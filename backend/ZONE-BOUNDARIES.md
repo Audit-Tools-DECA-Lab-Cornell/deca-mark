@@ -29,7 +29,7 @@ Reproduce acceptance with `pnpm backend:test ZONE_API_REHEARSAL=1` and
 `pnpm db:test ZONE_REHEARSAL=1`, both against newly created disposable containers. The
 loopback HTTP driver uses signed JWTs and the restricted API role. It covers authoring,
 publication, history, old late uploads and competing managers. BE-19 below adds strict
-bound v2 uploads; complete filtered read/export acceptance remains BE-20. The client-parity
+bound v2 uploads; BE-20 adds filtered historical reads and complete bounded exports. The client-parity
 test runtime-parses actual v1 site/archive bodies with the existing mobile Zod schemas
 and web archive reader, and parses v2/history bodies with the new response models. Full device/browser/QGIS
 release acceptance remains QA-07; no hosted migration or publication gate was enabled.
@@ -86,6 +86,21 @@ Use correct mixed-direction keyset pagination; bind cursor to filters and projec
 Exports add `package_id`, `map_version`, `zone_id`, `zone_code`, `zone_label_at_capture`, `assignment_basis`, `spatial_support`. Legacy code is preserved with unknown version/label, not recast. Preserve form-version codebook behavior and prevent CSV formula injection. GeoJSON event inventories have null geometry plus zone reference; a separate authorized historical-zone layer provides polygons. Do not mix polygon inventory features into the existing point layer without an explicit geometry-type contract.
 
 No viewport query, heatmap, general full-text search engine or asynchronous export job is required. If the map shows one loaded page, the client must label it; exact totals come from summary. Set a tested synchronous export ceiling and give an actionable narrowing error above it rather than introducing an unplanned job platform.
+
+The v2 export delivers an `application/zip` bundle: the selected `observations.csv` or
+`observations.geojson`, `codebook.csv`, `metadata.json`, `forms.json` and
+`historical-zones.geojson`. Scope metadata uses aware UTC interval bounds and records the
+project timezone for interpretation. Frozen form definitions and package-zone polygons
+are deduplicated; Inventory events retain null geometry while the zone file carries
+historical polygons. Reject page-only cursor/limit parameters on summary/export.
+
+Apply the same snapshot to rows, counts, forms, zones and metadata. The synchronous
+ceiling is 10,000 observations, 32 MiB of combined uncompressed assets, 32 MiB of archive
+bytes and 10 seconds of export work. Refuse an oversized scope before a successful
+response starts; bound the source JSON snapshot separately at 64 MiB. Bound concurrent
+serializer processes and terminate work on cancellation
+or deadline; release database sessions and temporary files. Record measured row/byte/time
+acceptance alongside query-plan evidence before marking BE-20 complete.
 
 ## Validation and release
 

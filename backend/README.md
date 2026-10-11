@@ -150,8 +150,23 @@ V1 retains its original serializer, hash and receipt shape. V2 persists the
 pruning. Duplicate JSON keys, invalid Unicode and encoded bodies are rejected at the v2
 boundary; observation bodies retain the 256 KiB limit.
 
-Filtered historical reads/exports remain BE-20 work. Local API acceptance does not establish
-device retention or release readiness; publication remains disabled by default.
+V2 observation reads expose paginated lists, historical detail, summaries and complete
+exports under `/v2/projects/{project_id}/observations`. Lists use mixed-direction keyset
+cursors bound to the project and normalized filters; each page's rows and exact count
+share one SQL snapshot. Later pages may include new uploads. Site, historical package,
+zone, assignment basis, round, observer, half-open UTC dates and site-scoped legacy codes
+use the same authorized filters for lists, summaries and exports. Recorded package/zone
+labels and form definitions remain historical; Inventory event geometry is null and its
+display anchor is explicit. V1 list responses and limits remain unchanged.
+
+`/export?format=csv|geojson` returns a ZIP containing observations, a codebook, scope
+metadata, frozen forms and separate historical-zone GeoJSON. Export limits are 10,000
+records, 32 MiB of combined uncompressed assets, 32 MiB of ZIP bytes and 10 seconds;
+the source snapshot has a separate 64 MiB limit. Oversized scopes return a structured
+422 requiring narrower filters. Two serializer processes may run concurrently per API
+process; exhaustion returns 429 with `Retry-After: 2`. Disconnects and deadlines cancel
+work and release sessions, subprocesses and temporary files. Local API acceptance does
+not establish device retention or release readiness; publication remains disabled by default.
 
 Requests have an `X-Request-Id`, echoed in responses. Access logs contain that identifier, response status and elapsed time, never request bodies, tokens or answers. `SENTRY_DSN` optionally enables sanitized API error events; no DSN is needed locally. Database errors are mapped by SQLSTATE: permission and validation failures retain their proper status, transient failures return 503, and unexpected errors return a sanitized 500.
 

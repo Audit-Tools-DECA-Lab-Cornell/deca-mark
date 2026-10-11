@@ -13,6 +13,7 @@ from starlette.exceptions import HTTPException as FrameworkError
 
 from fieldmaps_api.database_errors import database_error
 from fieldmaps_api.observability import REQUEST_ID
+from fieldmaps_api.observation_query_errors import query_details
 from fieldmaps_api.zone_error_details import SafeZoneIssue
 from fieldmaps_api.zone_validation_paths import body_parts
 
@@ -194,7 +195,18 @@ async def error_response(request: Request, error: Exception) -> JSONResponse:
         case DomainError():
             failure = error
         case RequestValidationError():
-            if zone_request(request.url.path):
+            if (
+                request.method == "GET"
+                and request.url.path.startswith("/v2/projects/")
+                and "/observations" in request.url.path
+            ):
+                failure = DomainError(
+                    "validation_failed",
+                    "Invalid observation query",
+                    422,
+                    query_details(VALIDATION_ISSUES.validate_python(error.errors())),
+                )
+            elif zone_request(request.url.path):
                 failure = zone_validation_failure(error, request.url.path)
             else:
                 failure = ordinary_validation_failure(error)

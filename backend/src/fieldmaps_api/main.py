@@ -21,7 +21,15 @@ from fieldmaps_api.observability import (
     configure_observability,
     log_startup_failure,
 )
-from fieldmaps_api.routers import collection, forms, identity, sites, tenancy, zones
+from fieldmaps_api.routers import (
+    collection,
+    forms,
+    identity,
+    observation_analysis,
+    sites,
+    tenancy,
+    zones,
+)
 from fieldmaps_api.services.zones import ZoneWork
 
 
@@ -110,6 +118,7 @@ def create_app(
 
     app.include_router(tenancy.create_router(sessions, authenticate))
     app.include_router(identity.create_router(sessions, authenticate, configuration))
+    app.include_router(observation_analysis.create_router(sessions, authenticate))
     app.include_router(collection.create_router(sessions, authenticate))
     zone_work = ZoneWork()
     app.include_router(

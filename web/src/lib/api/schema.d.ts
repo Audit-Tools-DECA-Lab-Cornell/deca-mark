@@ -689,6 +689,57 @@ export interface paths {
         patch: operations["setProjectRole"];
         trace?: never;
     };
+    "/v2/projects/{project_id}/observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Observations */
+        get: operations["listHistoricalObservations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/projects/{project_id}/observations/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["exportHistoricalObservations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/projects/{project_id}/observations/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Summary */
+        get: operations["summarizeHistoricalObservations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v2/projects/{project_id}/observations/{observation_id}": {
         parameters: {
             query?: never;
@@ -696,7 +747,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Observation */
+        get: operations["getHistoricalObservation"];
         /** Bound Upload */
         put: operations["uploadBoundObservation"];
         post?: never;
@@ -728,6 +780,8 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         AnswerValue: string | number | string[];
+        /** @enum {string} */
+        AssignmentBasis: "recorded_package" | "legacy_unversioned";
         /** BoundInventoryUpload */
         BoundInventoryUpload: {
             /** Answers */
@@ -1191,6 +1245,140 @@ export interface components {
              */
             status: "running";
         };
+        /** HistoricalObservation */
+        HistoricalObservation: {
+            /** Answers */
+            answers: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            assignment_basis: components["schemas"]["AssignmentBasis"];
+            display_anchor: components["schemas"]["Point"] | null;
+            /** Display Anchor Basis */
+            display_anchor_basis: ("snapshot" | "legacy_compatibility") | null;
+            /** First Round */
+            first_round: boolean | null;
+            /** Form Version */
+            form_version: string;
+            geometry: components["schemas"]["Point"] | null;
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Observer */
+            observer: string;
+            /** Package Id */
+            package_id: string | null;
+            /** Package Version */
+            package_version: number | null;
+            /** Placement */
+            placement: ("hand" | "zone") | null;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Revision */
+            revision: number;
+            round_type: components["schemas"]["RoundType"] | null;
+            /** Site Code */
+            site_code: string;
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+            /** Site Name */
+            site_name: string;
+            spatial_support: components["schemas"]["SpatialSupport"];
+            /** User Id */
+            user_id: string | null;
+            /** Zone Code */
+            zone_code: string | null;
+            /** Zone Id */
+            zone_id: string | null;
+            /** Zone Label */
+            zone_label: string | null;
+        };
+        /** HistoricalObservationDetail */
+        HistoricalObservationDetail: {
+            /** Answers */
+            answers: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            assignment_basis: components["schemas"]["AssignmentBasis"];
+            /** Definition */
+            definition: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            display_anchor: components["schemas"]["Point"] | null;
+            /** Display Anchor Basis */
+            display_anchor_basis: ("snapshot" | "legacy_compatibility") | null;
+            /** First Round */
+            first_round: boolean | null;
+            /** Form Version */
+            form_version: string;
+            geometry: components["schemas"]["Point"] | null;
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Observer */
+            observer: string;
+            /** Package Id */
+            package_id: string | null;
+            /** Package Version */
+            package_version: number | null;
+            /** Placement */
+            placement: ("hand" | "zone") | null;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Revision */
+            revision: number;
+            round_type: components["schemas"]["RoundType"] | null;
+            /** Site Code */
+            site_code: string;
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+            /** Site Name */
+            site_name: string;
+            spatial_support: components["schemas"]["SpatialSupport"];
+            /** User Id */
+            user_id: string | null;
+            /** Zone Code */
+            zone_code: string | null;
+            /** Zone Id */
+            zone_id: string | null;
+            /** Zone Label */
+            zone_label: string | null;
+        };
         /** HistoricalZones */
         HistoricalZones: {
             /**
@@ -1426,6 +1614,20 @@ export interface components {
                 [key: string]: string | number | boolean | null;
             };
         };
+        /** ObservationPage */
+        ObservationPage: {
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Items */
+            items: components["schemas"]["HistoricalObservation"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total Matching */
+            total_matching: number;
+        };
         /**
          * ObservationRow
          * @description One observation as the workspace lists it, with its site, form version and round.
@@ -1477,6 +1679,20 @@ export interface components {
             /** Zone */
             zone: string | null;
         };
+        /** ObservationSummary */
+        ObservationSummary: {
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Groups */
+            groups: components["schemas"]["SummaryGroup"][];
+            /** Legacy Count */
+            legacy_count: number;
+            /** Total Matching */
+            total_matching: number;
+        };
         /**
          * ObservationUpload
          * @description One observation, as the collector sends it.
@@ -1515,6 +1731,7 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        Observer: string;
         ObserverInitials: string;
         /** OrgInvitationCreate */
         OrgInvitationCreate: {
@@ -1731,6 +1948,20 @@ export interface components {
             version: number;
             /** Zone Contract Version */
             zone_contract_version?: 1 | null;
+        };
+        /** Point */
+        Point: {
+            /** Coordinates */
+            coordinates: [
+                number,
+                number
+            ];
+            /**
+             * Type
+             * @default Point
+             * @constant
+             */
+            type: "Point";
         };
         /** PointGeometry */
         PointGeometry: {
@@ -1973,6 +2204,8 @@ export interface components {
             status: "ready";
         };
         Ring: components["schemas"]["Position"][];
+        /** @enum {string} */
+        RoundType: "standard" | "reliability" | "inventory";
         /** Site */
         Site: {
             /** Centre */
@@ -2130,6 +2363,8 @@ export interface components {
             zone_id?: string | null;
         };
         Slug: string;
+        /** @enum {string} */
+        SpatialSupport: "point" | "zone" | "legacy_unknown";
         /**
          * StoredObservation
          * @description A direct record read, including the historical form needed to label its answers.
@@ -2185,6 +2420,29 @@ export interface components {
             site_name: string;
             /** Zone */
             zone: string | null;
+        };
+        /** SummaryGroup */
+        SummaryGroup: {
+            assignment_basis: components["schemas"]["AssignmentBasis"];
+            /** Count */
+            count: number;
+            /** Package Id */
+            package_id: string | null;
+            /** Package Version */
+            package_version: number | null;
+            round_type: components["schemas"]["RoundType"] | null;
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+            spatial_support: components["schemas"]["SpatialSupport"];
+            /** Zone Code */
+            zone_code: string | null;
+            /** Zone Id */
+            zone_id: string | null;
+            /** Zone Label */
+            zone_label: string | null;
         };
         /**
          * SupportedFormat
@@ -10774,6 +11032,632 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Method Not Allowed */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listHistoricalObservations: {
+        parameters: {
+            query?: {
+                site_id?: string | null;
+                package_id?: string | null;
+                zone_id?: string[];
+                assignment_basis?: components["schemas"]["AssignmentBasis"] | null;
+                legacy_zone_code?: string | null;
+                round_type?: components["schemas"]["RoundType"] | null;
+                observer?: components["schemas"]["Observer"] | null;
+                observed_from?: string | null;
+                observed_before?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObservationPage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Method Not Allowed */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    exportHistoricalObservations: {
+        parameters: {
+            query?: {
+                site_id?: string | null;
+                package_id?: string | null;
+                zone_id?: string[];
+                assignment_basis?: components["schemas"]["AssignmentBasis"] | null;
+                legacy_zone_code?: string | null;
+                round_type?: components["schemas"]["RoundType"] | null;
+                observer?: components["schemas"]["Observer"] | null;
+                observed_from?: string | null;
+                observed_before?: string | null;
+                format?: "csv" | "geojson";
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Method Not Allowed */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    summarizeHistoricalObservations: {
+        parameters: {
+            query?: {
+                site_id?: string | null;
+                package_id?: string | null;
+                zone_id?: string[];
+                assignment_basis?: components["schemas"]["AssignmentBasis"] | null;
+                legacy_zone_code?: string | null;
+                round_type?: components["schemas"]["RoundType"] | null;
+                observer?: components["schemas"]["Observer"] | null;
+                observed_from?: string | null;
+                observed_before?: string | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObservationSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Method Not Allowed */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getHistoricalObservation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                observation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoricalObservationDetail"];
+                };
             };
             /** @description Bad Request */
             400: {

@@ -21,8 +21,11 @@ cd backend
 .venv/bin/python -m pytest tests/test_zone_upload_contract.py tests/test_zone_geometry_contract.py tests/test_zone_draft_contract.py tests/test_zone_case_integrity.py -q
 ```
 
-The backend models now describe the locally implemented BE-18 authoring/discovery routes
-and BE-19 bound upload route; generated `openapi.json` and client declarations expose them.
+The backend models now describe the local BE-18 authoring/discovery routes, BE-19 bound
+upload route and BE-20 historical list/detail/summary/export routes; generated
+`openapi.json` and client declarations expose them. BE-20 query models preserve repeated
+zone UUID filters and distinguish pagination from summary/export scope. Export format
+selects the observation file within the ZIP bundle defined in the canonical contract.
 `test_zone_upload_fingerprint.py` runs the authored v2 canonical-byte vectors through the
 actual serializer. Stateful local API and SQL acceptance uses the disposable rehearsal
 commands documented in the backend README. Keep format-1 payloads, hashes, archives and

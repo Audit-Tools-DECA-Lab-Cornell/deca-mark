@@ -1,0 +1,170 @@
+"""Shared authorized predicates, narrow counts and bounded historical row rendering."""
+
+from typing import Final
+
+from sqlalchemy import text
+
+FILTER: Final = """
+o.project_id = :project AND o.deleted_at IS NULL
+AND (CAST(:site AS uuid) IS NULL OR o.site_id = CAST(:site AS uuid))
+AND (CAST(:package AS uuid) IS NULL OR o.package_id = CAST(:package AS uuid))
+AND ((CAST(:package AS uuid) IS NULL AND cardinality(CAST(:zones AS uuid[])) = 0)
+ OR o.upload_protocol = 2)
+AND (cardinality(CAST(:zones AS uuid[])) = 0 OR o.zone_id = ANY(CAST(:zones AS uuid[])))
+AND (CAST(:basis AS text) IS NULL OR
+  CASE WHEN o.package_id IS NULL THEN 'legacy_unversioned' ELSE 'recorded_package' END = :basis)
+AND (CAST(:legacy_code AS text) IS NULL OR o.zone_code = :legacy_code)
+AND (CAST(:round AS text) IS NULL OR o.round_type = :round)
+AND (CAST(:observer AS text) IS NULL OR o.observer_code = :observer)
+AND (CAST(:from AS timestamptz) IS NULL OR o.observed_at >= CAST(:from AS timestamptz))
+AND (CAST(:before AS timestamptz) IS NULL OR o.observed_at < CAST(:before AS timestamptz))
+"""
+
+JOINS: Final = """
+FROM fieldmaps.observations o
+JOIN fieldmaps.sites s ON s.id=o.site_id
+JOIN fieldmaps.form_versions f ON f.id=o.form_version_id
+LEFT JOIN fieldmaps.site_packages p ON p.id=o.package_id
+LEFT JOIN fieldmaps.package_zones z ON z.package_id=o.package_id AND z.zone_id=o.zone_id
+LEFT JOIN fieldmaps.zone_identities zi ON zi.id=z.zone_id
+"""
+
+SUPPORT: Final = """CASE WHEN o.round_type='inventory' THEN 'zone'
+ WHEN o.package_id IS NOT NULL OR (o.round_type IN ('standard','reliability')
+ AND o.placement_source='hand') THEN 'point' ELSE 'legacy_unknown' END"""
+BASIS: Final = (
+    "CASE WHEN o.package_id IS NULL THEN 'legacy_unversioned' ELSE 'recorded_package' END"
+)
+GROUP_DATA: Final = (
+    """
+jsonb_build_object('site_id',o.site_id,'package_id',o.package_id,'package_version',p.version,
+'zone_id',o.zone_id,'zone_code',coalesce(zi.code,o.zone_code),'zone_label',z.label,
+'round_type',o.round_type,'assignment_basis',"""
+    + BASIS
+    + ", 'spatial_support',"
+    + SUPPORT
+    + ")"
+)
+ROW_DATA: Final = (
+    """
+jsonb_build_object(
+ 'observation_id',o.id,'project_id',o.project_id,'user_id',o.created_by,
+ 'site_code',s.code,'site_name',s.name,'observer',o.observer_code,
+ 'observed_at',o.observed_at,'received_at',o.received_at,'revision',o.revision,
+ 'answers',o.answers,'form_version',f.code,'placement',o.placement_source,'first_round',o.first_round,
+ 'geometry',CASE WHEN o.round_type IS DISTINCT FROM 'inventory'
+ AND (o.package_id IS NOT NULL OR (o.round_type IN ('standard','reliability')
+ AND o.placement_source='hand')) THEN jsonb_build_object('type','Point','coordinates',
+ jsonb_build_array(fieldmaps.longitude(o.geom),fieldmaps.latitude(o.geom))) ELSE NULL END,
+ 'display_anchor',CASE WHEN o.round_type='inventory' THEN jsonb_build_object('type','Point',
+ 'coordinates',CASE WHEN o.package_id IS NULL THEN jsonb_build_array(
+ fieldmaps.longitude(o.geom),fieldmaps.latitude(o.geom)) ELSE jsonb_build_array(
+ extensions.ST_X(z.display_anchor),extensions.ST_Y(z.display_anchor)) END) ELSE NULL END,
+ 'display_anchor_basis',CASE WHEN o.round_type='inventory' THEN
+ CASE WHEN o.package_id IS NULL THEN 'legacy_compatibility' ELSE 'snapshot' END ELSE NULL END
+ ) || """
+    + GROUP_DATA
+)
+
+# Only constant SQL fragments are composed; every untrusted value is a bound parameter.
+PAGE: Final = text(
+    "WITH matched AS MATERIALIZED (SELECT o.id,o.observed_at FROM fieldmaps.observations o WHERE "  # noqa: S608 - constant fragments; bound values.
+    + FILTER
+    + """), selected AS (
+SELECT id,observed_at FROM matched
+WHERE CAST(:cursor_time AS timestamptz) IS NULL OR observed_at < CAST(:cursor_time AS timestamptz)
+ OR (observed_at=CAST(:cursor_time AS timestamptz) AND id > CAST(:cursor_id AS uuid))
+ORDER BY observed_at DESC,id ASC LIMIT :limit), rows AS (SELECT o.id,o.observed_at,"""
+    + ROW_DATA
+    + " AS data "
+    + JOINS
+    + " JOIN selected sel ON sel.id=o.id) "
+    + """
+SELECT jsonb_build_object('items',coalesce((SELECT jsonb_agg(data ORDER BY observed_at DESC,id)
+FROM rows),'[]'::jsonb),'total_matching',(SELECT count(*) FROM matched),
+'generated_at',statement_timestamp())::text
+"""
+)
+DETAIL: Final = text(
+    "SELECT ("
+    + ROW_DATA
+    + " || jsonb_build_object('definition',f.definition))::text "
+    + JOINS
+    + " WHERE "
+    + FILTER
+    + " AND o.id=:id"
+)
+SUMMARY: Final = text(
+    "WITH matched AS MATERIALIZED (SELECT "  # noqa: S608 - constant fragments; bound values.
+    + GROUP_DATA
+    + " AS data "
+    + JOINS
+    + " WHERE "
+    + FILTER
+    + """), groups AS (
+SELECT data || jsonb_build_object('count',count(*)) AS data FROM matched GROUP BY data)
+SELECT jsonb_build_object('groups',coalesce((SELECT jsonb_agg(data ORDER BY data::text)
+FROM groups),'[]'::jsonb),'total_matching',(SELECT count(*) FROM matched),
+'legacy_count',(SELECT count(*) FROM matched WHERE data->>'assignment_basis'='legacy_unversioned'),
+'generated_at',statement_timestamp())::text
+"""
+)
+EXPORT: Final = text(
+    "WITH probe AS MATERIALIZED (SELECT o.id FROM fieldmaps.observations o WHERE "  # noqa: S608 - constant fragments; bound values.
+    + FILTER
+    + """ ORDER BY o.observed_at DESC,o.id LIMIT :row_probe),
+form_refs AS MATERIALIZED (SELECT DISTINCT f.id,f.code FROM fieldmaps.form_versions f
+JOIN fieldmaps.observations o ON o.form_version_id=f.id JOIN probe ON probe.id=o.id),
+zone_refs AS MATERIALIZED (SELECT DISTINCT z.package_id,z.zone_id FROM fieldmaps.package_zones z
+JOIN fieldmaps.observations o ON o.package_id=z.package_id AND o.zone_id=z.zone_id
+JOIN probe ON probe.id=o.id),
+raw_size AS MATERIALIZED (SELECT count(*) AS count,
+coalesce(sum(octet_length(o.answers::text)),0)
+ + coalesce((SELECT sum(octet_length(f.definition::text)) FROM fieldmaps.form_versions f
+ JOIN form_refs r ON r.id=f.id),0)
+ + coalesce((SELECT sum(octet_length(z.canonical_geometry::text)) FROM fieldmaps.package_zones z
+ JOIN zone_refs r ON r.package_id=z.package_id AND r.zone_id=z.zone_id),0) AS bytes
+FROM fieldmaps.observations o JOIN probe ON probe.id=o.id),
+gate AS MATERIALIZED (SELECT *, count <= :row_limit AND bytes <= :byte_limit AS allowed
+FROM raw_size), matched AS MATERIALIZED ("""
+    + "SELECT o.id,o.observed_at,"
+    + ROW_DATA
+    + " AS data "
+    + JOINS
+    + " JOIN probe ON probe.id=o.id CROSS JOIN gate WHERE gate.allowed), forms AS ("
+    + """
+SELECT coalesce(jsonb_object_agg(code,definition),'{}'::jsonb) AS data FROM (
+SELECT f.code,f.definition FROM fieldmaps.form_versions f
+JOIN form_refs r ON r.id=f.id CROSS JOIN gate WHERE gate.allowed) u),
+zones AS (SELECT coalesce(jsonb_object_agg(key,geometry),'{}'::jsonb) AS data FROM (
+SELECT z.package_id::text || ':' || z.zone_id::text AS key,
+z.canonical_geometry AS geometry FROM fieldmaps.package_zones z
+JOIN zone_refs r ON r.package_id=z.package_id AND r.zone_id=z.zone_id
+CROSS JOIN gate WHERE gate.allowed) u),
+size AS (SELECT (SELECT count FROM gate) AS count,greatest((SELECT bytes FROM gate),
+coalesce(sum(octet_length(data::text)),0)
+ + (SELECT octet_length(data::text) FROM forms) + (SELECT octet_length(data::text) FROM zones)
+ ) AS bytes FROM matched)
+SELECT jsonb_build_object('items',CASE WHEN size.count <= :row_limit AND size.bytes <= :byte_limit
+THEN coalesce((SELECT jsonb_agg(data ORDER BY observed_at DESC,id) FROM matched),'[]'::jsonb)
+ELSE '[]'::jsonb END,'total_matching',size.count,'source_bytes',size.bytes,
+'forms',CASE WHEN size.count <= :row_limit AND size.bytes <= :byte_limit
+THEN (SELECT data FROM forms) ELSE '{}'::jsonb END,
+'historical_zones',CASE WHEN size.count <= :row_limit AND size.bytes <= :byte_limit
+THEN (SELECT data FROM zones) ELSE '{}'::jsonb END,
+'generated_at',statement_timestamp(),
+ 'timezone',(SELECT timezone FROM fieldmaps.projects WHERE id=:project))::text FROM size
+"""
+)
+VALID_SCOPE: Final = text("""
+SELECT
+ (CAST(:site AS uuid) IS NULL OR EXISTS(SELECT 1 FROM fieldmaps.sites
+   WHERE id=CAST(:site AS uuid) AND project_id=:project))
+ AND (CAST(:package AS uuid) IS NULL OR EXISTS(SELECT 1 FROM fieldmaps.site_packages
+   WHERE id=CAST(:package AS uuid) AND project_id=:project
+   AND (CAST(:site AS uuid) IS NULL OR site_id=CAST(:site AS uuid))))
+ AND NOT EXISTS(SELECT 1 FROM unnest(CAST(:zones AS uuid[])) AS requested(id)
+   WHERE NOT EXISTS(SELECT 1 FROM fieldmaps.package_zones z WHERE z.zone_id=requested.id
+   AND z.project_id=:project AND z.site_id=CAST(:site AS uuid)
+   AND (CAST(:package AS uuid) IS NULL OR z.package_id=CAST(:package AS uuid))))
+""")
