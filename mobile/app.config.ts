@@ -21,7 +21,7 @@ const base = {
   icon: "./assets/icon.png",
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.fieldmaps.collector.dev",
+    bundleIdentifier: "com.decalab.fieldmaps",
     requireFullScreen: true,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
