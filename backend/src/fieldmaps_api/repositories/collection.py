@@ -10,7 +10,6 @@ from fieldmaps_api.schemas import (
     ObservationRow,
     ObservationUpload,
     StoredObservation,
-    UploadReceipt,
     UploadTarget,
 )
 
@@ -78,20 +77,6 @@ async def list_observations(
         },
     )
     return [ObservationRow.model_validate_json(row) for row in result.scalars()]
-
-
-async def receipt(session: AsyncSession, upload: ObservationWrite) -> UploadReceipt | None:
-    result: Result[tuple[str]] = await session.execute(
-        queries.RECEIPT,
-        {
-            "id": upload.observation_id,
-            "project": upload.project_id,
-            "user_id": upload.user_id,
-            "fingerprint": upload.fingerprint,
-        },
-    )
-    data = result.scalar_one_or_none()
-    return None if data is None else UploadReceipt.model_validate_json(data)
 
 
 async def get_observation(

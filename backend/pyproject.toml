@@ -14,6 +14,7 @@ dependencies = [
   "sentry-sdk>=2,<3",
   "httpx2[http2,brotli,zstd]>=2",
   "fiona>=1.10,<2",
+  "rfc8785>=0.1.4,<0.2",
 ]
 
 [dependency-groups]

@@ -139,9 +139,19 @@ outside publication row locks. Overload/timeouts leave drafts and current packag
 Access logs add static operation IDs and safe zone/archive counts without geometry or answers.
 
 Run `pnpm backend:test ZONE_API_REHEARSAL=1` for a fresh disposable PostgreSQL/PostGIS
-API rehearsal without using local database password files. BE-19 v2 observation uploads
-and BE-20 filtered reads/exports remain separate tasks; publication alone does not establish
-historical observation attribution, device retention or release readiness.
+API rehearsal without using local database password files. V2 observations use
+`PUT /v2/projects/{project_id}/observations/{observation_id}` with nested answers and exact
+published package/zone IDs. Authorized uploads may reference superseded packages and retired
+frozen forms. Point coverage and Inventory anchors are enforced by PostGIS; clients cannot
+supply a substitute Inventory coordinate. Both upload protocols authorize each retry and
+return the original receipt only for the same owner, project, protocol and immutable body.
+V1 retains its original serializer, hash and receipt shape. V2 persists the
+`zone-upload-v2-jcs-1` fingerprint version and uses RFC 8785 canonical bytes before answer
+pruning. Duplicate JSON keys, invalid Unicode and encoded bodies are rejected at the v2
+boundary; observation bodies retain the 256 KiB limit.
+
+Filtered historical reads/exports remain BE-20 work. Local API acceptance does not establish
+device retention or release readiness; publication remains disabled by default.
 
 Requests have an `X-Request-Id`, echoed in responses. Access logs contain that identifier, response status and elapsed time, never request bodies, tokens or answers. `SENTRY_DSN` optionally enables sanitized API error events; no DSN is needed locally. Database errors are mapped by SQLSTATE: permission and validation failures retain their proper status, transient failures return 503, and unexpected errors return a sanitized 500.
 

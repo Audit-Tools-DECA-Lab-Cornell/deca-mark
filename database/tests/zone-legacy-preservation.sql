@@ -14,10 +14,12 @@ SELECT pg_temp.assert_true(
 SELECT pg_temp.assert_true(
   NOT EXISTS (SELECT FROM zone_rehearsal.before_observations b
     FULL JOIN fieldmaps.observations o USING (id)
-    WHERE b.value IS DISTINCT FROM to_jsonb(o) - ARRAY['package_id', 'zone_id', 'upload_protocol']),
+    WHERE b.value IS DISTINCT FROM to_jsonb(o) - ARRAY[
+      'package_id', 'zone_id', 'upload_protocol', 'upload_hash_version']),
   'additive migration preserves old hashes, answers, revisions, coordinates and receipts');
 SELECT pg_temp.assert_true(
-  (SELECT bool_and(package_id IS NULL AND zone_id IS NULL AND upload_protocol = 1)
+  (SELECT bool_and(package_id IS NULL AND zone_id IS NULL AND upload_protocol = 1
+    AND upload_hash_version IS NULL)
     FROM fieldmaps.observations), 'all historical observations remain explicitly unversioned');
 SELECT pg_temp.assert_true(
   NOT EXISTS (SELECT FROM fieldmaps.site_zone_state)

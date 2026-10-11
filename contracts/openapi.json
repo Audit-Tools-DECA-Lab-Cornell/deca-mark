@@ -1,6 +1,254 @@
 {
   "components": {
     "schemas": {
+      "AnswerValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "maximum": 9007199254740991.0,
+            "minimum": -9007199254740991.0,
+            "type": "integer"
+          },
+          {
+            "maximum": 9007199254740991.0,
+            "minimum": -9007199254740991.0,
+            "type": "number"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        ]
+      },
+      "BoundInventoryUpload": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnswerValue"
+            },
+            "maxProperties": 200,
+            "title": "Answers",
+            "type": "object"
+          },
+          "form_version": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][\\w.-]*$",
+            "title": "Form Version",
+            "type": "string"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "observer": {
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Observer",
+            "type": "string"
+          },
+          "package_id": {
+            "format": "uuid",
+            "title": "Package Id",
+            "type": "string"
+          },
+          "placement": {
+            "const": "zone",
+            "title": "Placement",
+            "type": "string"
+          },
+          "round_type": {
+            "const": "inventory",
+            "title": "Round Type",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 2,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "zone_id": {
+            "format": "uuid",
+            "title": "Zone Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "site_id",
+          "package_id",
+          "zone_id",
+          "form_version",
+          "observer",
+          "observed_at",
+          "answers",
+          "round_type",
+          "placement"
+        ],
+        "title": "BoundInventoryUpload",
+        "type": "object"
+      },
+      "BoundPointUpload": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnswerValue"
+            },
+            "maxProperties": 200,
+            "title": "Answers",
+            "type": "object"
+          },
+          "coordinates": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "first_round": {
+            "title": "First Round",
+            "type": "boolean"
+          },
+          "form_version": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][\\w.-]*$",
+            "title": "Form Version",
+            "type": "string"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "observer": {
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Observer",
+            "type": "string"
+          },
+          "package_id": {
+            "format": "uuid",
+            "title": "Package Id",
+            "type": "string"
+          },
+          "placement": {
+            "const": "hand",
+            "title": "Placement",
+            "type": "string"
+          },
+          "round_type": {
+            "enum": [
+              "standard",
+              "reliability"
+            ],
+            "title": "Round Type",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 2,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "site_id": {
+            "format": "uuid",
+            "title": "Site Id",
+            "type": "string"
+          },
+          "zone_id": {
+            "format": "uuid",
+            "title": "Zone Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "site_id",
+          "package_id",
+          "zone_id",
+          "form_version",
+          "observer",
+          "observed_at",
+          "answers",
+          "round_type",
+          "placement",
+          "first_round",
+          "coordinates"
+        ],
+        "title": "BoundPointUpload",
+        "type": "object"
+      },
+      "BoundUploadReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted_revision": {
+            "const": 1,
+            "title": "Accepted Revision",
+            "type": "integer"
+          },
+          "assignment_basis": {
+            "const": "recorded_package",
+            "title": "Assignment Basis",
+            "type": "string"
+          },
+          "observation_id": {
+            "format": "uuid",
+            "title": "Observation Id",
+            "type": "string"
+          },
+          "package_id": {
+            "format": "uuid",
+            "title": "Package Id",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "title": "Received At",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 2,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "zone_id": {
+            "format": "uuid",
+            "title": "Zone Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "observation_id",
+          "project_id",
+          "user_id",
+          "accepted_revision",
+          "received_at",
+          "schema_version",
+          "package_id",
+          "zone_id",
+          "assignment_basis"
+        ],
+        "title": "BoundUploadReceipt",
+        "type": "object"
+      },
       "CanonicalZone": {
         "properties": {
           "display_anchor": {
@@ -14443,6 +14691,217 @@
           }
         ],
         "summary": "Set Role"
+      }
+    },
+    "/v2/projects/{project_id}/observations/{observation_id}": {
+      "put": {
+        "operationId": "uploadBoundObservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "observation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Observation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "mapping": {
+                    "inventory": "#/components/schemas/BoundInventoryUpload",
+                    "reliability": "#/components/schemas/BoundPointUpload",
+                    "standard": "#/components/schemas/BoundPointUpload"
+                  },
+                  "propertyName": "round_type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/BoundPointUpload"
+                  },
+                  {
+                    "$ref": "#/components/schemas/BoundInventoryUpload"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoundUploadReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "428": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Bound Upload"
       }
     },
     "/v2/projects/{project_id}/sites": {

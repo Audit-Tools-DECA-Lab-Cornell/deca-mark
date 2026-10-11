@@ -9,6 +9,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from fieldmaps_api.errors import ErrorDetail, ErrorEnvelope, zone_request
+from fieldmaps_api.zone_upload_json import valid_upload_json
 
 KIB: Final = 1024
 MIB: Final = 1024 * KIB
@@ -98,6 +99,31 @@ class BodySizeMiddleware:
             if not message.more_body:
                 break
         body = bytes(buffer)
+        if (
+            request.method == "PUT"
+            and re.fullmatch(r"/v2/projects/[^/]+/observations/[^/]+", request.url.path.rstrip("/"))
+            and not valid_upload_json(body)
+        ):
+            envelope = ErrorEnvelope(
+                error=ErrorDetail(
+                    code="validation_failed",
+                    message="Send valid UTF-8 JSON with unique object keys",
+                    details={
+                        "issues": [
+                            {
+                                "code": "invalid_structure",
+                                "zone_ids": [],
+                                "path": "",
+                                "message": "Send valid UTF-8 JSON with unique object keys",
+                            }
+                        ]
+                    },
+                )
+            )
+            await JSONResponse(envelope.model_dump(mode="json"), status_code=422)(
+                scope, receive, send
+            )
+            return
         delivered = False
 
         async def replay() -> Message:

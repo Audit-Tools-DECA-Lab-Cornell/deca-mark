@@ -14,6 +14,7 @@ from starlette.exceptions import HTTPException as FrameworkError
 from fieldmaps_api.database_errors import database_error
 from fieldmaps_api.observability import REQUEST_ID
 from fieldmaps_api.zone_error_details import SafeZoneIssue
+from fieldmaps_api.zone_validation_paths import body_parts
 
 type ErrorCode = Literal[
     "bad_request",
@@ -140,6 +141,7 @@ def zone_request(path: str) -> bool:
             path.rstrip("/"),
         )
         is not None
+        or re.fullmatch(r"/v2/projects/[^/]+/observations/[^/]+", path.rstrip("/")) is not None
     )
 
 
@@ -152,11 +154,7 @@ def zone_validation_failure(error: RequestValidationError, path: str) -> DomainE
         return DomainError("precondition_required", "The expected current package is required", 428)
     safe_issues: list[JsonValue] = []
     for issue in issues[:1_000]:
-        parts = (
-            [part for part in issue.loc[1:] if part not in {"Polygon", "MultiPolygon"}]
-            if issue.loc and issue.loc[0] == "body" and issue.type != "json_invalid"
-            else []
-        )
+        parts = body_parts(issue.loc, issue.type, bound_upload=path.startswith("/v2/"))
         pointer = "".join("/" + str(part).replace("~", "~0").replace("/", "~1") for part in parts)
         code = "invalid_structure"
         if "distinct within a draft" in issue.msg:

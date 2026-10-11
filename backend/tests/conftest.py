@@ -10,7 +10,7 @@ from fieldmaps_api.main import create_app
 from tests.local_database import database_url, password_file
 from tests.signing import ISSUER, Signer, make_signer
 
-pytest_plugins = ("tests.zone_api_fixtures",)
+pytest_plugins = ("tests.zone_api_fixtures", "tests.bound_upload_fixtures")
 
 
 @pytest.fixture

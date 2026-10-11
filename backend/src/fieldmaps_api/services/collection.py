@@ -1,17 +1,14 @@
-import json
 from hashlib import sha256
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fieldmaps_api.domain.forms import AnswerError, validate_answers
 from fieldmaps_api.errors import (
-    ConflictError,
     NotFoundError,
     RoleRequiredError,
-    ValidationFailedError,
 )
-from fieldmaps_api.repositories import collection
+from fieldmaps_api.repositories import collection, upload_receipts
+from fieldmaps_api.repositories.upload_receipts import ReceiptIdentity
 from fieldmaps_api.schemas import (
     ObservationQuery,
     ObservationRow,
@@ -19,6 +16,7 @@ from fieldmaps_api.schemas import (
     StoredObservation,
     UploadReceipt,
 )
+from fieldmaps_api.services.observation_answers import validated_answers
 from fieldmaps_api.services.tenancy import project
 
 
@@ -29,30 +27,35 @@ async def upload_observation(
     user_id: UUID,
     payload: ObservationUpload,
 ) -> UploadReceipt:
+    await upload_receipts.authorize(session, project_id)
+    identity = ReceiptIdentity(
+        observation_id,
+        project_id,
+        user_id,
+        sha256(payload.model_dump_json(exclude_unset=True).encode()).hexdigest(),
+        1,
+        None,
+    )
+    replay = await upload_receipts.replay(session, identity)
+    if replay is not None:
+        return replay.legacy()
     target = await collection.upload_target(session, project_id, payload)
     if target is None:
         message = "You cannot upload to this project, site, or form"
         raise RoleRequiredError(message)
-    try:
-        answers = validate_answers(target.definition, payload.answers)
-    except AnswerError as error:
-        raise ValidationFailedError(str(error), field="answers") from error
     upload = collection.ObservationWrite(
         observation_id=observation_id,
         project_id=project_id,
         user_id=user_id,
         target=target,
         payload=payload,
-        answers_json=json.dumps(answers, sort_keys=True),
+        answers_json=validated_answers(target.definition, payload.answers),
         # Only what was sent: an upload made before the round fields existed hashes as it did.
-        fingerprint=sha256(payload.model_dump_json(exclude_unset=True).encode()).hexdigest(),
+        fingerprint=identity.fingerprint,
     )
     await collection.insert_observation(session, upload)
-    receipt = await collection.receipt(session, upload)
-    if receipt is None:
-        message = "This observation ID already exists with a different upload"
-        raise ConflictError(message)
-    return receipt
+    receipt = await upload_receipts.committed(session, identity)
+    return receipt.legacy()
 
 
 async def list_observations(

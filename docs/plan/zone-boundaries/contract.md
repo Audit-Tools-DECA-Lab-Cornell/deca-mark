@@ -1,6 +1,6 @@
 # Zone boundary contract, version 1
 
-[Master plan](README.md). CON-05 freezes the following interfaces and authored [shared cases](../../../contracts/zones/README.md). BE-18 implements authoring, historical-zone reads and v2 site discovery in local source with publication disabled by default; backend-generated OpenAPI and client declarations expose those routes. V2 observation uploads and filtered read/export routes remain BE-19/BE-20 work. Backend input models live in `zone_geometry_schemas.py`, `zone_draft_schemas.py` and `zone_observation_schemas.py`. Local implementation does not establish hosted availability. Any incompatible deviation requires lead review and coordinated consumer changes.
+[Master plan](README.md). CON-05 freezes the following interfaces and authored [shared cases](../../../contracts/zones/README.md). BE-18 implements authoring, historical-zone reads and v2 site discovery in local source with publication disabled by default; BE-19 adds bound v2 observation uploads and preserves v1 retries. Backend-generated OpenAPI and client declarations expose those routes. Filtered read/export routes remain BE-20 work. Backend input models live in `zone_geometry_schemas.py`, `zone_draft_schemas.py` and `zone_observation_schemas.py`. Local implementation does not establish hosted availability. Any incompatible deviation requires lead review and coordinated consumer changes.
 
 ## Identity vocabulary
 

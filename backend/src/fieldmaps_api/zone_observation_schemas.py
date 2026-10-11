@@ -58,7 +58,11 @@ class BoundObservationBase(BaseModel):
     @field_validator("observed_at")
     @classmethod
     def utc_capture_time(cls, value: datetime) -> datetime:
-        return value.astimezone(UTC)
+        try:
+            return value.astimezone(UTC)
+        except OverflowError as error:
+            message = "Capture time is outside the supported UTC range"
+            raise ValueError(message) from error
 
 
 class BoundPointUpload(BoundObservationBase):

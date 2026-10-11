@@ -21,4 +21,10 @@ cd backend
 .venv/bin/python -m pytest tests/test_zone_upload_contract.py tests/test_zone_geometry_contract.py tests/test_zone_draft_contract.py tests/test_zone_case_integrity.py -q
 ```
 
-The backend models are reusable input contracts, not available routes. Generated `openapi.json` and client declarations continue to describe the running API until BE-18/BE-19 integrate the schemas. Keep format-1 payloads, hashes, archives and local rows unchanged. Never label unexecuted topology, concurrency, filesystem or device scenarios as passing based on these contract tests.
+The backend models now describe the locally implemented BE-18 authoring/discovery routes
+and BE-19 bound upload route; generated `openapi.json` and client declarations expose them.
+`test_zone_upload_fingerprint.py` runs the authored v2 canonical-byte vectors through the
+actual serializer. Stateful local API and SQL acceptance uses the disposable rehearsal
+commands documented in the backend README. Keep format-1 payloads, hashes, archives and
+local rows unchanged. Never label unexecuted filesystem or device scenarios as passing
+based on these contract tests.

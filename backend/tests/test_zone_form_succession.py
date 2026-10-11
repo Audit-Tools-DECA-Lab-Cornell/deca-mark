@@ -5,6 +5,7 @@ from uuid import uuid4
 from zipfile import ZipFile
 
 import anyio
+import httpx2
 import orjson
 import pytest
 from fastapi.testclient import TestClient
@@ -19,7 +20,7 @@ from tests.zone_api_fixtures import ZoneSite, document, publish_draft, snapshot_
 pytestmark = pytest.mark.integration
 
 
-def published_form(client: TestClient, site: ZoneSite, code: str) -> str:
+def published_form(client: TestClient | httpx2.Client, site: ZoneSite, code: str) -> str:
     definition = {
         "version": "synthetic-v1",
         "title": "Synthetic regression form",
@@ -55,7 +56,7 @@ def published_form(client: TestClient, site: ZoneSite, code: str) -> str:
 
 
 def successor_body(
-    client: TestClient, site: ZoneSite, current: dict[str, JsonValue], play: str
+    client: TestClient | httpx2.Client, site: ZoneSite, current: dict[str, JsonValue], play: str
 ) -> dict[str, JsonValue]:
     history = client.get(f"{site.url}/zones?package_id={current['package_id']}")
     assert history.status_code == 200, history.text

@@ -2,6 +2,16 @@ from typing import Final
 
 from sqlalchemy import text
 
+AUTHORIZE_UPLOAD: Final = text("SELECT fieldmaps_private.assert_zone_observer(:project)")
+
+STORED_RECEIPT: Final = text("""
+SELECT json_build_object('observation_id', id, 'project_id', project_id,
+  'user_id', created_by, 'accepted_revision', 1, 'received_at', received_at,
+  'upload_hash', upload_hash, 'upload_protocol', upload_protocol,
+  'upload_hash_version', upload_hash_version, 'package_id', package_id, 'zone_id', zone_id)::text
+FROM fieldmaps.observations WHERE id = :id
+""")
+
 UPLOAD_TARGET: Final = text("""
 SELECT json_build_object('organization_id', p.organization_id,
   'site_id', s.id, 'form_version_id', f.id, 'definition', f.definition)::text
@@ -22,13 +32,6 @@ VALUES (:id, :organization, :project, :site, :form, :observer, :observed_at,
   CAST(:answers AS jsonb), :user_id, :fingerprint,
   :zone, :round_type, :first_round, :placement)
 ON CONFLICT (id) DO NOTHING RETURNING id
-""")
-
-RECEIPT: Final = text("""
-SELECT json_build_object('observation_id', id, 'project_id', project_id,
-  'user_id', created_by, 'accepted_revision', 1, 'received_at', received_at)::text
-FROM fieldmaps.observations
-WHERE id = :id AND project_id = :project AND created_by = :user_id AND upload_hash = :fingerprint
 """)
 
 OBSERVATION: Final = text("""

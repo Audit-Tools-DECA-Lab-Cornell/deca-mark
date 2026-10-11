@@ -28,8 +28,8 @@ codes; the clients still use v1 discovery until their own dependency tasks are c
 Reproduce acceptance with `pnpm backend:test ZONE_API_REHEARSAL=1` and
 `pnpm db:test ZONE_REHEARSAL=1`, both against newly created disposable containers. The
 loopback HTTP driver uses signed JWTs and the restricted API role. It covers authoring,
-publication, history, old late uploads and competing managers. Strict bound v2 uploads
-and complete filtered read/export acceptance belong to BE-19/BE-20. The client-parity
+publication, history, old late uploads and competing managers. BE-19 below adds strict
+bound v2 uploads; complete filtered read/export acceptance remains BE-20. The client-parity
 test runtime-parses actual v1 site/archive bodies with the existing mobile Zod schemas
 and web archive reader, and parses v2/history bodies with the new response models. Full device/browser/QGIS
 release acceptance remains QA-07; no hosted migration or publication gate was enabled.
@@ -59,6 +59,21 @@ Validate Standard/Reliability versus Inventory without assuming a particular for
 Do not add new metadata to old v1 responses if consumers are strict without testing them; prefer v2 read endpoints for bound metadata. Old v1 requests keep omitted/default fields and hash semantics. Existing UUID with incompatible payload/protocol returns conflict. New v2 record failing against an old server stays queued/needs attention according to capabilities; mobile never silently drops provenance and resubmits it as v1.
 
 Acceptance includes a v1 request accepted before deploy, response lost, identical replay after deploy; an old never-uploaded v1 record after site adoption; and a v2 record captured from v7, uploaded after v8 and form retirement. None may change its UUID, answers or capture context.
+
+The local route delegates to focused bound-upload and shared receipt/answer services.
+`domain/zone_upload_fingerprint.py` uses RFC 8785 with the frozen canonical-byte cases,
+six-digit UTC capture times and authenticated identities. The additive
+`20261011133000_zone_upload_protocol.sql` migration persists and freezes the hash version;
+its backfill retains receipt times and revisions. Uploads hold account then organization
+locks and refresh authorization after waiting, including exact replays. Missing/hidden
+packages return 404; an accessible package from another site returns a structured 422.
+New Inventory rows retain only the server-derived snapshot anchor for compatibility;
+the v2 event geometry/read semantics remain the BE-20 contract.
+
+Run `pnpm backend:test ZONE_API_REHEARSAL=1` and
+`pnpm db:test ZONE_REHEARSAL=1` for disposable local acceptance. The live Uvicorn driver
+exercises publication, bound upload, original-receipt replay and legacy readback. Device
+queue/retention and historical filtered display remain dependent tasks, not API evidence.
 
 ## BE-20: reads, zone filters and complete exports
 

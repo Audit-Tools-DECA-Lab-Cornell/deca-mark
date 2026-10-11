@@ -7,9 +7,10 @@ SELECT pg_temp.assert_true(NOT EXISTS (SELECT FROM zone_rehearsal.before_package
   'publication and concurrency tests preserve all original archive bytes and package fields');
 SELECT pg_temp.assert_true(NOT EXISTS (SELECT FROM zone_rehearsal.before_observations b
   LEFT JOIN fieldmaps.observations o USING(id) WHERE b.value IS DISTINCT FROM to_jsonb(o)
-    - ARRAY['package_id','zone_id','upload_protocol']),
+    - ARRAY['package_id','zone_id','upload_protocol','upload_hash_version']),
   'publication and concurrency tests preserve all original hashes, answers, coordinates, revisions and receipts');
 SELECT pg_temp.assert_true(NOT EXISTS (SELECT FROM zone_rehearsal.before_observations b
-  JOIN fieldmaps.observations o USING(id) WHERE o.package_id IS NOT NULL OR o.zone_id IS NOT NULL OR o.upload_protocol <> 1),
+  JOIN fieldmaps.observations o USING(id) WHERE o.package_id IS NOT NULL OR o.zone_id IS NOT NULL
+    OR o.upload_protocol <> 1 OR o.upload_hash_version IS NOT NULL),
   'original observations remain unversioned after all publication paths execute');
 ROLLBACK;

@@ -409,12 +409,13 @@ Done when: Live local HTTP workflow persists and publishes; conflicts/replays pr
 Verify: pnpm backend:check and backend:test; contract coordinator regenerates OpenAPI/types.
 
 ### BE-19: Bind new uploads to historical zone packages
-Status: todo · Phase 3 · Size L · Depends: BE-18 · Blocks: BE-20, GIS-09, MOB-29
+Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: BE-18 · Blocks: BE-20, GIS-09, MOB-29
 Owner: API agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Implement strict v2 upload, package/zone/form checks, point coverage, inventory semantics and bound receipts; preserve v1.
 Done when: v7 upload after v8 and old lost-receipt retry pass; cross-site and protocol conflicts fail safely.
 Verify: Backend checks and local API/SQL tests with old/new payloads.
+Verified: Strict v2 uploads bind the exact historical package/zone/form, use frozen RFC 8785 fingerprints before answer pruning and return receipts after commit. Superseded packages, retired frozen forms and archived projects accept authorized late work; point coverage and Inventory anchors remain server-authoritative. V1 hashes and lost-receipt replays remain unchanged, including pre-adoption records. Both protocols reject owner/project/protocol/content collisions and recheck authorization under account/organization locks. Disposable full backend rehearsal passed 604 tests; 15 affected API/live-HTTP tests passed after the final nullable legacy-package readiness correction. SQL rehearsal passed 425 assertions, 2,545 coordinate comparisons and six publication races. Ruff/BasedPyright, both client typechecks, stable contract regeneration, specification review and code-quality review passed. [Acceptance evidence](../docs/reviews/zone-boundaries-2026-10-11/be19.md) records the boundaries. Hosted rollout, device retention and browser/QGIS acceptance remain separate; publication defaults off. BE-20 is now unblocked for historical reads and complete exports.
 
 ### BE-20: Add historical-zone queries and complete exports
 Status: todo · Phase 3 · Size L · Depends: BE-19 · Blocks: QA-07, WEB-29, WEB-39
