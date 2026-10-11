@@ -34,6 +34,8 @@ ORGANIZATIONS: Final = Policy("organizations", 5, 3600)
 INVITATIONS: Final = Policy("invitations", 60, 3600)
 REDEMPTION: Final = Policy("invitation-access", 10, 600)
 DELETION: Final = Policy("account-deletion", 3, 3600)
+ZONE_VALIDATION: Final = Policy("zone-validation", 30, 60)
+ZONE_PUBLICATION: Final = Policy("zone-publication", 10, 60)
 
 
 def policy_for(method: str, path: str) -> Policy | None:
@@ -42,8 +44,17 @@ def policy_for(method: str, path: str) -> Policy | None:
         return DELETION
     if method != "POST":
         return None
-    if path == "/v1/orgs":
-        return ORGANIZATIONS
+    policies = (
+        (r"/v1/projects/[^/]+/sites/[^/]+/zone-drafts/[^/]+/validate", ZONE_VALIDATION),
+        (
+            r"/v1/projects/[^/]+/(?:sites/[^/]+/zone-drafts/[^/]+/publish|packages)",
+            ZONE_PUBLICATION,
+        ),
+        (r"/v1/orgs", ORGANIZATIONS),
+    )
+    for pattern, policy in policies:
+        if re.fullmatch(pattern, path):
+            return policy
     if path in ("/v1/invitations/preview", "/v1/invitations/redeem"):
         return REDEMPTION
     if re.fullmatch(r"/v1/(?:orgs|projects)/[^/]+/invitations", path):

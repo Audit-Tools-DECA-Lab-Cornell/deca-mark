@@ -177,6 +177,9 @@ class PackageSummary(BaseModel):
     archive_bytes: int
     archive_sha256: str
     prepared_at: AwareDatetime
+    format: Literal[1, 2] = 1
+    zone_contract_version: Literal[1] | None = None
+    map_revision: int | None = None
 
 
 class PackageDetail(PackageSummary):

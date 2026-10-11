@@ -37,6 +37,7 @@ case "${1:-help}" in
     docker cp database/tests supabase_db_field-maps:/tmp/fieldmaps-tests/database/
     docker cp supabase/seed.sql supabase_db_field-maps:/tmp/fieldmaps-tests/supabase/seed.sql
     docker cp contracts/forms/janet-test-v1.json supabase_db_field-maps:/tmp/fieldmaps-tests/janet-test-v1.json
+    docker cp contracts/zones/geometry.cases.json supabase_db_field-maps:/tmp/fieldmaps-tests/zone-geometry.cases.json
     docker cp database/hosted/verify.sql supabase_db_field-maps:/tmp/fieldmaps-tests/database/verify.sql
     local_psql -f /tmp/fieldmaps-tests/database/tests/run.sql
     docker exec -i supabase_db_field-maps psql -X -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \

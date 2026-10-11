@@ -543,3 +543,12 @@ def _write(archive: zipfile.ZipFile, name: str, payload: bytes) -> None:
     info.compress_type = zipfile.ZIP_DEFLATED
     info.external_attr = 0o644 << 16
     archive.writestr(info, payload)
+
+
+read_source_project = _read_source_project
+check_layer_sources = _check_layer_sources
+check_coordinate_reference = _check_coordinate_reference
+check_imagery_licence = _check_imagery_licence
+derive_extent = _derive_extent
+layer_bytes = _layer_bytes
+write_archive_entry = _write

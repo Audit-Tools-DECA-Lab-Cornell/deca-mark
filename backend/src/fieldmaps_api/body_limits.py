@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from fieldmaps_api.errors import ErrorDetail, ErrorEnvelope
+from fieldmaps_api.errors import ErrorDetail, ErrorEnvelope, zone_request
 
 KIB: Final = 1024
 MIB: Final = 1024 * KIB
@@ -23,6 +23,8 @@ class BodyFrame(BaseModel):
 
 def body_limit(method: str, path: str) -> int:
     path = path.rstrip("/")
+    if method == "PUT" and re.fullmatch(r"/v1/projects/[^/]+/sites/[^/]+/zone-drafts/[^/]+", path):
+        return 4 * MIB
     if method == "POST":
         if path == "/v1/sync/upload":
             return 4 * MIB
@@ -45,6 +47,31 @@ class BodySizeMiddleware:
             await self.app(scope, receive, send)
             return
         request = Request(scope)
+        new_zone_request = zone_request(request.url.path)
+        if (
+            new_zone_request
+            and request.headers.get("content-encoding", "identity").lower() != "identity"
+        ):
+            envelope = ErrorEnvelope(
+                error=ErrorDetail(
+                    code="validation_failed",
+                    message="Encoded zone request bodies are unsupported",
+                    details={
+                        "issues": [
+                            {
+                                "code": "invalid_structure",
+                                "zone_ids": [],
+                                "path": "",
+                                "message": "Send an uncompressed JSON request body",
+                            }
+                        ]
+                    },
+                )
+            )
+            await JSONResponse(envelope.model_dump(mode="json"), status_code=422)(
+                scope, receive, send
+            )
+            return
         limit = body_limit(request.method, request.url.path)
         buffer = bytearray()
         while True:
@@ -54,7 +81,7 @@ class BodySizeMiddleware:
             if len(buffer) + len(message.body) > limit:
                 envelope = ErrorEnvelope(
                     error=ErrorDetail(
-                        code="validation_failed",
+                        code="payload_too_large" if new_zone_request else "validation_failed",
                         message="Request body exceeds the size limit",
                         details={
                             "fields": [

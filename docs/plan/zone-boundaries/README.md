@@ -1,6 +1,6 @@
 # Zone polygon boundaries: master implementation plan
 
-Planning baseline: 2026-10-10. This is a proposed implementation contract, not a claim of shipped functionality. The user authorized this plan and its commit, not implementation, migrations, deployment or release. Finish this feature and its acceptance gates before starting other map features.
+Planning baseline: 2026-10-10. Implementation is now authorized in dependency order; source changes and disposable local tests are allowed. Commits, hosted migrations, deployments and releases remain separately authorized. The frozen contract and task status do not claim shipped functionality. Finish this feature and its acceptance gates before starting other map features.
 
 ## Outcome and scope
 
@@ -105,7 +105,7 @@ The dependency graph gates implementation/integration, not read-only preparation
 
 The lead freezes CON-05 before parallel writers consume interfaces. Use disjoint ownership: DB agent owns migrations/SQL fixtures; API agent owns Python/schema; mobile data agent owns storage/domain/sync/packages; web agent owns web; GIS agent owns QGIS docs/view specifications. **The DB agent alone writes migrations, including GIS views.** The contract coordinator alone regenerates OpenAPI and both generated TypeScript files after schema integration. Claude's mobile UI agent and the mobile data agent explicitly allocate shared `session/provider.tsx`, package providers and API client edits before working.
 
-Agents receive their bounded task text, product intent, invariants, file ownership, dependencies and test obligations. They also read this master plan and their component specification. They are not alone in the checkout: preserve unrelated edits, do not revert others' work, and report conflicts to the lead. Parallelize independent work or read-only reviews; serialize overlapping writes, migrations and integration. Current user authorization is for the planning commit only, not later implementation commits or branches.
+Agents receive their bounded task text, product intent, invariants, file ownership, dependencies and test obligations. They also read this master plan and their component specification. They are not alone in the checkout: preserve unrelated edits, do not revert others' work, and report conflicts to the lead. Parallelize independent work or read-only reviews; serialize overlapping writes, migrations and integration. Implementation source changes are authorized; implementation commits and branches require separate approval.
 
 Agents may improve algorithms, file organization and tests within the agreed behavior. A changed field, error, compatibility rule, retention policy or geometry meaning requires a short proposed deviation sent to the lead with evidence, alternatives, affected consumers and revised acceptance cases. The lead updates the canonical contract before dependent work continues. Ask the human only for unresolved product policy, destructive operations or external authorization; avoid asking about routine implementation choices. Never work around a failing invariant just to satisfy a checklist.
 
@@ -121,7 +121,7 @@ Each implementation handoff includes changed paths, contract effects, tests actu
 
 ## Product defaults needing explicit visibility
 
-The recommendations above intentionally choose non-overlapping observation zones, required zone assignment for new bound records, edits over existing ground, and delayed adoption until a new session. These are proposed defaults, not claims that the research lead approved them. Implementation can begin with contract work; if the study requires overlapping zones, zone-free point capture, or mandatory immediate updates, the lead must revise CON-05 before dependent implementation. Never silently change those policies.
+The authorized implementation follows non-overlapping observation zones, required zone assignment for new bound records, edits over existing ground, and delayed adoption until a new session. This records the selected product defaults, not separate research-lead approval. If the study requires overlapping zones, zone-free point capture, or mandatory immediate updates, revise CON-05 before dependent implementation. Never silently change those policies.
 
 ## Evidence boundary
 

@@ -12,6 +12,11 @@ it.each(Object.entries(errorCopy))("maps %s to safe field copy", (code, message)
 });
 it.each([
   ["conflict", "rejected"],
+  ["publication_conflict", "rejected"],
+  ["idempotency_conflict", "rejected"],
+  ["revision_conflict", "rejected"],
+  ["precondition_required", "rejected"],
+  ["payload_too_large", "rejected"],
   ["validation_failed", "rejected"],
   ["rate_limited", "retry"],
   ["token_invalid", "sign-in"],

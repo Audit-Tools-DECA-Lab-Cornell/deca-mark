@@ -19,6 +19,22 @@ const { failedChange: failedFormChange } = await load("features/forms/result.ts"
 
 const envelope = (code, message = "server text", details = {}) => ({ error: { code, message, details } });
 
+test("zone refusals preserve safe copy and require attention", () => {
+	for (const code of [
+		"publication_conflict",
+		"idempotency_conflict",
+		"revision_conflict",
+		"precondition_required",
+		"payload_too_large"
+	]) {
+		const error = parseApiError(409, envelope(code, "private geometry"));
+		assert.equal(error.kind, "rejected");
+		assert.equal(error.code, code);
+		assert.equal(error.message, errorCopy[code]);
+		assert.equal(error.detail, undefined);
+	}
+});
+
 test("410 is an expired invitation, with or without an envelope", () => {
 	for (const body of [envelope("invitation_expired"), "<html>Gone</html>"]) {
 		const error = parseApiError(410, body);

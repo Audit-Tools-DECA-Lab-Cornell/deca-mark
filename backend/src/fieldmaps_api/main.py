@@ -21,7 +21,8 @@ from fieldmaps_api.observability import (
     configure_observability,
     log_startup_failure,
 )
-from fieldmaps_api.routers import collection, forms, identity, sites, tenancy
+from fieldmaps_api.routers import collection, forms, identity, sites, tenancy, zones
+from fieldmaps_api.services.zones import ZoneWork
 
 
 class HealthResponse(BaseModel):
@@ -87,7 +88,7 @@ def create_app(
             allow_origins=configuration.allowed_origins,
             allow_origin_regex=configuration.browser_origin_pattern,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-            allow_headers=["authorization", "content-type", "x-request-id"],
+            allow_headers=["authorization", "content-type", "x-request-id", "if-match"],
             expose_headers=["etag", "Retry-After", "X-Request-Id"],
             max_age=600,
         )
@@ -110,7 +111,20 @@ def create_app(
     app.include_router(tenancy.create_router(sessions, authenticate))
     app.include_router(identity.create_router(sessions, authenticate, configuration))
     app.include_router(collection.create_router(sessions, authenticate))
-    app.include_router(sites.create_router(sessions, authenticate))
+    zone_work = ZoneWork()
+    app.include_router(
+        sites.create_router(
+            sessions,
+            authenticate,
+            zone_enabled=configuration.zone_publication_enabled,
+            work=zone_work,
+        )
+    )
+    app.include_router(
+        zones.create_router(
+            sessions, authenticate, enabled=configuration.zone_publication_enabled, work=zone_work
+        )
+    )
     app.include_router(forms.create_router(sessions, authenticate))
     return app
 

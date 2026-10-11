@@ -12,7 +12,7 @@ from fieldmaps_api.auth import JwksVerifier
 from fieldmaps_api.config import Settings
 from fieldmaps_api.errors import ErrorEnvelope
 from fieldmaps_api.main import create_app
-from tests.local_database import admin_sql, database_url
+from tests.local_database import admin_sql, database_url, password_file
 from tests.signing import ISSUER, Signer
 
 
@@ -35,8 +35,7 @@ def deletion_user() -> Iterator[UUID]:
 def deletion_client(signer: Signer, deletion_user: UUID) -> Iterator[TestClient]:
     settings = Settings(
         database_url=database_url(),
-        database_password_file=Path(__file__).resolve().parents[2]
-        / "database/.local/fieldmaps-api-password",
+        database_password_file=password_file(),
         issuer=HttpUrl(ISSUER),
         jwks_url=HttpUrl(f"{ISSUER}/.well-known/jwks.json"),
         auth_admin_key_file=Path("/sb_secret_synthetic-test-value"),

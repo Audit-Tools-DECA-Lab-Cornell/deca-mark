@@ -15,13 +15,13 @@ const base = {
   slug: "fieldmaps-mobile",
   version: "0.2.0",
   // DECA Mark links first; fieldmaps:// links from before the rename still open the app.
-  scheme: ["decamark", "fieldmaps"],
+  scheme: ["DECAMark", "decamark", "fieldmaps"],
   orientation: "default",
   userInterfaceStyle: "automatic",
   icon: "./assets/icon.png",
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.decalab.fieldmaps",
+    bundleIdentifier: "com.fieldmaps.collector.dev",
     requireFullScreen: true,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,

@@ -1,0 +1,513 @@
+{
+  "contract_version": 1,
+  "synthetic": true,
+  "scenarios": [
+    {
+      "id": "create_and_retry",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000007",
+        "role": "manager"
+      },
+      "steps": [
+        {
+          "action": "create",
+          "request_id": "create-1",
+          "base": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 201,
+            "draft": "d1",
+            "revision": 1
+          }
+        },
+        {
+          "action": "create",
+          "request_id": "create-1",
+          "base": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 200,
+            "draft": "d1",
+            "revision": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "two_saves",
+      "given": {
+        "draft": "d1",
+        "revision": 1
+      },
+      "steps": [
+        {
+          "action": "replace",
+          "if_match": "\"zone-draft:d1:1\"",
+          "zones": [
+            "square"
+          ],
+          "expected": {
+            "status": 200,
+            "revision": 2
+          }
+        },
+        {
+          "action": "replace",
+          "if_match": "\"zone-draft:d1:1\"",
+          "zones": [
+            "adjacent"
+          ],
+          "expected": {
+            "status": 412,
+            "code": "revision_conflict",
+            "revision": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "two_publications",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000007",
+        "drafts": [
+          "d1",
+          "d2"
+        ]
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "draft": "d1",
+          "request_id": "pub-1",
+          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 201,
+            "package": "20000000-0000-4000-8000-000000000008",
+            "current": "20000000-0000-4000-8000-000000000008"
+          }
+        },
+        {
+          "action": "publish",
+          "draft": "d2",
+          "request_id": "pub-2",
+          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 409,
+            "code": "publication_conflict",
+            "current": "20000000-0000-4000-8000-000000000008"
+          }
+        }
+      ]
+    },
+    {
+      "id": "old_replay_after_newer_publish",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000009",
+        "completed_request": "pub-1",
+        "completed_result": "20000000-0000-4000-8000-000000000008",
+        "original_request": {
+          "draft": "d1",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected_current": "20000000-0000-4000-8000-000000000007"
+        }
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "draft": "d1",
+          "request_id": "pub-1",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 200,
+            "package": "20000000-0000-4000-8000-000000000008",
+            "current": "20000000-0000-4000-8000-000000000009",
+            "new_versions": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "request_id_content_conflict",
+      "given": {
+        "completed_request": "pub-1"
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "request_id": "pub-1",
+          "changed_content": true,
+          "expected": {
+            "status": 409,
+            "code": "idempotency_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing_precondition",
+      "given": {
+        "revision": 1
+      },
+      "steps": [
+        {
+          "action": "replace",
+          "expected": {
+            "status": 428,
+            "code": "precondition_required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing_expected_current",
+      "given": {
+        "revision": 1
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "if_match": "\"zone-draft:d1:1\"",
+          "request_id": "pub-1",
+          "expected": {
+            "status": 428,
+            "code": "precondition_required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "draft_changes_after_validate",
+      "given": {
+        "revision": 1,
+        "validated_revision": 1
+      },
+      "steps": [
+        {
+          "action": "replace",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected": {
+            "status": 200,
+            "revision": 2
+          }
+        },
+        {
+          "action": "publish",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 412,
+            "code": "revision_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "archive_prepare_failure",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000007"
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "failure": "before_commit",
+          "expected": {
+            "status": 503,
+            "code": "storage_unavailable",
+            "current": "20000000-0000-4000-8000-000000000007",
+            "visible_partial_package": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "observer_denied",
+      "given": {
+        "role": "observer"
+      },
+      "steps": [
+        {
+          "action": "create",
+          "expected": {
+            "status": 403,
+            "code": "role_required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "inherited_admin",
+      "given": {
+        "role": "organization_admin",
+        "project_membership": false
+      },
+      "steps": [
+        {
+          "action": "create",
+          "expected": {
+            "status": 201
+          }
+        }
+      ]
+    },
+    {
+      "id": "cross_tenant_draft",
+      "given": {
+        "draft_authorized": false
+      },
+      "steps": [
+        {
+          "action": "get",
+          "expected": {
+            "status": 404,
+            "code": "not_found"
+          }
+        }
+      ]
+    },
+    {
+      "id": "managed_legacy_import",
+      "given": {
+        "managed": true,
+        "current": "20000000-0000-4000-8000-000000000008"
+      },
+      "steps": [
+        {
+          "action": "legacy_package_post",
+          "expected": {
+            "status": 428,
+            "code": "precondition_required",
+            "current": "20000000-0000-4000-8000-000000000008"
+          }
+        }
+      ]
+    },
+    {
+      "id": "adoption_only_on_publish",
+      "given": {
+        "managed": false,
+        "current": "20000000-0000-4000-8000-000000000007"
+      },
+      "steps": [
+        {
+          "action": "create",
+          "expected": {
+            "status": 201,
+            "managed": false
+          }
+        },
+        {
+          "action": "publish",
+          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 201,
+            "current": "20000000-0000-4000-8000-000000000008",
+            "legacy_package": "20000000-0000-4000-8000-000000000007",
+            "managed": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "rename_and_remove",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000007",
+        "historic_zone": "30000000-0000-4000-8000-000000000001",
+        "historic_label": "North"
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "rename": {
+            "zone_id": "30000000-0000-4000-8000-000000000001",
+            "label": "Meadow"
+          },
+          "omit_zone": "30000000-0000-4000-8000-000000000002",
+          "expected": {
+            "status": 201,
+            "historic_label": "North",
+            "historic_zone_readable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "code_reassignment",
+      "given": {
+        "known_zone_id": "30000000-0000-4000-8000-000000000001",
+        "known_code": "A"
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "zone_id": "30000000-0000-4000-8000-000000000001",
+          "zone_code": "B",
+          "expected": {
+            "status": 422,
+            "code": "validation_failed",
+            "issue": "identity_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "topology_save_publish",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000007"
+      },
+      "steps": [
+        {
+          "action": "replace",
+          "zones": [
+            "bow_tie"
+          ],
+          "expected": {
+            "status": 200
+          }
+        },
+        {
+          "action": "validate",
+          "expected": {
+            "status": 200,
+            "ready": false,
+            "issue": "self_intersection"
+          }
+        },
+        {
+          "action": "publish",
+          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected": {
+            "status": 422,
+            "code": "validation_failed",
+            "issue": "self_intersection",
+            "current": "20000000-0000-4000-8000-000000000007"
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty_draft",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000007"
+      },
+      "steps": [
+        {
+          "action": "replace",
+          "zones": [],
+          "expected": {
+            "status": 200
+          }
+        },
+        {
+          "action": "publish",
+          "expected": {
+            "status": 422,
+            "code": "validation_failed",
+            "issue": "empty_zone_set"
+          }
+        }
+      ]
+    },
+    {
+      "id": "published_draft_discard",
+      "given": {
+        "draft_state": "published"
+      },
+      "steps": [
+        {
+          "action": "discard",
+          "expected": {
+            "status": 409,
+            "code": "conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "late_snapshot_append",
+      "given": {
+        "package_finalized": true
+      },
+      "steps": [
+        {
+          "action": "restricted_sql_insert_zone",
+          "expected": {
+            "allowed": false,
+            "existing_snapshots_unchanged": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "adoption_inventory_selected",
+      "given": {
+        "base_format": 1,
+        "form_authorized": true,
+        "form_state": "published"
+      },
+      "steps": [
+        {
+          "action": "create",
+          "inventory_form_version": "janet-inventory-v1",
+          "expected": {
+            "status": 201,
+            "inventory_binding": "janet-inventory-v1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "adoption_inventory_unavailable",
+      "given": {
+        "base_format": 1
+      },
+      "steps": [
+        {
+          "action": "create",
+          "expected": {
+            "status": 201,
+            "inventory_binding": null,
+            "choose_latest_inventory": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "existing_bound_form_override",
+      "given": {
+        "base_format": 2,
+        "inventory_binding": "janet-inventory-v1"
+      },
+      "steps": [
+        {
+          "action": "create",
+          "inventory_form_version": "other-v1",
+          "expected": {
+            "status": 422,
+            "code": "validation_failed",
+            "issue": "form_not_in_package"
+          }
+        }
+      ]
+    },
+    {
+      "id": "adoption_legacy_mapping_note",
+      "given": {
+        "base_format": 1,
+        "legacy_codes": [
+          "A"
+        ],
+        "change_note": ""
+      },
+      "steps": [
+        {
+          "action": "publish",
+          "expected": {
+            "status": 422,
+            "code": "validation_failed",
+            "issue": "legacy_mapping_required",
+            "legacy_rows_unchanged": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -113,9 +113,39 @@ Local Supabase Auth may use HTTP only on literal `localhost`, `127.0.0.1` or `[:
 
 ## Contract and guarantees
 
+### Zone drafts and versioned packages
+
+BE-18 implements manager draft create/list/get/replace/validate/discard/publish under
+`/v1/projects/{project_id}/sites/{site_id}/zone-drafts` (UUID site IDs), historical
+`/zones?package_id=…`, and `/v2/projects/{project_id}/sites`. The existing site detail
+route still takes a site code. See [the zone handoff](ZONE-BOUNDARIES.md) and
+[frozen contract](../docs/plan/zone-boundaries/contract.md) for bodies and preconditions.
+
+`zone_publication_enabled` defaults to `false`; capability discovery returns editing
+unavailable until this explicit runtime gate is enabled. Client retention and historical
+display acceptance must precede enabling it outside the disposable test harness. Exact
+successful retries remain readable when the gate is subsequently disabled. V1 discovery
+continues selecting the frozen format-1 package after adoption. Updated clients request
+`supported_format=1&supported_format=2` for package lists. Managed imports require explicit
+current-package, request ID and exact string identity mapping and use the same database finalizer as drafts. A managed successor import selects its published play `form_version`; `inventory_form_version` omission inherits, null disables and a published code replaces inventory. Retire a bound form only after replacing it in all current managed packages; old packages retain their historical bindings.
+
+Draft replacement bodies have a 4 MiB streamed limit and refuse unsupported content encoding.
+Validation permits 30 requests/minute per verified user; publication and package submission
+share 10 requests/minute. These token buckets and the two-worker geometry/archive capacity
+are per process. Zone work has a 45-second deadline; SQL statements have 20 seconds and locks
+3 seconds. Archive subprocesses have a 30-second deadline with cancellation and, on Linux,
+20-second CPU, 1 GiB address-space and 16 MiB output-file ceilings. Temporary work occurs
+outside publication row locks. Overload/timeouts leave drafts and current packages intact.
+Access logs add static operation IDs and safe zone/archive counts without geometry or answers.
+
+Run `pnpm backend:test ZONE_API_REHEARSAL=1` for a fresh disposable PostgreSQL/PostGIS
+API rehearsal without using local database password files. BE-19 v2 observation uploads
+and BE-20 filtered reads/exports remain separate tasks; publication alone does not establish
+historical observation attribution, device retention or release readiness.
+
 Requests have an `X-Request-Id`, echoed in responses. Access logs contain that identifier, response status and elapsed time, never request bodies, tokens or answers. `SENTRY_DSN` optionally enables sanitized API error events; no DSN is needed locally. Database errors are mapped by SQLSTATE: permission and validation failures retain their proper status, transient failures return 503, and unexpected errors return a sanitized 500.
 
-Bodies are limited before JSON parsing: package submissions have 24 MiB, sync uploads 4 MiB, and other requests 256 KiB. Oversized streams return 413 even if the Content-Length header is absent or incorrect. Per-user token buckets allow five organization creations/hour, 60 invitation creations/hour, ten combined invitation previews/redemptions per ten minutes, and three account-deletion requests/hour. Exhaustion returns `429 rate_limited` with `Retry-After`. These limits are in memory per API process, suitable for the single-instance pilot; multiple workers or replicas require shared limit storage. Restarting the process resets its buckets. The deletion policy applies to `DELETE /v1/me`.
+Bodies are limited before JSON parsing: package submissions have 24 MiB, sync uploads and zone draft replacements 4 MiB, and other requests 256 KiB. Oversized streams return 413 even if the Content-Length header is absent or incorrect. Per-user token buckets allow five organization creations/hour, 60 invitation creations/hour, ten combined invitation previews/redemptions per ten minutes, and three account-deletion requests/hour. Exhaustion returns `429 rate_limited` with `Retry-After`. These limits are in memory per API process, suitable for the single-instance pilot; multiple workers or replicas require shared limit storage. Restarting the process resets its buckets. The deletion policy applies to `DELETE /v1/me`.
 
 The app factory in `main.py` includes identity, tenancy, collection and site routers. Routers keep authenticated transactions open around services; they complete the transaction before returning a response. `deps.py` sets the caller's database identity for each transaction. Services own validation, preparation and conflict decisions; repositories perform typed SQL access through matching `queries/` modules. Pure form and map-package logic lives under `domain/`.
 

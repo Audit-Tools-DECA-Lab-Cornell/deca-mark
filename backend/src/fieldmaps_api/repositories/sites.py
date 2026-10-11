@@ -76,10 +76,10 @@ async def insert_package(session: AsyncSession, package: PackageWrite) -> None:
 
 
 async def list_packages(
-    session: AsyncSession, project_id: UUID, site_code: str | None
+    session: AsyncSession, project_id: UUID, site_code: str | None, formats: tuple[int, ...] = (1,)
 ) -> list[PackageSummary]:
     result: Result[tuple[str]] = await session.execute(
-        queries.PACKAGES, {"project": project_id, "site": site_code}
+        queries.PACKAGES, {"project": project_id, "site": site_code, "formats": list(formats)}
     )
     return [PackageSummary.model_validate_json(row) for row in result.scalars()]
 

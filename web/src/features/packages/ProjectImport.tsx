@@ -80,7 +80,9 @@ export function ProjectImport({
 			</Field>
 			{files.length > 0 && (
 				<div className="flex flex-wrap items-center gap-3">
-					<p className="min-w-0 flex-1 type-small wrap-break-word">{files.map(file => file.name).join(", ")}</p>
+					<p className="min-w-0 flex-1 type-small wrap-break-word">
+						{files.map(file => file.name).join(", ")}
+					</p>
 					<Button
 						variant="outline"
 						size="sm"

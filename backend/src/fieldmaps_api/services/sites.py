@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,6 +56,10 @@ async def prepare_package(
         checks=prepared.checks,
     )
     try:
+        await session.execute(
+            text("SELECT fieldmaps_private.lock_legacy_package_site(:project,:site)"),
+            {"project": project_id, "site": target.site_id},
+        )
         await sites.insert_package(session, package)
     except IntegrityError as error:
         message = "Another package was prepared for this site; try again"
@@ -63,10 +68,10 @@ async def prepare_package(
 
 
 async def list_packages(
-    session: AsyncSession, project_id: UUID, site_code: str | None
+    session: AsyncSession, project_id: UUID, site_code: str | None, formats: tuple[int, ...] = (1,)
 ) -> list[PackageSummary]:
     await project(session, project_id)
-    return await sites.list_packages(session, project_id, site_code)
+    return await sites.list_packages(session, project_id, site_code, formats)
 
 
 async def get_package(session: AsyncSession, project_id: UUID, package_id: UUID) -> PackageDetail:

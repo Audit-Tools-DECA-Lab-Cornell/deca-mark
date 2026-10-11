@@ -2,7 +2,6 @@
 
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from threading import Barrier
 from uuid import UUID
 
@@ -18,14 +17,13 @@ from fieldmaps_api.config import Settings
 from fieldmaps_api.database import database_connection
 from fieldmaps_api.form_schemas import FormVersionDetail
 from fieldmaps_api.repositories import forms, sites
-from tests.local_database import admin_sql, database_url
+from tests.local_database import admin_sql, database_url, password_file
 from tests.signing import Signer
 from tests.tenant_fixtures import Tenant, cleanup_tenant, create_tenant, sign_in
 from tests.test_site_packages import submission
 from tests.test_workspace_api import inventory, start_inventory
 
 pytestmark = pytest.mark.integration
-PASSWORD_FILE = Path(__file__).resolve().parents[2] / "database/.local/fieldmaps-api-password"
 
 
 @pytest.fixture
@@ -62,7 +60,7 @@ def test_a_changed_draft_cannot_be_reported_as_saved_or_discarded(
         connection = database_connection(
             Settings(
                 database_url=database_url(),
-                database_password_file=PASSWORD_FILE,
+                database_password_file=password_file(),
             )
         )
         engine = create_async_engine(connection.url, poolclass=NullPool)

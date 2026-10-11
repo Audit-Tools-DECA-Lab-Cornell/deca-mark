@@ -20,6 +20,19 @@ Local confirmation and recovery templates in `supabase/templates/` display six-d
 
 `pnpm db:test` runs the SQL suite and `hosted/verify.sql` on the local database. Fixtures and temporary role grants roll back. API tests use generated UUIDs and the restricted runtime login; their committed observations/packages remain until an explicit local reset. No integration test silently skips when the stack is unavailable.
 
+For the DB-15/DB-16 migration and publication rehearsal, run `pnpm db:test ZONE_REHEARSAL=1`.
+It creates an isolated PostgreSQL 17/PostGIS container using the cached Supabase Postgres
+image, applies the canonical baseline, inserts synthetic legacy points/inventories,
+blocked packages and duplicate codes across sites, then applies the forward migration.
+It compares every original observation/package field and archive byte, runs the SQL,
+Auth-hook role and verification-script suites, and removes only its own test container.
+It also compares coordinate serialization and geometry checksums with Node 24, exercises
+publication/CAS/import races in separate restricted-role sessions with observed lock
+barriers, and rechecks historical rows after those committed synthetic operations.
+No ports, existing volumes, passwords or hosted services are used. The small Auth-user
+table supplies SQL identity fixtures; this rehearsal does not exercise the Auth HTTP
+service or replace the full Supabase/API integration gates.
+
 The separate Auth-hook suite connects through Docker as local `supabase_admin`, then switches to the actual restricted Auth role for behavioral checks. Supabase reserves that role, so the ordinary `postgres` test connection cannot grant itself membership. Application SQL tests and the hosted verification script still run as `postgres`.
 
 ## Schema and access
@@ -44,6 +57,20 @@ Profile initialization now enrolls active users in the separate Training project
 The Before User Created hook blocks disposable email domains at signup. Only Supabase Auth can invoke it or read its RLS-protected blocklist; browser and application roles have no access. The hook uses a pinned community list with no network request during signup. See [the email policy](Blocked-Email-Domains.md) for source attribution, updates and hosted activation boundaries.
 
 ## Verification
+
+Zone API acceptance can run independently of the persistent local Supabase stack:
+
+```sh
+pnpm backend:test ZONE_API_REHEARSAL=1
+pnpm db:test ZONE_REHEARSAL=1
+```
+
+Each command creates its own disposable PostgreSQL 17/PostGIS container from the cached
+Supabase image, applies canonical migrations and synthetic fixtures, and stops only its
+own container on exit. It does not reset existing databases or read their password files.
+The API harness publishes only an ephemeral loopback port, checks paired local database
+overrides, and exercises application SQL as the restricted `fieldmaps_api` role. Auth
+tables/signing keys are synthetic; these rehearsals do not exercise the hosted Auth service.
 
 Verified locally on 2026-10-03: all 131 backend tests, the application SQL suite, Auth-hook suite and hosted verification script run against local Supabase pass. The project-list checks now initialize the profile and assert both the study and automatic Training membership, so prior identity test runs cannot invalidate the expected project list. Ruff and BasedPyright pass. Docker Desktop started normally when launched outside the restricted shell; no reinstall, database reset or hosted operation was required.
 

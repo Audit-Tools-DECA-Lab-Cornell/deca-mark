@@ -10,6 +10,30 @@ The current observation hash is `sha256(payload.model_dump_json(exclude_unset=Tr
 
 ## BE-18: authoring and publication
 
+Implementation handoff (2026-10-11): focused `zone_*_schemas.py`, `routers/zones.py`,
+`services/{zones,zone_publication,zone_discovery,zone_archives}.py`, `repositories/zones.py`
+and `queries/zones.py` implement the frozen authoring contract. Format-2 archive building
+lives in `domain/zone_*`; format-1 generation remains unchanged. The forward migration
+`20261011124000_zone_api_validation.sql` adds restricted manager validation/capability
+wrappers over the DB-16 helpers; every activation calls the existing database finalizer.
+
+Publication defaults off through `zone_publication_enabled`. Tests enable it only on
+disposable databases. Exact retries reauthorize and return the original committed result
+before checking mutable state or the operational gate. Archive subprocess preparation
+finishes before the final transaction rechecks revision/current package and commits. V1
+site/package discovery stays on the frozen legacy version; v2 exposes UUIDs, current
+package and capability metadata. Existing web/mobile error adapters recognize the additive
+codes; the clients still use v1 discovery until their own dependency tasks are complete.
+
+Reproduce acceptance with `pnpm backend:test ZONE_API_REHEARSAL=1` and
+`pnpm db:test ZONE_REHEARSAL=1`, both against newly created disposable containers. The
+loopback HTTP driver uses signed JWTs and the restricted API role. It covers authoring,
+publication, history, old late uploads and competing managers. Strict bound v2 uploads
+and complete filtered read/export acceptance belong to BE-19/BE-20. The client-parity
+test runtime-parses actual v1 site/archive bodies with the existing mobile Zod schemas
+and web archive reader, and parses v2/history bodies with the new response models. Full device/browser/QGIS
+release acceptance remains QA-07; no hosted migration or publication gate was enabled.
+
 Create focused zone request/response schemas and a zone service/repository module rather than enlarging collection code with editor state. Expose draft create/list/get/replace/validate/discard/publish and historical zones exactly as CON-05 freezes. Every read/write checks project/site and role before expensive geometry work. Draft mutation preconditions are database compare-and-swap; reading a revision then writing without a condition is insufficient.
 
 Build one canonical geometry validation path backed by PostGIS. Python validates input structure and resource limits; PostGIS evaluates geometry validity/topology/coverage. Return precise safe issues by zone UUID and geometry path. Offline/browser preview validators provide immediate help but are never authoritative. Do not add Shapely solely to duplicate PostGIS unless a measured offline preprocessing requirement justifies it and parity tests exist.
@@ -55,3 +79,7 @@ Add shared-case tests in Python for structure/geometry outcomes, real local Post
 Run `pnpm backend:check`, targeted backend tests, then `pnpm backend:test` and `pnpm db:test` when required local infrastructure is available. Coordinator runs `pnpm contracts:generate`; both clients compile and runtime-parse examples. A live local HTTP driver must exercise create → edit → validate → publish → historical upload → filtered read/export. Mocked service tests alone do not establish completion.
 
 Backend schema and capability must ship before clients enable v2. Publication remains gated until client retention and historical display are accepted. Do not remove v2 support on operational rollback once a device can hold unsent v2 records. Explicit approval is required for hosted migrations/deployments. No claim of a device or production test follows from local API checks.
+
+### Audit corrections (2026-10-11)
+
+Managed successor imports explicitly select the published play code with `form_version` and may set `inventory_form_version`: omitted inherits, null disables, a published same-project code replaces. Draft edits still inherit exact bindings. Return actionable 409 when retirement would strand a current managed package; historical packages remain readable after retirement. Preserve omitted-versus-null semantics in normalized import requests and reauthorize exact replays. Finalization uses account → organization → site → draft/forms locks with fresh authorization after waits; archive work stays outside finalization. Managed discovery uses stored geometry metadata, and legacy capability caching never caches authorization, form state or the runtime gate.

@@ -1,6 +1,5 @@
 from collections.abc import Iterator
 from io import BytesIO
-from pathlib import Path
 from urllib.request import OpenerDirector, Request
 
 import anyio
@@ -17,7 +16,7 @@ from fieldmaps_api.auth import JwksVerifier
 from fieldmaps_api.config import Settings
 from fieldmaps_api.database import database_connection
 from fieldmaps_api.main import create_app
-from tests.local_database import database_url
+from tests.local_database import database_url, password_file
 from tests.signing import ISSUER, Signer
 
 pytestmark = pytest.mark.integration
@@ -28,8 +27,7 @@ def fault_client(signer: Signer) -> Iterator[TestClient]:
     settings = Settings.model_validate(
         {
             "database_url": database_url(),
-            "database_password_file": Path(__file__).resolve().parents[2]
-            / "database/.local/fieldmaps-api-password",
+            "database_password_file": password_file(),
             "issuer": ISSUER,
             "jwks_url": f"{ISSUER}/.well-known/jwks.json",
         }

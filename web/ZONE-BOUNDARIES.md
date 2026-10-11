@@ -1,6 +1,6 @@
 # Web handoff: manager zone boundaries
 
-[Master plan](../docs/plan/zone-boundaries/README.md) · [API contract](../docs/plan/zone-boundaries/contract.md) · Tasks WEB-28/WEB-29 in [PLAN.md](PLAN.md). Claude owns detailed frontend planning and implementation choices; backend semantics are shared contracts.
+[Master plan](../docs/plan/zone-boundaries/README.md) · [API contract](../docs/plan/zone-boundaries/contract.md) · [Detailed UI plan](ZONE-BOUNDARIES-UI.md) · Tasks WEB-28 to WEB-42 in [PLAN.md](PLAN.md). Claude owns detailed frontend planning and implementation choices; backend semantics are shared contracts. The detailed interface, state architecture, task split and verification live in [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md).
 
 ## Inspect before designing
 

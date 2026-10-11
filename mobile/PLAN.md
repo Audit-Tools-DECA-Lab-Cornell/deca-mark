@@ -610,7 +610,7 @@ Done when: no hex literal remains outside `src/ui/tokens.ts`; all tests pass.
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (airplane mode shows the offline states, haptics only when the switch is on, the gallery in both themes).
 
 ### MOB-28: Retain exact offline package versions safely
-Status: todo · Phase 3 · Size L · Depends: CON-05 · Blocks: MOB-29
+Status: todo · Phase 3 · Size L · Depends: CON-05 · Blocks: MOB-29, MOB-30, MOB-31, MOB-32
 Owner: Mobile data agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Migrate local context/protocol, add catalog/reference retention and atomic verified installation, fence async account work and remove bound-draft zone fallback.
@@ -618,9 +618,33 @@ Done when: Upgrade with unsent v1 rows preserves all payloads/receipts; restart/
 Verify: pnpm mobile:check, mobile:test and real SQLite/filesystem restart/failure drivers.
 
 ### MOB-29: Collect and upload pinned zone observations
-Status: todo · Phase 3 · Size L · Depends: MOB-28, BE-19 · Blocks: QA-07
+Status: todo · Phase 3 · Size L · Depends: MOB-28, BE-19, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
 Owner: Mobile data agent with Claude UI owner.
-Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
-Do: Freeze session forms/package/zone, apply geometry parity and v2 upload/receipt validation; coordinate update/recovery screens.
+Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 4.5, 6, 7 and 9.
+Do: Freeze session forms/package/zone, apply geometry parity (reusing MOB-31's `coveringZones`) and v2 upload/receipt validation; store structured rejection codes for the needs-attention copy in UI plan 4.5; run the physical-device scenario.
 Done when: Physical-device draft survives newer publication and restart, uploads with original attribution; inventory is whole-zone.
 Verify: Mobile checks/tests and physical-device acceptance matrix; missing evidence remains pending.
+
+### MOB-30: Show map versions, updates and safe removal
+Status: todo · Phase 3 · Size L · Depends: MOB-28 · Blocks: MOB-29
+Owner: Claude mobile UI owner.
+Read first: [UI plan](ZONE-BOUNDARIES-UI.md) MUI-1, MUI-2, MUI-5, MUI-6, MUI-8, MUI-10, 4.1 to 4.3 and 6; `app/(app)/(tabs)/(projects)/**`; `src/features/projects/*`; `src/features/preview/hosted-sites.ts`.
+Do: Drive readiness and labels from MOB-28's verified catalog; show available versus installed versions, update Notes, per-part download progress, older maps with reference-checked removal, last check and "Check for updates"; open the newest verified installed package for a session; reset visible state on account change.
+Done when: With v7 installed and v8 published, every screen in UI plan 4.1 to 4.3 shows the documented state in device mode; removing a referenced map is refused with its reason.
+Verify: `pnpm mobile:check`, `pnpm mobile:test` (label and state mapping tests), simulator screenshots of each state.
+
+### MOB-31: Make placement boundary-aware
+Status: todo · Phase 3 · Size L · Depends: MOB-28 · Blocks: MOB-29
+Owner: Claude mobile UI owner; the mobile data agent reviews geometry parity.
+Read first: [UI plan](ZONE-BOUNDARIES-UI.md) MUI-3, MUI-4, MUI-5, MUI-9 and 4.4; [contract](../docs/plan/zone-boundaries/contract.md) "Point attribution"; `src/maps/geometry.ts`; `src/features/collect/*`; `contracts/zones/geometry.cases.json` (`coverage_cases`).
+Do: Add `coveringZones` and `nearEdge` with a Vitest adapter over every coverage case; replace the PlaceStep readout with the five placement states, the edge choice and the disabled reasons on bound maps; add the ReviewStep save re-check, inventory tap candidates, the spotlight hole fix, and version labels in the collect header and Saved card.
+Done when: Every coverage case passes as an unordered set; each placement state renders in component tests; legacy maps keep advisory behaviour.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator walkthrough of the five states on phone and tablet with VoiceOver.
+
+### MOB-32: Resume exact drafts and explain recovery
+Status: todo · Phase 3 · Size M · Depends: MOB-28 · Blocks: MOB-29
+Owner: Claude mobile UI owner.
+Read first: [UI plan](ZONE-BOUNDARIES-UI.md) MUI-7, 4.3 and 4.6; `src/features/projects/UnfinishedCard.tsx`; `app/(app)/(tabs)/(projects)/[project]/[site]/brief.tsx`.
+Do: Render every unfinished-observation status with its actions, block "Start collection" while an unfinished observation would be overwritten, and add the field guide sections on map versions, zone edges and outside-zone points.
+Done when: Each status in UI plan MUI-7 renders with its actions in component tests; no path substitutes a zone or a newer map.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator check of a resume after force quit and of a missing-map recovery.

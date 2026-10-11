@@ -1,6 +1,5 @@
 from collections.abc import Iterator
 from hashlib import sha256
-from pathlib import Path
 from uuid import UUID, uuid4
 
 import anyio
@@ -12,10 +11,9 @@ from sqlalchemy.pool import NullPool
 
 from fieldmaps_api.config import Settings
 from fieldmaps_api.database import database_connection
-from tests.local_database import admin_sql, database_url
+from tests.local_database import admin_sql, database_url, password_file
 
 pytestmark = pytest.mark.integration
-PASSWORD_FILE = Path(__file__).resolve().parents[2] / "database/.local/fieldmaps-api-password"
 
 
 @pytest.fixture
@@ -67,7 +65,7 @@ async def act_together(first: UUID, second: UUID, statement: str, target: str) -
     connection = database_connection(
         Settings(
             database_url=database_url(),
-            database_password_file=PASSWORD_FILE,
+            database_password_file=password_file(),
         )
     )
     engine = create_async_engine(connection.url, poolclass=NullPool)

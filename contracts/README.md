@@ -10,6 +10,7 @@ Language-neutral JSON shared by the independently managed mobile, web and API ap
 | `contour.json` | Hand-authored Contour design tokens: the Day (default) and Dusk colours, with the Dusk values the design left out derived and listed under `derived`; the contrast pairs; fonts; the type, spacing, layout, radius, size and motion scales; and the state vocabulary (kind × state → label, Lucide icon and tone). Edit the JSON, then run `pnpm tokens`. Map colours do not belong here. | `scripts/contour-tokens.mjs` generates `web/src/styles/contour.css` (checked in, never edited by hand); web code reads the state vocabulary and motion through `web/src/lib/contour.ts`; the collector reads the file in `mobile/src/ui/tokens.ts` |
 | `map-palettes.json` | Hand-authored cartography for every map canvas: `day` (default) and `night`, with identical keys. The app chrome follows Contour's own Day or Dusk theme; only the map changes palette, and UI state colours never appear on it. | Mobile field map (MapLibre) and web observation and package-preview maps (Leaflet) |
 | `openapi.json` | Generated from FastAPI with `make -C backend openapi`; never edit by hand. | Separate generated TypeScript declarations in web and mobile |
+| `zones/*.cases.json` | Authored synthetic geometry, publication, upload and fingerprint expectations. Never regenerate expectations from implementation. See [zone contracts](zones/README.md). | Backend input tests now; DB/API/mobile integration adapters as their owning zone tasks land |
 
 ## Generate and verify
 

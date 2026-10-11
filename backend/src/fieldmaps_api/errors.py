@@ -1,3 +1,4 @@
+import re
 from http import HTTPStatus
 from typing import ClassVar, Final, Literal
 from uuid import uuid4
@@ -6,12 +7,13 @@ import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, TypeAdapter, ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as FrameworkError
 
 from fieldmaps_api.database_errors import database_error
 from fieldmaps_api.observability import REQUEST_ID
+from fieldmaps_api.zone_error_details import SafeZoneIssue
 
 type ErrorCode = Literal[
     "bad_request",
@@ -33,6 +35,11 @@ type ErrorCode = Literal[
     "rate_limited",
     "internal",
     "storage_unavailable",
+    "publication_conflict",
+    "idempotency_conflict",
+    "revision_conflict",
+    "precondition_required",
+    "payload_too_large",
 ]
 
 
@@ -116,13 +123,58 @@ class ValidationIssue(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
     loc: tuple[str | int, ...]
     msg: str
+    type: str = ""
 
 
 VALIDATION_ISSUES: Final = TypeAdapter(list[ValidationIssue])
 ERROR_RESPONSES: Final[dict[int | str, dict[str, type[BaseModel] | str]]] = {
     status: {"model": ErrorEnvelope}
-    for status in (400, 401, 403, 404, 405, 409, 410, 413, 422, 429, 500, 503)
+    for status in (400, 401, 403, 404, 405, 409, 410, 412, 413, 422, 428, 429, 500, 503)
 }
+
+
+def zone_request(path: str) -> bool:
+    return (
+        re.fullmatch(
+            r"/v1/projects/[^/]+/sites/[^/]+/zone-drafts(?:/[^/]+(?:/(?:validate|publish))?)?",
+            path.rstrip("/"),
+        )
+        is not None
+    )
+
+
+def zone_validation_failure(error: RequestValidationError, path: str) -> DomainError:
+    issues = VALIDATION_ISSUES.validate_python(error.errors())
+    if path.rstrip("/").endswith("/publish") and any(
+        issue.loc == ("body", "expected_current_package_id") and issue.type == "missing"
+        for issue in issues
+    ):
+        return DomainError("precondition_required", "The expected current package is required", 428)
+    safe_issues: list[JsonValue] = []
+    for issue in issues[:1_000]:
+        parts = (
+            [part for part in issue.loc[1:] if part not in {"Polygon", "MultiPolygon"}]
+            if issue.loc and issue.loc[0] == "body" and issue.type != "json_invalid"
+            else []
+        )
+        pointer = "".join("/" + str(part).replace("~", "~0").replace("/", "~1") for part in parts)
+        code = "invalid_structure"
+        if "distinct within a draft" in issue.msg:
+            code = "duplicate_zone_id" if "UUID" in issue.msg else "duplicate_code"
+        elif "positions" in issue.msg or (
+            issue.type == "too_long" and ("zones" in parts or "coordinates" in parts)
+        ):
+            code = "too_complex"
+        try:
+            safe_issue = SafeZoneIssue.model_validate({"code": code, "path": pointer})
+        except ValidationError:
+            safe_issue = SafeZoneIssue(code="invalid_structure")
+        safe_issues.append(safe_issue.safe_value())
+    return DomainError(
+        "validation_failed", "Request validation failed", 422, {"issues": safe_issues}
+    )
+
+
 HTTP_CODES: Final[dict[int, ErrorCode]] = {
     400: "bad_request",
     401: "unauthenticated",
@@ -144,26 +196,20 @@ async def error_response(request: Request, error: Exception) -> JSONResponse:
         case DomainError():
             failure = error
         case RequestValidationError():
-            issues = VALIDATION_ISSUES.validate_python(error.errors())
-            fields: list[JsonValue] = [
-                {
-                    "id": ".".join(str(part) for part in issue.loc[1:]) or "body",
-                    "problem": issue.msg,
-                }
-                for issue in issues
-            ]
-            failure = DomainError(
-                "validation_failed", "Request validation failed", 422, {"fields": fields}
-            )
+            if zone_request(request.url.path):
+                failure = zone_validation_failure(error, request.url.path)
+            else:
+                failure = ordinary_validation_failure(error)
         case SQLAlchemyError():
             mapped = database_error(error)
             failure = (
                 ValidationFailedError(mapped.message)
-                if mapped.status == HTTPStatus.UNPROCESSABLE_ENTITY
+                if mapped.status == HTTPStatus.UNPROCESSABLE_ENTITY and not mapped.details
                 else DomainError(
                     TypeAdapter[ErrorCode](ErrorCode).validate_python(mapped.code),
                     mapped.message,
                     mapped.status,
+                    mapped.details,
                 )
             )
         case FrameworkError():
@@ -180,6 +226,27 @@ async def error_response(request: Request, error: Exception) -> JSONResponse:
             )
         case _:
             failure = DomainError("internal", "Internal server error", 500)
+    return render_error_response(request, error, failure, headers)
+
+
+def ordinary_validation_failure(error: RequestValidationError) -> DomainError:
+    issues = VALIDATION_ISSUES.validate_python(error.errors())
+    fields: list[JsonValue] = [
+        {
+            "id": ".".join(str(part) for part in issue.loc[1:]) or "body",
+            "problem": issue.msg,
+        }
+        for issue in issues
+    ]
+    return DomainError("validation_failed", "Request validation failed", 422, {"fields": fields})
+
+
+def render_error_response(
+    request: Request,
+    error: Exception,
+    failure: DomainError,
+    headers: dict[str, str],
+) -> JSONResponse:
     headers.update(failure.headers)
     headers["X-Request-Id"] = TypeAdapter(str).validate_python(
         request.scope.get("fieldmaps_request_id", REQUEST_ID.get() or uuid4().hex)

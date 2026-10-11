@@ -1,6 +1,6 @@
 # Mobile plan: retain the boundaries used in the field
 
-[Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · Tasks MOB-28/MOB-29 in [PLAN.md](PLAN.md). Claude owns detailed screen/interaction planning; this document defines mandatory data behavior and test obligations.
+[Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Detailed UI plan](ZONE-BOUNDARIES-UI.md) · Tasks MOB-28 to MOB-32 in [PLAN.md](PLAN.md). Claude owns detailed screen/interaction planning ([ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md), which also lists the read models the UI needs from this plan); this document defines mandatory data behavior and test obligations.
 
 ## Current foundations and risks
 

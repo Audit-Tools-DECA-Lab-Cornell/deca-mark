@@ -20,13 +20,13 @@ backend-check:
 	cd backend && uv run --frozen basedpyright
 
 backend-test:
-	sh database/local-supabase.sh api-test
+	@if [ "$(ZONE_API_REHEARSAL)" = 1 ]; then sh database/zone-api-rehearsal.sh; else sh database/local-supabase.sh api-test; fi
 
 db-up:
 	sh database/local-supabase.sh start
 
 db-test:
-	sh database/local-supabase.sh test
+	@if [ "$(ZONE_REHEARSAL)" = 1 ]; then sh database/zone-rehearsal.sh; else sh database/local-supabase.sh test; fi
 
 api-hosted-up:
 	$(HOSTED_COMPOSE) up -d --build

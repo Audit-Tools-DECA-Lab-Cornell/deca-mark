@@ -16,6 +16,15 @@ export const errorCopy = {
   method_not_allowed: "This action is not supported by the server. Update the app.",
   invitation_invalid: "This invitation is not valid. Ask for a new invitation.",
   conflict: "A different upload already uses this record ID. Your local record is preserved.",
+  publication_conflict:
+    "The current map package changed. Refresh the project. Your local record is preserved.",
+  idempotency_conflict:
+    "This request differs from an earlier change. Your local record is preserved.",
+  revision_conflict: "This draft changed. Refresh the project. Your local record is preserved.",
+  precondition_required:
+    "Refresh the project before trying this action again. Your local record is preserved.",
+  payload_too_large:
+    "This upload is too large. Contact the project manager. Your local record is preserved.",
   sole_owner: "Assign another owner before leaving or removing this owner.",
   invitation_expired: "This invitation has expired. Ask for a new invitation.",
   archive_unavailable: "This map package is unavailable. Ask the manager to prepare it again.",
@@ -89,6 +98,11 @@ export function parseApiError(status: number, body: unknown): ApiError {
     case "method_not_allowed":
     case "invitation_invalid":
     case "conflict":
+    case "publication_conflict":
+    case "idempotency_conflict":
+    case "revision_conflict":
+    case "precondition_required":
+    case "payload_too_large":
     case "sole_owner":
     case "invitation_expired":
     case "archive_unavailable":

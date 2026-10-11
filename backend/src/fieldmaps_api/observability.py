@@ -13,6 +13,8 @@ from sentry_sdk.types import Event, Hint
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from fieldmaps_api.zone_diagnostics import metadata
+
 REQUEST_ID: Final = ContextVar("request_id", default="")
 LOGGER: Final = logging.getLogger("fieldmaps.requests")
 VALID_ID: Final = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
@@ -138,6 +140,7 @@ class RequestIdMiddleware:
                             "request_id": request_id,
                             "status": message["status"],
                             "duration_ms": round((monotonic() - started) * 1000),
+                            **metadata(scope),
                         }
                     ).decode()
                 )

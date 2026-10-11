@@ -23,6 +23,12 @@ export const errorCopy = {
 	invitation_invalid:
 		"This invitation cannot be used. It may have been revoked or used up, or you may already be a member. Ask for a new one.",
 	conflict: "Someone else changed this at the same time. Reload the page to see the latest, then try again.",
+	publication_conflict:
+		"The current map package changed. Your draft is preserved. Reload the site before publishing.",
+	idempotency_conflict: "This request differs from an earlier change. Reload the page to check what was saved.",
+	revision_conflict: "Someone else changed this draft. Reload it before saving again.",
+	precondition_required: "Nothing was saved. Reload the site to get the current map package and draft.",
+	payload_too_large: "Nothing was saved. The file is too large. Reduce its size and try again.",
 	sole_owner: "Give another person this role first. An organization needs an owner and a project needs a manager.",
 	invitation_expired: "This invitation has expired. Ask your project manager for a new one.",
 	archive_unavailable: "This map package is unavailable. Ask the project manager to prepare it again.",
@@ -167,6 +173,11 @@ export function parseApiError(status: number, body: unknown, headers?: HeaderSou
 		case "method_not_allowed":
 		case "invitation_invalid":
 		case "conflict":
+		case "publication_conflict":
+		case "idempotency_conflict":
+		case "revision_conflict":
+		case "precondition_required":
+		case "payload_too_large":
 		case "sole_owner":
 		case "invitation_expired":
 		case "archive_unavailable":

@@ -266,7 +266,8 @@ Done when:
 Verify: unit tests in both apps for three codes each.
 
 ### CON-05: Freeze zone contracts and shared cases
-Status: todo · Phase 3 · Size M · Depends: CON-03 · Blocks: DB-15, MOB-28
+Status: done (2026-10-10) · Phase 3 · Size M · Depends: CON-03 · Blocks: DB-15, MOB-28, WEB-30, WEB-31
+Verified: Frozen identity/code/extent/normalization rules, exact draft preconditions and response shapes, format-2 manifests/capabilities, adoption inventory selection and legacy-code mapping note, v2 inputs/receipts/reads/errors and RFC 8785 fingerprint specification. Three authored synthetic case files cover geometry, publication, historical uploads, read semantics and four shipped v1 hash goldens. Reusable backend geometry/draft/upload input models exercise the structural contract with 102 tests. Full backend non-integration suite: 315 passed, 99 integration tests excluded; Ruff, BasedPyright and the programming audit passed. OpenAPI and both client declarations regenerated twice through the existing exporter/generators with Node 24; hashes stayed identical to the starting artifacts. Node 24 ran the plan-check target successfully. Separate specification and code-quality self-reviews passed. SQL topology/concurrency, live routes, device retention, browser and GIS scenarios remain gates of their owning tasks; no hosted changes or commits made.
 Owner: Contract coordinator.
 Read first: [Master plan](zone-boundaries/README.md) and [component specification](zone-boundaries/contract.md).
 Do: Freeze identity/geometry rules, draft preconditions, v2 payloads/reads/errors, capabilities, legacy fingerprints and input limits; author independent geometry/publication/upload cases.

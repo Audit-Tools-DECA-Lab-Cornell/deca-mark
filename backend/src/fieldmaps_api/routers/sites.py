@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Annotated
 from uuid import UUID
 
@@ -5,29 +6,40 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.deps import Authentication, user_transaction
-from fieldmaps_api.domain.packages import PackageSubmission
 from fieldmaps_api.domain.project_import import ProjectImportRequest, ProjectImportResult
 from fieldmaps_api.errors import ERROR_RESPONSES
 from fieldmaps_api.queries import tenancy as tenancy_queries
 from fieldmaps_api.repositories import tenancy as tenancy_db
 from fieldmaps_api.schemas import PackageDetail, PackageSummary
 from fieldmaps_api.services import sites as site_service
+from fieldmaps_api.services import zone_publication
+from fieldmaps_api.services import zones as zone_service
 from fieldmaps_api.services.project_import import import_project
 from fieldmaps_api.services.sites import (
     get_package,
     list_packages,
-    prepare_package,
     read_package_archive,
 )
 from fieldmaps_api.site_schemas import Site, SiteCreate, SitePatch
+from fieldmaps_api.zone_import_schemas import PackageRequest
 
 type SiteCode = Annotated[str, Path(min_length=1, max_length=100)]
 
 
+class SupportedFormat(IntEnum):
+    legacy = 1
+    zones = 2
+
+
 def create_router(
-    sessions: async_sessionmaker[AsyncSession], authenticate: Authentication
+    sessions: async_sessionmaker[AsyncSession],
+    authenticate: Authentication,
+    *,
+    zone_enabled: bool = False,
+    work: zone_service.ZoneWork | None = None,
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
+    work = work or zone_service.ZoneWork()
 
     @router.get("/v1/projects/{project_id}/sites", operation_id="listSites")
     async def site_list(
@@ -84,12 +96,17 @@ def create_router(
     )
     async def prepare(
         project_id: UUID,
-        submission: PackageSubmission,
+        submission: PackageRequest,
+        response: Response,
         user_id: Annotated[UUID, Depends(authenticate)],
     ) -> PackageDetail:
         """Prepare a site package from a QGIS export, and record what every check found."""
-        async with user_transaction(sessions, user_id) as session:
-            return await prepare_package(session, project_id, user_id, submission)
+        async with work.slot():
+            result, status = await zone_publication.prepare_submission(
+                sessions, user_id, project_id, submission, enabled=zone_enabled
+            )
+        response.status_code = status
+        return result
 
     @router.get(
         "/v1/projects/{project_id}/packages",
@@ -99,9 +116,17 @@ def create_router(
         project_id: UUID,
         user_id: Annotated[UUID, Depends(authenticate)],
         site: Annotated[str | None, Query(max_length=100)] = None,
+        supported_format: Annotated[list[SupportedFormat] | None, Query()] = None,
     ) -> list[PackageSummary]:
         async with user_transaction(sessions, user_id) as session:
-            return await list_packages(session, project_id, site)
+            return await list_packages(
+                session,
+                project_id,
+                site,
+                tuple(int(value) for value in supported_format)
+                if supported_format is not None
+                else (1,),
+            )
 
     @router.get(
         "/v1/projects/{project_id}/packages/{package_id}",

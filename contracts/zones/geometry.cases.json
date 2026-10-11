@@ -1,0 +1,1347 @@
+{
+  "contract_version": 1,
+  "synthetic": true,
+  "geometries": {
+    "square": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "adjacent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0.01,
+            0
+          ],
+          [
+            0.02,
+            0
+          ],
+          [
+            0.02,
+            0.01
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0.01,
+            0
+          ]
+        ]
+      ]
+    },
+    "gap_neighbor": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0.02,
+            0
+          ],
+          [
+            0.03,
+            0
+          ],
+          [
+            0.03,
+            0.01
+          ],
+          [
+            0.02,
+            0.01
+          ],
+          [
+            0.02,
+            0
+          ]
+        ]
+      ]
+    },
+    "holed": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0.003,
+            0.003
+          ],
+          [
+            0.003,
+            0.007
+          ],
+          [
+            0.007,
+            0.007
+          ],
+          [
+            0.007,
+            0.003
+          ],
+          [
+            0.003,
+            0.003
+          ]
+        ]
+      ]
+    },
+    "concave": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.003
+          ],
+          [
+            0.003,
+            0.003
+          ],
+          [
+            0.003,
+            0.01
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "contained": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0.001,
+            0.001
+          ],
+          [
+            0.002,
+            0.001
+          ],
+          [
+            0.002,
+            0.002
+          ],
+          [
+            0.001,
+            0.002
+          ],
+          [
+            0.001,
+            0.001
+          ]
+        ]
+      ]
+    },
+    "in_hole": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0.004,
+            0.004
+          ],
+          [
+            0.006,
+            0.004
+          ],
+          [
+            0.006,
+            0.006
+          ],
+          [
+            0.004,
+            0.006
+          ],
+          [
+            0.004,
+            0.004
+          ]
+        ]
+      ]
+    },
+    "crossing": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0.005,
+            0.005
+          ],
+          [
+            0.015,
+            0.005
+          ],
+          [
+            0.015,
+            0.015
+          ],
+          [
+            0.005,
+            0.015
+          ],
+          [
+            0.005,
+            0.005
+          ]
+        ]
+      ]
+    },
+    "vertex_neighbor": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0.02,
+            0.01
+          ],
+          [
+            0.02,
+            0.02
+          ],
+          [
+            0.01,
+            0.02
+          ],
+          [
+            0.01,
+            0.01
+          ]
+        ]
+      ]
+    },
+    "multipart": {
+      "type": "MultiPolygon",
+      "coordinates": [
+        [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0.01,
+              0
+            ],
+            [
+              0.01,
+              0.01
+            ],
+            [
+              0,
+              0.01
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.02,
+              0
+            ],
+            [
+              0.03,
+              0
+            ],
+            [
+              0.03,
+              0.01
+            ],
+            [
+              0.02,
+              0.01
+            ],
+            [
+              0.02,
+              0
+            ]
+          ]
+        ]
+      ]
+    },
+    "bow_tie": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "outside_hole": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0.02,
+            0.02
+          ],
+          [
+            0.02,
+            0.03
+          ],
+          [
+            0.03,
+            0.03
+          ],
+          [
+            0.03,
+            0.02
+          ],
+          [
+            0.02,
+            0.02
+          ]
+        ]
+      ]
+    },
+    "collinear": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.001,
+            0
+          ],
+          [
+            0.002,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "duplicate_vertex": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "reversed": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0.01,
+            0.01
+          ]
+        ]
+      ]
+    },
+    "multipart_overlap": {
+      "type": "MultiPolygon",
+      "coordinates": [
+        [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0.01,
+              0
+            ],
+            [
+              0.01,
+              0.01
+            ],
+            [
+              0,
+              0.01
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.005,
+              0.005
+            ],
+            [
+              0.015,
+              0.005
+            ],
+            [
+              0.015,
+              0.015
+            ],
+            [
+              0.005,
+              0.015
+            ],
+            [
+              0.005,
+              0.005
+            ]
+          ]
+        ]
+      ]
+    },
+    "multipart_shared_edge": {
+      "type": "MultiPolygon",
+      "coordinates": [
+        [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0.01,
+              0
+            ],
+            [
+              0.01,
+              0.01
+            ],
+            [
+              0,
+              0.01
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.01,
+              0
+            ],
+            [
+              0.02,
+              0
+            ],
+            [
+              0.02,
+              0.01
+            ],
+            [
+              0.01,
+              0.01
+            ],
+            [
+              0.01,
+              0
+            ]
+          ]
+        ]
+      ]
+    },
+    "antimeridian": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            179.9,
+            0
+          ],
+          [
+            -179.9,
+            0
+          ],
+          [
+            -179.9,
+            0.1
+          ],
+          [
+            179.9,
+            0.1
+          ],
+          [
+            179.9,
+            0
+          ]
+        ]
+      ]
+    },
+    "polar": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            85.1
+          ],
+          [
+            0.1,
+            85.1
+          ],
+          [
+            0.1,
+            85.2
+          ],
+          [
+            0,
+            85.2
+          ],
+          [
+            0,
+            85.1
+          ]
+        ]
+      ]
+    },
+    "large_extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1.01,
+            0
+          ],
+          [
+            1.01,
+            0.01
+          ],
+          [
+            0,
+            0.01
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "empty": {
+      "type": "Polygon",
+      "coordinates": []
+    },
+    "empty_part": {
+      "type": "MultiPolygon",
+      "coordinates": [
+        []
+      ]
+    },
+    "unclosed": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0,
+            0.01
+          ]
+        ]
+      ]
+    },
+    "short": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "few_distinct": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "z_dimension": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0.01,
+            0,
+            1
+          ],
+          [
+            0.01,
+            0.01,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      ]
+    },
+    "projected": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            500000,
+            4500000
+          ],
+          [
+            500100,
+            4500000
+          ],
+          [
+            500100,
+            4500100
+          ],
+          [
+            500000,
+            4500000
+          ]
+        ]
+      ]
+    },
+    "numeric_string": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            "0",
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            "0",
+            0
+          ]
+        ]
+      ]
+    },
+    "boolean_coordinate": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            true,
+            0
+          ],
+          [
+            0.01,
+            0
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            true,
+            0
+          ]
+        ]
+      ]
+    }
+  },
+  "structure_cases": [
+    {
+      "id": "square",
+      "geometry": "square",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "adjacent",
+      "geometry": "adjacent",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "gap_neighbor",
+      "geometry": "gap_neighbor",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "holed",
+      "geometry": "holed",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "concave",
+      "geometry": "concave",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "contained",
+      "geometry": "contained",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "in_hole",
+      "geometry": "in_hole",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "crossing",
+      "geometry": "crossing",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "vertex_neighbor",
+      "geometry": "vertex_neighbor",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "multipart",
+      "geometry": "multipart",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "bow_tie",
+      "geometry": "bow_tie",
+      "draft_valid": true,
+      "publish_issue": "self_intersection"
+    },
+    {
+      "id": "outside_hole",
+      "geometry": "outside_hole",
+      "draft_valid": true,
+      "publish_issue": "invalid_topology"
+    },
+    {
+      "id": "collinear",
+      "geometry": "collinear",
+      "draft_valid": true,
+      "publish_issue": "zero_area"
+    },
+    {
+      "id": "duplicate_vertex",
+      "geometry": "duplicate_vertex",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "reversed",
+      "geometry": "reversed",
+      "draft_valid": true,
+      "publish_issue": null
+    },
+    {
+      "id": "multipart_overlap",
+      "geometry": "multipart_overlap",
+      "draft_valid": true,
+      "publish_issue": "invalid_topology"
+    },
+    {
+      "id": "multipart_shared_edge",
+      "geometry": "multipart_shared_edge",
+      "draft_valid": true,
+      "publish_issue": "invalid_topology"
+    },
+    {
+      "id": "antimeridian",
+      "geometry": "antimeridian",
+      "draft_valid": true,
+      "publish_issue": "unsupported_extent"
+    },
+    {
+      "id": "polar",
+      "geometry": "polar",
+      "draft_valid": true,
+      "publish_issue": "unsupported_extent"
+    },
+    {
+      "id": "large_extent",
+      "geometry": "large_extent",
+      "draft_valid": true,
+      "publish_issue": "unsupported_extent"
+    },
+    {
+      "id": "empty",
+      "geometry": "empty",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "empty_part",
+      "geometry": "empty_part",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "unclosed",
+      "geometry": "unclosed",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "short",
+      "geometry": "short",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "few_distinct",
+      "geometry": "few_distinct",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "z_dimension",
+      "geometry": "z_dimension",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "projected",
+      "geometry": "projected",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "numeric_string",
+      "geometry": "numeric_string",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    },
+    {
+      "id": "boolean_coordinate",
+      "geometry": "boolean_coordinate",
+      "draft_valid": false,
+      "publish_issue": "invalid_structure"
+    }
+  ],
+  "coverage_cases": [
+    {
+      "id": "inside",
+      "zones": [
+        "square"
+      ],
+      "point": [
+        0.005,
+        0.005
+      ],
+      "covering": [
+        "square"
+      ],
+      "selected": "square",
+      "accepted": true
+    },
+    {
+      "id": "outside",
+      "zones": [
+        "square"
+      ],
+      "point": [
+        0.02,
+        0.005
+      ],
+      "covering": [],
+      "selected": "square",
+      "accepted": false
+    },
+    {
+      "id": "exterior_edge",
+      "zones": [
+        "square"
+      ],
+      "point": [
+        0,
+        0.005
+      ],
+      "covering": [
+        "square"
+      ],
+      "selected": "square",
+      "accepted": true
+    },
+    {
+      "id": "exterior_vertex",
+      "zones": [
+        "square"
+      ],
+      "point": [
+        0,
+        0
+      ],
+      "covering": [
+        "square"
+      ],
+      "selected": "square",
+      "accepted": true
+    },
+    {
+      "id": "shared_edge_left",
+      "zones": [
+        "square",
+        "adjacent"
+      ],
+      "point": [
+        0.01,
+        0.005
+      ],
+      "covering": [
+        "square",
+        "adjacent"
+      ],
+      "selected": "square",
+      "accepted": true
+    },
+    {
+      "id": "shared_edge_right",
+      "zones": [
+        "adjacent",
+        "square"
+      ],
+      "point": [
+        0.01,
+        0.005
+      ],
+      "covering": [
+        "adjacent",
+        "square"
+      ],
+      "selected": "adjacent",
+      "accepted": true
+    },
+    {
+      "id": "near_edge_inside",
+      "zones": [
+        "square"
+      ],
+      "point": [
+        0.009999999999,
+        0.005
+      ],
+      "covering": [
+        "square"
+      ],
+      "selected": "square",
+      "accepted": true
+    },
+    {
+      "id": "near_edge_outside",
+      "zones": [
+        "square"
+      ],
+      "point": [
+        0.010000000001,
+        0.005
+      ],
+      "covering": [],
+      "selected": "square",
+      "accepted": false
+    },
+    {
+      "id": "hole_interior",
+      "zones": [
+        "holed"
+      ],
+      "point": [
+        0.005,
+        0.005
+      ],
+      "covering": [],
+      "selected": "holed",
+      "accepted": false
+    },
+    {
+      "id": "hole_edge",
+      "zones": [
+        "holed"
+      ],
+      "point": [
+        0.003,
+        0.005
+      ],
+      "covering": [
+        "holed"
+      ],
+      "selected": "holed",
+      "accepted": true
+    },
+    {
+      "id": "hole_vertex",
+      "zones": [
+        "holed"
+      ],
+      "point": [
+        0.003,
+        0.003
+      ],
+      "covering": [
+        "holed"
+      ],
+      "selected": "holed",
+      "accepted": true
+    },
+    {
+      "id": "gap",
+      "zones": [
+        "square",
+        "gap_neighbor"
+      ],
+      "point": [
+        0.015,
+        0.005
+      ],
+      "covering": [],
+      "selected": "square",
+      "accepted": false
+    },
+    {
+      "id": "concave_inside",
+      "zones": [
+        "concave"
+      ],
+      "point": [
+        0.002,
+        0.008
+      ],
+      "covering": [
+        "concave"
+      ],
+      "selected": "concave",
+      "accepted": true
+    },
+    {
+      "id": "concave_notch",
+      "zones": [
+        "concave"
+      ],
+      "point": [
+        0.008,
+        0.008
+      ],
+      "covering": [],
+      "selected": "concave",
+      "accepted": false
+    },
+    {
+      "id": "multipart_second_part",
+      "zones": [
+        "multipart"
+      ],
+      "point": [
+        0.025,
+        0.005
+      ],
+      "covering": [
+        "multipart"
+      ],
+      "selected": "multipart",
+      "accepted": true
+    },
+    {
+      "id": "multipart_gap",
+      "zones": [
+        "multipart"
+      ],
+      "point": [
+        0.015,
+        0.005
+      ],
+      "covering": [],
+      "selected": "multipart",
+      "accepted": false
+    }
+  ],
+  "relation_cases": [
+    {
+      "id": "shared_edge",
+      "left": "square",
+      "right": "adjacent",
+      "interior_overlap": false
+    },
+    {
+      "id": "shared_vertex",
+      "left": "square",
+      "right": "vertex_neighbor",
+      "interior_overlap": false
+    },
+    {
+      "id": "ordinary_crossing",
+      "left": "square",
+      "right": "crossing",
+      "interior_overlap": true
+    },
+    {
+      "id": "contained_zone",
+      "left": "square",
+      "right": "contained",
+      "interior_overlap": true
+    },
+    {
+      "id": "identical_zones",
+      "left": "square",
+      "right": "square",
+      "interior_overlap": true
+    }
+  ],
+  "containment_cases": [
+    {
+      "id": "inside_ground",
+      "ground": "square",
+      "zone": "contained",
+      "covered": true
+    },
+    {
+      "id": "outside_actual_ground_inside_bbox",
+      "ground": "concave",
+      "zone": "in_hole",
+      "covered": false
+    },
+    {
+      "id": "zone_inside_site_hole",
+      "ground": "holed",
+      "zone": "in_hole",
+      "covered": false
+    }
+  ],
+  "normalization_cases": [
+    {
+      "id": "winding_and_start_vertex",
+      "inputs": [
+        "square",
+        "reversed"
+      ],
+      "same_canonical_geometry": true,
+      "same_coverage": true
+    }
+  ],
+  "limit_cases": [
+    {
+      "resource": "zones",
+      "maximum": 250,
+      "at_limit": "accept_structure",
+      "one_over": "too_complex"
+    },
+    {
+      "resource": "zone_positions",
+      "maximum": 2000,
+      "at_limit": "accept_structure",
+      "one_over": "too_complex"
+    },
+    {
+      "resource": "package_positions",
+      "maximum": 20000,
+      "at_limit": "accept_structure",
+      "one_over": "too_complex"
+    },
+    {
+      "resource": "draft_bytes",
+      "maximum": 4194304,
+      "at_limit": "accept_body",
+      "one_over": "payload_too_large"
+    }
+  ]
+}

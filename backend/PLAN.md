@@ -398,7 +398,10 @@ Verified by:
 - Ruff and BasedPyright.
 
 ### BE-18: Expose persisted zone drafts and publication
-Status: todo · Phase 3 · Size L · Depends: DB-16 · Blocks: BE-19, WEB-28
+Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: DB-16 · Blocks: BE-19, WEB-28, WEB-35, WEB-36, WEB-42
+Verified: Persisted manager draft lifecycle with strong ETags/CAS, authoritative PostGIS validation, bounded archive subprocesses, shared atomic finalization for draft publication and managed imports, immutable historical-zone reads, v2 capabilities and frozen v1 package discovery. Actual format-2 ZIP geometry/anchors/digests match DB snapshots; retained ground/paths/trees bytes and old archives/observation hashes/receipts stay unchanged. Publication replays return the original result after later publication and reauthorize the caller. The 503-test full backend suite passed against fresh restricted-role PostgreSQL/PostGIS; 14 final focused checks passed after rehearsal isolation guards and both client runtime parsers were tightened. Database rehearsal passed 417 SQL/Auth-hook assertions, six separate-session races and 2,545 Node 24 coordinate comparisons. Ruff/BasedPyright, both client typechecks, 241 web unit tests, 51 mobile compatibility tests, client adapter lint/format checks, stable repeated OpenAPI/type generation, shell syntax and diff checks passed. Live loopback HTTP used signed JWTs and competing managers. Specification/code-quality self-review resolved raw managed geometry preservation, authorization, stale-base/replay order, legacy discovery/import races and hard cancellation. `zone_publication_enabled` remains false in runtime defaults; per-process limits require shared storage before multiple replicas. BE-19 owns strict bound v2 upload/fingerprints/receipts; BE-20 owns complete filtered reads/exports. Hosted migrations, browser/device/QGIS acceptance and publication rollout remain separately gated. No commit, persistent database reset, secret access or deployment.
+Correction acceptance (2026-10-11): F1–F4 of the principal audit now have durable regression coverage: signed HTTP revocation/publication races in both orders, draft-create/publication lock ordering and replay, explicit successor play/inventory bindings and retirement guards, exact string import IDs with unchanged state on refusal, and metadata-only managed discovery plus bounded legacy caching outside transactions. Contract/OpenAPI/client declarations describe the new optional managed-import inventory choice. The final disposable full suite passed 549 tests; Ruff/BasedPyright and both client typechecks passed. Suite and quality evidence are recorded in [the correction report](../docs/reviews/zone-boundaries-2026-10-11/fixes.md). Publication defaults remain disabled; hosted deployment and feature browser/device/QGIS acceptance are separate.
+
 Owner: API agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Implement draft lifecycle, conditional writes, geometry validation, publication, history/capabilities and format-2 archives; unify managed import activation.
@@ -414,7 +417,7 @@ Done when: v7 upload after v8 and old lost-receipt retry pass; cross-site and pr
 Verify: Backend checks and local API/SQL tests with old/new payloads.
 
 ### BE-20: Add historical-zone queries and complete exports
-Status: todo · Phase 3 · Size L · Depends: BE-19 · Blocks: QA-07, WEB-29
+Status: todo · Phase 3 · Size L · Depends: BE-19 · Blocks: QA-07, WEB-29, WEB-39
 Owner: API read agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Implement v2 list/detail/cursor, common server filters, summary and consistent bounded exports.
