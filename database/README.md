@@ -54,6 +54,28 @@ Profile initialization now enrolls active users in the separate Training project
 
 `gis.sample_observations` remains a fixed practice-project view, read-only to `fieldmaps_sample_reader`. Its readback tests exercise PostgreSQL, not QGIS Desktop.
 
+GIS-09 adds five read-only companion views: `gis.recorded_observations`, `gis.point_events`,
+`gis.zone_snapshots`, `gis.inventory_records` and `gis.legacy_records`. They use the existing
+`fieldmaps_api` caller identity and underlying RLS; existing GIS reader accounts receive no new
+grants. Exact package+zone joins preserve historical labels and polygons. Inventory records
+remain separate from point-event counts, and unversioned Inventory polygons remain null.
+The full projection and QGIS/export workflow are documented in
+[qgis/ZONE-BOUNDARIES.md](../qgis/ZONE-BOUNDARIES.md). General scoped GIS login provisioning
+remains GIS-01/GIS-02.
+
+Run the disposable SQL rehearsal above and the signed HTTP/SQL/export agreement fixture:
+
+```sh
+sh database/gis09-api-rehearsal.sh -q
+```
+
+The API fixture requires the guarded disposable database, publishes synthetic v7/v8 packages,
+uploads a delayed v7 event after v8, compares restricted GIS reads with complete API exports,
+and saves synthetic CSV/GeoJSON ZIPs plus the expected IDs/counts in `/tmp/gis09-exports`.
+The SQL rehearsal also verifies that the legacy GIS view definition, feature columns and ACLs
+are unchanged and that Training snapshot reads cannot expose another creator's activity.
+These checks do not apply hosted migrations or provision a QGIS database reader.
+
 The Before User Created hook blocks disposable email domains at signup. Only Supabase Auth can invoke it or read its RLS-protected blocklist; browser and application roles have no access. The hook uses a pinned community list with no network request during signup. See [the email policy](Blocked-Email-Domains.md) for source attribution, updates and hosted activation boundaries.
 
 ## Verification
@@ -85,3 +107,7 @@ The SQL tests cover geometry, immutable forms, replay ledger, restricted GIS rea
 DB-03 retired the historical Docker migration track after [all five CI jobs passed](https://github.com/Audit-Tools-DECA-Lab-Cornell/Field-Maps/actions/runs/36273492260). See [the canonical-migrations decision](../docs/decisions/0001-canonical-migrations.md).
 
 Hosted migration application remains a separate operation. `hosted/verify.sql` now requires the DB-04 through DB-08 migrations and checks their security boundary; applying files locally does not deploy them or enable a hosted Auth hook.
+
+### Mobile package acceptance
+
+`sh database/mobile-package-rehearsal.sh -q -s` uses Node 24, pnpm and a disposable local PostGIS/API fixture. The earlier format-2 pipeline passed before the single-contract rewrite. The current mobile reader accepts only the new zone-aware format-1 archive on `/v1`; this actual API gate requires DB-19 and BE-22 and must be rerun after those land. No hosted configuration is used. Old-schema queue migration acceptance is omitted under the [pre-launch reset policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11).

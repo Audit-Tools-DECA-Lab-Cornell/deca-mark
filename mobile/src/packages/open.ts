@@ -1,7 +1,7 @@
 import { formFor } from "../forms/registry";
 import { bundledPackage, bundledPackages } from "./bundled";
+import { readStoredPackage, verifiedIdentity } from "./hosted/access";
 import { hostedSitePackage } from "./hosted/build";
-import { readStoredPackage } from "./hosted/device";
 import { storedForms } from "./hosted/prepare";
 import type { SitePackage } from "./site-package";
 
@@ -16,7 +16,7 @@ export async function openSitePackage(id: string): Promise<SitePackage | undefin
   const stored = readStoredPackage(id);
   if (!stored) return undefined;
   try {
-    return hostedSitePackage(stored, storedForms(stored));
+    return hostedSitePackage(stored, storedForms(stored), verifiedIdentity(id));
   } catch {
     // A stored form this version of the app cannot read: the site is not ready, rather than broken.
     return undefined;

@@ -1,40 +1,21 @@
 import { z } from "zod";
+import { coordinateSchema } from "../../domain/observation";
+import {
+  boundFormsSchema,
+  boundManifestSchema,
+  boundZoneSchema,
+  sha256Schema,
+} from "./bound-manifest";
 
-/**
- * What the DECA Mark API says about a project's sites, forms and packages, and what this device keeps of
- * them. Every body is parsed here before use, as the identity client does: a server answer is never
- * trusted unread.
- */
-
-const finite = z.number().finite();
-const position = z.tuple([finite, finite]);
-
-/** A zone as the site's current package draws it: its id, its name and its box. */
-export const manifestZoneSchema = z.object({
-  id: z.string().min(1),
-  label: z.string().min(1),
-  west: finite,
-  south: finite,
-  east: finite,
-  north: finite,
-});
-export type ManifestZone = z.infer<typeof manifestZoneSchema>;
-
-export const extentSchema = z.object({ west: finite, south: finite, east: finite, north: finite });
-
-/** `manifest.json` inside a package archive (`backend/src/fieldmaps_api/domain/packages.py`). */
-export const manifestSchema = z.object({
-  format: z.number().int().min(1),
-  site_code: z.string().min(1),
-  form_version: z.string().min(1),
-  extent: extentSchema,
-  centre: position,
-  zones: z.array(manifestZoneSchema).min(1),
-});
+export const manifestSchema = boundManifestSchema;
 export type Manifest = z.infer<typeof manifestSchema>;
-
+export const extentSchema = z.strictObject({
+  west: z.number().finite(),
+  south: z.number().finite(),
+  east: z.number().finite(),
+  north: z.number().finite(),
+});
 const geometrySchema = z.object({ type: z.string().min(1), coordinates: z.unknown() });
-
 export const featureCollectionSchema = z.object({
   type: z.literal("FeatureCollection"),
   features: z.array(
@@ -46,8 +27,6 @@ export const featureCollectionSchema = z.object({
   ),
 });
 export type LayerData = z.infer<typeof featureCollectionSchema>;
-
-/** The layers an archive may carry. Ground and zones are required by the API before it prepares one. */
 export const layersSchema = z.object({
   ground: featureCollectionSchema,
   zones: featureCollectionSchema,
@@ -55,32 +34,47 @@ export const layersSchema = z.object({
   trees: featureCollectionSchema.optional(),
 });
 export type PackageLayers = z.infer<typeof layersSchema>;
-
-/** `GET /v1/projects/{project}/sites`: one site and its current package, if it has one. */
-export const siteSchema = z.object({
+export const packageSummarySchema = z.strictObject({
+  package_id: z.uuid(),
   site_id: z.uuid(),
-  code: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string().nullable(),
-  package: z
-    .object({
-      package_id: z.uuid(),
-      version: z.number().int().min(1),
-      form_version: z.string().nullable(),
-      archive_bytes: z.number().int().min(0),
-      archive_sha256: z.string().regex(/^[a-f0-9]{64}$/),
-      prepared_at: z.string(),
-    })
-    .nullable(),
-  zones: z.array(manifestZoneSchema),
-  observation_count: z.number().int().min(0),
+  package_version: z.number().int().positive(),
+  state: z.enum(["ready", "blocked"]),
+  prepared_at: z.iso.datetime({ offset: true }),
+  archive_bytes: z.number().int().nonnegative(),
+  archive_sha256: sha256Schema,
+  forms: boundFormsSchema,
+  zone_count: z.number().int().nonnegative().max(250),
+  change_note: z.string(),
+  published_by: z.uuid().nullable(),
+  source: z.enum(["upload", "draft"]),
 });
+export const siteSchema = z
+  .strictObject({
+    site_id: z.uuid(),
+    code: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().nullable(),
+    created_at: z.iso.datetime({ offset: true }),
+    observation_count: z.number().int().nonnegative(),
+    current_package_id: z.uuid().nullable(),
+    package: packageSummarySchema.nullable(),
+    zones: z.array(boundZoneSchema),
+    extent: extentSchema.nullable(),
+    centre: coordinateSchema.nullable(),
+    zone_editing_available: z.boolean(),
+  })
+  .refine(
+    (site) =>
+      site.current_package_id === (site.package?.package_id ?? null) &&
+      (!site.package ||
+        (site.package.site_id === site.site_id &&
+          site.package.state === "ready" &&
+          site.package.zone_count === site.zones.length)),
+    "Current package identity is inconsistent",
+  );
 export type HostedSite = z.infer<typeof siteSchema>;
 export const sitesSchema = z.array(siteSchema);
-
 const versionStateSchema = z.enum(["draft", "published", "retired"]);
-
-/** `GET /v1/projects/{project}/forms`: members see published and retired versions only. */
 export const formSummarySchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
@@ -90,37 +84,40 @@ export const formSummarySchema = z.object({
 });
 export const formSummariesSchema = z.array(formSummarySchema);
 export type FormSummary = z.infer<typeof formSummarySchema>;
-
-/** `GET /v1/projects/{project}/form-versions/{code}`: the definition itself. */
 export const formVersionSchema = z.object({
   code: z.string().min(1),
   state: versionStateSchema,
   form_code: z.string().min(1),
+  version_id: z.uuid(),
   definition: z.record(z.string(), z.unknown()),
 });
 export type FormVersion = z.infer<typeof formVersionSchema>;
-
-/**
- * What this device keeps of a downloaded site: the archive's manifest and layers, the forms it is
- * collected with, and which project and site they belong to. The definitions are kept as the server sent
- * them and parsed again on every open, so a form the parser would refuse never reaches the field.
- */
-export const storedPackageSchema = z.object({
-  format: z.literal(1),
+export const storedPackageSchema = z.strictObject({
   projectId: z.uuid(),
   siteId: z.uuid(),
   siteCode: z.string().min(1),
   siteName: z.string().min(1),
   packageId: z.uuid(),
-  packageVersion: z.number().int().min(1),
-  archiveBytes: z.number().int().min(0),
-  archiveSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  packageVersion: z.number().int().positive(),
+  archiveBytes: z.number().int().nonnegative(),
+  archiveSha256: sha256Schema,
   savedAt: z.iso.datetime(),
   manifest: manifestSchema,
   layers: layersSchema,
-  forms: z.object({
+  forms: z.strictObject({
     play: z.record(z.string(), z.unknown()),
     inventory: z.record(z.string(), z.unknown()).nullable(),
   }),
 });
 export type StoredPackage = z.infer<typeof storedPackageSchema>;
+export const packageDetailSchema = packageSummarySchema
+  .extend({ manifest: manifestSchema })
+  .refine(
+    (detail) =>
+      detail.manifest.package_id === detail.package_id &&
+      detail.manifest.site_id === detail.site_id &&
+      detail.manifest.package_version === detail.package_version &&
+      JSON.stringify(detail.forms) === JSON.stringify(detail.manifest.forms),
+    "Package detail identity is inconsistent",
+  );
+export type PackageDetail = z.infer<typeof packageDetailSchema>;

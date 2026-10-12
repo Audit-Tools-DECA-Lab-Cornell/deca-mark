@@ -1,0 +1,12 @@
+{
+  "total_matching": 5,
+  "point_event_count": 3,
+  "inventory_record_count": 2,
+  "inventory_polygon_count": 1,
+  "legacy_record_count": 2,
+  "historical_snapshot_count": 2,
+  "inventory_event_geometry": "null",
+  "snapshot_join": "package_id + zone_id",
+  "source": "authorized BE-20 export; no database credentials",
+  "csv_geojson_scope_and_identity_agree": true
+}

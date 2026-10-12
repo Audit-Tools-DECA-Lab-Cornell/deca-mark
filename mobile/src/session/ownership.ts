@@ -1,3 +1,4 @@
+import type { PackageBinding } from "../domain/package-binding";
 /**
  * An observation belongs to the account and the site package that started it.
  *
@@ -8,6 +9,7 @@
  */
 
 export type ObservationIdentity = {
+  readonly binding?: PackageBinding;
   readonly id: string;
   readonly startedAt: string;
   /** The account scope key in force when the observation was started. */
@@ -48,4 +50,44 @@ export function recoveryProblem(draftOwner: string, account: string): string | n
   if (draftOwner !== account)
     return "That draft belongs to a different account. Sign back into the account that started it to resume it.";
   return null;
+}
+
+export function validateRecoveredPackage(
+  draft: {
+    readonly packageId: string;
+    readonly siteId: string;
+    readonly formVersion: string;
+    readonly context: {
+      readonly packageVersion: string;
+      readonly zoneId: string;
+      readonly roundType: string;
+    };
+    readonly binding?: { readonly packageSha256: string; readonly zoneId: string } | undefined;
+  },
+  opened: {
+    readonly id: string;
+    readonly siteId: string;
+    readonly version: string;
+    readonly formVersion: string;
+    readonly inventoryFormVersion: string;
+    readonly packageIdentity?: { readonly packageSha256: string };
+    readonly zones: readonly {
+      readonly id: string;
+      readonly zoneId?: string;
+      readonly label: string;
+    }[];
+  },
+): "package_missing" | "zone_missing" | "form_missing" | null {
+  if (
+    opened.id !== draft.packageId ||
+    opened.siteId !== draft.siteId ||
+    opened.version !== draft.context.packageVersion ||
+    (draft.binding && opened.packageIdentity?.packageSha256 !== draft.binding.packageSha256)
+  )
+    return "package_missing";
+  const zone = opened.zones.find((entry) => entry.id === draft.context.zoneId);
+  if (!zone || (draft.binding && zone.zoneId !== draft.binding.zoneId)) return "zone_missing";
+  const form =
+    draft.context.roundType === "inventory" ? opened.inventoryFormVersion : opened.formVersion;
+  return form === draft.formVersion ? null : "form_missing";
 }

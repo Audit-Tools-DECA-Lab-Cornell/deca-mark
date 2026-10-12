@@ -398,7 +398,7 @@ Verified by:
 - Ruff and BasedPyright.
 
 ### BE-18: Expose persisted zone drafts and publication
-Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: DB-16 · Blocks: BE-19, MOB-33, WEB-28, WEB-35, WEB-36, WEB-42
+Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: DB-16 · Blocks: BE-19
 Verified: Persisted manager draft lifecycle with strong ETags/CAS, authoritative PostGIS validation, bounded archive subprocesses, shared atomic finalization for draft publication and managed imports, immutable historical-zone reads, v2 capabilities and frozen v1 package discovery. Actual format-2 ZIP geometry/anchors/digests match DB snapshots; retained ground/paths/trees bytes and old archives/observation hashes/receipts stay unchanged. Publication replays return the original result after later publication and reauthorize the caller. The 503-test full backend suite passed against fresh restricted-role PostgreSQL/PostGIS; 14 final focused checks passed after rehearsal isolation guards and both client runtime parsers were tightened. Database rehearsal passed 417 SQL/Auth-hook assertions, six separate-session races and 2,545 Node 24 coordinate comparisons. Ruff/BasedPyright, both client typechecks, 241 web unit tests, 51 mobile compatibility tests, client adapter lint/format checks, stable repeated OpenAPI/type generation, shell syntax and diff checks passed. Live loopback HTTP used signed JWTs and competing managers. Specification/code-quality self-review resolved raw managed geometry preservation, authorization, stale-base/replay order, legacy discovery/import races and hard cancellation. `zone_publication_enabled` remains false in runtime defaults; per-process limits require shared storage before multiple replicas. BE-19 owns strict bound v2 upload/fingerprints/receipts; BE-20 owns complete filtered reads/exports. Hosted migrations, browser/device/QGIS acceptance and publication rollout remain separately gated. No commit, persistent database reset, secret access or deployment.
 Correction acceptance (2026-10-11): F1–F4 of the principal audit now have durable regression coverage: signed HTTP revocation/publication races in both orders, draft-create/publication lock ordering and replay, explicit successor play/inventory bindings and retirement guards, exact string import IDs with unchanged state on refusal, and metadata-only managed discovery plus bounded legacy caching outside transactions. Contract/OpenAPI/client declarations describe the new optional managed-import inventory choice. The final disposable full suite passed 549 tests; Ruff/BasedPyright and both client typechecks passed. Suite and quality evidence are recorded in [the correction report](../docs/reviews/zone-boundaries-2026-10-11/fixes.md). Publication defaults remain disabled; hosted deployment and feature browser/device/QGIS acceptance are separate.
 
@@ -409,7 +409,7 @@ Done when: Live local HTTP workflow persists and publishes; conflicts/replays pr
 Verify: pnpm backend:check and backend:test; contract coordinator regenerates OpenAPI/types.
 
 ### BE-19: Bind new uploads to historical zone packages
-Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: BE-18 · Blocks: BE-20, GIS-09, MOB-29
+Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: BE-18 · Blocks: BE-20, GIS-09
 Owner: API agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Implement strict v2 upload, package/zone/form checks, point coverage, inventory semantics and bound receipts; preserve v1.
@@ -418,7 +418,7 @@ Verify: Backend checks and local API/SQL tests with old/new payloads.
 Verified: Strict v2 uploads bind the exact historical package/zone/form, use frozen RFC 8785 fingerprints before answer pruning and return receipts after commit. Superseded packages, retired frozen forms and archived projects accept authorized late work; point coverage and Inventory anchors remain server-authoritative. V1 hashes and lost-receipt replays remain unchanged, including pre-adoption records. Both protocols reject owner/project/protocol/content collisions and recheck authorization under account/organization locks. Disposable full backend rehearsal passed 604 tests; 15 affected API/live-HTTP tests passed after the final nullable legacy-package readiness correction. SQL rehearsal passed 425 assertions, 2,545 coordinate comparisons and six publication races. Ruff/BasedPyright, both client typechecks, stable contract regeneration, specification review and code-quality review passed. [Acceptance evidence](../docs/reviews/zone-boundaries-2026-10-11/be19.md) records the boundaries. Hosted rollout, device retention and browser/QGIS acceptance remain separate; publication defaults off. BE-20 is now unblocked for historical reads and complete exports.
 
 ### BE-20: Add historical-zone queries and complete exports
-Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: BE-19 · Blocks: DB-18, QA-07, WEB-29, WEB-39
+Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: BE-19 · Blocks: QA-07
 Owner: API read agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Implement v2 list/detail/cursor, common server filters, summary and consistent bounded exports.
@@ -437,3 +437,11 @@ Do:
 4. Run `pnpm contracts:generate`.
 
 Done when: `pnpm backend:check` and `pnpm backend:test` pass against a local stack carrying DB-17, and `grep -rni fieldmaps backend` finds only history.
+
+### BE-22: Serve one zone API path
+Status: todo · Phase 3 · Size L · Depends: CON-06, DB-19 · Blocks: DB-18, MOB-29, MOB-33, WEB-28, WEB-29, WEB-35, WEB-36, WEB-39, WEB-42
+Owner: API agent; the contract coordinator regenerates types.
+Read first: [contract](../docs/plan/zone-boundaries/contract.md) (whole document); [pre-launch policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11); `backend/src/fieldmaps_api/routers/{sites,collection,zones,observation_analysis}.py`.
+Do: Move the `/v2` behaviour onto the `/v1` paths and delete the old `/v1` site-list, observation-upload and observation-list behaviour, `LEGACY_SELECTION`, format-1 preparation and `supported_format`, unmanaged uploads, the adoption bootstrap, `assignment_basis` and legacy filters, the v1 fingerprint and `schema_version`, and `zone_publication_enabled`. Address sites by UUID on every route. Add the contract's new fields: draft `etag`, `current_package_version` and display names; validation `geometry_sha256` and `change`; publication `current_package_id` and `replayed`; package list `site_id` filter and publication metadata; `GET /sites/{site_id}`; first-upload identity mapping with `expected_current_package_id: null`. Rename the zone `DraftCreate` models so OpenAPI names do not collide. Delete tests that assert removed behaviour.
+Done when: OpenAPI has no `/v2` path; the live local workflow (upload v1, edit, publish v2, bound upload, filtered read and export) passes against the DB-19 baseline; `pnpm contracts:generate` is stable on a second run.
+Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm db:test`, and the coordinator's regeneration.

@@ -3,72 +3,91 @@ import { Directory, File, Paths } from "expo-file-system";
 import type { z } from "zod";
 import type { ApiClient } from "../../data/api/client";
 import { hex } from "./archive";
+import type { ImmutablePackageFiles } from "./installation";
 import type { PackageSource } from "./prepare";
-import { type HostedSite, type StoredPackage, sitesSchema, storedPackageSchema } from "./schemas";
+import { type HostedSite, sitesSchema } from "./schemas";
 
-/**
- * Hosted sites on this device: the JSON files that keep a project's site list and each downloaded
- * package, beside the other on-device JSON (`accounts/…/me.json`, `preferences/orientation.json`).
- *
- * A site list belongs to the account that read it, so another account on the same phone never sees
- * it. A package is named by its id and never changes once prepared (the API keeps them immutable), so
- * one copy serves every account that may open it; whether an account may is the site list's question.
- */
+export { hasStoredPackage, readStoredPackage } from "./access";
 
 const ROOT = "hosted";
-
 function directory(...names: string[]): Directory {
   const dir = new Directory(Paths.document, ROOT, ...names);
   dir.create({ intermediates: true, idempotent: true });
   return dir;
 }
-
-function packageFile(packageId: string): File {
-  return new File(directory("packages"), `${packageId}.json`);
+function contentFile(path: string): File {
+  const segments = path.split("/");
+  if (segments.some((part) => part === ".." || part === "." || part === ""))
+    throw new TypeError("Invalid package content path");
+  const name = segments.pop();
+  if (!name) throw new TypeError("Missing package content name");
+  return new File(directory("verified", ...segments), name);
 }
-
-function sitesFile(userId: string, projectId: string): File {
-  return new File(directory("accounts", userId), `sites-${projectId}.json`);
+export const devicePackageFiles: ImmutablePackageFiles = {
+  read(path) {
+    const file = contentFile(path);
+    return file.exists ? file.textSync() : null;
+  },
+  stage(path, text) {
+    contentFile(path).write(text);
+  },
+  publish(staged, destination) {
+    contentFile(staged).moveSync(contentFile(destination), { overwrite: false });
+  },
+  discard(path) {
+    const file = contentFile(path);
+    if (file.exists) file.delete();
+  },
+  staged() {
+    return directory("verified", "staged")
+      .list()
+      .filter((entry) => entry instanceof File)
+      .map((entry) => `staged/${entry.name}`);
+  },
+};
+export const deviceSha256 = async (bytes: Uint8Array) =>
+  hex(await digest(CryptoDigestAlgorithm.SHA256, new Uint8Array(bytes)));
+function sitesFile(issuer: string, userId: string, projectId: string): File {
+  return new File(
+    directory("accounts", encodeURIComponent(issuer), userId),
+    `sites-${projectId}.json`,
+  );
 }
-
 function readJson<T>(file: File, schema: z.ZodType<T>): T | null {
   try {
     if (!file.exists) return null;
     const parsed = schema.safeParse(JSON.parse(file.textSync()));
     return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof Error) return null;
+    throw error;
   }
 }
-
-export function readStoredPackage(packageId: string): StoredPackage | null {
-  return readJson(packageFile(packageId), storedPackageSchema);
+export function readSiteList(
+  issuer: string,
+  userId: string,
+  projectId: string,
+): HostedSite[] | null {
+  // Old issuer-less lists are retained on disk for recovery; they cannot establish authorization.
+  return readJson(sitesFile(issuer, userId, projectId), sitesSchema);
 }
-
-/** Whether a package is on this device, without reading it. */
-export function hasStoredPackage(packageId: string): boolean {
+export function writeSiteList(
+  issuer: string,
+  userId: string,
+  projectId: string,
+  sites: readonly HostedSite[],
+): void {
+  const target = sitesFile(issuer, userId, projectId);
+  const staged = new File(
+    directory("accounts", encodeURIComponent(issuer), userId),
+    `sites-${projectId}-${randomUUID()}.tmp`,
+  );
   try {
-    return packageFile(packageId).exists;
-  } catch {
-    return false;
+    staged.write(JSON.stringify(sites));
+    staged.moveSync(target, { overwrite: true });
+  } finally {
+    if (staged.exists) staged.delete();
   }
-}
-
-export function writeStoredPackage(stored: StoredPackage): void {
-  packageFile(stored.packageId).write(JSON.stringify(stored));
-}
-
-export function removeStoredPackage(packageId: string): void {
-  const file = packageFile(packageId);
-  if (file.exists) file.delete();
-}
-
-export function readSiteList(userId: string, projectId: string): HostedSite[] | null {
-  return readJson(sitesFile(userId, projectId), sitesSchema);
-}
-
-export function writeSiteList(userId: string, projectId: string, sites: readonly HostedSite[]) {
-  sitesFile(userId, projectId).write(JSON.stringify(sites));
 }
 
 /**
@@ -98,7 +117,12 @@ export function apiPackageSource(
     },
     // A copy typed as the digest wants it: an ArrayBuffer-backed view.
     sha256: async (bytes) => hex(await digest(CryptoDigestAlgorithm.SHA256, new Uint8Array(bytes))),
-    forms: () => api.forms(projectId, signal),
     formVersion: (code) => api.formVersion(projectId, code, signal),
   };
+}
+
+/** Pre-launch schema resets discard all incompatible package/cache files before mounting collectors. */
+export function resetHostedPackages(): void {
+  const root = new Directory(Paths.document, ROOT);
+  if (root.exists) root.delete();
 }

@@ -610,15 +610,17 @@ Done when: no hex literal remains outside `src/ui/tokens.ts`; all tests pass.
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (airplane mode shows the offline states, haptics only when the switch is on, the gallery in both themes).
 
 ### MOB-28: Retain exact offline package versions safely
-Status: todo · Phase 3 · Size L · Depends: CON-05 · Blocks: MOB-33
+Status: doing · Phase 3 · Size L · Depends: CON-05 · Blocks: MOB-33
 Owner: Mobile data agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
-Do: Migrate local context/protocol, add catalog/reference retention and atomic verified installation, fence async account work and remove bound-draft zone fallback.
-Done when: Upgrade with unsent v1 rows preserves all payloads/receipts; restart/download/removal cannot lose referenced maps.
+Do: Replace the SQLite migration ladder with one current schema: on any `user_version` mismatch, drop every table and recreate. Keep no v1 rows or v1 uploader path, no `upload_protocol` or `canonicalization_version` columns, no `server_capabilities` table and no legacy-database fixtures or upgrade tests. Add catalog/reference retention and atomic verified installation, fence async account work and remove bound-draft zone fallback.
+Done when: Incompatible schemas reset transactionally; current-schema restart/download/removal cannot lose referenced maps or unfinished observations.
 Verify: pnpm mobile:check, mobile:test and real SQLite/filesystem restart/failure drivers.
+Evidence: [local implementation and final review](../docs/reviews/zone-boundaries-2026-10-11/mob28.md): 506 mobile tests, typecheck/lint and independent local review pass.
+Acceptance gate: Local foundation follows the single-contract rewrite. Actual current-package API installation/restart must rerun after DB-19 and BE-22; the earlier format-2 result is historical evidence only.
 
 ### MOB-29: Collect and upload pinned zone observations
-Status: todo · Phase 3 · Size L · Depends: MOB-33, BE-19, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
+Status: todo · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
 Owner: Mobile data agent with Claude UI owner.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 4.5, 6, 7 and 9.
 Do: Freeze session forms/package/zone, apply geometry parity (reusing MOB-31's `coveringZones`) and v2 upload/receipt validation; store structured rejection codes for the needs-attention copy in UI plan 4.5; run the physical-device scenario.
@@ -650,9 +652,9 @@ Done when: Each status in UI plan MUI-7 renders with its actions in component te
 Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator check of a resume after force quit and of a missing-map recovery.
 
 ### MOB-33: Provide bound session and package read models
-Status: todo · Phase 3 · Size L · Depends: MOB-28, BE-18 · Blocks: MOB-29, MOB-30, MOB-31, MOB-32
+Status: todo · Phase 3 · Size L · Depends: MOB-28, BE-22 · Blocks: MOB-29, MOB-30, MOB-31, MOB-32
 Owner: Mobile data agent; the Claude mobile UI owner acknowledges the interface.
 Read first: [component specification](ZONE-BOUNDARIES.md) MOB-29; [UI plan](ZONE-BOUNDARIES-UI.md) MUI-1, MUI-4, MUI-7, MUI-11 and section 6.
-Do: Add v2 site discovery (MUI-11; no older-server fallback); package readiness with no box fallback; the frozen bound session context with zone UUIDs; exact-version form loading; parked drafts; persist a zone change on an open observation in the same handler; and write `src/packages/zone-read-models.ts` (SiteVersions, Pinned, Recovered, hooks and an in-memory fake), extending `SiteZone` with `zoneId` and `displayAnchor` and removing the box fallback. A local schema change resets local data instead of migrating it (pre-launch rule).
+Do: Add site discovery on the single site API (MUI-11); package readiness with no box fallback; the frozen bound session context with zone UUIDs; exact-version form loading; parked drafts; persist a zone change on an open observation in the same handler; and write `src/packages/zone-read-models.ts` (SiteVersions, Pinned, Recovered, hooks and an in-memory fake), extending `SiteZone` with `zoneId` and `displayAnchor` and removing the box fallback. A local schema change resets local data instead of migrating it (pre-launch rule).
 Done when: The read models are populated from real stores in unit tests; a 404 shows as no access; switching zone on a shared edge then killing the app restores the chosen zone; the UI owner has acknowledged the interface file.
 Verify: `pnpm mobile:check`, `pnpm mobile:test` with site-list failure, parking and zone-persistence cases.

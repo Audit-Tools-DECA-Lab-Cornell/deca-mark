@@ -32,7 +32,7 @@ export function hostedPreviewSite(projectId: string, site: HostedSite): PreviewS
     name: site.name,
     zones: site.zones.map((zone) => zone.label),
     packageId: site.package?.package_id ?? "",
-    packageVersion: site.package ? `v${site.package.version}` : "not prepared",
+    packageVersion: site.package ? `v${site.package.package_version}` : "not prepared",
     sizeMb: site.package ? megabytes(site.package.archive_bytes) : 0,
     initialDownload: "notDownloaded",
     verifiedLabel: "checked against the server's digest",

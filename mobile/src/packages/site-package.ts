@@ -1,6 +1,7 @@
 import type { LngLatBounds, StyleSpecification } from "@maplibre/maplibre-react-native";
 import type { FeatureCollection } from "geojson";
 import type { Coordinate } from "../domain/observation";
+import type { PackageIdentity } from "../domain/package-binding";
 import type { FormDefinition } from "../forms/definition";
 import type { SiteZone } from "../maps/sample-site";
 
@@ -41,6 +42,7 @@ export type PackageSummary = {
 };
 
 export type SitePackage = PackageSummary & {
+  readonly packageIdentity?: PackageIdentity;
   readonly version: string;
   readonly siteId: string;
   readonly sizeOnDevice: string;
@@ -62,7 +64,7 @@ export type SitePackage = PackageSummary & {
   readonly layers: readonly PackageLayer[];
   /**
    * The project a hosted site belongs to: its records upload there. Bundled sites have none; their
-   * practice records go to the practice project, and their instrument records stay on the device.
+   * practice and instrument records remain local preview data.
    */
   readonly projectId?: string;
   /**

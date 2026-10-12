@@ -44,10 +44,14 @@ for zone_migration in supabase/migrations/*.sql; do
   if [ "$zone_name" = 20261010120000_zone_foundation.sql ]; then
     zone_psql --single-transaction -f "$zone_root/database/tests/zone-legacy-fixtures.sql"
   fi
+  if [ "$zone_name" = 20261011134000_gis_recorded_zone_context.sql ]; then
+    zone_psql --single-transaction -f "$zone_root/database/tests/gis-legacy-before.sql"
+  fi
   zone_psql --single-transaction -f "$zone_root/supabase/migrations/$zone_name" >/dev/null
 done
 
 zone_psql -f "$zone_root/database/tests/zone-legacy-preservation.sql"
+zone_psql -f "$zone_root/database/tests/gis-legacy-preservation.sql"
 zone_psql -f "$zone_root/database/tests/run.sql"
 zone_psql -f "$zone_root/database/tests/auth_hooks.sql"
 zone_psql -f "$zone_root/database/verify.sql"

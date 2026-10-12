@@ -1,0 +1,13 @@
+{
+  "qgis_version": "4.2.2-Bel\u00e9m do Par\u00e1",
+  "mode": "separate installed QGIS process reopening saved project",
+  "saved_project_reopens": true,
+  "all_layers_read_only": true,
+  "counts": {
+    "legacy-records.geojson": 2,
+    "point-events.geojson": 3,
+    "historical-zones.geojson": 2,
+    "inventory-records.geojson": 2
+  },
+  "sources_beside_project": true
+}

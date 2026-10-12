@@ -112,7 +112,7 @@ describe("Unfinished observations", () => {
     }
   });
 
-  it("discards a draft it cannot understand instead of restoring the wrong answers", async () => {
+  it("preserves an unreadable draft for recovery without restoring it into the wrong form", async () => {
     // Given a draft written by a version whose shape no longer parses.
     const database = new DatabaseSync(":memory:");
     try {
@@ -123,10 +123,10 @@ describe("Unfinished observations", () => {
         )
         .run("local", draft.id, draft.updatedAt, JSON.stringify({ answers: "not a record" }));
       // When recovery runs.
-      // Then it declines the draft and clears it, rather than resuming into a wrong stack.
+      // Then it declines resume but preserves the original answers for recovery.
       expect(await readDraft(adapter(database), "local")).toBeNull();
       expect(database.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
-        total: 0,
+        total: 1,
       });
     } finally {
       database.close();
@@ -149,10 +149,10 @@ describe("Unfinished observations", () => {
           JSON.stringify({ ...draft, owner: "account-a" }),
         );
       // When that account opens the app.
-      // Then the draft is refused and cleared, so one observer's answers cannot change hands.
+      // Then the draft is refused and preserved, so one observer's answers cannot change hands.
       expect(await readDraft(adapter(database), "account-b")).toBeNull();
       expect(database.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
-        total: 0,
+        total: 1,
       });
     } finally {
       database.close();
@@ -169,29 +169,6 @@ describe("Unfinished observations", () => {
       await clearDraft(adapter(database), "local");
       // Then nothing remains to be offered on the next launch.
       expect(await readDraft(adapter(database), "local")).toBeNull();
-    } finally {
-      database.close();
-    }
-  });
-
-  it("adds the draft table to an existing version 2 database without touching its records", async () => {
-    // Given a database left at the previous schema with a practice record in it.
-    const database = new DatabaseSync(":memory:");
-    try {
-      await initializeDatabase(adapter(database));
-      database.exec("PRAGMA user_version = 2;");
-      database.exec("DROP TABLE observation_drafts;");
-      database
-        .prepare("INSERT INTO observations (id, created_at, payload) VALUES (?, ?, ?)")
-        .run("existing", "2026-09-18T00:00:00.000Z", "{}");
-      // When the updated app opens it.
-      await initializeDatabase(adapter(database));
-      // Then the migration runs and the existing record is still there.
-      expect(await readDraft(adapter(database), "local")).toBeNull();
-      expect(database.prepare("SELECT COUNT(*) AS total FROM observations").get()).toEqual({
-        total: 1,
-      });
-      expect(database.prepare("PRAGMA user_version").get()).toEqual({ user_version: 3 });
     } finally {
       database.close();
     }

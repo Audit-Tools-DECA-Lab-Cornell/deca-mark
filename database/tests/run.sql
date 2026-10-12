@@ -48,7 +48,8 @@ SELECT pg_temp.assert_true(
             '0013_sites_forms_collection', '0014_zone_foundation', '0015_zone_geometry', '0016_zone_drafts',
             '0017_zone_publication', '0018_zone_observation_binding', '0019_zone_api_validation',
             '0020_zone_authorization_lock', '0021_zone_import_identity', '0022_zone_discovery',
-            '0023_zone_form_succession', '0024_zone_upload_protocol'],
+            '0023_zone_form_succession', '0024_zone_upload_protocol',
+            '0025_gis_recorded_zone_context'],
   'migration replay records each version once'
 );
 \ir constraints.sql
@@ -66,5 +67,6 @@ SELECT pg_temp.assert_true(
 \ir zone-observation-binding.sql
 \ir zone-upload-protocol.sql
 \ir zone-training-binding.sql
+\ir gis-recorded-zone-context.sql
 ROLLBACK;
 \echo All database scenarios passed; test records rolled back.

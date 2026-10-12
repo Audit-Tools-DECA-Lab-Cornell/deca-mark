@@ -19,6 +19,12 @@ Do not join observations to current site zones. Use package+zone composite bindi
 
 The current `gis.sample_observations` point view must remain backward compatible. Add companion scoped views or future generic/typed view columns without changing its feature identity or secretly widening project access. GIS-01's older planned numeric-round fields must be reconciled with current Standard/Reliability/Inventory and D26 before implementing its dependent views.
 
+The [projection and export guide](zone-boundaries/README.md) specifies the additive
+`gis.recorded_observations`, `gis.point_events`, `gis.zone_snapshots`,
+`gis.inventory_records` and `gis.legacy_records` interfaces. They use the existing API
+request identity and RLS; no new GIS reader privileges are implied. Exported files are
+the authorized local QGIS path until the independent scoped-login work is approved.
+
 CSV preserves IDs/code/recorded label/version/basis. Event GeoJSON uses null geometry for whole-zone inventories, with references to a separate historical zones GeoJSON. A companion inventory polygon export is useful if explicitly labelled and schema documented; do not change event geometry type under existing consumers. The API and QGIS read must agree on filters and record counts.
 
 ## Import continuity

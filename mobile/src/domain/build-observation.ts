@@ -1,6 +1,7 @@
 import type { Answers, FormDefinition } from "../forms/definition";
 import { pruneAnswers, reviewProblems } from "../forms/engine";
 import {
+  boundShellObservationSchema,
   type Coordinate,
   instrumentObservationSchema,
   isShellObservation,
@@ -9,14 +10,8 @@ import {
   type RoundContext,
   shellObservationSchema,
 } from "./observation";
+import type { PackageBinding } from "./package-binding";
 import { roundLabel } from "./rounds";
-
-/**
- * Turns a completed question stack into a stored record. Each form version keeps its own record
- * shape: `shell-v1` writes the same three columns it always did, so existing practice records
- * and the API contract are untouched, while the instrument keeps its answers by question id
- * against its versioned definition.
- */
 
 export type ObservationInput = {
   readonly id: string;
@@ -31,6 +26,7 @@ export type ObservationInput = {
   /** The account's initials, for a form that asks no observer question of its own. */
   readonly observer?: string | undefined;
   readonly createdAt: string;
+  readonly binding?: PackageBinding | undefined;
 };
 
 export type BuildResult =
@@ -54,14 +50,23 @@ export function buildObservation(input: ObservationInput): BuildResult {
   };
   if (input.form.version === "shell-v1") {
     const { people } = answers;
-    const parsed = shellObservationSchema.safeParse({
+    const shell = {
       ...shared,
-      siteId: "sample-garden",
       formVersion: "shell-v1",
       observer: text(answers, "observer"),
       people,
       notes: text(answers, "notes"),
-    });
+    };
+    const parsed = input.binding
+      ? boundShellObservationSchema.safeParse({
+          ...shell,
+          binding: input.binding,
+          projectId: input.projectId,
+          siteId: input.siteId,
+          context: input.context,
+          placement: input.placement,
+        })
+      : shellObservationSchema.safeParse({ ...shell, siteId: "sample-garden" });
     return parsed.success
       ? { ok: true, record: parsed.data }
       : { ok: false, message: parsed.error.issues[0]?.message ?? "Check the answers." };
@@ -84,6 +89,7 @@ export function buildObservation(input: ObservationInput): BuildResult {
       observer,
       answers,
       context: input.context,
+      ...(input.binding ? { binding: input.binding } : {}),
       placement: input.placement,
     });
     return parsed.success

@@ -1,12 +1,5 @@
 import { strFromU8, unzipSync } from "fflate";
-import type { FormDefinition } from "../../forms/definition";
-import {
-  type FormSummary,
-  layersSchema,
-  type Manifest,
-  manifestSchema,
-  type PackageLayers,
-} from "./schemas";
+import { layersSchema, type Manifest, manifestSchema, type PackageLayers } from "./schemas";
 
 /**
  * Reading a site package the API prepared: a zip holding `manifest.json` and `layers/<name>.json`
@@ -56,31 +49,4 @@ export function readArchive(bytes: Uint8Array): {
 /** Lower-case hex, the form `archive_sha256` takes. */
 export function hex(digest: ArrayBuffer): string {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-/** The acts that describe a zone rather than a play event. */
-const ZONE_ACTS = new Set(["Climate", "Inventory"]);
-/** Acts any form may ask beside them: who observed, and a note. */
-const SHARED_ACTS = new Set(["Record"]);
-
-/**
- * Whether a form records a zone's inventory: it asks about the zone's climate or the loose parts
- * available, and nothing about a play event (D26). Recognised by its content rather than its name, so
- * a project can call it what it likes.
- */
-export function isInventoryForm(form: FormDefinition): boolean {
-  return (
-    form.questions.some((question) => ZONE_ACTS.has(question.act)) &&
-    form.questions.every((question) => ZONE_ACTS.has(question.act) || SHARED_ACTS.has(question.act))
-  );
-}
-
-/** The newest published version of each of a project's forms, leaving out the one named. */
-export function publishedVersions(forms: readonly FormSummary[], except: string): string[] {
-  return forms.flatMap((form) => {
-    const newest = form.versions
-      .filter((version) => version.state === "published")
-      .sort((a, b) => b.version - a.version)[0];
-    return newest && newest.code !== except ? [newest.code] : [];
-  });
 }

@@ -6,6 +6,12 @@ This is the entry point for taking DECA Mark from prototype to Janet's first fie
 - Target: the pilot in week 13 (about 3 months) with one developer.
 - Source research: seven codebase surveys and three vendor-documentation surveys run on 2026-09-22. Their findings are folded into the files below and cited as `file:line`.
 
+## Pre-launch compatibility policy (2026-10-11)
+
+The owner confirmed there are no real users or production-data preservation obligations yet. Breaking changes may reset incompatible local/server data and use newly prepared maps as the baseline. Do not add old-client bridges, old-schema upgrade paths or dual formats solely to retain experimental data. This applies to backend, web, mobile, database, contracts and schemas. Migration files may be consolidated when useful; their count is not a product requirement.
+
+Within the current supported schema, normal restarts and failed downloads still retain unfinished observations, referenced packages and immutable recorded attribution. A reset is a setup/schema transition, not an authentication repair or a silent reassignment of a valid observation. Source/test changes are authorized; choose the exact target explicitly before a hosted reset or deployment.
+
 ## The goal in one paragraph
 
 **The manager's side (web).** A manager signs up, creates an organization and a project, and uploads a QGIS site package. They publish Janet's form and invite observers.
@@ -144,8 +150,8 @@ WEB-20 to WEB-26 and MOB-23 to MOB-27 build the Contour screens ahead of the wir
 - **Web:** WEB-08, WEB-09, WEB-10, WEB-11, WEB-12, WEB-13
 - **GIS:** GIS-01, GIS-02, GIS-03, GIS-04
 - **Operations:** OPS-16
-- **Zone contracts/data:** CON-05, DB-15, DB-16, DB-18
-- **Zone API:** BE-18, BE-19, BE-20
+- **Zone contracts/data:** CON-05, CON-06, DB-15, DB-16, DB-18, DB-19
+- **Zone API:** BE-18, BE-19, BE-20, BE-22
 - **Zone clients:** MOB-28, MOB-29, MOB-30, MOB-31, MOB-32, MOB-33, WEB-28, WEB-29, WEB-30, WEB-31, WEB-32, WEB-33, WEB-34, WEB-35, WEB-36, WEB-37, WEB-38, WEB-39, WEB-40, WEB-41, WEB-42
 - **Zone GIS:** GIS-09
 

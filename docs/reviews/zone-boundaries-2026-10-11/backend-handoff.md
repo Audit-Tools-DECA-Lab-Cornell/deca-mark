@@ -134,6 +134,6 @@ budget. Neither point changes the current client contract.
 
 ## Immediate handoff
 
-Give Claude the [implementation prompt](../../plan/zone-boundaries/claude-prompt.md) and begin
-WEB-30. Complete MOB-28 with the data owner before wiring mobile UI. Keep publication off until
-the remaining acceptance and rollout gates are explicitly satisfied.
+The owner changed the pre-launch contract to one API, archive format and upload envelope. Follow [the updated master dependency graph](../../plan/zone-boundaries/README.md): CON-06, DB-19 and BE-22 precede client integration. Do not implement against the old `/v2` paths or keep an old-client bridge.
+
+Use the [mobile package foundation handoff](../../../mobile/PACKAGE-LIFECYCLE.md). MOB-28's local storage/package work passed final review ([evidence](mob28.md)); actual single-contract API acceptance requires BE-22/DB-19. MOB-33 then supplies the agreed session/read models before mobile UI integration. GIS-09's saved evidence verifies the prior backend baseline; DB-19 and QA-07 must revalidate GIS against the rewritten schema/export contract. Earlier results in this review remain historical evidence, not approval of the new single-path implementation.

@@ -96,6 +96,9 @@ export const siteTrees: FeatureCollection = {
 };
 
 export type SiteZone = {
+  readonly zoneId?: string;
+  readonly geometrySha256?: string;
+  readonly displayAnchor?: Coordinate;
   readonly id: string;
   readonly label: string;
   readonly centre: Coordinate;

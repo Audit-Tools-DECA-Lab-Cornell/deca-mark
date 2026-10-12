@@ -1,128 +1,134 @@
 # Zone polygon boundaries: master implementation plan
 
-Planning baseline: 2026-10-10. Implementation is now authorized in dependency order; source changes and disposable local tests are allowed. Commits, hosted migrations, deployments and releases remain separately authorized. The frozen contract and task status do not claim shipped functionality. Finish this feature and its acceptance gates before starting other map features.
+Planning baseline: 2026-10-10, rewritten 2026-10-11 to the owner's [pre-launch compatibility policy](../README.md#pre-launch-compatibility-policy-2026-10-11). There are no real users. Data is reset whenever the schema changes, and this feature keeps nothing for old data, old clients, old formats or an older API version. Implementation is authorized in dependency order; source changes and disposable local tests are allowed. Commits, hosted resets, deployments and releases remain separately authorized. Task status does not claim shipped functionality. Finish this feature and its acceptance gates before starting other map features.
 
 ## Outcome and scope
 
-A manager can draft, validate and publish named polygon zones for an existing site. Observers download an immutable map, collect offline against those exact boundaries, and upload later even if a newer map has been published. Managers can filter maps, tables and exports by the zone recorded at collection, without silently reinterpreting earlier research.
+- **Managers:** a manager draws and edits named polygon zones for a site, validates them and publishes them as a new immutable map version. A site's first version comes from a QGIS upload (`v1`); every later upload or publication adds one.
+- **Observers:** an observer downloads a version, collects offline against those exact boundaries, and uploads later even if a newer version has been published.
+- **Review:** managers filter maps, tables and exports by the zone and version each observation was recorded with, and nothing is reclassified against today's boundaries.
 
-The first delivery edits zones over an existing site's imported ground/reference layers. It does not add imagery ingestion, basemap configuration, round scheduling, new form types, observation correction, live collaboration or a new sync engine. A site without a usable ground boundary needs a package import first. This deliberately bounds the feature while retaining the existing QGIS import route.
+The first delivery edits zones over a site's uploaded ground and reference layers. It does not add imagery ingestion, basemap configuration, round scheduling, new form types, observation correction, live collaboration or a new sync engine. A site without a usable ground boundary needs a QGIS upload first.
 
 ## Read order and ownership
 
 | Document | Authority |
 | --- | --- |
 | This master plan | Product invariants, decisions, scope, coordination and release order |
-| [Current architecture assessment](assessment.md) | Source-backed baseline, gaps and reuse decisions |
-| [API and shared contract](contract.md) | Proposed wire shapes, errors, compatibility and geometry semantics |
-| [Database plan](../../../supabase/ZONE-BOUNDARIES.md) | Storage, constraints, RLS, publication transaction, migration |
-| [Backend plan](../../../backend/ZONE-BOUNDARIES.md) | Services, routes, validation, queries and rollout |
-| [Mobile data plan](../../../mobile/ZONE-BOUNDARIES.md) | Offline persistence, package/session ownership and upload behavior |
-| [Web handoff](../../../web/ZONE-BOUNDARIES.md) | Required behavior and integration boundaries; Claude owns detailed UI design |
-| [GIS plan](../../../qgis/ZONE-BOUNDARIES.md) | Historical geometry, typed exports and read-only analysis |
+| [Contract](contract.md) | Wire shapes, errors, geometry semantics and the single-path rules |
+| [Current architecture assessment](assessment.md) | Source-backed baseline from 2026-10-10 (historical; describes the code before this feature) |
+| [Database plan](../../../supabase/ZONE-BOUNDARIES.md) | Storage, constraints, RLS, publication transaction |
+| [Backend plan](../../../backend/ZONE-BOUNDARIES.md) | Services, routes, validation and queries |
+| [Mobile data plan](../../../mobile/ZONE-BOUNDARIES.md) | Offline persistence, package and session ownership, upload |
+| [Mobile UI plan](../../../mobile/ZONE-BOUNDARIES-UI.md) | Observer screens and the read models they need |
+| [Web handoff](../../../web/ZONE-BOUNDARIES.md) and [web UI plan](../../../web/ZONE-BOUNDARIES-UI.md) | Manager editor, review, state architecture |
+| [GIS plan](../../../qgis/ZONE-BOUNDARIES.md) | Recorded geometry, typed exports and read-only analysis |
 | [Verification and edge cases](verification.md) | Release-blocking scenarios and evidence requirements |
-| [Claude prompt](claude-prompt.md) | Copyable assignment for web and mobile frontend planning |
 
-Task status lives only in the existing owning `PLAN.md` files, or the contract/verification task files. These feature documents contain specifications, not duplicate progress boards. The [production index](../README.md) links the tasks into its dependency graph. Phase numbers preserve that graph's sequencing; they are not new calendar promises.
+Task status lives only in the owning `PLAN.md` files and the contract and verification task files. These documents hold specifications, not progress. The [production index](../README.md) links the tasks into its dependency graph.
 
 ## Non-negotiable behavior
 
-1. **History is immutable.** An observation references a specific published package and a zone within it. Changing a boundary or label creates a new package; old geometry, labels, records and receipts remain unchanged.
-2. **Offline work survives.** Publication never swaps the map under an active observer. Session/draft/queued-record dependencies retain old packages. An expired login pauses uploads, not local preservation. Revoked access does not authorize upload or erase device data.
-3. **Spatial support is explicit.** Standard/Reliability are point observations. Inventory describes a whole zone; its stored compatibility anchor is not an observed event location. No feature infers a child's location from the observer's GPS.
-4. **Authorization and validity are server-enforced.** Manager editing, tenant/site/package membership, geometry validity, version conflicts and observation attribution cannot depend on UI checks.
-5. **No invented history.** Existing uploads without package evidence remain legacy/unversioned. Do not assign today's boundaries, infer a version from timestamps, or mutate queued request bodies to make them look newer.
+1. **Versions are immutable.** An observation references one published package and a zone in it. Changing a boundary or label creates a new package; earlier geometry, labels, observations and receipts never change.
+2. **Offline work survives.** Publication never swaps the map under an observer who is collecting. An unfinished observation and every unsent record keep their package. An expired login pauses uploads, not local preservation. Revoked access does not authorize upload or erase device data. A deliberate schema reset is the only thing that clears local data.
+3. **Spatial support is explicit.** Standard and Reliability are point observations. Inventory describes a whole zone and has no event point. No feature infers a child's location from the observer's GPS.
+4. **Authorization and validity are server-enforced.** Manager editing, tenant, site and package membership, geometry validity, version conflicts and observation attribution never depend on UI checks.
+5. **One path.** One API version, one package format, one upload envelope, one fingerprint. When a design changes before launch, replace the old path and reset data; never run two side by side.
 
 ## Main design decisions
 
-### Reuse map packages as boundary versions
+### Packages are the boundary versions
 
-Use the existing immutable `site_packages` version as the zone-set revision. Add stable zone identities and immutable per-package zone snapshots. Do not introduce an independently published zone-set version in this feature: a single package pins ground, forms, boundaries and labels together. A label-only change also creates a new package. Duplicating small vector geometry per package is acceptable; object-storage migration and tile deduplication are separate tasks.
+The immutable package is the zone-set version. A package pins ground, forms, boundaries and labels together, so a label-only change also creates a package. Stable zone identities live beside immutable per-package zone snapshots. Duplicating small vector geometry per package is acceptable.
 
 ```mermaid
 flowchart LR
-  A[Manager draft] --> B[Validate and publish]
-  B --> C[Package v8 plus immutable zone snapshots]
-  C --> D[Current package pointer]
-  E[Observer already using v7] --> F[Draft and observations pinned to v7]
-  F --> G[Upload against v7]
-  G --> H[Historical zone in table, map and export]
-  D --> I[Download v8 for a later session]
+  U[QGIS upload] --> F[One finalization path]
+  D[Manager draft, validate] --> F
+  F --> C[Package v2 with immutable zone snapshots]
+  C --> P[Current package pointer]
+  O[Observer collecting on v1] --> K[Unfinished and unsent work pinned to v1]
+  K --> L[Upload bound to v1]
+  L --> H[Recorded zone in table, map and export]
+  P --> N[Download v2 for a later session]
 ```
 
 ### Identity, labels and boundary edits
 
-A zone has a stable UUID scoped to its site, an immutable human code, and a version-specific label and geometry. Ordinary reshaping/renaming retains the UUID. Removing a zone means omitting it from the next package, never deleting historical snapshots. Splitting or merging creates new identities; do not equate the children with the original. Codes are never reused for a different zone identity. Cross-version aggregation may group an explicitly retained identity, but must still expose map version because the sampled area changed.
-
-The current code's `zoneId` is a string code, not a UUID. New contracts use distinct names; do not reinterpret that field in place. Importers must preserve supplied known UUIDs or require manager identity mapping. Similar labels/codes alone do not prove historical identity.
+A zone has a stable UUID scoped to its site, an immutable human code, and a version-specific label and geometry. Reshaping or renaming keeps the UUID. Removing a zone means omitting it from the next package; earlier snapshots stay. Splitting or merging creates new identities. Codes are never reused for a different identity. Uploads keep known UUIDs through an explicit identity map, and similar labels or codes never prove continuity. Aggregating one identity across versions is allowed, but must still show the version, because the sampled area changed.
 
 ### Geometry and point assignment
 
-Accept Polygon and MultiPolygon with holes. Store a normalized PostGIS MultiPolygon in EPSG:4326; publish full-precision GeoJSON from that geometry. Bounding boxes are for navigation only. New editor publications reject interior overlaps, self-intersections, empty geometry and zones extending outside the site's actual ground boundary. Adjacent shared edges are allowed; site gaps are allowed and reported. No arbitrary overlap tolerance or automatic repair may silently change the research boundary.
+Accept Polygon and MultiPolygon with holes. Store a normalized PostGIS MultiPolygon in EPSG:4326, and publish full-precision GeoJSON from it. Bounding boxes are for navigation only. Publication rejects interior overlaps, self-intersections, empty geometry and zones outside the site polygon. Shared edges are allowed; site gaps are allowed and reported. No tolerance or automatic repair changes a research boundary.
 
-For point observations, the chosen zone must cover the point in the pinned package. A point on a shared edge can be assigned to either touching zone explicitly chosen by the observer; never select the first polygon by iteration order. A point in a gap or hole has no valid zone for this feature's collection flow. Preserve the unfinished observation and ask for placement/zone correction before save. The server repeats this validation. [Exact semantics and limits](contract.md#geometry-contract).
+For a point observation, the chosen zone must cover the point in the pinned package. A point on a shared edge goes to the covering zone the observer explicitly chose, never to whichever polygon comes first. A point in a gap or hole has no valid zone. The unfinished observation is kept while the observer moves the point or changes zone, and the server repeats the check ([contract](contract.md#geometry)).
 
-### Historical versus current-boundary analysis
+### Recorded-zone analysis
 
-Default all filters and labels to **recorded zone at collection**. Filtering an identity across versions is allowed but clearly labelled; filtering a package narrows to one boundary version. Add `map_version` and recorded zone identity/label to detail and export. There is already a zone field and web zone filter; this is a correction and extension, not an entirely new column from scratch.
-
-"Points inside today's boundaries" is a different analysis and is deferred. Do not silently spatially reclassify older records, including unversioned legacy rows. If added later, require an explicit target package, independent derived fields and a visible analysis basis. Whole-zone inventories cannot be reclassified from their anchor points.
+Every filter and label defaults to the zone recorded at collection. Filtering one identity across versions is allowed and labelled; filtering a package narrows to one version. Details and exports carry the package version and recorded zone identity and label. "Points inside today's boundaries" is a different analysis and is deferred. If it is added later, it needs an explicit target package, separate derived fields and a visible analysis basis. Inventories are never reclassified from an anchor.
 
 ### Update and conflict policy
 
 | Situation | Required result |
 | --- | --- |
-| Manager edits while observer is offline | Draft changes are invisible to collection; publication creates a new version |
-| Manager publishes while observer has an active session | Current session/drafts/queued uploads retain their original package |
-| Observer reconnects after days | Authorized upload against retained historical package succeeds; no age cutoff |
-| New package download fails | Last verified installed package remains usable; no partial activation |
-| Two managers edit or publish | ETag/revision preconditions; first valid commit wins, second receives actionable conflict |
-| Old publication request retries after a newer publication | Return its original result; never reactivate its old package |
-| Zone removed or renamed | Old records retain old snapshot; existing offline sessions remain valid |
-| Access revoked | Server refuses new writes, device retains records for authorized recovery |
+| Manager edits while an observer is offline | Draft changes are invisible to collection; publication creates a new version |
+| Manager publishes while an observer is collecting | The open collection, unfinished observation and unsent records keep their package |
+| Observer reconnects after days | Upload against the retained older package succeeds; no age cutoff |
+| New package download fails | The installed version stays usable; nothing is partly activated |
+| Two managers edit or publish | ETag and revision preconditions; the first valid commit wins and the second gets an actionable conflict |
+| A publication request retries after a newer publication | Returns its original result marked as a replay; never reactivates its package |
+| Zone removed or renamed | Earlier records keep their snapshot; collection already in progress stays valid |
+| Access revoked | The server refuses new writes; the device keeps records for recovery |
+| Schema change before launch | Reset server and device data; seed fresh sites from `v1` |
 
 ## Architecture judgment
 
-The stack is capable: PostgreSQL/PostGIS, FastAPI service/repository boundaries, generated OpenAPI types, immutable packages, SQLite outbox and receipt verification are a suitable foundation. It is not yet complete enough to call this feature safe or claim universal industry compliance. Required repairs include historical binding, geometry parity at edges, durable version selection, atomic package installation, package-reference retention, account-scoped async work and server-side filtered reads.
+The stack fits: PostgreSQL and PostGIS, FastAPI service and repository boundaries, generated OpenAPI types, immutable packages, the SQLite outbox and receipt verification. Do not replace the outbox with PowerSync, add Redux or TanStack Query, adopt ArcGIS services, or introduce a worker platform to implement polygons (D27 stands). Each change must remove a demonstrated failure mode. Frontend architecture choices belong to the UI plans within the contract.
 
-Do not replace the outbox with PowerSync, add Redux/TanStack Query, adopt ArcGIS services, or introduce a worker platform merely to implement polygons. The existing D27 outbox decision remains in force. Improvements must remove a demonstrated failure mode; frontend architecture choices belong to Claude within these contracts.
+## Execution and dependency waves
 
-## Execution ownership and dependency waves
-
-| Wave | Owning tasks | Exit condition |
+| Wave | Tasks | Exit condition |
 | --- | --- | --- |
-| A: freeze contracts | CON-05 | Shared examples, geometry decisions, compatibility and error policy reviewed |
-| B: durable foundation | DB-15, then DB-16; MOB-28 may start after A independently | Transaction/RLS/migration tests; local version retention and queue compatibility |
-| C: services | BE-18, then BE-19; BE-20 after observation schema | Draft publication, bound uploads and complete filtered read surfaces |
-| D: clients and GIS | MOB-29, WEB-28, WEB-29, GIS-09 | Real APIs wired; Claude's UI plan and browser/device scenarios exercised |
-| E: integrated acceptance | QA-07 | Cross-layer scenarios, migration rehearsal and evidence reviewed |
+| A: contract | CON-05 (done), CON-06 (single-path rewrite) | Contract, shared cases and component plans describe one path |
+| B: data and services | DB-15, DB-16, BE-18, BE-19, BE-20 (done, dual path); DB-19 and BE-22 collapse them to one path | One schema baseline, one API path, regenerated types, a reset local stack |
+| C: clients and GIS | MOB-28, MOB-33, MOB-30 to MOB-32, MOB-29; WEB-30 to WEB-42; GIS-09; DB-18 seed | Real API wired; UI plans' browser and device scenarios exercised |
+| D: integrated acceptance | QA-07 | Cross-layer scenarios and evidence reviewed |
 
-Owners and tasks live in [supabase](../../../supabase/PLAN.md), [backend](../../../backend/PLAN.md), [mobile](../../../mobile/PLAN.md), [web](../../../web/PLAN.md), [QGIS](../../../qgis/PLAN.md), [contracts](../contracts.md) and [verification](../verification.md). Estimates on individual tasks are engineering days including local checks, not elapsed parallel completion promises. Integration/device work can expose additional work; split any task exceeding five days rather than hiding it.
-
-The dependency graph gates implementation/integration, not read-only preparation: Claude can plan UI now from this proposal, and refine it once CON-05 freezes. API/query owners can inspect and design ahead of their schema prerequisites. Do not implement a competing wire contract or mark dependent acceptance complete before prerequisites land.
+Owners and tasks live in [supabase](../../../supabase/PLAN.md), [backend](../../../backend/PLAN.md), [mobile](../../../mobile/PLAN.md), [web](../../../web/PLAN.md), [QGIS](../../../qgis/PLAN.md), [contracts](../contracts.md) and [verification](../verification.md). Estimates are engineering days including local checks. Split any task over five days.
 
 ### Parallel-agent operating agreement
 
-The lead freezes CON-05 before parallel writers consume interfaces. Use disjoint ownership: DB agent owns migrations/SQL fixtures; API agent owns Python/schema; mobile data agent owns storage/domain/sync/packages; web agent owns web; GIS agent owns QGIS docs/view specifications. **The DB agent alone writes migrations, including GIS views.** The contract coordinator alone regenerates OpenAPI and both generated TypeScript files after schema integration. Claude's mobile UI agent and the mobile data agent explicitly allocate shared `session/provider.tsx`, package providers and API client edits before working.
+- **Ownership:**
+  - The database agent owns migrations and SQL fixtures, and alone writes migrations, including GIS views.
+  - The API agent owns Python and schemas.
+  - The mobile data agent owns storage, domain, sync and packages.
+  - The web agent owns `web/`.
+  - The GIS agent owns QGIS docs and view specifications.
+  - The contract coordinator alone regenerates OpenAPI and both generated TypeScript files.
+  - The mobile UI owner and the mobile data agent agree edits to `session/provider.tsx`, the package providers and the API client before working.
+- **Shared checkout:** agents read this plan, their component specification and their task. They are not alone in the checkout. Preserve unrelated edits, never revert others' work, and report conflicts to the lead. Parallelize independent work; serialize overlapping writes, migrations and integration.
+- **Changes to agreed behaviour:** agents may improve algorithms, files and tests within the agreed behaviour. A changed field, error, retention rule or geometry meaning goes to the lead as a short proposal with evidence and revised cases, and the lead updates the contract first. Never add a compatibility path to avoid a reset.
+- **Handoffs and review:** each handoff lists changed paths, contract effects, tests actually run, remaining uncertainty, and `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT` or `BLOCKED`. A spec review comes first, then a code-quality review. A failed or usage-limited reviewer is not approval.
 
-Agents receive their bounded task text, product intent, invariants, file ownership, dependencies and test obligations. They also read this master plan and their component specification. They are not alone in the checkout: preserve unrelated edits, do not revert others' work, and report conflicts to the lead. Parallelize independent work or read-only reviews; serialize overlapping writes, migrations and integration. Implementation source changes are authorized; implementation commits and branches require separate approval.
+## Delivery
 
-Agents may improve algorithms, file organization and tests within the agreed behavior. A changed field, error, compatibility rule, retention policy or geometry meaning requires a short proposed deviation sent to the lead with evidence, alternatives, affected consumers and revised acceptance cases. The lead updates the canonical contract before dependent work continues. Ask the human only for unresolved product policy, destructive operations or external authorization; avoid asking about routine implementation choices. Never work around a failing invariant just to satisfy a checklist.
-
-Each implementation handoff includes changed paths, contract effects, tests actually run, remaining uncertainty and `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT` or `BLOCKED`. Perform a spec-compliance review followed by a code-quality review; resolve findings before the next dependent task. Do not report a failed/usage-limited reviewer as approval.
-
-## Delivery and rollout
-
-1. Add schema and compatibility support with publication disabled. Rehearse additive migrations on a disposable local database restored from synthetic old-shape fixtures; keep old API/retry behavior unchanged.
-2. Deploy backend capability and historical read support only after explicit deployment approval. Release mobile version pinning and safe v2 uploads; Claude wires the web against the frozen contracts.
-3. Enable editor publication per site only after backend, mobile and web acceptance. Unsupported old clients may continue v1 collection/upload, visibly unversioned; managers must understand these records cannot gain exact historical attribution retroactively.
-4. On a publication defect, disable new publication and issue a corrected package with a higher version. Retain old schema/read/upload support and all published artifacts. Do not roll back by deleting versions or rewriting collected data.
-5. Complete QA-07, including a real offline device and QGIS/readback scenario, before calling zone boundaries complete or moving to the next map feature.
+1. CON-06 rewrites the contract, cases and component plans to one path.
+2. DB-19 squashes migrations into one baseline without compatibility columns, and BE-22 serves the single `/v1` path. The coordinator regenerates types, and every local database is reset and reseeded (DB-18).
+3. The clients implement against that path: mobile pinning and upload, the web editor and review, and GIS views.
+4. On a publication defect, publish a corrected package as a new version. Never delete a version or rewrite collected data within the current schema.
+5. QA-07, including a real offline device and QGIS readback, finishes the feature before the next map feature starts. Hosted resets and deployments need explicit approval of the exact target.
 
 ## Product defaults needing explicit visibility
 
-The authorized implementation follows non-overlapping observation zones, required zone assignment for new bound records, edits over existing ground, and delayed adoption until a new session. This records the selected product defaults, not separate research-lead approval. If the study requires overlapping zones, zone-free point capture, or mandatory immediate updates, revise CON-05 before dependent implementation. Never silently change those policies.
+The implementation follows these defaults, which the owner may change:
+
+- observation zones do not overlap;
+- every new point needs a zone;
+- edits happen over an uploaded site ground;
+- a newer map is adopted at the next collection, never mid-collection.
+
+Overlapping zones, zone-free points or forced immediate updates would need a contract change first. Never change these silently.
 
 ## Evidence boundary
 
-This plan was created from local source, existing documentation and official technical references. No hosted database, deployment, observer device or runtime was modified or reverified for this planning task. Some older READMEs and roadmap context describe future work as if it were current; [the assessment](assessment.md) records those discrepancies. Plan validation proves links/dependencies, not feature behavior.
+This plan comes from local source, project documentation and official technical references. No hosted database, deployment, observer device or runtime was changed or reverified to write it. Plan validation proves links and dependencies, not behaviour.

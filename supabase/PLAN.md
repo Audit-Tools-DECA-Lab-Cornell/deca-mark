@@ -669,9 +669,17 @@ Do: add one forward migration, `rename_to_decamark`. Never edit an applied migra
 Done when: `pnpm db:test` passes on a fresh local stack and on one upgraded from the old names, and `grep -rni fieldmaps supabase database` finds only applied migrations and history. After the authorized apply, `database/hosted/verify.sql` passes on staging.
 
 ### DB-18: Seed and enable a local zone acceptance stack
-Status: todo · Phase 3 · Size M · Depends: BE-20 · Blocks: WEB-35, WEB-42
+Status: todo · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-35, WEB-42
 Owner: Database agent; the API owner approves the local configuration.
 Read first: [web UI plan](../web/ZONE-BOUNDARIES-UI.md) section 10; [mobile UI plan](../mobile/ZONE-BOUNDARIES-UI.md) section 9; `scripts/e2e-local.sh`; `database/seed-web-workspace.mjs`; `backend/config.auth-local.json`.
-Do: Add a local-only API configuration with `zone_publication_enabled: true`, an opt-in `--zones` option in `scripts/e2e-local.sh` that selects it, and `database/seed-zone-review.mjs`. The seed uses only the real local API to create a separate project with a site at v7 and v8, a site with no package, two managers' open drafts, and more than 500 observations across v7 and v8, including inventory. Leave the existing seed and specs unchanged.
-Done when: `sh scripts/e2e-local.sh --zones` starts a zone-enabled local API and seeds idempotently; the existing specs still pass without the option.
+Do: Add an opt-in `--zones` option to `scripts/e2e-local.sh` that runs `database/seed-zone-review.mjs` (publication has no switch after BE-22). The seed uses only the real local API to create a separate project with a site at v7 and v8, a site with no package, two managers' open drafts, and more than 500 observations across v7 and v8, including inventory. Leave the existing seed and specs unchanged.
+Done when: `sh scripts/e2e-local.sh --zones` seeds idempotently against the reset local stack; the existing specs still pass without the option.
 Verify: Run the seed twice against the local stack; run the existing e2e suite without `--zones`. Never target hosted services.
+
+### DB-19: Reset the zone schema to one baseline
+Status: todo · Phase 3 · Size L · Depends: CON-06 · Blocks: BE-22
+Owner: Database agent.
+Read first: [contract](../docs/plan/zone-boundaries/contract.md) "What the rewrite removed" and "Data reset"; [pre-launch policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11); `supabase/migrations/`; `database/tests/`.
+Do: Squash `supabase/migrations/` into one baseline that describes only the current schema. Drop `upload_protocol`, `upload_hash_version`, `legacy_package_id`, format-1 package selection, unmanaged-site package writes, adoption bootstrap functions and legacy-code mapping. Replace the observation `geom NOT NULL` compatibility anchor with nullable event geometry plus the zone reference for inventories. Delete the legacy-preservation and migration-rehearsal tests and scripts (`zone-legacy-*`, `gis-legacy-*`, `zone-rehearsal.sh` old-shape fixtures). Update seeds so every site's first package is `v1`. If the owner agrees, fold DB-17's rename into the baseline.
+Done when: `pnpm db:reset` builds the baseline from scratch, `pnpm db:test` passes with only current-schema tests, and no migration, function or test references a removed concept.
+Verify: `pnpm db:reset` then `pnpm db:test` on the local stack; never a hosted database without explicit approval of the target.

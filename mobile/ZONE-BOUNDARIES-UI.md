@@ -9,11 +9,11 @@ Status: a plan; the mobile UI is not built. Baseline: HEAD `33faa58` on 2026-10-
 
 **Pre-launch rule (2026-10-11):** there are no real users, and local and server data are reset freely. The collector supports no legacy:
 
-- every map is a versioned (format-2) package, and every new observation is bound to it and uploads through `PUT /v2/…`;
+- every map is a zone-versioned package (manifest `format: 1`, the only format), and every new observation is bound to it and uploads through `PUT /v1/projects/{p}/observations/{id}` (the contract's single path; BE-22 moves it from `/v2`);
 - no old-server fallback, no format-1 maps, no legacy labels;
 - no upgrade path that preserves old SQLite rows: a schema change resets local data.
 
-CR-M10 asks to delete the compatibility code. Line references can drift. Re-read the cited function before editing it.
+CON-06, DB-19, BE-22 and MOB-28 delete the compatibility code. Line references can drift. Re-read the cited function before editing it.
 
 The mobile data agent owns storage, domain, sync and package lifecycle ([ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md)). This file owns what observers see and do, and the interfaces the UI needs from the data layer. If the two conflict on data behaviour, the data plan and the contract win. Raise the conflict with the lead instead of working around it.
 
@@ -52,7 +52,7 @@ Never:
 | Inventory | Stored at a client-computed `zoneAnchor`, never drawn as a marker, zone picked from a list or by a map tap (`zoneAt`, first match). | `session/provider.tsx:349-353`, `records.ts:28`, `CollectMap.tsx:515-521` |
 | Refresh errors | Recorded but never shown. No manual refresh. | `src/packages/hosted/provider.tsx:41-42,124-126` |
 | Download progress | During a hosted download the four checklist rows stay "Waiting"; only the bar says "Part N of 4". | `[site].tsx:137-141` |
-| Server side (HEAD) | v1 uploads and the v1 site list still exist for compatibility (CR-M10 deletes them). The v2 site list returns the current package with `format` and zones with `zone_id`, `zone_code`, `display_anchor` and `geometry_sha256`. A format-2 manifest carries `site_id`, `package_version`, `forms` (play and inventory by `form_version_id`) and per-zone `zone_id`, `display_anchor` and `geometry_sha256`. A published archive is built inside the publish request, so it is downloadable when the version appears. | `supabase/migrations/20261011123000_zone_observation_binding.sql:26`, `backend/src/fieldmaps_api/queries/sites.py` (`LEGACY_SELECTION`), `services/zone_discovery.py`, `domain/zone_package_schemas.py:76-124`, `services/zone_archives.py` |
+| Server side (HEAD) | v1 uploads and the v1 site list still exist for compatibility (BE-22 deletes them). The `/v2` site list (moving to `/v1`) returns the current package with `format` and zones with `zone_id`, `zone_code`, `display_anchor` and `geometry_sha256`. A format-2 manifest carries `site_id`, `package_version`, `forms` (play and inventory by `form_version_id`) and per-zone `zone_id`, `display_anchor` and `geometry_sha256`. A published archive is built inside the publish request, so it is downloadable when the version appears. | `supabase/migrations/20261011123000_zone_observation_binding.sql:26`, `backend/src/fieldmaps_api/queries/sites.py` (`LEGACY_SELECTION`), `services/zone_discovery.py`, `domain/zone_package_schemas.py:76-124`, `services/zone_archives.py` |
 | Primitives | `Note` (tone, glyph, title, action, live region), `StateBadge` (contract or custom), `RadioRows`, `Segmented`, `StatusLine` with `announce()`, `Island`, `Button`. No sheet primitive; the declared `explain/[question]` sheet has no route file. | `src/ui/index.ts`, `app/(app)/_layout.tsx:28-36` |
 
 Prompt facts confirmed: hosted packages download and verify into device files; removal has no dependency checks; `domain/observation.ts` keeps package ID/version and zone code/label but `sync/contracts.ts::uploadPayload` drops the package (`contracts.ts:42-56`); edge membership is ambiguous; restoring a draft can pick the first zone. One correction: the hosted `packageVersion` in a record's context is the display string `vN`, not an integer (`build.ts:174`). The data agent must add the integer and UUIDs; the UI must not parse them out of display strings.
@@ -158,7 +158,7 @@ Sign-in and permission copy keeps preserved work separate from permission to upl
 - ZoneStep keeps its `RadioRows` (`ZoneStep.tsx:45-116`).
 - A map tap uses `coveringZones`. One candidate selects it. Several candidates leave the selection unchanged and say "That spot is on the edge of A and B. Choose one in the list."
 - Bound inventories never show a point, in the collect map, the records map, the Saved card or the Observations detail.
-- Label pills and any inventory display anchor use the manifest's `display_anchor` for format-2 maps. Delete the client `zoneAnchor` computation (contract: clients never recompute an anchor).
+- Label pills and any inventory display anchor use the manifest's `display_anchor`. Delete the client `zoneAnchor` computation (contract: clients never recompute an anchor).
 
 ### MUI-10 Where messages live (no mid-observation prompts)
 
@@ -182,7 +182,7 @@ Suggested copy (field language):
 
 ### MUI-11 Site list failures
 
-The site list is `GET /v2/projects/{p}/sites`; there is no older-server fallback. A 404 means the project is no longer visible to this account (`refreshProblem: "no_access"`). Offline, 401 and 5xx are transient. Every failure keeps the cached list and the installed maps, and shows the refresh problem on the Site screen.
+The site list is `GET /v1/projects/{p}/sites` in its BE-22 shape; there is no older-server fallback. A 404 means the project is no longer visible to this account (`refreshProblem: "no_access"`). Offline, 401 and 5xx are transient. Every failure keeps the cached list and the installed maps, and shows the refresh problem on the Site screen.
 
 ## 4. Screen-by-screen changes
 
@@ -200,7 +200,7 @@ Keep layouts and primitives. One primary action per screen (DESIGN rule 01). Tar
 PackageIsland, top to bottom:
 
 1. Title "Map package v7" (the newest verified installed version) with badge "Ready offline", or "Not downloaded".
-2. Waiting Note when a newer version is available (MUI-10), with "Download v8 · 12 MB" (outline). The size comes from the v2 site list package (`archive_bytes`).
+2. Waiting Note when a newer version is available (MUI-10), with "Download v8 · 12 MB" (outline). The size comes from the site list package (`archive_bytes`).
 3. While downloading: ProgressBar plus the four checklist rows moving Waiting → Downloading → Verified. Fix the device-mode rows to use the per-part states (`[site].tsx:137-141`). Then "Cancel download".
 4. Failure or verification Notes (MUI-10). The older version stays ready.
 5. Primary "Set up this session". It opens the newest verified installed package (not `site.packageId`, `[site].tsx:143-162`).
@@ -296,16 +296,16 @@ Send these to the lead before building a divergent client. Each lists the reason
 
 | ID | Request | Why | Affects | Acceptance |
 | --- | --- | --- | --- | --- |
-| CR-M1 | Partly in BE-18 source (`PackageSummary` gained `format`, `zone_contract_version`, `map_revision`; list takes `supported_format`). Still freeze an observer-readable `GET /v1/projects/{p}/packages/{package_id}` with `site_id`, `site_code`, `version`, `format`, `zone_contract_version`, `archive_bytes`, `archive_sha256`, form bindings, and an `is_current` or `superseded_at` hint | Re-downloading a pinned old version and showing "v8 available" need exact metadata without the site list. Today PackageDetail has no format-2 fields (`backend/src/fieldmaps_api/schemas.py:167-184`) | Mobile recovery and update detection; web history | An observer fetches a superseded package's metadata; the digest verifies; a viewer and observer of another project get 404 |
+| CR-M1 | Closed. In the single-path contract: package detail and archive are readable by any project member, with forms, version and digest (BE-22) | Recovery of a pinned older version | Mobile | — |
 | CR-M2 | Name the endpoint for an observer to fetch a bound package's exact play and inventory definitions by `form_version_id`, retired versions included | `prepare.ts::publishedForm` rejects retired versions; exact-version recovery needs them (data plan) | Mobile prepare/recovery | Retired bound form returns 200 to an authorized observer; unbound retired form stays refused for new maps |
-| CR-M3 | In BE-18 source: `SiteV2.package` is the current package with `format`, and `zones` add `zone_id`, `zone_code`, `display_anchor`, `geometry_sha256` (`zone_response_schemas.py`). Write that meaning into contract.md so it stays frozen | Pre-download labels and "v8 available" depend on it | Mobile Project/Site screens; web | Fixture site with v7 installed and v8 current renders "v8 available" from the v2 list only |
+| CR-M3 | Closed. In the single-path contract: the site list's `package` is the current package and `zones` carry `zone_id`, `zone_code`, `label`, `display_anchor` and `geometry_sha256` | Labels before download | Mobile, web | — |
 | CR-M4 | Add an upload action matrix (HTTP, code, retry / rejected / sign-in, needs-attention) covering `idempotency_conflict`, `conflict`, `payload_too_large`, `not_found`, `account_deleted`, `membership_required` and each 422 issue code; and decide what an observer may do with a rejected immutable bound record (keep only, discard, or re-create under a new UUID) | Today an unknown code retries forever (`src/data/api/errors.ts:73`); records cannot change under their UUID (contract fingerprint) | Mobile errors, coordinator, Observations UI | Each code lands in the documented state in a unit test; the UI shows the documented action set |
 | CR-M5 | Add diagonal shared-edge, three-zone shared-vertex and non-axis-aligned near-edge cases to `coverage_cases`, state the client predicate (exact, no epsilon), and confirm a UI-only near-edge hint is allowed | All 16 current cases use axis-aligned edges with exactly representable coordinates | Mobile `coveringZones`; web editor hints | New cases pass in the mobile adapter, the web adapter and SQL |
-| CR-M6 | Name `package_version` (integer, shown `v{n}`) as the version people see. The BE-18 source sets `map_revision` equal to the version for format 2 and null otherwise; say so in contract.md, or drop the field | Two names for one label (contract "Package format 2"); the DB sets them equal (`20261011122000_zone_publication.sql:202`) | Mobile labels; web labels | One field drives every "map vN" label |
+| CR-M6 | Closed. In the single-path contract: `package_version` (shown `v{n}`, from 1) is the only version label; `map_revision` is deleted | One label | Mobile, web | — |
 | CR-M7 | Record the session and adoption policy (MUI-1, MUI-2) in the master plan's update table: new sessions use the newest verified installed version; older versions only through an unfinished observation | The contract permits superseded uploads but does not say who may start new sessions on them | Mobile Brief; manager reports | Lead-approved row; Brief behaviour matches it |
 | CR-M8 | Add a shared `placement` state kind to `contracts/contour.json` (inside, onEdge, otherZone, outside), or approve custom StateBadges for these four | DESIGN says states are a fixed vocabulary; mobile allows custom badges and the web does not (`mobile/src/ui/StateBadge.tsx:32-39` versus `web/src/lib/contour.ts:29-33`) | Both apps, if the web ever shows membership | `pnpm tokens:check` passes; both galleries show the states in Day and Dusk |
-| CR-M10 | Delete the compatibility paths the collector would otherwise carry: the v1 uploader and v1 site list, format-1 and bundled box-zone packages (bundled practice sites become format-2 packages or are dropped), legacy labels, and the SQLite migration ladder (reset local data on schema change). Pair with web CR-W19 for the server side | Pre-launch rule; each path costs tests and states | Mobile data and UI, backend, contracts | One upload path; a fresh install and a reset device pass `pnpm mobile:test` |
-| CR-M9 | State that a bound inventory record stores the manifest `display_anchor` locally, for display only, and that it is excluded from the v2 body | The record schema requires coordinates (`domain/observation.ts:19`), and the contract removes them for v2 inventory | Mobile domain, serializer, maps | A bound inventory is never a marker; the v2 body has no coordinates |
+| CR-M10 | In progress. Compatibility deletion: MOB-28 (one local schema, reset on mismatch, no v1 uploader or capability table) with CON-06, DB-19 and BE-22 on the server; bundled practice sites become current-format packages or are dropped | Pre-launch rule | Mobile, backend, contracts | One upload path; a fresh install passes `pnpm mobile:test` |
+| CR-M9 | State that a bound inventory record stores the manifest `display_anchor` locally, for display only, and that it is excluded from the upload body | The record schema requires coordinates (`domain/observation.ts:19`), and the contract removes them for v2 inventory | Mobile domain, serializer, maps | A bound inventory is never a marker; the v2 body has no coordinates |
 
 ## 8. Tasks
 
@@ -313,11 +313,11 @@ Status lives in [PLAN.md](PLAN.md). Summary:
 
 | Task | Owner | Depends | Builds |
 | --- | --- | --- | --- |
-| MOB-33 | Data agent | MOB-28, BE-18 | v2 site discovery (MUI-11), package readiness with no box fallback, the frozen bound session context with zone UUIDs, exact-version form loading, parked drafts, persisting zone changes on an open observation, and `src/packages/zone-read-models.ts` with its fake |
+| MOB-33 | Data agent | MOB-28, BE-22 | Site discovery (MUI-11), package readiness with no box fallback, the frozen bound session context with zone UUIDs, exact-version form loading, parked drafts, persisting zone changes on an open observation, and `src/packages/zone-read-models.ts` with its fake |
 | MOB-30 | Claude mobile UI | MOB-33 | Version labels on Projects, Project, Site and Brief; update Notes; per-part download progress; older versions; reference-checked removal UI; check for updates; account-switch reset |
 | MOB-31 | Claude mobile UI, data agent reviews parity | MOB-33 | `coveringZones`, `nearEdge` and the `coverage_cases` adapter; placement states; bound Place and Save gates; edge choice; inventory tap candidates; spotlight hole fix; header and Saved version labels |
 | MOB-32 | Claude mobile UI | MOB-33 | Unfinished and parked observation statuses and actions; the Brief start rule; field guide sections |
-| MOB-29 | Data agent with Claude UI | MOB-33, BE-19, MOB-30, MOB-31, MOB-32 | Bound upload, receipts, needs-attention codes and copy (section 4.5), and the physical-device acceptance |
+| MOB-29 | Data agent with Claude UI | MOB-33, BE-22, MOB-30, MOB-31, MOB-32 | Bound upload, receipts, needs-attention codes and copy (section 4.5), and the physical-device acceptance |
 
 Order: MOB-28 lands the catalog, references and fencing. MOB-33 adds the bound read models. MOB-30, MOB-31 and MOB-32 then run in parallel on disjoint files (section 6), each starting against the MOB-33 fake. MOB-29 integrates and runs the device scenario. If a task runs past five days, split it rather than stretching it.
 
