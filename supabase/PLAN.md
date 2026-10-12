@@ -677,7 +677,7 @@ Done when: `sh scripts/e2e-local.sh --zones` seeds idempotently against the rese
 Verify: Run the seed twice against the local stack; run the existing e2e suite without `--zones`. Never target hosted services.
 
 ### DB-19: Reset the zone schema to one baseline
-Status: todo · Phase 3 · Size L · Depends: CON-06 · Blocks: BE-22
+Status: done (2026-10-12: fresh disposable baseline, current SQL/Auth/GIS acceptance and seven authorization/publication races passed; [evidence](../docs/reviews/zone-boundaries-2026-10-12/db19.md)) · Phase 3 · Size L · Depends: CON-06 · Blocks: BE-22
 Owner: Database agent.
 Read first: [contract](../docs/plan/zone-boundaries/contract.md) "What the rewrite removed" and "Data reset"; [pre-launch policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11); `supabase/migrations/`; `database/tests/`.
 Do: Squash `supabase/migrations/` into one baseline that describes only the current schema. Drop `upload_protocol`, `upload_hash_version`, `legacy_package_id`, format-1 package selection, unmanaged-site package writes, adoption bootstrap functions and legacy-code mapping. Replace the observation `geom NOT NULL` compatibility anchor with nullable event geometry plus the zone reference for inventories. Delete the legacy-preservation and migration-rehearsal tests and scripts (`zone-legacy-*`, `gis-legacy-*`, `zone-rehearsal.sh` old-shape fixtures). Update seeds so every site's first package is `v1`. If the owner agrees, fold DB-17's rename into the baseline.

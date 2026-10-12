@@ -23,15 +23,19 @@ INSERT INTO form_versions (id, organization_id, project_id, code, definition) VA
   '20000000-0000-4000-8000-000000000002', 'other-v1', '{"fields":[]}'
 );
 
+\ir current-fixtures.sql
+
 -- When an observation is stored using the mobile contract's UUID and longitude/latitude.
 INSERT INTO observations (
   id, organization_id, project_id, site_id, form_version_id,
-  observer_code, observed_at, geom, answers
+  observer_code, observed_at, geom, answers, created_by, upload_hash, package_id, zone_id, round_type, first_round, placement_source
 ) VALUES (
   '30000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000003',
   '10000000-0000-4000-8000-000000000004', 'QA', '2026-09-17T14:00:00Z',
-  ST_SetSRID(ST_MakePoint(-76.485, 42.448), 4326), '{"people":3,"notes":"Database test"}'
+  ST_SetSRID(ST_MakePoint(-76.485, 42.448), 4326), '{"people":3,"notes":"Database test"}',
+  '50000000-0000-4000-8000-000000000001', repeat('a',64),
+  '91000000-0000-4000-8000-000000000001', '92000000-0000-4000-8000-000000000001', 'standard', true, 'hand'
 );
 
 -- Then GIS consumers get the same location, stable key, and typed answers.
@@ -40,18 +44,8 @@ SELECT pg_temp.assert_true(
     AND notes = 'Database test' AND ST_SRID(geom) = 4326 AND fid > 0
    FROM gis.sample_observations WHERE observation_id = '30000000-0000-4000-8000-000000000001'), 'QGIS projection preserves coordinates and typed answers'
 );
--- The exact ledger, in order: a replay adds nothing, and a new migration must be listed here.
-SELECT pg_temp.assert_true(
-  (SELECT array_agg(version ORDER BY version) FROM fieldmaps_meta.schema_migrations)
-    = ARRAY['0001_initial', '0002_observation_uploads', '0003_spatial_interface',
-            '0004_site_packages', '0005_package_policy_identity', '0006_default_privileges', '0007_identity_tenancy', '0008_tenancy_functions', '0009_invitation_membership_guard', '0010_tenancy_role_guards', '0011_training', '0012_auth_hooks',
-            '0013_sites_forms_collection', '0014_zone_foundation', '0015_zone_geometry', '0016_zone_drafts',
-            '0017_zone_publication', '0018_zone_observation_binding', '0019_zone_api_validation',
-            '0020_zone_authorization_lock', '0021_zone_import_identity', '0022_zone_discovery',
-            '0023_zone_form_succession', '0024_zone_upload_protocol',
-            '0025_gis_recorded_zone_context'],
-  'migration replay records each version once'
-);
+SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['0001_current_baseline'] FROM fieldmaps_meta.schema_migrations),
+  'one current schema baseline is recorded');
 \ir constraints.sql
 \ir access.sql
 \ir rls_coverage.sql
@@ -64,8 +58,8 @@ SELECT pg_temp.assert_true(
 \ir zone-geometry.sql
 \ir zone-publication.sql
 \ir zone-managed-import.sql
+\ir zone-first-upload.sql
 \ir zone-observation-binding.sql
-\ir zone-upload-protocol.sql
 \ir zone-training-binding.sql
 \ir gis-recorded-zone-context.sql
 ROLLBACK;

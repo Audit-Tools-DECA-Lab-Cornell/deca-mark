@@ -1,18 +1,18 @@
 -- Given a valid saved observation, invalid writes must leave it intact.
 SELECT pg_temp.assert_rejected(
   $$INSERT INTO observations (id, organization_id, project_id, site_id, form_version_id,
-    observer_code, observed_at, geom, answers)
+    observer_code, observed_at, geom, answers, created_by, upload_hash, package_id, zone_id, round_type, first_round, placement_source)
     SELECT id, organization_id, project_id, site_id, form_version_id,
-      observer_code, observed_at, geom, answers FROM observations WHERE id = '30000000-0000-4000-8000-000000000001'$$,
+      observer_code, observed_at, geom, answers, created_by, upload_hash, package_id, zone_id, round_type, first_round, placement_source FROM observations WHERE id = '30000000-0000-4000-8000-000000000001'$$,
   '23505', 'duplicate observation IDs cannot create a second record'
 );
 SELECT pg_temp.assert_rejected(
   $$UPDATE observations SET site_id = '20000000-0000-4000-8000-000000000003' WHERE id = '30000000-0000-4000-8000-000000000001'$$,
-  '23503', 'an observation cannot reference another organization site'
+  '23514', 'an observation cannot reference another organization site'
 );
 SELECT pg_temp.assert_rejected(
   $$UPDATE observations SET form_version_id = '20000000-0000-4000-8000-000000000004' WHERE id = '30000000-0000-4000-8000-000000000001'$$,
-  '23503', 'an observation cannot reference another project form'
+  '23514', 'an observation cannot reference another project form'
 );
 SELECT pg_temp.assert_rejected(
   $$UPDATE observations SET geom = ST_SetSRID(ST_MakePoint(181, 42), 4326) WHERE id = '30000000-0000-4000-8000-000000000001'$$,

@@ -439,7 +439,7 @@ Do:
 Done when: `pnpm backend:check` and `pnpm backend:test` pass against a local stack carrying DB-17, and `grep -rni fieldmaps backend` finds only history.
 
 ### BE-22: Serve one zone API path
-Status: todo · Phase 3 · Size L · Depends: CON-06, DB-19 · Blocks: DB-18, MOB-29, MOB-33, WEB-28, WEB-29, WEB-35, WEB-36, WEB-39, WEB-42
+Status: doing (2026-10-12: replacing the runtime with the sole current-contract API after DB-19 acceptance) · Phase 3 · Size L · Depends: CON-06, DB-19 · Blocks: DB-18, MOB-29, MOB-33, WEB-28, WEB-29, WEB-35, WEB-36, WEB-39, WEB-42
 Owner: API agent; the contract coordinator regenerates types.
 Read first: [contract](../docs/plan/zone-boundaries/contract.md) (whole document); [pre-launch policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11); `backend/src/fieldmaps_api/routers/{sites,collection,zones,observation_analysis}.py`.
 Do: Move the `/v2` behaviour onto the `/v1` paths and delete the old `/v1` site-list, observation-upload and observation-list behaviour, `LEGACY_SELECTION`, format-1 preparation and `supported_format`, unmanaged uploads, the adoption bootstrap, `assignment_basis` and legacy filters, the v1 fingerprint and `schema_version`, and `zone_publication_enabled`. Address sites by UUID on every route. Add the contract's new fields: draft `etag`, `current_package_version` and display names; validation `geometry_sha256` and `change`; publication `current_package_id` and `replayed`; package list `site_id` filter and publication metadata; `GET /sites/{site_id}`; first-upload identity mapping with `expected_current_package_id: null`. Rename the zone `DraftCreate` models so OpenAPI names do not collide. Delete tests that assert removed behaviour.

@@ -1,7 +1,7 @@
 RESET ROLE;
 INSERT INTO fieldmaps.observations (id, organization_id, project_id, site_id, form_version_id,
   observer_code, observed_at, geom, answers, created_by, upload_hash, zone_code, round_type,
-  first_round, placement_source, package_id, zone_id, upload_protocol)
+  first_round, placement_source, package_id, zone_id)
 SELECT md5('zone-query-plan-' || n)::uuid, '10000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000003',
   '10000000-0000-4000-8000-000000000004', 'QA', now() - n * interval '1 second',
@@ -9,7 +9,7 @@ SELECT md5('zone-query-plan-' || n)::uuid, '10000000-0000-4000-8000-000000000001
   repeat('e', 64), 'A', 'standard', true, 'hand',
   CASE WHEN n % 2 = 0 THEN '72000000-0000-4000-8000-000000000002'::uuid
     ELSE '72000000-0000-4000-8000-000000000003'::uuid END,
-  '71000000-0000-4000-8000-000000000001', 2
+  '71000000-0000-4000-8000-000000000001'
 FROM generate_series(1, 12000) n;
 ANALYZE fieldmaps.observations;
 
@@ -30,12 +30,12 @@ INSERT INTO zone_query_plans VALUES
   ('observations_zone_time_idx', pg_temp.zone_query_plan($q$
     SELECT id FROM fieldmaps.observations WHERE project_id = '10000000-0000-4000-8000-000000000002'
       AND site_id = '10000000-0000-4000-8000-000000000003'
-      AND zone_id = '71000000-0000-4000-8000-000000000001' AND upload_protocol = 2
+      AND zone_id = '71000000-0000-4000-8000-000000000001'
     ORDER BY observed_at DESC, id LIMIT 50$q$)),
   ('observations_package_time_idx', pg_temp.zone_query_plan($q$
     SELECT id FROM fieldmaps.observations WHERE project_id = '10000000-0000-4000-8000-000000000002'
       AND site_id = '10000000-0000-4000-8000-000000000003'
-      AND package_id = '72000000-0000-4000-8000-000000000002' AND upload_protocol = 2
+      AND package_id = '72000000-0000-4000-8000-000000000002'
     ORDER BY observed_at DESC, id LIMIT 50$q$));
 SELECT pg_temp.assert_true(plan::text LIKE '%"Index Name": "' || label || '"%'
     AND plan #>> '{0,Plan,Actual Rows}' = '50',

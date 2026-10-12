@@ -5,10 +5,10 @@ CREATE FUNCTION pg_temp.zone_observation(p_package uuid, p_zone uuid, p_point ex
 DECLARE result fieldmaps.observations;
 BEGIN
   INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,form_version_id,observer_code,observed_at,geom,
-    answers,created_by,upload_hash,package_id,zone_id,upload_protocol,zone_code,round_type,first_round,placement_source)
+    answers,created_by,upload_hash,package_id,zone_id,zone_code,round_type,first_round,placement_source)
   VALUES (gen_random_uuid(),'10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002',
     '80000000-0000-4000-8000-000000000001',p_form,'QA',now(),p_point,'{}',fieldmaps.request_user_id(),repeat('c',64),
-    p_package,p_zone,2,'UNTRUSTED',p_round,p_first,p_placement) RETURNING * INTO result;
+    p_package,p_zone,'UNTRUSTED',p_round,p_first,p_placement) RETURNING * INTO result;
   RETURN result;
 END;
 $$;
@@ -40,16 +40,17 @@ SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,fie
 SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,fieldmaps.make_point(0.001,0.001),%L,%L,true,%L)',
   :'p3',:'zone_a','80000000-0000-4000-8000-000000000010','standard','zone'), 'ZB001','point placement must be hand');
 SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,NULL,%L,%L,false,%L)',
-  :'p3',:'zone_a','80000000-0000-4000-8000-000000000004','inventory','zone'), 'ZB001','v2 inventory first_round must be null');
+  :'p3',:'zone_a','80000000-0000-4000-8000-000000000004','inventory','zone'), 'ZB001','Inventory first_round must be null');
 SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,NULL,%L,%L,NULL,%L)',
   :'p3',:'zone_a','80000000-0000-4000-8000-000000000010','inventory','zone'), 'ZB001','inventory cannot use the package play binding');
+SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,fieldmaps.make_point(0.001,0.001),%L,%L,NULL,%L)',
+ :'p3',:'zone_a','80000000-0000-4000-8000-000000000004','inventory','zone'),
+ 'ZB001','Inventory cannot submit an event coordinate in place of its zone snapshot');
 SELECT (pg_temp.zone_observation(:'p3',:'zone_a',NULL,'80000000-0000-4000-8000-000000000004','inventory',NULL,'zone')).id AS inventory_id \gset
 SELECT pg_temp.assert_true((SELECT first_round IS NULL AND placement_source = 'zone' AND zone_code = 'A'
-  AND ST_AsEWKB(o.geom) = ST_AsEWKB(z.display_anchor) FROM observations o
+  AND o.geom IS NULL FROM observations o
   JOIN package_zones z ON z.package_id = o.package_id AND z.zone_id = o.zone_id WHERE o.id = :'inventory_id'),
-  'inventory stores the exact server-derived snapshot anchor');
-SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,fieldmaps.make_point(0.001,0.001))',:'base',:'zone_a'),
-  'ZB001','format-1 package cannot acquire a v2 observation binding');
+  'Inventory stores no event point and keeps the exact snapshot reference');
 SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,fieldmaps.make_point(0.001,0.001))',
   '81000000-0000-4000-8000-000000000002',:'zone_a'), 'ZB001','blocked package cannot bind an observation');
 SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,fieldmaps.make_point(0.001,0.001))',:'p4',:'zone_b'),
@@ -64,12 +65,12 @@ SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_observation(%L,%L,fie
   '42501','authorization precedes geometry validation and does not disclose a guessed hole');
 RESET ROLE;
 SELECT pg_temp.assert_rejected(format('UPDATE observations SET geom = fieldmaps.make_point(0,0) WHERE id = %L',:'inventory_id'),
-  '23514','bound inventory anchor cannot be changed retrospectively');
+  '23514','Inventory cannot acquire a point retrospectively');
 SELECT pg_temp.assert_rejected(format('UPDATE observations SET form_version_id = %L WHERE id = %L',
   '80000000-0000-4000-8000-000000000010',:'inventory_id'), '23514','bound form attribution cannot be changed');
 SELECT pg_temp.assert_rejected($q$UPDATE form_versions SET state='retired'
   WHERE id='80000000-0000-4000-8000-000000000010'$q$,'ZB007',
-  'current managed play form cannot retire before an explicit successor');
+  'current bound play form cannot retire before an explicit successor');
 INSERT INTO form_versions(id,organization_id,project_id,code,definition)
 VALUES ('80000000-0000-4000-8000-000000000009','10000000-0000-4000-8000-000000000001',
   :'project','db16-successor-v1','{"fields":[]}');
@@ -80,7 +81,7 @@ CROSS JOIN LATERAL fieldmaps_private.finalize_zone_package(:'project',:'site',
   '85000000-0000-4000-8000-000000000009',:'p6',NULL,NULL,
   '81000000-0000-4000-8000-000000000009',7,
   p.value->'manifest' || jsonb_build_object('package_id','81000000-0000-4000-8000-000000000009',
-    'package_version',7,'form_version','db16-successor-v1','forms',jsonb_build_object(
+    'package_version',7,'forms',jsonb_build_object(
       'play',jsonb_build_object('form_version_id','80000000-0000-4000-8000-000000000009',
         'form_version','db16-successor-v1'),'inventory',NULL)),
   p.value->'layer','\x010203','[{"step":"archive","state":"passed","detail":"Synthetic successor"}]',
