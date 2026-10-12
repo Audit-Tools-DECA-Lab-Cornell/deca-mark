@@ -144,9 +144,9 @@ WEB-20 to WEB-26 and MOB-23 to MOB-27 build the Contour screens ahead of the wir
 - **Web:** WEB-08, WEB-09, WEB-10, WEB-11, WEB-12, WEB-13
 - **GIS:** GIS-01, GIS-02, GIS-03, GIS-04
 - **Operations:** OPS-16
-- **Zone contracts/data:** CON-05, DB-15, DB-16
+- **Zone contracts/data:** CON-05, DB-15, DB-16, DB-18
 - **Zone API:** BE-18, BE-19, BE-20
-- **Zone clients:** MOB-28, MOB-29, MOB-30, MOB-31, MOB-32, WEB-28, WEB-29, WEB-30, WEB-31, WEB-32, WEB-33, WEB-34, WEB-35, WEB-36, WEB-37, WEB-38, WEB-39, WEB-40, WEB-41, WEB-42
+- **Zone clients:** MOB-28, MOB-29, MOB-30, MOB-31, MOB-32, MOB-33, WEB-28, WEB-29, WEB-30, WEB-31, WEB-32, WEB-33, WEB-34, WEB-35, WEB-36, WEB-37, WEB-38, WEB-39, WEB-40, WEB-41, WEB-42
 - **Zone GIS:** GIS-09
 
 ### Phase 4: Mobile UX and hardening (weeks 9–12)

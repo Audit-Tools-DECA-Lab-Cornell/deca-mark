@@ -667,3 +667,11 @@ Do: add one forward migration, `rename_to_decamark`. Never edit an applied migra
 7. Rename the old identifiers in the docs and PLAN files, keeping applied migrations and dated evidence as written.
 
 Done when: `pnpm db:test` passes on a fresh local stack and on one upgraded from the old names, and `grep -rni fieldmaps supabase database` finds only applied migrations and history. After the authorized apply, `database/hosted/verify.sql` passes on staging.
+
+### DB-18: Seed and enable a local zone acceptance stack
+Status: todo · Phase 3 · Size M · Depends: BE-20 · Blocks: WEB-35, WEB-42
+Owner: Database agent; the API owner approves the local configuration.
+Read first: [web UI plan](../web/ZONE-BOUNDARIES-UI.md) section 10; [mobile UI plan](../mobile/ZONE-BOUNDARIES-UI.md) section 9; `scripts/e2e-local.sh`; `database/seed-web-workspace.mjs`; `backend/config.auth-local.json`.
+Do: Add a local-only API configuration with `zone_publication_enabled: true`, an opt-in `--zones` option in `scripts/e2e-local.sh` that selects it, and `database/seed-zone-review.mjs`. The seed uses only the real local API to create a separate project with an adopted site at v7 and v8, a format-1 site, two managers' open drafts, and more than 500 observations across v7, v8 and legacy, including inventory. Leave the existing seed and specs unchanged.
+Done when: `sh scripts/e2e-local.sh --zones` starts a zone-enabled local API and seeds idempotently; the existing specs still pass without the option.
+Verify: Run the seed twice against the local stack; run the existing e2e suite without `--zones`. Never target hosted services.

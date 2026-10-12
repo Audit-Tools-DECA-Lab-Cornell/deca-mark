@@ -1,13 +1,13 @@
 # Mobile UI plan: collecting on pinned zone boundaries
 
-[Mobile data plan](ZONE-BOUNDARIES.md) · [Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Web UI plan](../web/ZONE-BOUNDARIES-UI.md) · Tasks MOB-30, MOB-31 and MOB-32 (UI), MOB-28 and MOB-29 (data) in [PLAN.md](PLAN.md)
+[Mobile data plan](ZONE-BOUNDARIES.md) · [Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Web UI plan](../web/ZONE-BOUNDARIES-UI.md) · Tasks MOB-30, MOB-31 and MOB-32 (UI), MOB-28, MOB-33 and MOB-29 (data) in [PLAN.md](PLAN.md)
 
-Status: a plan, not built. Baseline: local source on 2026-10-11. During this planning, BE-18 appeared in the working tree as uncommitted source while its task still read `todo`:
+Status: a plan; the mobile UI is not built. Baseline: HEAD `33faa58` on 2026-10-11.
 
-- **Present in source:** `GET /v2/projects/{p}/sites`, historical `/zones` and the manager draft routes. They are in the regenerated `src/data/api/schema.d.ts`.
-- **Not present:** the v2 observation upload (`PUT /v2/…/observations/{id}`, BE-19) and the v2 reads exist nowhere.
+- **Committed backend:** BE-18 (`6da4359`: v2 site discovery, historical `/zones`, drafts), BE-19 (`92f8451`: `PUT /v2/…/observations/{id}` with `BoundUploadReceipt`) and BE-20 (`78eb825`: v2 reads). All are in `src/data/api/schema.d.ts`.
+- **In progress:** the mobile data agent has uncommitted MOB-28 work under `src/`. This plan does not touch it.
 
-Treat the BE-18 source as moving until BE-18 is marked done. Line references can drift. Re-read the cited function before editing it.
+Line references can drift. Re-read the cited function before editing it.
 
 The mobile data agent owns storage, domain, sync and package lifecycle ([ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md)). This file owns what observers see and do, and the interfaces the UI needs from the data layer. If the two conflict on data behaviour, the data plan and the contract win. Raise the conflict with the lead instead of working around it.
 
@@ -46,6 +46,7 @@ Never:
 | Inventory | Stored at a client-computed `zoneAnchor`, never drawn as a marker, zone picked from a list or by a map tap (`zoneAt`, first match). | `session/provider.tsx:349-353`, `records.ts:28`, `CollectMap.tsx:515-521` |
 | Refresh errors | Recorded but never shown. No manual refresh. | `src/packages/hosted/provider.tsx:41-42,124-126` |
 | Download progress | During a hosted download the four checklist rows stay "Waiting"; only the bar says "Part N of 4". | `[site].tsx:137-141` |
+| Server side (HEAD) | v1 uploads to an adopted site are still accepted as unbound legacy rows (`upload_protocol = 1`), so today's installed app keeps uploading after adoption. The v1 site list returns the frozen legacy package for adopted sites. The v2 site list returns the current package with `format` and zones with `zone_id`, `zone_code`, `display_anchor` and `geometry_sha256`. A format-2 manifest carries `site_id`, `package_version`, `forms` (play and inventory by `form_version_id`) and per-zone `zone_id`, `display_anchor` and `geometry_sha256`. A published archive is built inside the publish request, so it is downloadable when the version appears. | `supabase/migrations/20261011123000_zone_observation_binding.sql:26`, `backend/src/fieldmaps_api/queries/sites.py` (`LEGACY_SELECTION`), `services/zone_discovery.py`, `domain/zone_package_schemas.py:76-124`, `services/zone_archives.py` |
 | Primitives | `Note` (tone, glyph, title, action, live region), `StateBadge` (contract or custom), `RadioRows`, `Segmented`, `StatusLine` with `announce()`, `Island`, `Button`. No sheet primitive; the declared `explain/[question]` sheet has no route file. | `src/ui/index.ts`, `app/(app)/_layout.tsx:28-36` |
 
 Prompt facts confirmed: hosted packages download and verify into device files; removal has no dependency checks; `domain/observation.ts` keeps package ID/version and zone code/label but `sync/contracts.ts::uploadPayload` drops the package (`contracts.ts:42-56`); edge membership is ambiguous; restoring a draft can pick the first zone. One correction: the hosted `packageVersion` in a record's context is the display string `vN`, not an integer (`build.ts:174`). The data agent must add the integer and UUIDs; the UI must not parse them out of display strings.
@@ -62,7 +63,7 @@ The next session opens the **newest verified package installed on the device** f
 
 Why: the Brief already promises "MAP v7 · FORM x stay locked for this session", and observers already think of the collect screen as the session. Downloads are manual (the observer taps Download), so the observer controls when a new version reaches the device, and the Brief states which version the next session will use. This needs no new "End session" control. Only the draft has to survive process death, and it already carries its package (`draft-store.ts:15-29`).
 
-Alternative (Lead): if the protocol needs a session that spans several visits, add a durable session record with explicit "Continue session" and "End session" on the Brief. The data plan's "durable session context" (ZONE-BOUNDARIES.md, MOB-29) supports either. The UI cost is one Brief state and one leave-dialog choice. Do not build both.
+**Blocking lead decision before MOB-33.** The data plan says "Session context is durable enough to resume after process death" (ZONE-BOUNDARIES.md, MOB-29). MUI-1 makes only the unfinished draft durable. The lead either amends the data plan to MUI-1 (recommended), or adopts a durable session record with explicit "Continue session" and "End session" on the Brief. The UI cost of the second is one Brief state and one leave-dialog choice. Record the answer in both documents. It also fixes the meaning of `references.openSession` in section 6: under MUI-1 that is "the collect screen currently has this package open"; under the alternative it is a durable lease. Do not build both.
 
 ### MUI-2 Delayed adoption, never forced mid-work (Lead: confirm)
 
@@ -129,7 +130,14 @@ Unfinished observation states, driven by a typed status from the data layer (sec
 | Zone missing from map | "This observation's zone (NM) is not in map v7 on this device. Your point and answers are kept. Download map v7 again." | Download again, Discard draft |
 | Form missing | "Form janet-test-v1 for this observation is not on this device. Download map v7 again." | Download again, Discard draft |
 
-While an unfinished observation exists, "Start collection" on the Brief is disabled with "Resume or discard the unfinished observation first." Starting would overwrite the single draft (`draft-store.ts:37-45`). If the data agent adds more than one draft per account, relax this rule. Discard always uses `Alert.alert` with "Discard draft" / "Keep draft" (existing pattern).
+There is one draft slot per account today (`draft-store.ts:37-45`). A draft that cannot be resumed (map missing while offline, access gone, zone or form missing) must not block all collection until the observer discards research answers. MOB-33 therefore adds parked drafts, keyed by draft ID:
+
+- "Keep for later" parks an unresumable draft and frees the active slot without discarding it. Parked drafts appear on the Projects screen, with Resume when it becomes possible.
+- "Start collection" is disabled only while a resumable draft holds the active slot. The reason names its place and links to it: "Resume or discard the unfinished observation at Riverside (map v7)."
+- For `zone_missing` or `form_missing` on a digest-verified package, a new download cannot help. Offer "Keep for your coordinator" (park) and Discard, not "Download again".
+- A recovery download queues behind a running download of the same site.
+
+Discard always uses `Alert.alert` with "Discard draft" / "Keep draft" (existing pattern).
 
 ### MUI-8 Account changes reset visible state
 
@@ -166,6 +174,15 @@ Suggested copy (field language):
 - Site, download failed: "Map v8 did not finish downloading. Map v7 is still on this device and ready."
 - Site, verification failed: "Map v8 could not be checked: zone Slide has no boundary. Map v7 stays on this device. Tell your coordinator."
 - Site, refresh failed: "Could not check for map updates. Showing what this device knew at Oct 10 · 09:12."
+
+### MUI-11 Servers without versions
+
+The current API answers 404 `not_found` both for a missing route and for a project hidden by authorization (`services/zone_discovery.py:34-35` → `repositories/tenancy.py`). Treat the API as lacking versions only when:
+
+- the v2 list answers 405; or
+- it answers 404 while the v1 site list for the same project answers 200 in the same refresh.
+
+Once any v2 response has been seen for this issuer and server, capability is cached and never downgraded by a later 404. Any other 404 is `refreshProblem: "no_access"`. Transient failures (offline, 401, 5xx) are not absence either. When the API lacks versions, the data layer keeps legacy collection (data plan, MOB-29), and the UI shows no update or version Notes beyond the installed map's "map vN". Never downgrade a bound session or record.
 
 ## 4. Screen-by-screen changes
 
@@ -234,7 +251,7 @@ Add short sections: "Map versions" (why a session keeps its map), "Zone edges" (
 
 ## 6. Data-layer interfaces the UI needs (from the mobile data agent)
 
-The UI does not write storage, domain, sync or package code. It asks for these read models and actions. Names are proposals; the data agent may rename them, but each field must exist with this meaning. Agree them in a short interface file under `src/packages/` before either side builds on them.
+The UI does not write storage, domain, sync or package code. It asks for these read models and actions. MOB-33 (data agent) writes them in `src/packages/zone-read-models.ts`, with hooks `useSiteVersions(siteId)` and `useRecoveredDraft()` and an in-memory fake for UI tests. It also extends `SiteZone` with `zoneId: string | null`, `displayAnchor: [number, number] | null` and `boxFallback: boolean`. The UI owner acknowledges the file before MOB-30 to MOB-32 build on it. Names may change; each field's meaning may not.
 
 ```ts
 // Per site, scoped to the signed-in issuer/account/project; fenced against account switches.
@@ -265,6 +282,7 @@ type Pinned = { packageId: string; version: number; format: 1 | 2; bound: boolea
 type Recovered = {
   draftId: string; pinned: Pinned; placed: boolean; answered: number; asked: number;
   status: "ready" | "package_missing" | "package_unavailable" | "zone_missing" | "form_missing";
+  parked: boolean;
   redownload: { possible: boolean; bytes: number | null };
 };
 
@@ -273,7 +291,7 @@ coveringZones(point: [number, number], zones: SiteZone[]): SiteZone[];
 nearEdge(point, zones, metresPerPoint, thresholdPoints = 8): SiteZone | null;
 ```
 
-Shared hotspot files: `src/session/provider.tsx`, `src/packages/hosted/provider.tsx`, `src/data/api/client.ts` and `src/storage/*`. The data agent writes them. The UI agent changes them only by a written request answered by the data agent, one file at a time, with no overlapping edits. UI-owned files: `src/features/collect/*`, `src/features/projects/*`, the route screens under `app/(app)/(tabs)/(projects)/**` and `app/(app)/collect.tsx`, `src/maps/geometry.ts` (predicate and spotlight only), `src/ui/*` additions, and the field guide content.
+Shared hotspot files: `src/session/provider.tsx`, `src/packages/hosted/provider.tsx`, `src/data/api/client.ts` and `src/storage/*`. The data agent writes them. The UI agent changes them only by a written request answered by the data agent, one file at a time, with no overlapping edits. Shared adapters `src/features/preview/*` and `src/maps/sample-site.ts` change only through MOB-33 or with the data agent's agreement. UI-owned files: `src/features/collect/*`, `src/features/projects/*`, the route screens under `app/(app)/(tabs)/(projects)/**` and `app/(app)/collect.tsx`, `src/maps/geometry.ts` (predicate and spotlight only), `src/ui/*` additions, and the field guide content.
 
 ## 7. Contract and data-plan change requests
 
@@ -297,12 +315,13 @@ Status lives in [PLAN.md](PLAN.md). Summary:
 
 | Task | Owner | Depends | Builds |
 | --- | --- | --- | --- |
-| MOB-30 | Claude mobile UI | MOB-28 | Version labels on Projects, Project, Site and Brief; update Notes; per-part download progress; older versions; reference-checked removal UI; check for updates; account-switch reset |
-| MOB-31 | Claude mobile UI, data agent reviews parity | MOB-28 | `coveringZones`, `nearEdge` and the `coverage_cases` adapter; placement states; bound Place and Save gates; edge choice; inventory tap candidates; spotlight hole fix; header and Saved version labels |
-| MOB-32 | Claude mobile UI | MOB-28 | Unfinished-observation statuses and actions; the Brief start block; field guide sections |
-| MOB-29 | Data agent with Claude UI | MOB-28, BE-19, MOB-30, MOB-31, MOB-32 | Bound upload, receipts, needs-attention codes and copy (section 4.5), and the physical-device acceptance |
+| MOB-33 | Data agent | MOB-28, BE-18 | v2 site discovery with the capability rule (MUI-11), format-2 readiness with no box fallback, the frozen bound session context with zone UUIDs, exact-version form loading, parked drafts, persisting zone changes on an open observation, and `src/packages/zone-read-models.ts` with its fake |
+| MOB-30 | Claude mobile UI | MOB-33 | Version labels on Projects, Project, Site and Brief; update Notes; per-part download progress; older versions; reference-checked removal UI; check for updates; account-switch reset |
+| MOB-31 | Claude mobile UI, data agent reviews parity | MOB-33 | `coveringZones`, `nearEdge` and the `coverage_cases` adapter; placement states; bound Place and Save gates; edge choice; inventory tap candidates; spotlight hole fix; header and Saved version labels |
+| MOB-32 | Claude mobile UI | MOB-33 | Unfinished and parked observation statuses and actions; the Brief start rule; field guide sections |
+| MOB-29 | Data agent with Claude UI | MOB-33, BE-19, MOB-30, MOB-31, MOB-32 | Bound upload, receipts, needs-attention codes and copy (section 4.5), and the physical-device acceptance |
 
-Order: MOB-28 lands the catalog, references, fencing and format-2 parsing. MOB-30, MOB-31 and MOB-32 then run in parallel on disjoint files (section 6). MOB-29 integrates and runs the device scenario. If a task runs past five days, split it rather than stretching it.
+Order: MOB-28 lands the catalog, references and fencing. MOB-33 adds the bound read models. MOB-30, MOB-31 and MOB-32 then run in parallel on disjoint files (section 6), each starting against the MOB-33 fake. MOB-29 integrates and runs the device scenario. If a task runs past five days, split it rather than stretching it.
 
 ## 9. Verification
 
@@ -321,7 +340,7 @@ On a simulator (iPad and phone, portrait and landscape, left and right hand):
 
 Physical device (release gate, owned by MOB-29 and QA-07). Run on a real iPad and a real Android tablet, and record the build, commit and device:
 
-1. Download v7. Turn on airplane mode. Start a session, place a point near a shared edge, choose the zone, answer two questions. Force-quit.
+1. Download v7. Turn on airplane mode. Start a session, place a point on a shared edge, choose the non-session zone, and force-quit immediately. Reopen: the chosen zone is restored. Answer two questions. Force-quit again.
 2. On the manager web, publish v8 with a changed boundary and label.
 3. Reopen. Resume the unfinished observation on v7: same zone, point and answers. Save. Record an inventory.
 4. Reconnect. The Site screen shows "v8 available". The Brief still says v7 until v8 is downloaded. Try to remove v7 while records are unsent: it is refused, with the reason.
@@ -333,7 +352,7 @@ Done evidence: the commands above with output, simulator screenshots per state, 
 
 ## 10. Open questions for the lead
 
-1. MUI-1: session as one collect visit (recommended) or a durable multi-visit session?
+1. MUI-1 (blocking for MOB-33): session as one collect visit with a durable draft (recommended, needs a data-plan amendment) or a durable multi-visit session?
 2. MUI-2: confirm delayed adoption with no older-version choice for new sessions.
 3. MUI-3: does a preselected session zone on a shared edge count as an explicit choice?
 4. MUI-3: allow the UI-only near-edge hint?

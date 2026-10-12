@@ -505,11 +505,12 @@ Done when: Map/table/export agree beyond 500 without reclassification against cu
 Verify: Web checks/unit tests and real browser history/filter/export scenarios (`data-history.spec.ts`, `export-v2.spec.ts`).
 
 ### WEB-30: Spike the zone editor drawing surface
-Status: todo · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-32
+Status: todo · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-33
+Needs user: run gates 4 and 8 on a real iPad against `next dev --hostname 0.0.0.0` on the LAN (local stack only). WEB-30 may close with those two gates recorded as pending (user); a later failure opens a new task.
 Owner: Claude web owner.
-Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-1, WUI-2 and "WEB-30 spike criteria"; `src/components/map/{MapFrame,SitePlan}.tsx`; `src/lib/plan.ts`; `contracts/zones/geometry.cases.json`.
-Do: Build throwaway prototypes of the SVG editing layer and of OpenLayers Modify on the same geometry outside production routes; measure them against the spike criteria; delete the prototypes and append the decision record to the UI plan.
-Done when: The decision record lists each criterion with a measured result; no production route or dependency changed.
+Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-1, WUI-2 and "WEB-30 spike gates"; `src/components/map/{MapFrame,SitePlan}.tsx`; `src/lib/plan.ts`; `contracts/zones/geometry.cases.json`.
+Do: Build a dev-gated throwaway harness of Option A (the SVG editing layer on a pure longitude/latitude model) and measure it against the nine gates, including a real iPad Safari run. If gate 4 or 8 fails, stop and send the measurements to the lead; any OpenLayers trial runs in a scratch copy under `$TMPDIR` and never adds `ol` to `web/`. Delete the harness and record the results in the UI plan.
+Done when: Each gate has a measured result in the UI plan; the harness is gone; no production route or dependency changed.
 Verify: Measurements and screenshots in the decision record; `git status` shows no leftover prototype files.
 
 ### WEB-31: Keep zone geometry lossless in the web plan model
@@ -521,7 +522,7 @@ Done when: Every fixture geometry renders with its holes and parts; a parse-then
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and the honesty scan screenshots of Sites, site, Data and Overview.
 
 ### WEB-32: Build the pure zone editor core
-Status: todo · Phase 3 · Size L · Depends: WEB-30, WEB-31 · Blocks: WEB-33
+Status: todo · Phase 3 · Size L · Depends: WEB-31 · Blocks: WEB-33
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-2, WUI-4, WUI-5, WUI-8, 5.6 and 6.3; `contracts/zones/geometry.cases.json` (`structure_cases`, `limit_cases`).
 Do: Write `src/lib/zones/{geometry,hints}.ts` and the editor reducer, history and save-queue reducer as pure modules: vertex addressing, closed-ring edits, nudges in metres, rectangle and midpoint, structural checks with contract limits, exact-vertex snapping, tracing, self-intersection and outside-site hints.
@@ -529,9 +530,9 @@ Done when: Unit tests cover every operation and every save-queue transition list
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`.
 
 ### WEB-33: Build the zone editor canvas and panels
-Status: todo · Phase 3 · Size L · Depends: WEB-32 · Blocks: WEB-34, WEB-35
+Status: todo · Phase 3 · Size L · Depends: WEB-30, WEB-32 · Blocks: WEB-34, WEB-35
 Owner: Claude web owner.
-Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.3 to 5.6 and 6.6; `DESIGN.md` §5, §8 and §9; `src/components/map/MapFrame.tsx`; deleted `VertexHandles.tsx` and `ZoneEditor.tsx` at `4922f2b^` (reuse the accessibility, not the rounding).
+Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.3 to 5.6 and 6.6; `DESIGN.md` §5, §8 and §9; `src/components/map/MapFrame.tsx`; deleted `VertexHandles.tsx` and `ZoneEditor.tsx` at `4922f2b^` (reuse the names and announcements, not the per-vertex tab stops or the rounding).
 Do: Add the MapFrame mode, camera context, key ownership, pinch zoom, border-correct inverse and zoom by ground resolution; build handles, select, move, insert and remove point, the Zones list, the selected zone panel, the Points table and the keyboard map; add the dev-only `/dev/zone-editor` specimen with no network or save code.
 Done when: Every fixture shape can be edited by keyboard alone and by touch emulation with holes and parts preserved; screen-reader names and announcements match the UI plan.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, a Playwright run of the specimen at desktop-1440 and phone-390, and axe with no serious or critical findings.
@@ -545,10 +546,10 @@ Done when: Two adjacent zones drawn with a traced shared edge share exactly the 
 Verify: `pnpm --dir web test:unit` (exactness tests), specimen Playwright run; server validation of the traced pair is checked in WEB-28.
 
 ### WEB-35: Persist zone drafts with conditional autosave
-Status: todo · Phase 3 · Size L · Depends: BE-18, WEB-33 · Blocks: WEB-37, WEB-38
+Status: todo · Phase 3 · Size L · Depends: BE-18, WEB-33, DB-18 · Blocks: WEB-37, WEB-38
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-3, WUI-4, WUI-11, WUI-12, 5.8, 5.9, 6.3 and 6.4; [contract](../docs/plan/zone-boundaries/contract.md) manager endpoints and errors; `src/lib/api/{browser,errors}.ts`; `src/features/shell/useLeaveGuard.ts`.
-Do: Add zod schemas, `src/lib/api/zones-browser.ts` with If-Match, ETag and caller abort, the new error kinds with issues and conflict details, the autosave queue wiring, save status, the conflict dialog, validation with the Problems list and canvas markers, the shell navigation guard and the account fence.
+Do: Add zod schemas, `src/lib/api/zones-browser.ts` with If-Match, ETag and caller abort, the new error kinds with issues and conflict details, the autosave queue wiring, save status, the conflict dialog, validation with the Problems list and canvas markers, the shell navigation guard, the account fence, the mount-time draft GET, and the manager-gated editor route with removal of only the `zones/:path*` redirect (and its REMOVED_ROUTES entry).
 Done when: Against the local API, edits save with increasing revisions, a stale revision opens the conflict dialog with local edits kept, and validation results attach to their exact revision.
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and a local-stack Playwright smoke of save, conflict and validate.
 
@@ -564,7 +565,7 @@ Verify: `pnpm --dir web test:unit` (package-history, site-view), `pnpm web:check
 Status: todo · Phase 3 · Size L · Depends: WEB-35, WEB-36 · Blocks: WEB-38
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-13, section 4, 5.1 and 5.2; `next.config.ts` redirects; `e2e/removed-routes.spec.ts`; `e2e/support/routes.ts`.
-Do: Add the Zones page (current version, drafts, versions, read-only `?version=`), Start draft with adoption (inventory form choice, legacy codes), the site page entry replacing the NotAvailable note where editing is available, the routes, and the redirect and e2e route changes.
+Do: Add the Zones page (current version, drafts, versions, read-only `?version=`, restore an earlier version through a new draft from current), Start draft with adoption (inventory form choice, legacy codes), the site page entry replacing the NotAvailable note where editing is available, and removal of the root `zones` redirect with its e2e route change.
 Done when: A viewer sees the history; a manager starts, reopens and finds other managers' drafts; observers and viewers opening editor URLs see the no-access state; unsupported sites show their specific reason.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-access.spec.ts` and the honesty scan with the new routes.
 
@@ -596,12 +597,12 @@ Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `data-history.spec.ts` map
 Status: todo · Phase 3 · Size L · Depends: WEB-39 · Blocks: WEB-29
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 7.5 and 7.6; `src/features/{overview,reports,qgis}/*`; `src/lib/export/*`; `src/lib/observations/summary.ts`.
-Do: Feed coverage, field return, reports by zone and round, and the site page counts from the summary; keep page-limited panels labelled; export CSV and GeoJSON from the server for the same scope with the scope text and the ceiling error; neutralise formula prefixes in the client codebook; add the zones GeoJSON download on the QGIS page.
-Done when: A downloaded export has exactly `total_matching` rows; coverage rows are recorded snapshots, with legacy rows separate.
+Do: Feed coverage, field return, reports by zone and round, and the site page counts from the summary; keep page-limited panels labelled; download the server ZIP export for the same scope with the scope text and the 10,000-row ceiling; add the zones GeoJSON download on the QGIS page.
+Done when: `observations.csv` inside the downloaded ZIP has exactly `total_matching` rows; above 10,000 the action is disabled with its reason; coverage rows are recorded snapshots, with legacy rows separate.
 Verify: `pnpm --dir web test:unit` (summary, export, overview, reports), `pnpm web:check`, `export-v2.spec.ts`.
 
 ### WEB-42: Upload QGIS packages to adopted sites with zone identity mapping
-Status: todo · Phase 3 · Size M · Depends: BE-18, WEB-36 · Blocks: WEB-28
+Status: todo · Phase 3 · Size M · Depends: BE-18, WEB-36, DB-18 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.11; [contract](../docs/plan/zone-boundaries/contract.md) "Existing import/publication route" and "Package format 2 and capabilities"; `src/features/packages/UploadStep.tsx`; `backend/src/fieldmaps_api/zone_import_schemas.py`.
 Do: For adopted sites only, add the identity mapping step (preselect only features carrying a matching `zone_id`; code or label matches stay unselected suggestions), the removed-zone list, the change note, a per-attempt `request_id`, `expected_current_package_id`, and the conflict and identity error copy. Leave unadopted uploads byte-for-byte unchanged.
