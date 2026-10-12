@@ -22,6 +22,7 @@ from fieldmaps_api.queries import invitations as q
 from fieldmaps_api.queries import tenancy as tenancy_q
 from fieldmaps_api.repositories import tenancy as db
 from fieldmaps_api.services import tenancy
+from fieldmaps_api.tenancy_schemas import Organization
 
 ALPHABET: Final = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
@@ -77,7 +78,7 @@ async def create(  # noqa: PLR0913 - invitation scope and optional delivery cont
             and not email_settings.sandbox
             and user is not None
         ):
-            organization = await tenancy.organization(session, org)
+            organization = await db.one(session, tenancy_q.ORG, Organization, {"id": org})
             name = (await tenancy.project(session, project)).name if project else organization.name
             message = render(
                 EmailContent(
