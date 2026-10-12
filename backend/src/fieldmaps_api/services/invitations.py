@@ -6,6 +6,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fieldmaps_api.email.config import EmailSettings
+from fieldmaps_api.email.outbox import enqueue
+from fieldmaps_api.email.templates import EmailContent, render
 from fieldmaps_api.invitation_schemas import (
     Invitation,
     InvitationCreated,
@@ -30,11 +33,14 @@ def credential_hashes(payload: InvitationCredential) -> db.Parameters:
     }
 
 
-async def create(
+async def create(  # noqa: PLR0913 - invitation scope and optional delivery context.
     session: AsyncSession,
     org: UUID,
     project: UUID | None,
     payload: OrgInvitationCreate | ProjectInvitationCreate,
+    *,
+    email_settings: EmailSettings | None = None,
+    user: UUID | None = None,
 ) -> InvitationCreated:
     token = secrets.token_urlsafe(32)
     code = "".join(secrets.choice(ALPHABET) for _ in range(8))
@@ -62,16 +68,63 @@ async def create(
             "id": identifier,
         },
     )
+    delivery = "not_requested"
+    if invitation.email is not None:
+        delivery = "unavailable"
+        if (
+            email_settings is not None
+            and email_settings.enabled
+            and not email_settings.sandbox
+            and user is not None
+        ):
+            organization = await tenancy.organization(session, org)
+            name = (await tenancy.project(session, project)).name if project else organization.name
+            message = render(
+                EmailContent(
+                    f"You are invited to {name} · DECA Mark",
+                    f"Join {name}",
+                    (
+                        f"You have been invited to join {name} as a {invitation.role}.",
+                        "Open the invitation or enter this join code in the DECA Mark mobile app.",
+                        (
+                            f"Sign in with {invitation.email}. This invitation expires on "
+                            f"{invitation.expires_at:%Y-%m-%d %H:%M UTC}."
+                        ),
+                    ),
+                    code=code,
+                    action="Open invitation",
+                    url=f"{str(email_settings.app_url).rstrip('/')}/invite#t={token}",
+                    footnote="If you were not expecting this invitation, you can ignore it.",
+                )
+            )
+            await enqueue(
+                session,
+                created_by=user,
+                recipient=invitation.email,
+                kind="invitation",
+                message=message,
+                dedupe_key=invitation.id,
+                invitation_id=invitation.id,
+                project_id=project,
+                expires_at=invitation.expires_at,
+            )
+            delivery = "queued"
     return InvitationCreated.model_validate(
-        {**invitation.model_dump(), "token": token, "code": code}
+        {**invitation.model_dump(), "token": token, "code": code, "email_delivery": delivery}
     )
 
 
 async def create_project(
-    session: AsyncSession, project: UUID, payload: ProjectInvitationCreate
+    session: AsyncSession,
+    project: UUID,
+    payload: ProjectInvitationCreate,
+    email_settings: EmailSettings | None = None,
+    user: UUID | None = None,
 ) -> InvitationCreated:
     record = await tenancy.project(session, project)
-    return await create(session, record.organization_id, project, payload)
+    return await create(
+        session, record.organization_id, project, payload, email_settings=email_settings, user=user
+    )
 
 
 async def list_org(session: AsyncSession, org: UUID) -> list[Invitation]:

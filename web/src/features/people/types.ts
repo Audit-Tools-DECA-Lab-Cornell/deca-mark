@@ -41,6 +41,7 @@ export type InviteRequest<R extends PeopleRole> = {
 
 /** A new invitation's link token and join code, shown once. */
 export type CreatedInvitation = {
+	email_delivery?: "queued" | "not_requested" | "unavailable";
 	code: string;
 	token: string;
 	role: PeopleRole;
