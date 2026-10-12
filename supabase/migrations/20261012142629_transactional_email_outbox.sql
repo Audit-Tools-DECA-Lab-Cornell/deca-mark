@@ -32,6 +32,9 @@ CREATE INDEX email_outbox_due_idx ON fieldmaps_private.email_outbox (available_a
   WHERE status = 'queued';
 CREATE INDEX email_outbox_lease_idx ON fieldmaps_private.email_outbox (lease_until)
   WHERE status = 'sending';
+-- Expiration cleanup only visits rows that still contain private payload data.
+CREATE INDEX email_outbox_expired_payload_idx ON fieldmaps_private.email_outbox (expires_at)
+  WHERE recipient <> '';
 CREATE INDEX email_outbox_project_idx ON fieldmaps_private.email_outbox (project_id, created_at DESC);
 ALTER TABLE fieldmaps_private.email_outbox ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON fieldmaps_private.email_outbox FROM PUBLIC, anon, authenticated, service_role;
