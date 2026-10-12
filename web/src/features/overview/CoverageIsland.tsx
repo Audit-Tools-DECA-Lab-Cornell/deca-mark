@@ -11,7 +11,7 @@ import { StateBadge } from "@/components/contour/StateBadge";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/contour/Table";
 import { TextLink } from "@/components/contour/TextLink";
 import { MapFrame } from "@/components/map/MapFrame";
-import type { ZonePlanStyle } from "@/components/map/SitePlan";
+import { zonePath,type ZonePlanStyle } from "@/components/map/SitePlan";
 import { cx } from "@/lib/cx";
 import { plural, ROUND_TYPES, roundName } from "@/lib/labels";
 import type { Coverage } from "@/lib/observations/summary";
@@ -33,10 +33,6 @@ export type CoverageIslandProps = {
 	/** The Data page's address; zone rows add `?site=&zone=`. */
 	dataHref: string;
 };
-
-function ringPath(points: readonly (readonly [number, number])[]): string {
-	return `${points.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ")} Z`;
-}
 
 /**
  * Coverage by zone: which zones have records in which rounds, for one site, with its plan beside the counts.
@@ -127,7 +123,8 @@ export function CoverageIsland({
 							{plan.zones.map(zone => (
 								<path
 									key={zone.id}
-									d={ringPath(zone.points)}
+									d={zonePath(zone.parts)}
+									fillRule="evenodd"
 									fill="none"
 									pointerEvents="all"
 									onPointerEnter={() => setHovered(zone.code ?? zone.id)}

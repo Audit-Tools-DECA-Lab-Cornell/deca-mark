@@ -505,45 +505,50 @@ Done when: Map/table/export agree beyond 500 without reclassification against cu
 Verify: Web checks/unit tests and real browser history/filter/export scenarios (`data-history.spec.ts`, `export-v2.spec.ts`).
 
 ### WEB-30: Spike the zone editor drawing surface
-Status: todo · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-33
+Status: done (2026-10-12; gates 4 and 8 pending (user) on a real iPad) · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-33
 Needs user: run gates 4 and 8 on a real iPad against `next dev --hostname 0.0.0.0` on the LAN (local stack only). WEB-30 may close with those two gates recorded as pending (user); a later failure opens a new task.
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-1, WUI-2 and "WEB-30 spike gates"; `src/components/map/{MapFrame,SitePlan}.tsx`; `src/lib/plan.ts`; `contracts/zones/geometry.cases.json`.
 Do: Build a dev-gated throwaway harness of Option A (the SVG editing layer on a pure longitude/latitude model) and measure it against the nine gates, including a real iPad Safari run. If gate 4 or 8 fails, stop and send the measurements to the lead; any OpenLayers trial runs in a scratch copy under `$TMPDIR` and never adds `ol` to `web/`. Delete the harness and record the results in the UI plan.
 Done when: Each gate has a measured result in the UI plan; the harness is gone; no production route or dependency changed.
 Verify: Measurements and screenshots in the decision record; `git status` shows no leftover prototype files.
+Verified: Option A holds on the dev-only `/dev/zone-editor` specimen with no new dependency (results table in the [UI plan](ZONE-BOUNDARIES-UI.md#web-30-spike-gates)). Gates 1–3, 5–7 and 9 pass in desktop-1440 and phone-390 Chromium and unit tests: lossless round trips on all 15 sets, holes unfilled, keyboard editing of every fixture, axe clean in both palettes and themes, handle ink at least 3:1 on every palette surface, no outside requests, 39.7 KB gzipped of route-only code and no editor module in other routes. Desktop Chromium production timings (not the gate): 53–66 ms for the 20,000-position site, 60 fps for a 2,000-point drag. The harness is the specimen WEB-33 keeps (plan amended: the iPad gates run on it); iPad steps are in the UI plan and need a production build, because `next dev` on the network address never hydrates in Next.js 16.
 
 ### WEB-31: Keep zone geometry lossless in the web plan model
-Status: todo · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-32, WEB-40
+Status: done (2026-10-12; unit and static checks only, the honesty-scan screenshots wait for BE-22 archives) · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-32, WEB-40
 Owner: Claude web owner.
+Verified: Zones are one feature with every part and hole (even-odd per part), keyed by `zone_id`, carrying the exact longitude/latitude; the archive reader takes only the contract's `format: 1` manifest and refuses (never boxes or repairs) a zone that disagrees with it or is not a closed, readable MultiPolygon; loops replace spreads; the background is memoised. `tests/unit/zone-plan.test.mjs` and `site-archive.test.mjs`: every valid `structure_cases` shape round-trips to identical JSON, every invalid one is refused, holes and parts project ring for ring, 200,000 positions fit without a stack overflow. `pnpm --dir web check` passes; `test:unit` 246 of 247 (the failure is the pre-existing collector-rule assertion, unrelated). Until BE-22 ships the contract archive, packages from the current backend show their no-plan note.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-2 and section 2; `src/lib/{plan.ts,sites/archive.ts}`; `src/components/map/SitePlan.tsx`; `tests/unit/site-archive.test.mjs`.
 Do: Keep every zone as one feature with parts, rings and holes drawn with even-odd fill; carry `zone_id`, code and the raw longitude/latitude; read zones strictly (no silent repair, no bounding-box stand-in); replace `Math.min(...spread)` with loops; memoise the static background.
 Done when: Every fixture geometry renders with its holes and parts; a parse-then-serialise round trip is number-identical; all existing map screens and unit tests pass.
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and the honesty scan screenshots of Sites, site, Data and Overview.
 
 ### WEB-32: Build the pure zone editor core
-Status: todo · Phase 3 · Size L · Depends: WEB-31 · Blocks: WEB-33
+Status: done (2026-10-12; unit and static checks) · Phase 3 · Size L · Depends: WEB-31 · Blocks: WEB-33
 Owner: Claude web owner.
+Verified: `src/lib/zones/{geometry,hints}.ts` and `src/features/zones/editor/{state,history,save-queue}.ts` are pure. 51 new unit tests (`zone-geometry`, `zone-hints`, `zone-editor-state`, `zone-save-queue`): the reader agrees with all 29 `structure_cases`, bounds equal `limit_cases` (at the limit accepted, one over `too_complex`), an unedited draft re-serialises byte-identical for every valid fixture, one move leaves every other position the same array, nudges land within 0.5% of 10 cm and 1 m, snapping and tracing return the original arrays, coverage agrees with all 16 `coverage_cases` and containment with all 3, hints flag only `bow_tie` and `outside_hole`, history merges nudges within 1 s and caps at 200, and every save-queue branch in UI plan section 10 (success, dirty-after-flight, late response, 412, 409, 428, 413, 422, 401, 403/404, unconfirmed-then-acknowledged/-retry/-conflict, offline, 429) passes. `pnpm --dir web check` passes; `test:unit` 297 of 298 (the pre-existing collector-rule failure).
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-2, WUI-4, WUI-5, WUI-8, 5.6 and 6.3; `contracts/zones/geometry.cases.json` (`structure_cases`, `limit_cases`).
 Do: Write `src/lib/zones/{geometry,hints}.ts` and the editor reducer, history and save-queue reducer as pure modules: vertex addressing, closed-ring edits, nudges in metres, rectangle and midpoint, structural checks with contract limits, exact-vertex snapping, tracing, self-intersection and outside-site hints.
 Done when: Unit tests cover every operation and every save-queue transition listed in UI plan section 10, and agree with `structure_cases`.
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`.
 
 ### WEB-33: Build the zone editor canvas and panels
-Status: todo · Phase 3 · Size L · Depends: WEB-30, WEB-32 · Blocks: WEB-34, WEB-35
+Status: done (2026-10-12; Chromium specimen runs, real iPad pending with WEB-30) · Phase 3 · Size L · Depends: WEB-30, WEB-32 · Blocks: WEB-34, WEB-35
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.3 to 5.6 and 6.6; `DESIGN.md` §5, §8 and §9; `src/components/map/MapFrame.tsx`; deleted `VertexHandles.tsx` and `ZoneEditor.tsx` at `4922f2b^` (reuse the names and announcements, not the per-vertex tab stops or the rounding).
 Do: Add the MapFrame mode, camera context, key ownership, pinch zoom, border-correct inverse and zoom by ground resolution; build handles, select, move, insert and remove point, the Zones list, the selected zone panel, the Points table and the keyboard map; add the dev-only `/dev/zone-editor` specimen with no network or save code.
 Done when: Every fixture shape can be edited by keyboard alone and by touch emulation with holes and parts preserved; screen-reader names and announcements match the UI plan.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, a Playwright run of the specimen at desktop-1440 and phone-390, and axe with no serious or critical findings.
+Verified: `MapFrame` has `edit`/`draw` modes with free panning, 1 cm-per-pixel zoom, a camera context, `data-map-keys` key ownership, two-pointer pinch, frame-batched drags and a border-correct pointer position; `src/features/zones/editor/` has the handles (one tab stop per ring, 44 px targets, snapping, midpoints), Zones list, Selected zone, Points table, Problems island, toolbar and visible key list, and `/dev/zone-editor` is the in-memory specimen (no save, publish or network code). `pnpm --dir web test:specimen`: 51 passed, 3 skipped by design, at desktop-1440 and phone-390, covering keyboard-only and touch-emulated editing of every fixture set with holes and parts kept, point names and announcements, and axe with no violations in both palettes and both themes. Fixed on the way: Layers-menu presses reaching the plan through the React portal and deselecting the zone, touch drags ending at once, the plan image wrapping buttons (axe `nested-interactive`). `pnpm --dir web check` passes; `test:unit` 301 of 302 (the pre-existing collector-rule failure).
 
 ### WEB-34: Add zone drawing, snapping and tracing tools
-Status: todo · Phase 3 · Size M · Depends: WEB-33 · Blocks: WEB-28
+Status: done (2026-10-12; server validation of a traced pair waits for WEB-28) · Phase 3 · Size M · Depends: WEB-33 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.4, 5.5 and WUI-8.
 Do: Add Draw shape, Draw rectangle, keyboard drawing at the centre cross, snap feedback, edge tracing between two snapped vertices of one ring, and removing a hole or part.
 Done when: Two adjacent zones drawn with a traced shared edge share exactly the same vertex pairs; unfinished shapes never enter a save.
 Verify: `pnpm --dir web test:unit` (exactness tests), specimen Playwright run; server validation of the traced pair is checked in WEB-28.
+Verified: Draw shape and Draw rectangle by pointer, touch and the keyboard cross (P, R, V; Space, Enter, Backspace, T, Escape), exact-vertex snapping with a marker and Alt to place freely, "Follow the edge" between two snapped points of one zone or the site boundary (again for the other way round), and Remove hole and Remove part. `tests/unit/zone-drawing.test.mjs`: a traced neighbour shares the very same position arrays (so the same pairs), an unfinished shape never enters the zones, refusals say why, and drawing undoes as one step. `e2e/specimen/zone-drawing.specimen.ts` at desktop-1440 and phone-390: the concave fixture's notch drawn by mouse with a traced edge shares its three points exactly; rectangles by mouse and touch drag align to longitude and latitude; a shape tapped out by touch; holes and parts removed and undone; axe clean while drawing in both palettes. Full specimen suite 60 passed, 6 skipped by design; `pnpm --dir web check` passes; `test:unit` 305 of 306 (the pre-existing collector-rule failure).
 
 ### WEB-35: Persist zone drafts with conditional autosave
 Status: todo · Phase 3 · Size L · Depends: BE-22, WEB-33, DB-18 · Blocks: WEB-37, WEB-38

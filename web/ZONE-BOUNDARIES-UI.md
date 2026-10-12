@@ -217,6 +217,8 @@ Observers never reach these pages: the project layout already sends them to coll
 | Trace an edge | While drawing, two consecutive points snapped to the same ring offer "Follow the edge of Slide" (`T`, press again for the other direction). | Same | Copies the exact intermediate vertices, so zones share edges without slivers |
 | Remove hole or part | Selected zone island | Same buttons | Zone keeps its identity |
 
+Built in WEB-33 and WEB-34 (2026-10-12), beyond the rows above: while drawing, the toolbar offers Finish shape, Remove last point, Follow the edge and Cancel drawing, so touch needs no keyboard; Ctrl+Z (⌘Z) takes back the last drawn point before it undoes earlier steps; a rectangle can also be set by two clicks; a finished drawing selects the new zone and moves focus to its Name field; Escape with no points leaves the drawing tool. Redo is a word button until CR-W17 adds `redo-2` to both icon registries.
+
 Deferred: drawing a hole, adding a part, split and merge tools. Holes and parts are always displayed, preserved and editable point by point. To split or merge, remove a zone and draw new ones; the Zones page explains that this makes new identities (master plan, "Identity, labels and boundary edits").
 
 ### 5.5 Map interaction contract
@@ -226,6 +228,7 @@ Deferred: drawing a hole, adding a part, split and merge tools. Holes and parts 
 - Two-pointer pinch and pan in `edit` and `draw` modes, with `touch-action: none` on the canvas. Drags are batched per animation frame.
 - The selected ring is one tab stop (roving tabindex): only the current handle has `tabIndex=0`. `[`/`]`, Home and End move focus within the ring. Tab and Shift+Tab leave the canvas, and Esc returns focus from a handle to the zone's row in the Zones list. Reuse the deleted editor's names and announcements, not its per-vertex tab stops.
 - In draw mode the arrow keys move the centre cross itself (10 cm, Shift 1 m, position announced). The camera follows only when the cross nears the frame edge, and the pan clamp is lifted in `edit` and `draw` modes, so keyboard drawing reaches every site-boundary vertex at any zoom.
+- The editor's map has a working height on every screen (`min(72svh, 42rem)`, at least 22rem). At its plain proportions a 390 px phone showed a plan about 300 × 210 px, most of it under the label and the controls.
 - Handles are map chrome, not map data: island fill with an ink ring, scoped with `mapChromeTheme(palette)` like marker focus rings. They have a 44 px hit area, `role="button"`, the name "Point 12 of 214, North meadow, outer edge", and `aria-pressed` for the selected one. Above about 300 visible points, draw non-interactive dots and say "Zoom in to edit points, or use the points table."
 - The static background is memoised separately from the editable layer, so a drag re-renders only the selected ring. Replace `Math.min(...spread)` in `plan.ts:130-135,217-223` and `archive.ts:349-352` with loops; they throw at about 125,000 arguments (measured).
 - Problems are marked on the canvas only with palette means and chrome: hatch, heavier dashes, a numbered ink pill. The attention colour and words live in the Problems island (rule 03).
@@ -509,13 +512,13 @@ Parallel work (explicit file ownership, no reverting others): WEB-30 to WEB-34 a
 
 ### WEB-30 spike gates
 
-The desk spike settled the library question (WUI-1). WEB-30 now proves Option A in the repository, as a dev-gated throwaway harness under `src/app/dev/` (gated like `/dev/contour`). It uses a pure model with `node:test` tests and spike copies of the zone rendering with rings and parts. It deletes the harness afterwards and records the results here.
+The desk spike settled the library question (WUI-1). WEB-30 proves Option A in the repository on the dev-only `/dev/zone-editor` specimen (6.6; gated like `/dev/contour`: development, and preview builds made with `NEXT_PUBLIC_PREVIEW_TOOLS=1`), built on the pure model with `node:test` tests and the lossless rendering of rings and parts. *Amended 2026-10-12:* there is no separate throwaway harness to delete. The spike's harness is the specimen WEB-33 keeps, because gates 4 and 8 still need a real iPad and are run on it; it has no save, publish or network code and no production route. Results are recorded below.
 
 - **Fixtures:**
   - from `contracts/zones/geometry.cases.json`: square, holed, multipart, concave, reversed, duplicate_vertex, bow_tie, outside_hole, collinear, multipart_overlap, multipart_shared_edge;
   - synthetic full-precision variants (15–17 significant digits, plus one coordinate needing more than 20 decimals);
   - a 2,000-position zone and a 250-zone, 20,000-position site (`limit_cases`);
-  - one real ready package from the local stack (Fall Creek upload sample).
+  - one real ready package from the local stack (Fall Creek upload sample). *Amended 2026-10-12:* until BE-22 ships the contract archive and DB-18 seeds the stack, the specimen uses the Fall Creek upload layers themselves (`qgis/fall-creek/upload-sample/`: the site boundary, trees and Zone A at full precision), the input that package is prepared from.
 - **Gates:**
   1. **Lossless.** Load then serialise with no edit gives identical JSON. After one pointer move and one keyboard move, every other position is `JSON.stringify`-equal at its address, ring and part counts are unchanged, and the closing position equals the first.
   2. **Shapes.** Holes render unfilled. Hole and part vertices can be selected and moved. Nothing collapses to a box. Removing below four positions in a ring is refused.
@@ -523,10 +526,34 @@ The desk spike settled the library question (WUI-1). WEB-30 now proves Option A 
   4. **Touch, real iPad Safari** (Chromium `hasTouch` emulation does not count): vertex drag without page scroll or zoom, pinch zoom, 44 px targets, no long-press callout.
   5. **Palette.** Day and Night come from `contracts/map-palettes.json` with no hard-coded colours. Handles have at least 3:1 contrast in both palettes.
   6. **No tiles.** The request log shows no tile or glyph requests.
-  7. **Bundle.** The editor route adds at most 60 KB gzipped of its own code and nothing to other routes.
+  7. **Bundle.** The editor route adds at most 60 KB gzipped of its own code and nothing to other routes. *Clarified 2026-10-12:* "nothing" means no editor module (`src/features/zones/**`) in another route's chunks. The shared map changes this plan requires on every plan (WEB-31's lossless zones, 5.5's `MapFrame` modes) are measured and reported, not counted as editor code.
   8. **Performance.** A 2,000-vertex drag holds at least 50 fps on an iPad, and the 20,000-position site renders in under 200 ms.
   9. **Hints.** The local hints flag bow_tie and outside_hole, and do not flag holed, multipart, duplicate_vertex or reversed. Collinear and overlap cases are left to the server.
 - **Failure rule:** if gate 4 or 8 fails, rerun gates 1–9 against OpenLayers (`useGeographic`, Modify, vertex-only Snap, DOM handle overlay) before choosing.
+
+#### Results (2026-10-12)
+
+Measured on the working tree of 2026-10-12 with Node 24.21, Next.js 16.2.7 and the pinned Chromium 1194. Browser checks are `e2e/specimen/zone-editor.specimen.ts` (`pnpm --dir web test:specimen`, desktop-1440 and phone-390 with touch emulation, no local stack); unit checks are `tests/unit/zone-*.test.mjs`. No dependency was added; OpenLayers was not needed.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| 1 Lossless | Pass | Every valid `structure_cases` shape re-serialises byte-identical; one move leaves every other position the same array at its address (unit). In both browsers all 15 specimen sets serialise unchanged; keyboard, mouse and touch moves change only the moved point, its closing twin and points shared with it; part and ring counts hold and every ring stays closed. |
+| 2 Shapes | Pass | A hit test in the middle of a hole finds no zone (even–odd fill); multipart and holed zones draw one subpath per ring; the concave zone keeps all six points. Hole and second-part points are selected from the Edge picker and moved by keyboard. Removal below three different points is refused and announced. |
+| 3 Keyboard | Pass | Tab reaches the ring's one tab stop and the next Tab leaves the ring; arrows move 10 cm and Shift+arrows 1 m; `[`, `]`, Home, End, Delete and `I` work; Escape returns to the Zones list; Ctrl+Z and Ctrl+Shift+Z undo and redo to the exact loaded numbers, on every fixture set. The frame's camera transform does not change while a handle has focus. Every step is announced in a polite live region. Axe: no violations with a point selected, in the Day and Night palettes, and in the Day and Dusk themes (honesty scan). |
+| 4 Touch, real iPad | **Pending (user)** | Chromium touch emulation (does not count): a touch drag on every fixture set edits only that point, the plan does not move under the finger, two-finger pinch zooms, handle targets are 44 px. Found and fixed on the way: a touch's implicit capture made drags end at once, and at 390 px the label and controls covered most of the plan (the editor's map now has a working height). |
+| 5 Palette | Pass | No hex, `rgb()` or `hsl()` in the editor or map code (unit). The handle ring is the chrome theme's ink: at least 3:1 on every surface of both palettes (computed from both contracts) and as rendered in Day and Night. |
+| 6 No tiles | Pass | While editing and zooming, every request is to the page's own host; none is a tile, glyph or basemap. |
+| 7 Bundle | Pass | `/dev/zone-editor` loads 39.7 KB gzipped that no other route loads (the specimen shapes included); no editor module appears in any other route's chunks. Against a build of the committed baseline, the eight routes that draw a plan grew 2.2–3.4 KB gzipped (WEB-31's strict zone reader and parts, and `MapFrame`'s edit and draw modes); other routes moved by under 0.5 KB in either direction (chunk splitting). |
+| 8 Performance, iPad | **Pending (user)** | Desktop Chromium on a production build (does not count): the 250-zone, 20,000-position site is drawn 53–66 ms after it is chosen (three runs); a 2,000-point drag holds a 16.7 ms median frame (60 fps) with a 16.7–16.8 ms 95th percentile. Under `next dev` the same draw takes about 200–870 ms, so measure on a production build. Found and fixed: the label search took 556 ms for 250 zones; a centre well inside its zone is now used as it is (4 ms). |
+| 9 Hints | Pass | Unit and browser: `bow_tie` (crosses itself near point 3) and `outside_hole` are flagged; `holed`, `multipart`, `duplicate_vertex`, `reversed`, `concave`, `collinear`, `multipart_overlap` and `multipart_shared_edge` are not. Coverage agrees with all 16 `coverage_cases` and containment with all 3. |
+
+Gates 4 and 8 on a real iPad (local network only; the specimen has no data and makes no network calls). `pnpm --dir web dev --hostname 0.0.0.0` does not work for this: verified on 2026-10-12, Next.js 16 refuses its development connection from any host but `localhost` unless `allowedDevOrigins` lists it, and the page never becomes interactive. A production build works from the network address and gives representative timings:
+
+1. On a computer on the same Wi-Fi as the iPad, from the repository root: `pnpm --dir web install`, then `NEXT_PUBLIC_PREVIEW_TOOLS=1 pnpm --dir web build`, then `NEXT_PUBLIC_PREVIEW_TOOLS=1 pnpm --dir web start --hostname 0.0.0.0`.
+2. Find the computer's address (macOS: `ipconfig getifaddr en0`) and open `http://<address>:3000/dev/zone-editor?shapes=fall-creek` in iPad Safari, in portrait and in landscape.
+3. Gate 4: select Zone A, press Fit zone, drag a point with a finger (the page must not scroll or zoom, and a long press must show no callout), pinch to zoom in and out, and check each point's target takes a fingertip easily. Repeat on "Holed square" for a hole point.
+4. Gate 8: choose "250 zones · 20,000 points" from Shapes and read "Drawn in … ms" beside the note (under 200 passes). Choose "2,000 points", select the zone, drag its point 1 for a few seconds, and read "Last drag: … frames a second" (at least 50 passes).
+5. Record the iPad model, iPadOS and Safari versions, the numbers and screenshots in this table. A failure opens a new task and follows the failure rule.
 
 ## 9. Contract and backend change requests (send to the lead)
 

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { METRES_PER_DEGREE, partsOf, readZoneGeometry, type ZoneGeometry } from "./zones/geometry";
+
 /**
  * Site plans as geometry. A site is a GeoJSON FeatureCollection in WGS84 (the layers of a map package
  * uploaded from QGIS). Drawing it projects every position onto a plan: x runs east and y runs south, in plan
@@ -9,9 +11,6 @@ import { z } from "zod";
  *
  * Everything here is pure, so the plan draws on the server, in the browser and in print alike.
  */
-
-/** Metres per degree of latitude, and of longitude at the equator. */
-const METRES_PER_DEGREE = 111_320;
 
 /** Every plan is drawn into a frame of this many units; a site without its own frame is fitted inside it. */
 export const PLAN_WIDTH = 720;
@@ -45,10 +44,14 @@ export type SurfaceKind = "grass" | "mulch" | "dirt" | "blacktop" | "path";
 
 const position = z.tuple([z.number(), z.number()]);
 
+const polygonCoordinates = z.array(z.array(position).min(4)).min(1);
+
 const geometrySchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("Point"), coordinates: position }),
 	z.object({ type: z.literal("LineString"), coordinates: z.array(position).min(2) }),
-	z.object({ type: z.literal("Polygon"), coordinates: z.array(z.array(position).min(4)).min(1) })
+	z.object({ type: z.literal("Polygon"), coordinates: polygonCoordinates }),
+	/** Zones only: a zone with several parts stays one zone. */
+	z.object({ type: z.literal("MultiPolygon"), coordinates: z.array(polygonCoordinates).min(1) })
 ]);
 
 const propertiesSchema = z.object({
@@ -60,8 +63,12 @@ const propertiesSchema = z.object({
 	width_m: z.number().positive().optional(),
 	/** Trees drawn as points: their crown radius. */
 	radius_m: z.number().positive().optional(),
-	/** Zones: where the name pill sits, when the polygon's own centre would cover something. */
-	label_point: position.optional(),
+	/** Zones: the stable zone identity a map package carries. */
+	zone_id: z.string().min(1).optional(),
+	/** Zones: the point the server chose inside the zone (`ST_PointOnSurface`); the name pill sits on it. */
+	display_anchor: position.optional(),
+	/** Zones: the digest of the canonical shape, as the package lists it. */
+	geometry_sha256: z.string().optional(),
 	/** Fall Creek equipment keeps the QGIS layer's own kind ("swings", "picnic-table"). */
 	source_kind: z.string().optional()
 });
@@ -73,11 +80,25 @@ const frameSchema = z.object({
 	height: z.number().positive()
 });
 
+const featureSchema = z
+	.object({ type: z.literal("Feature"), properties: propertiesSchema, geometry: geometrySchema })
+	.superRefine((feature, context) => {
+		// A zone's shape is read strictly (WUI-2): nothing about it is repaired on the way to the plan.
+		if (feature.properties.kind === "zone") {
+			const read = readZoneGeometry(feature.geometry);
+			if (!read.ok)
+				for (const issue of read.issues)
+					context.addIssue({ code: "custom", message: issue.message, path: ["geometry", issue.path] });
+		} else if (feature.geometry.type === "MultiPolygon") {
+			context.addIssue({ code: "custom", message: "Only a zone keeps several parts.", path: ["geometry"] });
+		}
+	});
+
 const collectionSchema = z.object({
 	type: z.literal("FeatureCollection"),
 	name: z.string().min(1),
 	frame: frameSchema.optional(),
-	features: z.array(z.object({ type: z.literal("Feature"), properties: propertiesSchema, geometry: geometrySchema }))
+	features: z.array(featureSchema)
 });
 
 /**
@@ -113,11 +134,12 @@ export function fromPlan([x, y]: PlanPoint, frame: PlanFrame): LngLat {
 	return [lng, lat];
 }
 
-function positionsOf(feature: SiteFeature): LngLat[] {
+function forEachPosition(feature: SiteFeature, visit: (position: LngLat) => void) {
 	const { geometry } = feature;
-	if (geometry.type === "Point") return [geometry.coordinates];
-	if (geometry.type === "LineString") return geometry.coordinates;
-	return geometry.coordinates.flat();
+	if (geometry.type === "Point") visit(geometry.coordinates);
+	else if (geometry.type === "LineString") geometry.coordinates.forEach(visit);
+	else if (geometry.type === "Polygon") for (const ring of geometry.coordinates) ring.forEach(visit);
+	else for (const part of geometry.coordinates) for (const ring of part) ring.forEach(visit);
 }
 
 /**
@@ -125,14 +147,20 @@ function positionsOf(feature: SiteFeature): LngLat[] {
  * {@link PLAN_WIDTH} × {@link PLAN_HEIGHT} frame, so every plan shares one shape and thumbnails line up.
  */
 export function fitFrame(features: readonly SiteFeature[]): PlanFrame {
-	const all = features.flatMap(positionsOf);
-	if (all.length === 0) throw new Error("A site needs at least one feature to fit a plan to.");
-	const lngs = all.map(([lng]) => lng);
-	const lats = all.map(([, lat]) => lat);
-	const west = Math.min(...lngs);
-	const east = Math.max(...lngs);
-	const south = Math.min(...lats);
-	const north = Math.max(...lats);
+	// Loops, not Math.min(...spread): a spread of every position overflows the stack on a large site.
+	let west = Infinity;
+	let east = -Infinity;
+	let south = Infinity;
+	let north = -Infinity;
+	for (const feature of features) {
+		forEachPosition(feature, ([lng, lat]) => {
+			if (lng < west) west = lng;
+			if (lng > east) east = lng;
+			if (lat < south) south = lat;
+			if (lat > north) north = lat;
+		});
+	}
+	if (west > east) throw new Error("A site needs at least one feature to fit a plan to.");
 	const cos = cosOf((north + south) / 2);
 	const widthMetres = (east - west) * METRES_PER_DEGREE * cos;
 	const heightMetres = (north - south) * METRES_PER_DEGREE;
@@ -214,24 +242,104 @@ function distanceToEdge(point: PlanPoint, polygon: readonly PlanPoint[]): number
 
 export type PlanBounds = { minX: number; minY: number; maxX: number; maxY: number };
 
-export function boundsOf(points: readonly PlanPoint[]): PlanBounds {
-	return {
-		minX: Math.min(...points.map(([x]) => x)),
-		minY: Math.min(...points.map(([, y]) => y)),
-		maxX: Math.max(...points.map(([x]) => x)),
-		maxY: Math.max(...points.map(([, y]) => y))
-	};
+/** The box around plan points. Loops, so a long list never overflows the stack. */
+export function boundsOf(points: Iterable<PlanPoint>): PlanBounds {
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	for (const [x, y] of points) {
+		if (x < minX) minX = x;
+		if (x > maxX) maxX = x;
+		if (y < minY) minY = y;
+		if (y > maxY) maxY = y;
+	}
+	return { minX, minY, maxX, maxY };
+}
+
+/** A zone's projected parts: each part's rings, the outer edge first, without the closing repeat. */
+export type PlanParts = readonly (readonly (readonly PlanPoint[])[])[];
+
+/** Whether a point is inside one part: inside its outer edge and in no hole (even–odd over its rings). */
+function inPart(point: PlanPoint, rings: readonly (readonly PlanPoint[])[]): boolean {
+	let inside = false;
+	for (const ring of rings) if (pointInPolygon(point, ring)) inside = !inside;
+	return inside;
+}
+
+/** Whether a point lies inside a zone: in one of its parts and not in a hole. */
+export function pointInParts(point: PlanPoint, parts: PlanParts): boolean {
+	return parts.some(rings => inPart(point, rings));
+}
+
+function distanceToRings(point: PlanPoint, rings: readonly (readonly PlanPoint[])[]): number {
+	let best = Infinity;
+	for (const ring of rings) best = Math.min(best, distanceToEdge(point, ring));
+	return best;
 }
 
 /**
- * The inside point farthest from every edge: where a label reads best in a long or bent zone, where the
- * centroid can fall near an edge or outside it. A coarse grid search, then a finer one around the best cell.
+ * The area-weighted centre of a zone over every part, holes subtracted (the vertex average of its outer
+ * edges when it has no area).
  */
-export function interiorAnchor(polygon: readonly PlanPoint[]): PlanPoint {
-	const centroid = polygonCentroid(polygon);
+export function partsCentroid(parts: PlanParts): PlanPoint {
+	let area = 0;
+	let cx = 0;
+	let cy = 0;
+	for (const rings of parts) {
+		rings.forEach((ring, index) => {
+			const ringArea = Math.abs(signedArea(ring));
+			if (ringArea < 1e-12) return;
+			const [x, y] = polygonCentroid(ring);
+			const weight = index === 0 ? ringArea : -ringArea;
+			area += weight;
+			cx += x * weight;
+			cy += y * weight;
+		});
+	}
+	if (Math.abs(area) < 1e-9) {
+		let n = 0;
+		let sx = 0;
+		let sy = 0;
+		for (const rings of parts)
+			for (const [x, y] of rings[0] ?? []) {
+				sx += x;
+				sy += y;
+				n++;
+			}
+		return n > 0 ? [sx / n, sy / n] : [0, 0];
+	}
+	return [cx / area, cy / area];
+}
+
+/** A centre at least this share of its zone's narrower side from every edge is used as it is. */
+const WELL_INSIDE = 0.3;
+
+/**
+ * The inside point farthest from every edge, holes included, in the zone's largest part: where a name pill
+ * reads best in a long, bent or holed zone, where the centroid can fall near an edge, in a hole or outside.
+ * A coarse grid search, then a finer one around the best cell. This places a label for a shape drawn in the
+ * browser; a published zone's pill sits on the `display_anchor` the server chose instead.
+ */
+export function interiorAnchor(parts: PlanParts): PlanPoint {
+	let rings = parts[0] ?? [];
+	let largest = -1;
+	for (const part of parts) {
+		const area = Math.abs(signedArea(part[0] ?? []));
+		if (area > largest) {
+			largest = area;
+			rings = part;
+		}
+	}
+	const outer = rings[0] ?? [];
+	const centroid = partsCentroid([rings]);
 	let best: PlanPoint = centroid;
-	let bestDistance = pointInPolygon(centroid, polygon) ? distanceToEdge(centroid, polygon) : -1;
-	let { minX, minY, maxX, maxY } = boundsOf(polygon);
+	let bestDistance = inPart(centroid, rings) ? distanceToRings(centroid, rings) : -1;
+	let { minX, minY, maxX, maxY } = boundsOf(outer);
+	// A round or square zone's centre is already well inside it: no search needed. A bent or holed zone,
+	// whose centre lands near an edge, in a hole or outside, is searched. This keeps a site at the
+	// contract's limits (250 zones) quick to draw.
+	if (bestDistance >= Math.min(maxX - minX, maxY - minY) * WELL_INSIDE) return centroid;
 	for (let pass = 0; pass < 2; pass++) {
 		const steps = 16;
 		const stepX = (maxX - minX) / steps;
@@ -239,8 +347,8 @@ export function interiorAnchor(polygon: readonly PlanPoint[]): PlanPoint {
 		for (let i = 0; i <= steps; i++) {
 			for (let j = 0; j <= steps; j++) {
 				const point: PlanPoint = [minX + i * stepX, minY + j * stepY];
-				if (!pointInPolygon(point, polygon)) continue;
-				const distance = distanceToEdge(point, polygon);
+				if (!inPart(point, rings)) continue;
+				const distance = distanceToRings(point, rings);
 				if (distance > bestDistance) {
 					best = point;
 					bestDistance = distance;
@@ -268,12 +376,20 @@ export type PlanShape =
 	| (ShapeBase & { type: "line"; kind: "path"; points: PlanPoint[]; /** Plan units. */ width: number })
 	| (ShapeBase & { type: "circle"; kind: "tree"; center: PlanPoint; /** Plan units. */ radius: number });
 
+/**
+ * A zone on the plan. It stays one zone however many parts and holes it has, and it carries its longitude and
+ * latitude exactly as read: `parts` is only for drawing and is never turned back into coordinates.
+ */
 export type PlanZone = {
+	/** Styles and keys use this: the stable `zone_id` from a map package, else the source feature's id. */
 	id: string;
+	/** The stable zone identity, when the zone comes from a map package. */
+	zoneId?: string;
 	code?: string;
 	name: string;
-	/** The outer ring, without the closing repeat of the first point. */
-	points: PlanPoint[];
+	/** Longitude and latitude, exactly as read. */
+	geometry: ZoneGeometry;
+	parts: PlanParts;
 	centroid: PlanPoint;
 	/** Where the name pill is centred. */
 	labelAnchor: PlanPoint;
@@ -304,9 +420,54 @@ function openRing(ring: readonly PlanPoint[]): PlanPoint[] {
 	return first && last && first[0] === last[0] && first[1] === last[1] ? ring.slice(0, -1) : [...ring];
 }
 
+/** A zone's rings projected for drawing. The closing position is dropped by its count, not compared. */
+export function projectParts(geometry: ZoneGeometry, frame: PlanFrame): PlanParts {
+	return partsOf(geometry).map(rings =>
+		rings.map(ring => {
+			const open: PlanPoint[] = new Array(ring.length - 1);
+			for (let i = 0; i < ring.length - 1; i++) open[i] = toPlan(ring[i]!, frame);
+			return open;
+		})
+	);
+}
+
+export type ZoneInput = {
+	id: string;
+	zoneId?: string;
+	code?: string;
+	name: string;
+	geometry: ZoneGeometry;
+	/** The server's point inside the zone; the pill sits there. Without it the plan finds an inside point. */
+	displayAnchor?: LngLat;
+};
+
+/** One zone projected onto a plan, ready to draw. */
+export function projectZone(zone: ZoneInput, frame: PlanFrame): PlanZone {
+	const parts = projectParts(zone.geometry, frame);
+	return {
+		id: zone.id,
+		...(zone.zoneId ? { zoneId: zone.zoneId } : {}),
+		...(zone.code ? { code: zone.code } : {}),
+		name: zone.name,
+		geometry: zone.geometry,
+		parts,
+		centroid: partsCentroid(parts),
+		labelAnchor: zone.displayAnchor ? toPlan(zone.displayAnchor, frame) : interiorAnchor(parts)
+	};
+}
+
+/** The plan box around a zone's outer edges. */
+export function zoneBounds(zone: Pick<PlanZone, "parts">): PlanBounds {
+	return boundsOf(
+		(function* () {
+			for (const rings of zone.parts) yield* rings[0] ?? [];
+		})()
+	);
+}
+
 /**
  * Projects a site onto its plan: polygons as point lists, paths as lines with a width, trees as circles, and
- * zones with the centre and label anchor their pills need. Sizes in metres become plan units.
+ * zones with every part and hole and the label anchor their pills need. Sizes in metres become plan units.
  */
 export function projectSite(collection: SiteCollection): ProjectedSite {
 	const frame = collection.frame ?? fitFrame(collection.features);
@@ -315,24 +476,39 @@ export function projectSite(collection: SiteCollection): ProjectedSite {
 
 	const features: PlanShape[] = [];
 	const zones: PlanZone[] = [];
-	const extent: PlanPoint[] = [];
+	let bounds: PlanBounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+	const grow = (points: Iterable<PlanPoint>) => {
+		const box = boundsOf(points);
+		bounds = {
+			minX: Math.min(bounds.minX, box.minX),
+			minY: Math.min(bounds.minY, box.minY),
+			maxX: Math.max(bounds.maxX, box.maxX),
+			maxY: Math.max(bounds.maxY, box.maxY)
+		};
+	};
 
 	for (const { properties, geometry } of collection.features) {
 		const base: ShapeBase = { id: properties.id, ...(properties.name ? { name: properties.name } : {}) };
 
 		if (properties.kind === "zone") {
-			if (geometry.type !== "Polygon") continue;
-			const points = openRing(geometry.coordinates[0]!.map(project));
-			const centroid = polygonCentroid(points);
-			zones.push({
-				id: properties.id,
-				...(properties.code ? { code: properties.code } : {}),
-				name: properties.name ?? properties.id,
-				points,
-				centroid,
-				labelAnchor: properties.label_point ? project(properties.label_point) : interiorAnchor(points)
-			});
-			extent.push(...points);
+			if (geometry.type !== "Polygon" && geometry.type !== "MultiPolygon") continue;
+			const zone = projectZone(
+				{
+					id: properties.zone_id ?? properties.id,
+					...(properties.zone_id ? { zoneId: properties.zone_id } : {}),
+					...(properties.code ? { code: properties.code } : {}),
+					name: properties.name ?? properties.id,
+					geometry,
+					...(properties.display_anchor ? { displayAnchor: properties.display_anchor } : {})
+				},
+				frame
+			);
+			zones.push(zone);
+			const box = zoneBounds(zone);
+			grow([
+				[box.minX, box.minY],
+				[box.maxX, box.maxY]
+			]);
 			continue;
 		}
 
@@ -345,7 +521,7 @@ export function projectSite(collection: SiteCollection): ProjectedSite {
 				rings,
 				...(properties.source_kind ? { sourceKind: properties.source_kind } : {})
 			});
-			extent.push(...rings[0]!);
+			grow(rings[0]!);
 		} else if (geometry.type === "LineString" && properties.kind === "path") {
 			const points = geometry.coordinates.map(project);
 			features.push({
@@ -355,12 +531,15 @@ export function projectSite(collection: SiteCollection): ProjectedSite {
 				points,
 				width: units(properties.width_m ?? DEFAULT_PATH_WIDTH_M)
 			});
-			extent.push(...points);
+			grow(points);
 		} else if (geometry.type === "Point" && properties.kind === "tree") {
 			const center = project(geometry.coordinates);
 			const radius = units(properties.radius_m ?? DEFAULT_TREE_RADIUS_M);
 			features.push({ ...base, type: "circle", kind: "tree", center, radius });
-			extent.push([center[0] - radius, center[1] - radius], [center[0] + radius, center[1] + radius]);
+			grow([
+				[center[0] - radius, center[1] - radius],
+				[center[0] + radius, center[1] + radius]
+			]);
 		}
 	}
 
@@ -372,30 +551,13 @@ export function projectSite(collection: SiteCollection): ProjectedSite {
 		metresPerUnit: frame.metresPerUnit,
 		features,
 		zones,
-		bounds: extent.length > 0 ? boundsOf(extent) : { minX: 0, minY: 0, maxX: frame.width, maxY: frame.height }
+		bounds: bounds.minX <= bounds.maxX ? bounds : { minX: 0, minY: 0, maxX: frame.width, maxY: frame.height }
 	};
 }
 
-/**
- * A point inside a zone from a fraction of its bounding box ({u: 0, v: 0} is the north-west corner). A point
- * that lands outside a bent zone is pulled toward the label anchor until it is inside, so fixture records
- * placed this way always sit in their own zone.
- */
-export function placeInZone(zone: PlanZone, { u, v }: { u: number; v: number }): PlanPoint {
-	const { minX, minY, maxX, maxY } = boundsOf(zone.points);
-	const wanted: PlanPoint = [minX + (maxX - minX) * u, minY + (maxY - minY) * v];
-	if (pointInPolygon(wanted, zone.points) && distanceToEdge(wanted, zone.points) > 6) return wanted;
-	const [ax, ay] = zone.labelAnchor;
-	for (let t = 0.1; t <= 1; t += 0.1) {
-		const point: PlanPoint = [wanted[0] + (ax - wanted[0]) * t, wanted[1] + (ay - wanted[1]) * t];
-		if (pointInPolygon(point, zone.points) && distanceToEdge(point, zone.points) > 6) return point;
-	}
-	return zone.labelAnchor;
-}
-
-/** The zone a point falls in, if any. */
+/** The zone a point falls in, if any. Holes are not part of their zone. */
 export function zoneAt(site: ProjectedSite, point: PlanPoint): PlanZone | undefined {
-	return site.zones.find(zone => pointInPolygon(point, zone.points));
+	return site.zones.find(zone => pointInParts(point, zone.parts));
 }
 
 /* ── Scale ────────────────────────────────────────────────────────────────── */

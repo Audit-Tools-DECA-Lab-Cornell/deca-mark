@@ -1,8 +1,8 @@
-import { type KeyboardEvent, type ReactNode, useId } from "react";
+import { type KeyboardEvent, memo, type ReactNode, useId } from "react";
 
 import { cx } from "@/lib/cx";
 import { MAP_PALETTES, mapChromeTheme, type MapPalette, type MapPaletteName } from "@/lib/map-palette";
-import { type PlanPoint, type PlanShape, type PlanZone, type ProjectedSite, toPlan } from "@/lib/plan";
+import { type PlanParts, type PlanPoint, type PlanShape, type PlanZone, type ProjectedSite, toPlan } from "@/lib/plan";
 
 /**
  * A site plan as SVG: the ground, the site, its surfaces, paths, structures, equipment and trees, the
@@ -75,6 +75,8 @@ export type SitePlanProps = {
 	onFocusObservation?: (id: string) => void;
 	/** Extra layers above everything else, in plan units (vertex handles, a placed point). */
 	children?: ReactNode;
+	/** The children hold controls (an editing layer's handles), so the plan is a group, not an image. */
+	interactiveChildren?: boolean;
 };
 
 /* ── Drawing constants, in plan units unless marked px ───────────────────── */
@@ -208,6 +210,14 @@ function ringPath(points: readonly PlanPoint[]): string {
 
 function polygonPath(rings: readonly (readonly PlanPoint[])[]): string {
 	return rings.map(ringPath).join("");
+}
+
+/**
+ * A zone's outline as SVG path data, one subpath per ring of every part. Drawn with `fill-rule="evenodd"`,
+ * holes stay unfilled whichever way their rings wind.
+ */
+export function zonePath(parts: PlanParts): string {
+	return parts.map(polygonPath).join("");
 }
 
 function linePath(points: readonly PlanPoint[]): string {
@@ -349,6 +359,182 @@ function Marker({ palette, selected }: { palette: MapPalette; selected: boolean 
 	);
 }
 
+/**
+ * Everything under the zones: the ground, the grid, the site, its surfaces, paths, structures, equipment and
+ * trees. It changes only with the site, the palette and the zoom, so it is memoised: dragging a zone's point
+ * redraws the zones layer, never this.
+ */
+const PlanBackground = memo(function PlanBackground({
+	features,
+	width,
+	height,
+	metresPerUnit,
+	paletteName,
+	detail,
+	zoom,
+	showTrees
+}: {
+	/** The site's features, by reference: an editor that swaps the zones keeps this array and its memo. */
+	features: readonly PlanShape[];
+	width: number;
+	height: number;
+	metresPerUnit: number;
+	paletteName: MapPaletteName;
+	detail: "full" | "thumbnail";
+	zoom: number;
+	showTrees: boolean;
+}) {
+	const palette = MAP_PALETTES[paletteName];
+	// The ground reaches well past the frame, so letterboxing and panning never show an edge.
+	const groundX0 = -width;
+	const groundY0 = -height;
+	const groundX1 = width * 2;
+	const groundY1 = height * 2;
+	const grid = gridSpacing(metresPerUnit);
+	const gridOpacity = GRID_OPACITY[palette.tiles];
+
+	const surfaces = features.filter(
+		(shape): shape is Extract<PlanShape, { type: "polygon" }> =>
+			shape.type === "polygon" && surfaceSwatch(palette, shape.kind) !== null
+	);
+	const lines = features.filter((shape): shape is Extract<PlanShape, { type: "line" }> => shape.type === "line");
+	const built = features.filter(
+		(shape): shape is Extract<PlanShape, { type: "polygon" }> =>
+			shape.type === "polygon" && (shape.kind === "structure" || shape.kind === "equipment")
+	);
+	const boundaries = features.filter(
+		(shape): shape is Extract<PlanShape, { type: "polygon" }> => shape.type === "polygon" && shape.kind === "site"
+	);
+	const trees = features.filter(shape => shape.kind === "tree");
+
+	return (
+		<>
+			<rect
+				x={groundX0}
+				y={groundY0}
+				width={groundX1 - groundX0}
+				height={groundY1 - groundY0}
+				fill={palette.background}
+			/>
+			{/* A thumbnail keeps only the major lines; the minor ones would close up into a tint. */}
+			{detail === "full" && (
+				<path
+					d={gridPath(grid.minor, groundX0, groundY0, groundX1, groundY1, grid.major)}
+					stroke={palette.site.edge}
+					strokeOpacity={gridOpacity.minor}
+					strokeWidth={STROKE.grid}
+					vectorEffect="non-scaling-stroke"
+					fill="none"
+				/>
+			)}
+			<path
+				d={gridPath(grid.major, groundX0, groundY0, groundX1, groundY1)}
+				stroke={palette.site.edge}
+				strokeOpacity={gridOpacity.major}
+				strokeWidth={STROKE.grid}
+				vectorEffect="non-scaling-stroke"
+				fill="none"
+			/>
+
+			{boundaries.map(shape => (
+				<path
+					key={shape.id}
+					d={polygonPath(shape.rings)}
+					fillRule="evenodd"
+					fill={palette.site.fill}
+					stroke={palette.site.edge}
+					strokeWidth={STROKE.site}
+					strokeLinejoin="round"
+					vectorEffect="non-scaling-stroke"
+				/>
+			))}
+
+			{surfaces.map(shape => {
+				const swatch = surfaceSwatch(palette, shape.kind)!;
+				return (
+					<path
+						key={shape.id}
+						d={polygonPath(shape.rings)}
+						fillRule="evenodd"
+						fill={swatch.fill}
+						stroke={swatch.edge}
+						strokeWidth={STROKE.surface}
+						strokeLinejoin="round"
+						vectorEffect="non-scaling-stroke"
+					/>
+				);
+			})}
+
+			{/* Every path's edge first, then every fill, so crossings and junctions merge. */}
+			{lines.map(shape => (
+				<path
+					key={`${shape.id}-edge`}
+					d={linePath(shape.points)}
+					fill="none"
+					stroke={palette.path.line}
+					// The path is metres wide and zooms; its outline keeps its width on screen.
+					strokeWidth={round(shape.width + (PATH_EDGE * 2) / zoom)}
+					strokeLinejoin="miter"
+				/>
+			))}
+			{lines.map(shape => (
+				<path
+					key={shape.id}
+					d={linePath(shape.points)}
+					fill="none"
+					stroke={palette.surfaces.path.fill}
+					strokeWidth={round(shape.width)}
+					strokeLinejoin="miter"
+				/>
+			))}
+
+			{built.map(shape => {
+				const swatch = shape.kind === "structure" ? palette.structure : palette.equipment;
+				return (
+					<path
+						key={shape.id}
+						d={polygonPath(shape.rings)}
+						fillRule="evenodd"
+						fill={swatch.fill}
+						stroke={swatch.edge}
+						strokeWidth={STROKE.built}
+						strokeLinejoin="round"
+						vectorEffect="non-scaling-stroke"
+					/>
+				);
+			})}
+
+			{showTrees && (
+				<g opacity={palette.tree.opacity}>
+					{trees.map(shape =>
+						shape.type === "circle" ? (
+							<circle
+								key={shape.id}
+								cx={round(shape.center[0])}
+								cy={round(shape.center[1])}
+								r={round(shape.radius)}
+								fill={palette.tree.fill}
+								stroke={palette.tree.edge}
+								strokeWidth={STROKE.tree}
+								vectorEffect="non-scaling-stroke"
+							/>
+						) : shape.type === "polygon" ? (
+							<path
+								key={shape.id}
+								d={polygonPath(shape.rings)}
+								fill={palette.tree.fill}
+								stroke={palette.tree.edge}
+								strokeWidth={STROKE.tree}
+								vectorEffect="non-scaling-stroke"
+							/>
+						) : null
+					)}
+				</g>
+			)}
+		</>
+	);
+});
+
 /* ── The plan ─────────────────────────────────────────────────────────────── */
 
 export function SitePlan({
@@ -368,7 +554,8 @@ export function SitePlan({
 	labelScale = 1,
 	onSelectObservation,
 	onFocusObservation,
-	children
+	children,
+	interactiveChildren = false
 }: SitePlanProps) {
 	const palette = MAP_PALETTES[paletteName];
 	const show: PlanLayers = { zones: true, observations: true, trees: true, ...layers };
@@ -382,31 +569,11 @@ export function SitePlan({
 	// Pills and markers keep their size on screen while the plan zooms under them.
 	const counterScale = labelScale / camera.zoom;
 
-	// The ground reaches well past the frame, so letterboxing and panning never show an edge.
-	const groundX0 = -site.width;
-	const groundY0 = -site.height;
-	const groundX1 = site.width * 2;
-	const groundY1 = site.height * 2;
-	const grid = gridSpacing(site.metresPerUnit);
-	const gridOpacity = GRID_OPACITY[palette.tiles];
-
-	const surfaces = site.features.filter(
-		(shape): shape is Extract<PlanShape, { type: "polygon" }> =>
-			shape.type === "polygon" && surfaceSwatch(palette, shape.kind) !== null
-	);
-	const lines = site.features.filter((shape): shape is Extract<PlanShape, { type: "line" }> => shape.type === "line");
-	const built = site.features.filter(
-		(shape): shape is Extract<PlanShape, { type: "polygon" }> =>
-			shape.type === "polygon" && (shape.kind === "structure" || shape.kind === "equipment")
-	);
-	const boundaries = site.features.filter(
-		(shape): shape is Extract<PlanShape, { type: "polygon" }> => shape.type === "polygon" && shape.kind === "site"
-	);
-	const trees = site.features.filter(shape => shape.kind === "tree");
-
 	const zoneEdge = ZONE_EDGE[detail];
 	const anyHatched = site.zones.some(zone => zoneStyles[zone.id]?.hatched);
-	const interactive = Boolean(onSelectObservation);
+	// Markers are buttons only with a selection to report; the plan is a group whenever it holds controls.
+	const markersInteractive = Boolean(onSelectObservation);
+	const interactive = markersInteractive || interactiveChildren;
 	const shownObservations = show.observations ? observations : [];
 	// Faint markers first, the selected one last, so the selection is never under another marker.
 	const markerOrder = [...shownObservations].sort(
@@ -459,146 +626,36 @@ export function SitePlan({
 				className={cameraClass}
 				style={{ transform: `translate(${round(camera.x)}px, ${round(camera.y)}px) scale(${camera.zoom})` }}>
 				<g aria-hidden="true">
-					<rect
-						x={groundX0}
-						y={groundY0}
-						width={groundX1 - groundX0}
-						height={groundY1 - groundY0}
-						fill={palette.background}
+					<PlanBackground
+						features={site.features}
+						width={site.width}
+						height={site.height}
+						metresPerUnit={site.metresPerUnit}
+						paletteName={paletteName}
+						detail={detail}
+						zoom={camera.zoom}
+						showTrees={show.trees}
 					/>
-					{/* A thumbnail keeps only the major lines; the minor ones would close up into a tint. */}
-					{detail === "full" && (
-						<path
-							d={gridPath(grid.minor, groundX0, groundY0, groundX1, groundY1, grid.major)}
-							stroke={palette.site.edge}
-							strokeOpacity={gridOpacity.minor}
-							strokeWidth={STROKE.grid}
-							vectorEffect="non-scaling-stroke"
-							fill="none"
-						/>
-					)}
-					<path
-						d={gridPath(grid.major, groundX0, groundY0, groundX1, groundY1)}
-						stroke={palette.site.edge}
-						strokeOpacity={gridOpacity.major}
-						strokeWidth={STROKE.grid}
-						vectorEffect="non-scaling-stroke"
-						fill="none"
-					/>
-
-					{boundaries.map(shape => (
-						<path
-							key={shape.id}
-							d={polygonPath(shape.rings)}
-							fillRule="evenodd"
-							fill={palette.site.fill}
-							stroke={palette.site.edge}
-							strokeWidth={STROKE.site}
-							strokeLinejoin="round"
-							vectorEffect="non-scaling-stroke"
-						/>
-					))}
-
-					{surfaces.map(shape => {
-						const swatch = surfaceSwatch(palette, shape.kind)!;
-						return (
-							<path
-								key={shape.id}
-								d={polygonPath(shape.rings)}
-								fillRule="evenodd"
-								fill={swatch.fill}
-								stroke={swatch.edge}
-								strokeWidth={STROKE.surface}
-								strokeLinejoin="round"
-								vectorEffect="non-scaling-stroke"
-							/>
-						);
-					})}
-
-					{/* Every path's edge first, then every fill, so crossings and junctions merge. */}
-					{lines.map(shape => (
-						<path
-							key={`${shape.id}-edge`}
-							d={linePath(shape.points)}
-							fill="none"
-							stroke={palette.path.line}
-							// The path is metres wide and zooms; its outline keeps its width on screen.
-							strokeWidth={round(shape.width + (PATH_EDGE * 2) / camera.zoom)}
-							strokeLinejoin="miter"
-						/>
-					))}
-					{lines.map(shape => (
-						<path
-							key={shape.id}
-							d={linePath(shape.points)}
-							fill="none"
-							stroke={palette.surfaces.path.fill}
-							strokeWidth={round(shape.width)}
-							strokeLinejoin="miter"
-						/>
-					))}
-
-					{built.map(shape => {
-						const swatch = shape.kind === "structure" ? palette.structure : palette.equipment;
-						return (
-							<path
-								key={shape.id}
-								d={polygonPath(shape.rings)}
-								fillRule="evenodd"
-								fill={swatch.fill}
-								stroke={swatch.edge}
-								strokeWidth={STROKE.built}
-								strokeLinejoin="round"
-								vectorEffect="non-scaling-stroke"
-							/>
-						);
-					})}
-
-					{show.trees && (
-						<g opacity={palette.tree.opacity}>
-							{trees.map(shape =>
-								shape.type === "circle" ? (
-									<circle
-										key={shape.id}
-										cx={round(shape.center[0])}
-										cy={round(shape.center[1])}
-										r={round(shape.radius)}
-										fill={palette.tree.fill}
-										stroke={palette.tree.edge}
-										strokeWidth={STROKE.tree}
-										vectorEffect="non-scaling-stroke"
-									/>
-								) : shape.type === "polygon" ? (
-									<path
-										key={shape.id}
-										d={polygonPath(shape.rings)}
-										fill={palette.tree.fill}
-										stroke={palette.tree.edge}
-										strokeWidth={STROKE.tree}
-										vectorEffect="non-scaling-stroke"
-									/>
-								) : null
-							)}
-						</g>
-					)}
 
 					{show.zones &&
 						site.zones.map(zone => {
 							const style = zoneStyles[zone.id] ?? {};
 							const edge = style.emphasis === "focus" || style.hatched ? zoneEdge.focus : zoneEdge.plain;
 							return (
-								<g key={zone.id} opacity={style.emphasis === "dim" ? DIM_OPACITY : undefined}>
-									<path
-										d={ringPath(zone.points)}
-										fill={style.hatched ? `url(#${hatchId})` : palette.zone.fill}
-										fillOpacity={style.hatched ? 1 : palette.zone.fillOpacity}
-										stroke={palette.zone.edge}
-										strokeWidth={edge.width}
-										strokeDasharray={edge.dash}
-										strokeLinejoin="round"
-										vectorEffect="non-scaling-stroke"
-									/>
-								</g>
+								<path
+									key={zone.id}
+									data-zone={zone.id}
+									d={zonePath(zone.parts)}
+									fillRule="evenodd"
+									fill={style.hatched ? `url(#${hatchId})` : palette.zone.fill}
+									fillOpacity={style.hatched ? 1 : palette.zone.fillOpacity}
+									stroke={palette.zone.edge}
+									strokeWidth={edge.width}
+									strokeDasharray={edge.dash}
+									strokeLinejoin="round"
+									vectorEffect="non-scaling-stroke"
+									opacity={style.emphasis === "dim" ? DIM_OPACITY : undefined}
+								/>
 							);
 						})}
 				</g>
@@ -624,14 +681,14 @@ export function SitePlan({
 				)}
 
 				{markerOrder.length > 0 && (
-					<g aria-hidden={interactive ? undefined : true}>
+					<g aria-hidden={markersInteractive ? undefined : true}>
 						{markerOrder.map(observation => {
 							const [x, y] = toPlan([observation.lng, observation.lat], site.frame);
 							const selected = Boolean(observation.selected);
 							const placement = {
 								transform: `translate(${round(x)}px, ${round(y)}px) scale(${counterScale})`
 							};
-							if (!interactive) {
+							if (!markersInteractive) {
 								return (
 									<g
 										key={observation.id}

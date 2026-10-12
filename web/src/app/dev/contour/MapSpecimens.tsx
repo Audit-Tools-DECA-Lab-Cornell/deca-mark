@@ -92,7 +92,7 @@ function parkSite(): SiteCollection {
 					id: "zone-a",
 					code: "A",
 					name: "North meadow",
-					label_point: [...fromPlan([330, 165], frame)] as [number, number]
+					display_anchor: [...fromPlan([330, 165], frame)] as [number, number]
 				},
 				rect(120, 100, 420, 130),
 				frame
@@ -103,7 +103,7 @@ function parkSite(): SiteCollection {
 					id: "zone-b",
 					code: "B",
 					name: "Woodland edge",
-					label_point: [...fromPlan([225, 345], frame)] as [number, number]
+					display_anchor: [...fromPlan([225, 345], frame)] as [number, number]
 				},
 				rect(120, 270, 210, 150),
 				frame
@@ -114,7 +114,7 @@ function parkSite(): SiteCollection {
 					id: "zone-c",
 					code: "C",
 					name: "Sand area",
-					label_point: [...fromPlan([540, 330], frame)] as [number, number]
+					display_anchor: [...fromPlan([540, 330], frame)] as [number, number]
 				},
 				rect(470, 280, 140, 100),
 				frame

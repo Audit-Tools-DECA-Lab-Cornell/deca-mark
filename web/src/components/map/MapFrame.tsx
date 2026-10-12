@@ -1,12 +1,17 @@
 "use client";
 
 import {
+	createContext,
 	type KeyboardEvent,
 	type PointerEvent,
 	type ReactNode,
+	type Ref,
 	useCallback,
+	useContext,
 	useEffect,
 	useId,
+	useImperativeHandle,
+	useMemo,
 	useRef,
 	useState
 } from "react";
@@ -17,7 +22,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/contour/Po
 import { Segmented } from "@/components/contour/Segmented";
 import { cx } from "@/lib/cx";
 import { MAP_PALETTE_ORDER, MAP_PALETTES, mapChromeTheme, type MapPaletteName, useMapPalette } from "@/lib/map-palette";
-import { fromPlan, type LngLat, type PlanPoint, type ProjectedSite, scaleChip, toPlan } from "@/lib/plan";
+import {
+	fromPlan,
+	type LngLat,
+	type PlanBounds,
+	type PlanPoint,
+	type ProjectedSite,
+	scaleChip,
+	toPlan
+} from "@/lib/plan";
 
 import { type PlanCamera, type PlanLayers, type PlanObservation, SitePlan, type ZonePlanStyle } from "./SitePlan";
 
@@ -27,7 +40,45 @@ import { type PlanCamera, type PlanLayers, type PlanObservation, SitePlan, type 
  * pans by dragging or with the arrow keys once zoomed in. Selecting a marker reports its id; when the
  * selection changes to a marker out of view, the plan eases it into view. Layers switches the map palette
  * (separate from the screen theme) and turns zones, observations and trees on and off.
+ *
+ * In `edit` and `draw` modes the frame hosts an editing layer (the zone editor): it pans at any zoom and as
+ * far as any point of the plan, zooms to 1 cm of ground per pixel, pinches with two pointers, keeps the page
+ * from scrolling under a touch, and reports a plain click on the plan. Children read the camera through
+ * {@link usePlanCamera}. A focused child marked `data-map-keys` owns the arrow, Delete and Escape keys, so
+ * the frame does not pan while a handle has focus.
  */
+
+/** Whether the frame only shows the plan (`pan`) or hosts an editing layer. */
+export type MapMode = "pan" | "edit" | "draw";
+
+/** What an editing layer needs from the frame's camera. */
+export type PlanCameraState = {
+	camera: PlanCamera;
+	/** Screen pixels per plan unit at the current zoom. */
+	pixelsPerUnit: number;
+	/** A pointer's position on the plan, in plan units, or null before the frame has a size. */
+	clientToPlan: (clientX: number, clientY: number) => PlanPoint | null;
+	/** The part of the plan in view, in plan units. */
+	view: PlanBounds;
+	/** Eases the camera so a plan point is comfortably in view, when it is not. */
+	showPoint: (point: PlanPoint) => void;
+};
+
+const PlanCameraContext = createContext<PlanCameraState | null>(null);
+
+/** The camera of the MapFrame this layer is drawn in. */
+export function usePlanCamera(): PlanCameraState {
+	const value = useContext(PlanCameraContext);
+	if (!value) throw new Error("usePlanCamera needs a MapFrame around it.");
+	return value;
+}
+
+/** Camera moves a page can ask of its frame, through the `controller` prop. */
+export type MapController = {
+	/** Fits a part of the plan in view, as close as the zoom allows. */
+	fitBounds: (bounds: PlanBounds) => void;
+	showPoint: (point: PlanPoint) => void;
+};
 
 export type MapFrameProps = {
 	site: ProjectedSite;
@@ -65,11 +116,20 @@ export type MapFrameProps = {
 	className?: string;
 	/** Extra layers in plan units, drawn above the plan (vertex handles, a placed point). */
 	children?: ReactNode;
+	/** `edit` and `draw` host an editing layer; see above. */
+	mode?: MapMode;
+	/** A plain click or tap on the plan in `edit` or `draw` mode, at its plan position. */
+	onPlanClick?: (point: PlanPoint, modifiers: { altKey: boolean; shiftKey: boolean }) => void;
+	controller?: Ref<MapController>;
+	/** The screen-reader hint after the frame's name. Defaults to the zoom and pan keys. */
+	keysHint?: string;
 };
 
 /** Below 1 the whole plan sits smaller in the frame, with ground around it. */
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 8;
+/** While editing, the closest zoom shows this much ground per screen pixel (WUI-8): 1 cm. */
+const EDIT_METRES_PER_PIXEL = 0.01;
 /** Each press of +, −, or a zoom button. */
 const ZOOM_STEP = 1.5;
 /** How far an arrow key moves the plan, as a share of the frame. */
@@ -95,13 +155,21 @@ function layoutOf(size: Size, site: ProjectedSite) {
 	};
 }
 
+/** How far the camera may zoom and move. */
+type Limits = {
+	min: number;
+	max: number;
+	/** Pan anywhere a plan point can reach the frame's centre. */ free: boolean;
+};
+
 /**
  * Keeps the zoom in range and the plan in sight: zoomed in, the plan always covers the frame; zoomed out, it
- * always sits wholly inside it.
+ * always sits wholly inside it. Free limits (while editing) let any plan point reach the centre instead.
  */
-function clampCamera(camera: PlanCamera, site: ProjectedSite): PlanCamera {
-	const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, camera.zoom));
+function clampCamera(camera: PlanCamera, site: ProjectedSite, limits: Limits): PlanCamera {
+	const zoom = Math.min(limits.max, Math.max(limits.min, camera.zoom));
 	const clampAxis = (value: number, extent: number) => {
+		if (limits.free) return Math.min(extent / 2, Math.max(extent / 2 - extent * zoom, value));
 		const slack = extent * (1 - zoom);
 		return Math.min(Math.max(0, slack), Math.max(Math.min(0, slack), value));
 	};
@@ -109,10 +177,16 @@ function clampCamera(camera: PlanCamera, site: ProjectedSite): PlanCamera {
 }
 
 /** Zooms by `factor` about a point in frame units, keeping that point still. */
-function zoomAbout(camera: PlanCamera, factor: number, [qx, qy]: PlanPoint, site: ProjectedSite): PlanCamera {
-	const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, camera.zoom * factor));
+function zoomAbout(
+	camera: PlanCamera,
+	factor: number,
+	[qx, qy]: PlanPoint,
+	site: ProjectedSite,
+	limits: Limits
+): PlanCamera {
+	const zoom = Math.min(limits.max, Math.max(limits.min, camera.zoom * factor));
 	const ratio = zoom / camera.zoom;
-	return clampCamera({ zoom, x: qx - (qx - camera.x) * ratio, y: qy - (qy - camera.y) * ratio }, site);
+	return clampCamera({ zoom, x: qx - (qx - camera.x) * ratio, y: qy - (qy - camera.y) * ratio }, site, limits);
 }
 
 /** The camera that brings a plan point into view, or null when it is already comfortably visible. */
@@ -120,7 +194,8 @@ function cameraToShow(
 	camera: PlanCamera,
 	[px, py]: PlanPoint,
 	site: ProjectedSite,
-	size: Size | null
+	size: Size | null,
+	limits: Limits
 ): PlanCamera | null {
 	const layout = size ? layoutOf(size, site) : { scale: 1, offsetX: 0, offsetY: 0 };
 	const minX = -layout.offsetX / layout.scale + VIEW_MARGIN;
@@ -132,11 +207,31 @@ function cameraToShow(
 	if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY) return null;
 	return clampCamera(
 		{ zoom: camera.zoom, x: site.width / 2 - px * camera.zoom, y: site.height / 2 - py * camera.zoom },
-		site
+		site,
+		limits
 	);
 }
 
+/** The camera that fits a part of the plan in the frame, centred, as close as the limits allow. */
+function cameraToFit(bounds: PlanBounds, site: ProjectedSite, size: Size | null, limits: Limits): PlanCamera {
+	const layout = size ? layoutOf(size, site) : { scale: 1, offsetX: 0, offsetY: 0 };
+	const visibleWidth = size ? size.width / layout.scale : site.width;
+	const visibleHeight = size ? size.height / layout.scale : site.height;
+	const width = Math.max(bounds.maxX - bounds.minX, 1e-9);
+	const height = Math.max(bounds.maxY - bounds.minY, 1e-9);
+	const zoom = Math.min(
+		limits.max,
+		Math.max(limits.min, Math.min(visibleWidth / width, visibleHeight / height) * 0.8)
+	);
+	const cx = (bounds.minX + bounds.maxX) / 2;
+	const cy = (bounds.minY + bounds.maxY) / 2;
+	return clampCamera({ zoom, x: site.width / 2 - cx * zoom, y: site.height / 2 - cy * zoom }, site, limits);
+}
+
 type Drag = { pointerId: number; startX: number; startY: number; lastX: number; lastY: number; active: boolean };
+
+/** Two pointers down in edit or draw mode: a pinch, measured from where it last was. */
+type Pinch = { distance: number; midX: number; midY: number };
 
 export function MapFrame({
 	site,
@@ -156,7 +251,11 @@ export function MapFrame({
 	controls = true,
 	showLabels = true,
 	className,
-	children
+	children,
+	mode = "pan",
+	onPlanClick,
+	controller,
+	keysHint
 }: MapFrameProps) {
 	const [chosenPalette, setPalette] = useMapPalette();
 	const paletteName = pinnedPalette ?? chosenPalette;
@@ -171,11 +270,30 @@ export function MapFrame({
 	const [size, setSize] = useState<Size | null>(null);
 	const frameRef = useRef<HTMLDivElement>(null);
 	const dragRef = useRef<Drag | null>(null);
+	const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+	const pinchRef = useRef<Pinch | null>(null);
+	const editing = mode !== "pan";
+	// Placement armed, or a drawing tool on: the frame and its label turn accent, as the collector's armed map does.
+	const accentFrame = armed || mode === "draw";
 	const ids = useId();
 	const hintId = `${ids}-hint`;
 
 	const label = title ?? `${site.name} · ${palette.label} plan`;
 	const detail = subtitle ?? `Map ${mapVersion}`;
+
+	// While editing, the closest zoom is set by ground resolution, not by the fitted frame.
+	const fitScale = size ? layoutOf(size, site).scale : 1;
+	const limits = useMemo<Limits>(
+		() =>
+			editing
+				? {
+						min: MIN_ZOOM,
+						max: Math.max(MAX_ZOOM, site.metresPerUnit / (fitScale * EDIT_METRES_PER_PIXEL)),
+						free: true
+					}
+				: { min: MIN_ZOOM, max: MAX_ZOOM, free: false },
+		[editing, site.metresPerUnit, fitScale]
+	);
 
 	// The frame's size decides the scale bar and how a drag maps to plan units.
 	useEffect(() => {
@@ -195,7 +313,7 @@ export function MapFrame({
 		setShownSelection(selectedId);
 		const target = observations.find(observation => observation.id === selectedId);
 		if (target) {
-			const next = cameraToShow(camera, toPlan([target.lng, target.lat], site.frame), site, size);
+			const next = cameraToShow(camera, toPlan([target.lng, target.lat], site.frame), site, size, limits);
 			if (next) {
 				setEasing(true);
 				setCamera(next);
@@ -209,19 +327,45 @@ export function MapFrame({
 		if (!target) return;
 		const point = toPlan([target.lng, target.lat], site.frame);
 		setEasing(true);
-		setCamera(current => cameraToShow(current, point, site, size) ?? current);
+		setCamera(current => cameraToShow(current, point, site, size, limits) ?? current);
 	};
 
-	/** A point on screen in frame units (the plan's units at zoom 1). */
+	const showPoint = useCallback(
+		(point: PlanPoint) => {
+			setEasing(true);
+			setCamera(current => cameraToShow(current, point, site, size, limits) ?? current);
+		},
+		[site, size, limits]
+	);
+
+	useImperativeHandle(
+		controller,
+		() => ({
+			fitBounds: bounds => {
+				setEasing(true);
+				setCamera(cameraToFit(bounds, site, size, limits));
+			},
+			showPoint
+		}),
+		[site, size, limits, showPoint]
+	);
+
+	/**
+	 * A point on screen in frame units (the plan's units at zoom 1). Measured inside the frame's border,
+	 * where the plan is drawn, so a 1 or 2 px edge never offsets it.
+	 */
 	const frameUnits = useCallback(
 		(clientX: number, clientY: number): PlanPoint | null => {
 			const frame = frameRef.current;
 			if (!frame) return null;
 			const rect = frame.getBoundingClientRect();
-			const layout = layoutOf({ width: rect.width, height: rect.height }, site);
+			const width = frame.clientWidth;
+			const height = frame.clientHeight;
+			if (width === 0 || height === 0) return null;
+			const layout = layoutOf({ width, height }, site);
 			return [
-				(clientX - rect.left - layout.offsetX) / layout.scale,
-				(clientY - rect.top - layout.offsetY) / layout.scale
+				(clientX - rect.left - frame.clientLeft - layout.offsetX) / layout.scale,
+				(clientY - rect.top - frame.clientTop - layout.offsetY) / layout.scale
 			];
 		},
 		[site]
@@ -230,9 +374,9 @@ export function MapFrame({
 	const zoomBy = useCallback(
 		(factor: number) => {
 			setEasing(true);
-			setCamera(current => zoomAbout(current, factor, [site.width / 2, site.height / 2], site));
+			setCamera(current => zoomAbout(current, factor, [site.width / 2, site.height / 2], site, limits));
 		},
-		[site]
+		[site, limits]
 	);
 
 	// Ctrl or ⌘ with the wheel (and a trackpad pinch, which arrives the same way) zooms about the pointer. A
@@ -247,23 +391,57 @@ export function MapFrame({
 			if (!point) return;
 			const factor = Math.exp(-event.deltaY * 0.0025);
 			setEasing(false);
-			setCamera(current => zoomAbout(current, factor, point, site));
+			setCamera(current => zoomAbout(current, factor, point, site, limits));
 		};
 		frame.addEventListener("wheel", onWheel, { passive: false });
 		return () => frame.removeEventListener("wheel", onWheel);
-	}, [controls, frameUnits, site]);
+	}, [controls, frameUnits, site, limits]);
 
-	const canPan = controls && !armed && camera.zoom > 1;
+	// Drags and pinches move the camera at most once a frame.
+	const pendingRef = useRef<{ dx: number; dy: number; factor: number; about: PlanPoint | null } | null>(null);
+	const frameRequest = useRef<number | null>(null);
+	const scheduleCamera = (dx: number, dy: number, factor = 1, about: PlanPoint | null = null) => {
+		const pending = pendingRef.current ?? { dx: 0, dy: 0, factor: 1, about: null };
+		pendingRef.current = {
+			dx: pending.dx + dx,
+			dy: pending.dy + dy,
+			factor: pending.factor * factor,
+			about: about ?? pending.about
+		};
+		if (frameRequest.current !== null) return;
+		frameRequest.current = requestAnimationFrame(() => {
+			frameRequest.current = null;
+			const move = pendingRef.current;
+			pendingRef.current = null;
+			if (!move) return;
+			setCamera(current => {
+				const moved = clampCamera({ ...current, x: current.x + move.dx, y: current.y + move.dy }, site, limits);
+				return move.factor !== 1 && move.about
+					? zoomAbout(moved, move.factor, move.about, site, limits)
+					: moved;
+			});
+		});
+	};
+	useEffect(
+		() => () => {
+			if (frameRequest.current !== null) cancelAnimationFrame(frameRequest.current);
+		},
+		[]
+	);
+
+	const canPan = controls && !armed && (editing || camera.zoom > 1);
 
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
 		// Keys typed in the Layers menu reach here through the React tree; only the frame's own keys count.
 		if (!controls || !event.currentTarget.contains(event.target as Node)) return;
+		// A handle or cross that owns its keys: the arrows move it, not the plan.
+		if ((event.target as Element).closest("[data-map-keys]")) return;
 		if (event.altKey || event.ctrlKey || event.metaKey) return;
 		const panX = site.width * PAN_STEP;
 		const panY = site.height * PAN_STEP;
 		const pan = (dx: number, dy: number) => {
 			setEasing(true);
-			setCamera(current => clampCamera({ ...current, x: current.x + dx, y: current.y + dy }, site));
+			setCamera(current => clampCamera({ ...current, x: current.x + dx, y: current.y + dy }, site, limits));
 		};
 		// With nowhere to pan, an arrow key returns before preventDefault and scrolls the page as usual.
 		if (event.key.startsWith("Arrow") && !canPan) return;
@@ -295,9 +473,31 @@ export function MapFrame({
 	};
 
 	const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-		if (!controls || event.button !== 0) return;
+		// Presses in the Layers menu reach here through the React tree from its portal: they are not the plan's.
+		if (!controls || !event.currentTarget.contains(event.target as Node)) return;
 		// The overlay controls handle their own presses.
 		if ((event.target as Element).closest("[data-map-overlay]")) return;
+		if (editing) {
+			pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+			if (pointersRef.current.size === 2) {
+				// A second finger: the press becomes a pinch, and the first finger's drag stops.
+				const [a, b] = [...pointersRef.current.values()] as [
+					{ x: number; y: number },
+					{ x: number; y: number }
+				];
+				pinchRef.current = {
+					distance: Math.hypot(a.x - b.x, a.y - b.y),
+					midX: (a.x + b.x) / 2,
+					midY: (a.y + b.y) / 2
+				};
+				dragRef.current = null;
+				event.currentTarget.setPointerCapture(event.pointerId);
+				setEasing(false);
+				setDragging(true);
+				return;
+			}
+		}
+		if (event.button !== 0) return;
 		dragRef.current = {
 			pointerId: event.pointerId,
 			startX: event.clientX,
@@ -309,6 +509,29 @@ export function MapFrame({
 	};
 
 	const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+		if (editing && pointersRef.current.has(event.pointerId)) {
+			pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+			const pinch = pinchRef.current;
+			if (pinch && pointersRef.current.size >= 2) {
+				const [a, b] = [...pointersRef.current.values()] as [
+					{ x: number; y: number },
+					{ x: number; y: number }
+				];
+				const distance = Math.hypot(a.x - b.x, a.y - b.y);
+				const midX = (a.x + b.x) / 2;
+				const midY = (a.y + b.y) / 2;
+				const scale = size ? layoutOf(size, site).scale : 1;
+				const about = frameUnits(midX, midY);
+				scheduleCamera(
+					(midX - pinch.midX) / scale,
+					(midY - pinch.midY) / scale,
+					pinch.distance > 0 ? distance / pinch.distance : 1,
+					about
+				);
+				pinchRef.current = { distance, midX, midY };
+				return;
+			}
+		}
 		const drag = dragRef.current;
 		if (!drag || drag.pointerId !== event.pointerId || !canPan) return;
 		if (!drag.active) {
@@ -324,10 +547,21 @@ export function MapFrame({
 		const dy = (event.clientY - drag.lastY) / scale;
 		drag.lastX = event.clientX;
 		drag.lastY = event.clientY;
-		setCamera(current => clampCamera({ ...current, x: current.x + dx, y: current.y + dy }, site));
+		if (editing) scheduleCamera(dx, dy);
+		else setCamera(current => clampCamera({ ...current, x: current.x + dx, y: current.y + dy }, site, limits));
 	};
 
 	const endDrag = (event: PointerEvent<HTMLDivElement>, cancelled: boolean) => {
+		if (editing) {
+			pointersRef.current.delete(event.pointerId);
+			if (pinchRef.current) {
+				if (pointersRef.current.size < 2) {
+					pinchRef.current = null;
+					setDragging(false);
+				}
+				return;
+			}
+		}
 		const drag = dragRef.current;
 		if (!drag || drag.pointerId !== event.pointerId) return;
 		dragRef.current = null;
@@ -335,12 +569,12 @@ export function MapFrame({
 			setDragging(false);
 			return;
 		}
-		if (!cancelled && armed && onPlace) {
-			const point = frameUnits(event.clientX, event.clientY);
-			if (!point) return;
-			const onPlan: PlanPoint = [(point[0] - camera.x) / camera.zoom, (point[1] - camera.y) / camera.zoom];
-			onPlace(fromPlan(onPlan, site.frame));
-		}
+		if (cancelled) return;
+		const point = frameUnits(event.clientX, event.clientY);
+		if (!point) return;
+		const onPlan: PlanPoint = [(point[0] - camera.x) / camera.zoom, (point[1] - camera.y) / camera.zoom];
+		if (armed && onPlace) onPlace(fromPlan(onPlan, site.frame));
+		else if (editing && onPlanClick) onPlanClick(onPlan, { altKey: event.altKey, shiftKey: event.shiftKey });
 	};
 
 	const layout = size ? layoutOf(size, site) : null;
@@ -351,6 +585,29 @@ export function MapFrame({
 	);
 
 	const labelScale = layout ? Math.max(1, MIN_LABEL_SCALE / layout.scale) : 1;
+
+	const cameraState = useMemo<PlanCameraState>(() => {
+		const scale = layout?.scale ?? 1;
+		const toPlanUnits = (fx: number, fy: number): PlanPoint => [
+			(fx - camera.x) / camera.zoom,
+			(fy - camera.y) / camera.zoom
+		];
+		const [minX, minY] = toPlanUnits(-(layout?.offsetX ?? 0) / scale, -(layout?.offsetY ?? 0) / scale);
+		const [maxX, maxY] = toPlanUnits(
+			((size?.width ?? site.width) - (layout?.offsetX ?? 0)) / scale,
+			((size?.height ?? site.height) - (layout?.offsetY ?? 0)) / scale
+		);
+		return {
+			camera,
+			pixelsPerUnit: scale * camera.zoom,
+			clientToPlan: (clientX, clientY) => {
+				const point = frameUnits(clientX, clientY);
+				return point ? toPlanUnits(point[0], point[1]) : null;
+			},
+			view: { minX, minY, maxX, maxY },
+			showPoint
+		};
+	}, [camera, layout?.scale, layout?.offsetX, layout?.offsetY, size, site.width, site.height, frameUnits, showPoint]);
 
 	const shownObservations = observations.map(observation => ({
 		...observation,
@@ -376,8 +633,12 @@ export function MapFrame({
 			className={cx(
 				"@container relative isolate overflow-hidden",
 				surface === "island" ? "rounded-island" : "rounded-panel",
-				armed ? "border-2 border-accent" : "border border-line",
+				accentFrame ? "border-2 border-accent" : "border border-line",
 				canPan && (dragging ? "cursor-grabbing touch-none" : "cursor-grab touch-none"),
+				// While editing nothing under the map scrolls, zooms or opens a callout on a long press.
+				editing && !canPan && "touch-none",
+				editing && "[-webkit-touch-callout:none]",
+				mode === "draw" && "cursor-crosshair",
 				armed && onPlace && "cursor-crosshair",
 				className
 			)}
@@ -398,8 +659,9 @@ export function MapFrame({
 				animateCamera={easing && !dragging}
 				labelScale={labelScale}
 				onSelectObservation={controls ? onSelectObservation : undefined}
-				onFocusObservation={controls ? showObservation : undefined}>
-				{children}
+				onFocusObservation={controls ? showObservation : undefined}
+				interactiveChildren={editing}>
+				<PlanCameraContext.Provider value={cameraState}>{children}</PlanCameraContext.Provider>
 			</SitePlan>
 
 			{/* The label and the controls share one row, so a narrow frame wraps the label rather than overlapping. */}
@@ -410,13 +672,13 @@ export function MapFrame({
 					data-map-overlay
 					className={cx(
 						"pointer-events-auto min-w-0 max-w-80 rounded-thumb border px-4 py-2 shadow-ledge",
-						armed ? "border-accent bg-accent text-on-accent" : "border-line bg-island text-ink"
+						accentFrame ? "border-accent bg-accent text-on-accent" : "border-line bg-island text-ink"
 					)}>
 					{banner ?? (
 						<>
 							<p className="type-small font-semibold">{label}</p>
 							{/* A phone-width frame keeps only the first line, so the plan stays visible. */}
-							<p className={cx("type-small @max-sm:hidden", armed ? "text-on-accent" : "text-ink-2")}>
+							<p className={cx("type-small @max-sm:hidden", accentFrame ? "text-on-accent" : "text-ink-2")}>
 								{detail}
 							</p>
 						</>
@@ -430,7 +692,7 @@ export function MapFrame({
 							label="Zoom in"
 							variant="map"
 							className="shadow-ledge"
-							disabled={camera.zoom >= MAX_ZOOM}
+							disabled={camera.zoom >= limits.max}
 							onClick={() => zoomBy(ZOOM_STEP)}
 						/>
 						<IconButton
@@ -438,7 +700,7 @@ export function MapFrame({
 							label="Zoom out"
 							variant="map"
 							className="shadow-ledge"
-							disabled={camera.zoom <= MIN_ZOOM}
+							disabled={camera.zoom <= limits.min}
 							onClick={() => zoomBy(1 / ZOOM_STEP)}
 						/>
 						<Popover>
@@ -484,8 +746,8 @@ export function MapFrame({
 
 			{controls && (
 				<p id={hintId} className="sr-only">
-					Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys
-					to move the plan.
+					{keysHint ??
+						"Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys to move the plan."}
 				</p>
 			)}
 		</div>
