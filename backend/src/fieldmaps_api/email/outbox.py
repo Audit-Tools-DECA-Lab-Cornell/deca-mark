@@ -52,6 +52,61 @@ class MessageRequest(BaseModel):
     scheduled_at: datetime | None = None
 
 
+class StoredDelivery(Delivery):
+    fingerprint: str
+
+
+def request_fingerprint(
+    *,
+    recipient: str,
+    kind: Literal["invitation", "reminder", "notification"],
+    message: RenderedEmail,
+    project_id: UUID | None,
+    scheduled_at: datetime | None,
+) -> str:
+    """Keep retries comparable even after the outbox message body is scrubbed."""
+    return hashlib.sha256(
+        orjson.dumps(
+            [recipient, kind, message.subject, message.html, str(project_id), str(scheduled_at)]
+        )
+    ).hexdigest()
+
+
+async def existing_delivery(
+    session: AsyncSession,
+    *,
+    created_by: UUID,
+    dedupe_key: UUID,
+    recipient: str,
+    kind: Literal["invitation", "reminder", "notification"],
+    message: RenderedEmail,
+    project_id: UUID,
+    scheduled_at: datetime | None,
+) -> Delivery | None:
+    """Return a validated replay before new-request scheduling limits apply."""
+    result: Result[tuple[str]] = await session.execute(
+        text("""
+        SELECT row_to_json(e)::text FROM fieldmaps_private.email_outbox e
+        WHERE created_by = :creator AND dedupe_key = :dedupe
+        """),
+        {"creator": created_by, "dedupe": dedupe_key},
+    )
+    value = result.scalar_one_or_none()
+    if value is None:
+        return None
+    stored = StoredDelivery.model_validate_json(value)
+    if stored.fingerprint != request_fingerprint(
+        recipient=recipient,
+        kind=kind,
+        message=message,
+        project_id=project_id,
+        scheduled_at=scheduled_at,
+    ):
+        msg = "This email request was already used with different content"
+        raise ConflictError(msg)
+    return stored
+
+
 async def enqueue(  # noqa: PLR0913 - explicit persisted delivery fields.
     session: AsyncSession,
     *,
@@ -67,11 +122,13 @@ async def enqueue(  # noqa: PLR0913 - explicit persisted delivery fields.
     expires_at: datetime | None = None,
 ) -> Delivery:
     scheduled = scheduled_at or datetime.now(UTC)
-    digest = hashlib.sha256(
-        orjson.dumps(
-            [recipient, kind, message.subject, message.html, str(project_id), str(scheduled_at)]
-        )
-    ).hexdigest()
+    digest = request_fingerprint(
+        recipient=recipient,
+        kind=kind,
+        message=message,
+        project_id=project_id,
+        scheduled_at=scheduled_at,
+    )
     result: Result[tuple[str]] = await session.execute(
         text("""
         INSERT INTO fieldmaps_private.email_outbox
@@ -103,10 +160,7 @@ async def enqueue(  # noqa: PLR0913 - explicit persisted delivery fields.
     )
     value = result.scalar_one()
 
-    class Fingerprint(BaseModel):
-        fingerprint: str
-
-    if Fingerprint.model_validate_json(value).fingerprint != digest:
+    if StoredDelivery.model_validate_json(value).fingerprint != digest:
         msg = "This email request was already used with different content"
         raise ConflictError(msg)
     return Delivery.model_validate_json(value)
