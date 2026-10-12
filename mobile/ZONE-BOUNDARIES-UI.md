@@ -104,7 +104,7 @@ Placement states, for the session zone S and the candidates C:
 
 "Adjust point" keeps every answer (as today). Leaving adjust without confirming keeps the previous point. The draft is written on every change the data agent persists. That includes a zone change, which today is not persisted (`provider.tsx:506-512`; MOB-28 must add it).
 
-Lead default: a zone is required for new bound points. A zone-free point option (for example "Record outside the zones") changes the contract (zone_id required in the v2 envelope) and this table.
+Lead default: a zone is required for new bound points. A zone-free point option (for example "Record outside the zones") changes the contract (`zone_id` is required in the sole `/v1` envelope) and this table.
 
 ### MUI-5 Version labels are always visible and come from the pinned package
 
@@ -304,7 +304,7 @@ Send these to the lead before building a divergent client. Each lists the reason
 | CR-M7 | Record the session and adoption policy (MUI-1, MUI-2) in the master plan's update table: new sessions use the newest verified installed version; older versions only through an unfinished observation | The contract permits superseded uploads but does not say who may start new sessions on them | Mobile Brief; manager reports | Lead-approved row; Brief behaviour matches it |
 | CR-M8 | Add a shared `placement` state kind to `contracts/contour.json` (inside, onEdge, otherZone, outside), or approve custom StateBadges for these four | DESIGN says states are a fixed vocabulary; mobile allows custom badges and the web does not (`mobile/src/ui/StateBadge.tsx:32-39` versus `web/src/lib/contour.ts:29-33`) | Both apps, if the web ever shows membership | `pnpm tokens:check` passes; both galleries show the states in Day and Dusk |
 | CR-M10 | In progress. MOB-28 supplies one local schema and mismatch reset; CON-06, DB-19 and BE-22 establish the current server contract. MOB-29 implements the sole `/v1` uploader; practice observations remain held locally | Pre-launch rule | Mobile, backend, contracts | One upload path; fresh-install and real API acceptance pass |
-| CR-M9 | State that a bound inventory record stores the manifest `display_anchor` locally, for display only, and that it is excluded from the upload body | The record schema requires coordinates (`domain/observation.ts:19`), and the contract removes them for v2 inventory | Mobile domain, serializer, maps | A bound inventory is never a marker; the v2 body has no coordinates |
+| CR-M9 | State that a bound inventory record stores the manifest `display_anchor` locally, for display only, and that it is excluded from the upload body | The current contract omits coordinates from Inventory uploads | Mobile domain, serializer, maps | A bound inventory is never a marker; the sole `/v1` body has no coordinates |
 
 ## 8. Tasks
 

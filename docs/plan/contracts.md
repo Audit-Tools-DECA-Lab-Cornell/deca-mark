@@ -275,9 +275,10 @@ Done when: All owners can implement without guessing; examples cover points, inv
 Verify: Review cases and source paths; pnpm plan:check. OpenAPI remains backend-generated.
 
 ### CON-06: Collapse the zone contract to one path
-Status: doing (2026-10-11: contract and master plan rewritten) · Phase 3 · Size M · Depends: CON-05 · Blocks: BE-22, DB-19
+Status: done (2026-10-12: single-path specifications and authored cases verified) · Phase 3 · Size M · Depends: CON-05 · Blocks: BE-22, DB-19
 Owner: Contract coordinator.
 Read first: [pre-launch policy](README.md#pre-launch-compatibility-policy-2026-10-11); [master plan](zone-boundaries/README.md); [contract](zone-boundaries/contract.md) "What the rewrite removed" and "Names and versions".
 Do: Finish the single-path rewrite: remove the v1 envelopes and hash goldens, legacy, adoption and protocol cases from `contracts/zones/*.json` and its README, renumber example versions from 1, and add first-upload, replay (`replayed: true`) and validation `change` cases. Rewrite the component plans (`supabase/ZONE-BOUNDARIES.md`, `backend/ZONE-BOUNDARIES.md`, `mobile/ZONE-BOUNDARIES.md`, `qgis/ZONE-BOUNDARIES.md`, `zone-boundaries/verification.md`) so none requires a compatibility path.
 Done when: No zone document or shared case asks for a second API version, package format, upload protocol or legacy row; the backend case-integrity tests are updated with the cases.
 Verify: `pnpm plan:check`; a grep of the zone docs and `contracts/zones` for `/v2`, `legacy`, `format 2`, `upload_protocol` and `assignment_basis` finds only the contract's removal list.
+Evidence: [CON-06 acceptance and review](../reviews/zone-boundaries-2026-10-12/con06.md). Focused artifact tests: 91 passed; two explicit production-model/fingerprint obligations remain BE-22 gates. Ruff, formatting, focused BasedPyright and the programming audit pass. Reviewed handoffs now distinguish the sole `/v1` API from map versions, use zone-aware `format: 1`, required recorded bindings and one `observation-jcs-1` fingerprint. First-upload, replay/live-current and all five validation changes are independently authored. DB-19/BE-22 implementation, generated OpenAPI and runtime compliance remain pending; CON-06 does not claim those checks.

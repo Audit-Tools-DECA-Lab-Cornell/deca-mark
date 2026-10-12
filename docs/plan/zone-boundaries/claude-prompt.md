@@ -24,7 +24,7 @@ The first editor changes zones over imported ground/reference layers. Imagery in
 
 An immutable package freezes stable zone UUID/code, version-specific label/geometry and exact form versions. Renaming/reshaping keeps identity; splitting/merging creates new identities. Every observation keeps its recorded package/zone. Analysis never silently reclassifies historical records using current boundaries.
 
-One collection session is one visit to the collect screen. It pins its map throughout that visit. An unfinished observation survives process death with its exact map, zone, point and answers. New visits use the newest verified installed version; publishing or downloading never swaps an active visit's map. Unfinished work is resumed or explicitly discarded before starting competing work. Schema mismatch deliberately resets incompatible data; ordinary same-schema restarts and account changes preserve current work.
+One collection session is one visit to the collect screen. It pins its map throughout that visit. An unfinished observation survives process death with its exact map, zone, point and answers. New visits use the newest verified installed version; publishing or downloading never swaps an active visit's map. Unfinished work is resumed, explicitly discarded, or explicitly parked if it cannot be resumed before starting competing work. Parking keeps the exact context and package references; it never overwrites the unfinished observation. Schema mismatch deliberately resets incompatible data; ordinary same-schema restarts and account changes preserve current work.
 
 ## Wire and runtime boundaries
 

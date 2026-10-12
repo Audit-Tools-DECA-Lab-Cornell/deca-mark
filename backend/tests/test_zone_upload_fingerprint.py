@@ -1,6 +1,6 @@
 from copy import deepcopy
 from hashlib import sha256
-from typing import Literal
+from typing import Final, Literal, assert_never
 from uuid import uuid4
 
 import pytest
@@ -11,7 +11,7 @@ from fieldmaps_api.domain.zone_upload_fingerprint import canonical_bytes, finger
 from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
 from tests.zone_case_models import AuthoredFingerprintDocument, FingerprintCase, upload_cases
 
-CASES = upload_cases().fingerprints
+CASES: Final = upload_cases().fingerprints
 
 
 @pytest.mark.parametrize("case", CASES, ids=[case.id for case in CASES])
@@ -64,6 +64,8 @@ def test_authored_content_changes_affect_hash(
             body["answers"] = {"people": 3, "notes": "café", "activities": ["sit", "walk"]}
         case "unicode":
             body["answers"] = {"people": 3, "notes": "cafe\u0301", "activities": ["walk", "sit"]}
+        case _:
+            assert_never(change)
     changed["payload"] = body
     assert rfc8785.dumps(original) != rfc8785.dumps(changed)
 

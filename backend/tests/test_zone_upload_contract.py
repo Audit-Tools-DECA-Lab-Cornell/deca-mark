@@ -1,11 +1,13 @@
+from typing import Final
+
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
 from tests.zone_case_models import AuthoredReceipt, AuthoredUpload, EnvelopeCase, upload_cases
 
-SUITE = upload_cases()
-VALID_POINT = next(
+SUITE: Final = upload_cases()
+VALID_POINT: Final = next(
     case.payload for case in SUITE.envelopes if case.valid and "coordinates" in case.payload
 )
 

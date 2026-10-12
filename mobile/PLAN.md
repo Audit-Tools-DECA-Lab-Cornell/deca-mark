@@ -623,7 +623,7 @@ Acceptance gate: Local foundation follows the single-contract rewrite. Actual cu
 Status: todo · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
 Owner: Mobile data agent with Claude UI owner.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 4.5, 6, 7 and 9.
-Do: Freeze session forms/package/zone, apply geometry parity (reusing MOB-31's `coveringZones`) and v2 upload/receipt validation; store structured rejection codes for the needs-attention copy in UI plan 4.5; run the physical-device scenario.
+Do: Freeze session forms/package/zone, apply geometry parity (reusing MOB-31's `coveringZones`) and the sole `/v1` upload/receipt validation; store structured rejection codes for the needs-attention copy in UI plan 4.5; run the physical-device scenario.
 Done when: Physical-device draft survives newer publication and restart, uploads with original attribution; inventory is whole-zone.
 Verify: Mobile checks/tests and physical-device acceptance matrix; missing evidence remains pending.
 
@@ -632,7 +632,7 @@ Status: todo · Phase 3 · Size L · Depends: MOB-33 · Blocks: MOB-29
 Owner: Claude mobile UI owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) MUI-1, MUI-2, MUI-5, MUI-6, MUI-8, MUI-10, 4.1 to 4.3 and 6; `app/(app)/(tabs)/(projects)/**`; `src/features/projects/*`; `src/features/preview/hosted-sites.ts`.
 Do: Drive readiness and labels from MOB-33's read models over MOB-28's verified catalog; show available versus installed versions, update Notes, per-part download progress, older maps with reference-checked removal, last check and "Check for updates"; open the newest verified installed package for a session; reset visible state on account change.
-Done when: With v7 installed and v8 published, every screen in UI plan 4.1 to 4.3 shows the documented state in device mode; removing a referenced map is refused with its reason.
+Done when: With map v1 installed and map v2 published, every screen in UI plan 4.1 to 4.3 shows the documented state in device mode; removing a referenced map is refused with its reason.
 Verify: `pnpm mobile:check`, `pnpm mobile:test` (label and state mapping tests), simulator screenshots of each state.
 
 ### MOB-31: Make placement boundary-aware

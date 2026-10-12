@@ -277,8 +277,8 @@ Save feedback stays out of `StateBadge`: the state vocabulary has no saving or c
 
 - **Header:** "Publish zones · Riverside", eyebrow "MAP v1 → NEXT VERSION". Use the server's current version to say "Publishing creates the next version after v1. v1 never changes." A proposed next number is provisional until the publication succeeds.
 - **Readiness for revision n:** blocking problems link back to the editor; warnings (site gap, small zone) are listed; "Ready to publish" only when `ready` is true for this exact revision.
-- **Changes:** added, removed, label changed and boundary changed zones. Use server `changes` (CR-W7) when present. Otherwise compare against the base snapshot (`/zones?package_id=base`): a new UUID is added, a missing UUID is removed, a different label is relabelled, and different coordinate arrays are "Boundary changed".
-- **Map:** base boundaries dashed and changed zones hatched, labelled "Hatched: boundary changed since v1" (DESIGN §9).
+- **Changes:** use required validation `zones[].change` and `geometry_sha256` at the acknowledged revision, classified against the current package. Raw coordinate-array differences are not authoritative: equivalent geometry can use different ring order or type spelling. If the current pointer changed, show the conflict and prevent publication until the manager creates a draft from current.
+- **Map:** base boundaries dashed and validated geometry changes hatched, labelled "Hatched: boundary changed since v1" when base is current (DESIGN §9). A stale draft's base overlay is labelled as its base and never presented as the current comparison.
 - **What observers experience:** "Observers keep v1 for observations they have started and for anything not yet uploaded. They get the new version once they download it in the DECA Mark app, and use it from their next collection after that. Until then they can keep collecting on v1, and those observations keep v1."
 - **Forms:** play form version, and inventory form or "No inventory on this map".
 - **Change note:** a Textarea of up to 2,000 characters, recommended but optional. It is part of the draft, so editing it saves a revision.

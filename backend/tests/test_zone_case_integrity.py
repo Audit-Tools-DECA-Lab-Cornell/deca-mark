@@ -1,4 +1,4 @@
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, assert_never
 
 import pytest
 from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
@@ -121,7 +121,9 @@ def test_replay_returns_prior_success_and_live_current_without_new_version() -> 
 @pytest.mark.parametrize(
     "change", ["added", "removed", "geometry_changed", "label_changed", "unchanged"]
 )
-def test_validation_change_case_has_digest_and_recorded_identity(change: str) -> None:
+def test_validation_change_case_has_digest_and_recorded_identity(
+    change: Literal["added", "removed", "geometry_changed", "label_changed", "unchanged"],
+) -> None:
     case = publication_cases()[f"validation_change_{change}"]
     given = TypeAdapter(dict[str, JsonValue]).validate_python(case["given"])
     expected = TypeAdapter(dict[str, JsonValue]).validate_python(first_step(case)["expected"])
@@ -130,17 +132,20 @@ def test_validation_change_case_has_digest_and_recorded_identity(change: str) ->
     assert expected["zone_id"] == given["zone_id"]
     assert expected["revision"] == given["revision"]
     assert expected["geometry_sha256_present"] is True
-    if change == "added":
-        assert given["current_geometry"] is None
-        assert given["draft_geometry"] is not None
-    elif change == "removed":
-        assert given["current_geometry"] is not None
-        assert given["draft_geometry"] is None
-    elif change == "geometry_changed":
-        assert given["current_geometry"] != given["draft_geometry"]
-    elif change == "label_changed":
-        assert given["current_geometry"] == given["draft_geometry"]
-        assert given["current_label"] != given["draft_label"]
-    else:
-        assert given["current_geometry"] == given["draft_geometry"]
-        assert given["current_label"] == given["draft_label"]
+    match change:
+        case "added":
+            assert given["current_geometry"] is None
+            assert given["draft_geometry"] is not None
+        case "removed":
+            assert given["current_geometry"] is not None
+            assert given["draft_geometry"] is None
+        case "geometry_changed":
+            assert given["current_geometry"] != given["draft_geometry"]
+        case "label_changed":
+            assert given["current_geometry"] == given["draft_geometry"]
+            assert given["current_label"] != given["draft_label"]
+        case "unchanged":
+            assert given["current_geometry"] == given["draft_geometry"]
+            assert given["current_label"] == given["draft_label"]
+        case _:
+            assert_never(change)
