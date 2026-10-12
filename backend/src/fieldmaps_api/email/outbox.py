@@ -72,7 +72,7 @@ def request_fingerprint(
     ).hexdigest()
 
 
-async def existing_delivery(
+async def existing_delivery(  # noqa: PLR0913 - compare the original delivery fields.
     session: AsyncSession,
     *,
     created_by: UUID,
