@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.deps import Authentication, user_transaction
 from fieldmaps_api.email.config import EmailSettings
-from fieldmaps_api.email.outbox import Delivery, MessageRequest, enqueue
+from fieldmaps_api.email.outbox import Delivery, MessageRequest, enqueue, existing_delivery
 from fieldmaps_api.email.templates import EmailContent, render
 from fieldmaps_api.errors import (
     ERROR_RESPONSES,
@@ -19,9 +19,10 @@ from fieldmaps_api.errors import (
     ValidationFailedError,
 )
 from fieldmaps_api.queries import tenancy as q
+from fieldmaps_api.repositories.tenancy import one as read_org
 from fieldmaps_api.repositories.tenancy import require_manager
-from fieldmaps_api.services.tenancy import organization
 from fieldmaps_api.services.tenancy import project as read_project
+from fieldmaps_api.tenancy_schemas import Organization
 
 if TYPE_CHECKING:
     from sqlalchemy import Result
@@ -45,17 +46,9 @@ def create_router(
             if not settings.enabled or settings.sandbox:
                 msg = "Email delivery is not available"
                 raise StorageUnavailableError(msg)
-            now = datetime.now(UTC)
             when = payload.scheduled_at
-            if when is not None and (
-                when.tzinfo is None
-                or when < now - timedelta(minutes=1)
-                or when > now + timedelta(days=90)
-            ):
-                msg = "Choose a time with a timezone within the next 90 days"
-                raise ValidationFailedError(msg, "scheduled_at")
             record = await read_project(session, project)
-            org = await organization(session, record.organization_id)
+            org = await read_org(session, q.ORG, Organization, {"id": record.organization_id})
             result: Result[tuple[str | None]] = await session.execute(
                 text("SELECT fieldmaps_private.email_recipient(:project, :recipient)"),
                 {"project": project, "recipient": payload.recipient_user_id},
@@ -75,6 +68,26 @@ def create_router(
                     footnote=f"A {payload.kind} from your {record.name} project team.",
                 )
             )
+            replay = await existing_delivery(
+                session,
+                created_by=user,
+                dedupe_key=payload.idempotency_key,
+                recipient=recipient,
+                kind=payload.kind,
+                message=message,
+                project_id=project,
+                scheduled_at=when,
+            )
+            if replay is not None:
+                return replay
+            now = datetime.now(UTC)
+            if when is not None and (
+                when.tzinfo is None
+                or when < now - timedelta(minutes=1)
+                or when > now + timedelta(days=90)
+            ):
+                msg = "Choose a time with a timezone within the next 90 days"
+                raise ValidationFailedError(msg, "scheduled_at")
             return await enqueue(
                 session,
                 created_by=user,
