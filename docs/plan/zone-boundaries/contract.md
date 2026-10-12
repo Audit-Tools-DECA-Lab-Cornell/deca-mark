@@ -2,7 +2,7 @@
 
 [Master plan](README.md) · [Shared cases](../../../contracts/zones/README.md) · Tasks CON-05 (frozen 2026-10-10) and CON-06 (single-path rewrite, 2026-10-11) in [contracts.md](../contracts.md)
 
-This contract follows the owner's [pre-launch compatibility policy](../README.md#pre-launch-compatibility-policy-2026-10-11). There are no real users, server and device data are reset when the schema changes, and nothing here exists to keep old data, old clients, old formats or an older API version working. The 2026-10-11 rewrite replaces CON-05's dual-path design. Until BE-22 and DB-19 land, the committed backend (BE-18 to BE-20) still serves the old dual paths; the [cleanup](#what-the-rewrite-removed) lists what goes. Any change to this contract needs a coordinated update of backend, database, both clients and the shared cases.
+This contract follows the owner's [pre-launch compatibility policy](../README.md#pre-launch-compatibility-policy-2026-10-11). There are no real users, server and device data are reset when the schema changes, and nothing here exists to keep old data, old clients, old formats or an older API version working. The 2026-10-11 rewrite replaces CON-05's dual-path design. BE-22 and DB-19 now implement the single API path and current schema locally; the earlier BE-18 through BE-20 implementation served dual paths. Hosted and client-device acceptance remains part of QA-07. The [cleanup](#what-the-rewrite-removed) records the removed behavior. Any change to this contract needs a coordinated update of backend, database, both clients and the shared cases.
 
 ## What the rewrite removed
 

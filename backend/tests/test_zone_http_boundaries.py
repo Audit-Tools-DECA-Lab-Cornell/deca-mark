@@ -271,3 +271,6 @@ def test_zone_boundaries_match_only_canonical_nested_resources() -> None:
     assert policy_for("POST", obsolete_path + "/validate") is None
     assert policy_for("POST", obsolete_path + "/publish") is None
     assert not zone_request(PATH + "/unexpected")
+    package_path = f"/v1/projects/{uuid4()}/packages"
+    assert zone_request(package_path)
+    assert not zone_request(package_path + "/import")

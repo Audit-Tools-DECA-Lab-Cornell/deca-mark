@@ -10,20 +10,19 @@ from pydantic import JsonValue, TypeAdapter
 
 from fieldmaps_api.errors import ErrorEnvelope
 from fieldmaps_api.form_schemas import FormSummary, FormVersionDetail
-from fieldmaps_api.schemas import ObservationRow
 from fieldmaps_api.site_schemas import Site
 from fieldmaps_api.tenancy_schemas import ProjectMember
+from fieldmaps_api.zone_response_schemas import PackageForms, Publication
 from tests.local_database import admin_sql
+from tests.package_fixtures import submission
 from tests.signing import Signer
 from tests.tenant_fixtures import Tenant, cleanup_tenant, create_tenant, sign_in
-from tests.test_site_packages import submission
 
 pytestmark = pytest.mark.integration
 
 CONTRACTS = Path(__file__).resolve().parents[2] / "contracts" / "forms"
 FORMS = TypeAdapter(list[FormSummary])
 SITES = TypeAdapter(list[Site])
-ROWS = TypeAdapter(list[ObservationRow])
 MEMBERS = TypeAdapter(list[ProjectMember])
 DEFINITION: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
@@ -45,33 +44,6 @@ def inventory() -> dict[str, JsonValue]:
 
 def error(response_content: bytes) -> ErrorEnvelope:
     return ErrorEnvelope.model_validate_json(response_content)
-
-
-def inventory_upload(**overrides: JsonValue) -> dict[str, JsonValue]:
-    payload: dict[str, JsonValue] = {
-        "site_id": "sample-garden",
-        "form_version": "inventory-v1",
-        "coordinates": [-76.4857, 42.4483],
-        "observer": "QA",
-        "observed_at": "2026-10-07T14:00:00Z",
-        "zone": "A",
-        "round_type": "inventory",
-        "placement": "zone",
-        "weather": ["full_sun"],
-        "wind": "light_wind",
-        "shade": "partial_shade",
-        "inv_nat_surfaces": "none",
-        "inv_nat_lps_sm": "small",
-        "inv_nat_lps_sm_list": "pine cones, sticks",
-        "inv_nat_lps_med": "none",
-        "inv_nat_lps_lrg": "none",
-        "inv_mfgd_lps_sm": "none",
-        "inv_mfgd_lps_med": "none",
-        "inv_mfgd_lps_lrg": "none",
-        "observer_initials": "QA",
-    }
-    payload.update(overrides)
-    return payload
 
 
 def start_inventory(client: TestClient, base: str) -> FormVersionDetail:
@@ -108,8 +80,6 @@ def test_a_manager_drafts_edits_and_publishes_a_form(
     listed = FORMS.validate_json(api_client.get(f"{base}/forms").content)
     assert next(form for form in listed if form.code == "inventory").versions == []
     assert api_client.get(f"{base}/form-versions/inventory-v1").status_code == 404
-    refused = api_client.put(f"{base}/observations/{uuid4()}", json=inventory_upload())
-    assert refused.status_code == 403, refused.text
     assert api_client.post(f"{base}/form-versions/inventory-v1/publish").status_code == 403
 
     sign_in(api_client, signer, tenant.users["manager"])
@@ -159,48 +129,6 @@ def test_a_published_version_is_frozen_and_the_next_starts_as_a_copy(
     ]
     assert api_client.delete(f"{base}/form-versions/inventory-v2").status_code == 204
     assert api_client.get(f"{base}/form-versions/inventory-v2").status_code == 404
-
-
-def test_an_observer_collects_a_round_with_a_published_version(
-    api_client: TestClient, signer: Signer, tenant: Tenant
-) -> None:
-    base = f"/v1/projects/{tenant.project}"
-    _ = start_inventory(api_client, base)
-    assert api_client.post(f"{base}/form-versions/inventory-v1/publish").status_code == 200
-
-    sign_in(api_client, signer, tenant.users["observer"])
-    assert api_client.get(f"{base}/form-versions/inventory-v1").status_code == 200
-    record = uuid4()
-    uploaded = api_client.put(f"{base}/observations/{record}", json=inventory_upload())
-    assert uploaded.status_code == 200, uploaded.text
-    retried = api_client.put(f"{base}/observations/{record}", json=inventory_upload())
-    assert retried.status_code == 200, retried.text
-    forbidden = api_client.post(f"{base}/form-versions/inventory-v1/retire")
-    assert forbidden.status_code == 403, forbidden.text
-
-    sign_in(api_client, signer, tenant.users["manager"])
-    rows = ROWS.validate_json(
-        api_client.get(f"{base}/observations", params={"round_type": "inventory"}).content
-    )
-    assert [row.observation_id for row in rows] == [record]
-    row = rows[0]
-    assert (row.zone, row.round_type, row.first_round, row.placement, row.form_version) == (
-        "A",
-        "inventory",
-        None,
-        "zone",
-        "inventory-v1",
-    )
-    assert row.answers["inv_nat_lps_sm_list"] == "pine cones, sticks"
-    assert row.site_name == "Isolation site"
-
-    retired = api_client.post(f"{base}/form-versions/inventory-v1/retire")
-    assert retired.status_code == 200, retired.text
-    assert FormVersionDetail.model_validate_json(retired.content).state == "retired"
-    # Records collected before retirement still drain from devices that were offline.
-    sign_in(api_client, signer, tenant.users["observer"])
-    late = api_client.put(f"{base}/observations/{uuid4()}", json=inventory_upload())
-    assert late.status_code == 200, late.text
 
 
 def test_a_manager_of_another_organization_cannot_reach_the_forms(
@@ -323,17 +251,18 @@ def test_a_manager_creates_and_renames_sites(
         == 409
     )
 
-    renamed = api_client.patch(f"{base}/sites/north-yard", json={"name": "North play yard"})
+    site_path = f"{base}/sites/{site.site_id}"
+    renamed = api_client.patch(site_path, json={"name": "North play yard"})
     assert renamed.status_code == 200, renamed.text
     assert Site.model_validate_json(renamed.content).description == "Behind the gym"
-    cleared = api_client.patch(f"{base}/sites/north-yard", json={"description": None})
+    cleared = api_client.patch(site_path, json={"description": None})
     assert Site.model_validate_json(cleared.content).description is None
-    assert api_client.patch(f"{base}/sites/north-yard", json={"name": None}).status_code == 422
-    assert api_client.patch(f"{base}/sites/missing", json={"name": "x"}).status_code == 404
+    assert api_client.patch(site_path, json={"name": None}).status_code == 422
+    assert api_client.patch(f"{base}/sites/{uuid4()}", json={"name": "x"}).status_code == 404
 
     sign_in(api_client, signer, tenant.users["observer"])
     assert api_client.post(f"{base}/sites", json={"code": "mine", "name": "x"}).status_code == 403
-    assert api_client.patch(f"{base}/sites/north-yard", json={"name": "x"}).status_code == 403
+    assert api_client.patch(site_path, json={"name": "x"}).status_code == 403
     codes = [item.code for item in SITES.validate_json(api_client.get(f"{base}/sites").content)]
     assert codes == ["sample-garden", "north-yard"]  # by name: "Isolation site", "North play yard"
 
@@ -342,15 +271,21 @@ def test_a_site_reports_its_current_package_and_zones(
     api_client: TestClient, tenant: Tenant
 ) -> None:
     base = f"/v1/projects/{tenant.project}"
-    prepared = api_client.post(f"{base}/packages", json=submission())
+    prepared = api_client.post(f"{base}/packages", json=submission(site_id=str(tenant.site)))
     assert prepared.status_code == 201, prepared.text
-    site = Site.model_validate_json(api_client.get(f"{base}/sites/sample-garden").content)
+    publication = Publication.model_validate_json(prepared.content)
+    site = Site.model_validate_json(api_client.get(f"{base}/sites/{tenant.site}").content)
     assert site.package is not None
-    assert (site.package.version, site.package.form_version) == (1, "shell-v1")
-    assert [(zone.id, zone.label) for zone in site.zones] == [("A", "Lawn")]
+    package_forms = PackageForms.model_validate(site.package.forms)
+    assert (site.package.package_version, package_forms.play.form_version) == (
+        1,
+        "shell-v1",
+    )
+    assert site.current_package_id == publication.package.package_id
+    assert [(zone.zone_code, zone.label) for zone in site.zones] == [("A", "Lawn")]
     assert site.extent is not None
     assert site.centre is not None
-    assert site.observation_count == 1
+    assert site.observation_count == 0
 
 
 def test_a_package_needs_a_published_form(api_client: TestClient, tenant: Tenant) -> None:
@@ -360,34 +295,17 @@ def test_a_package_needs_a_published_form(api_client: TestClient, tenant: Tenant
         json={"code": "inventory", "name": "Inventory round", "definition": inventory()},
     )
     assert created.status_code == 201, created.text
-    refused = api_client.post(f"{base}/packages", json=submission(form_version="inventory-v1"))
+    refused = api_client.post(
+        f"{base}/packages",
+        json=submission(site_id=str(tenant.site), form_version="inventory-v1"),
+    )
     assert refused.status_code == 422, refused.text
-    assert error(refused.content).error.details["fields"] == [
-        {
-            "id": "form_version",
-            "problem": "inventory-v1 is draft; prepare the package with a published form version",
-        }
-    ]
-
-
-def test_records_list_filters_and_bounds(api_client: TestClient, tenant: Tenant) -> None:
-    base = f"/v1/projects/{tenant.project}"
-    every = ROWS.validate_json(api_client.get(f"{base}/observations").content)
-    assert [row.observation_id for row in every] == [tenant.observation]
-    # Uploaded without a round, as every record before D26 was: it lists and filters as Standard.
-    assert every[0].round_type == "standard"
-    standard = ROWS.validate_json(
-        api_client.get(f"{base}/observations", params={"round_type": "standard"}).content
-    )
-    assert [row.observation_id for row in standard] == [tenant.observation]
-    assert api_client.get(f"{base}/observations", params={"round_type": "reliability"}).json() == []
-    assert api_client.get(f"{base}/observations", params={"site": "elsewhere"}).json() == []
-    assert api_client.get(f"{base}/observations", params={"limit": 0}).status_code == 422
-    assert (
-        api_client.get(f"{base}/observations", params={"round_type": "round-1"}).status_code == 422
-    )
-    future = api_client.get(f"{base}/observations", params={"since": "2999-01-01T00:00:00Z"})
-    assert future.json() == []
+    issues = error(refused.content).error.details["issues"]
+    assert isinstance(issues, list)
+    assert issues
+    issue = issues[0]
+    assert isinstance(issue, dict)
+    assert issue["code"] == "form_not_in_package"
 
 
 def test_a_manager_sees_their_team_by_name(

@@ -8,10 +8,10 @@ from uuid import UUID, uuid4
 from fastapi.testclient import TestClient
 from pydantic import JsonValue
 
-from fieldmaps_api.schemas import PackageDetail
+from fieldmaps_api.zone_response_schemas import Publication
 from tests.local_database import admin_sql
+from tests.package_fixtures import submission
 from tests.signing import Signer
-from tests.test_site_packages import submission
 
 ROLES: Final = ("owner", "admin", "member", "manager", "observer", "viewer")
 TRAINING: Final = UUID("10000000-0000-4000-8000-000000000102")
@@ -70,14 +70,14 @@ def create_tenant(tenant: Tenant) -> None:
         "WHERE project_role IS NOT NULL; "
         "INSERT INTO fieldmaps.sites(id,organization_id,project_id,code,name) "
         "VALUES (:'site',:'org',:'project','sample-garden','Isolation site'); "
-        "INSERT INTO fieldmaps.form_versions(id,organization_id,project_id,code,definition) "
-        "SELECT :'form',:'org',:'project',code,definition FROM fieldmaps.form_versions "
+        "INSERT INTO fieldmaps.forms(id,organization_id,project_id,code,name) "
+        "VALUES (:'form',:'org',:'project','shell','Shell'); "
+        "INSERT INTO fieldmaps.form_versions(id,organization_id,project_id,form_id,code,"
+        "definition,version,state,published_at) "
+        "SELECT :'form',:'org',:'project',:'form',code,definition,version,'published',now() "
+        "FROM fieldmaps.form_versions "
         "WHERE project_id='10000000-0000-4000-8000-000000000002' AND code='shell-v1'; "
-        "INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,form_version_id,"
-        "observer_code,observed_at,geom,answers,created_by,upload_hash) "
-        "VALUES (:'observation',:'org',:'project',:'site',:'form','QA',now(),"
-        'fieldmaps.make_point(-76.485,42.448),\'{"people":3,"notes":""}\','
-        ":'observer',repeat('a',64)); COMMIT;",
+        "COMMIT;",
         *tenant.variables(),
     )
 
@@ -115,18 +115,30 @@ def sign_in(client: TestClient, signer: Signer, user: UUID) -> None:
 
 def create_package(client: TestClient, signer: Signer, tenant: Tenant) -> UUID:
     sign_in(client, signer, tenant.users["manager"])
-    response = client.post(f"/v1/projects/{tenant.project}/packages", json=submission())
+    response = client.post(
+        f"/v1/projects/{tenant.project}/packages",
+        json=submission(site_id=str(tenant.site)),
+    )
     assert response.status_code == 201, response.text
-    return PackageDetail.model_validate_json(response.content).package_id
+    publication = Publication.model_validate_json(response.content)
+    return publication.package.package_id
 
 
-def observation_payload() -> dict[str, JsonValue]:
+def observation_payload(
+    site_id: UUID | None = None,
+    package_id: UUID | None = None,
+    zone_id: UUID | None = None,
+) -> dict[str, JsonValue]:
     return {
-        "site_id": "sample-garden",
+        "site_id": str(site_id or UUID("10000000-0000-4000-8000-000000000003")),
+        "package_id": str(package_id or uuid4()),
+        "zone_id": str(zone_id or uuid4()),
         "form_version": "shell-v1",
         "coordinates": [-76.485, 42.448],
         "observer": "QA",
-        "people": 3,
-        "notes": "",
+        "round_type": "standard",
+        "first_round": True,
+        "placement": "hand",
+        "answers": {"people": 3, "notes": ""},
         "observed_at": "2026-09-17T12:00:00Z",
     }

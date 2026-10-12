@@ -16,11 +16,10 @@ class BoundSite:
     zone: UUID
 
     def url(self, observation: UUID) -> str:
-        return f"/v2/projects/{self.site.tenant.project}/observations/{observation}"
+        return f"/v1/projects/{self.site.tenant.project}/observations/{observation}"
 
     def point(self, **overrides: JsonValue) -> dict[str, JsonValue]:
         payload: dict[str, JsonValue] = {
-            "schema_version": 2,
             "site_id": str(self.site.tenant.site),
             "package_id": str(self.package),
             "zone_id": str(self.zone),
@@ -42,4 +41,4 @@ def bound_site(api_client: TestClient, zone_site: ZoneSite) -> BoundSite:
     response = api_client.get(f"{zone_site.url}/zones", params={"package_id": str(package)})
     assert response.status_code == 200, response.text
     history = HistoricalZones.model_validate_json(response.content)
-    return BoundSite(zone_site, package, history.zones[0].zone_id)
+    return BoundSite(ZoneSite(zone_site.tenant, package), package, history.zones[0].zone_id)

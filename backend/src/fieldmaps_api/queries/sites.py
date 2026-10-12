@@ -2,62 +2,32 @@ from typing import Final
 
 from sqlalchemy import text
 
-PACKAGE_TARGET: Final = text("""
-SELECT json_build_object('organization_id', p.organization_id,
-  'site_id', s.id, 'form_version_id', f.id, 'definition', f.definition,
-  'form_state', f.state)::text
-FROM fieldmaps.projects p
-JOIN fieldmaps.sites s ON s.project_id = p.id AND s.code = :site
-JOIN fieldmaps.form_versions f ON f.project_id = p.id AND f.code = :form
-WHERE p.id = :project AND fieldmaps_private.has_project_role(p.id, ARRAY['manager'])
-""")
-
-NEXT_PACKAGE_VERSION: Final = text("""
-SELECT coalesce(max(version), 0) + 1 FROM fieldmaps.site_packages
-WHERE project_id = :project AND site_id = :site
-""")
-
-INSERT_PACKAGE: Final = text("""
-INSERT INTO fieldmaps.site_packages (id, organization_id, project_id, site_id, form_version_id,
-  version, state, manifest, archive, archive_sha256, prepared_by)
-VALUES (:id, :organization, :project, :site, :form, :version, :state,
-  CAST(:manifest AS jsonb), :archive, :digest, :user_id)
-RETURNING prepared_at
-""")
-
-INSERT_PACKAGE_CHECK: Final = text("""
-INSERT INTO fieldmaps.package_checks (package_id, position, step, state, detail)
-VALUES (:package, :position, :step, :state, :detail)
-""")
-
 PACKAGES: Final = text("""
-SELECT json_build_object('package_id', k.id, 'site_code', s.code, 'form_version', f.code,
-  'version', k.version, 'state', k.state, 'archive_bytes', octet_length(k.archive),
+SELECT jsonb_build_object('package_id', k.id, 'site_id', k.site_id,
+  'package_version', k.version, 'state', k.state, 'archive_bytes', octet_length(k.archive),
   'archive_sha256', k.archive_sha256, 'prepared_at', k.prepared_at,
-  'format', (k.manifest->>'format')::integer, 'zone_contract_version', k.zone_contract_version,
-  'map_revision', CASE WHEN k.zone_contract_version=1 THEN k.version ELSE NULL END)::text
+  'forms', k.manifest->'forms', 'zone_count', jsonb_array_length(k.manifest->'zones'),
+  'change_note', m.change_note, 'published_by', m.published_by, 'source', m.source)::text
 FROM fieldmaps.site_packages k
 JOIN fieldmaps.sites s ON s.id = k.site_id
-JOIN fieldmaps.form_versions f ON f.id = k.form_version_id
+JOIN LATERAL fieldmaps_private.zone_package_metadata(k.id) m ON true
 WHERE k.project_id = :project
-  AND (CAST(:site AS text) IS NULL OR s.code = CAST(:site AS text))
-AND (k.manifest->>'format')::integer = ANY(CAST(:formats AS integer[]))
+  AND (CAST(:site AS uuid) IS NULL OR k.site_id = CAST(:site AS uuid))
 ORDER BY s.code, k.version DESC
 """)
 
 PACKAGE_DETAIL: Final = text("""
-SELECT json_build_object('package_id', k.id, 'site_code', s.code, 'form_version', f.code,
-  'version', k.version, 'state', k.state, 'archive_bytes', octet_length(k.archive),
+SELECT json_build_object('package_id', k.id, 'site_id', k.site_id,
+  'package_version', k.version, 'state', k.state, 'archive_bytes', octet_length(k.archive),
   'archive_sha256', k.archive_sha256, 'prepared_at', k.prepared_at,
-  'format', (k.manifest->>'format')::integer, 'zone_contract_version', k.zone_contract_version,
-  'map_revision', CASE WHEN k.zone_contract_version=1 THEN k.version ELSE NULL END, 'manifest',
-  k.manifest,
+  'forms', k.manifest->'forms', 'zone_count', jsonb_array_length(k.manifest->'zones'),
+  'change_note',m.change_note,'published_by',m.published_by,'source',m.source,'manifest',k.manifest,
   'checks', coalesce((SELECT json_agg(json_build_object('step', c.step, 'state', c.state,
       'detail', c.detail) ORDER BY c.position)
     FROM fieldmaps.package_checks c WHERE c.package_id = k.id), '[]'::json))::text
 FROM fieldmaps.site_packages k
 JOIN fieldmaps.sites s ON s.id = k.site_id
-JOIN fieldmaps.form_versions f ON f.id = k.form_version_id
+JOIN LATERAL fieldmaps_private.zone_package_metadata(k.id) m ON true
 WHERE k.project_id = :project AND k.id = :id
 """)
 
@@ -66,39 +36,46 @@ SELECT archive, archive_sha256, state FROM fieldmaps.site_packages
 WHERE project_id = :project AND id = :id
 """)
 
-#: A site as the workspace and the collector read it: its newest ready package, that package's
-#: zones and extent, and how many observations the caller can see there.
-BASE_SITE_SELECT: Final = """
-SELECT json_build_object('site_id', s.id, 'code', s.code, 'name', s.name,
-  'description', s.description, 'created_at', s.created_at,
-  'package', (SELECT json_build_object('package_id', k.id, 'version', k.version,
-      'form_version', (SELECT f.code FROM fieldmaps.form_versions f WHERE f.id = k.form_version_id),
-      'archive_bytes', octet_length(k.archive), 'archive_sha256', k.archive_sha256,
-      'prepared_at', k.prepared_at)
-    FROM fieldmaps.site_packages k WHERE k.site_id = s.id AND k.state = 'ready'
-    ORDER BY k.version DESC LIMIT 1),
-  'zones', coalesce((SELECT k.manifest -> 'zones' FROM fieldmaps.site_packages k
-    WHERE k.site_id = s.id AND k.state = 'ready' ORDER BY k.version DESC LIMIT 1), '[]'::jsonb),
-  'extent', (SELECT k.manifest -> 'extent' FROM fieldmaps.site_packages k
-    WHERE k.site_id = s.id AND k.state = 'ready' ORDER BY k.version DESC LIMIT 1),
-  'centre', (SELECT k.manifest -> 'centre' FROM fieldmaps.site_packages k
-    WHERE k.site_id = s.id AND k.state = 'ready' ORDER BY k.version DESC LIMIT 1),
-  'observation_count', (SELECT count(*) FROM fieldmaps.observations o
-    WHERE o.site_id = s.id AND o.deleted_at IS NULL))::text
+SITE_SELECT: Final = """
+SELECT jsonb_build_object('site_id',s.id,'code',s.code,'name',s.name,
+ 'description',s.description,'created_at',s.created_at,
+ 'observation_count',(SELECT count(*) FROM fieldmaps.observations o
+   WHERE o.site_id=s.id AND o.deleted_at IS NULL),
+ 'current_package_id',k.id,
+ 'package',CASE WHEN k.id IS NULL THEN NULL ELSE jsonb_build_object(
+   'package_id',k.id,'site_id',k.site_id,'package_version',k.version,'state',k.state,
+   'prepared_at',k.prepared_at,'archive_bytes',octet_length(k.archive),
+   'archive_sha256',k.archive_sha256,'forms',k.manifest->'forms',
+   'zone_count',jsonb_array_length(k.manifest->'zones'),'change_note',m.change_note,
+   'published_by',m.published_by,'source',m.source) END,
+ 'zones',coalesce((SELECT jsonb_agg(jsonb_build_object('zone_id',z.zone_id,'zone_code',i.code,
+   'label',z.label,'bbox',jsonb_build_array(extensions.ST_XMin(z.geom::extensions.box3d),
+    extensions.ST_YMin(z.geom::extensions.box3d),extensions.ST_XMax(z.geom::extensions.box3d),
+    extensions.ST_YMax(z.geom::extensions.box3d)),'display_anchor',
+    jsonb_build_array(extensions.ST_X(z.display_anchor),extensions.ST_Y(z.display_anchor)),
+    'geometry_sha256',z.geometry_sha256) ORDER BY i.code COLLATE "C")
+   FROM fieldmaps.package_zones z JOIN fieldmaps.zone_identities i ON i.id=z.zone_id
+   WHERE z.package_id=k.id),'[]'::jsonb),
+ 'extent',CASE WHEN k.id IS NULL THEN NULL ELSE jsonb_build_object(
+   'west',extensions.ST_XMin(k.site_boundary::extensions.box3d),
+   'south',extensions.ST_YMin(k.site_boundary::extensions.box3d),
+   'east',extensions.ST_XMax(k.site_boundary::extensions.box3d),
+   'north',extensions.ST_YMax(k.site_boundary::extensions.box3d)) END,
+ 'centre',CASE WHEN k.id IS NULL THEN NULL ELSE jsonb_build_array(
+   extensions.ST_X(extensions.ST_PointOnSurface(k.site_boundary)),
+   extensions.ST_Y(extensions.ST_PointOnSurface(k.site_boundary))) END,
+ 'zone_editing_available',fieldmaps_private.zone_authoring_available(s.project_id,s.id))::text
 FROM fieldmaps.sites s
-WHERE s.project_id = :project
+LEFT JOIN fieldmaps.site_zone_state st ON st.site_id=s.id
+LEFT JOIN fieldmaps.site_packages k ON k.id=st.current_package_id AND k.state='ready'
+LEFT JOIN LATERAL fieldmaps_private.zone_package_metadata(k.id) m ON k.id IS NOT NULL
+WHERE s.project_id=:project
 """
-LEGACY_SELECTION: Final = """k.id = CASE WHEN EXISTS (SELECT FROM fieldmaps.site_zone_state st
-  WHERE st.site_id=s.id)
- THEN (SELECT st.legacy_package_id FROM fieldmaps.site_zone_state st WHERE st.site_id=s.id)
- ELSE (SELECT l.id FROM fieldmaps.site_packages l WHERE l.site_id=s.id AND l.state='ready'
- AND l.manifest->'format'='1'::jsonb ORDER BY l.version DESC LIMIT 1) END"""
-SITE_SELECT: Final = BASE_SITE_SELECT.replace(
-    "k.site_id = s.id AND k.state = 'ready'",
-    "k.site_id = s.id AND k.state = 'ready' AND " + LEGACY_SELECTION,
-)
 SITES: Final = text(SITE_SELECT + " ORDER BY s.name, s.id")
-SITE: Final = text(SITE_SELECT + " AND s.code = :code")
+SITE: Final = text(SITE_SELECT + " AND s.id = :site")
+SITE_BY_CODE: Final = text(
+    "SELECT id FROM fieldmaps.sites WHERE project_id=:project AND code=:code"
+)
 
 PROJECT_ORGANIZATION: Final = text(
     "SELECT organization_id FROM fieldmaps.projects WHERE id = :project"
@@ -112,6 +89,6 @@ VALUES (:id, :organization, :project, :code, :name, :description, fieldmaps.requ
 PATCH_SITE: Final = text("""
 UPDATE fieldmaps.sites SET name = coalesce(:name, name),
   description = CASE WHEN :has_description THEN :description ELSE description END
-WHERE project_id = :project AND code = :code
+WHERE project_id = :project AND id = :site
 RETURNING id
 """)

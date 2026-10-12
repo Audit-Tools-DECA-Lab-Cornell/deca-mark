@@ -115,19 +115,24 @@ Local Supabase Auth may use HTTP only on literal `localhost`, `127.0.0.1` or `[:
 
 ### Zone drafts and versioned packages
 
-BE-18 implements manager draft create/list/get/replace/validate/discard/publish under
-`/v1/projects/{project_id}/sites/{site_id}/zone-drafts` (UUID site IDs), historical
-`/zones?package_id=…`, and `/v2/projects/{project_id}/sites`. The existing site detail
-route still takes a site code. See [the zone handoff](ZONE-BOUNDARIES.md) and
-[frozen contract](../docs/plan/zone-boundaries/contract.md) for bodies and preconditions.
+Zone draft create/list/get/replace/validate/discard/publish use
+`/v1/projects/{project_id}/sites/{site_id}/zone-drafts`; site IDs are UUIDs. Managed
+package publication and successor imports use `POST /v1/projects/{project_id}/packages`
+with a required `expected_current_package_id`, request ID and explicit zone identity map.
+The first package supplies a null expected-current value; successors supply the exact
+current package ID. QGIS source conversion remains a separate
+`POST /v1/projects/{project_id}/packages/import` operation. Package and site reads use the
+same `/v1` API, including historical `/sites/{site_id}/zones?package_id=…` reads. There is
+no `/v2` zone or observation API and no runtime publication gate. Display capability hints
+do not replace server-side role, package-state or geometry validation. See [the zone
+handoff](ZONE-BOUNDARIES.md) and [frozen contract](../docs/plan/zone-boundaries/contract.md)
+for bodies and preconditions.
 
-`zone_publication_enabled` defaults to `false`; capability discovery returns editing
-unavailable until this explicit runtime gate is enabled. Client retention and historical
-display acceptance must precede enabling it outside the disposable test harness. Exact
-successful retries remain readable when the gate is subsequently disabled. V1 discovery
-continues selecting the frozen format-1 package after adoption. Updated clients request
-`supported_format=1&supported_format=2` for package lists. Managed imports require explicit
-current-package, request ID and exact string identity mapping and use the same database finalizer as drafts. A managed successor import selects its published play `form_version`; `inventory_form_version` omission inherits, null disables and a published code replaces inventory. Retire a bound form only after replacing it in all current managed packages; old packages retain their historical bindings.
+A managed successor import selects its published play `form_version`; omitted
+`inventory_form_version` inherits, null disables, and a published code replaces inventory.
+Retire a bound form only after replacing it in all current managed packages; old packages
+retain their historical bindings. Historical package snapshots and observation attribution
+remain immutable.
 
 Draft replacement bodies have a 4 MiB streamed limit and refuse unsupported content encoding.
 Validation permits 30 requests/minute per verified user; publication and package submission
@@ -138,26 +143,23 @@ are per process. Zone work has a 45-second deadline; SQL statements have 20 seco
 outside publication row locks. Overload/timeouts leave drafts and current packages intact.
 Access logs add static operation IDs and safe zone/archive counts without geometry or answers.
 
-Run `pnpm backend:test ZONE_API_REHEARSAL=1` for a fresh disposable PostgreSQL/PostGIS
-API rehearsal without using local database password files. V2 observations use
-`PUT /v2/projects/{project_id}/observations/{observation_id}` with nested answers and exact
+Run `ZONE_API_REHEARSAL=1 pnpm backend:test` for a fresh disposable PostgreSQL/PostGIS API
+rehearsal without using local database password files. Observation uploads use
+`PUT /v1/projects/{project_id}/observations/{observation_id}` with nested answers and exact
 published package/zone IDs. Authorized uploads may reference superseded packages and retired
 frozen forms. Point coverage and Inventory anchors are enforced by PostGIS; clients cannot
-supply a substitute Inventory coordinate. Both upload protocols authorize each retry and
-return the original receipt only for the same owner, project, protocol and immutable body.
-V1 retains its original serializer, hash and receipt shape. V2 persists the
-`zone-upload-v2-jcs-1` fingerprint version and uses RFC 8785 canonical bytes before answer
-pruning. Duplicate JSON keys, invalid Unicode and encoded bodies are rejected at the v2
-boundary; observation bodies retain the 256 KiB limit.
+supply a substitute Inventory coordinate. A retry authorizes again and returns the original
+receipt only for the same owner, project and immutable body. Upload identity uses RFC 8785
+canonical bytes before answer pruning. Duplicate JSON keys, invalid Unicode and encoded bodies
+are rejected; observation bodies retain the 256 KiB limit.
 
-V2 observation reads expose paginated lists, historical detail, summaries and complete
-exports under `/v2/projects/{project_id}/observations`. Lists use mixed-direction keyset
-cursors bound to the project and normalized filters; each page's rows and exact count
-share one SQL snapshot. Later pages may include new uploads. Site, historical package,
-zone, assignment basis, round, observer, half-open UTC dates and site-scoped legacy codes
-use the same authorized filters for lists, summaries and exports. Recorded package/zone
-labels and form definitions remain historical; Inventory event geometry is null and its
-display anchor is explicit. V1 list responses and limits remain unchanged.
+Observation reads expose paginated lists, historical detail, summaries and complete exports
+under `/v1/projects/{project_id}/observations`. Lists use mixed-direction keyset cursors bound
+to the project and normalized filters; each page's rows and exact count share one SQL snapshot.
+Later pages may include new uploads. Site, historical package, zone, round, observer and
+half-open UTC date filters apply consistently to lists, summaries and exports. Recorded
+package/zone labels and form definitions remain historical; Inventory event geometry is null
+and its display anchor is explicit.
 
 `/export?format=csv|geojson` returns a ZIP containing observations, a codebook, scope
 metadata, frozen forms and separate historical-zone GeoJSON. Export limits are 10,000
@@ -166,11 +168,20 @@ the source snapshot has a separate 64 MiB limit. Oversized scopes return a struc
 422 requiring narrower filters. Two serializer processes may run concurrently per API
 process; exhaustion returns 429 with `Retry-After: 2`. Disconnects and deadlines cancel
 work and release sessions, subprocesses and temporary files. Local API acceptance does
-not establish device retention or release readiness; publication remains disabled by default.
+not establish device retention or release readiness.
 
 Requests have an `X-Request-Id`, echoed in responses. Access logs contain that identifier, response status and elapsed time, never request bodies, tokens or answers. `SENTRY_DSN` optionally enables sanitized API error events; no DSN is needed locally. Database errors are mapped by SQLSTATE: permission and validation failures retain their proper status, transient failures return 503, and unexpected errors return a sanitized 500.
 
-Bodies are limited before JSON parsing: package submissions have 24 MiB, sync uploads and zone draft replacements 4 MiB, and other requests 256 KiB. Oversized streams return 413 even if the Content-Length header is absent or incorrect. Per-user token buckets allow five organization creations/hour, 60 invitation creations/hour, ten combined invitation previews/redemptions per ten minutes, and three account-deletion requests/hour. Exhaustion returns `429 rate_limited` with `Retry-After`. These limits are in memory per API process, suitable for the single-instance pilot; multiple workers or replicas require shared limit storage. Restarting the process resets its buckets. The deletion policy applies to `DELETE /v1/me`.
+Bodies are limited before JSON parsing: managed package submissions and QGIS source imports
+have 24 MiB, sync uploads 256 KiB, zone draft replacements 4 MiB, and other requests 256 KiB.
+Oversized managed package, upload and draft streams return
+`413 payload_too_large`, even if the Content-Length header is absent or incorrect. Per-user
+token buckets allow five organization creations/hour, 60 invitation creations/hour, ten
+combined invitation previews/redemptions per ten minutes, and three account-deletion requests
+per hour. Exhaustion returns `429 rate_limited` with `Retry-After`. These limits are in memory
+per API process, suitable for the single-instance pilot; multiple workers or replicas require
+shared limit storage. Restarting the process resets its buckets. The deletion policy applies
+to `DELETE /v1/me`.
 
 The app factory in `main.py` includes identity, tenancy, collection and site routers. Routers keep authenticated transactions open around services; they complete the transaction before returning a response. `deps.py` sets the caller's database identity for each transaction. Services own validation, preparation and conflict decisions; repositories perform typed SQL access through matching `queries/` modules. Pure form and map-package logic lives under `domain/`.
 
@@ -196,25 +207,25 @@ Success bodies, URLs, status codes and archive headers are unchanged by BE-03. W
 | `GET /v1/projects`                               | Projects visible to the verified account                          |
 | `PUT /v1/projects/{project}/observations/{uuid}` | Validate and commit a new point or acknowledge an identical retry |
 | `GET /v1/projects/{project}/observations/{uuid}` | Read a permitted observation                                      |
-| `POST /v1/projects/{project}/packages`            | Check a base map submission and store a prepared package version  |
+| `POST /v1/projects/{project}/packages`            | Validate and publish a zone-bound package version                 |
 | `POST /v1/projects/{project}/packages/import`     | Convert uploaded QGIS vector sources for review without saving a package |
-| `GET /v1/projects/{project}/packages`             | List prepared package versions and their state                    |
+| `GET /v1/projects/{project}/packages`             | List published package versions and their state                   |
 | `GET /v1/projects/{project}/packages/{package}`   | Read one package's manifest and every check it ran                |
 | `GET /v1/projects/{project}/packages/{package}/archive` | Download the zip; the ETag is its `sha256`                  |
 
-The PUT body contains `site_id`, `form_version`, `[longitude, latitude]` coordinates, `observer`, timezone-aware `observed_at`, and the answers as further top-level keys. The site and form version are resolved against the project's own rows rather than two string literals, and each answer is validated against that form version's stored definition, so a new instrument is a seeded form version and not a code change. Unknown sites and forms are still rejected, and an answer that fails its field's type or bounds returns 422.
+The observation PUT body is bound to `site_id`, `package_id`, `zone_id`, `form_version`, `observer`, timezone-aware `observed_at`, and an `answers` object. Standard and reliability rounds also send `round_type`, `placement: "hand"`, `first_round` and coordinates; Inventory sends `round_type: "inventory"` and `placement: "zone"` without coordinates or `first_round`. The server resolves the site, immutable package, zone and form, checks point coverage or Inventory semantics, and validates answers against the package's form definition. Unknown fields and invalid bindings are rejected; answers are never accepted as top-level fields.
 
-Canonical definitions use the same defaults, conditions, dynamic options and reference checks as the mobile engine. Validation checks visible answers before pruning hidden ones; the normalization result carries the removed question IDs for the future sync endpoint. Existing stored `fields` definitions, including `shell-v1`, pass through the unchanged legacy validator. No published definition or hosted record is rewritten. Shared cases pass in Python and mobile, and local legacy upload/readback tests pass. Publishing Janet's draft remains separate work.
+The collector stores and retries the exact envelope for an observation. The server fingerprints the canonical request, authorizes every retry, and returns the original receipt only for the same observation, owner, project and body. Form definitions remain attached to the published package snapshot, so later form changes do not reinterpret historical observations.
 
-A package submission carries the site and form version, the GeoJSON layers (`ground` and `zones` required, `paths` and `trees` optional) and optionally the `.qgz`/`.qgs` project file, base64 encoded so no multipart dependency is needed. Preparation runs five checks — layers present, layer sources, coordinate reference, imagery licence, derived geometry — and stores the result either way: a blocked package keeps its reasons but does not download. Network tile sources block unless their host is allow-listed, because imagery permission is granted rather than assumed. The archive carries no clock, so its `sha256` is a content identity: the same submission prepared again next month is byte-identical, and the ETag is stable. When it was prepared lives on the row and in the API response, not inside the zip. Rows are immutable and preparing one needs the manager role.
+A package submission carries a UUID `site_id`, the selected form versions, the GeoJSON layers (`ground` and `zones` required, `paths` and `trees` optional), an explicit zone identity map, a request ID and the expected current package ID. An optional `.qgz`/`.qgs` project file is base64 encoded, so no multipart dependency is needed. The server validates and prepares the archive before publication; failed checks return a structured error and leave the current package unchanged. Only a ready package is published and downloadable. Network tile sources are rejected unless redistribution is permitted. The archive carries no clock, so its `sha256` is a content identity: identical content produces stable bytes and an ETag. Preparation time lives in the response and package row, not inside the zip. Published rows are immutable and require manager authority.
 
-A 200 receipt includes observation/project/user UUIDs, original `received_at`, and `accepted_revision: 1`. A receipt is returned only after commit. Identical retries return the original receipt; conflicting content returns 409 and preserves the original. The authenticated user and normalized payload fingerprint are immutable. A lost response can therefore be retried without duplicate records.
+The upload receipt includes observation, project and user UUIDs, original `received_at`, `accepted_revision: 1`, `package_id` and `zone_id`. New uploads return 200 after commit. Identical retries return the original receipt with 200; conflicting content returns 409 and preserves the original. A lost response can therefore be retried without duplicate records.
 
 Project membership is enforced in both the API lookup and database row policies. The API uses a restricted non-owner role with transaction-local identity, preventing pooled connections from retaining another account's context. It can select permitted rows and insert observations; it cannot edit/delete observations or grant membership. The SQLite queue keeps records until matching receipt verification and never uploads unassigned practice records.
 
 ## QGIS conversion
 
-`POST /v1/projects/{project}/packages/import` accepts `files`, an array of base64 `ProjectFile` objects. Managers can upload one `.qgz`/`.qgs` with its sources, optionally in a ZIP. The response returns the original `.qgs` as `project_file`, converted `layers` (`name`, `collection`), and per-layer `issues`. It neither creates a site nor saves a package. Clients review and assign the converted layers, optionally replace them with GeoJSON, then use the existing package submission with `site_code` and `form_version`.
+`POST /v1/projects/{project}/packages/import` accepts `files`, an array of base64 `ProjectFile` objects. Managers can upload one `.qgz`/`.qgs` with its sources, optionally in a ZIP. The response returns the original `.qgs` as `project_file`, converted `layers` (`name`, `collection`), and per-layer `issues`. It neither creates a site nor saves a package. Clients review and assign the converted layers, optionally replace them with GeoJSON, then submit a package using `site_id`, `zone_identity_map`, `expected_current_package_id` and the other publication fields.
 
 Fiona's bundled GDAL reads only uploaded GeoPackage, shapefile and GeoJSON datasets through a fixed driver list. A layer's QGIS CRS assignment takes precedence over dataset metadata; coordinates are converted to EPSG:4326. Remote sources are not fetched. Missing/ambiguous sources, unsupported providers, raster layers and filtered layers return actionable issues. The original project remains available for preparation checks, including imagery policy. Uploaded ZIP paths, symlinks, encryption, duplicate paths and XML entities are rejected. The standard inert QGIS DOCTYPE is allowed without fetching its URL.
 
@@ -224,7 +235,7 @@ Conversion runs in a temporary subprocess with no inherited credentials, at most
 
 `pnpm backend:test` exercises real local Supabase, including token rejection, membership checks, connection-pool isolation, conflicting/concurrent retries, input boundaries, and restricted GIS readback. It also covers the error envelope, framework errors, sanitized failures and OpenAPI responses. Run `pnpm backend:check` for Ruff and BasedPyright. Current SQL verification is recorded in [the database README](../database/README.md). Native sign-in, mobile-to-running-API reconnect, and QGIS Desktop refresh still need a configured account/device acceptance run.
 
-This is a local development service. Local Supabase is development infrastructure and must not be deployed as a production database. The hosted development database now has adapted migrations, restricted runtime credentials, and verified TLS. Production rollout still needs approved region/retention choices, a public HTTPS API deployment, managed secret injection, network restrictions, backups, monitoring, and API resource limits. The API has no attachments, update/delete synchronization, download cursor, or closed-app mobile background synchronization yet. Package archives live in a `bytea` column capped at 16 MB, which keeps them transactional with their manifest and checks and under the same row policies; moving to object storage later means replacing one column. The device cannot fetch a package yet.
+This is a local development service. Local Supabase is development infrastructure and must not be deployed as a production database. Production rollout still needs approved region/retention choices, a public HTTPS API deployment, managed secret injection, network restrictions, backups, monitoring, and API resource limits. The API has no attachments, update/delete synchronization, incremental sync-download cursor, or closed-app mobile background synchronization yet. Package manifests and archives are available through the versioned API; archive bytes remain transactional in the database and are capped at 16 MB. Mobile offline pinning, retention and restart behavior still require the dependent mobile implementation and device acceptance.
 
 Use QGIS read-only access for this slice; arbitrary GIS edits do not yet synchronize back to devices. The local database listens on port 54322; a QGIS Desktop login is not provisioned by these commands. The GIS test validates the database view, not the desktop application's behavior.
 

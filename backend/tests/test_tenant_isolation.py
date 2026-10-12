@@ -1,7 +1,7 @@
 """Exercise tenant boundaries through the same authenticated API used by clients."""
 
 from collections.abc import Iterator
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,11 +10,10 @@ from pydantic import JsonValue, TypeAdapter
 from fieldmaps_api.identity_schemas import Identity
 from fieldmaps_api.invitation_schemas import InvitationCreated
 from fieldmaps_api.tenancy_schemas import Organization, Project
-from tests.local_database import admin_sql
+from tests.package_fixtures import submission
 from tests.signing import Signer
 from tests.tenant_fixtures import (
     ROLES,
-    TRAINING,
     Tenant,
     cleanup_tenant,
     create_package,
@@ -22,7 +21,6 @@ from tests.tenant_fixtures import (
     observation_payload,
     sign_in,
 )
-from tests.test_site_packages import submission
 
 pytestmark = pytest.mark.integration
 
@@ -95,7 +93,9 @@ def test_every_foreign_role_is_denied_tenant_routes(
             assert response.status_code in {403, 404}, (role, method, path, response.text)
         denied = api_client.post(f"/v1/projects/{project}/packages", json=submission())
         assert denied.status_code == 403, (role, denied.text)
-        listed = api_client.get(f"/v1/projects/{project}/packages")
+        listed = api_client.get(
+            f"/v1/projects/{project}/packages", params={"site_id": str(first.site)}
+        )
         assert listed.status_code in {403, 404}, listed.text
 
 
@@ -183,49 +183,3 @@ def test_viewer_has_no_collection_or_management_rights_even_with_a_project_manag
     assert package.status_code == 403, package.text
     for suffix in ("members", "invitations"):
         assert api_client.get(f"/v1/projects/{first.project}/{suffix}").status_code == 403
-
-
-def test_training_records_profiles_and_memberships_are_private_between_trainees(
-    api_client: TestClient,
-    signer: Signer,
-    tenants: tuple[Tenant, Tenant],
-) -> None:
-    first, second = tenants
-    observations: list[tuple[UUID, UUID]] = []
-    for tenant in (first, second):
-        user, observation = tenant.users["observer"], uuid4()
-        sign_in(api_client, signer, user)
-        assert api_client.get("/v1/me").status_code == 200
-        admin_sql(
-            "INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,"
-            "form_version_id,"
-            "observer_code,observed_at,geom,answers,created_by,upload_hash) SELECT "
-            ":'observation',s.organization_id,s.project_id,s.id,f.id,'QA',now(),"
-            "fieldmaps.make_point(-76.485,42.448),'{}',:'user',repeat('b',64) "
-            "FROM fieldmaps.sites s JOIN fieldmaps.form_versions f ON f.project_id=s.project_id "
-            "WHERE s.project_id=:'training';",
-            f"observation={observation}",
-            f"user={user}",
-            f"training={TRAINING}",
-        )
-        observations.append((user, observation))
-    for user, own in observations:
-        other_user, other_observation = next(row for row in observations if row[0] != user)
-        sign_in(api_client, signer, user)
-        assert api_client.get(f"/v1/projects/{TRAINING}/observations/{own}").status_code == 200
-        assert (
-            api_client.get(f"/v1/projects/{TRAINING}/observations/{other_observation}").status_code
-            == 404
-        )
-        assert api_client.get(f"/v1/projects/{TRAINING}/members").status_code == 403
-        hidden = admin_sql(
-            "BEGIN; GRANT fieldmaps_api TO postgres; SET LOCAL ROLE fieldmaps_api; "
-            "SELECT set_config('fieldmaps.user_id',:'user',true); "
-            "SELECT (SELECT count(*) FROM fieldmaps.profiles WHERE user_id=:'other') || ',' || "
-            "(SELECT count(*) FROM fieldmaps.project_memberships WHERE user_id=:'other' "
-            "AND project_id=:'training'); ROLLBACK;",
-            f"user={user}",
-            f"other={other_user}",
-            f"training={TRAINING}",
-        )
-        assert hidden.splitlines()[-1] == "0,0"

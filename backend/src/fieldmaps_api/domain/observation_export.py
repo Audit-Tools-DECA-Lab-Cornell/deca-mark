@@ -111,11 +111,11 @@ def record(row: HistoricalObservation) -> dict[str, JsonValue]:
     inventory = row.round_type == "inventory"
     values["Rel_Round"] = (
         None
-        if inventory or row.round_type is None
+        if inventory
         else ("yes" if row.round_type == "reliability" else "no")
     )
     values["First_Round"] = (
-        None if inventory or row.first_round is None else ("yes" if row.first_round else "no")
+        None if inventory else ("yes" if row.first_round else "no")
     )
     return values
 
@@ -185,22 +185,21 @@ def assets(
             assert_never(filters.format)
     historical: dict[str, JsonValue] = {}
     for row in rows:
-        if row.package_id is not None and row.zone_id is not None:
-            key = f"{row.package_id}:{row.zone_id}"
-            if key in historical:
-                continue
-            historical[key] = {
-                "type": "Feature",
-                "id": key,
-                "geometry": snapshot.historical_zones[key],
-                "properties": {
-                    "package_id": str(row.package_id),
-                    "map_version": row.package_version,
-                    "zone_id": str(row.zone_id),
-                    "zone_code": row.zone_code,
-                    "zone_label_at_capture": row.zone_label,
-                },
-            }
+        key = f"{row.package_id}:{row.zone_id}"
+        if key in historical:
+            continue
+        historical[key] = {
+            "type": "Feature",
+            "id": key,
+            "geometry": snapshot.historical_zones[key],
+            "properties": {
+                "package_id": str(row.package_id),
+                "map_version": row.package_version,
+                "zone_id": str(row.zone_id),
+                "zone_code": row.zone_code,
+                "zone_label_at_capture": row.zone_label,
+            },
+        }
     files["historical-zones.geojson"] = orjson.dumps(
         {"type": "FeatureCollection", "features": list(historical.values())}
     )
@@ -216,10 +215,7 @@ def assets(
                 "observed_before exclusive"
             ),
             "filters": filters.model_dump(mode="json", exclude={"format"}),
-            "versions": sorted(
-                {row.package_version for row in snapshot.items if row.package_version is not None}
-            ),
-            "assignment_basis": sorted({row.assignment_basis for row in snapshot.items}),
+            "versions": sorted({row.package_version for row in snapshot.items}),
             "limits": {
                 "rows": ROW_LIMIT,
                 "uncompressed_bytes": BYTE_LIMIT,
@@ -231,8 +227,7 @@ def assets(
             "csv_null_answer": "n/a",
             "csv_multi_select": "semicolon-separated option codes",
             "display_anchor": (
-                "Snapshot anchors and legacy_compatibility anchors are display aids; "
-                "inventories have null event geometry"
+                "Snapshot anchors are display aids; inventories have null event geometry"
             ),
         }
     )

@@ -20,11 +20,12 @@ from tests.zone_api_fixtures import document
 
 
 def snapshot(answers: dict[str, JsonValue], definition: dict[str, JsonValue]) -> ExportSnapshot:
+    package_id, zone_id = uuid4(), uuid4()
     row = HistoricalObservation.model_validate(
         {
             "observation_id": str(uuid4()),
             "project_id": str(uuid4()),
-            "user_id": None,
+            "user_id": str(uuid4()),
             "site_id": str(uuid4()),
             "site_code": "synthetic",
             "site_name": "=danger",
@@ -37,23 +38,35 @@ def snapshot(answers: dict[str, JsonValue], definition: dict[str, JsonValue]) ->
             "round_type": "standard",
             "first_round": True,
             "placement": "hand",
-            "package_id": None,
-            "package_version": None,
-            "zone_id": None,
+            "package_id": str(package_id),
+            "package_version": 1,
+            "zone_id": str(zone_id),
             "zone_code": "same",
-            "zone_label": None,
-            "assignment_basis": "legacy_unversioned",
+            "zone_label": "Same label",
             "spatial_support": "point",
             "geometry": {"type": "Point", "coordinates": [-76.0, 42.0]},
             "display_anchor": None,
-            "display_anchor_basis": None,
         }
     )
     return ExportSnapshot.model_validate(
         {
             "items": [row],
             "forms": {"test-v1": definition},
-            "historical_zones": {},
+            "historical_zones": {
+                f"{package_id}:{zone_id}": {
+                    "type": "MultiPolygon",
+                    "coordinates": [
+                        [
+                            [
+                                [-76.1, 41.9],
+                                [-75.9, 41.9],
+                                [-75.9, 42.1],
+                                [-76.1, 41.9],
+                            ]
+                        ]
+                    ],
+                }
+            },
             "total_matching": 1,
             "source_bytes": 100,
             "timezone": "America/New_York",

@@ -23,7 +23,6 @@ type Parameters = dict[str, UUID | str | int | bool | bytes | None]
 class Scope(ZoneResponse):
     site_id: UUID
     code: str
-    managed: bool
     manager: bool
     current_package_id: UUID | None
     next_version: int

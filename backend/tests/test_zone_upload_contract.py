@@ -77,9 +77,6 @@ def test_authored_receipt_requires_recorded_binding_without_protocol_fields() ->
         AuthoredReceipt.model_validate(dict(receipt, schema_version=2))
 
 
-@pytest.mark.skip(
-    reason="BE-22 must replace the production upload model with the sole /v1 contract"
-)
 def test_production_model_accepts_authored_envelopes_without_translation() -> None:
     schema = TypeAdapter[BoundObservationUpload](BoundObservationUpload)
     for case in SUITE.envelopes:

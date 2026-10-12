@@ -1,11 +1,10 @@
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
-from fieldmaps_api.schemas import PackageDetail
 from fieldmaps_api.zone_response_schemas import Draft, Publication
 from tests.bound_upload_fixtures import BoundSite
-from tests.test_site_packages import submission
+from tests.package_fixtures import submission
 from tests.test_zone_api_live import LiveApi
 from tests.zone_api_fixtures import ZoneSite
 
@@ -17,14 +16,17 @@ def live_bound_site(live_api: LiveApi) -> BoundSite:
     project = f"/v1/projects/{live_api.tenant.project}"
     drafts = f"{project}/sites/{live_api.tenant.site}/zone-drafts"
     with live_api.client() as client:
-        response = client.post(f"{project}/packages", json=submission())
+        response = client.post(
+            f"{project}/packages", json=submission(site_id=str(live_api.tenant.site))
+        )
         assert response.status_code == 201, response.text
-        legacy = PackageDetail.model_validate_json(response.content)
+        imported = Publication.model_validate_json(response.content)
+        base_package = imported.package.package_id
         created = client.post(
             drafts,
             json={
                 "request_id": str(uuid4()),
-                "base_package_id": str(legacy.package_id),
+                "base_package_id": str(base_package),
             },
         )
         assert created.status_code == 201, created.text
@@ -46,13 +48,13 @@ def live_bound_site(live_api: LiveApi) -> BoundSite:
             headers={"If-Match": edited.headers["etag"]},
             json={
                 "request_id": str(uuid4()),
-                "expected_current_package_id": str(legacy.package_id),
+                "expected_current_package_id": str(base_package),
             },
         )
         assert published.status_code == 201, published.text
         package = Publication.model_validate_json(published.content)
         return BoundSite(
-            ZoneSite(live_api.tenant, UUID(str(legacy.package_id))),
+            ZoneSite(live_api.tenant, package.package.package_id),
             package.package.package_id,
             draft.zones[0].zone_id,
         )

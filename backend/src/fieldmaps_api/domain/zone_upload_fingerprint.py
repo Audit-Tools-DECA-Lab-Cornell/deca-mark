@@ -6,7 +6,7 @@ import rfc8785
 
 from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
 
-HASH_VERSION: Final = "zone-upload-v2-jcs-1"
+HASH_VERSION: Final = "observation-jcs-1"
 
 
 def canonical_bytes(

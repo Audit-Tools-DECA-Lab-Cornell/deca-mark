@@ -23,7 +23,7 @@ def create_router(
     sessions: async_sessionmaker[AsyncSession], authenticate: Authentication
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
-    base = "/v2/projects/{project_id}/observations"
+    base = "/v1/projects/{project_id}/observations"
 
     @router.get(base, operation_id="listHistoricalObservations")
     async def observations(

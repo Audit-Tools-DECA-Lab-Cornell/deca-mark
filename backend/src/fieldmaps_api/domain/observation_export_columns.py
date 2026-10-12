@@ -35,11 +35,9 @@ RECORD_COLUMNS: Final = (
     "zone_id",
     "zone_code",
     "zone_label_at_capture",
-    "assignment_basis",
     "spatial_support",
     "display_anchor_longitude",
     "display_anchor_latitude",
-    "display_anchor_basis",
 )
 
 

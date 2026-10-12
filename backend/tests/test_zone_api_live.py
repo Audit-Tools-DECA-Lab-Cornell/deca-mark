@@ -15,9 +15,9 @@ from fieldmaps_api.auth import JwksVerifier
 from fieldmaps_api.config import Settings
 from fieldmaps_api.main import create_app
 from tests.local_database import database_url
+from tests.package_fixtures import submission
 from tests.signing import ISSUER, Signer
-from tests.tenant_fixtures import Tenant, create_tenant, observation_payload
-from tests.test_site_packages import submission
+from tests.tenant_fixtures import Tenant, create_tenant
 from tests.zone_api_fixtures import clean_zone_tenant, document
 
 pytestmark = pytest.mark.integration
@@ -62,7 +62,7 @@ class LiveApi:
 def live_api(signer: Signer) -> Iterator[LiveApi]:
     tenant = Tenant.new()
     create_tenant(tenant)
-    settings = Settings(database_url=database_url(), zone_publication_enabled=True)
+    settings = Settings(database_url=database_url())
     app = create_app(settings, JwksVerifier(ISSUER, "authenticated", signer))
     server = ReadyServer(uvicorn.Config(app, host="127.0.0.1", port=0, log_level="error"))
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
@@ -81,13 +81,23 @@ def live_api(signer: Signer) -> Iterator[LiveApi]:
             clean_zone_tenant(tenant)
 
 
-def test_loopback_http_edit_publish_history_and_legacy_upload(live_api: LiveApi) -> None:
+def initial_package(client: httpx2.Client, api: LiveApi) -> str:
+    project = f"/v1/projects/{api.tenant.project}"
+    response = client.post(
+        f"{project}/packages", json=submission(site_id=str(api.tenant.site))
+    )
+    assert response.status_code == 201, response.text
+    result = document(response.content)
+    package = result["package"]
+    assert isinstance(package, dict)
+    return str(package["package_id"])
+
+
+def test_loopback_http_upload_edit_publish_bound_upload_read_and_export(live_api: LiveApi) -> None:
     project = f"/v1/projects/{live_api.tenant.project}"
     site = f"{project}/sites/{live_api.tenant.site}"
     with live_api.client() as client:
-        legacy = client.post(f"{project}/packages", json=submission())
-        assert legacy.status_code == 201, legacy.text
-        base = document(legacy.content)["package_id"]
+        base = initial_package(client, live_api)
         created = client.post(
             f"{site}/zone-drafts", json={"request_id": str(uuid4()), "base_package_id": base}
         )
@@ -114,21 +124,48 @@ def test_loopback_http_edit_publish_history_and_legacy_upload(live_api: LiveApi)
         historical = client.get(f"{site}/zones", params={"package_id": str(package)})
         assert historical.status_code == 200, historical.text
         assert "geometry_sha256" in historical.text
+        latest = client.get(f"{site}/zones", params={"package_id": str(package)})
+        assert latest.status_code == 200, latest.text
     with live_api.client("observer") as collector:
-        uploaded = collector.put(f"{project}/observations/{uuid4()}", json=observation_payload())
+        zones = document(latest.content)["zones"]
+        assert isinstance(zones, list)
+        assert zones
+        zone = zones[0]
+        assert isinstance(zone, dict)
+        uploaded = collector.put(
+            f"{project}/observations/{uuid4()}",
+            json={
+                "site_id": str(live_api.tenant.site),
+                "package_id": str(package),
+                "zone_id": str(zone["zone_id"]),
+                "form_version": "shell-v1",
+                "round_type": "standard",
+                "first_round": True,
+                "placement": "hand",
+                "coordinates": [-76.4857, 42.4482],
+                "observer": "QA",
+                "observed_at": "2026-10-10T12:00:00Z",
+                "answers": {"people": 3, "notes": "Synthetic offline café"},
+            },
+        )
         assert uploaded.status_code == 200, uploaded.text
-        read = collector.get(f"{project}/observations")
+        read = collector.get(
+            f"{project}/observations", params={"site_id": str(live_api.tenant.site)}
+        )
         assert read.status_code == 200, read.text
         assert '"people":3' in read.text
+        exported = collector.get(
+            f"{project}/observations/export", params={"site_id": str(live_api.tenant.site)}
+        )
+        assert exported.status_code == 200, exported.text
+        assert exported.headers["content-type"] == "application/zip"
 
 
 def test_two_signed_manager_requests_cannot_activate_same_base_twice(live_api: LiveApi) -> None:
     project = f"/v1/projects/{live_api.tenant.project}"
     drafts = f"{project}/sites/{live_api.tenant.site}/zone-drafts"
     with live_api.client() as client:
-        legacy = client.post(f"{project}/packages", json=submission())
-        assert legacy.status_code == 201, legacy.text
-        base = document(legacy.content)["package_id"]
+        base = initial_package(client, live_api)
         first = client.post(drafts, json={"request_id": str(uuid4()), "base_package_id": base})
         second = client.post(drafts, json={"request_id": str(uuid4()), "base_package_id": base})
         assert first.status_code == 201, first.text
@@ -159,13 +196,12 @@ def test_two_signed_manager_saves_have_exactly_one_revision_increment(live_api: 
     project = f"/v1/projects/{live_api.tenant.project}"
     drafts = f"{project}/sites/{live_api.tenant.site}/zone-drafts"
     with live_api.client() as client:
-        legacy = client.post(f"{project}/packages", json=submission())
-        assert legacy.status_code == 201, legacy.text
+        base = initial_package(client, live_api)
         created = client.post(
             drafts,
             json={
                 "request_id": str(uuid4()),
-                "base_package_id": document(legacy.content)["package_id"],
+                "base_package_id": base,
             },
         )
         assert created.status_code == 201, created.text
@@ -196,11 +232,10 @@ def test_concurrent_draft_creation_returns_one_created_and_one_replay(live_api: 
     project = f"/v1/projects/{live_api.tenant.project}"
     drafts = f"{project}/sites/{live_api.tenant.site}/zone-drafts"
     with live_api.client() as client:
-        legacy = client.post(f"{project}/packages", json=submission())
-        assert legacy.status_code == 201, legacy.text
+        base = initial_package(client, live_api)
         body = {
             "request_id": str(uuid4()),
-            "base_package_id": document(legacy.content)["package_id"],
+            "base_package_id": base,
         }
     barrier = Barrier(2)
 

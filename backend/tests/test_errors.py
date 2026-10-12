@@ -6,8 +6,11 @@ from pydantic import JsonValue, TypeAdapter
 from sqlalchemy.exc import SQLAlchemyError
 
 from fieldmaps_api.auth import JwksVerifier
+from fieldmaps_api.errors import ErrorEnvelope
 from fieldmaps_api.main import create_app
+from tests.bound_upload_fixtures import BoundSite
 from tests.signing import ISSUER, PROJECT, make_signer
+from tests.tenant_fixtures import observation_payload
 
 JSON = TypeAdapter[JsonValue](JsonValue)
 
@@ -99,7 +102,7 @@ def test_server_failures_are_sanitized(failure: Exception, status: int, code: st
 def test_request_validation_reports_fields_without_input(api_client: TestClient) -> None:
     response = api_client.put(
         f"/v1/projects/{PROJECT}/observations/{uuid4()}",
-        json={"observer": "private field note"},
+        json={"round_type": "standard", "observer": "private field note"},
     )
     assert response.status_code == 422
     content = JSON.validate_json(response.content)
@@ -109,24 +112,19 @@ def test_request_validation_reports_fields_without_input(api_client: TestClient)
     assert error["code"] == "validation_failed"
     details = error["details"]
     assert isinstance(details, dict)
-    fields = details["fields"]
-    assert isinstance(fields, list)
-    assert any(isinstance(field, dict) and field["id"] == "coordinates" for field in fields)
+    issues = details["issues"]
+    assert isinstance(issues, list)
+    assert any(isinstance(issue, dict) and issue["path"] == "/coordinates" for issue in issues)
     assert "private field note" not in response.text
 
 
 @pytest.mark.integration
-def test_domain_validation_reports_answer_field(api_client: TestClient) -> None:
+def test_domain_validation_reports_answer_field(
+    api_client: TestClient, bound_site: BoundSite
+) -> None:
     response = api_client.put(
-        f"/v1/projects/{PROJECT}/observations/{uuid4()}",
-        json={
-            "site_id": "sample-garden",
-            "form_version": "shell-v1",
-            "coordinates": [1, 2],
-            "observer": "QA",
-            "people": -1,
-            "observed_at": "2026-09-17T12:00:00Z",
-        },
+        bound_site.url(uuid4()),
+        json=bound_site.point(answers={"people": -1, "notes": ""}),
     )
     assert response.status_code == 422
     assert JSON.validate_json(response.content) == {
@@ -145,19 +143,23 @@ def test_invalid_body_encoding_keeps_bad_request_status(api_client: TestClient) 
         content=b"\xff",
         headers={"Content-Type": "application/json"},
     )
-    assert response.status_code == 400
-    assert JSON.validate_json(response.content) == {
-        "error": {
-            "code": "bad_request",
-            "message": "There was an error parsing the body",
-            "details": {},
-        }
-    }
+    assert response.status_code == 422
+    error = ErrorEnvelope.model_validate_json(response.content).error
+    assert error.code == "validation_failed"
+    issues = error.details["issues"]
+    assert isinstance(issues, list)
+    assert issues
+    issue = issues[0]
+    assert isinstance(issue, dict)
+    assert issue["code"] == "invalid_structure"
+    assert "\ufffd" not in response.text
 
 
 @pytest.mark.integration
-def test_role_and_missing_record_errors_use_domain_codes(api_client: TestClient) -> None:
-    url = f"/v1/projects/{PROJECT}/observations/{uuid4()}"
+def test_hidden_site_upload_uses_not_found_without_revealing_membership(
+    api_client: TestClient, bound_site: BoundSite
+) -> None:
+    url = bound_site.url(uuid4())
     missing = api_client.get(url)
     assert missing.status_code == 404
     assert JSON.validate_json(missing.content) == {
@@ -165,22 +167,10 @@ def test_role_and_missing_record_errors_use_domain_codes(api_client: TestClient)
     }
     denied = api_client.put(
         url,
-        json={
-            "site_id": "unknown-site",
-            "form_version": "shell-v1",
-            "coordinates": [1, 2],
-            "observer": "QA",
-            "observed_at": "2026-09-17T12:00:00Z",
-        },
+        json=observation_payload(site_id=uuid4()),
     )
-    assert denied.status_code == 403
-    assert JSON.validate_json(denied.content) == {
-        "error": {
-            "code": "role_required",
-            "message": "You cannot upload to this project, site, or form",
-            "details": {},
-        }
-    }
+    assert denied.status_code == 404
+    assert ErrorEnvelope.model_validate_json(denied.content).error.code == "not_found"
 
 
 def test_openapi_preserves_routes_and_declares_error_envelope() -> None:

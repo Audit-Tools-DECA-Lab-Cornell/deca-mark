@@ -26,8 +26,6 @@ def parameters(project_id: UUID, filters: ObservationFilters) -> dict[str, Param
         "site": filters.site_id,
         "package": filters.package_id,
         "zones": list(filters.zone_id),
-        "basis": filters.assignment_basis,
-        "legacy_code": filters.legacy_zone_code,
         "round": filters.round_type,
         "observer": filters.observer,
         "from": filters.observed_from,

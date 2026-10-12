@@ -82,8 +82,6 @@ async def upload(
         project_id,
         user_id,
         fingerprint(project_id, observation_id, user_id, payload),
-        2,
-        "zone-upload-v2-jcs-1",
     )
     replay = await upload_receipts.replay(session, identity)
     if replay is not None:

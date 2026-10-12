@@ -125,14 +125,11 @@ def create_app(
         sites.create_router(
             sessions,
             authenticate,
-            zone_enabled=configuration.zone_publication_enabled,
             work=zone_work,
         )
     )
     app.include_router(
-        zones.create_router(
-            sessions, authenticate, enabled=configuration.zone_publication_enabled, work=zone_work
-        )
+        zones.create_router(sessions, authenticate, work=zone_work)
     )
     app.include_router(forms.create_router(sessions, authenticate))
     return app

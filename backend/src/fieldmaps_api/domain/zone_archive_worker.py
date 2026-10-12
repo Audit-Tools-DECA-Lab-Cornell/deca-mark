@@ -30,13 +30,13 @@ def process(directory: Path) -> None:
     match job:
         case ExtractJob():
             base = extract_base_archive((directory / "base.zip").read_bytes())
-            bootstrap = Bootstrap(ground=base.ground, legacy_zones=base.legacy_zones)
+            bootstrap = Bootstrap(ground=base.ground, zones=base.zones)
             (directory / "bootstrap.json").write_text(bootstrap.model_dump_json())
             return
         case PublishJob():
             base = extract_base_archive((directory / "base.zip").read_bytes())
         case ImportJob():
-            base = prepare_import_base(job.submission.legacy())
+            base = prepare_import_base(job.submission, job.identity.site_code, job.forms)
         case _:
             assert_never(job)
     prepared = prepare_zone_package(base, job.identity, job.forms, job.validation)

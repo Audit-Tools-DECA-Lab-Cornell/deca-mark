@@ -15,8 +15,7 @@ from pydantic import (
     model_validator,
 )
 
-type AssignmentBasis = Literal["recorded_package", "legacy_unversioned"]
-type SpatialSupport = Literal["point", "zone", "legacy_unknown"]
+type SpatialSupport = Literal["point", "zone"]
 type RoundType = Literal["standard", "reliability", "inventory"]
 type Observer = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=12)
@@ -31,8 +30,6 @@ class ObservationFilters(Frozen):
     site_id: UUID | None = None
     package_id: UUID | None = None
     zone_id: Annotated[tuple[UUID, ...], Field(max_length=500)] = ()
-    assignment_basis: AssignmentBasis | None = None
-    legacy_zone_code: Annotated[str, Field(min_length=1, max_length=100)] | None = None
     round_type: RoundType | None = None
     observer: Observer | None = None
     observed_from: AwareDatetime | None = None
@@ -56,17 +53,6 @@ class ObservationFilters(Frozen):
     def combinations(self) -> Self:
         if self.zone_id and self.site_id is None:
             message = "Zone filters require a site"
-            raise ValueError(message)
-        if self.legacy_zone_code is not None and (
-            self.site_id is None
-            or self.assignment_basis != "legacy_unversioned"
-            or self.package_id is not None
-            or self.zone_id
-        ):
-            message = "Legacy codes require a site and legacy basis without bound identifiers"
-            raise ValueError(message)
-        if self.assignment_basis == "legacy_unversioned" and (self.package_id or self.zone_id):
-            message = "Legacy records have no bound identifiers"
             raise ValueError(message)
         if (
             self.observed_from is not None
@@ -95,7 +81,7 @@ class Point(Frozen):
 class HistoricalObservation(Frozen):
     observation_id: UUID
     project_id: UUID
-    user_id: UUID | None
+    user_id: UUID
     site_id: UUID
     site_code: str
     site_name: str
@@ -105,19 +91,17 @@ class HistoricalObservation(Frozen):
     revision: int
     answers: dict[str, JsonValue]
     form_version: str
-    round_type: RoundType | None
+    round_type: RoundType
     first_round: bool | None
-    placement: Literal["hand", "zone"] | None
-    package_id: UUID | None
-    package_version: int | None
-    zone_id: UUID | None
-    zone_code: str | None
-    zone_label: str | None
-    assignment_basis: AssignmentBasis
+    placement: Literal["hand", "zone"]
+    package_id: UUID
+    package_version: int
+    zone_id: UUID
+    zone_code: str
+    zone_label: str
     spatial_support: SpatialSupport
     geometry: Point | None
     display_anchor: Point | None
-    display_anchor_basis: Literal["snapshot", "legacy_compatibility"] | None
 
 
 class HistoricalObservationDetail(HistoricalObservation):
@@ -137,13 +121,12 @@ class ObservationPage(Frozen):
 
 class SummaryGroup(Frozen):
     site_id: UUID
-    package_id: UUID | None
-    package_version: int | None
-    zone_id: UUID | None
-    zone_code: str | None
-    zone_label: str | None
-    round_type: RoundType | None
-    assignment_basis: AssignmentBasis
+    package_id: UUID
+    package_version: int
+    zone_id: UUID
+    zone_code: str
+    zone_label: str
+    round_type: RoundType
     spatial_support: SpatialSupport
     count: int
 
@@ -151,7 +134,6 @@ class SummaryGroup(Frozen):
 class ObservationSummary(Frozen):
     groups: list[SummaryGroup]
     total_matching: int
-    legacy_count: int
     generated_at: datetime
 
 

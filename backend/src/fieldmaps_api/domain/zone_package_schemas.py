@@ -4,15 +4,7 @@ from uuid import UUID
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, JsonValue
 
-from fieldmaps_api.domain.packages import (
-    Extent,
-    LayerName,
-    LayerRecord,
-    Manifest,
-    PreparationCheck,
-    SourceProject,
-    Zone,
-)
+from fieldmaps_api.domain.packages import LayerName, PreparationCheck, SourceProject
 from fieldmaps_api.zone_geometry_schemas import Position, closed_ring
 from fieldmaps_api.zone_response_schemas import PackageForms
 
@@ -35,10 +27,17 @@ class GroundMultiPolygon(BaseModel):
 type GroundGeometry = Annotated[GroundPolygon | GroundMultiPolygon, Field(discriminator="type")]
 
 
-class LegacyZone(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+class ManifestZone(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    zone_id: UUID
     zone_code: str
-    zone_label: str
+    label: str
+    bbox: tuple[float, float, float, float]
+    display_anchor: Position
+    geometry_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
+
+
+class PackageZone(ManifestZone):
     geometry: GroundGeometry
 
 
@@ -65,10 +64,11 @@ class ArchiveLayer:
 
 @dataclass(frozen=True, slots=True)
 class BaseArchive:
-    manifest: Manifest
     layers: tuple[ArchiveLayer, ...]
     ground: GroundGeometry
-    legacy_zones: tuple[LegacyZone, ...]
+    zones: tuple[PackageZone, ...]
+    site_code: str
+    source_project: SourceProject | None
     checks: tuple[PreparationCheck, ...]
 
 
@@ -80,33 +80,19 @@ class PackageIdentity:
     site_code: str
 
 
-class ManifestZoneV2(Zone):
-    zone_id: UUID
-    zone_code: str
-    display_anchor: Position
-    geometry_sha256: str
-
-
-class ManifestV2(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-    format: Literal[2] = 2
-    site_code: str
-    form_version: str
-    extent: Extent
-    centre: tuple[float, float]
-    layers: tuple[LayerRecord, ...]
-    source_project: SourceProject | None
-    zone_contract_version: Literal[1] = 1
+class ZonePackageManifest(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    format: Literal[1] = 1
     site_id: UUID
+    site_code: str
     package_id: UUID
-    package_version: int
+    package_version: Annotated[int, Field(ge=1)]
     forms: PackageForms
-    zones: tuple[ManifestZoneV2, ...]
+    zones: tuple[ManifestZone, ...]
 
 
 class ZoneLayerProperties(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-    id: str
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
     zone_id: UUID
     zone_code: str
     name: str
@@ -115,21 +101,21 @@ class ZoneLayerProperties(BaseModel):
 
 
 class ZoneLayerFeature(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
     type: Literal["Feature"] = "Feature"
     geometry: GroundMultiPolygon
     properties: ZoneLayerProperties
 
 
 class ZoneLayer(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
     type: Literal["FeatureCollection"] = "FeatureCollection"
     features: tuple[ZoneLayerFeature, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class PreparedZonePackage:
-    manifest: ManifestV2
+    manifest: ZonePackageManifest
     zone_layer: ZoneLayer
     zone_layer_bytes: bytes
     checks: tuple[PreparationCheck, ...]

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from pydantic import HttpUrl
 from starlette.types import Message, Receive, Scope, Send
 
+import fieldmaps_api.body_limits as body_limits_module
 from fieldmaps_api.auth import JwksVerifier
 from fieldmaps_api.body_limits import KIB, MIB, BodySizeMiddleware, body_limit
 from fieldmaps_api.config import Settings
@@ -32,8 +33,8 @@ from tests.signing import ISSUER, Signer
         ("POST", "/v1/projects/project/packages", 24 * MIB),
         ("POST", "/v1/projects/project/packages/import", 24 * MIB),
         ("POST", "/v1/projects/project/packages/import/other", 256 * KIB),
-        ("POST", "/v1/sync/upload", 4 * MIB),
         ("PUT", "/v1/projects/project/observations/id", 256 * KIB),
+        ("PUT", "/v1/projects/project/sites/site/zone-drafts/draft", 4 * MIB),
         ("POST", "/v1/invitations/preview", 256 * KIB),
     ],
 )
@@ -54,6 +55,24 @@ def test_size_rejection_precedes_json_validation() -> None:
         response = client.post("/body", content=b"{" * (256 * KIB + 1))
     assert response.status_code == 413
     assert response.json()["error"]["code"] == "validation_failed"
+
+
+def test_managed_package_oversize_uses_zone_error_code(monkeypatch: pytest.MonkeyPatch) -> None:
+    app = FastAPI()
+    app.add_middleware(BodySizeMiddleware)
+
+    @app.post("/v1/projects/{project_id}/packages")
+    async def package(project_id: str, request: Request) -> int:
+        return len(await request.body()) + len(project_id)
+
+    def small_body_limit(_method: str, _path: str) -> int:
+        return 1
+
+    monkeypatch.setattr(body_limits_module, "body_limit", small_body_limit)
+    with TestClient(app) as client:
+        response = client.post("/v1/projects/project/packages", content=b"{}")
+    assert response.status_code == 413
+    assert response.json()["error"]["code"] == "payload_too_large"
 
 
 def test_chunked_body_cannot_bypass_limit_with_false_content_length() -> None:

@@ -70,7 +70,6 @@ def test_authored_content_changes_affect_hash(
     assert rfc8785.dumps(original) != rfc8785.dumps(changed)
 
 
-@pytest.mark.skip(reason="BE-22 must implement observation-jcs-1 on the sole /v1 upload path")
 def test_production_fingerprint_matches_authored_golden_bytes_without_translation() -> None:
     for case in CASES:
         document = AuthoredFingerprintDocument.model_validate(case.document)

@@ -9,7 +9,7 @@ from fieldmaps_api.zone_error_details import SafeZoneIssue
 from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
 
 PATH = (
-    "/v2/projects/50000000-0000-4000-8000-000000000001"
+    "/v1/projects/50000000-0000-4000-8000-000000000001"
     "/observations/40000000-0000-4000-8000-000000000001"
 )
 
@@ -20,7 +20,6 @@ def boundary_app() -> FastAPI:
     register_error_handlers(app)
 
     @app.put(PATH)
-    @app.put(PATH.replace("/v2/", "/v1/"))
     async def upload() -> str:
         return "accepted"
 
@@ -60,19 +59,19 @@ def test_unicode_surrogate_pair_and_valid_json_pass() -> None:
     assert response.status_code == 200
 
 
-def test_v1_duplicate_key_behavior_is_unchanged() -> None:
+def test_duplicate_key_is_rejected_by_the_current_api() -> None:
     with TestClient(boundary_app()) as client:
-        response = client.put(PATH.replace("/v2/", "/v1/"), content=b'{"answer":1,"answer":2}')
-    assert response.status_code == 200
+        response = client.put(PATH, content=b'{"answer":1,"answer":2}')
+    assert response.status_code == 422
 
 
-def test_v2_encoded_request_is_rejected() -> None:
+def test_encoded_request_is_rejected() -> None:
     with TestClient(boundary_app()) as client:
         response = client.put(PATH, content=b"{}", headers={"Content-Encoding": "gzip"})
     assert response.status_code == 422
 
 
-def test_v2_request_size_is_bounded_before_json_parsing() -> None:
+def test_request_size_is_bounded_before_json_parsing() -> None:
     with TestClient(boundary_app()) as client:
         response = client.put(PATH, content=b"x" * (256 * 1024 + 1))
     assert response.status_code == 413
@@ -98,7 +97,6 @@ def test_validation_pointers_reference_the_submitted_body(
         return payload.observer
 
     body = {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
         "package_id": "20000000-0000-4000-8000-000000000007",
         "zone_id": "30000000-0000-4000-8000-000000000001",

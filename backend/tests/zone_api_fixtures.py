@@ -8,9 +8,9 @@ from fastapi.testclient import TestClient
 from pydantic import JsonValue, TypeAdapter
 
 from tests.local_database import admin_sql
+from tests.package_fixtures import submission
 from tests.signing import Signer
 from tests.tenant_fixtures import Tenant, cleanup_tenant, create_tenant, sign_in
-from tests.test_site_packages import submission
 
 JSON_DOCUMENT = TypeAdapter(dict[str, JsonValue])
 
@@ -56,7 +56,7 @@ def zone_site(api_client: TestClient, signer: Signer) -> Iterator[ZoneSite]:
     create_tenant(tenant)
     sign_in(api_client, signer, tenant.users["manager"])
     try:
-        source = JSON_DOCUMENT.validate_python(submission())
+        source = JSON_DOCUMENT.validate_python(submission(site_id=str(tenant.site)))
         layers = source["layers"]
         assert isinstance(layers, dict)
         layers["paths"] = {
@@ -85,7 +85,9 @@ def zone_site(api_client: TestClient, signer: Signer) -> Iterator[ZoneSite]:
         created = api_client.post(f"/v1/projects/{tenant.project}/packages", json=source)
         assert created.status_code == 201, created.text
         result = document(created.content)
-        yield ZoneSite(tenant, UUID(str(result["package_id"])))
+        package = result["package"]
+        assert isinstance(package, dict)
+        yield ZoneSite(tenant, UUID(str(package["package_id"])))
     finally:
         clean_zone_tenant(tenant)
 

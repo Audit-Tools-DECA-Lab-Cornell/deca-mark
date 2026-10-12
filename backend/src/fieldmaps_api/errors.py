@@ -142,20 +142,29 @@ def zone_request(path: str) -> bool:
             path.rstrip("/"),
         )
         is not None
-        or re.fullmatch(r"/v2/projects/[^/]+/observations/[^/]+", path.rstrip("/")) is not None
+        or re.fullmatch(r"/v1/projects/[^/]+/packages", path.rstrip("/")) is not None
+        or re.fullmatch(
+            r"/v1/projects/[^/]+/observations/[^/]+", path.rstrip("/")
+        ) is not None
     )
 
 
 def zone_validation_failure(error: RequestValidationError, path: str) -> DomainError:
     issues = VALIDATION_ISSUES.validate_python(error.errors())
-    if path.rstrip("/").endswith("/publish") and any(
+    normalized_path = path.rstrip("/")
+    package_import = re.fullmatch(r"/v1/projects/[^/]+/packages", normalized_path) is not None
+    if (normalized_path.endswith("/publish") or package_import) and any(
         issue.loc == ("body", "expected_current_package_id") and issue.type == "missing"
         for issue in issues
     ):
         return DomainError("precondition_required", "The expected current package is required", 428)
     safe_issues: list[JsonValue] = []
     for issue in issues[:1_000]:
-        parts = body_parts(issue.loc, issue.type, bound_upload=path.startswith("/v2/"))
+        bound_upload = (
+            re.fullmatch(r"/v1/projects/[^/]+/observations/[^/]+", path.rstrip("/"))
+            is not None
+        )
+        parts = body_parts(issue.loc, issue.type, bound_upload=bound_upload)
         pointer = "".join("/" + str(part).replace("~", "~0").replace("/", "~1") for part in parts)
         code = "invalid_structure"
         if "distinct within a draft" in issue.msg:
@@ -197,7 +206,7 @@ async def error_response(request: Request, error: Exception) -> JSONResponse:
         case RequestValidationError():
             if (
                 request.method == "GET"
-                and request.url.path.startswith("/v2/projects/")
+                and request.url.path.startswith("/v1/projects/")
                 and "/observations" in request.url.path
             ):
                 failure = DomainError(
