@@ -2,18 +2,17 @@
 
 [Mobile data plan](ZONE-BOUNDARIES.md) · [Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Web UI plan](../web/ZONE-BOUNDARIES-UI.md) · Tasks MOB-30, MOB-31 and MOB-32 (UI), MOB-28, MOB-33 and MOB-29 (data) in [PLAN.md](PLAN.md)
 
-Status: a plan; the mobile UI is not built. Baseline: HEAD `33faa58` on 2026-10-11.
+Status: a plan; the mobile UI is not built. Source inspection baseline: `33faa58` on 2026-10-11; contract aligned by CON-06.
 
-- **Committed backend:** BE-18 (`6da4359`: v2 site discovery, historical `/zones`, drafts), BE-19 (`92f8451`: `PUT /v2/…/observations/{id}` with `BoundUploadReceipt`) and BE-20 (`78eb825`: v2 reads). All are in `src/data/api/schema.d.ts`.
-- **In progress:** the mobile data agent has uncommitted MOB-28 work under `src/`. This plan does not touch it.
+BE-18 through BE-20 established earlier backend behavior. DB-19 and BE-22 replace that baseline with the current contract and regenerate API declarations before dependent mobile integration. MOB-28's local package lifecycle is committed in `a86a1ee`; its real API gate remains pending. [PACKAGE-LIFECYCLE.md](PACKAGE-LIFECYCLE.md) defines the implemented storage/recovery interfaces; MOB-33 supplies collection read models and MOB-29 supplies bound uploads.
 
-**Pre-launch rule (2026-10-11):** there are no real users, and local and server data are reset freely. The collector supports no legacy:
+**Pre-launch rule (2026-10-11):** there are no real users:
 
-- every map is a zone-versioned package (manifest `format: 1`, the only format), and every new observation is bound to it and uploads through `PUT /v1/projects/{p}/observations/{id}` (the contract's single path; BE-22 moves it from `/v2`);
-- no old-server fallback, no format-1 maps, no legacy labels;
-- no upgrade path that preserves old SQLite rows: a schema change resets local data.
+- every archive uses the sole zone-aware manifest `format: 1`; every new observation binds site/package/zone UUIDs and uploads through `PUT /v1/projects/{p}/observations/{id}`;
+- every map starts at version 1 and current-schema historical work keeps its exact map, forms and recorded labels;
+- a schema mismatch resets incompatible SQLite data and package caches; ordinary same-schema restarts retain work.
 
-CON-06, DB-19, BE-22 and MOB-28 delete the compatibility code. Line references can drift. Re-read the cited function before editing it.
+Line references below describe the inspection baseline and can drift. Re-read the cited function before editing it; MOB-28 has already replaced several baseline behaviors.
 
 The mobile data agent owns storage, domain, sync and package lifecycle ([ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md)). This file owns what observers see and do, and the interfaces the UI needs from the data layer. If the two conflict on data behaviour, the data plan and the contract win. Raise the conflict with the lead instead of working around it.
 
@@ -44,7 +43,7 @@ Never:
 | Zone readout while aiming | "In Zone B" / "Outside Zone B · in Zone C" / "Outside Zone B", from `zoneAt`. It only advises: placing and saving are never blocked. The record always takes the session zone. | `PlaceStep.tsx:118-150,198-207`, `session/provider.tsx:201-212,396-417` |
 | Edge membership | Half-open ray casting. A square owns its left and bottom edges but not its right and top; holes are the reverse. It disagrees with `ST_Covers` on 4 of the 16 shared `coverage_cases` (both shared edges, hole edge, hole vertex). On a shared edge, `zoneAt` cannot return the preferred zone. | `src/maps/geometry.ts:39-72`; scratch run of the unmodified file against `contracts/zones/geometry.cases.json` |
 | Missing polygon | Falls back to the bounding box. The "Zone boundaries" readiness part passes on zone count alone. | `src/packages/hosted/build.ts:136-152`, `src/maps/geometry.ts:19-37`, `src/packages/open.ts:57` |
-| Installed versions | One file per package, at a global path. Refresh replaces the site list wholesale. `isStored` only checks the current package, so an installed v7 reads as "Not downloaded" once v8 is published. Brief refuses a session whose package differs from the site list's. | `src/packages/hosted/provider.tsx:115-129,218-221`, `device.ts:26-28`, `brief.tsx:107` |
+| Installed versions | One file per package, at a global path. Refresh replaces the site list wholesale. `isStored` only checks the current package, so an installed v1 reads as "Not downloaded" once v2 is published. Brief refuses a session whose package differs from the site list's. | `src/packages/hosted/provider.tsx:115-129,218-221`, `device.ts:26-28`, `brief.tsx:107` |
 | Remove | Deletes the current package's file without checking drafts, unsent records or other accounts, and does not abort a running download. | `src/packages/hosted/provider.tsx:185-195` |
 | Draft resume | Reopens `draft.packageId`. If the saved zone is missing, it silently uses `zones[0]`. It never compares package version, form version or site. | `session/provider.tsx:461-494` (fallback at 476-478) |
 | One draft per account | Starting a new observation while a recovered draft is offered overwrites that draft. | `session/provider.tsx:331,337`, `storage/draft-store.ts:37-45` |
@@ -52,10 +51,10 @@ Never:
 | Inventory | Stored at a client-computed `zoneAnchor`, never drawn as a marker, zone picked from a list or by a map tap (`zoneAt`, first match). | `session/provider.tsx:349-353`, `records.ts:28`, `CollectMap.tsx:515-521` |
 | Refresh errors | Recorded but never shown. No manual refresh. | `src/packages/hosted/provider.tsx:41-42,124-126` |
 | Download progress | During a hosted download the four checklist rows stay "Waiting"; only the bar says "Part N of 4". | `[site].tsx:137-141` |
-| Server side (HEAD) | v1 uploads and the v1 site list still exist for compatibility (BE-22 deletes them). The `/v2` site list (moving to `/v1`) returns the current package with `format` and zones with `zone_id`, `zone_code`, `display_anchor` and `geometry_sha256`. A format-2 manifest carries `site_id`, `package_version`, `forms` (play and inventory by `form_version_id`) and per-zone `zone_id`, `display_anchor` and `geometry_sha256`. A published archive is built inside the publish request, so it is downloadable when the version appears. | `supabase/migrations/20261011123000_zone_observation_binding.sql:26`, `backend/src/fieldmaps_api/queries/sites.py` (`LEGACY_SELECTION`), `services/zone_discovery.py`, `domain/zone_package_schemas.py:76-124`, `services/zone_archives.py` |
+| Server side (BE-22 target) | The sole `/v1` site list returns the explicit current package pointer and exact package/zone metadata. A zone-aware `format: 1` manifest pins UUID site/package identities, integer map version, exact play/inventory forms and server anchors/digests. Publication returns a ready downloadable archive. Historical packages and exact retired bound forms remain readable to authorized project members. | [Canonical contract](../docs/plan/zone-boundaries/contract.md), [backend specification](../backend/ZONE-BOUNDARIES.md) |
 | Primitives | `Note` (tone, glyph, title, action, live region), `StateBadge` (contract or custom), `RadioRows`, `Segmented`, `StatusLine` with `announce()`, `Island`, `Button`. No sheet primitive; the declared `explain/[question]` sheet has no route file. | `src/ui/index.ts`, `app/(app)/_layout.tsx:28-36` |
 
-Prompt facts confirmed: hosted packages download and verify into device files; removal has no dependency checks; `domain/observation.ts` keeps package ID/version and zone code/label but `sync/contracts.ts::uploadPayload` drops the package (`contracts.ts:42-56`); edge membership is ambiguous; restoring a draft can pick the first zone. One correction: the hosted `packageVersion` in a record's context is the display string `vN`, not an integer (`build.ts:174`). The data agent must add the integer and UUIDs; the UI must not parse them out of display strings.
+The table records the earlier inspection. MOB-28 now installs immutable versions, checks removal references and preserves exact recovery context; it also fences account changes and holds records until the bound serializer is implemented. Review [PACKAGE-LIFECYCLE.md](PACKAGE-LIFECYCLE.md) before wiring screens. Edge coverage remains MOB-29. The UI uses the stored integer package version and UUIDs, never parses identity or numbers from display labels.
 
 ## 3. Decisions
 
@@ -65,18 +64,18 @@ Each decision gives the choice, then why, then what would change it. "Lead" mark
 
 A session starts at "Start collection" on the Brief and ends when the observer leaves the collect screen with no unfinished observation. While it runs, the opened package never changes. An unfinished observation keeps its own package after the session ends, through restarts, until it is saved or discarded.
 
-The next session opens the **newest verified package installed on the device** for that site. That is not necessarily the site list's current package: if v8 is published but not downloaded, the next session uses v7 and says so.
+The next session opens the **newest verified package installed on the device** for that site. That is not necessarily the site list's current package: if v2 is published but not downloaded, the next session uses v1 and says so.
 
-Why: the Brief already promises "MAP v7 · FORM x stay locked for this session", and observers already think of the collect screen as the session. Downloads are manual (the observer taps Download), so the observer controls when a new version reaches the device, and the Brief states which version the next session will use. This needs no new "End session" control. Only the draft has to survive process death, and it already carries its package (`draft-store.ts:15-29`).
+Why: the Brief already promises "MAP v1 · FORM x stay locked for this session", and observers already think of the collect screen as the session. Downloads are manual (the observer taps Download), so the observer controls when a new version reaches the device, and the Brief states which version the next session will use. This needs no new "End session" control. Only the draft has to survive process death, and it already carries its package (`draft-store.ts:15-29`).
 
 **Decided 2026-10-11:** this option, with the data plan amended to match (ZONE-BOUNDARIES.md, MOB-29). Only the unfinished observation survives a restart. `references.openSession` means "the collect screen has this package open now".
 
 ### MUI-2 Delayed adoption, never forced mid-work (Lead: confirm)
 
 - A newer published version is announced on the Projects row, the Site screen and the Brief only.
-- Downloading v8 never changes an active session or an unfinished observation.
-- When v8 is verified on the device, the next session uses it. Starting a new session on an older installed version is not offered, except by resuming an unfinished observation pinned to it.
-- When v8 is published but not downloaded, collection on v7 stays allowed, with a waiting Note. Blocking offline collection would lose fieldwork, and the server accepts uploads bound to superseded packages (contract, "New observation protocol").
+- Downloading v2 never changes an active session or an unfinished observation.
+- When v2 is verified on the device, the next session uses it. Starting a new session on an older installed version is not offered, except by resuming an unfinished observation pinned to it.
+- When v2 is published but not downloaded, collection on v1 stays allowed, with a waiting Note. Blocking offline collection would lose fieldwork, and the server accepts uploads bound to superseded packages (contract, "New observation protocol").
 
 Lead decision: whether a study ever needs (a) immediate mandatory updates or (b) a manual choice of an older version for new sessions. Either changes MUI-2 and CR-M7.
 
@@ -92,7 +91,7 @@ Placement states, for the session zone S and the candidates C:
 | On an edge | S ∈ C, more than one zone | "On the edge of North meadow and Slide", with a choice; S is preselected | Enabled for the selected zone |
 | In another zone | S ∉ C, C = {Z} | "Outside North meadow · in Slide" plus "Switch to Slide" | Disabled: "Switch to Slide or move the ×." |
 | Between other zones | S ∉ C, more than one zone | "Outside North meadow · on the edge of Slide and Swings", with a choice and nothing preselected | Disabled until a zone is chosen |
-| Outside every zone | C = ∅ (gap, hole or outside the site) | "Outside every zone on map v7" | Disabled: "Move the × into a zone." |
+| Outside every zone | C = ∅ (gap, hole or outside the site) | "Outside every zone on map v1" | Disabled: "Move the × into a zone." |
 
 - The choice is a `Segmented` for two or three candidates and `RadioRows` for more. Choosing a zone uses the existing `switchZone` path (haptic, announce), so it changes the session zone, as "Switch to Zone C" already does (`CollectScreen.tsx:227-231`). The header shows the result.
 - **Preselecting S on an edge (Lead: confirm):** the contract forbids an implicit first match (contract "Point attribution"). The session zone is the observer's own earlier choice, shown on screen when they confirm the point. It is not list order. I treat it as explicit. If the lead disagrees, show the edge choice with nothing selected; the cost is one extra tap, only on exact edges.
@@ -101,7 +100,7 @@ Placement states, for the session zone S and the candidates C:
 ### MUI-4 The bound save gate has two checkpoints and never loses work
 
 1. **Place:** "Place point here" is disabled in the states above, with the reason as a visible line under the button (DESIGN §5: a disabled control carries its reason).
-2. **Save:** ReviewStep checks `coveringZones(point)` contains the record's zone again, in case the zone changed after placing. If it does not, show an attention Note: "Not saved yet. The point is outside Slide on map v7. Adjust the point or switch zone. Your answers are kept." with "Adjust point". Disable "Save on this device" with the same reason.
+2. **Save:** ReviewStep checks `coveringZones(point)` contains the record's zone again, in case the zone changed after placing. If it does not, show an attention Note: "Not saved yet. The point is outside Slide on map v1. Adjust the point or switch zone. Your answers are kept." with "Adjust point". Disable "Save on this device" with the same reason.
 
 "Adjust point" keeps every answer (as today). Leaving adjust without confirming keeps the previous point. The draft is written on every change the data agent persists. That includes a zone change, which today is not persisted (`provider.tsx:506-512`; MOB-28 must add it).
 
@@ -109,16 +108,16 @@ Lead default: a zone is required for new bound points. A zone-free point option 
 
 ### MUI-5 Version labels are always visible and come from the pinned package
 
-- Collect header: "North meadow · Standard · map v7". The version is in mono and stays visible during placing.
+- Collect header: "North meadow · Standard · map v1". The version is in mono and stays visible during placing.
 - Brief locked line: unchanged wording, fed from the package the session will open.
-- Saved card: a "Map and form" fact, "Map v7 · form janet-test-v1".
-- Observations list and detail: "map v7" from the record's frozen context.
+- Saved card: a "Map and form" fact, "Map v1 · form janet-test-v1".
+- Observations list and detail: "map v1" from the record's frozen context.
 
 Labels use `package_version` as an integer formatted `v{n}` (CR-M6). Installed labels come from each stored package's own manifest, never from the site list (today the labels come from the site list: `hosted-sites.ts:28-41`).
 
 ### MUI-6 Removal is per installed version and reference-checked
 
-The Site screen lists "Older maps on this device". Each row shows what still uses it. "Remove map v7" is enabled only when nothing does. Otherwise it is disabled with its reason: "Used by 1 unfinished observation and 3 records not uploaded yet." The data agent's `remove()` must re-check and refuse (MOB-28), so the UI check is only a preview. Removing the currently selected newest version follows the same rule.
+The Site screen lists "Older maps on this device". Each row shows what still uses it. "Remove map v1" is enabled only when nothing does. Otherwise it is disabled with its reason: "Used by 1 unfinished observation and 3 records not uploaded yet." The data agent's `remove()` must re-check and refuse (MOB-28), so the UI check is only a preview. Removing the currently selected newest version follows the same rule.
 
 Automatic cleanup of unreferenced superseded versions is a data-layer retention policy (MOB-28). The UI only needs to say "Older maps are removed from this device once nothing uses them" if that policy is adopted.
 
@@ -128,17 +127,17 @@ Unfinished observation states, driven by a typed status from the data layer (sec
 
 | Status | Card text | Actions |
 | --- | --- | --- |
-| Ready | "Unfinished observation · map v7 · North meadow · Point placed, 3 of 8 answered. Kept on this device." | Resume (opens v7 pinned), Discard draft |
-| Map missing, can download | "Map v7 is not on this device. Your point and answers are kept." | "Download map v7 again · 12 MB", Discard draft |
-| Map missing, offline | Same first line, then "Connect to download map v7 again." | Discard draft |
-| Map no longer available to you | "Map v7 cannot be downloaded with your current access. Your point and answers stay on this device. Ask your coordinator." | Discard draft |
-| Zone missing from map | "This observation's zone (NM) is not in map v7 on this device. Your point and answers are kept. Download map v7 again." | Download again, Discard draft |
-| Form missing | "Form janet-test-v1 for this observation is not on this device. Download map v7 again." | Download again, Discard draft |
+| Ready | "Unfinished observation · map v1 · North meadow · Point placed, 3 of 8 answered. Kept on this device." | Resume (opens v1 pinned), Discard draft |
+| Map missing, can download | "Map v1 is not on this device. Your point and answers are kept." | "Download map v1 again · 12 MB", Discard draft |
+| Map missing, offline | Same first line, then "Connect to download map v1 again." | Discard draft |
+| Map no longer available to you | "Map v1 cannot be downloaded with your current access. Your point and answers stay on this device. Ask your coordinator." | Discard draft |
+| Zone missing from map | "This observation's zone (NM) is not in map v1 on this device. Your point and answers are kept. Download map v1 again." | Download again, Discard draft |
+| Form missing | "Form janet-test-v1 for this observation is not on this device. Download map v1 again." | Download again, Discard draft |
 
 There is one draft slot per account today (`draft-store.ts:37-45`). A draft that cannot be resumed (map missing while offline, access gone, zone or form missing) must not block all collection until the observer discards research answers. MOB-33 therefore adds parked drafts, keyed by draft ID:
 
 - "Keep for later" parks an unresumable draft and frees the active slot without discarding it. Parked drafts appear on the Projects screen, with Resume when it becomes possible.
-- "Start collection" is disabled only while a resumable draft holds the active slot. The reason names its place and links to it: "Resume or discard the unfinished observation at Riverside (map v7)."
+- "Start collection" is disabled only while a resumable draft holds the active slot. The reason names its place and links to it: "Resume or discard the unfinished observation at Riverside (map v1)."
 - For `zone_missing` or `form_missing` on a digest-verified package, a new download cannot help. Offer "Keep for your coordinator" (park) and Discard, not "Download again".
 - A recovery download queues behind a running download of the same site.
 
@@ -165,7 +164,7 @@ Sign-in and permission copy keeps preserved work separate from permission to upl
 | Place | Message |
 | --- | --- |
 | Projects row | "2 sites ready offline · map update for 1 site" |
-| Project site row | Badge "Ready offline". Subtitle "3 zones · map v7 · v8 available · 12 MB" |
+| Project site row | Badge "Ready offline". Subtitle "3 zones · map v1 · v2 available · 12 MB" |
 | Site screen | Update Note, download progress per part, older versions, last check, check now |
 | Brief | Which version this session uses, and why it differs from the last session or from the published version |
 | Collect | Only the header label and placement readout. No update prompts. |
@@ -173,11 +172,11 @@ Sign-in and permission copy keeps preserved work separate from permission to upl
 
 Suggested copy (field language):
 
-- Site, newer available: "Map v8 is available. Download it now to use it from your next session. Your unfinished and saved observations keep map v7."
-- Brief, v8 on device: "This session uses map v8. Earlier observations keep map v7."
-- Brief, v8 published but not on device: "This session uses map v7, the newest map on this device. Map v8 has been published. Download it when you have a connection."
-- Site, download failed: "Map v8 did not finish downloading. Map v7 is still on this device and ready."
-- Site, verification failed: "Map v8 could not be checked: zone Slide has no boundary. Map v7 stays on this device. Tell your coordinator."
+- Site, newer available: "Map v2 is available. Download it now to use it from your next session. Your unfinished and saved observations keep map v1."
+- Brief, v2 on device: "This session uses map v2. Earlier observations keep map v1."
+- Brief, v2 published but not on device: "This session uses map v1, the newest map on this device. Map v2 has been published. Download it when you have a connection."
+- Site, download failed: "Map v2 did not finish downloading. Map v1 is still on this device and ready."
+- Site, verification failed: "Map v2 could not be checked: zone Slide has no boundary. Map v1 stays on this device. Tell your coordinator."
 - Site, refresh failed: "Could not check for map updates. Showing what this device knew at Oct 10 · 09:12."
 
 ### MUI-11 Site list failures
@@ -199,15 +198,15 @@ Keep layouts and primitives. One primary action per screen (DESIGN rule 01). Tar
 
 PackageIsland, top to bottom:
 
-1. Title "Map package v7" (the newest verified installed version) with badge "Ready offline", or "Not downloaded".
-2. Waiting Note when a newer version is available (MUI-10), with "Download v8 · 12 MB" (outline). The size comes from the site list package (`archive_bytes`).
+1. Title "Map package v1" (the newest verified installed version) with badge "Ready offline", or "Not downloaded".
+2. Waiting Note when a newer version is available (MUI-10), with "Download v2 · 12 MB" (outline). The size comes from the site list package (`archive_bytes`).
 3. While downloading: ProgressBar plus the four checklist rows moving Waiting → Downloading → Verified. Fix the device-mode rows to use the per-part states (`[site].tsx:137-141`). Then "Cancel download".
 4. Failure or verification Notes (MUI-10). The older version stays ready.
 5. Primary "Set up this session". It opens the newest verified installed package (not `site.packageId`, `[site].tsx:143-162`).
 6. "Older maps on this device" list (MUI-6), shown only when more than one version is installed.
 7. Footer: "Checked for updates Today · 09:12" with "Check for updates" (TextLink). It calls the fenced refresh.
 
-The removal confirm keeps "Remove Riverside map v7 from this device?" and adds what stays: "Saved observations stay on this device and still upload."
+The removal confirm keeps "Remove Riverside map v1 from this device?" and adds what stays: "Saved observations stay on this device and still upload."
 
 ### 4.3 Brief (`…/[site]/brief.tsx`)
 
@@ -218,7 +217,7 @@ The removal confirm keeps "Remove Riverside map v7 from this device?" and adds w
 
 ### 4.4 Collect (`src/features/collect/`)
 
-- Header detail adds "map v7" (MUI-5).
+- Header detail adds "map v1" (MUI-5).
 - PlaceStep: replace the ad-hoc readout (`PlaceStep.tsx:118-150`) with a `StateBadge` (custom glyph, word and tone, or a new contract kind; see CR-M8). Then the candidate choice and the disabled reason. The live region stays polite while aiming. `useAimZone` (`CollectMap.tsx:895-903`) returns `{candidates, status, nearEdge}` and keeps its 100 ms throttle.
 - Map: highlight candidate zones with palette means only (heavier `zone.edge` dashes, using the existing focus layer pattern). No UI state colour on the map (rule 03). Fix the spotlight so zone holes are dimmed (`geometry.ts:184-189`); today a hole looks inside the focused zone.
 - ReviewStep: the save gate Note (MUI-4).
@@ -230,9 +229,9 @@ The removal confirm keeps "Remove Riverside map v7 from this device?" and adds w
 
 - Version label per record.
 - Needs-attention copy for bound rejections, keyed by error and issue code (the data agent stores structured codes; data plan MOB-29). Draft copy:
-  - `point_outside_zone`: "Needs attention. DECA Mark did not accept North meadow for this point on map v7. The record keeps its number and stays on this device. Tell your coordinator."
-  - `zone_not_in_package`, `package_not_in_site`, `package_not_ready`: "Needs attention. DECA Mark could not match map v7 for this record. It stays on this device. Tell your coordinator."
-  - `form_not_in_package`: "Needs attention. The form on this record does not belong to map v7. It stays on this device. Tell your coordinator."
+  - `point_outside_zone`: "Needs attention. DECA Mark did not accept North meadow for this point on map v1. The record keeps its number and stays on this device. Tell your coordinator."
+  - `zone_not_in_package`, `package_not_in_site`, `package_not_ready`: "Needs attention. DECA Mark could not match map v1 for this record. It stays on this device. Tell your coordinator."
+  - `form_not_in_package`: "Needs attention. The form on this record does not belong to map v1. It stays on this device. Tell your coordinator."
 - Whether such a record can be corrected, re-created or only kept is not specified (CR-M4). Until the lead decides, offer no "Correct and send again" for bound records. Records are immutable under their UUID.
 
 ### 4.6 Field guide (`app/(app)/(tabs)/account/field-guide.tsx`)
@@ -301,10 +300,10 @@ Send these to the lead before building a divergent client. Each lists the reason
 | CR-M3 | Closed. In the single-path contract: the site list's `package` is the current package and `zones` carry `zone_id`, `zone_code`, `label`, `display_anchor` and `geometry_sha256` | Labels before download | Mobile, web | — |
 | CR-M4 | Add an upload action matrix (HTTP, code, retry / rejected / sign-in, needs-attention) covering `idempotency_conflict`, `conflict`, `payload_too_large`, `not_found`, `account_deleted`, `membership_required` and each 422 issue code; and decide what an observer may do with a rejected immutable bound record (keep only, discard, or re-create under a new UUID) | Today an unknown code retries forever (`src/data/api/errors.ts:73`); records cannot change under their UUID (contract fingerprint) | Mobile errors, coordinator, Observations UI | Each code lands in the documented state in a unit test; the UI shows the documented action set |
 | CR-M5 | Add diagonal shared-edge, three-zone shared-vertex and non-axis-aligned near-edge cases to `coverage_cases`, state the client predicate (exact, no epsilon), and confirm a UI-only near-edge hint is allowed | All 16 current cases use axis-aligned edges with exactly representable coordinates | Mobile `coveringZones`; web editor hints | New cases pass in the mobile adapter, the web adapter and SQL |
-| CR-M6 | Closed. In the single-path contract: `package_version` (shown `v{n}`, from 1) is the only version label; `map_revision` is deleted | One label | Mobile, web | — |
+| CR-M6 | Closed. In the single-path contract: `package_version` (shown `v{n}`, from 1) is the only version label | One label | Mobile, web | — |
 | CR-M7 | Record the session and adoption policy (MUI-1, MUI-2) in the master plan's update table: new sessions use the newest verified installed version; older versions only through an unfinished observation | The contract permits superseded uploads but does not say who may start new sessions on them | Mobile Brief; manager reports | Lead-approved row; Brief behaviour matches it |
 | CR-M8 | Add a shared `placement` state kind to `contracts/contour.json` (inside, onEdge, otherZone, outside), or approve custom StateBadges for these four | DESIGN says states are a fixed vocabulary; mobile allows custom badges and the web does not (`mobile/src/ui/StateBadge.tsx:32-39` versus `web/src/lib/contour.ts:29-33`) | Both apps, if the web ever shows membership | `pnpm tokens:check` passes; both galleries show the states in Day and Dusk |
-| CR-M10 | In progress. Compatibility deletion: MOB-28 (one local schema, reset on mismatch, no v1 uploader or capability table) with CON-06, DB-19 and BE-22 on the server; bundled practice sites become current-format packages or are dropped | Pre-launch rule | Mobile, backend, contracts | One upload path; a fresh install passes `pnpm mobile:test` |
+| CR-M10 | In progress. MOB-28 supplies one local schema and mismatch reset; CON-06, DB-19 and BE-22 establish the current server contract. MOB-29 implements the sole `/v1` uploader; practice observations remain held locally | Pre-launch rule | Mobile, backend, contracts | One upload path; fresh-install and real API acceptance pass |
 | CR-M9 | State that a bound inventory record stores the manifest `display_anchor` locally, for display only, and that it is excluded from the upload body | The record schema requires coordinates (`domain/observation.ts:19`), and the contract removes them for v2 inventory | Mobile domain, serializer, maps | A bound inventory is never a marker; the v2 body has no coordinates |
 
 ## 8. Tasks
@@ -326,7 +325,7 @@ Order: MOB-28 lands the catalog, references and fencing. MOB-33 adds the bound r
 Automated (local, no hosted services):
 
 - `pnpm mobile:check` and `pnpm mobile:test`.
-- Vitest: `coveringZones` against every `coverage_cases` entry (unordered set) and the CR-M5 additions; `nearEdge` thresholds at zoom 18, 20.5 and 22; the placement-state reducer for all five states, both map kinds and the save re-check; the Recovered-status-to-card mapping; SiteVersions-to-row-label mapping (installed v7 + available v8, failed v8, needs-redownload v7).
+- Vitest: `coveringZones` against every `coverage_cases` entry (unordered set) and the CR-M5 additions; `nearEdge` thresholds at zoom 18, 20.5 and 22; the placement-state reducer for all five states, both map kinds and the save re-check; the Recovered-status-to-card mapping; SiteVersions-to-row-label mapping (installed v1 + available v2, failed v2, needs-redownload v1).
 - Component tests (react-test-renderer, already used in `hosted/provider.test.tsx`): PlaceStep renders each state's readout, choice and disabled reason; the Brief start block; UnfinishedCard statuses.
 - No upgrade fixtures: a schema change resets local data (pre-launch rule).
 
@@ -338,12 +337,12 @@ On a simulator (iPad and phone, portrait and landscape, left and right hand):
 
 Physical device (release gate, owned by MOB-29 and QA-07). Run on a real iPad and a real Android tablet, and record the build, commit and device:
 
-1. Download v7. Turn on airplane mode. Start a session, place a point on a shared edge, choose the non-session zone, and force-quit immediately. Reopen: the chosen zone is restored. Answer two questions. Force-quit again.
-2. On the manager web, publish v8 with a changed boundary and label.
-3. Reopen. Resume the unfinished observation on v7: same zone, point and answers. Save. Record an inventory.
-4. Reconnect. The Site screen shows "v8 available". The Brief still says v7 until v8 is downloaded. Try to remove v7 while records are unsent: it is refused, with the reason.
-5. Download v8. Start a new session: the header says map v8. Saved v7 records still say v7.
-6. Repeat with a failed or cancelled v8 download (v7 stays ready), and with a v8 that fails verification.
+1. Download v1. Turn on airplane mode. Start a session, place a point on a shared edge, choose the non-session zone, and force-quit immediately. Reopen: the chosen zone is restored. Answer two questions. Force-quit again.
+2. On the manager web, publish v2 with a changed boundary and label.
+3. Reopen. Resume the unfinished observation on v1: same zone, point and answers. Save. Record an inventory.
+4. Reconnect. The Site screen shows "v2 available". The Brief still says v1 until v2 is downloaded. Try to remove v1 while records are unsent: it is refused, with the reason.
+5. Download v2. Start a new session: the header says map v2. Saved v1 records still say v1.
+6. Repeat with a failed or cancelled v2 download (v1 stays ready), and with a v2 that fails verification.
 7. Screenshots of every state in daylight on the tablet.
 
 Done evidence: the commands above with output, simulator screenshots per state, and a device run log. A green unit suite does not stand in for missing device evidence: mark it pending. Native builds from this checkout have hit a code-signing failure before (see `mobile/README.md`), so the device run may need the user's own terminal.

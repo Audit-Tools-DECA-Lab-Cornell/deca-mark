@@ -212,6 +212,7 @@ A summary omits `zones`.
 **Validation response:** `{draft_id, revision, ready, issues, warnings, zones, site_gap_area_m2}`.
 
 - Zone summaries are `{zone_id, area_m2, extent, display_anchor, geometry_sha256, change}`, with `change` one of `added`, `removed`, `geometry_changed`, `label_changed` or `unchanged` against the current package. They are null where the zone is invalid.
+- A removed-zone summary describes its retained current-package snapshot; other summaries describe the proposed zone. If geometry and label both change, `geometry_changed` takes precedence.
 - `extent` is `{west, south, east, north}`; anchors are `[longitude, latitude]`; areas are geography square metres.
 - `ready` covers that exact revision and never bypasses revalidation at publication.
 
@@ -359,13 +360,9 @@ Conflict details carry only authorized `draft_id`, `revision`, `etag`, `current_
 
 ## Shared cases
 
-`contracts/zones/geometry.cases.json`, `publication.cases.json` and `upload.cases.json` hold independently authored expected results on synthetic fixtures. CON-06 removes from them:
+`contracts/zones/geometry.cases.json`, `publication.cases.json` and `upload.cases.json` hold independently authored expected results on synthetic fixtures. Map examples begin at version 1. Cases cover explicit identity mapping on first upload, publish replay with `replayed: true` and a live current pointer, all five validation `change` values, nested-answer uploads and one canonical fingerprint.
 
-- the v1 envelopes and hash goldens;
-- the legacy and adoption cases;
-- the `schema_version` and protocol fields.
-
-It renumbers example versions from 1, and adds the cases this contract introduces: first upload, publish replay with `replayed: true`, and validation `change` values. The backend owns Pydantic and OpenAPI. The coordinator runs `pnpm contracts:generate` twice and checks that the second run is stable. Clients validate downloaded and cached data at runtime. Generated OpenAPI and TypeScript are never hand-edited.
+CON-06 verifies these artifacts without claiming production runtime compliance. DB-19 and BE-22 consume them in SQL/API acceptance. The backend owns Pydantic and OpenAPI; BE-22 runs `pnpm contracts:generate` twice and checks that the second run is stable. Clients validate downloaded and cached data at runtime. Generated OpenAPI and TypeScript are never hand-edited.
 
 ## Data reset
 
