@@ -161,6 +161,53 @@ def test_notification_idempotency_permissions_and_delivery(
     assert email_client.get(path).json()[0]["status"] == "sent"
 
 
+def test_project_manager_can_send_invitations_and_project_email(
+    email_client: TestClient, signer: Signer, tenant: Tenant
+) -> None:
+    # Manager is only an organization member, not an organization owner or admin.
+    sign_in(email_client, signer, tenant.users["manager"])
+    invited = email_client.post(
+        f"/v1/projects/{tenant.project}/invitations",
+        json={"role": "observer", "email": "manager-invited@example.test"},
+    )
+    assert invited.status_code == 201, invited.text
+    assert InvitationCreated.model_validate_json(invited.content).email_delivery == "queued"
+    scheduled = email_client.post(
+        f"/v1/projects/{tenant.project}/emails", json=request_body(tenant)
+    )
+    assert scheduled.status_code == 202, scheduled.text
+    assert Delivery.model_validate_json(scheduled.content).status == "queued"
+
+
+def test_scheduled_replay_survives_expired_scheduling_window(
+    email_client: TestClient, tenant: Tenant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = f"/v1/projects/{tenant.project}/emails"
+    body = {
+        **request_body(tenant),
+        "scheduled_at": (datetime.now(UTC) + timedelta(minutes=2)).isoformat(),
+    }
+    original = email_client.post(path, json=body)
+    assert original.status_code == 202, original.text
+    identifier = original.json()["id"]
+
+    class Later(datetime):
+        @classmethod
+        def now(cls, tz=None) -> datetime:  # noqa: ANN001 - mirrors datetime.now.
+            return datetime.now(tz) + timedelta(hours=3)
+
+    monkeypatch.setattr("fieldmaps_api.routers.emails.datetime", Later)
+    retry = email_client.post(path, json=body)
+    assert retry.status_code == 202, retry.text
+    assert retry.json()["id"] == identifier
+    assert email_client.post(path, json={**body, "heading": "Changed"}).status_code == 409
+    # A brand-new request cannot bypass the time validation.
+    assert (
+        email_client.post(path, json={**body, "idempotency_key": str(uuid4())}).status_code
+        == 422
+    )
+
+
 def test_reminder_scheduling_cancellation_and_member_recheck(
     email_client: TestClient, tenant: Tenant
 ) -> None:
