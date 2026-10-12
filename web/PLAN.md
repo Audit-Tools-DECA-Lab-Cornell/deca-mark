@@ -489,7 +489,7 @@ Verified 2026-10-09 (Node 22.22.0, pnpm 10.17.1): `test:unit` 229 of 229, `test:
 ### WEB-28: Build a real manager zone editor
 Status: todo · Phase 3 · Size L · Depends: BE-18, WEB-34, WEB-38, WEB-42 · Blocks: QA-07
 Owner: Claude web owner.
-Planned 2026-10-11: the detailed UI, state architecture, drawing-surface decision and verification are in [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md). This task is now the acceptance gate for editing and adopted-site uploads; WEB-30 to WEB-38 and WEB-42 do the work.
+Planned 2026-10-11: the detailed UI, state architecture, drawing-surface decision and verification are in [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md). This task is now the acceptance gate for editing and QGIS uploads; WEB-30 to WEB-38 and WEB-42 do the work.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 1, 3, 5 and 10.
 Do: Run the editing evidence in UI plan section 10 against the local stack with the real API: create, edit, validate, publish, two-manager conflict, lost-response replay, direct-URL refusal, network loss, leave guard, keyboard, touch emulation and the manual iPad Safari check.
 Done when: Real API browser flow and two-manager conflict pass; no fake saves or complex-geometry loss; manual evidence is recorded or marked pending.
@@ -500,7 +500,7 @@ Status: todo · Phase 3 · Size L · Depends: BE-20, WEB-40, WEB-41 · Blocks: Q
 Owner: Claude web owner.
 Planned 2026-10-11: see [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md) section 7. This task is now the acceptance gate for review; WEB-36 and WEB-39 to WEB-41 do the work.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 7 and 10.
-Do: Run the review evidence in UI plan section 10 with more than 500 synthetic observations across two map versions and legacy rows: totals, paging, zone filters by identity and by version, map version picker, inventory, record detail and complete exports.
+Do: Run the review evidence in UI plan section 10 with more than 500 synthetic observations across two map versions: totals, paging, zone filters by identity and by version, map version picker, inventory, record detail and complete exports.
 Done when: Map/table/export agree beyond 500 without reclassification against current boundaries.
 Verify: Web checks/unit tests and real browser history/filter/export scenarios (`data-history.spec.ts`, `export-v2.spec.ts`).
 
@@ -517,7 +517,7 @@ Verify: Measurements and screenshots in the decision record; `git status` shows 
 Status: todo · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-32, WEB-40
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-2 and section 2; `src/lib/{plan.ts,sites/archive.ts}`; `src/components/map/SitePlan.tsx`; `tests/unit/site-archive.test.mjs`.
-Do: Keep every zone as one feature with parts, rings and holes drawn with even-odd fill; carry `zone_id`, code and the raw longitude/latitude; read format-2 zones strictly (no silent repair, no bounding-box stand-in) and mark format-1 fallbacks; replace `Math.min(...spread)` with loops; memoise the static background.
+Do: Keep every zone as one feature with parts, rings and holes drawn with even-odd fill; carry `zone_id`, code and the raw longitude/latitude; read zones strictly (no silent repair, no bounding-box stand-in); replace `Math.min(...spread)` with loops; memoise the static background.
 Done when: Every fixture geometry renders with its holes and parts; a parse-then-serialise round trip is number-identical; all existing map screens and unit tests pass.
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and the honesty scan screenshots of Sites, site, Data and Overview.
 
@@ -557,15 +557,15 @@ Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and a local-stack Playwrig
 Status: todo · Phase 3 · Size M · Depends: BE-18 · Blocks: WEB-37, WEB-39, WEB-42
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) section 4 and WUI-13; [contract](../docs/plan/zone-boundaries/contract.md) "Selected compatibility mechanism"; `src/features/{sites,packages,qgis,data}/*`; `src/features/packages/history.ts`.
-Do: Read `GET /v2/projects/{p}/sites` with runtime parsing; carry `siteId`; mark the current package from `current_package_id` in Sites, the site page, package history (with its copy) and the QGIS page; request `supported_format=1&supported_format=2` for package history; choose plans from the current package on Data and Overview.
-Done when: No screen derives the current package or managed boundaries from a v1 site read; legacy sites behave as before.
+Do: Read `GET /v2/projects/{p}/sites` with runtime parsing and stop reading v1 site endpoints; carry `siteId`; mark the current package from `current_package_id` in Sites, the site page, package history (with its copy) and the QGIS page; request `supported_format=1&supported_format=2` for package history; choose plans from the current package on Data and Overview.
+Done when: No screen reads a v1 site endpoint; the current package always comes from `current_package_id`.
 Verify: `pnpm --dir web test:unit` (package-history, site-view), `pnpm web:check`, and the sites and packages e2e specs.
 
 ### WEB-37: Build the Zones page, draft start and version history
 Status: todo · Phase 3 · Size L · Depends: WEB-35, WEB-36 · Blocks: WEB-38
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-13, section 4, 5.1 and 5.2; `next.config.ts` redirects; `e2e/removed-routes.spec.ts`; `e2e/support/routes.ts`.
-Do: Add the Zones page (current version, drafts, versions, read-only `?version=`, restore an earlier version through a new draft from current), Start draft with adoption (inventory form choice, legacy codes), the site page entry replacing the NotAvailable note where editing is available, and removal of the root `zones` redirect with its e2e route change.
+Do: Add the Zones page (current version, drafts, versions, read-only `?version=`, restore an earlier version through a new draft from current), Start draft, the site page entry replacing the NotAvailable note where editing is available, and removal of the root `zones` redirect with its e2e route change.
 Done when: A viewer sees the history; a manager starts, reopens and finds other managers' drafts; observers and viewers opening editor URLs see the no-access state; unsupported sites show their specific reason.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-access.spec.ts` and the honesty scan with the new routes.
 
@@ -573,7 +573,7 @@ Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-access.spec.ts` and
 Status: todo · Phase 3 · Size L · Depends: WEB-35, WEB-37 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-6, 5.7, 5.10 and 6.7; `src/features/forms/PublishScreen.tsx`.
-Do: Add the publish page: readiness for the exact revision, changes against the base, base versus new map, observer effect, forms, change note with legacy mapping, confirmation, request ID kept per revision, lost-response check, replay display, publication conflict recovery and revalidation; add discard with confirmation.
+Do: Add the publish page: readiness for the exact revision, changes against the base, base versus new map, observer effect, forms, change note, confirmation, request ID kept per revision, lost-response check, replay display, publication conflict recovery and revalidation; add discard with confirmation.
 Done when: Publish, replay and conflict e2e cases pass on the local stack; no screen claims a replayed result is current.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-publish.spec.ts` and `zones-conflict.spec.ts`.
 
@@ -581,7 +581,7 @@ Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-publish.spec.ts` an
 Status: todo · Phase 3 · Size L · Depends: BE-20, WEB-36 · Blocks: WEB-40, WEB-41
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-9, 7.1 and 7.2; [contract](../docs/plan/zone-boundaries/contract.md) "Observation reads, filters and exports"; `src/features/data/*`; `src/lib/time.ts`.
-Do: Add the v2 list adapter with runtime parsing, the URL-to-query builder (site-scoped zones by identity or version, legacy codes, round, observer, project-day to UTC), pushed filter history, old-link mapping, "Show the next 500" through a Server Action, totals and refresh, the new columns, legacy and inventory rows, and "Search loaded observations".
+Do: Add the v2 list adapter with runtime parsing, the URL-to-query builder (site-scoped zones by identity or version, round, observer, project-day to UTC), pushed filter history, "Show the next 500" through a Server Action, totals and refresh, the new columns, inventory rows, and "Search loaded observations".
 Done when: With more than 500 matching synthetic rows, counts and paging agree with the summary and nothing says "Based on the newest 500" where a server total exists.
 Verify: `pnpm --dir web test:unit` (data-view, time), `pnpm web:check`, `data-history.spec.ts`.
 
@@ -589,7 +589,7 @@ Verify: `pnpm --dir web test:unit` (data-view, time), `pnpm web:check`, `data-hi
 Status: todo · Phase 3 · Size M · Depends: WEB-39, WEB-31 · Blocks: WEB-29
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 7.3 and 7.4, WUI-10.
-Do: Add the map version picker with dimmed other-version points, the zone inventory list and highlighting, the loaded-subset note, record detail on the recorded package, legacy and inventory detail states, and the account-scoped memo for package zones.
+Do: Add the map version picker with dimmed other-version points, the zone inventory list and highlighting, the loaded-subset note, record detail on the recorded package, inventory detail, and the account-scoped memo for package zones.
 Done when: A mixed-version fixture never draws current boundaries under historical points as theirs; inventory is never a marker.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `data-history.spec.ts` map cases.
 
@@ -598,13 +598,13 @@ Status: todo · Phase 3 · Size L · Depends: WEB-39 · Blocks: WEB-29
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 7.5 and 7.6; `src/features/{overview,reports,qgis}/*`; `src/lib/export/*`; `src/lib/observations/summary.ts`.
 Do: Feed coverage, field return, reports by zone and round, and the site page counts from the summary; keep page-limited panels labelled; download the server ZIP export for the same scope with the scope text and the 10,000-row ceiling; add the zones GeoJSON download on the QGIS page.
-Done when: `observations.csv` inside the downloaded ZIP has exactly `total_matching` rows; above 10,000 the action is disabled with its reason; coverage rows are recorded snapshots, with legacy rows separate.
+Done when: `observations.csv` inside the downloaded ZIP has exactly `total_matching` rows; above 10,000 the action is disabled with its reason; coverage rows are recorded snapshots.
 Verify: `pnpm --dir web test:unit` (summary, export, overview, reports), `pnpm web:check`, `export-v2.spec.ts`.
 
-### WEB-42: Upload QGIS packages to adopted sites with zone identity mapping
+### WEB-42: Upload QGIS packages with zone identity mapping
 Status: todo · Phase 3 · Size M · Depends: BE-18, WEB-36, DB-18 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.11; [contract](../docs/plan/zone-boundaries/contract.md) "Existing import/publication route" and "Package format 2 and capabilities"; `src/features/packages/UploadStep.tsx`; `backend/src/fieldmaps_api/zone_import_schemas.py`.
-Do: For adopted sites only, add the identity mapping step (preselect only features carrying a matching `zone_id`; code or label matches stay unselected suggestions), the removed-zone list, the change note, a per-attempt `request_id`, `expected_current_package_id`, and the conflict and identity error copy. Leave unadopted uploads byte-for-byte unchanged.
-Done when: On the local stack, an upload into an adopted site with one mapped, one new and one removed zone activates the next version; a stale expected current gets the conflict copy; an unadopted upload behaves as before.
-Verify: `pnpm web:check`, `pnpm --dir web test:unit` (mapping model tests), and the packages e2e specs plus a new adopted-site upload case.
+Do: Add the identity mapping step to every upload (a first upload maps every feature to a new zone) (preselect only features carrying a matching `zone_id`; code or label matches stay unselected suggestions), the removed-zone list, the change note, a per-attempt `request_id`, `expected_current_package_id`, and the conflict and identity error copy.
+Done when: On the local stack, a first upload creates v1; a later upload with one mapped, one new and one removed zone creates v2; a stale expected current gets the conflict copy.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit` (mapping model tests), and the packages e2e specs with first and later uploads.

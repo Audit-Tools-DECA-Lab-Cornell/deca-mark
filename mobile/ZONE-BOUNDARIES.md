@@ -24,7 +24,7 @@ Add account/request generation fencing to refresh/download callbacks. Account or
 
 ## MOB-29: collection, upload and geometry parity
 
-New format-2 session context freezes package UUID/version/digest, server site UUID, zone UUID/code/label, play/inventory form versions and geometry contract version. Session context is durable enough to resume after process death. A foreground metadata refresh cannot replace that context. Zone switching is an explicit action within the same pinned package; carry-forward decisions must not silently copy zone-specific answers into a different zone.
+New format-2 session context freezes package UUID/version/digest, server site UUID, zone UUID/code/label, play/inventory form versions and geometry contract version. An unfinished observation's context is durable enough to resume after process death; a session is one visit to the collect screen (decided 2026-10-11, [UI plan](ZONE-BOUNDARIES-UI.md) MUI-1). A foreground metadata refresh cannot replace that context. Zone switching is an explicit action within the same pinned package; carry-forward decisions must not silently copy zone-specific answers into a different zone.
 
 Updated clients discover managed packages via the v2 site list. Fall back to v1 site discovery only after confirmed endpoint/capability absence and only for legacy collection, not after transient network/auth failure and never to downgrade an existing bound session/record. Cache capability with issuer/server identity and preserve exact local packages through server rollback.
 

@@ -637,8 +637,8 @@ Verify: `pnpm mobile:check`, `pnpm mobile:test` (label and state mapping tests),
 Status: todo · Phase 3 · Size L · Depends: MOB-33 · Blocks: MOB-29
 Owner: Claude mobile UI owner; the mobile data agent reviews geometry parity.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) MUI-3, MUI-4, MUI-5, MUI-9 and 4.4; [contract](../docs/plan/zone-boundaries/contract.md) "Point attribution"; `src/maps/geometry.ts`; `src/features/collect/*`; `contracts/zones/geometry.cases.json` (`coverage_cases`).
-Do: Add `coveringZones` and `nearEdge` with a Vitest adapter over every coverage case; replace the PlaceStep readout with the five placement states, the edge choice and the disabled reasons on bound maps; add the ReviewStep save re-check, inventory tap candidates, the spotlight hole fix, and version labels in the collect header and Saved card.
-Done when: Every coverage case passes as an unordered set; each placement state renders in component tests; legacy maps keep advisory behaviour.
+Do: Add `coveringZones` and `nearEdge` with a Vitest adapter over every coverage case; replace the PlaceStep readout with the five placement states, the edge choice and the disabled reasons; add the ReviewStep save re-check, inventory tap candidates, the spotlight hole fix, and version labels in the collect header and Saved card.
+Done when: Every coverage case passes as an unordered set; each placement state renders in component tests.
 Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator walkthrough of the five states on phone and tablet with VoiceOver.
 
 ### MOB-32: Resume exact drafts and explain recovery
@@ -652,8 +652,7 @@ Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator check of a resume aft
 ### MOB-33: Provide bound session and package read models
 Status: todo · Phase 3 · Size L · Depends: MOB-28, BE-18 · Blocks: MOB-29, MOB-30, MOB-31, MOB-32
 Owner: Mobile data agent; the Claude mobile UI owner acknowledges the interface.
-Needs user: decide the session model (UI plan MUI-1) before this starts: one collect visit with a durable draft (recommended; amend ZONE-BOUNDARIES.md MOB-29), or a durable multi-visit session.
 Read first: [component specification](ZONE-BOUNDARIES.md) MOB-29; [UI plan](ZONE-BOUNDARIES-UI.md) MUI-1, MUI-4, MUI-7, MUI-11 and section 6.
-Do: Add v2 site discovery with the MUI-11 capability rule; format-2 readiness with no box fallback; the frozen bound session context with zone UUIDs; exact-version form loading; parked drafts; persist a zone change on an open observation in the same handler; and write `src/packages/zone-read-models.ts` (SiteVersions, Pinned, Recovered, hooks and an in-memory fake), extending `SiteZone` with `zoneId`, `displayAnchor` and `boxFallback`.
-Done when: The read models are populated from real stores in unit tests; a 404 from a hidden project never switches to legacy collection; switching zone on a shared edge then killing the app restores the chosen zone; the UI owner has acknowledged the interface file.
-Verify: `pnpm mobile:check`, `pnpm mobile:test` with capability, parking and zone-persistence cases.
+Do: Add v2 site discovery (MUI-11; no older-server fallback); package readiness with no box fallback; the frozen bound session context with zone UUIDs; exact-version form loading; parked drafts; persist a zone change on an open observation in the same handler; and write `src/packages/zone-read-models.ts` (SiteVersions, Pinned, Recovered, hooks and an in-memory fake), extending `SiteZone` with `zoneId` and `displayAnchor` and removing the box fallback. A local schema change resets local data instead of migrating it (pre-launch rule).
+Done when: The read models are populated from real stores in unit tests; a 404 shows as no access; switching zone on a shared edge then killing the app restores the chosen zone; the UI owner has acknowledged the interface file.
+Verify: `pnpm mobile:check`, `pnpm mobile:test` with site-list failure, parking and zone-persistence cases.
