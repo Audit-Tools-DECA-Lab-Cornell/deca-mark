@@ -38,7 +38,7 @@ export type MembersScreenProps = {
 /**
  * The organization's people (org-02) for owners and admins: who is in it with what role, and the
  * invitations still waiting. Owners change roles between Admin and Member; admins can remove members.
- * Invitations are links and join codes, shown once. DECA Mark does not send email.
+ * Invitations are links and join codes, shown once, with optional queued email delivery.
  */
 export function MembersScreen({
 	org,

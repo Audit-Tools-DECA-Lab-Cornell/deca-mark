@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.deps import Authentication, user_transaction
+from fieldmaps_api.email.config import EmailSettings
 from fieldmaps_api.errors import ERROR_RESPONSES
 from fieldmaps_api.invitation_schemas import (
     Invitation,
@@ -19,7 +20,9 @@ from fieldmaps_api.services import invitations as service
 
 
 def create_router(
-    sessions: async_sessionmaker[AsyncSession], authenticate: Authentication
+    sessions: async_sessionmaker[AsyncSession],
+    authenticate: Authentication,
+    email_settings: EmailSettings | None = None,
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
 
@@ -30,7 +33,9 @@ def create_router(
         org: UUID, payload: OrgInvitationCreate, user: Annotated[UUID, Depends(authenticate)]
     ) -> InvitationCreated:
         async with user_transaction(sessions, user) as session:
-            return await service.create(session, org, None, payload)
+            return await service.create(
+                session, org, None, payload, email_settings=email_settings, user=user
+            )
 
     @router.post(
         "/v1/projects/{project}/invitations",
@@ -43,7 +48,7 @@ def create_router(
         user: Annotated[UUID, Depends(authenticate)],
     ) -> InvitationCreated:
         async with user_transaction(sessions, user) as session:
-            return await service.create_project(session, project, payload)
+            return await service.create_project(session, project, payload, email_settings, user)
 
     @router.get("/v1/orgs/{org}/invitations", operation_id="listOrganizationInvitations")
     async def list_org(org: UUID, user: Annotated[UUID, Depends(authenticate)]) -> list[Invitation]:

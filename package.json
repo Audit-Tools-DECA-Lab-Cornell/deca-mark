@@ -42,8 +42,10 @@
     "help": "make help",
     "plan:check": "node docs/plan/check-plan.mjs",
     "forms:parity": "node scripts/check-form-engine-parity.mjs",
-    "tokens": "node scripts/contour-tokens.mjs",
-    "tokens:check": "node scripts/contour-tokens.mjs --check",
+    "tokens": "node scripts/contour-tokens.mjs && pnpm emails:generate",
+    "tokens:check": "node scripts/contour-tokens.mjs --check && pnpm emails:check",
+    "emails:generate": "make -C backend email-templates",
+    "emails:check": "make -C backend email-templates-check",
     "screenshots:web": "sh scripts/screenshots-web.sh",
     "screenshots:mobile": "node scripts/screenshots-mobile.mjs"
   }

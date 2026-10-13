@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.deps import Authentication, user_transaction
+from fieldmaps_api.email.config import EmailSettings
 from fieldmaps_api.errors import ERROR_RESPONSES
 from fieldmaps_api.routers import invitations, organizations
 from fieldmaps_api.services import members as member_service
@@ -19,11 +20,13 @@ from fieldmaps_api.tenancy_schemas import (
 
 
 def create_router(
-    sessions: async_sessionmaker[AsyncSession], authenticate: Authentication
+    sessions: async_sessionmaker[AsyncSession],
+    authenticate: Authentication,
+    email_settings: EmailSettings | None = None,
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
     router.include_router(organizations.create_router(sessions, authenticate))
-    router.include_router(invitations.create_router(sessions, authenticate))
+    router.include_router(invitations.create_router(sessions, authenticate, email_settings))
 
     @router.get("/v1/projects", operation_id="listProjects")
     async def projects(user: Annotated[UUID, Depends(authenticate)]) -> list[Project]:

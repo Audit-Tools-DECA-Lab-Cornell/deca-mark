@@ -176,6 +176,7 @@ export async function createOrgInvitationAction(
 			status: "done",
 			invitation: {
 				code: created.code,
+				email_delivery: created.email_delivery,
 				token: created.token,
 				role: created.role,
 				email: created.email,

@@ -95,6 +95,7 @@ export async function createInvitation(context: TeamContext, request: InviteRequ
 		status: "done",
 		invitation: {
 			code: created.code,
+			email_delivery: created.email_delivery,
 			token: created.token,
 			role: created.role,
 			email: created.email,

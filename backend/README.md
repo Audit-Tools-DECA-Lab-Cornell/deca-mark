@@ -1,5 +1,9 @@
 # DECA Mark observation API
 
+Transactional email uses Brevo REST with a durable private outbox; authentication
+uses Brevo SMTP through Supabase. See [email setup and delivery](../docs/Brevo-Email.md)
+for shared Contour templates, required host variables, hosted setup, and verification.
+
 The [live web workspace handoff](WEB-FLOW-HANDOFF.md) documents current endpoint roles,
 observation-detail metadata, bounded reporting, local browser fixtures and release checks.
 
