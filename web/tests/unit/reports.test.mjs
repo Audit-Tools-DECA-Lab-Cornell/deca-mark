@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import { observation as fixture, uuid } from "./fixtures.mjs";
 import { load } from "./support.mjs";
 
 const {
@@ -39,28 +40,22 @@ const ny = clock("America/New_York");
 let serial = 0;
 function observation(overrides = {}) {
 	serial += 1;
-	return {
-		observation_id: `70000000-0000-4000-8000-${String(serial).padStart(12, "0")}`,
-		site_code: "fall-creek",
-		site_name: "Fall Creek",
-		zone: "A",
-		round_type: "standard",
+	return fixture({
+		observation_id: uuid(70_000 + serial),
 		first_round: true,
-		placement: "hand",
-		observer: "OB",
-		observed_at: "2026-10-07T14:00:00Z",
 		received_at: "2026-10-07T17:00:00Z",
 		form_version: "janet-test-v1",
-		revision: 1,
-		coordinates: [-76.4957, 42.4508],
 		answers: { play_type_1: "physical" },
 		...overrides
-	};
+	});
 }
 
+const A = uuid(200);
+const B = uuid(202);
+const OLD = uuid(209);
 const zones = [
-	{ siteCode: "fall-creek", siteName: "Fall Creek", id: "A", label: "Zone A · Whole playground" },
-	{ siteCode: "fall-creek", siteName: "Fall Creek", id: "B", label: "Zone B · Garden" }
+	{ siteCode: "fall-creek", siteName: "Fall Creek", id: A, label: "Zone A · Whole playground" },
+	{ siteCode: "fall-creek", siteName: "Fall Creek", id: B, label: "Zone B · Garden" }
 ];
 
 test("a day key is a real calendar date or nothing", () => {
@@ -92,10 +87,13 @@ test("play type is read with each record's own form version", () => {
 	assert.equal(playOptions["janet-test-v1"][0], "Physical");
 });
 
-test("a record without a round counts as Standard and a missing zone stays None", () => {
-	const { rows } = reportRows([observation({ round_type: null, zone: null })], { "janet-test-v1": janet });
-	assert.equal(rows[0].round, "standard");
-	assert.equal(rows[0].zone, null);
+test("a row keeps the zone it was recorded in, by identity, with the label it had then", () => {
+	const { rows } = reportRows([observation({ zone_id: OLD, zone_label: "Pond", round_type: "reliability" })], {
+		"janet-test-v1": janet
+	});
+	assert.equal(rows[0].round, "reliability");
+	assert.equal(rows[0].zone, OLD);
+	assert.equal(rows[0].zoneLabel, "Pond");
 });
 
 test("days are the project's calendar days, across the clock change", () => {
@@ -121,8 +119,14 @@ test("the report counts zones, rounds, play types, observers and days", () => {
 		observation(),
 		observation({ round_type: "reliability" }),
 		observation({ round_type: "inventory", answers: { play_type_1: "bio" } }),
-		observation({ zone: "Z-old", observer: "JL", observed_at: "2026-10-08T14:00:00Z" }),
-		observation({ zone: null, observer: "JL", observed_at: "2026-10-08T15:00:00Z", answers: {} })
+		observation({ zone_id: OLD, zone_label: "Pond", observer: "JL", observed_at: "2026-10-08T14:00:00Z" }),
+		observation({
+			zone_id: B,
+			zone_label: "Garden",
+			observer: "JL",
+			observed_at: "2026-10-08T15:00:00Z",
+			answers: {}
+		})
 	];
 	const { rows, playOptions } = reportRows(list, { "janet-test-v1": janet });
 	const report = buildReport({ rows, zones, playOptions, clock: ny });
@@ -132,9 +136,8 @@ test("the report counts zones, rounds, play types, observers and days", () => {
 		report.zones.map(bar => [bar.label, bar.value]),
 		[
 			["Zone A · Whole playground", 3],
-			["Zone B · Garden", 0],
-			["Z-old", 1],
-			["No zone", 1]
+			["Zone B · Garden", 1],
+			["Pond", 1]
 		]
 	);
 	assert.deepEqual(
@@ -173,7 +176,7 @@ test("the report counts zones, rounds, play types, observers and days", () => {
 	);
 	assert.ok(report.play.some(bar => bar.label === "Digital" && bar.value === 0));
 	assert.ok(report.play.some(bar => bar.label === "Not answered" && bar.value === 1));
-	assert.equal(report.zonesWithRecords, 2);
+	assert.equal(report.zonesWithRecords, 3);
 	assert.deepEqual(report.formVersions, ["janet-test-v1"]);
 });
 
@@ -191,9 +194,13 @@ test("no play type chart when no form has a Play question; rows of other forms g
 });
 
 test("two sites keep their own zones apart", () => {
-	const list = [observation(), observation({ site_code: "creek-2", site_name: "Second site", zone: "A" })];
+	const second = uuid(301);
+	const list = [
+		observation(),
+		observation({ site_id: uuid(2), site_code: "creek-2", site_name: "Second site", zone_id: second })
+	];
 	const { rows, playOptions } = reportRows(list, { "janet-test-v1": janet });
-	const both = [...zones, { siteCode: "creek-2", siteName: "Second site", id: "A", label: "Zone A" }];
+	const both = [...zones, { siteCode: "creek-2", siteName: "Second site", id: second, label: "Zone A" }];
 	const report = buildReport({ rows, zones: both, playOptions, clock: ny });
 	assert.deepEqual(
 		report.zones.filter(bar => bar.value > 0).map(bar => bar.label),

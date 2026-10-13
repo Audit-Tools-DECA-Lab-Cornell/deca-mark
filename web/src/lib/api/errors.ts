@@ -97,12 +97,72 @@ function messageFor(code: ApiErrorCode | "unknown", retryAfter: number | undefin
 	return errorCopy[code];
 }
 
+/** One problem a zone write was refused for (contract "Errors"): which zones, and where in the body. */
+export type ZoneIssue = {
+	readonly code: string;
+	readonly zoneIds: readonly string[];
+	/** An RFC 6901 pointer into the submitted body, such as "/zone_identity_map/2"; "" when none. */
+	readonly path: string;
+};
+
+/** What a conflict says about the current state: only identities and versions, never content. */
+export type ConflictDetails = {
+	readonly draftId?: string;
+	readonly revision?: number;
+	readonly etag?: string;
+	readonly currentPackageId?: string | null;
+	readonly currentPackageVersion?: number | null;
+};
+
 export type ApiErrorOptions = {
 	readonly status?: number;
 	readonly retryAfter?: number;
 	readonly fields?: Readonly<Record<string, string>>;
 	readonly detail?: string;
+	readonly issues?: readonly ZoneIssue[];
+	readonly conflict?: ConflictDetails | null;
 };
+
+const issueSchema = z.object({
+	code: z.string(),
+	zone_ids: z.array(z.string()).default([]),
+	path: z.string().default("")
+});
+
+const conflictSchema = z.object({
+	draft_id: z.string().optional(),
+	revision: z.number().int().optional(),
+	etag: z.string().optional(),
+	current_package_id: z.string().nullable().optional(),
+	current_package_version: z.number().int().nullable().optional()
+});
+
+/** A refusal's `details.issues`, read leniently: an entry that cannot be read is left out. */
+export function zoneIssues(details: unknown): ZoneIssue[] {
+	const list = (details as { issues?: unknown } | undefined)?.issues;
+	if (!Array.isArray(list)) return [];
+	return list.flatMap(entry => {
+		const parsed = issueSchema.safeParse(entry);
+		return parsed.success
+			? [{ code: parsed.data.code, zoneIds: parsed.data.zone_ids, path: parsed.data.path }]
+			: [];
+	});
+}
+
+/** A conflict's details, or null when it carries none this page can read. */
+export function conflictDetails(details: unknown): ConflictDetails | null {
+	const parsed = conflictSchema.safeParse(details ?? {});
+	if (!parsed.success) return null;
+	const { draft_id, revision, etag, current_package_id, current_package_version } = parsed.data;
+	const found: ConflictDetails = {
+		...(draft_id !== undefined ? { draftId: draft_id } : {}),
+		...(revision !== undefined ? { revision } : {}),
+		...(etag !== undefined ? { etag } : {}),
+		...(current_package_id !== undefined ? { currentPackageId: current_package_id } : {}),
+		...(current_package_version !== undefined ? { currentPackageVersion: current_package_version } : {})
+	};
+	return Object.keys(found).length > 0 ? found : null;
+}
 
 export class ApiError extends Error {
 	readonly name = "ApiError";
@@ -119,6 +179,10 @@ export class ApiError extends Error {
 	 * was refused. Every other screen shows `message`.
 	 */
 	readonly detail: string | undefined;
+	/** The zone problems a refusal names (`details.issues`). Empty otherwise. */
+	readonly issues: readonly ZoneIssue[];
+	/** What a conflict says about the current state, when it says anything. */
+	readonly conflict: ConflictDetails | null;
 
 	constructor(code: ApiErrorCode | "unknown", kind: ErrorKind, options: ApiErrorOptions = {}) {
 		super(messageFor(code, options.retryAfter));
@@ -128,6 +192,8 @@ export class ApiError extends Error {
 		this.retryAfter = options.retryAfter;
 		this.fields = options.fields ?? {};
 		this.detail = code === "validation_failed" ? options.detail : undefined;
+		this.issues = options.issues ?? [];
+		this.conflict = options.conflict ?? null;
 	}
 }
 
@@ -144,7 +210,10 @@ export function parseApiError(status: number, body: unknown, headers?: HeaderSou
 		status,
 		retryAfter,
 		fields: parsed.success ? fieldProblems(parsed.data.error.details) : {},
-		detail: parsed.success ? parsed.data.error.message : undefined
+		detail: parsed.success ? parsed.data.error.message : undefined,
+		issues: parsed.success ? zoneIssues(parsed.data.error.details) : [],
+		conflict:
+			parsed.success && (status === 409 || status === 412) ? conflictDetails(parsed.data.error.details) : null
 	};
 	if (status === 401)
 		return new ApiError(parsed.success ? parsed.data.error.code : "token_invalid", "sign-in", options);

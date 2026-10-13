@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/contour/PageHeader";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { SiteScreen } from "@/features/sites/SiteScreen";
 import { siteView, zoneRows } from "@/features/sites/view";
-import { getProject, getSite, getSitePlan, listObservations, resolveProject } from "@/lib/api/workspace";
+import { getProject, getSite, getSitePlan, resolveProject, summarizeObservations } from "@/lib/api/workspace";
 import { clock } from "@/lib/time";
 import { projectAbilities } from "@/lib/workspace/access";
 import { isNotFound, settle } from "@/lib/workspace/result";
@@ -34,8 +34,8 @@ function SiteFailure({ failure }: { failure: Failure }) {
 }
 
 /**
- * A site: its plan from the current map package, its zones with observation counts, the current package
- * and its details. A site that does not exist in this project is the in-shell not-found page.
+ * A site: its plan from the current map package, its zones with exact observation counts from the server
+ * (every map version), the current package and its details. A site that does not exist in this project is the in-shell not-found page.
  */
 export default async function SitePage({ params }: { params: Promise<Params> }) {
 	const { org, project: code, site: siteCode } = await params;
@@ -51,13 +51,13 @@ export default async function SitePage({ params }: { params: Promise<Params> }) 
 	if (!project.ok) return <SiteFailure failure={project.failure} />;
 
 	const view = siteView(site.data, clock(project.data.timezone));
-	const [plan, observations] = await Promise.all([
+	const [plan, counts] = await Promise.all([
 		view.package ? settle(getSitePlan(ref.id, view.package.packageId, view.name)) : null,
 		// A site with no observations has nothing to count.
-		view.observationCount > 0 ? settle(listObservations(ref.id, view.code)) : null
+		view.observationCount > 0 ? settle(summarizeObservations(ref.id, { siteId: view.siteId })) : null
 	]);
 
-	const rows = observations === null ? [] : observations.ok ? observations.data.rows : null;
+	const groups = counts === null ? [] : counts.ok ? counts.data.groups : null;
 
 	return (
 		<SiteScreen
@@ -68,9 +68,8 @@ export default async function SitePage({ params }: { params: Promise<Params> }) 
 			site={view}
 			plan={plan?.ok ? plan.data : null}
 			planFailure={plan && !plan.ok ? plan.failure : null}
-			zoneRows={zoneRows(view.zones, rows)}
-			countsFailure={observations && !observations.ok ? observations.failure : null}
-			countsLimited={observations?.ok ? observations.data.limited : false}
+			zoneRows={zoneRows(view.zones, groups)}
+			countsFailure={counts && !counts.ok ? counts.failure : null}
 		/>
 	);
 }

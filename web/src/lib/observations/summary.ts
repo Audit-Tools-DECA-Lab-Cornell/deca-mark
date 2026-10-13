@@ -1,27 +1,28 @@
-import { NO_ZONE, plural, ROUND_TYPES, roundLabel, roundOf } from "../labels";
-import { addDays, type Clock, dayKeysBetween } from "../time";
+import { plural, ROUND_TYPES, roundLabel, roundOf } from "../labels";
+import { type Clock, dayKeysBetween } from "../time";
 import type { RoundType } from "../workspace/types";
 import { allOptions, findQuestion, isAnswered, NOT_ANSWERED } from "./answers";
 
 /**
- * Counts for Overview and Reports, computed from the observation list the API returns: the newest 500 at
- * most, filtered by site and round on the server and by anything else here. Every function is pure.
+ * Counts for Overview and Reports, computed from a loaded page of observations (the newest 500 at most;
+ * the page's `total_matching` says how many match). Every function is pure.
  *
- * Rules (backend/WEB-FLOW-HANDOFF.md § Bounded reports and exports):
+ * Rules:
  * - days are calendar days of `observed_at` in the project's timezone;
- * - a record without a round (made before rounds existed) counts as Standard;
- * - a record without a zone stays in a "No zone" bucket, and zones the newest package no longer has are
- *   kept under their id;
+ * - every record names the zone it was recorded in (`zone_id`), with the label it had then; a zone the
+ *   current package no longer has keeps that recorded label;
  * - coverage is which zones have records in which rounds, never completion against a target;
  * - activity is read from timestamps and is not an audit log.
  */
 
-/** The parts of an observation these counts read. `ObservationRow` and `StoredObservation` both fit. */
+/** The parts of an observation these counts read. An observation and its detail both fit. */
 export type ObservationLike = {
 	readonly observation_id: string;
 	readonly site_code: string;
 	readonly site_name: string;
-	readonly zone: string | null;
+	readonly zone_id: string;
+	/** The zone's label when the record was collected. */
+	readonly zone_label: string;
 	readonly round_type: RoundType | null;
 	readonly observer: string;
 	readonly observed_at: string;
@@ -49,25 +50,31 @@ export function countBy<T, K extends string | null>(
 	return [...counts].map(([key, count]) => ({ key, label: labelOf(key), count })).sort(byCountThenLabel);
 }
 
+/** The label each zone was last recorded with among the rows (the newest record wins). */
+function recordedLabels(rows: readonly ObservationLike[]): Map<string, string> {
+	const labels = new Map<string, { label: string; at: string }>();
+	for (const row of rows) {
+		const seen = labels.get(row.zone_id);
+		if (!seen || row.observed_at > seen.at) labels.set(row.zone_id, { label: row.zone_label, at: row.observed_at });
+	}
+	return new Map([...labels].map(([id, entry]) => [id, entry.label]));
+}
+
 /**
- * Records per zone: the site's zones in their own order (a zone without records counts 0), then any
- * other zone the records name, by id, then "No zone" when some records have none.
+ * Records per zone: the site's current zones in their own order (a zone without records counts 0), then
+ * any other zone the records name, under the label it was recorded with.
  */
-export function byZone(rows: readonly ObservationLike[], zones: readonly ZoneRef[] = []): Count<string | null>[] {
-	const counts = new Map<string | null, number>();
-	for (const row of rows) counts.set(row.zone || null, (counts.get(row.zone || null) ?? 0) + 1);
-	const known = zones.map(zone => ({
-		key: zone.id as string | null,
-		label: zone.label,
-		count: counts.get(zone.id) ?? 0
-	}));
+export function byZone(rows: readonly ObservationLike[], zones: readonly ZoneRef[] = []): Count<string>[] {
+	const counts = new Map<string, number>();
+	for (const row of rows) counts.set(row.zone_id, (counts.get(row.zone_id) ?? 0) + 1);
+	const known = zones.map(zone => ({ key: zone.id, label: zone.label, count: counts.get(zone.id) ?? 0 }));
 	const knownIds = new Set(zones.map(zone => zone.id));
+	const recorded = recordedLabels(rows);
 	const others = [...counts]
-		.filter(([key]) => key !== null && !knownIds.has(key))
-		.map(([key, count]) => ({ key, label: key as string, count }))
+		.filter(([key]) => !knownIds.has(key))
+		.map(([key, count]) => ({ key, label: recorded.get(key) ?? key, count }))
 		.sort((a, b) => a.label.localeCompare(b.label, "en"));
-	const none = counts.get(null) ?? 0;
-	return [...known, ...others, ...(none > 0 ? [{ key: null, label: NO_ZONE, count: none }] : [])];
+	return [...known, ...others];
 }
 
 /** Records per round type, always all three in order. A record without a round counts as Standard. */
@@ -143,10 +150,10 @@ export function byQuestion(
 /* ── Coverage ─────────────────────────────────────────────────────────────── */
 
 export type CoverageRow = {
-	/** The zone id, or null for records without a zone. */
-	readonly zone: string | null;
+	/** The zone's identity (`zone_id`). */
+	readonly zone: string;
 	readonly label: string;
-	/** False for a zone the site's current package does not have, and for "No zone". */
+	/** False for a zone the site's current package does not have (it keeps its recorded label). */
 	readonly known: boolean;
 	readonly counts: Readonly<Record<RoundType, number>>;
 	readonly total: number;
@@ -164,37 +171,88 @@ const zeroRounds = (): Record<RoundType, number> => ({ standard: 0, reliability:
 
 /** Records by zone × round type: which zones have been observed in which rounds. Not completion. */
 export function coverageMatrix(rows: readonly ObservationLike[], zones: readonly ZoneRef[] = []): Coverage {
-	const cells = new Map<string | null, Record<RoundType, number>>();
+	const cells = new Map<string, Record<RoundType, number>>();
 	const totals = zeroRounds();
 	for (const zone of zones) cells.set(zone.id, zeroRounds());
 	for (const row of rows) {
-		const key = row.zone || null;
 		const round = roundOf(row.round_type);
-		const cell = cells.get(key) ?? zeroRounds();
+		const cell = cells.get(row.zone_id) ?? zeroRounds();
 		cell[round] += 1;
-		cells.set(key, cell);
+		cells.set(row.zone_id, cell);
 		totals[round] += 1;
 	}
 	const knownIds = new Set(zones.map(zone => zone.id));
 	const label = new Map(zones.map(zone => [zone.id, zone.label]));
-	const row = (zone: string | null, counts: Record<RoundType, number>): CoverageRow => ({
+	const recorded = recordedLabels(rows);
+	const row = (zone: string, counts: Record<RoundType, number>): CoverageRow => ({
 		zone,
-		label: zone === null ? NO_ZONE : (label.get(zone) ?? zone),
-		known: zone !== null && knownIds.has(zone),
+		label: label.get(zone) ?? recorded.get(zone) ?? zone,
+		known: knownIds.has(zone),
 		counts,
 		total: counts.standard + counts.reliability + counts.inventory
 	});
 	const known = zones.map(zone => row(zone.id, cells.get(zone.id)!));
 	const others = [...cells]
-		.filter(([zone]) => zone !== null && !knownIds.has(zone))
-		.sort(([a], [b]) => (a as string).localeCompare(b as string, "en"))
-		.map(([zone, counts]) => row(zone, counts));
-	const none = cells.get(null);
-	const all = [...known, ...others, ...(none ? [row(null, none)] : [])];
+		.filter(([zone]) => !knownIds.has(zone))
+		.map(([zone, counts]) => row(zone, counts))
+		.sort((a, b) => a.label.localeCompare(b.label, "en"));
+	const all = [...known, ...others];
 	return {
 		rows: all,
 		totals,
 		total: rows.length,
+		max: Math.max(0, ...all.flatMap(entry => ROUND_TYPES.map(type => entry.counts[type])))
+	};
+}
+
+/** A count of records the server made for one zone of one map version, in one round type. */
+export type CoverageGroup = {
+	readonly zone_id: string;
+	readonly zone_label: string;
+	readonly package_version: number;
+	readonly round_type: RoundType;
+	readonly count: number;
+};
+
+/**
+ * The coverage matrix from the server's counts, which cover every matching record. Every map version is
+ * added up by zone identity; a zone the current package no longer has keeps the label of the newest
+ * version it was recorded on.
+ */
+export function coverageFromGroups(groups: readonly CoverageGroup[], zones: readonly ZoneRef[] = []): Coverage {
+	const cells = new Map<string, Record<RoundType, number>>();
+	const recorded = new Map<string, { label: string; version: number }>();
+	const totals = zeroRounds();
+	for (const zone of zones) cells.set(zone.id, zeroRounds());
+	for (const group of groups) {
+		const cell = cells.get(group.zone_id) ?? zeroRounds();
+		cell[group.round_type] += group.count;
+		cells.set(group.zone_id, cell);
+		totals[group.round_type] += group.count;
+		const seen = recorded.get(group.zone_id);
+		if (!seen || group.package_version > seen.version)
+			recorded.set(group.zone_id, { label: group.zone_label, version: group.package_version });
+	}
+	const knownIds = new Set(zones.map(zone => zone.id));
+	const label = new Map(zones.map(zone => [zone.id, zone.label]));
+	const row = (zone: string, counts: Record<RoundType, number>): CoverageRow => ({
+		zone,
+		label: label.get(zone) ?? recorded.get(zone)?.label ?? zone,
+		known: knownIds.has(zone),
+		counts,
+		total: counts.standard + counts.reliability + counts.inventory
+	});
+	const all = [
+		...zones.map(zone => row(zone.id, cells.get(zone.id)!)),
+		...[...cells]
+			.filter(([zone]) => !knownIds.has(zone))
+			.map(([zone, counts]) => row(zone, counts))
+			.sort((a, b) => a.label.localeCompare(b.label, "en"))
+	];
+	return {
+		rows: all,
+		totals,
+		total: totals.standard + totals.reliability + totals.inventory,
 		max: Math.max(0, ...all.flatMap(entry => ROUND_TYPES.map(type => entry.counts[type])))
 	};
 }
@@ -209,60 +267,26 @@ export type SiteLike = {
 };
 
 export type FieldReturn = {
-	/** Every accessible record: the sum of each site's exact count, not limited to the list. */
+	/** Every accessible record: the sum of each site's exact count, not limited to the loaded page. */
 	readonly total: number;
 	readonly bySite: readonly { readonly code: string; readonly name: string; readonly count: number }[];
-	/** The project's today, as a day key. */
-	readonly todayKey: string;
-	/** Records observed today and over the last 7 days (today and the 6 before), from the list. */
-	readonly today: number;
-	readonly last7Days: number;
-	/**
-	 * Whether `today` and `last7Days` are complete. False only when the list was cut at 500 records and
-	 * all of them fall inside the 7 days, so older ones in the window may be missing.
-	 */
-	readonly recentIsExact: boolean;
-	/** The newest `received_at` and `observed_at` among the listed records. */
+	/** The newest `received_at` among the loaded records. */
 	readonly lastReceivedAt: string | null;
-	readonly lastObservedAt: string | null;
 };
 
-/** The size of the observation list the API returns at most. */
-export const OBSERVATION_LIMIT = 500;
-
-export function fieldReturn(
-	sites: readonly SiteLike[],
-	rows: readonly ObservationLike[],
-	nowIso: string,
-	clock: Clock
-): FieldReturn {
-	const todayKey = clock.dayKey(nowIso);
-	const weekStart = addDays(todayKey, -6);
-	let today = 0;
-	let last7Days = 0;
-	let oldestKey: string | null = null;
+/**
+ * Field return: the exact total from each site's own count, and when the newest loaded record arrived.
+ * Today and the last 7 days are counted by the server, not from a page.
+ */
+export function fieldReturn(sites: readonly SiteLike[], rows: readonly ObservationLike[]): FieldReturn {
 	let lastReceivedAt: string | null = null;
-	let lastObservedAt: string | null = null;
-	for (const row of rows) {
-		const key = clock.dayKey(row.observed_at);
-		if (key === todayKey) today += 1;
-		if (key >= weekStart && key <= todayKey) last7Days += 1;
-		if (key !== "" && (oldestKey === null || key < oldestKey)) oldestKey = key;
+	for (const row of rows)
 		if (row.received_at && (lastReceivedAt === null || Date.parse(row.received_at) > Date.parse(lastReceivedAt)))
 			lastReceivedAt = row.received_at;
-		if (lastObservedAt === null || Date.parse(row.observed_at) > Date.parse(lastObservedAt))
-			lastObservedAt = row.observed_at;
-	}
-	const limited = rows.length >= OBSERVATION_LIMIT;
 	return {
 		total: sites.reduce((sum, site) => sum + site.observation_count, 0),
 		bySite: sites.map(site => ({ code: site.code, name: site.name, count: site.observation_count })),
-		todayKey,
-		today,
-		last7Days,
-		recentIsExact: !limited || (oldestKey !== null && oldestKey < weekStart),
-		lastReceivedAt,
-		lastObservedAt
+		lastReceivedAt
 	};
 }
 
@@ -270,8 +294,9 @@ export function fieldReturn(
 
 export type PackageLike = {
 	readonly package_id: string;
+	/** The code of the package's site. */
 	readonly site_code: string;
-	readonly version: number;
+	readonly package_version: number;
 	readonly state: "ready" | "blocked";
 	readonly prepared_at: string;
 };
@@ -366,8 +391,8 @@ export function activity(
 			dayKey: clock.dayKey(pkg.prepared_at),
 			title:
 				pkg.state === "ready"
-					? `Map package v${pkg.version} prepared for ${site}`
-					: `Map package v${pkg.version} for ${site} was blocked`,
+					? `Map package v${pkg.package_version} prepared for ${site}`
+					: `Map package v${pkg.package_version} for ${site} was blocked`,
 			siteCode: pkg.site_code,
 			packageId: pkg.package_id,
 			state: pkg.state

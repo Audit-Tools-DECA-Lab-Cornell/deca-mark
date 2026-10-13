@@ -1,12 +1,14 @@
 /**
- * The manifest a map package carries (`Manifest` in backend/src/fieldmaps_api/domain/packages.py), read
- * leniently for the Inspect view: the API sends it as free-form data, and a field this page does not
- * understand is left out rather than turned into an error.
+ * The manifest a map package carries (`ZonePackageManifest` in
+ * backend/src/fieldmaps_api/domain/zone_package_schemas.py), read leniently for the Inspect view: the API
+ * sends it as free-form data, and a field this page does not understand is left out rather than turned
+ * into an error.
  */
 
 export type ManifestView = {
 	formVersion: string | null;
-	zones: { id: string; label: string }[];
+	/** The package's zones by identity, with their codes and labels as this version names them. */
+	zones: { id: string; code: string | null; label: string }[];
 	layers: { name: string; features: number }[];
 	/** The QGIS project the layers came from, when one was supplied. */
 	project: {
@@ -38,8 +40,9 @@ export function readManifest(value: unknown): ManifestView | null {
 
 	const zones = (Array.isArray(manifest.zones) ? manifest.zones : []).flatMap(entry => {
 		const zone = record(entry);
-		const id = text(zone?.id);
-		return id ? [{ id, label: text(zone?.label) ?? id }] : [];
+		const id = text(zone?.zone_id);
+		const code = text(zone?.zone_code);
+		return id ? [{ id, code, label: text(zone?.label) ?? code ?? id }] : [];
 	});
 
 	const layers = (Array.isArray(manifest.layers) ? manifest.layers : []).flatMap(entry => {
@@ -62,5 +65,6 @@ export function readManifest(value: unknown): ManifestView | null {
 				}
 			: null;
 
-	return { formVersion: text(manifest.form_version), zones, layers, project };
+	const play = record(record(manifest.forms)?.play);
+	return { formVersion: text(play?.form_version), zones, layers, project };
 }

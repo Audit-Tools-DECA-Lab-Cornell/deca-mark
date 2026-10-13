@@ -305,13 +305,15 @@ Every package upload goes through the same activation rules as publishing (contr
    - A feature whose code or label merely matches is shown as a suggestion and left unselected. Labels and codes do not prove continuity (master plan).
    - A new zone gets a client UUID and uses the source ID as its code when it fits the code syntax; otherwise the manager types a code.
 3. Current zones that no feature maps to are listed: "Removed from the next version: Swings. Earlier versions and their observations keep it."
-4. A change note is recommended.
-5. Submit with `request_id` (kept for this attempt, so a retry replays), `expected_current_package_id`, `zone_identity_map` and `change_note`.
-6. Results:
-   - 409 `publication_conflict`: "Not uploaded. v2 was published meanwhile. Read the current version and map again."
-   - 422 `identity_conflict`: the issue copy names the feature.
-   - 503 `storage_unavailable`: "Not uploaded. The map could not be saved. Your file stays available. Try again."
-   - Success: show the returned package version. Refresh the current pointer before calling that version current, because a retry may return a historical result.
+4. A change note is recommended ("What changed", at most 2,000 characters).
+5. The inventory form is chosen with the play form (amended 2026-10-13: `inventory_form_version` is part of `PackageRequest`): "Keep the current one · <code>" leaves the field out so the current map's form carries over; "None: no Inventory on this map" sends null; or a published form. A site's first upload starts on the most recently published form that asks only about a zone, or on None when there is none.
+6. Zone names (amended 2026-10-13): BE-22 reads a zone's label from the feature's `name`, while the QGIS templates write `label`. The zones layer is sent with `name` filled from `label` when `name` is missing, nothing else changed, and the mapping step says "Names come from each zone's name field, or its label field when it has none." A zone with neither blocks the upload ("Zones have a name").
+7. Submit with `request_id`, `expected_current_package_id`, `zone_identity_map` and `change_note`. While an answer is unknown (no response, or a 5xx), the attempt is kept whole: "Upload package again" resends the same body, so a request that did arrive replays. A changed request after that is still sent against the same `expected_current_package_id` and current zones, so it is refused rather than applied to a map published by the first.
+8. Results:
+   - 409 `publication_conflict`: "Not uploaded. Map v2 was published meanwhile. Read the current version and choose each zone again." The upload conflict carries only `current_package_id`, so without a version it reads "The site's current map changed meanwhile."
+   - 422 with `details.issues`: each issue's copy (6.7) names the feature by its `properties.id`, through the issue's `/zone_identity_map/N` path or its zone IDs.
+   - 503 `storage_unavailable`: "Not uploaded. The map could not be saved. Your files stay chosen. Try again."
+   - Success: show the returned package version, Active only when the response's `current_package_id` is that package; a replay says "The same package had already arrived, so no new version was made."
 
 ### 5.12 Screen states for the new routes
 

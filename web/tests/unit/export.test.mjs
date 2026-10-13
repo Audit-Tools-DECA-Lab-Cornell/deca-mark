@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import { observation, PROJECT, USER, uuid } from "./fixtures.mjs";
 import { load } from "./support.mjs";
 
-const { codebook, exportColumns, exportFileName, NULL_ANSWER, toCsv, toGeoJson } =
+const { codebook, exportColumns, exportFileName, neutralizeFormula, NULL_ANSWER, toCsv, toGeoJson } =
 	await load("lib/export/observations.ts");
 const { RECORD_COLUMNS } = await load("lib/export/columns.ts");
 
@@ -18,23 +19,14 @@ const legacy = {
 const definitions = { "janet-test-v1": janet, "shell-v1": legacy };
 
 function row(overrides = {}) {
-	return {
+	return observation({
 		observation_id: "3f2a1b9c-0000-4000-8000-000000000001",
-		site_code: "fall-creek",
-		site_name: "Fall Creek",
-		zone: "A",
-		round_type: "standard",
 		first_round: true,
-		placement: "hand",
-		observer: "OB",
-		observed_at: "2026-10-07T14:00:00Z",
 		received_at: "2026-10-08T17:00:00Z",
 		form_version: "janet-test-v1",
-		revision: 1,
-		coordinates: [-76.4857123, 42.4483456],
-		answers: {},
+		geometry: { type: "Point", coordinates: [-76.4857123, 42.4483456] },
 		...overrides
-	};
+	});
 }
 
 /** A small RFC 4180 reader, enough to read back what toCsv writes. */
@@ -102,18 +94,11 @@ test("a missing answer is an empty cell and a null answer is n/a", () => {
 	assert.equal(record.Play_Type_1, "");
 });
 
-test("round, zone and placement columns follow the collector; legacy rounds read as standard", () => {
+test("round, zone and placement columns follow the collector; an older form's fields get columns", () => {
 	const rows = [
 		row({ round_type: "reliability", first_round: false }),
 		row({ round_type: "inventory", first_round: null, placement: "zone" }),
-		row({
-			round_type: null,
-			first_round: null,
-			zone: null,
-			placement: null,
-			form_version: "shell-v1",
-			answers: { people: 3 }
-		})
+		row({ form_version: "shell-v1", answers: { people: 3 } })
 	];
 	const [reliability, inventory, old] = table(toCsv(rows, definitions));
 	assert.deepEqual(
@@ -124,12 +109,85 @@ test("round, zone and placement columns follow the collector; legacy rounds read
 		[inventory.round_type, inventory.Rel_Round, inventory.First_Round, inventory.placement],
 		["inventory", "", "", "zone"]
 	);
-	assert.deepEqual(
-		[old.round_type, old.Rel_Round, old.First_Round, old.zone, old.placement],
-		["standard", "no", "", "", ""]
-	);
 	assert.equal(old.people, "3");
 	assert.equal(old.Child_AgeRange, "", "a column another form fills is empty for this record");
+});
+
+test("each record names its project, uploader, site, map version and the zone as it was recorded", () => {
+	const [record] = table(
+		toCsv(
+			[
+				row({
+					package_id: uuid(102),
+					package_version: 2,
+					zone_id: uuid(201),
+					zone_code: "MEADOW",
+					zone_label: "North meadow"
+				})
+			],
+			definitions
+		)
+	);
+	assert.deepEqual(
+		[record.project_id, record.user_id, record.site_id, record.site_code, record.site_name],
+		[PROJECT, USER, uuid(1), "fall-creek", "Fall Creek"]
+	);
+	assert.deepEqual(
+		[record.zone, record.zone_id, record.zone_code, record.zone_label_at_capture],
+		["MEADOW", uuid(201), "MEADOW", "North meadow"]
+	);
+	assert.deepEqual([record.package_id, record.map_version, record.spatial_support], [uuid(102), "2", "point"]);
+	assert.deepEqual([record.display_anchor_longitude, record.display_anchor_latitude], ["", ""]);
+});
+
+test("an inventory is a whole-zone record: no point, the zone's label point instead", () => {
+	const inventory = row({
+		round_type: "inventory",
+		placement: "zone",
+		spatial_support: "zone",
+		geometry: null,
+		display_anchor: { type: "Point", coordinates: [-76.49, 42.45] }
+	});
+	const [record] = table(toCsv([inventory], definitions));
+	assert.deepEqual([record.longitude, record.latitude], ["", ""]);
+	assert.deepEqual([record.display_anchor_longitude, record.display_anchor_latitude], ["-76.49", "42.45"]);
+	assert.equal(record.spatial_support, "zone");
+	const [feature] = JSON.parse(toGeoJson([inventory], definitions)).features;
+	assert.equal(feature.geometry, null);
+	assert.equal(feature.properties.zone_id, uuid(200));
+	assert.equal(feature.properties.display_anchor_longitude, -76.49);
+});
+
+test("a text cell a spreadsheet would run as a formula starts with an apostrophe, as the server writes it", () => {
+	for (const [value, written] of [
+		["=SUM(A1)", "'=SUM(A1)"],
+		["+1", "'+1"],
+		["-2", "'-2"],
+		["@cmd", "'@cmd"],
+		["  =1", "'  =1"],
+		["\tx", "'\tx"],
+		["\nx", "'\nx"],
+		["a=b", "a=b"],
+		["", ""]
+	])
+		assert.equal(neutralizeFormula(value), written, JSON.stringify(value));
+	const [record] = table(
+		toCsv([row({ observer: "=HYPERLINK(1)", answers: { play_event_summary: "-x" } })], definitions)
+	);
+	assert.equal(record.observer, "'=HYPERLINK(1)");
+	assert.equal(record.Play_Event_Summary, "'-x");
+	assert.equal(record.longitude, "-76.4857123", "numbers are not text");
+	const book = codebook({ x: { questions: [{ id: "q", kind: "text", label: "-Notes", exportColumn: "=Q" }] } }, [
+		row({ form_version: "x", answers: { q: "1" } })
+	]);
+	assert.ok(book.includes("\r\n'=Q,question q (x),'-Notes,text,\r\n"));
+	assert.ok(
+		parseCsv(
+			toCsv([row({ form_version: "x", answers: { q: "1" } })], {
+				x: { questions: [{ id: "q", kind: "text", label: "Q", exportColumn: "=Q" }] }
+			})
+		)[0].includes("'=Q")
+	);
 });
 
 test("multi-select answers join their codes; coordinates keep full precision", () => {

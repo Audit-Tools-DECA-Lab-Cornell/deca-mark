@@ -2,8 +2,8 @@ import { Island } from "@/components/contour/Island";
 import { TextLink } from "@/components/contour/TextLink";
 import { Timeline } from "@/components/contour/Timeline";
 import { LoadFailure } from "@/components/shell/LoadFailure";
+import { PAGE_LIMIT } from "@/lib/api/observations";
 import type { ActivityEntry } from "@/lib/observations/summary";
-import { OBSERVATION_LIMIT } from "@/lib/observations/summary";
 import type { Clock } from "@/lib/time";
 import type { Failure } from "@/lib/workspace/types";
 
@@ -36,7 +36,7 @@ export function ActivityIsland({ entries, unread, limited, nowIso, clock, dataHr
 			footnote={
 				<p>
 					Built from the dates on observations, map packages, forms and sites. It does not list every change.
-					{limited ? ` Observation counts come from the newest ${OBSERVATION_LIMIT}.` : ""}
+					{limited ? ` Observation counts come from the newest ${PAGE_LIMIT}.` : ""}
 				</p>
 			}>
 			<div className="px-island-pad pt-1 pb-island-pad">

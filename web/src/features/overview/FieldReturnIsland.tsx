@@ -3,15 +3,20 @@ import { Island } from "@/components/contour/Island";
 import { Note } from "@/components/contour/Note";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { CountBars } from "@/features/reports/CountBars";
-import type { ObservationRow, Site } from "@/lib/api/types";
+import type { ObservationPage, Site } from "@/lib/api/types";
 import { formatCount, plural } from "@/lib/labels";
-import { fieldReturn, OBSERVATION_LIMIT } from "@/lib/observations/summary";
+import { fieldReturn } from "@/lib/observations/summary";
 import type { Clock } from "@/lib/time";
 import type { Result } from "@/lib/workspace/types";
 
+/** Exact counts the server makes for the project's today and its last 7 days (today and the 6 before). */
+export type RecentCounts = { readonly today: number; readonly last7Days: number };
+
 export type FieldReturnIslandProps = {
 	sites: Result<readonly Site[]>;
-	observations: Result<{ rows: readonly ObservationRow[]; limited: boolean }>;
+	/** The newest observations (a page of at most 500), for when the last one was received. */
+	observations: Result<ObservationPage>;
+	recent: Result<RecentCounts>;
 	nowIso: string;
 	clock: Clock;
 	/** The Data page's address; each site's bar opens its records. */
@@ -19,16 +24,17 @@ export type FieldReturnIslandProps = {
 };
 
 /**
- * The field return: what the project's sites hold, as one sentence with its caveat. The total adds up each
- * site's own exact count. Today, the last 7 days and the last time something arrived come from the
- * observation list, which stops at 500, and the island says so when it does.
+ * The field return: what the project's sites hold, as one sentence. The total adds up each site's own exact
+ * count, and today and the last 7 days are counted by the server. When the last record arrived is read from
+ * the newest observations loaded, and the island says so when more match than loaded.
  */
-export function FieldReturnIsland({ sites, observations, nowIso, clock, dataHref }: FieldReturnIslandProps) {
+export function FieldReturnIsland({ sites, observations, recent, nowIso, clock, dataHref }: FieldReturnIslandProps) {
 	if (!sites.ok) return <LoadFailure failure={sites.failure} what="the field return" />;
 
-	const listed = observations.ok ? observations.data.rows : [];
-	const summary = fieldReturn(sites.data, listed, nowIso, clock);
-	const limited = observations.ok && observations.data.limited;
+	const listed = observations.ok ? observations.data.items : [];
+	const summary = fieldReturn(sites.data, listed);
+	const loadedCount = listed.length;
+	const limited = observations.ok && observations.data.total_matching > loadedCount;
 	const withRecords = summary.bySite.filter(site => site.count > 0);
 
 	let sentence = "No observations have come back yet.";
@@ -37,8 +43,6 @@ export function FieldReturnIsland({ sites, observations, nowIso, clock, dataHref
 			withRecords.length === 1
 				? `${plural(summary.total, "observation")} at ${withRecords[0]!.name}.`
 				: `${plural(summary.total, "observation")} across ${plural(withRecords.length, "site")}.`;
-
-	const last7 = summary.recentIsExact ? formatCount(summary.last7Days) : `At least ${formatCount(summary.last7Days)}`;
 
 	return (
 		<Island flush aria-labelledby="field-return-title">
@@ -53,28 +57,38 @@ export function FieldReturnIsland({ sites, observations, nowIso, clock, dataHref
 						The total adds up every site&apos;s own count. Records still on devices are not counted here.
 					</p>
 					<div className="mt-6">
-						{observations.ok ? (
-							<FactsList
-								labelWidth="minmax(8rem, 40%)"
-								items={[
-									{
-										label: "Last received",
-										value: summary.lastReceivedAt
+						<FactsList
+							labelWidth="minmax(8rem, 40%)"
+							items={[
+								{
+									label: "Last received",
+									value: !observations.ok
+										? "Not read"
+										: summary.lastReceivedAt
 											? clock.relativeDayTime(summary.lastReceivedAt, nowIso)
 											: "Nothing received yet"
-									},
-									{ label: "Observed today", value: formatCount(summary.today) },
-									{ label: "Observed in the last 7 days", value: last7 }
-								]}
-							/>
-						) : (
+								},
+								{
+									label: "Observed today",
+									value: recent.ok ? formatCount(recent.data.today) : "Not counted"
+								},
+								{
+									label: "Observed in the last 7 days",
+									value: recent.ok ? formatCount(recent.data.last7Days) : "Not counted"
+								}
+							]}
+						/>
+						{!observations.ok && (
 							<LoadFailure failure={observations.failure} what="recent observations" bare />
 						)}
+						{!recent.ok && <LoadFailure failure={recent.failure} what="recent counts" bare />}
 					</div>
 					{limited && (
-						<Note className="mt-4" title={`Based on the newest ${OBSERVATION_LIMIT} observations.`}>
-							Last received, today and the last 7 days come from them. The total above counts every
-							observation.
+						<Note
+							className="mt-4"
+							title={`Last received is read from the newest ${formatCount(loadedCount)}.`}>
+							A record collected earlier but uploaded later may have arrived since. Today, the last 7 days
+							and the total count every observation.
 						</Note>
 					)}
 					<p className="mt-4 type-small text-ink-2">

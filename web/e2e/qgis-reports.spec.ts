@@ -8,9 +8,11 @@ import { downloadText } from "./support/ui";
 
 test.use({ storageState: authFile("manager") });
 
-type Feature = { geometry: { type: string; coordinates: number[] }; properties: Record<string, unknown> };
+type Feature = { geometry: { type: string; coordinates: number[] } | null; properties: Record<string, unknown> };
 
-test("the QGIS page exports the records as GeoJSON points", async ({ page }) => {
+test("the QGIS page exports the records as GeoJSON: points, and inventories as whole-zone records", async ({
+	page
+}) => {
 	const { baseline, observations } = manifest();
 	await page.goto(projectPath("qgis"));
 	const main = page.getByRole("main");
@@ -34,9 +36,15 @@ test("the QGIS page exports the records as GeoJSON points", async ({ page }) => 
 	expect(collection.type).toBe("FeatureCollection");
 	expect(collection.features).toHaveLength(baseline.total);
 	for (const feature of collection.features) {
-		expect(feature.geometry.type).toBe("Point");
 		expect(observations).toContain(feature.properties.observation_id);
+		if (feature.properties.round_type === "inventory") {
+			// An inventory describes the whole zone: no point, joined to the zone by its identity.
+			expect(feature.geometry).toBeNull();
+			expect(feature.properties.spatial_support).toBe("zone");
+			expect(feature.properties.zone_id).toEqual(expect.any(String));
+		} else expect(feature.geometry?.type).toBe("Point");
 	}
+	expect(collection.features.filter(feature => feature.geometry === null)).toHaveLength(baseline.inventory);
 });
 
 test("the reports count the records by round type and zone, and can be printed", async ({ page }) => {

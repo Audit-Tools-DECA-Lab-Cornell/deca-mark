@@ -15,7 +15,7 @@ import { TextLink } from "@/components/contour/TextLink";
 import { NotAvailable } from "@/components/shell/NotAvailable";
 import { downloadPackageArchive } from "@/lib/api/browser";
 import { apiRequestError, UNKNOWN_ERROR_COPY } from "@/lib/api/errors";
-import type { ObservationRow } from "@/lib/api/types";
+import type { Observation } from "@/lib/api/types";
 import { packageFileName, saveText } from "@/lib/download";
 import { RECORD_COLUMNS } from "@/lib/export/columns";
 import { codebook, EMPTY_CELL_NOTE, exportColumns, exportFileName, toCsv, toGeoJson } from "@/lib/export/observations";
@@ -39,7 +39,7 @@ export type QgisScreenProps = {
 	/** The site and round the records were read for ("" for all). */
 	site: string;
 	round: RoundType | "";
-	rows: readonly ObservationRow[];
+	rows: readonly Observation[];
 	/** Form version code → its definition, for the records' answer columns. */
 	definitions: Readonly<Record<string, unknown>>;
 	/** Form versions whose definition could not be read. */
@@ -284,8 +284,9 @@ export function QgisScreen({
 						</div>
 						<p className="type-small text-ink-2">
 							In QGIS, choose Layer, Add Layer, Add Vector Layer and pick the GeoJSON file. For the CSV,
-							use Add Delimited Text Layer with longitude as X and latitude as Y (EPSG:4326).{" "}
-							{EMPTY_CELL_NOTE} Download again to refresh a layer.
+							use Add Delimited Text Layer with longitude as X and latitude as Y (EPSG:4326). Inventory
+							records describe a whole zone, so they have no point: in the GeoJSON their geometry is
+							empty. {EMPTY_CELL_NOTE} Download again to refresh a layer.
 						</p>
 					</IslandSection>
 				</Island>

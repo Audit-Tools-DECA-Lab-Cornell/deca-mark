@@ -44,8 +44,10 @@ export async function textWithValues(locator: Locator): Promise<string> {
  */
 export async function recordRows(scope: Locator): Promise<Locator> {
 	const rows = scope.getByRole("row").filter({ hasText: /OBS-[0-9A-F]{6}/ });
-	if ((await rows.count()) > 0) return rows;
-	return scope.getByRole("listitem").filter({ hasText: /OBS-[0-9A-F]{6}/ });
+	const cards = scope.getByRole("listitem").filter({ hasText: /OBS-[0-9A-F]{6}/ });
+	// The list streams in after the page loads: wait for whichever form this width shows.
+	await expect(rows.or(cards).first()).toBeVisible();
+	return (await rows.count()) > 0 ? rows : cards;
 }
 
 /** Picks an option in a native select by the words of the option, not its value. */

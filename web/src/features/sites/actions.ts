@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { apiRequestError, failedWrite } from "@/lib/api/errors";
 import { createSite, patchSite } from "@/lib/api/mutations";
-import { resolveProject } from "@/lib/api/workspace";
+import { getSite, resolveProject } from "@/lib/api/workspace";
 import { projectAbilities } from "@/lib/workspace/access";
 
 import { SITE_CODE_PATTERN, SITE_CODE_RULE, SITE_DESCRIPTION_MAX, SITE_NAME_MAX } from "./code";
@@ -123,7 +123,9 @@ export async function updateSiteAction(
 		if (!projectAbilities(project.role).manage)
 			return { status: "failed", message: "Nothing was saved. Only project managers can edit sites." };
 		const description = parsed.data.description.trim();
-		const site = await patchSite(project.id, z.string().min(1).parse(code), {
+		// The API addresses a site by its UUID; the site list says which one this code is.
+		const current = await getSite(project.id, z.string().min(1).parse(code));
+		const site = await patchSite(project.id, current.site_id, {
 			name: parsed.data.name,
 			description: description || null
 		});

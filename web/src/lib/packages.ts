@@ -455,17 +455,19 @@ export function runClientChecks(
 				detail: `More than one zone has the id ${repeated.map(id => `"${id}"`).join(", ")}. Give each zone its own id.`
 			});
 
-		const unlabelled = zones.collection.features.filter(
-			feature => textProperty(feature.properties, "label") === null
+		// DECA Mark names each zone from its `name` field; a layer from the QGIS templates has `label` instead.
+		const unnamed = zones.collection.features.filter(
+			feature =>
+				textProperty(feature.properties, "name") === null && textProperty(feature.properties, "label") === null
 		).length;
 		checks.push({
 			id: "zone-labels",
-			state: unlabelled > 0 ? "warning" : "passed",
-			label: "Zones have a label",
+			state: unnamed > 0 ? "blocked" : "passed",
+			label: "Zones have a name",
 			detail:
-				unlabelled > 0
-					? `${unlabelled} ${unlabelled === 1 ? "zone has" : "zones have"} no label field, so its id is shown instead.`
-					: "Observers see each zone's label."
+				unnamed > 0
+					? `${unnamed} ${unnamed === 1 ? "zone has" : "zones have"} no name or label field. Observers choose zones by name: in QGIS, give each zone a name, then export again.`
+					: "Observers see each zone's name."
 		});
 	}
 

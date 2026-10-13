@@ -43,13 +43,20 @@ export default async function QgisPage({
 	if (!sitesRead.ok) return <LoadFailure failure={sitesRead.failure} what="the sites" />;
 
 	// A site or round in the address that does not exist is ignored, so an old link still opens the page.
-	const site = sitesRead.data.find(entry => entry.code === firstOf(query.site))?.code ?? "";
+	const chosen = sitesRead.data.find(entry => entry.code === firstOf(query.site));
+	const site = chosen?.code ?? "";
 	const requestedRound = firstOf(query.round);
 	const round = isRoundType(requestedRound) ? requestedRound : "";
 
-	const listRead = await settle(listObservations(ref.id, site || undefined, round || undefined));
+	const listRead = await settle(
+		listObservations(ref.id, {
+			...(chosen ? { siteId: chosen.site_id } : {}),
+			...(round ? { roundType: round } : {})
+		})
+	);
 	if (!listRead.ok) return <LoadFailure failure={listRead.failure} what="the observations" />;
-	const { rows, limited } = listRead.data;
+	const rows = listRead.data.items;
+	const limited = listRead.data.total_matching > rows.length;
 	const { definitions, missing } = await getFormDefinitions(ref.id, [...new Set(rows.map(row => row.form_version))]);
 
 	return (

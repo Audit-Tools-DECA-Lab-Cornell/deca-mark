@@ -11,7 +11,8 @@ const {
 	parseApiError,
 	readApiError,
 	retryAfterSeconds,
-	waitCopy
+	waitCopy,
+	zoneIssues
 } = await load("lib/api/errors.ts");
 const { settle, toFailure } = await load("lib/workspace/result.ts");
 const { failedChange: failedTeamChange } = await load("features/people/result.ts");
@@ -152,4 +153,32 @@ test("team and form changes claim nothing happened only when DECA Mark refused t
 		assert.equal(form, team);
 	}
 	assert.throws(() => failedTeamChange("Nothing was changed.", new RangeError("bug")), RangeError);
+});
+
+test("a refusal names its zone problems, and a conflict the current package, leniently", () => {
+	const issues = [
+		{ code: "interior_overlap", zone_ids: ["z1", "z2"], path: "/layers/zones/features/0" },
+		{ code: "empty_zone_set" },
+		{ zone_ids: ["no code"] }
+	];
+	const refused = parseApiError(422, envelope("validation_failed", "x", { issues }));
+	assert.deepEqual(refused.issues, [
+		{ code: "interior_overlap", zoneIds: ["z1", "z2"], path: "/layers/zones/features/0" },
+		{ code: "empty_zone_set", zoneIds: [], path: "" }
+	]);
+	assert.equal(refused.conflict, null, "only a 409 or 412 says what is current");
+	assert.deepEqual(zoneIssues(undefined), []);
+	assert.deepEqual(zoneIssues({ issues: "not a list" }), []);
+
+	const conflict = parseApiError(
+		409,
+		envelope("publication_conflict", "x", { current_package_id: "p2", current_package_version: 2 })
+	);
+	assert.deepEqual(conflict.conflict, { currentPackageId: "p2", currentPackageVersion: 2 });
+	assert.equal(parseApiError(409, envelope("publication_conflict", "x", {})).conflict, null);
+	assert.equal(
+		parseApiError(412, envelope("revision_conflict", "x", { revision: "two" })).conflict,
+		null,
+		"details that cannot be read say nothing"
+	);
 });

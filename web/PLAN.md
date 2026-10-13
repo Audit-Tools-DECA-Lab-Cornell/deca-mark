@@ -559,7 +559,7 @@ Done when: Against the local API, edits save with increasing revisions, a stale 
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and a local-stack Playwright smoke of save, conflict and validate.
 
 ### WEB-36: Read sites through the single site API
-Status: todo · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-37, WEB-39, WEB-42
+Status: doing (2026-10-13; unit and static checks pass, local-stack e2e run in progress) · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-37, WEB-39, WEB-42
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) section 4 and WUI-13; [contract](../docs/plan/zone-boundaries/contract.md) "Selected compatibility mechanism"; `src/features/{sites,packages,qgis,data}/*`; `src/features/packages/history.ts`.
 Do: Read `GET /v1/projects/{p}/sites` in its BE-22 shape with runtime parsing; carry `siteId`; mark the current package from `current_package_id` in Sites, the site page, package history (with its copy) and the QGIS page; read package history from the BE-22 package list; choose plans from the current package on Data and Overview.
@@ -583,7 +583,7 @@ Done when: Publish, replay and conflict e2e cases pass on the local stack; no sc
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-publish.spec.ts` and `zones-conflict.spec.ts`.
 
 ### WEB-39: Read observations with server filters and paging
-Status: todo · Phase 3 · Size L · Depends: BE-22, WEB-36 · Blocks: WEB-40, WEB-41
+Status: doing (2026-10-13; unit and static checks pass, `data-history.spec.ts` added for the zone review fixture) · Phase 3 · Size L · Depends: BE-22, WEB-36 · Blocks: WEB-40, WEB-41
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-9, 7.1 and 7.2; [contract](../docs/plan/zone-boundaries/contract.md) "Observation reads, filters and exports"; `src/features/data/*`; `src/lib/time.ts`.
 Do: Add the observation page adapter with runtime parsing, the URL-to-query builder (site-scoped zones by identity or version, round, observer, project-day to UTC), pushed filter history, "Show the next 500" through a Server Action, totals and refresh, the new columns, inventory rows, and "Search loaded observations".
@@ -607,7 +607,7 @@ Done when: `observations.csv` inside the downloaded ZIP has exactly `total_match
 Verify: `pnpm --dir web test:unit` (summary, export, overview, reports), `pnpm web:check`, `export-v2.spec.ts`.
 
 ### WEB-42: Upload QGIS packages with zone identity mapping
-Status: todo · Phase 3 · Size M · Depends: BE-22, WEB-36, DB-18 · Blocks: WEB-28
+Status: doing (2026-10-13; unit and static checks pass, `packages-identity.spec.ts` added) · Phase 3 · Size M · Depends: BE-22, WEB-36, DB-18 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.11; [contract](../docs/plan/zone-boundaries/contract.md) "Existing import/publication route" and "Package format 2 and capabilities"; `src/features/packages/UploadStep.tsx`; `backend/src/fieldmaps_api/zone_import_schemas.py`.
 Do: Add the identity mapping step to every upload (a first upload maps every feature to a new zone) (preselect only features carrying a matching `zone_id`; code or label matches stay unselected suggestions), the removed-zone list, the change note, a per-attempt `request_id`, `expected_current_package_id`, and the conflict and identity error copy.

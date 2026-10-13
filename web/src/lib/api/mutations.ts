@@ -3,6 +3,8 @@ import "server-only";
 import type { OrgRole, ProjectRole } from "@/lib/workspace/types";
 
 import { call, callEmpty } from "./client";
+import { ApiError } from "./errors";
+import { siteSchema } from "./sites";
 import type {
 	FormVersionDetail,
 	InvitationCreated,
@@ -121,21 +123,27 @@ export function revokeProjectInvitation(projectId: string, invitationId: string)
 
 /* ── Sites ────────────────────────────────────────────────────────────────── */
 
-/** A new site has no map until a package is prepared for its code. */
-export function createSite(projectId: string, body: SiteCreate): Promise<Site> {
-	return call(api =>
+/** A new site has no map until its first package is uploaded. */
+export async function createSite(projectId: string, body: SiteCreate): Promise<Site> {
+	const data = await call<unknown>(api =>
 		api.POST("/v1/projects/{project_id}/sites", { params: { path: { project_id: projectId } }, body })
 	);
+	const parsed = siteSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
 }
 
-/** Name and description; a site's code never changes. */
-export function patchSite(projectId: string, code: string, patch: SitePatch): Promise<Site> {
-	return call(api =>
-		api.PATCH("/v1/projects/{project_id}/sites/{site_code}", {
-			params: { path: { project_id: projectId, site_code: code } },
+/** Name and description; a site's code never changes. The site is named by its UUID. */
+export async function patchSite(projectId: string, siteId: string, patch: SitePatch): Promise<Site> {
+	const data = await call<unknown>(api =>
+		api.PATCH("/v1/projects/{project_id}/sites/{site_id}", {
+			params: { path: { project_id: projectId, site_id: siteId } },
 			body: patch
 		})
 	);
+	const parsed = siteSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
 }
 
 /* ── Forms ────────────────────────────────────────────────────────────────── */

@@ -7,7 +7,8 @@ import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 import { ApiError, apiRequestError, parseApiError } from "./errors";
 import type { paths } from "./schema";
-import type { PackageDetail, PackageSubmission, ProjectImportRequest, ProjectImportResult } from "./types";
+import { publicationSchema } from "./sites";
+import type { PackageSubmission, ProjectImportRequest, ProjectImportResult, Publication } from "./types";
 
 /**
  * Requests the browser sends to the API itself, as the signed-in person: map package uploads (up to
@@ -65,10 +66,12 @@ export function browserApi(timeoutMs = REQUEST_TIMEOUT_MS) {
 }
 
 /**
- * Sends a map package from QGIS layers and returns what the API prepared, with its checks. A blocked
- * package is still an answer (state "blocked"); only a refused request throws.
+ * Sends a map package from QGIS layers. DECA Mark checks it, and either publishes it as the site's next
+ * version (201) or refuses it with the reasons (a 4xx, thrown). Sending the same request again, with the
+ * same `request_id`, returns the original result with `replayed: true` (200), which may no longer be the
+ * site's current version.
  */
-export async function preparePackage(projectId: string, submission: PackageSubmission): Promise<PackageDetail> {
+export async function preparePackage(projectId: string, submission: PackageSubmission): Promise<Publication> {
 	try {
 		const api = browserApi(TRANSFER_TIMEOUT_MS);
 		const { data, error, response } = await api.POST("/v1/projects/{project_id}/packages", {
@@ -76,7 +79,9 @@ export async function preparePackage(projectId: string, submission: PackageSubmi
 			body: submission
 		});
 		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
-		return data;
+		const parsed = publicationSchema.safeParse(data);
+		if (!parsed.success) throw new ApiError("unknown", "retry");
+		return parsed.data;
 	} catch (error) {
 		throw apiRequestError(error);
 	}

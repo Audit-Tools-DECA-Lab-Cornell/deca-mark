@@ -18,12 +18,13 @@ import {
 	getProject,
 	listForms,
 	listObservations,
-	listPackages,
+	listProjectPackages,
 	listSites,
-	resolveProject
+	resolveProject,
+	summarizeObservations
 } from "@/lib/api/workspace";
 import { activity } from "@/lib/observations/summary";
-import { clock } from "@/lib/time";
+import { addDays, clock } from "@/lib/time";
 import { projectAbilities } from "@/lib/workspace/access";
 import { collectPath } from "@/lib/workspace/home";
 import { settle } from "@/lib/workspace/result";
@@ -60,14 +61,23 @@ export default async function OverviewPage({
 	const [projectRead, sitesRead, packagesRead, formsRead, observationsRead] = await Promise.all([
 		settle(getProject(ref.id)),
 		settle(listSites(ref.id)),
-		settle(listPackages(ref.id)),
+		settle(listProjectPackages(ref.id)),
 		settle(listForms(ref.id)),
+		// The newest 500, for the counts read from records; the page's total says how many match in all.
 		settle(listObservations(ref.id))
 	]);
 	// Days and times are the project's own; without its time zone none of them can be shown truthfully.
 	if (!projectRead.ok) return <LoadFailure failure={projectRead.failure} what="the overview" />;
 	const projectClock = clock(projectRead.data.timezone);
 	const nowIso = new Date().toISOString();
+	// Today and the last 7 days in the project's time zone, counted by the server for every record.
+	const todayKey = projectClock.dayKey(nowIso);
+	const recentRead = await settle(
+		Promise.all([
+			summarizeObservations(ref.id, { observedFrom: projectClock.dayStart(todayKey) }),
+			summarizeObservations(ref.id, { observedFrom: projectClock.dayStart(addDays(todayKey, -6)) })
+		]).then(([today, week]) => ({ today: today.total_matching, last7Days: week.total_matching }))
+	);
 
 	// Needs attention: the first blocked check of each site's newest package, when that package is blocked.
 	const newestBlocked =
@@ -75,7 +85,7 @@ export default async function OverviewPage({
 			? sitesRead.data.flatMap(site => {
 					const newest = packagesRead.data
 						.filter(entry => entry.site_code === site.code)
-						.sort((a, b) => b.version - a.version)[0];
+						.sort((a, b) => b.package_version - a.package_version)[0];
 					return newest?.state === "blocked" ? [newest] : [];
 				})
 			: [];
@@ -105,7 +115,7 @@ export default async function OverviewPage({
 	// Activity: from whichever sources could be read; the others are named.
 	const entries = activity(
 		{
-			rows: observationsRead.ok ? observationsRead.data.rows : [],
+			rows: observationsRead.ok ? observationsRead.data.items : [],
 			packages: packagesRead.ok ? packagesRead.data : [],
 			forms: formsRead.ok ? formsRead.data : [],
 			sites: sitesRead.ok ? sitesRead.data : []
@@ -133,6 +143,7 @@ export default async function OverviewPage({
 			<FieldReturnIsland
 				sites={sitesRead}
 				observations={observationsRead}
+				recent={recentRead}
 				nowIso={nowIso}
 				clock={projectClock}
 				dataHref={`${base}/data`}
@@ -149,7 +160,6 @@ export default async function OverviewPage({
 						base={base}
 						manage={abilities.manage}
 						sites={sitesRead}
-						observations={observationsRead}
 						requested={firstOf(query.site)}
 					/>
 				</Suspense>
@@ -158,7 +168,10 @@ export default async function OverviewPage({
 					<ActivityIsland
 						entries={entries}
 						unread={unread}
-						limited={observationsRead.ok && observationsRead.data.limited}
+						limited={
+							observationsRead.ok &&
+							observationsRead.data.total_matching > observationsRead.data.items.length
+						}
 						nowIso={nowIso}
 						clock={projectClock}
 						dataHref={`${base}/data`}

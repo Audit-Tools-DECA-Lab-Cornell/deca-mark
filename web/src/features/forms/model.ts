@@ -1,3 +1,4 @@
+import { boundFormVersions } from "@/lib/api/sites";
 import type { FormSummary, Site, VersionState } from "@/lib/api/types";
 import type { Condition, FormDefinition, Question } from "@/lib/forms";
 
@@ -48,10 +49,10 @@ export type FormRow = {
 	readonly sites: readonly SiteRef[];
 };
 
-/** The sites whose current map package names this form version. */
+/** The sites whose current map package binds this form version, as its play form or its inventory form. */
 export function sitesUsing(code: string, sites: readonly Site[]): SiteRef[] {
 	return sites
-		.filter(site => site.package?.form_version === code)
+		.filter(site => site.package !== null && boundFormVersions(site.package.forms).includes(code))
 		.map(site => ({ code: site.code, name: site.name }));
 }
 
@@ -117,9 +118,8 @@ const SHARED_ACTS: ReadonlySet<string> = new Set(["Record"]);
 
 /**
  * Whether the form asks only about a zone (its climate, the loose parts available) and nothing about a
- * play event. The collector finds such a form by its content, as this does (`isInventoryForm` in
- * `mobile/src/packages/hosted/archive.ts`): the Inventory round uses the newest published one of these.
- * Every other form is a play form, which a site uses only when its current map package names it.
+ * play event: a form a map package can bind as its inventory form. Every other form is a play form. Either
+ * way a site uses a form only when its current map package names it (contract "Package forms").
  */
 export function isZoneForm(definition: Pick<RawDefinition, "questions">): boolean {
 	const acts = definition.questions.map(question => question.act);
@@ -276,17 +276,16 @@ export type Delivery = {
 
 /**
  * How observers come to collect with a published version, as the collector does it
- * (`mobile/src/packages/hosted/prepare.ts`). A play form reaches a device only through a site's map package,
- * which names the form version it was prepared with; publishing a new version changes nothing for a site
- * until a package that names it is prepared and downloaded. A zone-only form is found by its content when a
- * site is downloaded, so it arrives with the next download.
+ * (`mobile/src/packages/hosted/prepare.ts`). A form reaches a device only through a site's map package,
+ * which names its play form and its inventory form exactly; publishing a new version changes nothing for a
+ * site until a package that names it is prepared and observers download the site again.
  */
 export function deliveryOf(definition: Pick<RawDefinition, "questions">, code: string): Delivery {
 	if (isZoneForm(definition))
 		return {
 			kind: "zone",
-			text: `${code} asks only about a zone, so the app uses it for the Inventory round. Observers get it the next time they download a site in the app. If more than one published form asks only about a zone, the app uses the first by name.`,
-			confirm: `I understand that ${code} cannot be edited once it is published, and that observers get it the next time they download a site.`
+			text: `${code} asks only about a zone, so a map package can name it as the form for the Inventory round. Observers collect with it only through a map package that names it. A site keeps the inventory form its current map package names until you prepare a new package with ${code} and observers download the site again in the app.`,
+			confirm: `I understand that ${code} cannot be edited once it is published, and that observers get it only through a new map package.`
 		};
 	return {
 		kind: "play",

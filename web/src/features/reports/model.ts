@@ -1,4 +1,4 @@
-import type { ObservationRow } from "@/lib/api/types";
+import type { Observation } from "@/lib/api/types";
 import { plural, roundName } from "@/lib/labels";
 import { allOptions, answerLabel, playTypeQuestion } from "@/lib/observations/answers";
 import { byDay, byObserver, byRound, byZone, type ObservationLike } from "@/lib/observations/summary";
@@ -10,9 +10,9 @@ import type { RoundType } from "@/lib/workspace/types";
  * browser filters them by day and counts them (`buildReport`), so changing a date never asks for the list
  * again. Pure: no imports of server code, so the tests load it directly.
  *
- * Rules (backend/WEB-FLOW-HANDOFF.md § Bounded reports and exports): days are the project's calendar days
- * of `observed_at`; a missing round counts as Standard; "No zone" and zones the newest package no longer
- * has stay in the counts; play type is read with each row's own form version, never the newest form.
+ * Rules: days are the project's calendar days of `observed_at`; a missing round counts as Standard; every
+ * record counts in the zone it was recorded in, and a zone the current package no longer has keeps the
+ * label it was recorded with; play type is read with each row's own form version, never the newest form.
  */
 
 /** Bars listed for the days chart; older days are left out and the page says so. */
@@ -26,7 +26,10 @@ export type ReportRow = {
 	readonly id: string;
 	readonly siteCode: string;
 	readonly siteName: string;
-	readonly zone: string | null;
+	/** The zone's identity, the same on every map version. */
+	readonly zone: string;
+	/** The zone's label when the record was collected. */
+	readonly zoneLabel: string;
 	readonly round: RoundType;
 	readonly observer: string;
 	readonly observedAt: string;
@@ -51,7 +54,7 @@ export type Bar = { readonly key: string; readonly label: string; readonly value
 export type Report = {
 	readonly total: number;
 	readonly observers: number;
-	/** Zones that have at least one record (not "No zone"). */
+	/** Zones that have at least one record. */
 	readonly zonesWithRecords: number;
 	readonly siteNames: readonly string[];
 	readonly firstDay: string | null;
@@ -76,7 +79,7 @@ export type Report = {
  * read" rather than a guess from another version.
  */
 export function reportRows(
-	rows: readonly ObservationRow[],
+	rows: readonly Observation[],
 	definitions: Readonly<Record<string, unknown>>
 ): { rows: ReportRow[]; playOptions: PlayOptions } {
 	const questions = new Map<string, { id: string } | null>();
@@ -104,8 +107,9 @@ export function reportRows(
 				id: row.observation_id,
 				siteCode: row.site_code,
 				siteName: row.site_name,
-				zone: row.zone || null,
-				round: row.round_type ?? "standard",
+				zone: row.zone_id,
+				zoneLabel: row.zone_label,
+				round: row.round_type,
 				observer: row.observer,
 				observedAt: row.observed_at,
 				formVersion: version,
@@ -147,14 +151,13 @@ export function inDays(rows: readonly ReportRow[], clock: Clock, from: string | 
 
 /* ── Counting ─────────────────────────────────────────────────────────────── */
 
-const NONE = "none";
-
-function asObservation(row: ReportRow, zone: string | null): ObservationLike {
+function asObservation(row: ReportRow, zone: string): ObservationLike {
 	return {
 		observation_id: row.id,
 		site_code: row.siteCode,
 		site_name: row.siteName,
-		zone,
+		zone_id: zone,
+		zone_label: row.zoneLabel,
 		round_type: row.round,
 		observer: row.observer,
 		observed_at: row.observedAt,
@@ -163,9 +166,8 @@ function asObservation(row: ReportRow, zone: string | null): ObservationLike {
 	};
 }
 
-/** The same zone id can belong to two sites, so with more than one site a zone is counted per site. */
-function zoneKey(row: ReportRow, multiSite: boolean): string | null {
-	if (row.zone === null) return null;
+/** With more than one site, a zone's key carries its site, so its bar can name the site too. */
+function zoneKey(row: ReportRow, multiSite: boolean): string {
 	return multiSite ? `${row.siteCode}\u0000${row.zone}` : row.zone;
 }
 
@@ -200,17 +202,12 @@ export function buildReport(input: {
 		id: multiSite ? `${zone.siteCode}\u0000${zone.id}` : zone.id,
 		label: multiSite ? `${zone.siteName} · ${zone.label}` : zone.label
 	}));
-	// A zone no current package has: named by its id (and its site, when there is more than one).
-	const historical = new Map<string, string>();
-	for (const row of rows)
-		if (row.zone !== null)
-			historical.set(zoneKey(row, multiSite)!, multiSite ? `${row.siteName} · ${row.zone}` : row.zone);
+	// A zone no current package has keeps the label it was recorded with (and its site's name, with several).
+	const known = new Set(refs.map(ref => ref.id));
+	const siteOf = new Map(rows.map(row => [zoneKey(row, multiSite), row.siteName]));
 	const zoneBars: Bar[] = byZone(adapted, refs).map(entry => ({
-		key: entry.key ?? NONE,
-		label:
-			entry.key !== null && historical.has(entry.key) && entry.label === entry.key
-				? historical.get(entry.key)!
-				: entry.label,
+		key: entry.key,
+		label: multiSite && !known.has(entry.key) ? `${siteOf.get(entry.key) ?? ""} · ${entry.label}` : entry.label,
 		value: entry.count
 	}));
 
@@ -221,7 +218,7 @@ export function buildReport(input: {
 	return {
 		total: rows.length,
 		observers: observers.length,
-		zonesWithRecords: zoneBars.filter(bar => bar.key !== NONE && bar.value > 0).length,
+		zonesWithRecords: zoneBars.filter(bar => bar.value > 0).length,
 		siteNames: [...new Set(rows.map(row => row.siteName))].sort((a, b) => a.localeCompare(b, "en")),
 		firstDay: days[0]?.key ?? null,
 		lastDay: days[days.length - 1]?.key ?? null,

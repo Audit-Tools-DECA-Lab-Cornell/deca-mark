@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { listSites } from "./support/api";
+import { currentZone, listSites } from "./support/api";
 import { authFile } from "./support/auth";
 import { manifest, projectPath, runStamp, SEED } from "./support/manifest";
 import { countPattern } from "./support/ui";
@@ -21,8 +21,9 @@ test("the Fall Creek site plan shows Zone A and its observations", async ({ page
 	const main = page.getByRole("main");
 	// The zone is drawn and listed from the current package's zones layer.
 	await expect(main.getByText(new RegExp(`Zone ${baseline.zone}\\b`)).first()).toBeVisible();
-	// Its row leads to the data filtered to that zone.
-	const zoneLink = main.locator(`a[href*="zone=${baseline.zone}"]`).first();
+	// Its row leads to the data filtered to that zone, by its identity.
+	const zone = await currentZone(SEED.sites.fallCreek, baseline.zone);
+	const zoneLink = main.locator(`a[href*="zone=${zone.zone_id}"]`).first();
 	await expect(zoneLink).toBeVisible();
 	await expect(main).toContainText(countPattern(baseline.total, "observation"));
 });

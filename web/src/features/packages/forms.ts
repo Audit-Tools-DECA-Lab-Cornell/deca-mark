@@ -35,13 +35,13 @@ export function publishedVersions(forms: readonly FormSummary[]): PublishedVersi
 		);
 }
 
-/** The acts that describe a zone rather than a play event (the collector's `isInventoryForm`). */
+/** The acts that describe a zone rather than a play event. */
 const ZONE_ACTS = new Set(["Climate", "Inventory"]);
 const SHARED_ACTS = new Set(["Record"]);
 
 /**
  * Whether a form records a zone's inventory: it asks about the zone's climate or loose parts and nothing
- * about a play event. A package is prepared for the play form, not for this one.
+ * about a play event. A package binds it as its inventory form, never as its play form.
  */
 export function isInventoryDefinition(definition: RawDefinition | unknown): boolean {
 	const acts = readDefinition(definition).questions.map(question => question.act ?? "");
@@ -60,4 +60,15 @@ export function chooseFormVersion(
 ): string | null {
 	if (currentFormVersion && published.some(version => version.code === currentFormVersion)) return currentFormVersion;
 	return (published.find(version => !inventory.has(version.code)) ?? published[0])?.code ?? null;
+}
+
+/**
+ * The inventory form a site's first upload starts on: the most recently published form that asks only about
+ * a zone, or null (Inventory off) when none is. Later uploads keep the current map's choice instead.
+ */
+export function chooseInventoryForm(
+	published: readonly PublishedVersion[],
+	inventory: ReadonlySet<string>
+): string | null {
+	return published.find(version => inventory.has(version.code))?.code ?? null;
 }

@@ -9,7 +9,7 @@ import { RadioRows } from "@/components/contour/RadioRows";
 import { useToast } from "@/components/contour/Toast";
 import { saveText } from "@/lib/download";
 import { codebook, EMPTY_CELL_NOTE, exportFileName, toCsv, toGeoJson } from "@/lib/export/observations";
-import { plural } from "@/lib/labels";
+import { formatCount, plural } from "@/lib/labels";
 import type { Clock } from "@/lib/time";
 
 import type { DataRecord } from "./view";
@@ -25,22 +25,24 @@ const FORMATS: Record<Format, { word: string; extension: "csv" | "geojson"; mime
 export type ExportObservationsProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	/** The observations in view: what the table shows after every filter. */
+	/** The observations in view: the loaded ones the search finds. */
 	records: readonly DataRecord[];
 	/** Each form version's definition, as it was when the version was published. */
 	definitions: Readonly<Record<string, unknown>>;
 	/** Form versions whose definition could not be read. */
 	missingVersions: readonly string[];
-	/** The list holds only the newest 500 observations. */
-	limited: boolean;
+	/** How many observations match the filters in all. */
+	matching: number;
+	/** Whether a search narrows the loaded observations. */
+	searched: boolean;
 	projectCode: string;
 	clock: Clock;
 };
 
 /**
  * Export: the observations in view as a CSV or GeoJSON file, or the codebook that explains the columns.
- * The file is written in this browser from the rows on screen, with each row's own form version, so
- * answers keep the wording and option codes they were collected with.
+ * The file is written in this browser from the loaded rows on screen, with each row's own form version, so
+ * answers keep the wording and option codes they were collected with. It says when more match than loaded.
  */
 export function ExportObservations({
 	open,
@@ -48,7 +50,8 @@ export function ExportObservations({
 	records,
 	definitions,
 	missingVersions,
-	limited,
+	matching,
+	searched,
 	projectCode,
 	clock
 }: ExportObservationsProps) {
@@ -79,7 +82,12 @@ export function ExportObservations({
 		toast({ title: `Download started: ${fileName}`, tone: "saved" });
 	}
 
-	const scope = `${plural(records.length, "observation")} in this view`;
+	const partial = !searched && matching > records.length;
+	const scope = searched
+		? `The ${plural(records.length, "loaded observation")} the search finds`
+		: partial
+			? `The ${plural(records.length, "loaded observation")} of ${formatCount(matching)} that match`
+			: `${plural(records.length, "observation")} in this view`;
 
 	return (
 		<Dialog
@@ -122,7 +130,8 @@ export function ExportObservations({
 						{
 							value: "geojson",
 							label: "GeoJSON",
-							description: "One point per observation with its answers, for QGIS."
+							description:
+								"One feature per observation with its answers, for QGIS. Inventories describe a whole zone and have no point."
 						},
 						{
 							value: "codebook",
@@ -131,9 +140,11 @@ export function ExportObservations({
 						}
 					]}
 				/>
-				{limited && (
-					<Note tone="neutral" title="Based on the newest 500 observations.">
-						Older observations are not in this file.
+				{partial && (
+					<Note
+						tone="neutral"
+						title={`This file holds the ${formatCount(records.length)} loaded observations.`}>
+						{`${formatCount(matching - records.length)} more match the filters. Show the next 500 on the page before exporting to include them.`}
 					</Note>
 				)}
 				{missingVersions.length > 0 && (

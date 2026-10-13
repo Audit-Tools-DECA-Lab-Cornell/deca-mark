@@ -125,7 +125,7 @@ export default async function FormVersionPage({ params }: { params: Promise<Para
 				siteName: site.name,
 				zoneId: zone?.id ?? null,
 				zoneName: zone?.name ?? null,
-				mapVersion: `v${site.package.version}`
+				mapVersion: `v${site.package.package_version}`
 			};
 		}
 	}

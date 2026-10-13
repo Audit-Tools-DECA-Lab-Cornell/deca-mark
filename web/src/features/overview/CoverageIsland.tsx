@@ -27,8 +27,6 @@ export type CoverageIslandProps = {
 	plan: ProjectedSite | null;
 	/** Why there is no plan, when there is not one. The counts do not depend on it. */
 	planNote: string | null;
-	/** The list was cut at 500 records, so older ones may be missing from the counts. */
-	limited: boolean;
 	siteHref: string;
 	/** The Data page's address; zone rows add `?site=&zone=`. */
 	dataHref: string;
@@ -39,16 +37,7 @@ export type CoverageIslandProps = {
  * It is where records exist, never whether a round is complete: the project sets no target. Pointing at a
  * zone row highlights its zone on the plan, and the other way round.
  */
-export function CoverageIsland({
-	site,
-	choices,
-	coverage,
-	plan,
-	planNote,
-	limited,
-	siteHref,
-	dataHref
-}: CoverageIslandProps) {
+export function CoverageIsland({ site, choices, coverage, plan, planNote, siteHref, dataHref }: CoverageIslandProps) {
 	const pickerId = useId();
 	const router = useRouter();
 	const pathname = usePathname();
@@ -58,12 +47,12 @@ export function CoverageIsland({
 	const zoneStyles: Record<string, ZonePlanStyle> = Object.fromEntries(
 		(plan?.zones ?? []).map(zone => [
 			zone.id,
-			(hovered !== null && hovered === (zone.code ?? zone.id)
+			(hovered !== null && hovered === zone.id
 				? { emphasis: "focus", hatched: true }
 				: {}) satisfies ZonePlanStyle
 		])
 	);
-	const leave = (zone: string | null) => setHovered(current => (current === zone ? null : current));
+	const leave = (zone: string) => setHovered(current => (current === zone ? null : current));
 	const dataFor = (zone: string) =>
 		`${dataHref}?site=${encodeURIComponent(site.code)}&zone=${encodeURIComponent(zone)}`;
 
@@ -78,13 +67,12 @@ export function CoverageIsland({
 			footnote={
 				<div className="flex flex-col gap-2">
 					<p>
-						Counts are the observations recorded in each zone and round. They show where records exist, not
-						whether a round is complete.
+						Counts are every observation recorded in each zone and round, on every map version. They show
+						where records exist, not whether a round is complete.
 					</p>
 					{coverage.totals.inventory > 0 && (
-						<p>Inventory observations sit at the centre of their zone, not where play happened.</p>
+						<p>Inventory observations describe a whole zone, not a place in it.</p>
 					)}
-					{limited && <p>Based on the newest 500 observations.</p>}
 				</div>
 			}>
 			{choices.length > 1 && (
@@ -127,8 +115,8 @@ export function CoverageIsland({
 									fillRule="nonzero"
 									fill="none"
 									pointerEvents="all"
-									onPointerEnter={() => setHovered(zone.code ?? zone.id)}
-									onPointerLeave={() => leave(zone.code ?? zone.id)}
+									onPointerEnter={() => setHovered(zone.id)}
+									onPointerLeave={() => leave(zone.id)}
 								/>
 							))}
 						</g>
@@ -157,23 +145,19 @@ export function CoverageIsland({
 					<TBody>
 						{coverage.rows.map(row => (
 							<Tr
-								key={row.zone ?? "none"}
+								key={row.zone}
 								onPointerEnter={() => setHovered(row.zone)}
 								onPointerLeave={() => leave(row.zone)}
 								onFocus={() => setHovered(row.zone)}
 								onBlur={() => leave(row.zone)}
-								className={cx(row.zone !== null && hovered === row.zone && "bg-ground")}>
+								className={cx(hovered === row.zone && "bg-ground")}>
 								<Td>
-									{row.zone !== null ? (
-										<TextLink tone="ink" href={dataFor(row.zone)}>
-											{row.label}
-										</TextLink>
-									) : (
-										row.label
-									)}
-									{row.zone !== null && !row.known && (
+									<TextLink tone="ink" href={dataFor(row.zone)}>
+										{row.label}
+									</TextLink>
+									{!row.known && (
 										<span className="block type-small text-ink-2">
-											Not in the current map package
+											Not in the current map version
 										</span>
 									)}
 									{row.total === 0 && (

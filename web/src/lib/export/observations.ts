@@ -17,12 +17,23 @@ import { answerHeader, csvLine, RECORD_COLUMNS, repeatsRecordColumn } from "./co
  *   under its own id.
  */
 
-/** The parts of an observation an export writes. `ObservationRow` and `StoredObservation` both fit. */
+/**
+ * The parts of an observation an export writes. An observation and its detail both fit. Each record keeps
+ * the zone label and map version it was recorded with; an inventory is a whole-zone record with no point.
+ */
 export type ExportRow = {
 	readonly observation_id: string;
+	readonly project_id: string;
+	readonly user_id: string;
+	readonly site_id: string;
 	readonly site_code: string;
 	readonly site_name: string;
-	readonly zone: string | null;
+	readonly zone_id: string;
+	readonly zone_code: string;
+	readonly zone_label: string;
+	readonly package_id: string;
+	readonly package_version: number;
+	readonly spatial_support: "point" | "zone";
 	readonly round_type: RoundType | null;
 	readonly first_round: boolean | null;
 	readonly placement: "hand" | "zone" | null;
@@ -31,7 +42,10 @@ export type ExportRow = {
 	readonly received_at?: string | null;
 	readonly form_version: string;
 	readonly revision: number;
-	readonly coordinates: readonly [number, number] | readonly number[];
+	/** A point record's place; null for an inventory. */
+	readonly geometry: { readonly coordinates: readonly [number, number] } | null;
+	/** An inventory's zone label point; null for a point record. */
+	readonly display_anchor: { readonly coordinates: readonly [number, number] } | null;
 	readonly answers: Readonly<Record<string, unknown>>;
 };
 
@@ -240,13 +254,25 @@ function yesNo(value: boolean | null | undefined): string | null {
 function recordValues(row: ExportRow): Record<string, string | number | null> {
 	const round = roundOf(row.round_type);
 	const inventory = round === "inventory";
-	const [longitude, latitude] = row.coordinates;
+	const [longitude, latitude] = row.geometry?.coordinates ?? [null, null];
+	const [anchorLongitude, anchorLatitude] = row.display_anchor?.coordinates ?? [null, null];
 	return {
 		observation_id: row.observation_id,
 		label: shortLabel(row.observation_id),
+		project_id: row.project_id,
+		user_id: row.user_id,
+		site_id: row.site_id,
 		site_code: row.site_code,
 		site_name: row.site_name,
-		zone: row.zone || null,
+		zone: row.zone_code,
+		package_id: row.package_id,
+		map_version: row.package_version,
+		zone_id: row.zone_id,
+		zone_code: row.zone_code,
+		zone_label_at_capture: row.zone_label,
+		spatial_support: row.spatial_support,
+		display_anchor_longitude: typeof anchorLongitude === "number" ? anchorLongitude : null,
+		display_anchor_latitude: typeof anchorLatitude === "number" ? anchorLatitude : null,
 		round_type: round,
 		Rel_Round: inventory ? null : round === "reliability" ? "yes" : "no",
 		First_Round: inventory ? null : yesNo(row.first_round),
@@ -261,9 +287,24 @@ function recordValues(row: ExportRow): Record<string, string | number | null> {
 	};
 }
 
+/**
+ * A text cell a spreadsheet would read as a formula (`=`, `+`, `-` or `@` after any leading spaces, or a
+ * tab or line break first) starts with an apostrophe instead, so opening the file never runs it. The same
+ * rule as the server export (`backend/src/fieldmaps_api/domain/observation_export.py`); numbers are not
+ * text and are left alone.
+ */
+export function neutralizeFormula(value: string): string {
+	return /^\s*[=+\-@]/.test(value) || /^[\t\r\n]/.test(value) ? `'${value}` : value;
+}
+
+/** A CSV line of text cells, each guarded like an answer (headers and codebook lines). */
+function textLine(cells: readonly string[]): string {
+	return csvLine(cells.map(neutralizeFormula));
+}
+
 function cellOf(value: unknown): string {
 	if (value === null) return NULL_ANSWER;
-	if (typeof value === "string") return value;
+	if (typeof value === "string") return neutralizeFormula(value);
 	if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
 	if (typeof value === "boolean") return value ? "yes" : "no";
 	if (Array.isArray(value)) return value.map(entry => (entry === null ? NULL_ANSWER : cellOf(entry))).join(";");
@@ -279,7 +320,7 @@ export type CsvOptions = {
 export function toCsv(rows: readonly ExportRow[], definitions: Definitions, options: CsvOptions = {}): string {
 	const planned = plan(rows, definitions);
 	const { columns } = planned;
-	const lines = [csvLine([...RECORD_COLUMNS.map(entry => entry.column), ...columns.map(column => column.header)])];
+	const lines = [textLine([...RECORD_COLUMNS.map(entry => entry.column), ...columns.map(column => column.header)])];
 	for (const row of rows) {
 		const record = recordValues(row);
 		const cells = answerCells(planned, row);
@@ -287,7 +328,8 @@ export function toCsv(rows: readonly ExportRow[], definitions: Definitions, opti
 			csvLine([
 				...RECORD_COLUMNS.map(entry => {
 					const value = record[entry.column];
-					return value === null || value === undefined ? "" : String(value);
+					if (value === null || value === undefined) return "";
+					return typeof value === "string" ? neutralizeFormula(value) : String(value);
 				}),
 				...columns.map(column => (cells.has(column.header) ? cellOf(cells.get(column.header)) : ""))
 			])
@@ -296,7 +338,11 @@ export function toCsv(rows: readonly ExportRow[], definitions: Definitions, opti
 	return `${options.byteOrderMark ? "﻿" : ""}${lines.join("\r\n")}\r\n`;
 }
 
-/** The records as a GeoJSON FeatureCollection of points, [longitude, latitude], with every column as a property. */
+/**
+ * The records as a GeoJSON FeatureCollection, with every column as a property: a point record is a Point,
+ * [longitude, latitude]; an inventory is a whole-zone record with null geometry, joined to its zone by
+ * `package_id` and `zone_id`.
+ */
 export function toGeoJson(rows: readonly ExportRow[], definitions: Definitions): string {
 	const planned = plan(rows, definitions);
 	const features = rows.map(row => {
@@ -310,7 +356,7 @@ export function toGeoJson(rows: readonly ExportRow[], definitions: Definitions):
 		return {
 			type: "Feature",
 			id: row.observation_id,
-			geometry: { type: "Point", coordinates: [record.longitude, record.latitude] },
+			geometry: row.geometry ? { type: "Point", coordinates: [record.longitude, record.latitude] } : null,
 			properties
 		};
 	});
@@ -323,11 +369,11 @@ export function toGeoJson(rows: readonly ExportRow[], definitions: Definitions):
  * and the option codes and their labels.
  */
 export function codebook(definitions: Definitions, rows: readonly ExportRow[] = []): string {
-	const lines = [csvLine(["export_column", "source", "label", "type", "values"])];
-	for (const entry of RECORD_COLUMNS) lines.push(csvLine([entry.column, "record", entry.label, entry.type, ""]));
+	const lines = [textLine(["export_column", "source", "label", "type", "values"])];
+	for (const entry of RECORD_COLUMNS) lines.push(textLine([entry.column, "record", entry.label, entry.type, ""]));
 	for (const column of plan(rows, definitions).columns)
 		lines.push(
-			csvLine([
+			textLine([
 				column.header,
 				`question ${column.questionId} (${column.formVersions.join(", ")})`,
 				column.label,

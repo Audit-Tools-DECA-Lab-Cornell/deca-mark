@@ -85,6 +85,11 @@ export type Clock = {
 	keyLabel(key: string): string;
 	/** A day key as "Oct 07". */
 	shortKeyLabel(key: string): string;
+	/**
+	 * The first instant of a calendar day in this timezone, as a UTC ISO string: what an API filter by
+	 * day takes. A day whose midnight the clocks skip starts at the first instant that falls on it.
+	 */
+	dayStart(key: string): string;
 };
 
 type Formatters = {
@@ -166,6 +171,21 @@ export function clock(timeZone: string): Clock {
 			return label === "Today" || label === "Yesterday" ? `${label} ${time}` : `${label} · ${time}`;
 		},
 		keyLabel: key => UTC.day.format(noonOf(key)),
-		shortKeyLabel: key => UTC.shortDay.format(noonOf(key))
+		shortKeyLabel: key => UTC.shortDay.format(noonOf(key)),
+		dayStart: key => {
+			const [year, month, day] = keyParts(key);
+			const wallMidnight = Date.UTC(year, month - 1, day);
+			const keyAt = (ms: number) => dayKey(new Date(ms).toISOString());
+			// Every offset is between −12 and +14 hours: the day starts within this window. Day keys only grow
+			// with time, so the first second on the day is found by halving the window.
+			let before = wallMidnight - 15 * 3_600_000;
+			let onOrAfter = wallMidnight + 13 * 3_600_000;
+			while (onOrAfter - before > 1000) {
+				const middle = before + Math.floor((onOrAfter - before) / 2000) * 1000;
+				if (keyAt(middle) < key) before = middle;
+				else onOrAfter = middle;
+			}
+			return new Date(onOrAfter).toISOString();
+		}
 	};
 }

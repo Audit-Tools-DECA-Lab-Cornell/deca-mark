@@ -37,16 +37,35 @@ export type Invitation = {
 	expires_at: string;
 };
 export type InvitationCreated = Invitation & { token: string; code: string };
-export type PackageSummary = { package_id: string; version: number; state: "ready" | "blocked"; site_code: string };
+export type PackageSummary = {
+	package_id: string;
+	package_version: number;
+	state: "ready" | "blocked";
+	site_id: string;
+};
+/** A site's packages, and which one is current (contract "Reads"). */
+export type PackageHistory = { current_package_id: string | null; packages: PackageSummary[] };
 export type FormVersion = { version_id: string; code: string; version: number; state: string };
 export type FormSummary = { code: string; name: string; versions: FormVersion[] };
 export type Project = { name: string; description: string | null; timezone: string; status: string };
-export type Site = { code: string; name: string; observation_count: number };
+export type SiteZone = { zone_id: string; zone_code: string; label: string };
+export type Site = {
+	site_id: string;
+	code: string;
+	name: string;
+	observation_count: number;
+	current_package_id: string | null;
+	package: { package_id: string; package_version: number; forms: { play: { form_version: string } } } | null;
+	zones: SiteZone[];
+};
 
 export const listProjectMembers = () => api<Member[]>("manager", "GET", `${project()}/members`);
 export const listProjectInvitations = () => api<Invitation[]>("manager", "GET", `${project()}/invitations`);
-export const listPackages = (site: string) =>
-	api<PackageSummary[]>("manager", "GET", `${project()}/packages?site=${encodeURIComponent(site)}`);
+/** A site's package history, by the site's code (the API takes its identity). */
+export async function listPackages(code: string): Promise<PackageHistory> {
+	const site = await siteByCode(code);
+	return api<PackageHistory>("manager", "GET", `${project()}/packages?site_id=${encodeURIComponent(site.site_id)}`);
+}
 export const listForms = () => api<FormSummary[]>("manager", "GET", `${project()}/forms`);
 export const getProject = () => api<Project>("manager", "GET", project());
 export const listSites = () => api<Site[]>("manager", "GET", `${project()}/sites`);
@@ -74,8 +93,26 @@ export async function ensureNotProjectMember(role: Role): Promise<void> {
 	}
 }
 
-/** The newest ready package's version for a site: the site's current map. */
-export async function currentPackageVersion(site: string): Promise<number | null> {
-	const ready = (await listPackages(site)).filter(item => item.state === "ready");
-	return ready.length ? Math.max(...ready.map(item => item.version)) : null;
+export async function siteByCode(code: string): Promise<Site> {
+	const site = (await listSites()).find(entry => entry.code === code);
+	if (!site) throw new Error(`No site ${code} in the seeded project.`);
+	return site;
+}
+
+/** The version of the package the site names as current: the site's current map. */
+export async function currentPackageVersion(code: string): Promise<number | null> {
+	const history = await listPackages(code);
+	return history.packages.find(item => item.package_id === history.current_package_id)?.package_version ?? null;
+}
+
+/** The newest version number a site has, so a spec knows which one its upload makes. */
+export async function newestPackageVersion(code: string): Promise<number> {
+	return Math.max(0, ...(await listPackages(code)).packages.map(item => item.package_version));
+}
+
+/** A zone of the site's current map, by its code. */
+export async function currentZone(code: string, zoneCode: string): Promise<SiteZone> {
+	const zone = (await siteByCode(code)).zones.find(entry => entry.zone_code === zoneCode);
+	if (!zone) throw new Error(`Site ${code} has no zone ${zoneCode} in its current map.`);
+	return zone;
 }

@@ -8,13 +8,14 @@ import type { RoundType } from "@/lib/workspace/types";
 type SiteLike = {
 	readonly code: string;
 	readonly name: string;
-	readonly zones?: readonly unknown[];
+	readonly zones: readonly unknown[];
+	/** The package `current_package_id` names. */
 	readonly package: {
 		readonly package_id: string;
-		readonly version: number;
+		readonly package_version: number;
 		readonly archive_bytes: number;
 		readonly prepared_at: string;
-		readonly form_version: string | null;
+		readonly forms: { readonly play: { readonly form_version: string } };
 	} | null;
 };
 
@@ -36,14 +37,14 @@ export function mapRows(sites: readonly SiteLike[]): MapRow[] {
 	return sites.map(site => ({
 		code: site.code,
 		name: site.name,
-		zoneCount: site.zones?.length ?? 0,
+		zoneCount: site.zones.length,
 		package: site.package
 			? {
 					id: site.package.package_id,
-					version: site.package.version,
+					version: site.package.package_version,
 					bytes: site.package.archive_bytes,
 					preparedAt: site.package.prepared_at,
-					formVersion: site.package.form_version
+					formVersion: site.package.forms.play.form_version
 				}
 			: null
 	}));
