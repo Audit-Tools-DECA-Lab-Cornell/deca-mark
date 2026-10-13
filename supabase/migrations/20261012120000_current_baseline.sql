@@ -2556,9 +2556,16 @@ ALTER TABLE fieldmaps.sites ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY visible_org_members ON fieldmaps.organization_members FOR SELECT TO fieldmaps_api USING (((user_id = fieldmaps.request_user_id()) OR fieldmaps_private.has_org_role(organization_id, ARRAY['owner'::text, 'admin'::text])));
 
-CREATE POLICY visible_profiles ON fieldmaps.profiles FOR SELECT TO fieldmaps_api USING (((user_id = fieldmaps.request_user_id()) OR (EXISTS ( SELECT
-   FROM fieldmaps.project_memberships m
-  WHERE ((m.user_id = profiles.user_id) AND (m.project_id IN ( SELECT fieldmaps_private.my_collaborative_project_ids() AS my_collaborative_project_ids)) AND fieldmaps_private.has_project_role(m.project_id, ARRAY['manager'::text]))))));
+CREATE POLICY visible_profiles ON fieldmaps.profiles FOR SELECT TO fieldmaps_api USING (
+  user_id = fieldmaps.request_user_id()
+  OR EXISTS (SELECT FROM fieldmaps.organization_members m
+    WHERE m.user_id = profiles.user_id
+      AND fieldmaps_private.has_org_role(m.organization_id, ARRAY['owner','admin']))
+  OR EXISTS (SELECT FROM fieldmaps.project_memberships m
+    WHERE m.user_id = profiles.user_id
+      AND m.project_id IN (SELECT fieldmaps_private.my_collaborative_project_ids())
+      AND fieldmaps_private.has_project_role(m.project_id, ARRAY['manager']))
+);
 
 ALTER TABLE fieldmaps.zone_drafts ENABLE ROW LEVEL SECURITY;
 

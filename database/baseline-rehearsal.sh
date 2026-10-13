@@ -40,14 +40,16 @@ docker cp contracts/zones/geometry.cases.json "$baseline_container:$baseline_roo
 docker cp contracts/zones/publication.cases.json "$baseline_container:$baseline_root/zone-publication.cases.json"
 docker cp contracts/zones/upload.cases.json "$baseline_container:$baseline_root/zone-upload.cases.json"
 baseline_psql -f "$baseline_root/database/tests/zone-bootstrap.sql"
-# The fresh schema has exactly one canonical baseline, never an incremental conversion.
+# Start from the canonical baseline, then apply subsequent current feature migrations.
 set -- supabase/migrations/*.sql
-if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-  printf '%s\n' 'Expected exactly one current schema baseline.' >&2
+if [ ! -f "$1" ] || [ "$(basename "$1")" != '20261012120000_current_baseline.sql' ]; then
+  printf '%s\n' 'Expected the current schema baseline as the first migration.' >&2
   exit 1
 fi
-baseline_name=$(basename "$1")
-baseline_psql --single-transaction -f "$baseline_root/supabase/migrations/$baseline_name" >/dev/null
+for baseline_migration in "$@"; do
+  baseline_name=$(basename "$baseline_migration")
+  baseline_psql --single-transaction -f "$baseline_root/supabase/migrations/$baseline_name" >/dev/null
+done
 baseline_psql -f "$baseline_root/supabase/seed.sql"
 if [ "$baseline_mode" = '--reset-only' ]; then
   printf '%s\n' 'Fresh baseline and seeds built on disposable PostgreSQL 17/PostGIS; existing databases untouched.'

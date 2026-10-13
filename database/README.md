@@ -20,7 +20,8 @@ Local confirmation and recovery templates in `supabase/templates/` display six-d
 
 `pnpm db:test` runs the SQL suite and `hosted/verify.sql` on the local database. Fixtures and temporary role grants roll back. API tests use generated UUIDs and the restricted runtime login; their committed observations/packages remain until an explicit local reset. No integration test silently skips when the stack is unavailable.
 
-DB-19 replaces the migration chain with one current baseline. Validate it from scratch
+DB-19 replaces the old migration chain with one current baseline. Later feature
+migrations (such as the email outbox) follow that baseline. Validate them from scratch
 without changing the persistent local database:
 
 ```sh
@@ -79,12 +80,23 @@ Auth/API seed runs produced identical manifests, package IDs, draft IDs/ETags an
 520 observation IDs, with every recorded revision still 1. The user also approved
 adapting the older browser seed to BE-22: UUID bindings, nested answers, valid
 in-zone points and coordinate-free inventories. Existing browser specs are unchanged.
-Browser acceptance remains pending until the unchanged suite passes; API fixture
-acceptance alone does not certify the web application.
+Completion verified on 2026-10-13 after the web contract updates: the final local
+desktop/phone browser suite without `--zones` passed **218 tests**, with **30**
+intentional zone-only skips and no failures. The user approved the organization
+profile visibility fix and current invitation assertion/readback correction that
+unblocked full regression. Repeat seeds still preserve all 520 recorded revisions,
+package identities and draft ETags. See [DB-18 acceptance evidence](../docs/reviews/zone-boundaries-2026-10-13/db18.md).
 
 The schema now includes profiles linked to Auth users, organizations, organization members, projects, project memberships, invitations, sites, immutable form versions, observations, immutable site packages and package checks. Composite foreign keys enforce project/organization boundaries.
 
-Organization owners/admins act as managers on their organization's projects. Project managers can read their collaborators' profiles and memberships, except Training memberships. Browser roles and `service_role` cannot access application tables or execute application functions. `fieldmaps_api` cannot bypass RLS or directly grant membership. Column-limited grants allow only the documented profile, organization and project edits.
+Organization owners/admins act as managers on their organization's projects and can
+read their organization members' profiles, including people without a project
+membership. Project managers can read their collaborators' profiles and memberships,
+except Training memberships. Ordinary members/viewers retain own-profile access;
+an organization role does not reveal profiles from another organization. Browser
+roles and `service_role` cannot access application tables or execute application
+functions. `fieldmaps_api` cannot bypass RLS or directly grant membership.
+Column-limited grants allow only the documented profile, organization and project edits.
 
 Tenancy writes go through `fieldmaps_private` functions with a fixed empty search path, current-user authorization and organization locks. Invitation redemption checks the current Auth email, confirmation and use limit. Account forgetting removes memberships and leaves a durable anonymized profile marker until Auth deletion.
 

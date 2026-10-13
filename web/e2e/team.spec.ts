@@ -24,8 +24,8 @@ test("a manager invites someone, sees the link and code once, and revokes the in
 		.last()
 		.click();
 
-	// The link and the code are shown once, with the note that DECA Mark sends no email.
-	await expect(dialog).toContainText(/does not send email/i);
+	// Local delivery is disabled; the person must share the once-only link or code.
+	await expect(dialog).toContainText("Email delivery is unavailable. Send the link or code yourself.");
 	const shown = await textWithValues(dialog);
 	expect(shown, "the invitation link").toMatch(/\/invite#t=[\w-]{20,}/);
 	const code = CODE.exec(shown);
@@ -57,6 +57,13 @@ test("a manager invites someone, sees the link and code once, and revokes the in
 		.click();
 	await expect(page.getByRole("main").getByText(email)).toHaveCount(0);
 
-	const invitation = (await listProjectInvitations()).find(item => item.email === email);
-	expect(invitation === undefined || invitation.revoked_at !== null, "the invitation is revoked").toBe(true);
+	await expect
+		.poll(
+			async () => {
+				const invitation = (await listProjectInvitations()).find(item => item.email === email);
+				return invitation === undefined || invitation.revoked_at !== null;
+			},
+			{ message: "the invitation is revoked", timeout: 10_000 }
+		)
+		.toBe(true);
 });
