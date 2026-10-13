@@ -29,7 +29,8 @@
 		"test:auth:local": "node --experimental-strip-types --test tests/auth-local.test.mjs",
 		"test:account": "node --experimental-strip-types --test tests/profile-answer.test.mjs tests/data-export.test.mjs",
 		"test:unit": "node --experimental-strip-types --test \"tests/unit/*.test.mjs\"",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test:specimen": "playwright test -c playwright.specimen.config.ts"
 	},
 	"dependencies": {
 		"@supabase/ssr": "0.12.7",

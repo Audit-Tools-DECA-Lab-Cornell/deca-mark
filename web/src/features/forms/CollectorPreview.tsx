@@ -25,7 +25,7 @@ import {
 	visibleQuestions
 } from "@/lib/forms";
 import { MAP_PALETTES } from "@/lib/map-palette";
-import { boundsOf, type ProjectedSite } from "@/lib/plan";
+import { type ProjectedSite, zoneBounds } from "@/lib/plan";
 
 /**
  * The collector as an observer would see this form, driven by the engine the device runs:
@@ -319,7 +319,7 @@ function PlanStrip({
 		);
 	const zone = plan.zones.find(candidate => candidate.id === zoneId) ?? plan.zones[0];
 	const observation = MAP_PALETTES.day.observation;
-	const box = zone ? boundsOf(zone.points) : plan.bounds;
+	const box = zone ? zoneBounds(zone) : plan.bounds;
 	const pad = 24;
 	const viewBox = [
 		box.minX - pad,

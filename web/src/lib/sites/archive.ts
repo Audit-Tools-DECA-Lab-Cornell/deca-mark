@@ -2,23 +2,23 @@ import { strFromU8, unzipSync } from "fflate";
 import { z } from "zod";
 
 import { parseSite, type ProjectedSite, projectSite, type SiteCollection, type SiteFeature } from "../plan";
+import { readZoneGeometry, ZONE_LIMITS } from "../zones/geometry";
 
 /**
- * Reading a map package the API prepared, the way the collector reads it
- * (`mobile/src/packages/hosted/archive.ts` and `build.ts`): a zip holding `manifest.json` and
- * `layers/{ground,paths,trees,zones}.json` (`_build_archive` in
- * `backend/src/fieldmaps_api/domain/packages.py`), turned into the site collection `lib/plan.ts` draws.
+ * Reading a map package the API prepared, in the contract's one archive format
+ * (`docs/plan/zone-boundaries/contract.md`, Archive): a zip holding `manifest.json` (`format: 1`) and
+ * `layers/{ground,paths,trees,zones}.json`, turned into the site collection `lib/plan.ts` draws.
  *
  * - Ground: polygons, drawn by `properties.kind` when the plan knows it (site, a surface, equipment,
  *   structure, tree) and as grass otherwise. The original kind is kept as `source_kind`, as is an
  *   equipment drawing's own `type` ("swings").
  * - Paths: lines, or areas when the layer draws paths as polygons. Trees: points become crowns (circles),
  *   polygons stay polygons.
- * - Zones: one per manifest zone, in manifest order. Its id is the feature's `properties.id` (what an
- *   observation records) and its name is the manifest label. A MultiPolygon zone draws every part: the
- *   first under the zone id, the rest as `<id>~2`, `<id>~3`, all with `code` set to the zone id. A zone
- *   whose feature is missing draws its manifest box.
- * - Every MultiPolygon is split into its parts. Other features get the id `<layer>-<n>` (`-<part>` for
+ * - Zones: one per manifest zone, in manifest order, each one feature however many parts and holes it has,
+ *   keyed by its `zone_id`. Zone shapes are read strictly: the manifest and the zones layer must agree on
+ *   every identity, code, label, anchor and digest, and a shape is taken exactly as written or the package
+ *   is refused. Nothing is closed, dropped, rounded or drawn as a box in its place.
+ * - Ground MultiPolygons are split into their parts. Other features get the id `<layer>-<n>` (`-<part>` for
  *   later parts).
  */
 
@@ -27,23 +27,29 @@ export class PackageArchiveError extends Error {
 }
 
 const finite = z.number().finite();
+const lngLat = z.tuple([finite, finite]);
+const uuid = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+const digest = z.string().regex(/^[0-9a-f]{64}$/);
 
 const manifestZoneSchema = z.object({
-	id: z.string().min(1),
+	zone_id: uuid,
+	zone_code: z.string().min(1),
 	label: z.string().min(1),
-	west: finite,
-	south: finite,
-	east: finite,
-	north: finite
+	bbox: z.tuple([finite, finite, finite, finite]),
+	display_anchor: lngLat,
+	geometry_sha256: digest
 });
 
+const formReference = z.object({ form_version_id: uuid, form_version: z.string().min(1) });
+
 const manifestSchema = z.object({
-	format: z.number().int().min(1),
+	format: z.literal(1),
+	site_id: uuid,
 	site_code: z.string().min(1),
-	form_version: z.string().min(1),
-	extent: z.object({ west: finite, south: finite, east: finite, north: finite }),
-	centre: z.tuple([finite, finite]),
-	zones: z.array(manifestZoneSchema).min(1)
+	package_id: uuid,
+	package_version: z.number().int().min(1),
+	forms: z.object({ play: formReference, inventory: formReference.nullable() }),
+	zones: z.array(manifestZoneSchema).min(1).max(ZONE_LIMITS.zones)
 });
 
 const featureCollectionSchema = z.object({
@@ -223,21 +229,6 @@ function polygonFeature(properties: SiteFeature["properties"], coordinates: Poly
 	return { type: "Feature", properties, geometry: { type: "Polygon", coordinates } };
 }
 
-function box(zone: ZoneBox): Polygon {
-	return [
-		[
-			[zone.west, zone.south],
-			[zone.east, zone.south],
-			[zone.east, zone.north],
-			[zone.west, zone.north],
-			[zone.west, zone.south]
-		]
-	];
-}
-
-/** A zone's id, label and box, as a manifest lists it. */
-type ZoneBox = Pick<ManifestZone, "id" | "label" | "west" | "south" | "east" | "north">;
-
 /** The layers a collection is drawn from; any may be missing while a manager is still choosing files. */
 export type CollectionLayers = {
 	readonly ground?: LayerInput;
@@ -246,7 +237,8 @@ export type CollectionLayers = {
 	readonly zones?: LayerInput;
 };
 
-function collection(zones: readonly ZoneBox[], layers: CollectionLayers): SiteFeature[] {
+/** Ground, paths and trees: everything the plan draws under the zones. */
+function backgroundFeatures(layers: CollectionLayers): SiteFeature[] {
 	const features: SiteFeature[] = [];
 
 	layers.ground?.features.forEach((feature, index) => {
@@ -302,28 +294,70 @@ function collection(zones: readonly ZoneBox[], layers: CollectionLayers): SiteFe
 		);
 	});
 
-	for (const zone of zones) {
-		const feature = layers.zones?.features.find(entry => nonEmpty(entry.properties?.id) === zone.id);
-		const parts = feature ? polygonParts(feature.geometry) : [];
-		(parts.length > 0 ? parts : [box(zone)]).forEach((part, n) =>
-			features.push(
-				polygonFeature(
-					{ kind: "zone", id: n === 0 ? zone.id : `${zone.id}~${n + 1}`, code: zone.id, name: zone.label },
-					part
-				)
-			)
-		);
-	}
-
 	return features;
+}
+
+const sameNumber = (a: unknown, b: number) => typeof a === "number" && Object.is(a, b);
+
+/**
+ * A package's zones, strictly: one feature per manifest zone, in manifest order, with the manifest and the
+ * zones layer agreeing on identity, code, label, anchor and digest, and each shape the canonical
+ * MultiPolygon exactly as written. Anything else refuses the package rather than drawing a guess.
+ */
+function packageZones(manifest: PackageManifest, layer: LayerData): SiteFeature[] {
+	const mismatch = () => new PackageArchiveError("The map package's zones do not match its manifest.");
+	if (layer.features.length !== manifest.zones.length) throw mismatch();
+	const byId = new Map<string, LayerData["features"][number]>();
+	for (const feature of layer.features) {
+		const id = feature.properties?.zone_id;
+		if (typeof id !== "string" || byId.has(id)) throw mismatch();
+		byId.set(id, feature);
+	}
+	return manifest.zones.map(zone => {
+		const feature = byId.get(zone.zone_id);
+		const properties = feature?.properties;
+		const anchor = properties?.display_anchor;
+		if (
+			!feature ||
+			properties?.zone_code !== zone.zone_code ||
+			properties.name !== zone.label ||
+			properties.geometry_sha256 !== zone.geometry_sha256 ||
+			!Array.isArray(anchor) ||
+			anchor.length !== 2 ||
+			!sameNumber(anchor[0], zone.display_anchor[0]) ||
+			!sameNumber(anchor[1], zone.display_anchor[1])
+		)
+			throw mismatch();
+		const read = readZoneGeometry(feature.geometry);
+		if (!read.ok || read.geometry.type !== "MultiPolygon")
+			throw new PackageArchiveError(`The shape of zone ${zone.zone_code} in the map package cannot be read.`);
+		return {
+			type: "Feature",
+			properties: {
+				kind: "zone",
+				id: zone.zone_id,
+				zone_id: zone.zone_id,
+				code: zone.zone_code,
+				name: zone.label,
+				display_anchor: zone.display_anchor,
+				geometry_sha256: zone.geometry_sha256
+			},
+			geometry: read.geometry
+		} as SiteFeature;
+	});
 }
 
 /**
  * The collection `parseSite` and `projectSite` accept, from a package's manifest and layers. Ground first,
- * then paths, trees and zones, the order the plan draws them in.
+ * then paths, trees and zones, the order the plan draws them in. Throws `PackageArchiveError` when the zones
+ * do not agree with the manifest.
  */
 export function packageSiteCollection(name: string, manifest: PackageManifest, layers: PackageLayers): SiteCollection {
-	return parseSite({ type: "FeatureCollection", name, features: collection(manifest.zones, layers) });
+	return parseSite({
+		type: "FeatureCollection",
+		name,
+		features: [...backgroundFeatures(layers), ...packageZones(manifest, layers.zones)]
+	});
 }
 
 /** A package archive straight to its projected plan. Throws `PackageArchiveError` when it cannot be read. */
@@ -333,24 +367,21 @@ export function packagePlan(name: string, bytes: Uint8Array): ProjectedSite {
 }
 
 /**
- * The zones a package prepared from these layers would list, as the API derives them
- * (`_derive_zones`): each zone feature's trimmed `id`, its `label` (else the id) and its box. Features
- * without an id are left out; the API refuses a package with one, so the upload check flags it.
+ * The zones of a zones layer chosen for upload, before anything is sent: each feature with an `id`, named by
+ * its `label` (else the id), its shape taken exactly as written. A feature without an id, or whose shape is
+ * not a readable area, is not drawn; the upload checks name it. Nothing is repaired or drawn as a box.
  */
-export function zonesFromLayer(zones: LayerInput | undefined): ManifestZone[] {
-	return (zones?.features ?? []).flatMap(feature => {
+function sourceZones(layer: LayerInput | undefined): SiteFeature[] {
+	return (layer?.features ?? []).flatMap(feature => {
 		const id = nonEmpty(feature.properties?.id);
-		const points = polygonParts(feature.geometry).flatMap(part => part.flat());
-		if (!id || points.length === 0) return [];
+		const read = readZoneGeometry(feature.geometry);
+		if (!id || !read.ok) return [];
 		return [
 			{
-				id,
-				label: nonEmpty(feature.properties?.label) ?? id,
-				west: Math.min(...points.map(([x]) => x)),
-				south: Math.min(...points.map(([, y]) => y)),
-				east: Math.max(...points.map(([x]) => x)),
-				north: Math.max(...points.map(([, y]) => y))
-			}
+				type: "Feature",
+				properties: { kind: "zone", id, code: id, name: nonEmpty(feature.properties?.label) ?? id },
+				geometry: read.geometry
+			} as SiteFeature
 		];
 	});
 }
@@ -360,7 +391,7 @@ export function zonesFromLayer(zones: LayerInput | undefined): ManifestZone[] {
  * preview. Null when there is nothing to draw yet.
  */
 export function layersPlan(name: string, layers: CollectionLayers): ProjectedSite | null {
-	const features = collection(zonesFromLayer(layers.zones), layers);
+	const features = [...backgroundFeatures(layers), ...sourceZones(layers.zones)];
 	if (features.length === 0) return null;
 	return projectSite(parseSite({ type: "FeatureCollection", name, features }));
 }
