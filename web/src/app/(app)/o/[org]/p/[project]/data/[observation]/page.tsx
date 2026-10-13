@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { ObservationDetail, type ObservationPlan } from "@/features/observation/ObservationDetail";
-import { getFormVersion, getObservation, getProject, getSite, getSitePlan, resolveProject } from "@/lib/api/workspace";
+import { getObservation, getProject, getSitePlan, resolveProject } from "@/lib/api/workspace";
 import { shortLabel } from "@/lib/labels";
 import { isNotFound, settle } from "@/lib/workspace/result";
 
@@ -17,9 +17,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 }
 
 /**
- * One observation. The observation read carries its own site, round and form version, so it opens even
- * when it is older than the newest 500; its answers are worded by that form version, never the newest.
- * An address that is not an observation of this project is the in-shell not-found page.
+ * One observation, as it was recorded: its site, zone label, map version and round, and its answers worded
+ * by the form definition it was collected with, never the newest. The plan is the map version it was
+ * recorded on, never today's. An address that is not an observation of this project is the in-shell
+ * not-found page.
  */
 export default async function ObservationPage({ params }: { params: Promise<Params> }) {
 	const { org, project: code, observation: id } = await params;
@@ -34,25 +35,18 @@ export default async function ObservationPage({ params }: { params: Promise<Para
 	}
 	const row = found.data;
 
-	const [details, form, site] = await Promise.all([
+	const [details, drawn] = await Promise.all([
 		settle(getProject(project.id)),
-		settle(getFormVersion(project.id, row.form_version)),
-		settle(getSite(project.id, row.site_code))
+		// Every member can read a superseded package, so the record's own map version always loads.
+		settle(getSitePlan(project.id, row.package_id, row.site_name))
 	]);
 	if (!details.ok) return <LoadFailure failure={details.failure} what="the project" />;
-	if (!form.ok && form.failure.kind === "sign-in") return <LoadFailure failure={form.failure} what="the form" />;
 
-	let plan: ObservationPlan | null = null;
-	let planNote: string | null = null;
-	if (!site.ok) {
-		planNote = `The plan of ${row.site_name} did not load, so the point is not drawn.`;
-	} else if (!site.data.package) {
-		planNote = `${row.site_name} has no map package, so the point is not drawn.`;
-	} else {
-		const drawn = await settle(getSitePlan(project.id, site.data.package.package_id, site.data.name));
-		if (drawn.ok && drawn.data) plan = { site: drawn.data, version: site.data.package.version };
-		else planNote = `The plan of ${row.site_name} did not load, so the point is not drawn.`;
-	}
+	const plan: ObservationPlan | null =
+		drawn.ok && drawn.data ? { site: drawn.data, version: row.package_version } : null;
+	const planNote = plan
+		? null
+		: `Map v${row.package_version} of ${row.site_name}, which this record was collected on, did not load.`;
 
 	return (
 		<ObservationDetail
@@ -60,8 +54,7 @@ export default async function ObservationPage({ params }: { params: Promise<Para
 			project={code}
 			observation={row}
 			timeZone={details.data.timezone}
-			definition={form.ok ? form.data.definition : null}
-			zones={site.ok ? (site.data.zones ?? []).map(zone => ({ id: zone.id, label: zone.label })) : null}
+			definition={row.definition}
 			plan={plan}
 			planNote={planNote}
 		/>

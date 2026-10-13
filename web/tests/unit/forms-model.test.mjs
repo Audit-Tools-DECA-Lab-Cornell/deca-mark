@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import { forms, pkg, site as fixtureSite } from "./fixtures.mjs";
 import { load } from "./support.mjs";
 
 const read = name =>
@@ -24,23 +25,8 @@ const version = (code, n, state, extra = {}) => ({
 	...extra
 });
 const form = (code, versions) => ({ form_id: `f-${code}`, code, name: `Form ${code}`, created_at: NOW, versions });
-const site = (code, name, formVersion) => ({
-	site_id: code,
-	code,
-	name,
-	description: null,
-	observation_count: 0,
-	package: formVersion
-		? {
-				package_id: "p",
-				version: 1,
-				form_version: formVersion,
-				archive_bytes: 1,
-				archive_sha256: "x",
-				prepared_at: NOW
-			}
-		: null
-});
+const site = (code, name, formVersion, inventoryVersion = null) =>
+	fixtureSite({ code, name, package: formVersion ? pkg({ forms: forms(formVersion, inventoryVersion) }) : null });
 
 test("a form row names its newest published version, its drafts and the sites that use it", () => {
 	const rows = model.formRows(
@@ -113,9 +99,17 @@ test("an earlier version from before the form editor is not a base to compare wi
 	assert.equal(model.baseVersionOf(row, "f-v2"), null);
 });
 
-test("sitesUsing lists the sites whose current package names exactly that version", () => {
-	const sites = [site("a", "A", "x-v1"), site("b", "B", "x-v10"), site("c", "C", null)];
-	assert.deepEqual(model.sitesUsing("x-v1", sites), [{ code: "a", name: "A" }]);
+test("sitesUsing lists the sites whose current package names exactly that version, as either form", () => {
+	const sites = [
+		site("a", "A", "x-v1"),
+		site("b", "B", "x-v10"),
+		site("c", "C", null),
+		site("d", "D", "y-v1", "x-v1")
+	];
+	assert.deepEqual(model.sitesUsing("x-v1", sites), [
+		{ code: "a", name: "A" },
+		{ code: "d", name: "D" }
+	]);
 	assert.deepEqual(model.sitesUsing("x-v2", sites), []);
 });
 
@@ -127,12 +121,6 @@ test("the inventory form asks only about a zone; the behaviour form is a play fo
 	assert.equal(model.isZoneForm({ questions: [{ act: "Climate" }, { act: "Play" }] }), false);
 });
 
-test("the collector's own rule for the inventory form is the one the web copies", () => {
-	const mobile = readFileSync(new URL("../../../mobile/src/packages/hosted/archive.ts", import.meta.url), "utf8");
-	assert.match(mobile, /ZONE_ACTS = new Set\(\["Climate", "Inventory"\]\)/);
-	assert.match(mobile, /SHARED_ACTS = new Set\(\["Record"\]\)/);
-});
-
 test("publishing a play form says it reaches observers only through a map package that names it", () => {
 	const play = model.deliveryOf(behaviour, "janet-v3");
 	assert.equal(play.kind, "play");
@@ -141,7 +129,9 @@ test("publishing a play form says it reaches observers only through a map packag
 	assert.doesNotMatch(play.confirm, /next time they open the site/);
 	const zone = model.deliveryOf(inventory, "zones-v2");
 	assert.equal(zone.kind, "zone");
-	assert.match(zone.text, /next time they download a site/);
+	assert.match(zone.text, /form for the Inventory round/);
+	assert.match(zone.text, /only through a map package that names it/);
+	assert.match(zone.confirm, /only through a new map package/);
 });
 
 test("draft changes name the field that changed, and a new question is new", () => {

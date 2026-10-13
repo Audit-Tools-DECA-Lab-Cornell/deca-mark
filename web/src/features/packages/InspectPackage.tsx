@@ -26,6 +26,8 @@ export type InspectedPackage = {
 	prepared: string;
 	sizeLabel: string;
 	formVersion: string;
+	/** The inventory form the package binds, or null when Inventory is off on this map. */
+	inventoryFormVersion: string | null;
 	checks: PreparationCheck[];
 	manifest: ManifestView | null;
 };
@@ -59,7 +61,16 @@ export function InspectPackage({
 		{ label: "Version", value: `v${pkg.version}`, mono: true },
 		{ label: "Prepared", value: pkg.prepared },
 		{ label: "Size", value: pkg.sizeLabel, mono: true },
-		{ label: "Form version", value: <span className="break-all">{pkg.formVersion}</span>, mono: true }
+		{ label: "Form version", value: <span className="break-all">{pkg.formVersion}</span>, mono: true },
+		{
+			label: "Inventory form",
+			value: pkg.inventoryFormVersion ? (
+				<span className="break-all">{pkg.inventoryFormVersion}</span>
+			) : (
+				"None: Inventory is off on this map"
+			),
+			mono: pkg.inventoryFormVersion !== null
+		}
 	];
 	if (manifest && manifest.layers.length > 0)
 		facts.push({
@@ -135,7 +146,7 @@ export function InspectPackage({
 									key={zone.id}
 									className="flex flex-wrap items-baseline justify-between gap-x-4 py-2">
 									<span className="min-w-0 break-words text-ink">{zone.label}</span>
-									<span className="type-mono-data break-all text-ink-2">{zone.id}</span>
+									<span className="type-mono-data break-all text-ink-2">{zone.code ?? zone.id}</span>
 								</li>
 							))}
 						</ul>

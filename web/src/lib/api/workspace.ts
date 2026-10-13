@@ -3,29 +3,44 @@ import "server-only";
 import { cache } from "react";
 import { ZodError } from "zod";
 
-import { OBSERVATION_LIMIT } from "@/lib/observations/summary";
 import { type ProjectedSite, projectSite } from "@/lib/plan";
 import { PackageArchiveError, packageSiteCollection, readPackageArchive } from "@/lib/sites/archive";
 import { buildWorkspaceIndex, unavailableWorkspace } from "@/lib/workspace/build";
 import { toFailure } from "@/lib/workspace/result";
-import type { OrgRef, ProjectRef, RoundType, WorkspaceIndex } from "@/lib/workspace/types";
+import type { OrgRef, ProjectRef, WorkspaceIndex } from "@/lib/workspace/types";
 
 import { call, getIdentity, session } from "./client";
 import { ApiError, errorCopy } from "./errors";
+import {
+	filterQuery,
+	type ObservationDetail,
+	observationDetailSchema,
+	type ObservationFilters,
+	type ObservationPage,
+	observationPageSchema,
+	type ObservationSummary,
+	observationSummarySchema,
+	PAGE_LIMIT
+} from "./observations";
+import {
+	type PackageDetail,
+	packageDetailSchema,
+	type PackageHistory,
+	packageHistorySchema,
+	type PackageSummary,
+	type Site,
+	siteByCode,
+	siteListSchema
+} from "./sites";
 import type {
 	FormSummary,
 	FormVersionDetail,
 	Invitation,
-	ObservationRow,
 	Organization,
 	OrganizationMember,
-	PackageDetail,
-	PackageSummary,
 	Project,
 	ProjectMember,
-	RawDefinition,
-	Site,
-	StoredObservation
+	RawDefinition
 } from "./types";
 
 /**
@@ -36,9 +51,6 @@ import type {
  * Reads throw `ApiError` on failure. Pages wrap them with `settle()` and show the failure; a failed read
  * is never turned into an empty list. `getWorkspace()` is the exception: it never throws.
  */
-
-/** The observation list's cap: at this many rows the list may be missing older records. */
-export { OBSERVATION_LIMIT };
 
 export const getMe = cache(getIdentity);
 
@@ -140,40 +152,67 @@ export const listProjectInvitations = cache(
 
 /* ── Sites and map packages ───────────────────────────────────────────────── */
 
-/** Every site, with its current package (the newest ready one), zones and exact observation count. */
-export const listSites = cache(
-	(projectId: string): Promise<Site[]> =>
-		call(api => api.GET("/v1/projects/{project_id}/sites", { params: { path: { project_id: projectId } } }))
-);
+/**
+ * Every site, with the package `current_package_id` names (its summary in `package`), that package's zones
+ * and the exact observation count. Checked at runtime: an answer of another shape is a failed read.
+ */
+export const listSites = cache(async (projectId: string): Promise<Site[]> => {
+	const data = await call<unknown>(api =>
+		api.GET("/v1/projects/{project_id}/sites", { params: { path: { project_id: projectId } } })
+	);
+	const parsed = siteListSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+});
 
-export const getSite = cache(
-	(projectId: string, code: string): Promise<Site> =>
-		call(api =>
-			api.GET("/v1/projects/{project_id}/sites/{site_code}", {
-				params: { path: { project_id: projectId, site_code: code } }
-			})
-		)
-);
+/**
+ * The site whose web address carries `code`. API paths take the site's UUID, which only the site list
+ * supplies (codes and UUIDs are never inferred from each other), so this reads the list. A code the project
+ * does not have is a 404.
+ */
+export const getSite = cache(async (projectId: string, code: string): Promise<Site> => {
+	const site = siteByCode(await listSites(projectId), code);
+	if (!site) throw new ApiError("not_found", "rejected", { status: 404 });
+	return site;
+});
 
-/** Every package, ready and blocked, for one site when `siteCode` is given. */
-export const listPackages = cache(
-	(projectId: string, siteCode?: string): Promise<PackageSummary[]> =>
-		call(api =>
-			api.GET("/v1/projects/{project_id}/packages", {
-				params: { path: { project_id: projectId }, ...(siteCode ? { query: { site: siteCode } } : {}) }
-			})
-		)
+/** Every package of one site, ready and blocked, and the site's current package. */
+export const listPackages = cache(async (projectId: string, siteId: string): Promise<PackageHistory> => {
+	const data = await call<unknown>(api =>
+		api.GET("/v1/projects/{project_id}/packages", {
+			params: { path: { project_id: projectId }, query: { site_id: siteId } }
+		})
+	);
+	const parsed = packageHistorySchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+});
+
+/**
+ * Every package of every site in the project, each with its site's code (the package list is per site).
+ * Fails when any site's history cannot be read, rather than leaving that site out.
+ */
+export const listProjectPackages = cache(
+	async (projectId: string): Promise<(PackageSummary & { readonly site_code: string })[]> => {
+		const sites = await listSites(projectId);
+		const histories = await Promise.all(sites.map(site => listPackages(projectId, site.site_id)));
+		return histories.flatMap((history, index) =>
+			history.packages.map(item => ({ ...item, site_code: sites[index]!.code }))
+		);
+	}
 );
 
 /** A package with its preparation checks and manifest. */
-export const getPackage = cache(
-	(projectId: string, packageId: string): Promise<PackageDetail> =>
-		call(api =>
-			api.GET("/v1/projects/{project_id}/packages/{package_id}", {
-				params: { path: { project_id: projectId, package_id: packageId } }
-			})
-		)
-);
+export const getPackage = cache(async (projectId: string, packageId: string): Promise<PackageDetail> => {
+	const data = await call<unknown>(api =>
+		api.GET("/v1/projects/{project_id}/packages/{package_id}", {
+			params: { path: { project_id: projectId, package_id: packageId } }
+		})
+	);
+	const parsed = packageDetailSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+});
 
 /** A ready package's archive bytes. Blocked packages have none to download. */
 export const getPackageArchive = cache(
@@ -249,38 +288,62 @@ export async function getFormDefinitions(
 
 /* ── Observations ─────────────────────────────────────────────────────────── */
 
-/**
- * The newest observations (at most 500), optionally for one site and one round type, filtered on the
- * server before the cap. `since` keeps records received at or after that time; it is not an observed-date
- * filter. `limited` is true when the cap was reached, so older records may be missing: aggregates and
- * exports then say "Based on the newest 500 observations".
- */
-export const listObservations = cache(
-	async (
-		projectId: string,
-		site?: string,
-		roundType?: RoundType,
-		since?: string
-	): Promise<{ rows: ObservationRow[]; limited: boolean }> => {
-		const query: { site?: string; round_type?: RoundType; since?: string; limit: number } = {
-			limit: OBSERVATION_LIMIT
-		};
-		if (site) query.site = site;
-		if (roundType) query.round_type = roundType;
-		if (since) query.since = since;
-		const rows = await call<ObservationRow[]>(api =>
-			api.GET("/v1/projects/{project_id}/observations", { params: { path: { project_id: projectId }, query } })
-		);
-		return { rows, limited: rows.length >= OBSERVATION_LIMIT };
-	}
-);
+const observationPage = cache(async (projectId: string, filters: string, cursor: string): Promise<ObservationPage> => {
+	const query = {
+		...(JSON.parse(filters) as Record<string, unknown>),
+		limit: PAGE_LIMIT,
+		...(cursor ? { cursor } : {})
+	};
+	const data = await call<unknown>(api =>
+		api.GET("/v1/projects/{project_id}/observations", {
+			params: { path: { project_id: projectId }, query: query as never }
+		})
+	);
+	const parsed = observationPageSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+});
 
-/** One observation with its full context (site, form version, round), even outside the list's cap. */
-export const getObservation = cache(
-	(projectId: string, observationId: string): Promise<StoredObservation> =>
-		call(api =>
-			api.GET("/v1/projects/{project_id}/observations/{observation_id}", {
-				params: { path: { project_id: projectId, observation_id: observationId } }
-			})
-		)
-);
+/**
+ * One page of the observations matching `filters`, newest first, at most 500. `total_matching` counts every
+ * match, so a count never stops at the page. `next_cursor` reads the following page (with the same filters),
+ * or is null on the last one.
+ */
+export function listObservations(
+	projectId: string,
+	filters: ObservationFilters = {},
+	cursor: string | null = null
+): Promise<ObservationPage> {
+	return observationPage(projectId, JSON.stringify(filterQuery(filters)), cursor ?? "");
+}
+
+const observationSummary = cache(async (projectId: string, filters: string): Promise<ObservationSummary> => {
+	const data = await call<unknown>(api =>
+		api.GET("/v1/projects/{project_id}/observations/summary", {
+			params: { path: { project_id: projectId }, query: JSON.parse(filters) as never }
+		})
+	);
+	const parsed = observationSummarySchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+});
+
+/** Counts of every observation matching `filters`, by site, map version, zone, round type and support. */
+export function summarizeObservations(
+	projectId: string,
+	filters: ObservationFilters = {}
+): Promise<ObservationSummary> {
+	return observationSummary(projectId, JSON.stringify(filterQuery(filters)));
+}
+
+/** One observation with its recorded binding and the form definition it was collected with. */
+export const getObservation = cache(async (projectId: string, observationId: string): Promise<ObservationDetail> => {
+	const data = await call<unknown>(api =>
+		api.GET("/v1/projects/{project_id}/observations/{observation_id}", {
+			params: { path: { project_id: projectId, observation_id: observationId } }
+		})
+	);
+	const parsed = observationDetailSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+});

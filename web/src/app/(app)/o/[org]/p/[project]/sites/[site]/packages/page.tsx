@@ -8,13 +8,19 @@ import { PageHeader } from "@/components/contour/PageHeader";
 import { ScreenState } from "@/components/contour/ScreenState";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { NotAvailable } from "@/components/shell/NotAvailable";
-import { chooseFormVersion, isInventoryDefinition, publishedVersions } from "@/features/packages/forms";
+import {
+	chooseFormVersion,
+	chooseInventoryForm,
+	isInventoryDefinition,
+	publishedVersions
+} from "@/features/packages/forms";
 import { blockedToExplain, firstBlockedDetail, historyRows } from "@/features/packages/history";
 import { type InspectedPackage, InspectPackage } from "@/features/packages/InspectPackage";
 import { readManifest } from "@/features/packages/manifest";
 import { UploadStep } from "@/features/packages/UploadStep";
 import { VersionHistory } from "@/features/packages/VersionHistory";
 import { projectHref } from "@/features/shell/navigation";
+import type { SiteZone } from "@/lib/api/types";
 import {
 	getFormDefinitions,
 	getPackage,
@@ -75,16 +81,14 @@ export default async function PackagesPage({
 	if (!ref) notFound();
 	const canManage = projectAbilities(ref.role).manage;
 
-	const [site, project, packages] = await Promise.all([
-		settle(getSite(ref.id, siteCode)),
-		settle(getProject(ref.id)),
-		settle(listPackages(ref.id, siteCode))
-	]);
+	const [site, project] = await Promise.all([settle(getSite(ref.id, siteCode)), settle(getProject(ref.id))]);
 	if (!site.ok) {
 		if (isNotFound(site.failure) || site.failure.code === "validation_failed") notFound();
 		return <PackagesFailure failure={site.failure} />;
 	}
 	if (!project.ok) return <PackagesFailure failure={project.failure} />;
+	// The package list is per site, by UUID.
+	const packages = await settle(listPackages(ref.id, site.data.site_id));
 
 	const sitesHref = projectHref(org, code, "sites");
 	const siteHref = `${sitesHref}/${site.data.code}`;
@@ -96,7 +100,7 @@ export default async function PackagesPage({
 	const explained: Record<string, string | null> = {};
 	if (packages.ok)
 		await Promise.all(
-			blockedToExplain(packages.data).map(async id => {
+			blockedToExplain(packages.data.packages).map(async id => {
 				const detail = await settle(getPackage(ref.id, id));
 				explained[id] = detail.ok ? firstBlockedDetail(detail.data.checks) : null;
 			})
@@ -105,7 +109,7 @@ export default async function PackagesPage({
 
 	// Inspect: the package the address names, if it is one of this site's.
 	const wanted = uploading ? undefined : one(query.package);
-	const listed = wanted && packages.ok ? packages.data.find(item => item.package_id === wanted) : undefined;
+	const listed = wanted && packages.ok ? packages.data.packages.find(item => item.package_id === wanted) : undefined;
 	let inspected: InspectedPackage | null = null;
 	let inspectFailure: Failure | null = null;
 	let plan: ProjectedSite | null = null;
@@ -117,12 +121,13 @@ export default async function PackagesPage({
 			const row = rows.find(item => item.packageId === listed.package_id);
 			inspected = {
 				packageId: detail.data.package_id,
-				version: detail.data.version,
+				version: detail.data.package_version,
 				ready: detail.data.state === "ready",
 				state: row?.state ?? (detail.data.state === "ready" ? "archived" : "blocked"),
 				prepared: timezone.dayTime(detail.data.prepared_at),
 				sizeLabel: formatBytes(detail.data.archive_bytes),
-				formVersion: detail.data.form_version,
+				formVersion: detail.data.forms.play.form_version,
+				inventoryFormVersion: detail.data.forms.inventory?.form_version ?? null,
 				checks: detail.data.checks,
 				manifest: readManifest(detail.data.manifest)
 			};
@@ -143,7 +148,7 @@ export default async function PackagesPage({
 					{ label: "Map packages" }
 				]}
 				title={`${site.data.name} map packages`}
-				lead="Prepare a map package from QGIS layers. The newest ready package is the one observers get."
+				lead="Prepare a map package from QGIS layers. The current version is the one observers get; records keep the version they were collected on."
 				actions={
 					uploading ? (
 						<ButtonLink href={base} variant="outline" icon="arrow-left">
@@ -163,9 +168,12 @@ export default async function PackagesPage({
 						org={org}
 						project={code}
 						projectId={ref.id}
-						siteCode={site.data.code}
 						siteName={site.data.name}
-						currentFormVersion={site.data.package?.form_version ?? null}
+						siteId={site.data.site_id}
+						currentPackageId={site.data.current_package_id}
+						currentZones={site.data.zones}
+						currentFormVersion={site.data.package?.forms.play.form_version ?? null}
+						currentInventoryFormVersion={site.data.package?.forms.inventory?.form_version ?? null}
 						packagesHref={base}
 					/>
 				) : (
@@ -215,17 +223,23 @@ async function UploadSection({
 	org,
 	project,
 	projectId,
-	siteCode,
+	siteId,
 	siteName,
+	currentPackageId,
+	currentZones,
 	currentFormVersion,
+	currentInventoryFormVersion,
 	packagesHref
 }: {
 	org: string;
 	project: string;
 	projectId: string;
-	siteCode: string;
+	siteId: string;
 	siteName: string;
+	currentPackageId: string | null;
+	currentZones: SiteZone[];
 	currentFormVersion: string | null;
+	currentInventoryFormVersion: string | null;
 	packagesHref: string;
 }) {
 	const forms = await settle(listForms(projectId));
@@ -250,30 +264,33 @@ async function UploadSection({
 			</Island>
 		);
 
-	// Keep the current package's form while it is published. Otherwise start on the newest play form, which
-	// takes reading the definitions to tell it from an inventory form.
-	let inventory = new Set<string>();
-	if (!currentFormVersion || !published.some(version => version.code === currentFormVersion)) {
-		const { definitions } = await getFormDefinitions(
-			projectId,
-			published.slice(0, 8).map(version => version.code)
-		);
-		inventory = new Set(
-			Object.entries(definitions)
-				.filter(([, definition]) => isInventoryDefinition(definition))
-				.map(([versionCode]) => versionCode)
-		);
-	}
+	// Which published forms ask only about a zone: only those can be a map's inventory form, and the play
+	// form starts on the newest one that is not. A form whose definition cannot be read is neither offered as
+	// an inventory form nor taken for one.
+	const { definitions } = await getFormDefinitions(
+		projectId,
+		published.map(version => version.code)
+	);
+	const inventory = new Set(
+		published
+			.map(version => version.code)
+			.filter(code => definitions[code] !== undefined && isInventoryDefinition(definitions[code]))
+	);
 
 	return (
 		<UploadStep
 			org={org}
 			project={project}
 			projectId={projectId}
-			siteCode={siteCode}
+			siteId={siteId}
 			siteName={siteName}
+			currentPackageId={currentPackageId}
+			currentZones={currentZones}
+			currentInventoryFormVersion={currentInventoryFormVersion}
 			forms={published}
+			inventoryForms={published.filter(version => inventory.has(version.code))}
 			defaultFormVersion={chooseFormVersion(published, currentFormVersion, inventory) ?? published[0]!.code}
+			defaultInventoryFormVersion={currentPackageId ? null : chooseInventoryForm(published, inventory)}
 			packagesHref={packagesHref}
 		/>
 	);

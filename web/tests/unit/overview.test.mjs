@@ -5,7 +5,7 @@ import { load } from "./support.mjs";
 
 const { activityTone, attentionItems, pickCoverageSite } = await load("features/overview/model.ts");
 
-const pkg = version => ({ package_id: `pkg-${version}`, version });
+const pkg = version => ({ package_id: `pkg-${version}`, package_version: version });
 const site = (code, count, version = null) => ({
 	code,
 	name: `Site ${code}`,
@@ -73,8 +73,8 @@ test("a site without a ready package, and a draft that observers cannot see", ()
 
 test("a blocked newest package gives its first blocked check, and says what observers still get", () => {
 	const packages = [
-		{ package_id: "p1", site_code: "a", version: 1, state: "ready" },
-		{ package_id: "p2", site_code: "a", version: 2, state: "blocked" }
+		{ package_id: "p1", site_code: "a", package_version: 1, state: "ready" },
+		{ package_id: "p2", site_code: "a", package_version: 2, state: "blocked" }
 	];
 	const [item] = attentionItems({
 		sites: [site("a", 4, 1)],
@@ -93,7 +93,7 @@ test("a blocked newest package gives its first blocked check, and says what obse
 test("a site whose only packages are blocked is one item, not two", () => {
 	const items = attentionItems({
 		sites: [site("a", 0)],
-		packages: [{ package_id: "p1", site_code: "a", version: 1, state: "blocked" }],
+		packages: [{ package_id: "p1", site_code: "a", package_version: 1, state: "blocked" }],
 		blocked: { p1: null },
 		forms: [{ ...forms[0], versions: [forms[0].versions[1]] }],
 		base,
@@ -107,8 +107,8 @@ test("an older blocked package does not count when a newer one is ready", () => 
 	const items = attentionItems({
 		sites: [site("a", 0, 2)],
 		packages: [
-			{ package_id: "p1", site_code: "a", version: 1, state: "blocked" },
-			{ package_id: "p2", site_code: "a", version: 2, state: "ready" }
+			{ package_id: "p1", site_code: "a", package_version: 1, state: "blocked" },
+			{ package_id: "p2", site_code: "a", package_version: 2, state: "ready" }
 		],
 		blocked: {},
 		forms: [{ ...forms[0], versions: [forms[0].versions[1]] }],

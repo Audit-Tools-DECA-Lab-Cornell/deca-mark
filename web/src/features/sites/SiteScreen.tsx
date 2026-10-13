@@ -35,8 +35,7 @@ export function SiteScreen({
 	plan,
 	planFailure,
 	zoneRows,
-	countsFailure,
-	countsLimited
+	countsFailure
 }: {
 	org: string;
 	project: string;
@@ -48,10 +47,8 @@ export function SiteScreen({
 	/** Why the current package could not be fetched, when it could not. */
 	planFailure: Failure | null;
 	zoneRows: ZoneRow[];
-	/** Why the observations could not be listed, when they could not: the zones show without counts. */
+	/** Why the observations could not be counted, when they could not: the zones show without counts. */
 	countsFailure: Failure | null;
-	/** The list came back at its limit, so the counts cover the newest observations only. */
-	countsLimited: boolean;
 }) {
 	const sitesHref = projectHref(org, project, "sites");
 	const base = `${sitesHref}/${site.code}`;
@@ -84,7 +81,6 @@ export function SiteScreen({
 						hasPackage={current !== null}
 						rows={zoneRows}
 						failure={countsFailure}
-						limited={countsLimited}
 						zoneHref={id =>
 							`${dataHref}?site=${encodeURIComponent(site.code)}&zone=${encodeURIComponent(id)}`
 						}
@@ -142,21 +138,19 @@ function ZonesIsland({
 	hasPackage,
 	rows,
 	failure,
-	limited,
 	zoneHref
 }: {
 	hasPackage: boolean;
 	rows: ZoneRow[];
 	failure: Failure | null;
-	limited: boolean;
 	zoneHref: (id: string) => string;
 }) {
 	return (
 		<Island
 			flush
 			title="Zones"
-			meta={hasPackage ? plural(rows.filter(row => row.id !== null).length, "zone") : undefined}
-			footnote={limited ? "Counts are based on the newest 500 observations of this site." : undefined}>
+			meta={hasPackage ? plural(rows.length, "zone") : undefined}
+			footnote="Counts cover every map version of this site.">
 			{rows.length === 0 ? (
 				<ScreenState
 					kind="empty"
@@ -169,19 +163,16 @@ function ZonesIsland({
 				<ul>
 					{rows.map(row => (
 						<li
-							key={row.id ?? "none"}
+							key={row.id}
 							className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 border-t border-rule px-island-pad py-3.5 first:border-t-0">
 							{/* Plain spaces keep a zone, its count and the next zone apart when the row is read as text. */}
 							<div className="min-w-0">
-								{row.id !== null ? (
-									<TextLink href={zoneHref(row.id)} tone="ink" className="break-words">
-										{row.label}
-									</TextLink>
-								) : (
-									<span className="text-ink">{row.label}</span>
-								)}{" "}
-								{row.id !== null && row.id !== row.label && (
-									<p className="mt-1 type-mono-data break-all text-ink-2">Zone id {row.id}</p>
+								<TextLink href={zoneHref(row.id)} tone="ink" className="break-words">
+									{row.label}
+								</TextLink>{" "}
+								{row.code && <p className="mt-1 type-mono-data break-all text-ink-2">{row.code}</p>}
+								{!row.current && (
+									<p className="mt-1 type-small text-ink-2">Not in the current map version.</p>
 								)}
 							</div>{" "}
 							{row.countLabel && <p className="type-body text-ink">{row.countLabel}</p>}{" "}
@@ -214,10 +205,11 @@ function PackageIsland({
 				{ label: "Version", value: `v${current.version}`, mono: true },
 				{ label: "Prepared", value: current.prepared },
 				{ label: "Size", value: current.sizeLabel, mono: true },
+				{ label: "Form version", value: current.formVersion, mono: true },
 				{
-					label: "Form version",
-					value: current.formVersion ?? "None named",
-					mono: current.formVersion !== null
+					label: "Inventory form",
+					value: current.inventoryFormVersion ?? "None: Inventory is off on this map",
+					mono: current.inventoryFormVersion !== null
 				}
 			]
 		: [];

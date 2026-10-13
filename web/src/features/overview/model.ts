@@ -42,13 +42,13 @@ export type AttentionItem = {
 type AttentionSite = {
 	readonly code: string;
 	readonly name: string;
-	readonly package: { readonly version: number } | null;
+	readonly package: { readonly package_version: number } | null;
 };
 
 type AttentionPackage = {
 	readonly package_id: string;
 	readonly site_code: string;
-	readonly version: number;
+	readonly package_version: number;
 	readonly state: "ready" | "blocked";
 };
 
@@ -96,7 +96,7 @@ export function attentionItems(input: {
 		const newest = (packages ?? [])
 			.filter(entry => entry.site_code === site.code)
 			.reduce<AttentionPackage | null>(
-				(best, entry) => (best === null || entry.version > best.version ? entry : best),
+				(best, entry) => (best === null || entry.package_version > best.package_version ? entry : best),
 				null
 			);
 
@@ -104,12 +104,12 @@ export function attentionItems(input: {
 			const reason = blocked[newest.package_id];
 			const why = reason ? (/[.!?]$/.test(reason) ? `${reason} ` : `${reason}. `) : "";
 			const current = site.package
-				? `Observers still get v${site.package.version}.`
+				? `Observers still get v${site.package.package_version}.`
 				: "There is no ready map package for this site.";
 			items.push({
 				id: `blocked-${newest.package_id}`,
 				tone: "attention",
-				title: `Map package v${newest.version} for ${site.name} was blocked.`,
+				title: `Map package v${newest.package_version} for ${site.name} was blocked.`,
 				detail: `${why}${current}`,
 				...link("See the checks", `${base}/sites/${site.code}/packages?package=${newest.package_id}`)
 			});

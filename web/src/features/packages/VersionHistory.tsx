@@ -16,10 +16,20 @@ function StateOf({ row }: { row: HistoryRow }) {
 }
 
 function Notes({ row, currentVersion }: { row: HistoryRow; currentVersion: number | null }) {
-	if (row.state === "current") return <span>Observers get this version.</span>;
+	const origin = row.source === "draft" ? "Published from a draft on the web." : "Uploaded from QGIS.";
+	const note = row.changeNote ? ` ${row.changeNote}` : "";
+	if (row.state === "current")
+		return (
+			<span>
+				Observers get this version. <span className="text-ink-2">{`${origin}${note}`}</span>
+			</span>
+		);
 	if (row.state === "archived")
 		return (
-			<span className="text-ink-2">{currentVersion ? `Replaced by v${currentVersion}.` : "Older version."}</span>
+			<span className="text-ink-2">
+				{currentVersion ? `Replaced by v${currentVersion}. ` : "Not the current version. "}
+				Records collected on it keep it.{` ${origin}${note}`}
+			</span>
 		);
 	return (
 		<span>
@@ -30,8 +40,9 @@ function Notes({ row, currentVersion }: { row: HistoryRow; currentVersion: numbe
 }
 
 /**
- * Version history: every map package prepared for the site, newest first. The newest ready one is current
- * and Active; older ready ones are Archived; a blocked one fails, with the first reason it was blocked.
+ * Version history: every map package of the site, newest first. The one the site names as current is
+ * Active; other ready ones are Archived and stay readable; a blocked one fails, with the first reason it
+ * was blocked.
  */
 export function VersionHistory({
 	rows,
@@ -85,9 +96,15 @@ export function VersionHistory({
 						{ key: "size", label: "Size", mono: true, nowrap: true, cell: row => row.sizeLabel },
 						{
 							key: "form",
-							label: "Form version",
+							label: "Forms",
 							mono: true,
-							cell: row => <span className="break-all">{row.formVersion}</span>
+							cell: row => (
+								<span className="break-all">
+									{row.inventoryFormVersion
+										? `${row.formVersion} · ${row.inventoryFormVersion}`
+										: row.formVersion}
+								</span>
+							)
 						},
 						{
 							key: "notes",

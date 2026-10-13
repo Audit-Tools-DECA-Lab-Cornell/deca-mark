@@ -9,15 +9,15 @@ import type { ZonePlanStyle } from "@/components/map/SitePlan";
 import { NotAvailable } from "@/components/shell/NotAvailable";
 import { viewQuery } from "@/features/data/view";
 import { projectHref } from "@/features/shell/navigation";
-import type { RawDefinition, StoredObservation } from "@/lib/api/types";
-import { plural, roundLabel, roundOf, shortLabel, zoneName } from "@/lib/labels";
+import type { ObservationDetail as Observation, RawDefinition } from "@/lib/api/types";
+import { plural, roundLabel, roundOf, shortLabel } from "@/lib/labels";
 import { answerRows, readDefinition } from "@/lib/observations/answers";
 import type { ProjectedSite } from "@/lib/plan";
 import { clock as makeClock } from "@/lib/time";
 
 export type ObservationPlan = {
+	/** The map version the record was collected on, drawn as a plan. */
 	site: ProjectedSite;
-	/** The version of the package the plan is drawn from. */
 	version: number;
 };
 
@@ -25,34 +25,30 @@ export type ObservationDetailProps = {
 	org: string;
 	/** The project's code in the address. */
 	project: string;
-	observation: StoredObservation;
+	observation: Observation;
 	timeZone: string;
-	/** The definition of the form version the observation was collected with; null when it could not be read. */
+	/** The definition of the form version the observation was collected with. */
 	definition: RawDefinition | null;
-	/** The observation's site, for zone names; null when it could not be read. */
-	zones: readonly { id: string; label: string }[] | null;
 	plan: ObservationPlan | null;
 	/** Why there is no plan. */
 	planNote: string | null;
 };
 
-function firstRound(observation: StoredObservation): string {
+function firstRound(observation: Observation): string {
 	if (roundOf(observation.round_type) === "inventory") return "Does not apply to a zone inventory";
 	if (observation.first_round === true) return "Yes";
 	if (observation.first_round === false) return "No";
 	return "Not recorded";
 }
 
-function placement(observation: StoredObservation): string {
-	if (observation.placement === "hand") return "Placed by hand on the map";
-	if (observation.placement === "zone") return "Stored at the centre of the zone";
-	return "Not recorded";
+function placement(observation: Observation): string {
+	return observation.placement === "hand" ? "Placed by hand on the map" : "The whole zone (an inventory)";
 }
 
 /**
  * One observation: when it was made and by whom, where it sits, and every answer, worded as the form
- * version it was collected with worded it. The page is read-only; the plan draws the point on the site's
- * current map.
+ * version it was collected with worded it. The page is read-only; the plan is the map version the record
+ * was collected on. A point record is drawn as its point; an inventory is the whole zone, highlighted.
  */
 export function ObservationDetail({
 	org,
@@ -60,30 +56,30 @@ export function ObservationDetail({
 	observation,
 	timeZone,
 	definition,
-	zones,
 	plan,
 	planNote
 }: ObservationDetailProps) {
 	const clock = makeClock(timeZone);
 	const label = shortLabel(observation.observation_id);
 	const round = roundOf(observation.round_type);
-	const names = new Map((zones ?? []).map(zone => [zone.id, zone.label]));
-	const zone = observation.zone ? observation.zone : null;
-	const zoneText = zoneName(zone, names);
+	const zone = observation.zone_id;
+	const zoneText = observation.zone_label;
 	const answers = answerRows(definition, observation.answers);
 	const form = readDefinition(definition);
-	const [lng, lat] = observation.coordinates;
+	const point = observation.geometry?.coordinates ?? null;
 	const dataHref = projectHref(org, project, "data");
 
-	const zoneStyles: Record<string, ZonePlanStyle> | undefined =
-		plan && zone
-			? Object.fromEntries(
-					plan.site.zones.map(planZone => [
-						planZone.id,
-						{ emphasis: (planZone.code ?? planZone.id) === zone ? "focus" : "dim" } as ZonePlanStyle
-					])
-				)
-			: undefined;
+	// The record's zone stands out on its map version; an inventory's zone is hatched, as it is the record.
+	const zoneStyles: Record<string, ZonePlanStyle> | undefined = plan
+		? Object.fromEntries(
+				plan.site.zones.map(planZone => [
+					planZone.id,
+					(planZone.id === zone
+						? { emphasis: "focus", hatched: point === null }
+						: { emphasis: "dim" }) satisfies ZonePlanStyle
+				])
+			)
+		: undefined;
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -104,7 +100,9 @@ export function ObservationDetail({
 			<div className="grid gap-6 lg:grid-cols-[minmax(0,46fr)_minmax(0,54fr)] lg:items-start">
 				<div className="flex min-w-0 flex-col gap-6">
 					{plan ? (
-						<Island title="Where it was placed" meta={`${observation.site_name} · Map v${plan.version}`}>
+						<Island
+							title={point ? "Where it was placed" : "The zone it describes"}
+							meta={`${observation.site_name} · Map v${plan.version}`}>
 							<div className="flex flex-col gap-4">
 								<MapFrame
 									site={plan.site}
@@ -114,20 +112,24 @@ export function ObservationDetail({
 									title={observation.site_name}
 									subtitle={`${zoneText} · ${roundLabel(round)}`}
 									zones={zoneStyles}
-									observations={[
-										{
-											id: observation.observation_id,
-											lng,
-											lat,
-											label: `${label}, ${zoneText}, ${roundLabel(round)}`
-										}
-									]}
-									selectedId={observation.observation_id}
+									observations={
+										point
+											? [
+													{
+														id: observation.observation_id,
+														lng: point[0],
+														lat: point[1],
+														label: `${label}, ${zoneText}, ${roundLabel(round)}`
+													}
+												]
+											: []
+									}
+									selectedId={point ? observation.observation_id : null}
 								/>
 								<p className="type-small text-ink-2">
-									Drawn on the site&apos;s current map.
-									{round === "inventory" &&
-										" A zone inventory sits at the centre of its zone. It does not show where play happened."}
+									Drawn on map v{plan.version}, the version it was collected on.
+									{point === null &&
+										" A zone inventory describes the whole zone, so it has no point."}
 								</p>
 							</div>
 						</Island>
@@ -152,16 +154,18 @@ export function ObservationDetail({
 								},
 								{
 									label: "Zone",
-									value: zone ? (
-										<TextLink
-											tone="ink"
-											href={`${dataHref}${viewQuery({ site: observation.site_code, zone })}`}>
-											{zoneText}
-										</TextLink>
-									) : (
-										zoneText
+									value: (
+										<>
+											<TextLink
+												tone="ink"
+												href={`${dataHref}${viewQuery({ site: observation.site_code, zones: [zone] })}`}>
+												{zoneText}
+											</TextLink>{" "}
+											<span className="type-mono-data text-ink-2">{observation.zone_code}</span>
+										</>
 									)
 								},
+								{ label: "Map version", value: `v${observation.package_version}`, mono: true },
 								{ label: "Round", value: roundLabel(round) },
 								{ label: "First round", value: firstRound(observation) },
 								{ label: "Placement", value: placement(observation) },
@@ -178,11 +182,13 @@ export function ObservationDetail({
 									)
 								},
 								{ label: "Revision", value: String(observation.revision), mono: true },
-								{
-									label: "Latitude, longitude",
-									value: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
-									mono: true
-								}
+								point
+									? {
+											label: "Latitude, longitude",
+											value: `${point[1].toFixed(5)}, ${point[0].toFixed(5)}`,
+											mono: true
+										}
+									: { label: "Latitude, longitude", value: "None: an inventory has no point" }
 							]}
 						/>
 					</Island>

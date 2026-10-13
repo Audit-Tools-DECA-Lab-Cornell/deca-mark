@@ -60,6 +60,7 @@ export function DataTable({ records, hrefOf, selectedId, onSelect }: DataTablePr
 							<Th>Observed</Th>
 							<Th>Site</Th>
 							<Th>Zone</Th>
+							<Th>Map</Th>
 							<Th>Round</Th>
 							<Th>Observer</Th>
 							<Th>Answer</Th>
@@ -78,7 +79,15 @@ export function DataTable({ records, hrefOf, selectedId, onSelect }: DataTablePr
 									<span className="block type-small text-ink-2">{record.time}</span>
 								</Td>
 								<Td>{record.siteName}</Td>
-								<Td>{record.zoneLabel}</Td>
+								<Td>
+									<span className="block">{record.zoneLabel}</span>
+									<span className="block type-mono-data text-ink-2">
+										{record.wholeZone ? `Whole zone · ${record.zoneCode}` : record.zoneCode}
+									</span>
+								</Td>
+								<Td mono nowrap>
+									{record.mapVersion}
+								</Td>
 								<Td>{record.roundName}</Td>
 								<Td mono>{record.observer}</Td>
 								<Td className="min-w-48">
@@ -105,9 +114,11 @@ export function DataTable({ records, hrefOf, selectedId, onSelect }: DataTablePr
 						</div>
 						<p className="type-body">
 							{record.when} · {record.zoneLabel}
+							{record.wholeZone ? " · whole zone" : ""}
 						</p>
 						<p className="type-small text-ink-2">
-							{record.siteName} · Observer <span className="type-mono-data">{record.observer}</span>
+							{record.siteName} · Map {record.mapVersion} · Observer{" "}
+							<span className="type-mono-data">{record.observer}</span>
 						</p>
 						{record.summary && (
 							<p className="type-body wrap-anywhere">

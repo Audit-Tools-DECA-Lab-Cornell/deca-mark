@@ -1,18 +1,19 @@
-import type { ObservationRow } from "@/lib/api/types";
-import { plural, roundName } from "@/lib/labels";
+import type { Observation } from "@/lib/api/types";
+import { plural, ROUND_TYPES, roundLabel, roundName } from "@/lib/labels";
 import { allOptions, answerLabel, playTypeQuestion } from "@/lib/observations/answers";
-import { byDay, byObserver, byRound, byZone, type ObservationLike } from "@/lib/observations/summary";
+import { byDay, byObserver, type ObservationLike } from "@/lib/observations/summary";
 import type { Clock } from "@/lib/time";
 import type { RoundType } from "@/lib/workspace/types";
 
 /**
- * What the Reports page counts. The server turns the observation list into slim rows (`reportRows`), the
- * browser filters them by day and counts them (`buildReport`), so changing a date never asks for the list
- * again. Pure: no imports of server code, so the tests load it directly.
+ * What the Reports page counts. DECA Mark applies site, round and days to every observation: zones and
+ * rounds come from its summary, which counts every match exactly. Observers, days and play types have no
+ * server count yet, so they are counted from the newest page of observations (`reportRows`), and the page
+ * says so when more match than it holds. Pure: no imports of server code, so the tests load it directly.
  *
- * Rules (backend/WEB-FLOW-HANDOFF.md § Bounded reports and exports): days are the project's calendar days
- * of `observed_at`; a missing round counts as Standard; "No zone" and zones the newest package no longer
- * has stay in the counts; play type is read with each row's own form version, never the newest form.
+ * Rules: days are the project's calendar days of `observed_at`; every record counts in the zone it was
+ * recorded in (by identity, across map versions), and a zone the current package no longer has keeps the
+ * label of the newest version it was recorded on; play type is read with each row's own form version.
  */
 
 /** Bars listed for the days chart; older days are left out and the page says so. */
@@ -26,7 +27,10 @@ export type ReportRow = {
 	readonly id: string;
 	readonly siteCode: string;
 	readonly siteName: string;
-	readonly zone: string | null;
+	/** The zone's identity, the same on every map version. */
+	readonly zone: string;
+	/** The zone's label when the record was collected. */
+	readonly zoneLabel: string;
 	readonly round: RoundType;
 	readonly observer: string;
 	readonly observedAt: string;
@@ -37,6 +41,7 @@ export type ReportRow = {
 
 /** A zone of a site in scope, as its current map package names it. */
 export type ZoneChoice = {
+	readonly siteId: string;
 	readonly siteCode: string;
 	readonly siteName: string;
 	readonly id: string;
@@ -48,10 +53,25 @@ export type PlayOptions = Readonly<Record<string, readonly string[]>>;
 
 export type Bar = { readonly key: string; readonly label: string; readonly value: number };
 
+/** The summary's counts for one zone of one map version, in one round type (contract "Observation summary"). */
+export type ReportGroup = {
+	readonly site_id: string;
+	readonly zone_id: string;
+	readonly zone_label: string;
+	readonly package_version: number;
+	readonly round_type: RoundType;
+	readonly count: number;
+};
+
 export type Report = {
+	/** Every matching observation, counted by DECA Mark. */
 	readonly total: number;
+	/** Whether observers, days and play types come from fewer observations than match. */
+	readonly sampled: boolean;
+	/** How many observations observers, days and play types were counted from. */
+	readonly counted: number;
 	readonly observers: number;
-	/** Zones that have at least one record (not "No zone"). */
+	/** Zones that have at least one record. */
 	readonly zonesWithRecords: number;
 	readonly siteNames: readonly string[];
 	readonly firstDay: string | null;
@@ -76,7 +96,7 @@ export type Report = {
  * read" rather than a guess from another version.
  */
 export function reportRows(
-	rows: readonly ObservationRow[],
+	rows: readonly Observation[],
 	definitions: Readonly<Record<string, unknown>>
 ): { rows: ReportRow[]; playOptions: PlayOptions } {
 	const questions = new Map<string, { id: string } | null>();
@@ -104,8 +124,9 @@ export function reportRows(
 				id: row.observation_id,
 				siteCode: row.site_code,
 				siteName: row.site_name,
-				zone: row.zone || null,
-				round: row.round_type ?? "standard",
+				zone: row.zone_id,
+				zoneLabel: row.zone_label,
+				round: row.round_type,
 				observer: row.observer,
 				observedAt: row.observed_at,
 				formVersion: version,
@@ -134,39 +155,21 @@ export function dayRangeIsBackwards(from: string | null, to: string | null): boo
 	return from !== null && to !== null && from > to;
 }
 
-/** Rows observed from `from` to `to`, both included, as days in the project's timezone. Null leaves a side open. */
-export function inDays(rows: readonly ReportRow[], clock: Clock, from: string | null, to: string | null): ReportRow[] {
-	if (dayRangeIsBackwards(from, to)) return [];
-	return rows.filter(row => {
-		if (from === null && to === null) return true;
-		const key = clock.dayKey(row.observedAt);
-		if (key === "") return false;
-		return (from === null || key >= from) && (to === null || key <= to);
-	});
-}
+/* ── Counting ─────────────────────────────────────────────────────────── */
 
-/* ── Counting ─────────────────────────────────────────────────────────────── */
-
-const NONE = "none";
-
-function asObservation(row: ReportRow, zone: string | null): ObservationLike {
+function asObservation(row: ReportRow): ObservationLike {
 	return {
 		observation_id: row.id,
 		site_code: row.siteCode,
 		site_name: row.siteName,
-		zone,
+		zone_id: row.zone,
+		zone_label: row.zoneLabel,
 		round_type: row.round,
 		observer: row.observer,
 		observed_at: row.observedAt,
 		form_version: row.formVersion,
 		answers: {}
 	};
-}
-
-/** The same zone id can belong to two sites, so with more than one site a zone is counted per site. */
-function zoneKey(row: ReportRow, multiSite: boolean): string | null {
-	if (row.zone === null) return null;
-	return multiSite ? `${row.siteCode}\u0000${row.zone}` : row.zone;
 }
 
 function playBars(rows: readonly ReportRow[], playOptions: PlayOptions): Bar[] | null {
@@ -184,49 +187,88 @@ function playBars(rows: readonly ReportRow[], playOptions: PlayOptions): Bar[] |
 		.sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, "en"));
 }
 
-/** Everything the report page shows, counted from the rows it is given (already filtered by day). */
+/**
+ * Bars by zone from the summary: the current zones of the sites in scope, in their map's order (0 when
+ * nothing was recorded), then zones only earlier versions had, under the label of the newest version they
+ * were recorded on. With more than one site, each label names its site.
+ */
+function zoneBars(
+	groups: readonly ReportGroup[],
+	zones: readonly ZoneChoice[],
+	siteName: ReadonlyMap<string, string>,
+	multiSite: boolean
+): Bar[] {
+	const counts = new Map<string, { count: number; label: string; version: number; site: string }>();
+	for (const group of groups) {
+		const entry = counts.get(group.zone_id) ?? {
+			count: 0,
+			label: group.zone_label,
+			version: 0,
+			site: group.site_id
+		};
+		entry.count += group.count;
+		if (group.package_version > entry.version) {
+			entry.version = group.package_version;
+			entry.label = group.zone_label;
+		}
+		counts.set(group.zone_id, entry);
+	}
+	const named = (site: string, label: string) => (multiSite ? `${siteName.get(site) ?? ""} · ${label}` : label);
+	const current = new Set(zones.map(zone => zone.id));
+	return [
+		...zones.map(zone => ({
+			key: zone.id,
+			label: named(zone.siteId, zone.label),
+			value: counts.get(zone.id)?.count ?? 0
+		})),
+		...[...counts]
+			.filter(([id]) => !current.has(id))
+			.map(([id, entry]) => ({ key: id, label: named(entry.site, entry.label), value: entry.count }))
+			.sort((a, b) => a.label.localeCompare(b.label, "en"))
+	];
+}
+
+/**
+ * Everything the report page shows. `groups` and `total` are the summary's (every match); `rows` are the
+ * newest observations of the same scope, which observers, days and play types are counted from.
+ */
 export function buildReport(input: {
+	readonly groups: readonly ReportGroup[];
+	readonly total: number;
 	readonly rows: readonly ReportRow[];
 	readonly zones: readonly ZoneChoice[];
+	readonly sites: readonly { readonly siteId: string; readonly name: string }[];
 	readonly playOptions: PlayOptions;
 	readonly clock: Clock;
 }): Report {
-	const { rows, zones, playOptions, clock } = input;
-	const siteCodes = new Set([...zones.map(zone => zone.siteCode), ...rows.map(row => row.siteCode)]);
-	const multiSite = siteCodes.size > 1;
+	const { groups, total, rows, zones, sites, playOptions, clock } = input;
+	const siteName = new Map(sites.map(site => [site.siteId, site.name]));
+	const inScope = new Set([...zones.map(zone => zone.siteId), ...groups.map(group => group.site_id)]);
+	const zonesBars = zoneBars(groups, zones, siteName, inScope.size > 1);
 
-	const adapted = rows.map(row => asObservation(row, zoneKey(row, multiSite)));
-	const refs = zones.map(zone => ({
-		id: multiSite ? `${zone.siteCode}\u0000${zone.id}` : zone.id,
-		label: multiSite ? `${zone.siteName} · ${zone.label}` : zone.label
-	}));
-	// A zone no current package has: named by its id (and its site, when there is more than one).
-	const historical = new Map<string, string>();
-	for (const row of rows)
-		if (row.zone !== null)
-			historical.set(zoneKey(row, multiSite)!, multiSite ? `${row.siteName} · ${row.zone}` : row.zone);
-	const zoneBars: Bar[] = byZone(adapted, refs).map(entry => ({
-		key: entry.key ?? NONE,
-		label:
-			entry.key !== null && historical.has(entry.key) && entry.label === entry.key
-				? historical.get(entry.key)!
-				: entry.label,
-		value: entry.count
-	}));
+	const rounds = new Map<RoundType, number>();
+	for (const group of groups) rounds.set(group.round_type, (rounds.get(group.round_type) ?? 0) + group.count);
 
+	const adapted = rows.map(asObservation);
 	const days = byDay(adapted, clock);
 	const shown = days.slice(-MAX_DAYS);
 	const observers = byObserver(adapted);
+	const recorded = new Set(groups.filter(group => group.count > 0).map(group => group.site_id));
 
 	return {
-		total: rows.length,
+		total,
+		sampled: total > rows.length,
+		counted: rows.length,
 		observers: observers.length,
-		zonesWithRecords: zoneBars.filter(bar => bar.key !== NONE && bar.value > 0).length,
-		siteNames: [...new Set(rows.map(row => row.siteName))].sort((a, b) => a.localeCompare(b, "en")),
+		zonesWithRecords: zonesBars.filter(bar => bar.value > 0).length,
+		siteNames: [...recorded]
+			.map(id => siteName.get(id) ?? "")
+			.filter(Boolean)
+			.sort((a, b) => a.localeCompare(b, "en")),
 		firstDay: days[0]?.key ?? null,
 		lastDay: days[days.length - 1]?.key ?? null,
-		zones: zoneBars,
-		rounds: byRound(adapted).map(entry => ({ key: entry.key, label: entry.label, value: entry.count })),
+		zones: zonesBars,
+		rounds: ROUND_TYPES.map(type => ({ key: type, label: roundLabel(type), value: rounds.get(type) ?? 0 })),
 		play: playBars(rows, playOptions),
 		observerBars: observers.map(entry => ({ key: entry.key, label: entry.label, value: entry.count })),
 		days: shown.map(entry => ({ key: entry.key, label: entry.label, value: entry.count })),
@@ -239,15 +281,20 @@ export function buildReport(input: {
 
 /**
  * The report in one plain sentence: "8 observations by 1 observer in 1 zone at Fall Creek test site on
- * Oct 07, 2026." A round filter is named at the end.
+ * Oct 07, 2026." Observers and days are said only when every match was read; a round filter is named at
+ * the end.
  */
 export function summarySentence(report: Report, options: { clock: Clock; round: RoundType | null }): string {
 	if (report.total === 0) return "No observations match these filters.";
-	const parts = [`${plural(report.total, "observation")} by ${plural(report.observers, "observer")}`];
+	const parts = [
+		report.sampled
+			? plural(report.total, "observation")
+			: `${plural(report.total, "observation")} by ${plural(report.observers, "observer")}`
+	];
 	if (report.zonesWithRecords > 0) parts.push(`in ${plural(report.zonesWithRecords, "zone")}`);
 	if (report.siteNames.length === 1) parts.push(`at ${report.siteNames[0]}`);
 	else if (report.siteNames.length > 1) parts.push(`across ${plural(report.siteNames.length, "site")}`);
-	if (report.firstDay !== null && report.lastDay !== null)
+	if (!report.sampled && report.firstDay !== null && report.lastDay !== null)
 		parts.push(
 			report.firstDay === report.lastDay
 				? `on ${options.clock.keyLabel(report.firstDay)}`

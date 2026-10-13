@@ -77,3 +77,23 @@ test("an unknown timezone falls back to UTC, and an unreadable time formats as n
 	assert.equal(ny.time("not a time"), "");
 	assert.equal(ny.dayKey("not a time"), "");
 });
+
+test("a day starts at its first instant in the timezone, across clock changes and far offsets", () => {
+	const cases = [
+		["America/New_York", "2026-03-08", "2026-03-08T05:00:00.000Z"], // the 23-hour day starts on EST
+		["America/New_York", "2026-11-01", "2026-11-01T04:00:00.000Z"], // the 25-hour day starts on EDT
+		["America/New_York", "2026-11-02", "2026-11-02T05:00:00.000Z"],
+		// Santiago skips midnight when its clocks go forward: the day starts at 01:00.
+		["America/Santiago", "2026-09-06", "2026-09-06T04:00:00.000Z"],
+		["Pacific/Kiritimati", "2026-10-08", "2026-10-07T10:00:00.000Z"], // +14
+		["Pacific/Pago_Pago", "2026-10-08", "2026-10-08T11:00:00.000Z"], // −11
+		["Asia/Kolkata", "2026-10-08", "2026-10-07T18:30:00.000Z"], // +5:30
+		["UTC", "2026-10-08", "2026-10-08T00:00:00.000Z"]
+	];
+	for (const [zone, key, start] of cases) {
+		const zoned = clock(zone);
+		assert.equal(zoned.dayStart(key), start, `${zone} ${key}`);
+		assert.equal(zoned.dayKey(start), key);
+		assert.equal(zoned.dayKey(new Date(Date.parse(start) - 1000).toISOString()), addDays(key, -1));
+	}
+});

@@ -183,11 +183,19 @@ test("MultiPolygon zones and ground are accepted; points in the zones layer are 
 	);
 });
 
-test("a zone without a label is a warning, not a block", () => {
-	const zones = ready("zones", collection(feature({ id: "A" })));
-	const checks = runClientChecks({ ...goodSlots(), zones });
-	assert.equal(byId(checks, "zone-labels").state, "warning");
-	assert.equal(canUpload({ ...goodSlots(), zones }, checks), true);
+test("a zone needs a name: its name field, or its label field when it has none", () => {
+	const unnamed = ready("zones", collection(feature({ id: "A" })));
+	const checks = runClientChecks({ ...goodSlots(), zones: unnamed });
+	assert.equal(byId(checks, "zone-labels").state, "blocked");
+	assert.match(byId(checks, "zone-labels").detail, /1 zone has no name or label field/);
+	assert.equal(canUpload({ ...goodSlots(), zones: unnamed }, checks), false);
+	for (const properties of [
+		{ id: "A", name: "Meadow" },
+		{ id: "A", label: "Meadow" }
+	]) {
+		const zones = ready("zones", collection(feature(properties)));
+		assert.equal(byId(runClientChecks({ ...goodSlots(), zones }), "zone-labels").state, "passed");
+	}
 });
 
 test("zones outside the ground are a warning", () => {

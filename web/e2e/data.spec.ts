@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { authFile } from "./support/auth";
 import { manifest, projectPath, SEED } from "./support/manifest";
-import { chooseFilter, csvLines, downloadText, recordRows } from "./support/ui";
+import { chooseFilter, csvLines, downloadZip, recordRows } from "./support/ui";
 
 /** Plan step 7: filter the data, open a record, export CSV. */
 
@@ -33,24 +33,30 @@ test("opening a record shows its answers labelled from its form", async ({ page 
 	await expect(main).toContainText(/OBS-[0-9A-F]{6}/);
 });
 
-test("exporting CSV downloads every record in view with its columns", async ({ page }) => {
+test("exporting downloads every matching record as DECA Mark writes it, with its codebook", async ({ page }) => {
 	const { baseline, observations } = manifest();
 	await page.goto(projectPath("data"));
 	await page.getByRole("button", { name: "Export", exact: true }).first().click();
 	const dialog = page.getByRole("dialog");
-	const csvChoice = dialog.getByRole("radio", { name: /csv/i });
-	if ((await csvChoice.count()) > 0) await csvChoice.first().check();
+	await dialog.getByRole("radio", { name: /csv/i }).first().check();
+	await expect(dialog).toContainText("All sites");
 
-	const { name, text } = await downloadText(page, () =>
-		dialog
-			.getByRole("button", { name: /(download|export)/i })
-			.last()
-			.click()
+	const { name, files } = await downloadZip(page, () =>
+		dialog.getByRole("button", { name: `Export ${baseline.total} matching observations`, exact: true }).click()
 	);
-	expect(name).toMatch(/\.csv$/);
-	const [header, ...rows] = csvLines(text);
-	const columns = header.split(",");
-	for (const column of ["observation_id", "label", "site_code", "zone", "round_type", "observer", "observed_at"]) {
+	expect(name).toMatch(/^play-study-observations-\d{4}-\d{2}-\d{2}\.zip$/);
+	expect(Object.keys(files)).toEqual(expect.arrayContaining(["observations.csv", "codebook.csv"]));
+	const [header, ...rows] = csvLines(files["observations.csv"]!);
+	const columns = header!.split(",");
+	for (const column of [
+		"observation_id",
+		"label",
+		"site_code",
+		"zone_id",
+		"map_version",
+		"round_type",
+		"observed_at"
+	]) {
 		expect(columns, `the CSV has ${column}`).toContain(column);
 	}
 	expect(rows).toHaveLength(baseline.total);

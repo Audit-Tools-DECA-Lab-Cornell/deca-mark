@@ -305,13 +305,15 @@ Every package upload goes through the same activation rules as publishing (contr
    - A feature whose code or label merely matches is shown as a suggestion and left unselected. Labels and codes do not prove continuity (master plan).
    - A new zone gets a client UUID and uses the source ID as its code when it fits the code syntax; otherwise the manager types a code.
 3. Current zones that no feature maps to are listed: "Removed from the next version: Swings. Earlier versions and their observations keep it."
-4. A change note is recommended.
-5. Submit with `request_id` (kept for this attempt, so a retry replays), `expected_current_package_id`, `zone_identity_map` and `change_note`.
-6. Results:
-   - 409 `publication_conflict`: "Not uploaded. v2 was published meanwhile. Read the current version and map again."
-   - 422 `identity_conflict`: the issue copy names the feature.
-   - 503 `storage_unavailable`: "Not uploaded. The map could not be saved. Your file stays available. Try again."
-   - Success: show the returned package version. Refresh the current pointer before calling that version current, because a retry may return a historical result.
+4. A change note is recommended ("What changed", at most 2,000 characters).
+5. The inventory form is chosen with the play form (amended 2026-10-13: `inventory_form_version` is part of `PackageRequest`): "Keep the current one · <code>" leaves the field out so the current map's form carries over; "None: no Inventory on this map" sends null; or a published form. A site's first upload starts on the most recently published form that asks only about a zone, or on None when there is none.
+6. Zone names (amended 2026-10-13): BE-22 reads a zone's label from the feature's `name`, while the QGIS templates write `label`. The zones layer is sent with `name` filled from `label` when `name` is missing, nothing else changed, and the mapping step says "Names come from each zone's name field, or its label field when it has none." A zone with neither blocks the upload ("Zones have a name").
+7. Submit with `request_id`, `expected_current_package_id`, `zone_identity_map` and `change_note`. While an answer is unknown (no response, or a 5xx), the attempt is kept whole: "Upload package again" resends the same body, so a request that did arrive replays. A changed request after that is still sent against the same `expected_current_package_id` and current zones, so it is refused rather than applied to a map published by the first.
+8. Results:
+   - 409 `publication_conflict`: "Not uploaded. Map v2 was published meanwhile. Read the current version and choose each zone again." The upload conflict carries only `current_package_id`, so without a version it reads "The site's current map changed meanwhile."
+   - 422 with `details.issues`: each issue's copy (6.7) names the feature by its `properties.id`, through the issue's `/zone_identity_map/N` path or its zone IDs.
+   - 503 `storage_unavailable`: "Not uploaded. The map could not be saved. Your files stay chosen. Try again."
+   - Success: show the returned package version, Active only when the response's `current_package_id` is that package; a replay says "The same package had already arrived, so no new version was made."
 
 ### 5.12 Screen states for the new routes
 
@@ -471,7 +473,7 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 - **Coverage:** from `GET /v1/…/observations/summary?site_id=…`. Rows are recorded snapshots: the current version's zones first (zero rows from the current package zones), then "Recorded on earlier versions" (`v1 · North meadow`). Columns are the round types. Keep "Coverage is the records present, not completion."
 - **Field return:** the total from the summary; today and the last 7 days from the summary with date bounds.
 - **Panels with no server dimension** (observer, day, play type, last received): keep them, but compute them from the newest 500 with the existing note, until CR-W15 adds facets. Never mix exact and page-limited numbers without saying which is which.
-- **Reports:** zone and round from the summary. Observer and day follow the rule above.
+- **Reports:** zone and round from the summary. Observer and day follow the rule above. Amended 2026-10-13 (WEB-41): days are filters DECA Mark applies (they were applied in the browser to the newest 500), so every bar covers the same scope; when more match than the newest page holds, the sentence leaves out observers and days, and the observer, day and play type sections are titled "…, newest observations" under a note naming both counts.
 - **Site page zone island:** counts "recorded on v2" from the summary filtered to the current package, plus "N on earlier versions".
 
 ### 7.6 Exports
@@ -484,6 +486,7 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
   - When `total_matching` exceeds 10,000, disable Export with the visible reason "One export holds up to 10,000 observations. Narrow the dates or choose one site."
   - A 422 `validation_failed` whose issue code is `export_scope_too_large` gets the same text, without counts until CR-W15.
 - **Codebook and formula protection:** the server writes the codebook and protects every CSV cell. The client builds neither. Any remaining client CSV (none planned) must neutralise `=`, `+`, `-`, `@`, tab and CR in text cells.
+- **Client exports (amended 2026-10-13, WEB-41):** the browser-built CSV, GeoJSON and codebook are removed; Data and QGIS both download the server ZIP. The Data dialog's button reads "Export 1,284 matching observations", lists the scope one filter per line (zones say "every map version, by the zone's identity" or "only what was recorded on map v2"; days give the UTC bounds), and says when the page's search is not applied to the file.
 - **QGIS page:** "Records out" uses the same server export. "Maps for QGIS in" adds, per site, "Download zone boundaries of v1 (.geojson)" built from `/zones?package_id` (UUID, code, label and version properties). Exports already carry `historical-zones.geojson` for their own scope.
 
 ## 8. Tasks and order

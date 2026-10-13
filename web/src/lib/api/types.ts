@@ -26,15 +26,29 @@ export type InvitationCredential = { token: string } | { code: string };
 export type OrgInvitationCreate = Schemas["OrgInvitationCreate"];
 export type ProjectInvitationCreate = Schemas["ProjectInvitationCreate"];
 export type InvitationRole = Invitation["role"];
-export type Site = Schemas["Site"];
+export type {
+	Observation,
+	ObservationDetail,
+	ObservationFilters,
+	ObservationPage,
+	ObservationSummary,
+	SummaryGroup
+} from "./observations";
+export type {
+	PackageDetail,
+	PackageForms,
+	PackageHistory,
+	PackageSummary,
+	Publication,
+	Site,
+	SitePackageInfo,
+	SiteZone
+} from "./sites";
 export type SiteCreate = Schemas["SiteCreate"];
 export type SitePatch = Schemas["SitePatch"];
-export type SitePackageInfo = Schemas["SitePackageInfo"];
-export type ManifestZone = Schemas["ManifestZone"];
 export type Extent = Schemas["Extent"];
-export type PackageSummary = Schemas["PackageSummary"];
-export type PackageDetail = Schemas["PackageDetail"];
 export type PackageSubmission = Schemas["PackageRequest"];
+export type ZoneIdentityMapping = Schemas["ZoneIdentityMapping"];
 export type ProjectImportRequest = Schemas["ProjectImportRequest"];
 export type ProjectImportResult = Schemas["ProjectImportResult"];
 export type PreparationCheck = Schemas["PreparationCheck"];
@@ -46,6 +60,4 @@ export type FormCreate = Schemas["FormCreate"];
 export type VersionState = Schemas["VersionState"];
 /** A form definition as the API stores it: canonical `questions`, or legacy `fields`. */
 export type RawDefinition = FormVersionDetail["definition"];
-export type ObservationRow = Schemas["ObservationRow"];
-export type StoredObservation = Schemas["StoredObservation"];
 export type ErrorCode = Schemas["ErrorCode"];

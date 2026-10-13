@@ -2,9 +2,9 @@ import { Island } from "@/components/contour/Island";
 import { ScreenState } from "@/components/contour/ScreenState";
 import { TextLink } from "@/components/contour/TextLink";
 import { LoadFailure } from "@/components/shell/LoadFailure";
-import type { ObservationRow, Site } from "@/lib/api/types";
-import { getSitePlan, listObservations } from "@/lib/api/workspace";
-import { coverageMatrix } from "@/lib/observations/summary";
+import type { Site } from "@/lib/api/types";
+import { getSitePlan, summarizeObservations } from "@/lib/api/workspace";
+import { coverageFromGroups } from "@/lib/observations/summary";
 import { settle } from "@/lib/workspace/result";
 import type { Result } from "@/lib/workspace/types";
 
@@ -18,25 +18,16 @@ export type CoverageSectionProps = {
 	/** Managers get a link to the Sites page when there is nothing to count yet. */
 	manage: boolean;
 	sites: Result<readonly Site[]>;
-	/** The project-wide list the page already read; it answers for one site when it was not cut off. */
-	observations: Result<{ rows: readonly ObservationRow[]; limited: boolean }>;
 	/** The site asked for with `?site=`. */
 	requested?: string;
 };
 
 /**
  * Coverage by zone for one site: the zones of its current map package (named by the package), the
- * records it holds in each round, and its plan. Reads the site's own records and plan here, so the rest of
- * the Overview does not wait for the plan's archive.
+ * records it holds in each round, counted by the server for every map version, and its plan. Reads the
+ * counts and plan here, so the rest of the Overview does not wait for the plan's archive.
  */
-export async function CoverageSection({
-	projectId,
-	base,
-	manage,
-	sites,
-	observations,
-	requested
-}: CoverageSectionProps) {
+export async function CoverageSection({ projectId, base, manage, sites, requested }: CoverageSectionProps) {
 	if (!sites.ok) return <LoadFailure failure={sites.failure} what="the coverage" />;
 
 	const chosen = pickCoverageSite(sites.data, requested);
@@ -54,17 +45,11 @@ export async function CoverageSection({
 		);
 
 	const packageId = chosen.package.package_id;
-	const [siteRows, plan] = await Promise.all([
-		// The project-wide list answers for this site when it was not cut off; otherwise ask for the site alone.
-		observations.ok && !observations.data.limited
-			? Promise.resolve<Result<{ rows: readonly ObservationRow[]; limited: boolean }>>({
-					ok: true,
-					data: { rows: observations.data.rows.filter(row => row.site_code === chosen.code), limited: false }
-				})
-			: settle(listObservations(projectId, chosen.code)),
+	const [counts, plan] = await Promise.all([
+		settle(summarizeObservations(projectId, { siteId: chosen.site_id })),
 		settle(getSitePlan(projectId, packageId, chosen.name))
 	]);
-	if (!siteRows.ok) return <LoadFailure failure={siteRows.failure} what="the coverage" />;
+	if (!counts.ok) return <LoadFailure failure={counts.failure} what="the coverage" />;
 
 	let planNote: string | null = null;
 	if (!plan.ok) planNote = `The site plan could not be loaded. ${plan.failure.message} The counts are not affected.`;
@@ -73,15 +58,14 @@ export async function CoverageSection({
 
 	return (
 		<CoverageIsland
-			site={{ code: chosen.code, name: chosen.name, version: chosen.package.version }}
+			site={{ code: chosen.code, name: chosen.name, version: chosen.package.package_version }}
 			choices={sites.data.filter(site => site.package).map(site => ({ code: site.code, name: site.name }))}
-			coverage={coverageMatrix(
-				siteRows.data.rows,
-				(chosen.zones ?? []).map(zone => ({ id: zone.id, label: zone.label }))
+			coverage={coverageFromGroups(
+				counts.data.groups,
+				chosen.zones.map(zone => ({ id: zone.zone_id, label: zone.label }))
 			)}
 			plan={plan.ok ? plan.data : null}
 			planNote={planNote}
-			limited={siteRows.data.limited}
 			siteHref={`${base}/sites/${chosen.code}`}
 			dataHref={`${base}/data`}
 		/>

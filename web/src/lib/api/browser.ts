@@ -2,16 +2,19 @@
 
 import createClient from "openapi-fetch";
 
-import { saveBlob } from "@/lib/download";
+import { saveBlob, saveText } from "@/lib/download";
+import { zonesGeoJson } from "@/lib/export/files";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 import { ApiError, apiRequestError, parseApiError } from "./errors";
+import { filterQuery, type ObservationFilters } from "./observations";
 import type { paths } from "./schema";
-import type { PackageDetail, PackageSubmission, ProjectImportRequest, ProjectImportResult } from "./types";
+import { publicationSchema } from "./sites";
+import type { PackageSubmission, ProjectImportRequest, ProjectImportResult, Publication } from "./types";
 
 /**
  * Requests the browser sends to the API itself, as the signed-in person: map package uploads (up to
- * 24 MiB) and archive downloads, which are larger than a Server Action may carry. The API allows the web
+ * 24 MiB), archive and export downloads, which are larger than a Server Action may carry. The API allows the web
  * app's origin (CORS). Every other read and write goes through the server (`workspace.ts`,
  * `mutations.ts`).
  */
@@ -65,10 +68,12 @@ export function browserApi(timeoutMs = REQUEST_TIMEOUT_MS) {
 }
 
 /**
- * Sends a map package from QGIS layers and returns what the API prepared, with its checks. A blocked
- * package is still an answer (state "blocked"); only a refused request throws.
+ * Sends a map package from QGIS layers. DECA Mark checks it, and either publishes it as the site's next
+ * version (201) or refuses it with the reasons (a 4xx, thrown). Sending the same request again, with the
+ * same `request_id`, returns the original result with `replayed: true` (200), which may no longer be the
+ * site's current version.
  */
-export async function preparePackage(projectId: string, submission: PackageSubmission): Promise<PackageDetail> {
+export async function preparePackage(projectId: string, submission: PackageSubmission): Promise<Publication> {
 	try {
 		const api = browserApi(TRANSFER_TIMEOUT_MS);
 		const { data, error, response } = await api.POST("/v1/projects/{project_id}/packages", {
@@ -76,7 +81,9 @@ export async function preparePackage(projectId: string, submission: PackageSubmi
 			body: submission
 		});
 		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
-		return data;
+		const parsed = publicationSchema.safeParse(data);
+		if (!parsed.success) throw new ApiError("unknown", "retry");
+		return parsed.data;
 	} catch (error) {
 		throw apiRequestError(error);
 	}
@@ -129,6 +136,50 @@ export async function downloadPackageArchive(
 		}
 		saveBlob(data, fileName);
 		return { bytes: data.size };
+	} catch (error) {
+		throw apiRequestError(error);
+	}
+}
+
+/**
+ * Downloads DECA Mark's export of every observation the filters match (no page, no limit of 500) as a ZIP
+ * and saves it as `fileName`. More than 10,000 matching observations are refused (422, with an
+ * `export_scope_too_large` issue).
+ */
+export async function downloadObservationExport(
+	projectId: string,
+	filters: ObservationFilters,
+	format: "csv" | "geojson",
+	fileName: string
+): Promise<{ bytes: number }> {
+	try {
+		const api = browserApi(TRANSFER_TIMEOUT_MS);
+		const { data, error, response } = await api.GET("/v1/projects/{project_id}/observations/export", {
+			params: { path: { project_id: projectId }, query: { ...filterQuery(filters), format } },
+			parseAs: "blob"
+		});
+		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
+		saveBlob(data, fileName);
+		return { bytes: data.size };
+	} catch (error) {
+		throw apiRequestError(error);
+	}
+}
+
+/** Downloads one map version's zone boundaries and saves them as GeoJSON for QGIS. */
+export async function downloadZoneBoundaries(
+	projectId: string,
+	site: { readonly siteId: string; readonly code: string },
+	packageId: string,
+	fileName: string
+): Promise<void> {
+	try {
+		const api = browserApi(TRANSFER_TIMEOUT_MS);
+		const { data, error, response } = await api.GET("/v1/projects/{project_id}/sites/{site_id}/zones", {
+			params: { path: { project_id: projectId, site_id: site.siteId }, query: { package_id: packageId } }
+		});
+		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
+		saveText(zonesGeoJson(data, site.code), fileName, "application/geo+json");
 	} catch (error) {
 		throw apiRequestError(error);
 	}

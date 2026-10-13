@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import { observation as fixture, uuid } from "./fixtures.mjs";
 import { load } from "./support.mjs";
 
 const {
 	buildReport,
 	dayRangeIsBackwards,
 	FORM_UNREADABLE,
-	inDays,
 	MAX_DAYS,
 	NO_PLAY_QUESTION,
 	parseDayKey,
@@ -39,28 +39,22 @@ const ny = clock("America/New_York");
 let serial = 0;
 function observation(overrides = {}) {
 	serial += 1;
-	return {
-		observation_id: `70000000-0000-4000-8000-${String(serial).padStart(12, "0")}`,
-		site_code: "fall-creek",
-		site_name: "Fall Creek",
-		zone: "A",
-		round_type: "standard",
+	return fixture({
+		observation_id: uuid(70_000 + serial),
 		first_round: true,
-		placement: "hand",
-		observer: "OB",
-		observed_at: "2026-10-07T14:00:00Z",
 		received_at: "2026-10-07T17:00:00Z",
 		form_version: "janet-test-v1",
-		revision: 1,
-		coordinates: [-76.4957, 42.4508],
 		answers: { play_type_1: "physical" },
 		...overrides
-	};
+	});
 }
 
+const A = uuid(200);
+const B = uuid(202);
+const OLD = uuid(209);
 const zones = [
-	{ siteCode: "fall-creek", siteName: "Fall Creek", id: "A", label: "Zone A · Whole playground" },
-	{ siteCode: "fall-creek", siteName: "Fall Creek", id: "B", label: "Zone B · Garden" }
+	{ siteId: uuid(1), siteCode: "fall-creek", siteName: "Fall Creek", id: A, label: "Zone A · Whole playground" },
+	{ siteId: uuid(1), siteCode: "fall-creek", siteName: "Fall Creek", id: B, label: "Zone B · Garden" }
 ];
 
 test("a day key is a real calendar date or nothing", () => {
@@ -92,49 +86,95 @@ test("play type is read with each record's own form version", () => {
 	assert.equal(playOptions["janet-test-v1"][0], "Physical");
 });
 
-test("a record without a round counts as Standard and a missing zone stays None", () => {
-	const { rows } = reportRows([observation({ round_type: null, zone: null })], { "janet-test-v1": janet });
-	assert.equal(rows[0].round, "standard");
-	assert.equal(rows[0].zone, null);
+test("a row keeps the zone it was recorded in, by identity, with the label it had then", () => {
+	const { rows } = reportRows([observation({ zone_id: OLD, zone_label: "Pond", round_type: "reliability" })], {
+		"janet-test-v1": janet
+	});
+	assert.equal(rows[0].round, "reliability");
+	assert.equal(rows[0].zone, OLD);
+	assert.equal(rows[0].zoneLabel, "Pond");
 });
+
+/** The summary DECA Mark would send for these observations: counts by site, zone, version and round. */
+function summarize(list) {
+	const groups = new Map();
+	for (const row of list) {
+		const key = [row.site_id, row.zone_id, row.package_version, row.round_type].join("|");
+		const group = groups.get(key) ?? {
+			site_id: row.site_id,
+			zone_id: row.zone_id,
+			zone_label: row.zone_label,
+			package_version: row.package_version,
+			round_type: row.round_type,
+			count: 0
+		};
+		group.count += 1;
+		groups.set(key, group);
+	}
+	return [...groups.values()];
+}
+
+const SITES = [
+	{ siteId: uuid(1), name: "Fall Creek" },
+	{ siteId: uuid(2), name: "Second site" }
+];
+
+/** A report of these observations, every one read (or only `read` of them, the newest page). */
+function reportOf(list, definitions = { "janet-test-v1": janet }, options = {}) {
+	const read = options.read ?? list;
+	const { rows, playOptions } = reportRows(read, definitions);
+	return buildReport({
+		groups: summarize(list),
+		total: list.length,
+		rows,
+		zones: options.zones ?? zones,
+		sites: SITES,
+		playOptions,
+		clock: ny
+	});
+}
 
 test("days are the project's calendar days, across the clock change", () => {
 	// 2026-11-01 is the 25-hour day in New York: 00:30 EDT, 01:30 EDT, and 23:30 EST.
-	const { rows } = reportRows(
+	const report = reportOf([
+		observation({ observed_at: "2026-11-01T04:30:00Z" }),
+		observation({ observed_at: "2026-11-01T05:30:00Z" }),
+		observation({ observed_at: "2026-11-02T04:30:00Z" }),
+		observation({ observed_at: "2026-11-02T05:30:00Z" })
+	]);
+	assert.deepEqual(
+		report.days.map(bar => [bar.key, bar.value]),
 		[
-			observation({ observed_at: "2026-11-01T04:30:00Z" }),
-			observation({ observed_at: "2026-11-01T05:30:00Z" }),
-			observation({ observed_at: "2026-11-02T04:30:00Z" }),
-			observation({ observed_at: "2026-11-02T05:30:00Z" })
-		],
-		{ "janet-test-v1": janet }
+			["2026-11-01", 3],
+			["2026-11-02", 1]
+		]
 	);
-	assert.equal(inDays(rows, ny, "2026-11-01", "2026-11-01").length, 3);
-	assert.equal(inDays(rows, ny, "2026-11-02", null).length, 1);
-	assert.equal(inDays(rows, ny, null, "2026-10-31").length, 0);
-	assert.equal(inDays(rows, ny, null, null).length, 4);
-	assert.equal(inDays(rows, ny, "2026-11-02", "2026-11-01").length, 0);
 });
 
-test("the report counts zones, rounds, play types, observers and days", () => {
+test("zones and rounds count every match; observers, days and play types count the rows read", () => {
 	const list = [
 		observation(),
 		observation({ round_type: "reliability" }),
 		observation({ round_type: "inventory", answers: { play_type_1: "bio" } }),
-		observation({ zone: "Z-old", observer: "JL", observed_at: "2026-10-08T14:00:00Z" }),
-		observation({ zone: null, observer: "JL", observed_at: "2026-10-08T15:00:00Z", answers: {} })
+		observation({ zone_id: OLD, zone_label: "Pond", observer: "JL", observed_at: "2026-10-08T14:00:00Z" }),
+		observation({
+			zone_id: B,
+			zone_label: "Garden",
+			observer: "JL",
+			observed_at: "2026-10-08T15:00:00Z",
+			answers: {}
+		})
 	];
-	const { rows, playOptions } = reportRows(list, { "janet-test-v1": janet });
-	const report = buildReport({ rows, zones, playOptions, clock: ny });
+	const report = reportOf(list);
 
 	assert.equal(report.total, 5);
+	assert.equal(report.sampled, false);
 	assert.deepEqual(
 		report.zones.map(bar => [bar.label, bar.value]),
 		[
 			["Zone A · Whole playground", 3],
-			["Zone B · Garden", 0],
-			["Z-old", 1],
-			["No zone", 1]
+			["Zone B · Garden", 1],
+			["Pond", 1]
 		]
 	);
 	assert.deepEqual(
@@ -173,28 +213,68 @@ test("the report counts zones, rounds, play types, observers and days", () => {
 	);
 	assert.ok(report.play.some(bar => bar.label === "Digital" && bar.value === 0));
 	assert.ok(report.play.some(bar => bar.label === "Not answered" && bar.value === 1));
-	assert.equal(report.zonesWithRecords, 2);
+	assert.equal(report.zonesWithRecords, 3);
 	assert.deepEqual(report.formVersions, ["janet-test-v1"]);
+	assert.deepEqual(report.siteNames, ["Fall Creek"]);
+});
+
+test("a zone recorded on several map versions is one bar, named as its newest version names it", () => {
+	const report = reportOf(
+		[
+			observation({ zone_id: OLD, zone_label: "Pond", package_version: 1 }),
+			observation({ zone_id: OLD, zone_label: "Pond edge", package_version: 2 }),
+			observation({ zone_id: OLD, zone_label: "Pond edge", package_version: 2, round_type: "inventory" })
+		],
+		undefined,
+		{ zones: [] }
+	);
+	assert.deepEqual(
+		report.zones.map(bar => [bar.key, bar.label, bar.value]),
+		[[OLD, "Pond edge", 3]]
+	);
+});
+
+test("when more match than were read, the counts say which are exact", () => {
+	const list = Array.from({ length: 6 }, (_, index) =>
+		observation({ observer: index < 3 ? "OB" : "JL", observed_at: `2026-10-0${index + 1}T14:00:00Z` })
+	);
+	const report = reportOf(list, undefined, { read: list.slice(3) });
+	assert.equal(report.total, 6);
+	assert.equal(report.sampled, true);
+	assert.equal(report.counted, 3);
+	assert.equal(report.zones[0].value, 6, "zones count every match");
+	assert.equal(report.rounds[0].value, 6, "rounds count every match");
+	assert.deepEqual(
+		report.observerBars.map(bar => [bar.label, bar.value]),
+		[["JL", 3]],
+		"observers count the rows read"
+	);
+	// Observers and days are left out of the sentence when they were not counted from every match.
+	assert.equal(summarySentence(report, { clock: ny, round: null }), "6 observations in 1 zone at Fall Creek.");
 });
 
 test("no play type chart when no form has a Play question; rows of other forms get their own bar", () => {
-	const none = reportRows([observation({ form_version: "notes-v1", answers: {} })], { "notes-v1": plain });
-	assert.equal(buildReport({ rows: none.rows, zones, playOptions: none.playOptions, clock: ny }).play, null);
-
-	const mixed = reportRows([observation(), observation({ form_version: "notes-v1", answers: {} })], {
+	const none = reportOf([observation({ form_version: "notes-v1", answers: {} })], { "notes-v1": plain });
+	assert.equal(none.play, null);
+	const mixed = reportOf([observation(), observation({ form_version: "notes-v1", answers: {} })], {
 		"janet-test-v1": janet,
 		"notes-v1": plain
 	});
-	const report = buildReport({ rows: mixed.rows, zones, playOptions: mixed.playOptions, clock: ny });
-	assert.equal(report.play.find(bar => bar.label === NO_PLAY_QUESTION).value, 1);
-	assert.equal(report.play.find(bar => bar.label === "Physical").value, 1);
+	assert.equal(mixed.play.find(bar => bar.label === NO_PLAY_QUESTION).value, 1);
+	assert.equal(mixed.play.find(bar => bar.label === "Physical").value, 1);
 });
 
 test("two sites keep their own zones apart", () => {
-	const list = [observation(), observation({ site_code: "creek-2", site_name: "Second site", zone: "A" })];
-	const { rows, playOptions } = reportRows(list, { "janet-test-v1": janet });
-	const both = [...zones, { siteCode: "creek-2", siteName: "Second site", id: "A", label: "Zone A" }];
-	const report = buildReport({ rows, zones: both, playOptions, clock: ny });
+	const second = uuid(301);
+	const list = [
+		observation(),
+		observation({ site_id: uuid(2), site_code: "creek-2", site_name: "Second site", zone_id: second })
+	];
+	const both = [
+		...zones,
+		{ siteId: uuid(2), siteCode: "creek-2", siteName: "Second site", id: second, label: "Zone A" }
+	];
+	const report = reportOf(list, undefined, { zones: both });
 	assert.deepEqual(
 		report.zones.filter(bar => bar.value > 0).map(bar => bar.label),
 		["Fall Creek · Zone A · Whole playground", "Second site · Zone A"]
@@ -211,8 +291,7 @@ test("only the newest 31 days are listed, and the rest are counted", () => {
 			observed_at: `2026-${index < 31 ? "08" : "09"}-${String((index % 31) + 1).padStart(2, "0")}T16:00:00Z`
 		})
 	);
-	const { rows, playOptions } = reportRows(list, { "janet-test-v1": janet });
-	const report = buildReport({ rows, zones, playOptions, clock: ny });
+	const report = reportOf(list);
 	assert.equal(report.days.length, MAX_DAYS);
 	assert.equal(report.daysLeftOut, 9);
 	assert.equal(report.days[0].key, "2026-08-10");
@@ -220,10 +299,7 @@ test("only the newest 31 days are listed, and the rest are counted", () => {
 });
 
 test("the summary is one plain sentence", () => {
-	const { rows, playOptions } = reportRows([observation(), observation({ round_type: "reliability" })], {
-		"janet-test-v1": janet
-	});
-	const report = buildReport({ rows, zones, playOptions, clock: ny });
+	const report = reportOf([observation(), observation({ round_type: "reliability" })]);
 	assert.equal(
 		summarySentence(report, { clock: ny, round: null }),
 		"2 observations by 1 observer in 1 zone at Fall Creek on Oct 07, 2026."
@@ -232,17 +308,12 @@ test("the summary is one plain sentence", () => {
 		summarySentence(report, { clock: ny, round: "reliability" }),
 		"2 observations by 1 observer in 1 zone at Fall Creek on Oct 07, 2026, Reliability rounds only."
 	);
-	const spread = reportRows([observation(), observation({ observed_at: "2026-10-09T14:00:00Z", observer: "JL" })], {
-		"janet-test-v1": janet
-	});
+	const spread = reportOf([observation(), observation({ observed_at: "2026-10-09T14:00:00Z", observer: "JL" })]);
 	assert.equal(
-		summarySentence(buildReport({ rows: spread.rows, zones, playOptions: spread.playOptions, clock: ny }), {
-			clock: ny,
-			round: null
-		}),
+		summarySentence(spread, { clock: ny, round: null }),
 		"2 observations by 2 observers in 1 zone at Fall Creek from Oct 07, 2026 to Oct 09, 2026."
 	);
-	const empty = buildReport({ rows: [], zones, playOptions: {}, clock: ny });
+	const empty = reportOf([]);
 	assert.equal(summarySentence(empty, { clock: ny, round: null }), "No observations match these filters.");
 	assert.deepEqual(
 		empty.rounds.map(bar => bar.value),

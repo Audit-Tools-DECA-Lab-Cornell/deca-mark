@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { Button, ButtonLink } from "@/components/contour/Button";
 import { Island } from "@/components/contour/Island";
@@ -12,32 +12,35 @@ import { TextLink } from "@/components/contour/TextLink";
 import { useToast } from "@/components/contour/Toast";
 import { MapFrame } from "@/components/map/MapFrame";
 import type { PlanObservation, ZonePlanStyle } from "@/components/map/SitePlan";
+import { LoadFailure } from "@/components/shell/LoadFailure";
 import { projectHref } from "@/features/shell/navigation";
-import type { ObservationRow, RawDefinition } from "@/lib/api/types";
+import { appendPage } from "@/lib/api/observations";
+import type { Observation, ObservationFilters, ObservationPage, RawDefinition } from "@/lib/api/types";
+import { scopeLines } from "@/lib/export/files";
 import { formatCount, plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
 import { clock as makeClock } from "@/lib/time";
+import type { Failure } from "@/lib/workspace/types";
 
+import { loadObservationsAction } from "./actions";
 import { DataTable } from "./DataTable";
 import { ExportObservations } from "./ExportObservations";
 import { FilterBar } from "./FilterBar";
 import {
-	applyFilters,
-	type ClientFilters,
+	countLine,
 	type DataRecord,
-	EMPTY_CLIENT_FILTERS,
-	EMPTY_SCOPE,
-	exactTotal,
-	filterOptions,
-	hasClientFilters,
-	NO_ZONE_KEY,
+	type DataView,
+	daysBackwards,
+	hasFilters,
+	type Option,
 	prepareRecords,
-	type ServerScope,
-	type SiteZones,
+	searchLoaded,
 	viewQuery
 } from "./view";
 
-export type DataSite = SiteZones & {
+export type DataSite = {
+	readonly code: string;
+	readonly name: string;
 	/** The exact number of observations at the site. */
 	readonly observationCount: number;
 	/** Whether the site has a ready map package. */
@@ -48,23 +51,32 @@ export type DataPlan = {
 	site: ProjectedSite;
 	siteCode: string;
 	siteName: string;
-	/** The version of the package the plan is drawn from. */
+	/** The package the plan is drawn from (the site's current map version). */
+	packageId: string;
 	version: number;
 };
 
 export type DataScreenProps = {
 	org: string;
 	project: string;
+	/** The project's identity, for the export DECA Mark makes. */
+	projectId: string;
 	timeZone: string;
-	rows: ObservationRow[];
-	/** The list holds exactly 500 rows, so older observations may be missing. */
-	limited: boolean;
-	/** The site and round type the rows were loaded for. */
-	scope: ServerScope;
-	/** The browser-side filters in the address when the page loaded. */
-	initialFilters: ClientFilters;
+	/** The view in the address, as the server applied it. */
+	view: DataView;
+	/** The filters the first page was read with; the next pages use the same ones. */
+	filters: ObservationFilters;
+	page: ObservationPage;
 	sites: DataSite[];
-	/** Each form version in the rows, as it was published. */
+	/** The zones the chosen site's filter offers; empty without a site. */
+	zones: Option[];
+	/** The site's map versions, for "One map version"; empty without a site. */
+	versions: number[];
+	/** Why the zone or map version choices could not be read in full, when they could not. */
+	zonesFailure: Failure | null;
+	/** Why the map version in the address was not applied, when it was not. */
+	versionNote: string | null;
+	/** Each form version in the page, as it was published. */
 	definitions: Record<string, RawDefinition>;
 	missingVersions: string[];
 	plan: DataPlan | null;
@@ -72,87 +84,110 @@ export type DataScreenProps = {
 	planNote: string | null;
 };
 
-/** A marker's accessible name. Inventory points are zone centres, not places where play happened. */
+/** A marker's accessible name. */
 function markerLabel(record: DataRecord): string {
-	const base = `${record.label}, ${record.zoneLabel}, ${record.roundName}`;
-	return record.round === "inventory" ? `${base}, zone inventory` : base;
+	return `${record.label}, ${record.zoneLabel}, ${record.roundName}, map ${record.mapVersion}`;
 }
 
+/** How long typing in the search waits before the address follows it. */
+const SEARCH_DEBOUNCE_MS = 300;
+
 /**
- * Observation data: the observations observers uploaded, in one table that the map, the count and the
- * export all follow. Site and round type load a different list from DECA Mark; zone, observer, days and
- * search narrow the list that loaded. The address always holds the view, so a copied link opens it again.
+ * Observation data: what observers uploaded, in one table that the map, the count and the export all
+ * follow. DECA Mark applies every filter but the search to every observation, and says how many match;
+ * the newest 500 load first and the next 500 on request. The search finds words in the loaded ones and
+ * says so. The address holds the view, and each filter change is a step Back undoes.
  */
 export function DataScreen({
 	org,
 	project,
+	projectId,
 	timeZone,
-	rows,
-	limited,
-	scope: loadedScope,
-	initialFilters,
+	view,
+	filters,
+	page,
 	sites,
-	definitions,
-	missingVersions,
+	zones,
+	versions,
+	zonesFailure,
+	versionNote,
+	definitions: firstDefinitions,
+	missingVersions: firstMissing,
 	plan,
 	planNote
 }: DataScreenProps) {
 	const router = useRouter();
 	const { toast } = useToast();
 	const [pending, startTransition] = useTransition();
-	const [scope, setScope] = useOptimistic(loadedScope);
-	const [filters, setFilters] = useState(initialFilters);
+	const [items, setItems] = useState<Observation[]>(page.items);
+	const [cursor, setCursor] = useState(page.next_cursor);
+	const [total, setTotal] = useState(page.total_matching);
+	const [generatedAt, setGeneratedAt] = useState(page.generated_at);
+	const [definitions, setDefinitions] = useState(firstDefinitions);
+	const [missingVersions, setMissingVersions] = useState(firstMissing);
+	const [loadingMore, setLoadingMore] = useState(false);
+	const [moreProblem, setMoreProblem] = useState<string | null>(null);
+	const [q, setQ] = useState(view.q);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [exportOpen, setExportOpen] = useState(false);
 	const firstFilterRef = useRef<HTMLSelectElement>(null);
 	const listRef = useRef<HTMLDivElement>(null);
 
 	const clock = useMemo(() => makeClock(timeZone), [timeZone]);
-	const records = useMemo(() => prepareRecords(rows, definitions, sites, clock), [rows, definitions, sites, clock]);
-	const shown = useMemo(() => applyFilters(records, filters), [records, filters]);
-	const options = useMemo(() => filterOptions(records, filters, sites), [records, filters, sites]);
+	const records = useMemo(() => prepareRecords(items, definitions, clock), [items, definitions, clock]);
+	const shown = useMemo(() => searchLoaded(records, q), [records, q]);
 	const selected = shown.find(record => record.id === selectedId) ?? null;
 
 	const base = projectHref(org, project, "data");
 	const hrefOf = (record: DataRecord) => `${base}/${record.id}`;
-	const canClear = Boolean(scope.site || scope.round) || hasClientFilters(filters);
-	const noneYet = records.length === 0 && !canClear;
+	const current = { ...view, q };
+	const canClear = hasFilters(current);
+	const noneYet = total === 0 && !hasFilters(view) && items.length === 0;
 
 	/* ── The address ───────────────────────────────────────────────────── */
 
-	function writeAddress(nextScope: ServerScope, nextFilters: ClientFilters) {
-		const { pathname, hash } = window.location;
-		window.history.replaceState(null, "", `${pathname}${viewQuery({ ...nextScope, ...nextFilters })}${hash}`);
+	/** A filter DECA Mark applies: the page is asked for again, and Back returns to this view. */
+	function changeView(patch: Partial<DataView>) {
+		const next = { ...view, q, ...patch };
+		// Zones belong to one site; a version belongs to the zones.
+		const tidy: DataView = {
+			...next,
+			zones: next.site === view.site ? next.zones : [],
+			version: next.site === view.site && next.zones.length > 0 ? next.version : null
+		};
+		cancelSearchWrite();
+		startTransition(() => router.push(`${base}${viewQuery(tidy)}`, { scroll: false }));
 	}
 
-	/** Loads a different list: the page is asked for again, and the old rows stay until the new ones arrive. */
-	function loadScope(nextScope: ServerScope, nextFilters: ClientFilters) {
-		startTransition(() => {
-			setScope(nextScope);
-			router.replace(`${base}${viewQuery({ ...nextScope, ...nextFilters })}`, { scroll: false });
-		});
-	}
+	// The search narrows what loaded without asking again; the address follows it, without a Back step each.
+	// Nothing is written while the address already says it, and a filter change cancels a pending write, so
+	// the search never replaces the address of a page that is still on its way.
+	const searchWrite = useRef<number | null>(null);
+	useEffect(() => {
+		if ((new URLSearchParams(window.location.search).get("q") ?? "") === q.trim()) return;
+		const timer = window.setTimeout(() => {
+			const { pathname, hash } = window.location;
+			window.history.replaceState(window.history.state, "", `${pathname}${viewQuery({ ...view, q })}${hash}`);
+		}, SEARCH_DEBOUNCE_MS);
+		searchWrite.current = timer;
+		return () => window.clearTimeout(timer);
+	}, [q, view]);
 
-	function changeScope(patch: Partial<ServerScope>) {
-		loadScope({ ...scope, ...patch }, filters);
-	}
-
-	function changeFilters(patch: Partial<ClientFilters>) {
-		const next = { ...filters, ...patch };
-		setFilters(next);
-		writeAddress(scope, next);
+	function cancelSearchWrite() {
+		if (searchWrite.current !== null) window.clearTimeout(searchWrite.current);
+		searchWrite.current = null;
 	}
 
 	function clearAll() {
-		setFilters(EMPTY_CLIENT_FILTERS);
-		if (scope.site || scope.round) loadScope(EMPTY_SCOPE, EMPTY_CLIENT_FILTERS);
-		else writeAddress(EMPTY_SCOPE, EMPTY_CLIENT_FILTERS);
+		cancelSearchWrite();
+		setQ("");
+		startTransition(() => router.push(base, { scroll: false }));
 		firstFilterRef.current?.focus();
 	}
 
 	async function copyLink() {
 		try {
-			await navigator.clipboard.writeText(window.location.href);
+			await navigator.clipboard.writeText(`${window.location.origin}${base}${viewQuery(current)}`);
 			toast({ title: "Link to this view copied", tone: "saved" });
 		} catch {
 			toast({
@@ -163,11 +198,31 @@ export function DataScreen({
 		}
 	}
 
-	/* ── Selection ─────────────────────────────────────────────────────── */
+	/* ── More pages ────────────────────────────────────────────────────── */
 
-	function selectRow(id: string) {
-		setSelectedId(id);
+	async function loadMore() {
+		if (!cursor || loadingMore) return;
+		setLoadingMore(true);
+		setMoreProblem(null);
+		try {
+			const next = await loadObservationsAction({ org, project }, filters, cursor, Object.keys(definitions));
+			if (next.status === "failed") {
+				setMoreProblem(next.message);
+				return;
+			}
+			// A record uploaded since the first page can shift a later one: each is kept once.
+			setItems(loaded => appendPage(loaded, next.items));
+			setCursor(next.nextCursor);
+			setTotal(next.total);
+			setGeneratedAt(next.generatedAt);
+			setDefinitions(known => ({ ...known, ...next.definitions }));
+			setMissingVersions(known => [...new Set([...known, ...next.missingVersions])]);
+		} finally {
+			setLoadingMore(false);
+		}
 	}
+
+	/* ── Selection ─────────────────────────────────────────────────────── */
 
 	function selectMarker(id: string) {
 		setSelectedId(id);
@@ -177,41 +232,40 @@ export function DataScreen({
 
 	/* ── The plan ──────────────────────────────────────────────────────── */
 
+	// Only records collected on the drawn map version are drawn on it; inventories describe a whole zone.
+	const onPlan = plan ? shown.filter(record => record.siteCode === plan.siteCode) : [];
 	const markers: PlanObservation[] = plan
-		? shown
-				.filter(record => record.siteCode === plan.siteCode)
+		? onPlan
+				.filter(record => record.point !== null && record.packageId === plan.packageId)
 				.map(record => ({
 					id: record.id,
-					lng: record.row.coordinates[0],
-					lat: record.row.coordinates[1],
+					lng: record.point![0],
+					lat: record.point![1],
 					label: markerLabel(record)
 				}))
 		: [];
+	const otherVersions = onPlan.filter(record => record.point !== null && record.packageId !== plan?.packageId).length;
+	const wholeZone = onPlan.filter(record => record.wholeZone).length;
 	const zoneStyles: Record<string, ZonePlanStyle> | undefined =
-		plan && filters.zone && filters.zone !== NO_ZONE_KEY
+		plan && view.zones.length > 0
 			? Object.fromEntries(
 					plan.site.zones.map(zone => [
 						zone.id,
-						{ emphasis: (zone.code ?? zone.id) === filters.zone ? "focus" : "dim" } as ZonePlanStyle
+						{ emphasis: view.zones.includes(zone.id) ? "focus" : "dim" } as ZonePlanStyle
 					])
 				)
 			: undefined;
-	const hasInventory = shown.some(record => record.round === "inventory" && record.siteCode === plan?.siteCode);
 
 	/* ── What the list says about itself ───────────────────────────────── */
 
-	const total = exactTotal(sites, scope);
-	const totalSite = scope.site ? (sites.find(site => site.code === scope.site)?.name ?? "This site") : "The project";
 	const count = pending
 		? "Loading observations…"
-		: `${formatCount(shown.length)} of ${formatCount(records.length)} shown`;
-
-	const limitedBody =
-		total === null
-			? "Older observations may not be listed or exported here. Choose a site or round type to narrow the list."
-			: total > records.length
-				? `Older observations are not listed or exported here. ${totalSite} has ${plural(total, "observation")} in all. Choose a site or round type to narrow the list.`
-				: `${totalSite} has ${plural(total, "observation")} in all.`;
+		: countLine({
+				loaded: records.length,
+				total,
+				searched: q.trim() ? shown.length : null,
+				countedAt: clock.time(generatedAt)
+			});
 
 	const emptyBody = !sites.length
 		? "This project has no sites. Add a site and upload its map package, then observers can start collecting."
@@ -237,23 +291,29 @@ export function DataScreen({
 	) : (
 		<>
 			<FilterBar
-				scope={scope}
-				filters={filters}
+				view={current}
 				sites={sites.map(site => ({ value: site.code, label: site.name }))}
-				zones={options.zones}
-				observers={options.observers}
+				zones={zones}
+				versions={versions}
 				timeZone={clock.timeZone}
-				onScopeChange={changeScope}
-				onFiltersChange={changeFilters}
+				onViewChange={changeView}
+				onSearch={setQ}
 				onClear={clearAll}
 				canClear={canClear}
 				firstFilterRef={firstFilterRef}
 			/>
-			{limited && (
+			{zonesFailure && (
 				<div className="px-island-pad pb-5">
-					<Note tone="neutral" title="Based on the newest 500 observations.">
-						{limitedBody}
-					</Note>
+					<LoadFailure
+						failure={zonesFailure}
+						what="every zone and map version of this site's earlier maps"
+						bare
+					/>
+				</div>
+			)}
+			{versionNote && (
+				<div className="px-island-pad pb-5">
+					<Note tone="neutral">{versionNote}</Note>
 				</div>
 			)}
 			{shown.length === 0 ? (
@@ -262,8 +322,18 @@ export function DataScreen({
 					icon="funnel"
 					headingLevel={3}
 					className="border-t border-rule"
-					title="No observations match this view"
-					body="Change the filters to see more. No observations were removed."
+					title={
+						daysBackwards(view)
+							? "The first day is after the last"
+							: q.trim() && records.length > 0
+								? "No loaded observations match the search"
+								: "No observations match this view"
+					}
+					body={
+						q.trim() && cursor
+							? "The search finds words in the observations that have loaded. Show the next 500, or change the filters."
+							: "Change the filters to see more. No observations were removed."
+					}
 					actions={
 						<Button variant="ink" icon="x" onClick={clearAll}>
 							Clear filters
@@ -272,9 +342,41 @@ export function DataScreen({
 				/>
 			) : (
 				<div ref={listRef} className="border-t border-rule">
-					<DataTable records={shown} hrefOf={hrefOf} selectedId={selectedId} onSelect={selectRow} />
+					<DataTable records={shown} hrefOf={hrefOf} selectedId={selectedId} onSelect={setSelectedId} />
 				</div>
 			)}
+			<div className="flex flex-col gap-3 border-t border-rule px-island-pad py-4">
+				{cursor && (
+					<div className="flex flex-wrap items-center gap-3">
+						<Button
+							variant="outline"
+							icon="chevron-down"
+							disabled={loadingMore}
+							disabledReason={loadingMore ? "The next observations are loading." : undefined}
+							onClick={loadMore}>
+							{loadingMore
+								? "Loading…"
+								: `Show the next ${formatCount(Math.min(500, total - records.length))}`}
+						</Button>
+						<p className="type-small text-ink-2">
+							{formatCount(total - records.length)} more match the filters.
+						</p>
+					</div>
+				)}
+				{moreProblem && (
+					<Note tone="attention" title="The next observations did not load.">
+						{moreProblem}
+					</Note>
+				)}
+				<div className="flex flex-wrap items-center gap-3">
+					<Button variant="outline" size="sm" icon="refresh-cw" onClick={() => router.refresh()}>
+						Refresh
+					</Button>
+					<p className="type-small text-ink-2">
+						Refresh counts again and starts from the newest observations.
+					</p>
+				</div>
+			</div>
 		</>
 	);
 
@@ -291,12 +393,12 @@ export function DataScreen({
 						<Button
 							variant="primary"
 							icon="download"
-							disabled={shown.length === 0}
+							disabled={total === 0}
 							disabledReason={
-								shown.length === 0
+								total === 0
 									? noneYet
 										? "There is nothing to export yet."
-										: "No observations are in this view."
+										: "No observations match these filters."
 									: undefined
 							}
 							onClick={() => setExportOpen(true)}>
@@ -308,7 +410,7 @@ export function DataScreen({
 
 			{missingVersions.length > 0 && (
 				<Note tone="attention" title="Some questions could not be loaded.">
-					Answers made with {missingVersions.join(", ")} are shown and exported under their question ids.
+					Answers made with {missingVersions.join(", ")} are shown under their question ids.
 				</Note>
 			)}
 			{planNote && <Note tone="neutral">{planNote}</Note>}
@@ -320,7 +422,7 @@ export function DataScreen({
 					divided={false}
 					title="Observations"
 					meta={noneYet ? undefined : <span role="status">{count}</span>}
-					aria-busy={pending}>
+					aria-busy={pending || loadingMore}>
 					{body}
 				</Island>
 
@@ -335,14 +437,17 @@ export function DataScreen({
 								subtitle={`${plural(markers.length, "observation")} placed`}
 								observations={markers}
 								zones={zoneStyles}
-								selectedId={selected?.id ?? null}
+								selectedId={
+									selected && markers.some(marker => marker.id === selected.id) ? selected.id : null
+								}
 								onSelectObservation={selectMarker}
 							/>
 							<div aria-live="polite" className="type-body">
 								{selected ? (
 									<p>
 										<span className="type-mono-data font-semibold">{selected.label}</span> ·{" "}
-										{selected.zoneLabel} · {selected.roundName} · {selected.when}{" "}
+										{selected.zoneLabel} · {selected.roundName} · Map {selected.mapVersion} ·{" "}
+										{selected.when}{" "}
 										<TextLink tone="ink" href={hrefOf(selected)}>
 											Open observation
 										</TextLink>
@@ -354,9 +459,11 @@ export function DataScreen({
 								)}
 							</div>
 							<p className="type-small text-ink-2">
-								Drawn on the site&apos;s current map.
-								{hasInventory &&
-									" Zone inventory observations sit at the centre of their zone. They do not show where play happened."}
+								{`Drawn on map v${plan.version}, the site's current version, with the loaded observations collected on it.`}
+								{otherVersions > 0 &&
+									` ${plural(otherVersions, "loaded observation")} collected on other map versions ${otherVersions === 1 ? "is" : "are"} not drawn here.`}
+								{wholeZone > 0 &&
+									` ${plural(wholeZone, "zone inventory", "zone inventories")} describe whole zones and are listed, not drawn.`}
 							</p>
 						</div>
 					</Island>
@@ -366,12 +473,24 @@ export function DataScreen({
 			<ExportObservations
 				open={exportOpen}
 				onOpenChange={setExportOpen}
-				records={shown}
-				definitions={definitions}
-				missingVersions={missingVersions}
-				limited={limited}
-				projectCode={project}
-				clock={clock}
+				projectId={projectId}
+				filters={filters}
+				matching={total}
+				searched={q.trim() !== ""}
+				scope={scopeLines(
+					{
+						site: sites.find(entry => entry.code === view.site)?.name ?? null,
+						zones: view.zones.map(id => zones.find(option => option.value === id)?.label ?? id),
+						version: view.version,
+						round: view.round,
+						observer: view.observer,
+						from: view.from,
+						to: view.to
+					},
+					clock
+				)}
+				fileStem={view.site ?? project}
+				dayKey={clock.dayKey(new Date().toISOString())}
 			/>
 		</div>
 	);

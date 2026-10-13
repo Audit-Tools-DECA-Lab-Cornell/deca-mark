@@ -559,12 +559,13 @@ Done when: Against the local API, edits save with increasing revisions, a stale 
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and a local-stack Playwright smoke of save, conflict and validate.
 
 ### WEB-36: Read sites through the single site API
-Status: todo · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-37, WEB-39, WEB-42
+Status: done (2026-10-13) · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-37, WEB-39, WEB-42
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) section 4 and WUI-13; [contract](../docs/plan/zone-boundaries/contract.md) "Selected compatibility mechanism"; `src/features/{sites,packages,qgis,data}/*`; `src/features/packages/history.ts`.
 Do: Read `GET /v1/projects/{p}/sites` in its BE-22 shape with runtime parsing; carry `siteId`; mark the current package from `current_package_id` in Sites, the site page, package history (with its copy) and the QGIS page; read package history from the BE-22 package list; choose plans from the current package on Data and Overview.
 Done when: The current package always comes from `current_package_id`; site API calls use UUIDs while web addresses keep site codes.
 Verify: `pnpm --dir web test:unit` (package-history, site-view), `pnpm web:check`, and the sites and packages e2e specs.
+Verified: Sites, package histories and package details are parsed at runtime (`src/lib/api/sites.ts`); every API call names a site by `site_id` and web addresses keep codes; the current package comes from `current_package_id` on Sites, the site page, the history (Active only for that package; a replayed upload says it is not current), Overview, QGIS and the upload. Unit: `site-view`, `package-history`, `api-shapes`, `forms-model`, `qgis`, `overview`; `pnpm --dir web check`; local stack `sites.spec`, `packages.spec` at desktop-1440 and phone-390.
 
 ### WEB-37: Build the Zones page, draft start and version history
 Status: todo · Phase 3 · Size L · Depends: WEB-35, WEB-36 · Blocks: WEB-38
@@ -583,12 +584,13 @@ Done when: Publish, replay and conflict e2e cases pass on the local stack; no sc
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-publish.spec.ts` and `zones-conflict.spec.ts`.
 
 ### WEB-39: Read observations with server filters and paging
-Status: todo · Phase 3 · Size L · Depends: BE-22, WEB-36 · Blocks: WEB-40, WEB-41
+Status: done (2026-10-13) · Phase 3 · Size L · Depends: BE-22, WEB-36 · Blocks: WEB-40, WEB-41
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-9, 7.1 and 7.2; [contract](../docs/plan/zone-boundaries/contract.md) "Observation reads, filters and exports"; `src/features/data/*`; `src/lib/time.ts`.
 Do: Add the observation page adapter with runtime parsing, the URL-to-query builder (site-scoped zones by identity or version, round, observer, project-day to UTC), pushed filter history, "Show the next 500" through a Server Action, totals and refresh, the new columns, inventory rows, and "Search loaded observations".
 Done when: With more than 500 matching synthetic rows, counts and paging agree with the summary and nothing says "Based on the newest 500" where a server total exists.
 Verify: `pnpm --dir web test:unit` (data-view, time), `pnpm web:check`, `data-history.spec.ts`.
+Verified: Data reads pages of 500 with the address's filters applied by the API (site, zones by identity, one map version as `package_id`, round, exact observer, project days to UTC through `Clock.dayStart`), "Show the next N" through a Server Action that checks access again, pushed filter history, Refresh, "Showing 1–500 of N … counted at", Zone and Map columns, inventories as "Whole zone", and "Search loaded observations". Unit: `data-view`, `time` (DST, Santiago, ±14 h), `api-shapes`. Local stack `data-history.spec.ts` on the 520-row zone review fixture (`scripts/e2e-local.sh --zones`): 500 of 520, then all 520; zone by identity across v1–v2; one version 260; inventories 20, all whole-zone; Back undoes; search says loaded only; the CSV writes the v1 name `=Synthetic lawn v1` as `'=…`. Also `data.spec` at both widths. Partial, moved ahead from WEB-40: the record page draws the recorded package, and the Data map draws only points of the plan's version (the version picker stays with WEB-40).
 
 ### WEB-40: Draw historical map versions on Data and record pages
 Status: todo · Phase 3 · Size M · Depends: WEB-39, WEB-31 · Blocks: WEB-29
@@ -599,17 +601,19 @@ Done when: A mixed-version fixture never draws current boundaries under historic
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `data-history.spec.ts` map cases.
 
 ### WEB-41: Move summaries and exports to the server scope
-Status: todo · Phase 3 · Size L · Depends: WEB-39 · Blocks: WEB-29
+Status: done (2026-10-13) · Phase 3 · Size L · Depends: WEB-39 · Blocks: WEB-29
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 7.5 and 7.6; `src/features/{overview,reports,qgis}/*`; `src/lib/export/*`; `src/lib/observations/summary.ts`.
 Do: Feed coverage, field return, reports by zone and round, and the site page counts from the summary; keep page-limited panels labelled; download the server ZIP export for the same scope with the scope text and the 10,000-row ceiling; add the zones GeoJSON download on the QGIS page.
 Done when: `observations.csv` inside the downloaded ZIP has exactly `total_matching` rows; above 10,000 the action is disabled with its reason; coverage rows are recorded snapshots.
 Verify: `pnpm --dir web test:unit` (summary, export, overview, reports), `pnpm web:check`, `export-v2.spec.ts`.
+Verified: Data and QGIS download DECA Mark's export ZIP browser-direct (`downloadObservationExport`): every match, the scope repeated one filter per line with the days' UTC bounds, the search named as not applied, refused above 10,000 with "One export holds up to 10,000 observations. Narrow the dates or choose one site." (also for an `export_scope_too_large` refusal); the browser-built CSV, GeoJSON and codebook are removed. QGIS adds each site's current zone boundaries as GeoJSON (`zone_id`, `map_version`). Reports apply days on the server, take zones and rounds from the summary and say when observers, days and play types come from the newest 500; coverage, field return and the site page ("on v2 · N on earlier versions") read the summary. Unit: `export-files`, `reports`, `summary`, `site-view`, `qgis`. Local stack at desktop-1440 and phone-390: `data.spec` (the ZIP's `observations.csv` has exactly the 8 matches and a codebook), `data-history.spec` (one version: 260 rows, the v1 name written `'=Synthetic lawn v1`), `qgis-reports.spec` (GeoJSON ZIP with inventories as null geometry; the zone boundaries download), `overview`, `sites`, `packages`, `packages-identity` and the honesty scan of every route.
 
 ### WEB-42: Upload QGIS packages with zone identity mapping
-Status: todo · Phase 3 · Size M · Depends: BE-22, WEB-36, DB-18 · Blocks: WEB-28
+Status: done (2026-10-13) · Phase 3 · Size M · Depends: BE-22, WEB-36, DB-18 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.11; [contract](../docs/plan/zone-boundaries/contract.md) "Existing import/publication route" and "Package format 2 and capabilities"; `src/features/packages/UploadStep.tsx`; `backend/src/fieldmaps_api/zone_import_schemas.py`.
 Do: Add the identity mapping step to every upload (a first upload maps every feature to a new zone) (preselect only features carrying a matching `zone_id`; code or label matches stay unselected suggestions), the removed-zone list, the change note, a per-attempt `request_id`, `expected_current_package_id`, and the conflict and identity error copy.
 Done when: On the local stack, a first upload creates v1; a later upload with one mapped, one new and one removed zone creates v2; a stale expected current gets the conflict copy.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit` (mapping model tests), and the packages e2e specs with first and later uploads.
+Verified: Every upload maps each zone of the file (`src/features/packages/{identity.ts,ZoneMapping.tsx}`): only a carried `zone_id` is preselected, a matching code or name is a suggestion, new zones get a client identity and a valid free code, left-out zones are listed; the inventory form, the change note, `request_id` and `expected_current_package_id` are sent; an attempt whose answer is unknown is kept whole until answered (resend replays); conflicts and zone issues read in words. Unit: `zone-identity`, `package-checks`, `package-history`. Local stack at desktop-1440 and phone-390: `packages-identity.spec.ts` (one kept, one new, one removed across successive versions with zone A's identity and its 8 records kept; an upload against a map changed meanwhile is refused with the conflict copy and makes no version) and `packages.spec.ts`.

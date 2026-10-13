@@ -1,54 +1,68 @@
-import type { ObservationRow } from "../../lib/api/types";
-import { isRoundType, roundLabel, roundName, roundOf, shortLabel, zoneName } from "../../lib/labels";
+import type { Observation, ObservationFilters } from "../../lib/api/observations";
+import { formatCount, isRoundType, roundLabel, roundName, shortLabel } from "../../lib/labels";
 import { answerRows, playTypeQuestion } from "../../lib/observations/answers";
-import type { Clock } from "../../lib/time";
+import { addDays, type Clock } from "../../lib/time";
 import type { RoundType } from "../../lib/workspace/types";
 
 /**
- * Data's one view: which observations the page loads, which of those it shows, and how a row reads.
- * Pure, with relative imports only, so the unit tests load it directly.
+ * Data's one view: the filters in the address, the query they make, and how a row reads. Pure, with relative
+ * imports only, so the unit tests load it directly.
  *
- * The address carries the whole view, so a link to it opens the same rows:
- *   ?site=<code>&round=<type>   chosen on the server: they decide which observations load (the list
- *                               query takes only these, plus a cap of 500);
- *   ?zone=&observer=&from=&to=&q=   applied in the browser, to what loaded.
+ * Every filter but the search is applied by DECA Mark to every observation, so counts, pages and the map
+ * all cover what matches, not a loaded subset (UI plan 7.1, 7.2):
+ *
+ * | Address                        | API                                     |
+ * | ------------------------------ | --------------------------------------- |
+ * | `site=<code>`                  | `site_id`                               |
+ * | `zone=<id>` (repeatable)       | `zone_id` (any of them; needs a site)   |
+ * | `version=<n>` with zones       | `package_id` (one map version)          |
+ * | `round=<type>`                 | `round_type`                            |
+ * | `observer=<initials>` (exact)  | `observer`                              |
+ * | `from=` and `to=` (days)       | `observed_from`, `observed_before`      |
+ *
+ * `q` searches the observations that have loaded, and says so.
  */
-
-/** The zone filter value for records without a zone. */
-export const NO_ZONE_KEY = "~none";
 
 /** Longest answer shown in a table cell, in characters. The observation page has the whole answer. */
 export const SUMMARY_LIMIT = 140;
 
-export type ServerScope = { site: string | null; round: RoundType | null };
-
-export type ClientFilters = {
-	zone: string | null;
-	observer: string | null;
-	/** First day to show, "2026-10-07", in the project's timezone. */
-	from: string | null;
-	/** Last day to show. */
-	to: string | null;
-	q: string;
+export type DataView = {
+	/** The site's code. */
+	readonly site: string | null;
+	/** Zone identities, any of which matches. Only with a site. */
+	readonly zones: readonly string[];
+	/** One map version of those zones; null matches every version. Only with zones. */
+	readonly version: number | null;
+	readonly round: RoundType | null;
+	/** Observer initials, exactly as recorded. */
+	readonly observer: string | null;
+	/** First day, "2026-10-07", in the project's timezone. */
+	readonly from: string | null;
+	/** Last day, included. */
+	readonly to: string | null;
+	/** Words to find in the loaded observations. */
+	readonly q: string;
 };
 
-export type DataView = ServerScope & ClientFilters;
+/** Reads the address: `URLSearchParams`, or Next's `searchParams` object through `paramsReader`. */
+export type ParamsReader = {
+	get(key: string): string | null | undefined;
+	getAll(key: string): readonly string[];
+};
 
-export const EMPTY_CLIENT_FILTERS: ClientFilters = { zone: null, observer: null, from: null, to: null, q: "" };
-export const EMPTY_SCOPE: ServerScope = { site: null, round: null };
-
-/** A reader of address parameters: `URLSearchParams.get`, or a lookup into Next's `searchParams` object. */
-export type ParamGetter = (key: string) => string | null | undefined;
-
-/** A getter over Next's `searchParams` object (a value may be a list when a key repeats; the first wins). */
-export function paramsGetter(params: Readonly<Record<string, string | string[] | undefined>>): ParamGetter {
-	return key => {
+/** A reader over Next's `searchParams` object (a key that repeats is a list). */
+export function paramsReader(params: Readonly<Record<string, string | string[] | undefined>>): ParamsReader {
+	const all = (key: string): string[] => {
 		const value = params[key];
-		return Array.isArray(value) ? value[0] : value;
+		return value === undefined ? [] : Array.isArray(value) ? value : [value];
 	};
+	return { get: key => all(key)[0], getAll: all };
 }
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** The longest initials the API takes. */
+const OBSERVER_MAX = 12;
 
 /** A day key that is a real calendar day, or null. */
 function dayOrNull(value: string | null | undefined): string | null {
@@ -62,36 +76,38 @@ const text = (value: string | null | undefined): string | null => {
 	return found ? found : null;
 };
 
-/** The server-side choices from the address. A round type the API does not know is ignored. */
-export function parseScope(get: ParamGetter): ServerScope {
-	const round = get("round");
-	return { site: text(get("site")), round: round && isRoundType(round) ? round : null };
-}
-
-/** The browser-side filters from the address. */
-export function parseClientFilters(get: ParamGetter): ClientFilters {
+/**
+ * The view in the address. Anything malformed is left out: a zone that is not an identity, zones without a
+ * site, a version without zones, a round type DECA Mark does not know, an observer too long to be one.
+ */
+export function parseView(params: ParamsReader): DataView {
+	const site = text(params.get("site"));
+	const zones = site
+		? [...new Set(params.getAll("zone").map(value => value.trim().toLowerCase()))].filter(value => UUID.test(value))
+		: [];
+	const rawVersion = Number(params.get("version"));
+	const version = zones.length > 0 && Number.isInteger(rawVersion) && rawVersion >= 1 ? rawVersion : null;
+	const round = params.get("round");
+	const observer = text(params.get("observer"));
 	return {
-		zone: text(get("zone")),
-		observer: text(get("observer")),
-		from: dayOrNull(get("from")),
-		to: dayOrNull(get("to")),
-		q: get("q")?.trim() ?? ""
+		site,
+		zones,
+		version,
+		round: round && isRoundType(round) ? round : null,
+		observer: observer && observer.length <= OBSERVER_MAX ? observer : null,
+		from: dayOrNull(params.get("from")),
+		to: dayOrNull(params.get("to")),
+		q: params.get("q")?.trim() ?? ""
 	};
 }
 
-export function parseView(get: ParamGetter): DataView {
-	return { ...parseScope(get), ...parseClientFilters(get) };
-}
-
-const CLIENT_KEYS = ["zone", "observer", "from", "to", "q"] as const;
-export const DATA_PARAM_KEYS: readonly string[] = ["site", "round", ...CLIENT_KEYS];
-
-/** The address query for a view: "" for the plain page, otherwise "?site=…&round=…". Defaults are left out. */
+/** The address query for a view: "" for the plain page, otherwise "?site=…&zone=…". Defaults are left out. */
 export function viewQuery(view: Partial<DataView>): string {
 	const params = new URLSearchParams();
 	if (view.site) params.set("site", view.site);
+	for (const zone of view.site ? (view.zones ?? []) : []) params.append("zone", zone);
+	if (view.version && view.site && (view.zones ?? []).length > 0) params.set("version", String(view.version));
 	if (view.round) params.set("round", view.round);
-	if (view.zone) params.set("zone", view.zone);
 	if (view.observer) params.set("observer", view.observer);
 	if (view.from) params.set("from", view.from);
 	if (view.to) params.set("to", view.to);
@@ -100,44 +116,68 @@ export function viewQuery(view: Partial<DataView>): string {
 	return query ? `?${query}` : "";
 }
 
-/** Whether any browser-side filter narrows the rows. */
-export function hasClientFilters(filters: ClientFilters): boolean {
-	return Boolean(filters.zone || filters.observer || filters.from || filters.to || filters.q.trim());
+/** Whether any filter narrows the observations (the search included). */
+export function hasFilters(view: DataView): boolean {
+	return Boolean(
+		view.site || view.round || view.observer || view.from || view.to || view.q.trim() || view.zones.length > 0
+	);
+}
+
+/** Whether the first day is after the last, which no observation can satisfy. */
+export function daysBackwards(view: Pick<DataView, "from" | "to">): boolean {
+	return view.from !== null && view.to !== null && view.from > view.to;
+}
+
+/**
+ * The API filters for a view. The site and the map version come from the site list and its package history
+ * (codes and versions are never sent as identities). Days become instants in the project's timezone: `to`
+ * is included, so the filter stops before the next day starts.
+ */
+export function viewFilters(
+	view: DataView,
+	resolved: { readonly siteId: string | null; readonly packageId: string | null },
+	clock: Pick<Clock, "dayStart">
+): ObservationFilters {
+	return {
+		...(resolved.siteId ? { siteId: resolved.siteId } : {}),
+		...(resolved.siteId && view.zones.length > 0 ? { zoneIds: view.zones } : {}),
+		...(resolved.siteId && view.zones.length > 0 && resolved.packageId ? { packageId: resolved.packageId } : {}),
+		...(view.round ? { roundType: view.round } : {}),
+		...(view.observer ? { observer: view.observer } : {}),
+		...(view.from ? { observedFrom: clock.dayStart(view.from) } : {}),
+		...(view.to ? { observedBefore: clock.dayStart(addDays(view.to, 1)) } : {})
+	};
 }
 
 /* ── Rows ─────────────────────────────────────────────────────────────────── */
 
-/** What the screen needs to know about a site to name a record's zone. */
-export type SiteZones = {
-	readonly code: string;
-	readonly name: string;
-	readonly zones: readonly { readonly id: string; readonly label: string }[];
-};
-
 export type AnswerSummary = { label: string; value: string };
 
-/** One observation prepared for the table, the filters and the search. */
+/** One observation prepared for the table, the map and the search. */
 export type DataRecord = {
 	/** The observation's UUID: its address and its export row. */
 	id: string;
 	/** "OBS-3F2A1B". */
 	label: string;
-	row: ObservationRow;
+	row: Observation;
 	/** "Oct 07, 2026 · 14:05" in the project's timezone. */
 	when: string;
 	/** "Oct 07, 2026" and "14:05": the same moment in two parts, for a narrow column. */
 	day: string;
 	time: string;
-	/** "2026-10-07" in the project's timezone. */
-	dayKey: string;
 	siteCode: string;
 	siteName: string;
-	/** The stored zone id, or null. */
-	zone: string | null;
-	/** The zone filter's value: the zone id, or `NO_ZONE_KEY`. */
-	zoneKey: string;
-	/** "Zone A · Whole playground", or "No zone". */
+	/** The zone's identity. */
+	zone: string;
+	/** The zone's label when the record was collected, never today's. */
 	zoneLabel: string;
+	zoneCode: string;
+	/** The map version it was collected on: "v2". */
+	mapVersion: string;
+	packageId: string;
+	/** Inventories describe a whole zone and have no point. */
+	wholeZone: boolean;
+	point: readonly [number, number] | null;
 	round: RoundType;
 	/** "Standard". */
 	roundName: string;
@@ -166,29 +206,21 @@ export function summaryOf(definition: unknown, answers: Readonly<Record<string, 
 	return { label: chosen.label, value: clip(chosen.value) };
 }
 
-function zoneNames(sites: readonly SiteZones[]): Map<string, Map<string, string>> {
-	return new Map(sites.map(site => [site.code, new Map(site.zones.map(zone => [zone.id, zone.label]))]));
-}
-
 /**
  * The rows prepared for display. Each record is read with the form version it was collected with
  * (`definitions` is keyed by version code); a version that is missing leaves its answers labelled by
  * their question ids.
  */
 export function prepareRecords(
-	rows: readonly ObservationRow[],
+	rows: readonly Observation[],
 	definitions: Readonly<Record<string, unknown>>,
-	sites: readonly SiteZones[],
 	clock: Clock
 ): DataRecord[] {
-	const names = zoneNames(sites);
 	return rows.map(row => {
 		const definition = definitions[row.form_version];
 		const answers = answerRows(definition, row.answers);
-		const zone = row.zone ? row.zone : null;
-		const zoneLabel = zoneName(zone, names.get(row.site_code));
-		const round = roundOf(row.round_type);
 		const label = shortLabel(row.observation_id);
+		const point = row.geometry?.coordinates ?? null;
 		return {
 			id: row.observation_id,
 			label,
@@ -196,14 +228,17 @@ export function prepareRecords(
 			when: clock.dayTime(row.observed_at),
 			day: clock.day(row.observed_at),
 			time: clock.time(row.observed_at),
-			dayKey: clock.dayKey(row.observed_at),
 			siteCode: row.site_code,
 			siteName: row.site_name,
-			zone,
-			zoneKey: zone ?? NO_ZONE_KEY,
-			zoneLabel,
-			round,
-			roundName: roundName(round),
+			zone: row.zone_id,
+			zoneLabel: row.zone_label,
+			zoneCode: row.zone_code,
+			mapVersion: `v${row.package_version}`,
+			packageId: row.package_id,
+			wholeZone: row.spatial_support === "zone",
+			point,
+			round: row.round_type,
+			roundName: roundName(row.round_type),
 			observer: row.observer,
 			summary: summaryOf(definition, row.answers),
 			search: [
@@ -212,9 +247,10 @@ export function prepareRecords(
 				row.observer,
 				row.site_name,
 				row.site_code,
-				zoneLabel,
-				zone ?? "",
-				roundLabel(round),
+				row.zone_label,
+				row.zone_code,
+				`v${row.package_version}`,
+				roundLabel(row.round_type),
 				...answers.flatMap(answer => [answer.label, answer.value])
 			]
 				.join(" ")
@@ -223,60 +259,128 @@ export function prepareRecords(
 	});
 }
 
-/** The records that pass the browser-side filters, in the order given. */
-export function applyFilters(records: readonly DataRecord[], filters: ClientFilters): DataRecord[] {
-	const terms = filters.q.toLowerCase().split(/\s+/).filter(Boolean);
-	return records.filter(record => {
-		if (filters.zone && record.zoneKey !== filters.zone) return false;
-		if (filters.observer && record.observer !== filters.observer) return false;
-		if (filters.from && record.dayKey < filters.from) return false;
-		if (filters.to && record.dayKey > filters.to) return false;
-		return terms.every(term => record.search.includes(term));
-	});
+/** The loaded records the search finds, in the order given. */
+export function searchLoaded(records: readonly DataRecord[], q: string): DataRecord[] {
+	const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+	if (terms.length === 0) return [...records];
+	return records.filter(record => terms.every(term => record.search.includes(term)));
 }
+
+/* ── Zone choices ─────────────────────────────────────────────────────────── */
 
 export type Option = { value: string; label: string };
 
-/**
- * The choices the zone and observer filters offer: those in the loaded rows, plus the one already chosen,
- * so a link to a zone with no rows still shows that zone in the filter. "No zone" comes last.
- */
-export function filterOptions(
-	records: readonly DataRecord[],
-	filters: Pick<ClientFilters, "zone" | "observer">,
-	sites: readonly SiteZones[] = []
-): { zones: Option[]; observers: Option[] } {
-	const zones = new Map<string, string>();
-	for (const record of records) zones.set(record.zoneKey, record.zoneLabel);
-	if (filters.zone && !zones.has(filters.zone)) {
-		const known = sites.flatMap(site => site.zones).find(zone => zone.id === filters.zone);
-		zones.set(filters.zone, filters.zone === NO_ZONE_KEY ? zoneName(null) : (known?.label ?? filters.zone));
+/** Counts the server grouped by zone and map version, for the site in view. */
+export type ZoneGroup = {
+	readonly zone_id: string;
+	readonly zone_label: string;
+	readonly package_version: number;
+	readonly count: number;
+};
+
+/** "v1", "v1–v3", "v1, v3": the map versions a zone was recorded on. */
+export function versionRange(versions: readonly number[]): string {
+	const sorted = [...new Set(versions)].sort((a, b) => a - b);
+	if (sorted.length === 0) return "";
+	const runs: string[] = [];
+	let start = sorted[0]!;
+	let previous = start;
+	for (const version of [...sorted.slice(1), Number.NaN]) {
+		if (version === previous + 1) {
+			previous = version;
+			continue;
+		}
+		runs.push(start === previous ? `v${start}` : `v${start}–v${previous}`);
+		start = version;
+		previous = version;
 	}
-	const observers = new Set(records.map(record => record.observer));
-	if (filters.observer) observers.add(filters.observer);
-	return {
-		zones: [...zones.entries()]
-			.map(([value, label]) => ({ value, label }))
-			.sort((a, b) =>
-				a.value === NO_ZONE_KEY ? 1 : b.value === NO_ZONE_KEY ? -1 : a.label.localeCompare(b.label)
-			),
-		observers: [...observers].sort((a, b) => a.localeCompare(b)).map(value => ({ value, label: value }))
-	};
+	return runs.join(", ");
 }
 
-/* ── What the view is about ───────────────────────────────────────────────── */
+/**
+ * The zones a site's filter offers: every zone its observations were recorded in (from the server's counts,
+ * so a zone with records on an earlier version is there too) and every zone of its current map. Each names
+ * the versions it was recorded on and whether today's map still has it: "North meadow · v1–v2",
+ * "Swings · v1 · not in the current map". Current zones first, in their map's order.
+ */
+export function zoneOptions(
+	groups: readonly ZoneGroup[],
+	current: readonly { readonly id: string; readonly label: string }[],
+	currentVersion: number | null
+): Option[] {
+	const seen = new Map<string, { label: string; newest: number; versions: number[] }>();
+	for (const group of groups) {
+		const entry = seen.get(group.zone_id) ?? { label: group.zone_label, newest: 0, versions: [] };
+		entry.versions.push(group.package_version);
+		if (group.package_version > entry.newest) {
+			entry.newest = group.package_version;
+			entry.label = group.zone_label;
+		}
+		seen.set(group.zone_id, entry);
+	}
+	const currentIds = new Set(current.map(zone => zone.id));
+	const ofCurrent = current.map(zone => {
+		const versions = seen.get(zone.id)?.versions ?? (currentVersion ? [currentVersion] : []);
+		const range = versionRange(versions);
+		return { value: zone.id, label: range ? `${zone.label} · ${range}` : zone.label };
+	});
+	const others = [...seen]
+		.filter(([id]) => !currentIds.has(id))
+		.map(([id, entry]) => ({
+			value: id,
+			label: `${entry.label} · ${versionRange(entry.versions)} · not in the current map`
+		}))
+		.sort((a, b) => a.label.localeCompare(b.label, "en"));
+	return [...ofCurrent, ...others];
+}
 
 /**
- * The exact number of observations in the server scope, when the sites' counts answer it: the chosen
- * site's own count, or every site's added up. A round type has no exact count, so it returns null.
+ * The map versions "One map version" offers for the chosen zones: each version on which every chosen zone
+ * has records (pass the site's counts for every round, observer and day, so other filters do not hide a
+ * version), and the site's current version when it still has every chosen zone. A version without one of
+ * the zones is never offered (DECA Mark refuses that pair). None without zones.
  */
-export function exactTotal(
-	sites: readonly { readonly code: string; readonly observationCount: number }[],
-	scope: ServerScope
-): number | null {
-	if (scope.round) return null;
-	if (scope.site) return sites.find(site => site.code === scope.site)?.observationCount ?? null;
-	return sites.reduce((sum, site) => sum + site.observationCount, 0);
+export function zoneVersions(
+	groups: readonly ZoneGroup[],
+	zones: readonly string[],
+	current: { readonly version: number | null; readonly zoneIds: readonly string[] }
+): number[] {
+	if (zones.length === 0) return [];
+	const byVersion = new Map<number, Set<string>>();
+	for (const group of groups) {
+		const found = byVersion.get(group.package_version) ?? new Set<string>();
+		found.add(group.zone_id);
+		byVersion.set(group.package_version, found);
+	}
+	const versions = [...byVersion]
+		.filter(([, found]) => zones.every(zone => found.has(zone)))
+		.map(([version]) => version);
+	if (current.version !== null && zones.every(zone => current.zoneIds.includes(zone))) versions.push(current.version);
+	return [...new Set(versions)].sort((a, b) => a - b);
+}
+
+/* ── Counts ───────────────────────────────────────────────────────────────── */
+
+/**
+ * What the count line says: "Showing 1–500 of 1,284 matching observations · counted at 11:32", or, while a
+ * search narrows the loaded ones, "12 of 500 loaded match · 1,284 match the filters".
+ */
+export function countLine(input: {
+	readonly loaded: number;
+	readonly total: number;
+	readonly searched: number | null;
+	readonly countedAt: string;
+}): string {
+	const { loaded, total, searched, countedAt } = input;
+	if (searched !== null)
+		return `${formatCount(searched)} of ${formatCount(loaded)} loaded match · ${formatCount(total)} match the filters · counted at ${countedAt}`;
+	if (total === 0) return `No matching observations · counted at ${countedAt}`;
+	const noun = total === 1 ? "matching observation" : "matching observations";
+	if (loaded >= total)
+		return total === 1
+			? `Showing 1 ${noun} · counted at ${countedAt}`
+			: `Showing all ${formatCount(total)} ${noun} · counted at ${countedAt}`;
+	return `Showing 1–${formatCount(loaded)} of ${formatCount(total)} ${noun} · counted at ${countedAt}`;
 }
 
 /**
@@ -285,10 +389,10 @@ export function exactTotal(
  */
 export function planSiteCode(
 	sites: readonly { readonly code: string; readonly observationCount: number }[],
-	scope: ServerScope
+	site: string | null
 ): string | null {
-	if (scope.site) return sites.some(site => site.code === scope.site) ? scope.site : null;
+	if (site) return sites.some(entry => entry.code === site) ? site : null;
 	if (sites.length === 1) return sites[0]!.code;
-	const holding = sites.filter(site => site.observationCount > 0);
+	const holding = sites.filter(entry => entry.observationCount > 0);
 	return holding.length === 1 ? holding[0]!.code : null;
 }
