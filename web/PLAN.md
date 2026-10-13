@@ -601,12 +601,13 @@ Done when: A mixed-version fixture never draws current boundaries under historic
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `data-history.spec.ts` map cases.
 
 ### WEB-41: Move summaries and exports to the server scope
-Status: doing (2026-10-13; coverage, field return and site zone counts read the summary; Reports and exports remain) · Phase 3 · Size L · Depends: WEB-39 · Blocks: WEB-29
+Status: done (2026-10-13) · Phase 3 · Size L · Depends: WEB-39 · Blocks: WEB-29
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 7.5 and 7.6; `src/features/{overview,reports,qgis}/*`; `src/lib/export/*`; `src/lib/observations/summary.ts`.
 Do: Feed coverage, field return, reports by zone and round, and the site page counts from the summary; keep page-limited panels labelled; download the server ZIP export for the same scope with the scope text and the 10,000-row ceiling; add the zones GeoJSON download on the QGIS page.
 Done when: `observations.csv` inside the downloaded ZIP has exactly `total_matching` rows; above 10,000 the action is disabled with its reason; coverage rows are recorded snapshots.
 Verify: `pnpm --dir web test:unit` (summary, export, overview, reports), `pnpm web:check`, `export-v2.spec.ts`.
+Verified: Data and QGIS download DECA Mark's export ZIP browser-direct (`downloadObservationExport`): every match, the scope repeated one filter per line with the days' UTC bounds, the search named as not applied, refused above 10,000 with "One export holds up to 10,000 observations. Narrow the dates or choose one site." (also for an `export_scope_too_large` refusal); the browser-built CSV, GeoJSON and codebook are removed. QGIS adds each site's current zone boundaries as GeoJSON (`zone_id`, `map_version`). Reports apply days on the server, take zones and rounds from the summary and say when observers, days and play types come from the newest 500; coverage, field return and the site page ("on v2 · N on earlier versions") read the summary. Unit: `export-files`, `reports`, `summary`, `site-view`, `qgis`. Local stack at desktop-1440 and phone-390: `data.spec` (the ZIP's `observations.csv` has exactly the 8 matches and a codebook), `data-history.spec` (one version: 260 rows, the v1 name written `'=Synthetic lawn v1`), `qgis-reports.spec` (GeoJSON ZIP with inventories as null geometry; the zone boundaries download), `overview`, `sites`, `packages`, `packages-identity` and the honesty scan of every route.
 
 ### WEB-42: Upload QGIS packages with zone identity mapping
 Status: done (2026-10-13) · Phase 3 · Size M · Depends: BE-22, WEB-36, DB-18 · Blocks: WEB-28
