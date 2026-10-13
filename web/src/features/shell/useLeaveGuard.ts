@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { holdNavigation } from "./navigationGuard";
+
 /** The held navigation when it is the browser's Back button rather than a link. */
 const BACK = "back";
 /** Marks the copy of this page's history entry that sits on top while there are unsaved changes. */
@@ -22,8 +24,8 @@ function pushGuard() {
 
 /**
  * Asks before leaving a page with unsaved changes (DESIGN §8, Settings). Closing or reloading the tab gets
- * the browser's own question. Following a link inside the workspace (a tab, a breadcrumb, a card) and the
- * browser's Back button are held and reported as `leavingTo`, so the page can ask in its own words; then
+ * the browser's own question. Following a link inside the workspace (a tab, a breadcrumb, a card), a `g`
+ * chord or the command palette, and the browser's Back button are held and reported as `leavingTo`, so the page can ask in its own words; then
  * `leave()` goes where the person was going and `stay()` keeps them here.
  *
  * Back is held by keeping a copy of this page's history entry on top while there are changes: Back lands
@@ -33,6 +35,8 @@ export function useLeaveGuard(dirty: boolean): {
 	leavingTo: string | null;
 	stay: () => void;
 	leave: () => void;
+	/** The page's own way out (its changes are saved, or it means to drop them): goes to `href` without asking. */
+	go: (href: string) => void;
 } {
 	const router = useRouter();
 	const [leavingTo, setLeavingTo] = useState<string | null>(null);
@@ -74,11 +78,15 @@ export function useLeaveGuard(dirty: boolean): {
 			setLeavingTo(BACK);
 		}
 
+		// A `g` chord or the command palette asks too.
+		const release = holdNavigation(href => setLeavingTo(href));
+
 		window.addEventListener("beforeunload", onBeforeUnload);
 		// Capture runs before the router's own link and history handlers, so the navigation can be held.
 		document.addEventListener("click", onClick, true);
 		window.addEventListener("popstate", onPopState, true);
 		return () => {
+			release();
 			window.removeEventListener("beforeunload", onBeforeUnload);
 			document.removeEventListener("click", onClick, true);
 			window.removeEventListener("popstate", onPopState, true);
@@ -102,5 +110,19 @@ export function useLeaveGuard(dirty: boolean): {
 		if (to) router.replace(to);
 	}, [leavingTo, router]);
 
-	return { leavingTo, stay, leave };
+	const go = useCallback(
+		(href: string) => {
+			setLeavingTo(null);
+			if (!dirty) {
+				router.push(href);
+				return;
+			}
+			// Over the copy, so Back from the next page returns here in one step; the copy is not stepped back over.
+			released.current = true;
+			router.replace(href);
+		},
+		[dirty, router]
+	);
+
+	return { leavingTo, stay, leave, go };
 }

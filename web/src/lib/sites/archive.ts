@@ -2,7 +2,7 @@ import { strFromU8, unzipSync } from "fflate";
 import { z } from "zod";
 
 import { parseSite, type ProjectedSite, projectSite, type SiteCollection, type SiteFeature } from "../plan";
-import { readZoneGeometry, ZONE_LIMITS } from "../zones/geometry";
+import { type PolygonRings, readZoneGeometry, ZONE_LIMITS } from "../zones/geometry";
 
 /**
  * Reading a map package the API prepared, in the contract's one archive format
@@ -357,6 +357,20 @@ export function packageSiteCollection(name: string, manifest: PackageManifest, l
 		type: "FeatureCollection",
 		name,
 		features: [...backgroundFeatures(layers), ...packageZones(manifest, layers.zones)]
+	});
+}
+
+/**
+ * The site boundary of a collection, as longitude and latitude polygons exactly as read: what the zone
+ * editor snaps to and checks points against. Empty when the package has no site feature.
+ */
+export function siteBoundaryOf(collection: SiteCollection): PolygonRings[] {
+	return collection.features.flatMap(feature => {
+		if (feature.properties.kind !== "site") return [];
+		const geometry = feature.geometry as { type?: string; coordinates?: unknown };
+		if (geometry.type === "Polygon") return [geometry.coordinates as PolygonRings];
+		if (geometry.type === "MultiPolygon") return [...(geometry.coordinates as PolygonRings[])];
+		return [];
 	});
 }
 

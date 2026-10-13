@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { Island } from "@/components/contour/Island";
 import { plural } from "@/lib/labels";
 
@@ -38,49 +40,77 @@ function ProblemRow({ problem, onShow }: { problem: EditorProblem; onShow: (prob
 	);
 }
 
-export function ProblemsIsland({
+export type ProblemsIslandProps = {
+	problems: readonly EditorProblem[];
+	onShow: (problem: EditorProblem) => void;
+	/** What DECA Mark's last check covers, such as "Checked revision 6 at 11:33 · 2 problems". */
+	checkedLine?: string | null;
+	/** "Check boundaries", when the page can ask DECA Mark. */
+	action?: ReactNode;
+};
+
+function Section({
+	label,
 	problems,
 	onShow
 }: {
+	label: string;
 	problems: readonly EditorProblem[];
 	onShow: (problem: EditorProblem) => void;
 }) {
-	const blocking = problems.filter(problem => problem.kind === "blocking");
-	const hints = problems.filter(problem => problem.kind === "hint");
+	if (problems.length === 0) return null;
+	return (
+		<section aria-label={label}>
+			<p className="px-island-pad pt-3 pb-2 type-mono-label text-ink-2">{label}</p>
+			<ul>
+				{problems.map(problem => (
+					<ProblemRow key={problem.number} problem={problem} onShow={onShow} />
+				))}
+			</ul>
+		</section>
+	);
+}
+
+export function ProblemsIsland({ problems, onShow, checkedLine = null, action }: ProblemsIslandProps) {
+	const local = problems.filter(problem => problem.kind === "blocking" || problem.kind === "hint");
 	return (
 		<Island
 			title="Problems"
 			meta={
-				problems.length === 0
+				checkedLine ??
+				(local.length === 0
 					? "None found while editing"
-					: `Found while editing · ${plural(problems.length, "problem")}`
+					: `Found while editing · ${plural(local.length, "problem")}`)
 			}
+			actions={action}
 			flush
-			footnote="DECA Mark checks every boundary again before a version is published. These are what the browser found while you edited.">
+			footnote={
+				checkedLine
+					? "DECA Mark checks the saved draft after a pause in editing and before a version is published."
+					: "DECA Mark checks every boundary again before a version is published. These are what the browser found while you edited."
+			}>
 			{problems.length === 0 ? (
-				<p className="px-island-pad py-4 type-body text-ink-2">Nothing found while editing.</p>
+				<p className="px-island-pad py-4 type-body text-ink-2">
+					{checkedLine ? "Nothing found." : "Nothing found while editing."}
+				</p>
 			) : (
 				<div className="flex flex-col">
-					{blocking.length > 0 && (
-						<section aria-label="Stops saving">
-							<p className="px-island-pad pt-3 pb-2 type-mono-label text-ink-2">Stops saving</p>
-							<ul>
-								{blocking.map(problem => (
-									<ProblemRow key={problem.number} problem={problem} onShow={onShow} />
-								))}
-							</ul>
-						</section>
-					)}
-					{hints.length > 0 && (
-						<section aria-label="Found while editing">
-							<p className="px-island-pad pt-3 pb-2 type-mono-label text-ink-2">Found while editing</p>
-							<ul>
-								{hints.map(problem => (
-									<ProblemRow key={problem.number} problem={problem} onShow={onShow} />
-								))}
-							</ul>
-						</section>
-					)}
+					<Section
+						label="Stops saving"
+						problems={problems.filter(p => p.kind === "blocking")}
+						onShow={onShow}
+					/>
+					<Section
+						label="Stops publishing"
+						problems={problems.filter(p => p.kind === "checked")}
+						onShow={onShow}
+					/>
+					<Section label="Warnings" problems={problems.filter(p => p.kind === "warning")} onShow={onShow} />
+					<Section
+						label="Found while editing"
+						problems={problems.filter(p => p.kind === "hint")}
+						onShow={onShow}
+					/>
 				</div>
 			)}
 		</Island>

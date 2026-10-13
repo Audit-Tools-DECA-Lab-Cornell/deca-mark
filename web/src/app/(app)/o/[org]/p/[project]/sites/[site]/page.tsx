@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/contour/PageHeader";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { SiteScreen } from "@/features/sites/SiteScreen";
 import { siteView, zoneRows } from "@/features/sites/view";
+import { zoneEntry } from "@/features/zones/model";
 import { getProject, getSite, getSitePlan, resolveProject, summarizeObservations } from "@/lib/api/workspace";
 import { clock } from "@/lib/time";
 import { projectAbilities } from "@/lib/workspace/access";
@@ -70,6 +71,7 @@ export default async function SitePage({ params }: { params: Promise<Params> }) 
 			planFailure={plan && !plan.ok ? plan.failure : null}
 			zoneRows={zoneRows(view.zones, groups, view.package?.version ?? null)}
 			countsFailure={counts && !counts.ok ? counts.failure : null}
+			zoneEntry={zoneEntry(site.data)}
 		/>
 	);
 }

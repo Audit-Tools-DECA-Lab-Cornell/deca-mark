@@ -8,7 +8,7 @@ This application and the collector are one product, so they carry one design sys
 
 All of it (D30). Every page under `/o/<org>/p/<project>` reads and writes the DECA Mark API for the signed-in person: sites and map packages, forms and their versions, observations, the team, invitations, and project and organization settings. Sign-in, sign-up, verification and password recovery use Supabase through Server Actions (`src/lib/auth/actions.ts`). There is no sample workspace, no fixture data, no Preview data marker and no set-up flow.
 
-When a feature has no backend, the page says so once, with `components/shell/NotAvailable.tsx`: "X is not available yet.", then why, and what to do instead. Today that covers saved named views, the rounds plan, the zone editor (edit zones in QGIS), reviewing or excluding records, device readiness, live QGIS database access, deleting projects, organizations, sites or map packages, and resending invitations. A read that fails shows `LoadFailure` and never an empty list. The Honesty section of [`AGENTS.md`](AGENTS.md) holds the rules.
+When a feature has no backend, the page says so once, with `components/shell/NotAvailable.tsx`: "X is not available yet.", then why, and what to do instead. Today that covers saved named views, the rounds plan, editing zones on the web where a site has no usable boundary or published form (edit them in QGIS), reviewing or excluding records, device readiness, live QGIS database access, deleting projects, organizations, sites or map packages, and resending invitations. A read that fails shows `LoadFailure` and never an empty list. The Honesty section of [`AGENTS.md`](AGENTS.md) holds the rules.
 
 Two limits show on the screens. The API lists at most the newest 500 observations of a project and has no paging, so every count, chart and export built from a list that long says "Based on the newest 500 observations." And dates use the project's timezone, not the browser's.
 
@@ -26,7 +26,7 @@ Organizations are created by the bootstrap script (`scripts/bootstrap-study.mjs`
 | `/o/[org]` | The organization's projects; Members and Settings for owners and admins |
 | `/o/[org]/collect` | Where observers land: they collect in the DECA Mark app |
 | `/o/[org]/p/[project]` | Overview: what the field returned, coverage by zone and round, and what needs attention |
-| `…/data`, `…/data/[observation]` | The newest 500 observations as a table and a plan, with filters and export; one record |
+| `…/data`, `…/data/[observation]` | Every matching observation, 500 at a time, as a table and a plan of one map version, with filters and export; one record on the map version it was recorded with |
 | `…/sites`, `…/sites/[site]`, `…/sites/[site]/packages` | Sites, the plan of each, and its map packages: history, checks, upload from QGIS layers |
 | `…/forms`, `…/forms/versions`, `…/forms/versions/[version]` | Forms, their versions, the draft editor and publishing |
 | `…/team`, `…/settings` | Project members and invitations; name, description, timezone and archive (managers only) |

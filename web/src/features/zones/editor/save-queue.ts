@@ -100,7 +100,12 @@ export type QueueEvent =
 	/** Conflict choice: drop these edits and continue from the saved draft. */
 	| { readonly type: "take-saved" }
 	/** The first read after the editor mounts: adopt the server's draft when it is newer. */
-	| { readonly type: "mounted"; readonly draft: SavedDraft };
+	| { readonly type: "mounted"; readonly draft: SavedDraft }
+	/**
+	 * A check of the acknowledged revision was refused as stale (412) while nothing was being saved: someone
+	 * else saved since. The draft is read, as for a refused save.
+	 */
+	| { readonly type: "stale" };
 
 export type QueueStep = { readonly queue: SaveQueue; readonly command: Command | null };
 
@@ -347,6 +352,10 @@ export function queueReducer(queue: SaveQueue, event: QueueEvent): QueueStep {
 				acknowledged: acknowledge(snapshot, server)
 			});
 		}
+
+		case "stale":
+			if (queue.pause || queue.inFlight || queue.reading) return step(queue);
+			return read(queue, "conflict", { kind: "conflict", server: null });
 
 		case "mounted": {
 			const { draft } = event;

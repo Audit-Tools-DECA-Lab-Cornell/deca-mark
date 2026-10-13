@@ -30,8 +30,19 @@ export function browserApiUrl(): string | null {
 	return process.env.NEXT_PUBLIC_DECAMARK_API_URL || null;
 }
 
-/** The signed-in person's access token, refreshed first when it expires within a minute. */
-async function accessToken(): Promise<string> {
+/**
+ * The signed-in account is not the one a page was opened for (another tab signed in as someone else).
+ * Nothing was sent: what the page holds belongs to the previous account.
+ */
+export class AccountChangedError extends Error {
+	readonly name = "AccountChangedError";
+}
+
+/**
+ * The signed-in person's access token, refreshed first when it expires within a minute. With `expectUser`,
+ * a session of anyone else is refused before anything is sent.
+ */
+async function accessToken(expectUser?: string): Promise<string> {
 	let supabase: ReturnType<typeof createSupabaseClient>;
 	try {
 		supabase = createSupabaseClient();
@@ -40,27 +51,45 @@ async function accessToken(): Promise<string> {
 	}
 	const { data, error } = await supabase.auth.getSession();
 	if (error || !data.session) throw new ApiError("token_invalid", "sign-in");
+	if (expectUser !== undefined && data.session.user.id !== expectUser) throw new AccountChangedError();
 	const expiresAt = data.session.expires_at;
 	if (expiresAt !== undefined && expiresAt * 1000 - Date.now() > REFRESH_WITHIN_MS) return data.session.access_token;
 	const refreshed = await supabase.auth.refreshSession();
 	if (refreshed.error || !refreshed.data.session) throw new ApiError("token_invalid", "sign-in");
+	if (expectUser !== undefined && refreshed.data.session.user.id !== expectUser) throw new AccountChangedError();
 	return refreshed.data.session.access_token;
 }
 
+export type BrowserApiOptions = {
+	readonly timeoutMs?: number;
+	/** Ends the request early, as well as the timeout. */
+	readonly signal?: AbortSignal;
+	/** Send only while this account is the one signed in (WUI-12). */
+	readonly expectUser?: string;
+};
+
 /**
- * An API client for the browser. Each request carries a fresh token and its own timeout signal.
- * Throws when this deployment has no browser API address.
+ * An API client for the browser. Each request carries a fresh token and its own timeout signal, combined
+ * with the caller's when one is given. Throws when this deployment has no browser API address.
  */
-export function browserApi(timeoutMs = REQUEST_TIMEOUT_MS) {
+export function browserApi(options: number | BrowserApiOptions = REQUEST_TIMEOUT_MS) {
+	const {
+		timeoutMs = REQUEST_TIMEOUT_MS,
+		signal,
+		expectUser
+	} = typeof options === "number" ? { timeoutMs: options } : options;
 	const baseUrl = browserApiUrl();
 	if (!baseUrl) throw new ApiError("storage_unavailable", "retry");
 	const client = createClient<paths>({
 		baseUrl,
-		fetch: request => fetch(request, { signal: AbortSignal.timeout(timeoutMs) })
+		fetch: request => {
+			const timeout = AbortSignal.timeout(timeoutMs);
+			return fetch(request, { signal: signal ? AbortSignal.any([timeout, signal]) : timeout });
+		}
 	});
 	client.use({
 		async onRequest({ request }) {
-			request.headers.set("Authorization", `Bearer ${await accessToken()}`);
+			request.headers.set("Authorization", `Bearer ${await accessToken(expectUser)}`);
 			return request;
 		}
 	});

@@ -177,6 +177,15 @@ Observers never reach these pages: the project layout already sends them to coll
 - **Versions:** v2 Active, v1 Archived ("Replaced by v2"), with change note, date and author, and a link to `?version=1` (read-only plan and zone table). Mark "current" from `current_package_id`, never newest-ready (`history.ts:31-34` today).
 - **Restore an earlier version:** "Restore v1 boundaries in a new draft" on every archived version. A draft must be based on the current package to publish (contract.md:72; `services/zone_publication.py:122-139` refuses a stale base with 409). So the action creates a draft from `current_package_id`, then PUTs the zones from `GET /zones?package_id=<v1>` (same `zone_id`, code, label and geometry; zones added after v1 show as removed). It opens the review page, which diffs against current and prefills the change note "Restores v1 boundaries".
 
+Amended 2026-10-13 (WEB-37), as built:
+- **Header line:** "Map v2 · published Oct 11, 2026 · drawn on the web". The publisher is not named: a package carries only the publisher's identity, and the member list that would name them is for managers only.
+- **Actions:** a manager with an open draft on the current version gets ink "Open your draft" beside outline "Start another draft"; otherwise ink "Start a draft from v2".
+- **Zone table:** name, code, and parts and holes. Areas come with the review page (WEB-38), from the check of a revision.
+- **Open drafts:** each row has Open and "Save as file". Discard comes with WEB-38.
+- **Restoring an earlier version** opens the new draft in the editor until the review page exists (WEB-38 moves it there). The draft's change note starts as "Restores v1 boundaries". A replayed start is not restored a second time.
+- **`?version=` with a version the site does not have** shows the current version with a note.
+- **Who sees what:** viewers see the versions and none of the draft parts, and nothing about drafts is read for them. The site page's Zones island links "Edit zones" (managers, where editing is available) or "Zone versions". The "Editing zones on the web" note stays only where editing is not available.
+
 ### 5.2 Starting a draft
 
 - A Server Action calls `POST zone-drafts {request_id, base_package_id}`. The request ID is generated when the dialog opens, so a double click or a retry replays. On success, navigate to the editor.
@@ -295,6 +304,22 @@ Submitting:
 - Unconfirmed: "DECA Mark could not confirm whether this was published. Nothing is lost." Then automatically GET the draft. If its state is published, show that result. Otherwise offer "Try again", which reuses the same `request_id`.
 - 422 issues: return to the problems list. 412: reload the draft and validate again.
 
+Amended 2026-10-13 (WEB-38), as built:
+- **Map:** the draft's zones are drawn over the base version's background, and zones whose boundary changed, or that are new, are hatched ("Hatched: a boundary changed since v1, or a new zone."). The base boundaries are not drawn under them; that overlay waits for the WEB-28 acceptance pass, with the 412 one.
+- **Readiness and changes:** the check runs half a second after the review opens, and again after each saved change to the note. Readiness and the changes list (DECA Mark's `zones[].change`, changed zones first) are for that revision only.
+- **Publish and its answers:**
+  - The button reads "Publish v3" (current + 1). It is enabled only for a saved, checked, ready revision of a draft based on the current version, with the box ticked.
+  - A 201 opens the Zones page with the toast. If the person left the review while it was publishing, the toast still says so and they stay where they went. The change note is read only while publishing, so nothing typed then is left behind.
+  - A 200 replay shows its result on the page. When its version is no longer current, it says "This draft was already published as v2. A later version is current now.": the answer does not carry the current version, and the one this page read may be older, so it is not named (this replaces "v3 is current now." above).
+  - No answer, or a 5xx, reads the draft. If it is published, the same request is sent again (same ID, same revision's ETag), which returns the first answer. Otherwise it offers Try again with that same request.
+  - Any 409 reads the draft first: published as above, discarded as its outcome, and otherwise the publication conflict copy with "Start a draft from v2" and "Save this draft as a file".
+  - A 412 reads and checks the draft again.
+  - When someone else saves the draft while the note is being edited, the review asks the editor's conflict question (5.9): keep the edits in this tab, load the saved draft, or save the edits as a file. The dialog says whether the zones or the note differ.
+  - A 429 says "Publishing paused for 20 s. Nothing was published."
+- **Discard:** offered in the editor, on the review page and on each row of the Zones page's drafts list. It sends DELETE with the draft's ETag, then `zonesChangedAction` revalidates the site's paths.
+- **The editor's "Review and publish"** saves first and then opens the review. A restored version opens straight on its review page, with the note "Restores v1 boundaries".
+- **Fixed on the way:** the editor read its draft again whenever the page re-rendered with new props, which could have replaced edits not yet saved. It now reads the draft once per editor.
+
 ### 5.11 Uploading a QGIS package
 
 Every package upload goes through the same activation rules as publishing (contract "QGIS upload"). Missing, duplicate or unused identity mappings return 422 `validation_failed` with an `identity_conflict` issue. Missing `expected_current_package_id` returns 428; the first upload must explicitly send null. `UploadStep` gains a mapping step. On a site's first upload there are no current zones, so every feature becomes a new zone and the step only asks for codes where the source ID does not fit.
@@ -394,6 +419,16 @@ The queue is a pure reducer (`save-queue.ts`) plus a thin effect hook, so every 
   - `payload_too_large` gets a size kind;
   - `details.issues` and the conflict details are kept in `ApiError` and in a serializable form for Server Action results.
 
+Amended 2026-10-13 (WEB-35), as built:
+- **Error kinds:** `ErrorKind` keeps its three kinds. The editor reads each failure's status, code, issues, `Retry-After` and `X-Request-Id` through `queueFailure` (`features/zones/editor/failure.ts`); conflict and size are the queue's pauses. `ApiError` now keeps `requestId`. A session that ended before a request was sent counts as signed out, never as a lost answer.
+- **Transport:** browser-direct as WUI-3 planned, confirmed by a real Chromium preflight with `If-Match` against the local API. `browserApi` takes the caller's signal (combined with the timeout through `AbortSignal.any`) and `expectUser`: a request is refused before sending when another account is signed in.
+- **The 412 dialog** names the zones that differ ("Zones that differ: North meadow and Slide") in place of a map overlay of the saved draft. The overlay waits for the WEB-28 acceptance pass. Its choices are as 5.9, with "Decide later", which leaves a "Not saved" note with "Choose what to keep".
+- **A 409 (published or discarded elsewhere)** replaces the editor with the outcome, "Open the site" and "Save my edits as a file". "Open v2" and "Start a draft from v2" come with the Zones page (WEB-37).
+- **Header and checks:** "Review and publish" and "Discard draft" come with WEB-38. "Check boundaries" sits in the Problems island. A check also runs after 10 s without changes, and its line reads "Checked revision 6 at 11:33 · 2 problems · 1 warning". When the draft has changed since, it adds "the draft has changed since, so it is checked again once saved".
+- **Leaving and shell navigation:** WUI-11's guard is a small module (`features/shell/navigationGuard.ts`) rather than a context. `useLeaveGuard` holds shell navigation while it is on, and `useShortcuts` and the command palette go through `guardedPush`. The pending `g` chord lives in `lib/shortcuts.ts`, so the editor leaves the chord's second key alone. "Save and leave" keeps the guard on until the save lands, then leaves.
+- **Saving a drag:** a drag reports its zones once, when it ends, so a save never carries a point mid-drag.
+- **Routes:** only the `zones/:path*` redirect is gone. Unknown paths under `zones/` are not-found pages. `…/zones` still redirects to the site until WEB-37.
+
 ### 6.5 Capability, not flags
 
 Editing appears only when `zone_editing_available` is true for this manager on this site, and the server re-checks every write. There are no client feature flags and no environment toggles. Before BE-18 the pages show the NotAvailable state from section 4.
@@ -459,6 +494,12 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 - **Geometry:** recorded package geometry through `getSitePlan(packageId)`, plus `/zones?package_id`, memoised per package. Zones keep their holes and parts (WEB-31).
 - **Inventory:** never a marker. Show a "Zone inventories in this view" list under the map (zone, version, count). Selecting an inventory row hatches its zone, switching the picker to its version.
 - **Subset note:** "The map shows the 500 loaded of 1,284 matching observations." Totals come from the summary.
+- **Amended 2026-10-13 (WEB-40):**
+  - The geometry is the version's own package archive only. The archive carries that version's zones with their `zone_id`, code and name, so `/zones?package_id` is not read for the plan; QGIS still reads it for the boundaries download.
+  - The picker shows only when the matches span more than one version; the island's meta names the drawn version, with "(current)" when it is.
+  - The counts come from the summary of the same filters (the zone filter included). If it cannot be read, the versions and inventories are counted from the loaded observations, and the picker hint and the inventories footnote say so.
+  - Other versions' plans are read through a Server Action that checks the package belongs to the site, then memoised per `${userId}:${projectId}:${packageId}` (WUI-10), at most 8 per tab. If one fails, the plan keeps the version it shows and says so, with Try again.
+  - The inventories are a flush island under the plan, "Zone inventories in this view": a table with one tab stop (zone, map, inventories). Choosing a row hatches its zone and switches the plan to its version. A whole-zone record selected in the table is hatched too when its version is drawn.
 
 ### 7.4 Record detail
 
@@ -467,6 +508,8 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 | Bound point | Recorded package (`package_id`) with its zone hatched. "Map v1, the version this observation was recorded with." plus "v2 is current." when it differs | Zone "North meadow (NM) · map v1" |
 | Bound inventory | Recorded zone hatched, no point. "An inventory of the whole zone. No point was recorded." | Same |
 | Historical map cannot load | "We could not load map v1 for this observation. The record and its zone are unchanged." with Try again | Facts unaffected |
+
+Amended 2026-10-13 (WEB-40): a package that loads but cannot be drawn as a plan says "Map v1 of Fall Creek cannot be drawn as a plan. The record and its zone are unchanged.", without Try again, because trying again reads the same archive. "v2 is current." comes from the site list. If that read fails, the line is left out and the page still loads.
 
 ### 7.5 Overview, Reports and the site page
 
@@ -611,6 +654,8 @@ Each request is precise and additive unless marked. "Accept" is the acceptance c
   6. `data-history.spec.ts`: seeded above 500 observations across v1 and v2. Totals, paging, zone filter by identity and by version, map version picker, inventory list, record detail on v1.
   7. `export.spec.ts`: unzip; `observations.csv` data rows equal `metadata.json`'s total; `codebook.csv` and `historical-zones.geojson` are present; a formula-leading label is protected; above 10,000 the action is disabled with its reason.
   8. Honesty and axe scans include every new route in Day and Dusk: no serious or critical axe findings, one primary action, no banned words.
+
+Amended 2026-10-13 (WEB-28, WEB-29), as run: items 1–5 are `zones-editor`, `zones-conflict`, `zones-publish`, `zones-access` with `zones-draft`, and `zones-network`. Item 7's cases are the export step of `data-history.spec.ts`, and the refusal above 10,000 is unit-tested (the fixture holds 520 observations). Item 8 for the zone routes is `zones-honesty.spec.ts`, on the zone review project. The touch drag in item 1 runs on the phone project; the traced strip, which needs exact mouse positions, runs on the desktop one.
 
 ### Manual (recorded with commit, browser and screenshots)
 

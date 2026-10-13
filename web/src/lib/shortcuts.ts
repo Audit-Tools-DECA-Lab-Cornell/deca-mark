@@ -35,6 +35,25 @@ export const ORG_GO_KEYS: Record<string, string> = {
 /** How long the second key of a `g` chord is waited for. */
 export const CHORD_TIMEOUT = 1500;
 
+let chordUntil = 0;
+
+/** `g` was pressed: the next key, within the timeout, finishes the chord. */
+export function startChord(now = Date.now()): void {
+	chordUntil = now + CHORD_TIMEOUT;
+}
+
+/**
+ * Whether a `g` chord waits for its second key. A page's own single-letter keys (the zone editor's tools)
+ * leave that key to the chord.
+ */
+export function chordPending(now = Date.now()): boolean {
+	return now < chordUntil;
+}
+
+export function endChord(): void {
+	chordUntil = 0;
+}
+
 export const GLOBAL_SHORTCUTS: ShortcutGroup = {
 	title: "Anywhere",
 	rows: [

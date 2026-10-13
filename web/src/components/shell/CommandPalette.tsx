@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { Icon } from "@/components/contour/Icon";
 import { Kbd } from "@/components/contour/Kbd";
 import { projectHref } from "@/features/shell/navigation";
+import { guardedPush } from "@/features/shell/navigationGuard";
 import {
 	type PaletteEntry,
 	type PaletteGroup,
@@ -207,7 +208,7 @@ export function CommandPalette() {
 	function navigate(href: string) {
 		navigated.current = true;
 		setPaletteOpen(false, { restoreFocus: false });
-		router.push(href);
+		guardedPush(router, href);
 	}
 
 	return (

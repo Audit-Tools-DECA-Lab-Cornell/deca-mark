@@ -52,6 +52,8 @@ export const SCAN_ROUTES: ScanRoute[] = [
 	{ name: "site", role: "manager", path: () => projectPath(`sites/${SEED.sites.fallCreek}`) },
 	{ name: "site-empty", role: "manager", path: () => projectPath(`sites/${SEED.sites.empty}`) },
 	{ name: "packages", role: "manager", path: () => projectPath(`sites/${SEED.sites.fallCreek}/packages`) },
+	{ name: "zones", role: "manager", path: () => projectPath(`sites/${SEED.sites.fallCreek}/zones`) },
+	{ name: "zones-empty-site", role: "manager", path: () => projectPath(`sites/${SEED.sites.empty}/zones`) },
 	{
 		name: "packages-upload",
 		role: "manager",
@@ -71,6 +73,7 @@ export const SCAN_ROUTES: ScanRoute[] = [
 	// What a viewer and an observer see.
 	{ name: "viewer-overview", role: "viewer", path: () => projectPath() },
 	{ name: "viewer-team", role: "viewer", path: () => projectPath("team") },
+	{ name: "viewer-zones", role: "viewer", path: () => projectPath(`sites/${SEED.sites.fallCreek}/zones`) },
 	{ name: "observer-collect", role: "observer", path: () => orgPath("collect") },
 
 	// The organization, as its owner.
@@ -91,7 +94,6 @@ export const REMOVED_ROUTES: { name: string; path: () => string }[] = [
 	{ name: "old overview", path: () => "/overview" },
 	{ name: "old QGIS page", path: () => "/qgis" },
 	{ name: "organization library", path: () => orgPath("library") },
-	{ name: "zone editor", path: () => projectPath(`sites/${SEED.sites.fallCreek}/zones`) },
 	{ name: "saved report views", path: () => projectPath("reports/views") },
 	{ name: "rounds plan", path: () => projectPath("settings/rounds") },
 	{ name: "sample workspace", path: () => "/o/deca/p/play-study" }

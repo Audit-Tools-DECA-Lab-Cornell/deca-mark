@@ -18,9 +18,13 @@ import { ringName, zoneName } from "./state";
 
 export type EditorProblem = {
 	readonly number: number;
-	/** blocking stops saving; hint is the browser's own finding, which the server decides. */
-	readonly kind: "blocking" | "hint";
-	readonly code: StructureIssue["code"] | ZoneHint["code"];
+	/**
+	 * blocking stops saving; hint is the browser's own finding, which the server decides; checked and warning
+	 * are what DECA Mark found checking a saved revision (checked ones stop publishing, warnings do not).
+	 */
+	readonly kind: "blocking" | "hint" | "checked" | "warning";
+	/** A local check's code, a hint's, or the code DECA Mark sent. */
+	readonly code: StructureIssue["code"] | ZoneHint["code"] | (string & {});
 	readonly zoneId: string | null;
 	/** The point to show, when the problem is at one. */
 	readonly address: VertexAddress | null;

@@ -26,8 +26,6 @@ const OLD_ROUTES: [string, string][] = [
 	["/onboarding", "/o"],
 	["/onboarding/:path*", "/o"],
 	["/o/:org/library", "/o/:org"],
-	["/o/:org/p/:project/sites/:site/zones", "/o/:org/p/:project/sites/:site"],
-	["/o/:org/p/:project/sites/:site/zones/:path*", "/o/:org/p/:project/sites/:site"],
 	["/o/:org/p/:project/reports/views", "/o/:org/p/:project/reports"],
 	["/o/:org/p/:project/settings/rounds", "/o/:org/p/:project/settings"]
 ];

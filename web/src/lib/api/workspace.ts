@@ -4,10 +4,19 @@ import { cache } from "react";
 import { ZodError } from "zod";
 
 import { type ProjectedSite, projectSite } from "@/lib/plan";
-import { PackageArchiveError, packageSiteCollection, readPackageArchive } from "@/lib/sites/archive";
+import { PackageArchiveError, packageSiteCollection, readPackageArchive, siteBoundaryOf } from "@/lib/sites/archive";
 import { buildWorkspaceIndex, unavailableWorkspace } from "@/lib/workspace/build";
 import { toFailure } from "@/lib/workspace/result";
 import type { OrgRef, ProjectRef, WorkspaceIndex } from "@/lib/workspace/types";
+import type { PolygonRings } from "@/lib/zones/geometry";
+import {
+	draftSummaryListSchema,
+	type HistoricalZones,
+	historicalZonesSchema,
+	type ZoneDraft,
+	zoneDraftSchema,
+	type ZoneDraftSummary
+} from "@/lib/zones/schemas";
 
 import { call, getIdentity, session } from "./client";
 import { ApiError, errorCopy } from "./errors";
@@ -244,6 +253,77 @@ export const getSitePlan = cache(
 		}
 	}
 );
+
+/**
+ * What a zone draft is edited over: its base package drawn without zones (the editor draws the draft's), and
+ * the site boundary in longitude and latitude for snapping. Null when the archive cannot be read as a plan.
+ */
+export const getEditorBase = cache(
+	async (
+		projectId: string,
+		packageId: string,
+		siteName: string
+	): Promise<{ site: ProjectedSite; boundary: PolygonRings[] } | null> => {
+		const bytes = await getPackageArchive(projectId, packageId);
+		try {
+			const { manifest, layers } = readPackageArchive(bytes);
+			const collection = packageSiteCollection(siteName, manifest, layers);
+			return { site: { ...projectSite(collection), zones: [] }, boundary: siteBoundaryOf(collection) };
+		} catch (error) {
+			if (error instanceof PackageArchiveError || error instanceof ZodError) return null;
+			throw error;
+		}
+	}
+);
+
+/** One map version's zones, exactly as published. */
+export const getHistoricalZones = cache(
+	async (projectId: string, siteId: string, packageId: string): Promise<HistoricalZones> => {
+		const data = await call<unknown>(api =>
+			api.GET("/v1/projects/{project_id}/sites/{site_id}/zones", {
+				params: { path: { project_id: projectId, site_id: siteId }, query: { package_id: packageId } }
+			})
+		);
+		const parsed = historicalZonesSchema.safeParse(data);
+		if (!parsed.success) throw new ApiError("unknown", "retry");
+		return parsed.data;
+	}
+);
+
+/* ── Zone drafts (managers) ───────────────────────────────────────────────── */
+
+/** A site's zone drafts, without their zones. Managers only. */
+export const listZoneDrafts = cache(
+	async (
+		projectId: string,
+		siteId: string,
+		state?: "draft" | "published" | "discarded"
+	): Promise<ZoneDraftSummary[]> => {
+		const data = await call<unknown>(api =>
+			api.GET("/v1/projects/{project_id}/sites/{site_id}/zone-drafts", {
+				params: { path: { project_id: projectId, site_id: siteId }, query: state ? { state } : {} }
+			})
+		);
+		const parsed = draftSummaryListSchema.safeParse(data);
+		if (!parsed.success) throw new ApiError("unknown", "retry");
+		return parsed.data;
+	}
+);
+
+/**
+ * One zone draft with every zone. Managers only. The editor reads it again from the browser before it saves
+ * anything, so a draft restored from the router's history is never the one written over.
+ */
+export const getZoneDraft = cache(async (projectId: string, siteId: string, draftId: string): Promise<ZoneDraft> => {
+	const data = await call<unknown>(api =>
+		api.GET("/v1/projects/{project_id}/sites/{site_id}/zone-drafts/{draft_id}", {
+			params: { path: { project_id: projectId, site_id: siteId, draft_id: draftId } }
+		})
+	);
+	const parsed = zoneDraftSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+});
 
 /* ── Forms ────────────────────────────────────────────────────────────────── */
 
