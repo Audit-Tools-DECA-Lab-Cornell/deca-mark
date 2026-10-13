@@ -109,8 +109,16 @@ export function DataMap({
 	const [loading, setLoading] = useState<Version | null>(null);
 	const [problem, setProblem] = useState<{ version: Version; message: string } | null>(null);
 	const [inventoryKey, setInventoryKey] = useState<string | null>(null);
-	// The version asked for last: an answer for any other comes too late and is dropped.
-	const asked = useRef<string | null>(null);
+	// Selecting another observation ends the inventory chosen below: one zone is hatched, the one chosen last.
+	const selectedId = selected?.id ?? null;
+	const [selectedBefore, setSelectedBefore] = useState(selectedId);
+	if (selectedId !== selectedBefore) {
+		setSelectedBefore(selectedId);
+		setInventoryKey(null);
+	}
+	// The read asked for last: an answer to any earlier one, even for the same version, is dropped.
+	const asked = useRef<{ packageId: string; token: number } | null>(null);
+	const reads = useRef(0);
 
 	// The plan drawn on the server is kept too, so coming back to its version reads nothing.
 	useEffect(() => {
@@ -135,12 +143,15 @@ export function DataMap({
 	const inventory = inventories.find(row => `${row.zoneId}|${row.packageId}` === inventoryKey) ?? null;
 
 	async function show(version: Version) {
-		setProblem(null);
 		if (version.packageId === drawn.packageId) {
 			asked.current = null;
 			setLoading(null);
+			setProblem(null);
 			return;
 		}
+		// The version already on its way is not asked for again.
+		if (asked.current?.packageId === version.packageId) return;
+		setProblem(null);
 		const key = planKey(account.userId, projectId, version.packageId);
 		const kept = packagePlans.recall(key);
 		if (kept) {
@@ -149,12 +160,15 @@ export function DataMap({
 			setDrawn({ ...version, site: kept });
 			return;
 		}
-		asked.current = version.packageId;
+		reads.current += 1;
+		const token = reads.current;
+		asked.current = { packageId: version.packageId, token };
+		const latest = () => asked.current?.token === token;
 		setLoading(version);
 		let message: string;
 		try {
 			const read = await loadSitePlanAction({ org, project }, plan.siteCode, version.packageId);
-			if (asked.current !== version.packageId) return;
+			if (!latest()) return;
 			if (read.status === "loaded") {
 				packagePlans.remember(key, read.site);
 				setDrawn({ ...version, site: read.site });
@@ -162,10 +176,10 @@ export function DataMap({
 			}
 			message = read.message;
 		} catch {
-			if (asked.current !== version.packageId) return;
+			if (!latest()) return;
 			message = "Check the connection and try again.";
 		} finally {
-			if (asked.current === version.packageId) {
+			if (latest()) {
 				asked.current = null;
 				setLoading(null);
 			}
