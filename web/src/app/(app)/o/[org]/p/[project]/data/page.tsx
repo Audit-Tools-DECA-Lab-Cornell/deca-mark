@@ -164,7 +164,13 @@ export default async function DataPage({ params, searchParams }: Props) {
 			sites={sites}
 			zones={zones}
 			versions={versions}
-			zonesFailure={zoneCounts && !zoneCounts.ok ? zoneCounts.failure : null}
+			zonesFailure={
+				zoneCounts && !zoneCounts.ok
+					? zoneCounts.failure
+					: membership && !membership.ok
+						? membership.failure
+						: null
+			}
 			versionNote={versionNote}
 			definitions={definitions}
 			missingVersions={missing}

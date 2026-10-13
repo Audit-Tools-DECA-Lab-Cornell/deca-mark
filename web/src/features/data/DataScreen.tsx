@@ -72,7 +72,7 @@ export type DataScreenProps = {
 	zones: Option[];
 	/** The site's map versions, for "One map version"; empty without a site. */
 	versions: number[];
-	/** Why the zone choices could not be read in full, when they could not. */
+	/** Why the zone or map version choices could not be read in full, when they could not. */
 	zonesFailure: Failure | null;
 	/** Why the map version in the address was not applied, when it was not. */
 	versionNote: string | null;
@@ -304,7 +304,11 @@ export function DataScreen({
 			/>
 			{zonesFailure && (
 				<div className="px-island-pad pb-5">
-					<LoadFailure failure={zonesFailure} what="every zone of this site's earlier map versions" bare />
+					<LoadFailure
+						failure={zonesFailure}
+						what="every zone and map version of this site's earlier maps"
+						bare
+					/>
 				</div>
 			)}
 			{versionNote && (
