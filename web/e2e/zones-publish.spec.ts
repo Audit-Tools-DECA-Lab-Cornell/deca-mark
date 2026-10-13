@@ -119,6 +119,15 @@ test("a draft is reviewed and published once, a conflict keeps it, and Discard a
 		);
 		await expect(main.getByRole("region", { name: "Changes" })).toContainText("Name changed");
 		await main.getByLabel("Change note").fill("Renamed the lawn");
+		// Leaving before the note is saved asks first; Save and leave saves it, and the review opens again.
+		await main.getByRole("link", { name: "Back to the editor" }).click();
+		const leaving = page.getByRole("dialog", { name: "Save your changes first?" });
+		await expect(leaving).toBeVisible();
+		await leaving.getByRole("button", { name: "Save and leave" }).click();
+		await expect(page).toHaveURL(/\/zones\/drafts\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+		await main.getByRole("button", { name: "Review and publish" }).click();
+		await expect(page).toHaveURL(/\/publish$/, { timeout: 30_000 });
+		await expect(main.getByLabel("Change note")).toHaveValue("Renamed the lawn");
 		await expect(main.getByRole("region", { name: "Ready to publish?" })).toContainText(
 			"Ready to publish: revision 3",
 			{
@@ -148,16 +157,18 @@ test("a draft is reviewed and published once, a conflict keeps it, and Discard a
 			timeout: 30_000
 		});
 		// The request reaches DECA Mark; its answer never reaches the page.
+		let reached = 0;
 		await page.route(
 			/\/zone-drafts\/[0-9a-f-]{36}\/publish$/,
 			async route => {
-				await route.fetch();
+				reached = (await route.fetch()).status();
 				await route.abort("connectionreset");
 			},
 			{ times: 1 }
 		);
 		await main.getByText("I understand published boundaries cannot be edited.").click();
 		await main.getByRole("button", { name: "Publish v2" }).click();
+		await expect.poll(() => reached, { timeout: 30_000 }).toBe(201);
 		await expect(main).toContainText("This draft was already published as v2.", { timeout: 30_000 });
 		await expect(main).toContainText("v2 is the current version.");
 		expect((await history(site.site_id)).packages).toHaveLength(2);
@@ -171,7 +182,10 @@ test("a draft is reviewed and published once, a conflict keeps it, and Discard a
 		await expect(main.getByRole("region", { name: "Ready to publish?" })).toContainText("Ready to publish", {
 			timeout: 30_000
 		});
-		await call(
+		// Another manager publishes first (DECA Mark allows each manager 10 publications a minute).
+		await (
+			await zoneApi("manager2")
+		)(
 			"POST",
 			`/v1/projects/${projectId}/sites/${site.site_id}/zone-drafts/${theirs.draft_id}/publish`,
 			{ request_id: randomUUID(), expected_current_package_id: v1 },

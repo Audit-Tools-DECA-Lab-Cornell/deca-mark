@@ -74,7 +74,9 @@ export function ZonesScreen(props: ZonesScreenProps) {
 			lead={
 				current
 					? `Map v${current.version} · published ${current.published} · ${current.madeBy.toLowerCase()}`
-					: "No map package yet"
+					: entry === "no-package"
+						? "No map package yet"
+						: undefined
 			}
 			actions={
 				editing && current ? (
@@ -118,6 +120,15 @@ export function ZonesScreen(props: ZonesScreenProps) {
 						) : undefined
 					}
 				/>
+			</div>
+		);
+
+	// Without the versions nothing on the page can be said truthfully: the failure is the page.
+	if (props.versionsFailure)
+		return (
+			<div className="flex flex-col gap-6">
+				{header}
+				<LoadFailure failure={props.versionsFailure} what="the site's map versions" />
 			</div>
 		);
 

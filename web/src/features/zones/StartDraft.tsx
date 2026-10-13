@@ -7,6 +7,7 @@ import { Button, type ButtonVariant } from "@/components/contour/Button";
 import { Dialog, DialogClose } from "@/components/contour/Dialog";
 import type { IconName } from "@/components/contour/Icon";
 import { Note } from "@/components/contour/Note";
+import { newId } from "@/lib/ids";
 
 import { startDraftAction } from "./actions";
 
@@ -83,7 +84,7 @@ export function StartDraft({
 				icon={icon}
 				size={size}
 				onClick={() => {
-					setRequestId(crypto.randomUUID());
+					setRequestId(newId());
 					setProblem(null);
 					setOpen(true);
 				}}>

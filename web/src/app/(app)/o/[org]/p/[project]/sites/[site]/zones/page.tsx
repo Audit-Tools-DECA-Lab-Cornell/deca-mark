@@ -134,7 +134,7 @@ export default async function ZonesPage({
 			draftsFailure={drafts && !drafts.ok ? drafts.failure : null}
 			ownDraft={ownDraft(rows)}
 			othersNote={drafts?.ok ? othersNote(drafts.data, context) : null}
-			missingVersion={asked !== null && !named ? asked : null}
+			missingVersion={history?.ok && asked !== null && !named ? asked : null}
 		/>
 	);
 }

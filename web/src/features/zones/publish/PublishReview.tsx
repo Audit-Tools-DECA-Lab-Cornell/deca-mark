@@ -23,6 +23,7 @@ import type { Publication } from "@/lib/api/sites";
 import type { PackageForms } from "@/lib/api/sites";
 import { type DraftAddress, getZoneDraft, publishZoneDraft } from "@/lib/api/zones-browser";
 import { saveText } from "@/lib/download";
+import { newId } from "@/lib/ids";
 import type { ProjectedSite } from "@/lib/plan";
 import { clock as makeClock } from "@/lib/time";
 import { CHANGE_NOTE_MAX, codePoints, type DraftZone } from "@/lib/zones/geometry";
@@ -35,6 +36,7 @@ import { draftFileName, draftGeoJson } from "../editor/conflict";
 import { planZone } from "../editor/projection";
 import { isDirty, type SavedDraft, saveStatus } from "../editor/save-queue";
 import { useDraftSaving } from "../editor/useDraftSaving";
+import { LeaveDialog } from "../LeaveDialog";
 import { StartDraft } from "../StartDraft";
 import {
 	CHANGE_WORDS,
@@ -81,12 +83,12 @@ function requestIdFor(draftId: string, revision: number): string {
 	try {
 		const kept = window.sessionStorage.getItem(key);
 		if (kept) return kept;
-		const fresh = crypto.randomUUID();
+		const fresh = newId();
 		window.sessionStorage.setItem(key, fresh);
 		return fresh;
 	} catch {
 		// Without storage a reload chooses a new one; DECA Mark still refuses publishing the revision twice.
-		return crypto.randomUUID();
+		return newId();
 	}
 }
 
@@ -111,7 +113,13 @@ export function PublishReview(props: PublishReviewProps) {
 	const zonesHref = `${siteHref}/zones`;
 	const editorHref = `${zonesHref}/drafts/${address.draftId}`;
 	const unsaved = isDirty(queue) || queue.inFlight !== null;
-	const guard = useLeaveGuard(saving.ready && !saving.fenced && unsaved);
+	// Where "Save and leave" was going: it leaves once the note is saved; the guard stays on until then.
+	const [leaveFor, setLeaveFor] = useState<string | null>(null);
+	const guard = useLeaveGuard(saving.ready && !saving.fenced && (unsaved || leaveFor !== null));
+	const savingToLeave = leaveFor !== null && leaveFor === guard.leavingTo && queue.pause === null;
+	useEffect(() => {
+		if (savingToLeave && !unsaved) guard.leave();
+	}, [savingToLeave, unsaved, guard]);
 	const status = saveStatus(queue, iso => clock.time(iso));
 	const stale = props.currentPackageId !== props.basePackageId;
 	const nextVersion = currentVersion !== null ? currentVersion + 1 : null;
@@ -276,6 +284,31 @@ export function PublishReview(props: PublishReviewProps) {
 		);
 	}
 
+	const leaveDialog = (
+		<LeaveDialog
+			leavingTo={guard.leavingTo}
+			onStay={() => {
+				setLeaveFor(null);
+				guard.stay();
+			}}
+			onLeave={guard.leave}
+			closed={queue.pause?.kind === "closed"}
+			onSaveFile={saveFile}
+			save={{
+				busy: savingToLeave,
+				unavailable: queue.invalid
+					? `${queue.invalid} Or leave without saving.`
+					: queue.pause
+						? status.text
+						: null,
+				onSave: () => {
+					setLeaveFor(guard.leavingTo);
+					saving.flush();
+				}
+			}}
+		/>
+	);
+
 	const header = (
 		<PageHeader
 			breadcrumbs={[
@@ -322,6 +355,7 @@ export function PublishReview(props: PublishReviewProps) {
 		return (
 			<div className="flex flex-col gap-6">
 				{header}
+				{leaveDialog}
 				{saving.mountProblem ? (
 					<ScreenState
 						kind="error"
@@ -344,6 +378,7 @@ export function PublishReview(props: PublishReviewProps) {
 		return (
 			<div className="flex flex-col gap-6">
 				{header}
+				{leaveDialog}
 				<Note tone="saved" title={line.title}>
 					<span className="flex flex-col items-start gap-3">
 						<span>{line.body}</span>
@@ -360,6 +395,7 @@ export function PublishReview(props: PublishReviewProps) {
 		return (
 			<div className="flex flex-col gap-6">
 				{header}
+				{leaveDialog}
 				<ScreenState
 					kind="empty"
 					icon="info"
@@ -385,6 +421,7 @@ export function PublishReview(props: PublishReviewProps) {
 	return (
 		<div className="flex flex-col gap-6">
 			{header}
+			{leaveDialog}
 			<p aria-live="polite" className="sr-only">
 				{status.live === "polite" ? status.text : ""}
 			</p>

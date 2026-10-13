@@ -23,6 +23,7 @@ import { blockingReason, editorProblems } from "./editor/problems";
 import { isDirty, type SavedDraft, saveStatus } from "./editor/save-queue";
 import { useDraftSaving } from "./editor/useDraftSaving";
 import { ZoneEditor } from "./editor/ZoneEditor";
+import { LeaveDialog } from "./LeaveDialog";
 
 export type DraftEditorProps = {
 	org: string;
@@ -137,6 +138,27 @@ export function DraftEditor(props: DraftEditorProps) {
 			/>
 		);
 
+	const leaveDialog = (
+		<LeaveDialog
+			leavingTo={guard.leavingTo}
+			onStay={() => {
+				setLeaveFor(null);
+				guard.stay();
+			}}
+			onLeave={guard.leave}
+			closed={pause?.kind === "closed"}
+			onSaveFile={saveFile}
+			save={{
+				busy: savingToLeave,
+				unavailable: queue.invalid ? `${queue.invalid} Or leave without saving.` : pause ? status.text : null,
+				onSave: () => {
+					setLeaveFor(guard.leavingTo);
+					flush();
+				}
+			}}
+		/>
+	);
+
 	const header = (
 		<PageHeader
 			breadcrumbs={[
@@ -240,6 +262,7 @@ export function DraftEditor(props: DraftEditorProps) {
 						</>
 					}
 				/>
+				{leaveDialog}
 			</div>
 		);
 
@@ -376,45 +399,7 @@ export function DraftEditor(props: DraftEditorProps) {
 				)}
 			</Dialog>
 
-			<Dialog
-				open={guard.leavingTo !== null}
-				onOpenChange={open => {
-					if (!open) {
-						setLeaveFor(null);
-						guard.stay();
-					}
-				}}
-				title="Save your changes first?"
-				description="Some changes to this draft are not saved yet. If you leave without saving, they are lost and the draft keeps its last saved revision."
-				footer={
-					<>
-						<DialogClose asChild>
-							<Button variant="outline">Keep editing</Button>
-						</DialogClose>
-						<Button variant="outline" icon="arrow-right" onClick={guard.leave}>
-							Leave without saving
-						</Button>
-						<Button
-							variant="ink"
-							busy={savingToLeave}
-							busyLabel="Saving…"
-							disabled={queue.invalid !== null || pause !== null}
-							disabledReason={
-								queue.invalid
-									? `${queue.invalid} Or leave without saving.`
-									: pause
-										? status.text
-										: undefined
-							}
-							onClick={() => {
-								setLeaveFor(guard.leavingTo);
-								flush();
-							}}>
-							Save and leave
-						</Button>
-					</>
-				}
-			/>
+			{leaveDialog}
 		</div>
 	);
 }
