@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 import { expect, test } from "@playwright/test";
 
@@ -163,6 +164,11 @@ test("a draft is reviewed and published once, a conflict keeps it, and Discard a
 		await expect(dialog).toContainText("The saved draft has the same zones as yours. Its change note differs.", {
 			timeout: 30_000
 		});
+		// The file keeps the note too, so nothing typed here depends on the tab.
+		const file = page.waitForEvent("download");
+		await dialog.getByRole("button", { name: "Save my edits as a file" }).click();
+		const kept = JSON.parse(readFileSync((await (await file).path())!, "utf8")) as { change_note: string };
+		expect(kept.change_note).toBe("My note");
 		await dialog.getByRole("button", { name: "Discard my edits and load the saved draft" }).click();
 		await expect(dialog).toHaveCount(0);
 		await expect(main.getByLabel("Change note")).toHaveValue("Their note");

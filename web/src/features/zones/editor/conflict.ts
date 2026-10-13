@@ -51,11 +51,15 @@ export function conflictLine(mine: DraftSnapshot, theirs: DraftSnapshot): string
 		: `Zones that differ: ${nameList(zones)}.`;
 }
 
-/** The edits in this tab as a GeoJSON file for QGIS: every zone with its identity, code and name. */
-export function draftGeoJson(zones: readonly DraftZone[]): string {
+/**
+ * The edits in this tab as a GeoJSON file for QGIS: every zone with its identity, code and name, and the
+ * change note beside them (a member QGIS ignores), so a note kept this way is not lost either.
+ */
+export function draftGeoJson({ zones, changeNote }: DraftSnapshot): string {
 	return `${JSON.stringify(
 		{
 			type: "FeatureCollection",
+			change_note: changeNote,
 			features: zones.map(zone => ({
 				type: "Feature",
 				id: zone.zone_id,

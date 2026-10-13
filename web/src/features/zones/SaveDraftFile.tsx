@@ -10,7 +10,7 @@ import { saveText } from "@/lib/download";
 
 import { draftFileName, draftGeoJson } from "./editor/conflict";
 
-/** Saves a draft's zones as a GeoJSON file, read from DECA Mark when pressed. */
+/** Saves a draft's zones and change note as a GeoJSON file, read from DECA Mark when pressed. */
 export function SaveDraftFile({ address, siteCode }: { address: DraftAddress; siteCode: string }) {
 	const { toast } = useToast();
 	const [busy, setBusy] = useState(false);
@@ -20,7 +20,11 @@ export function SaveDraftFile({ address, siteCode }: { address: DraftAddress; si
 		try {
 			const { draft } = await getZoneDraft(address);
 			const fileName = draftFileName(siteCode, draft.revision);
-			saveText(draftGeoJson(draft.zones), fileName, "application/geo+json");
+			saveText(
+				draftGeoJson({ zones: draft.zones, changeNote: draft.change_note }),
+				fileName,
+				"application/geo+json"
+			);
 			toast({ title: `Download started: ${fileName}`, tone: "saved" });
 		} catch (error) {
 			const message =

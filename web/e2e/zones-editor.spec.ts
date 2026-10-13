@@ -14,8 +14,9 @@ import {
 /**
  * Plan WEB-28 (UI plan section 10, item 1): a manager edits zones in the real editor against the local API.
  * They start a draft, draw a rectangle (mouse, or touch on the phone) and a shape (keyboard), move a point
- * by keyboard (and by touch on the phone) until DECA Mark finds an overlap, undo it, reload with nothing
- * lost, and publish. The untouched zones keep every number they were imported with. Runs on a site of its
+ * by keyboard (and by touch on the phone) until DECA Mark finds an overlap, and undo it. On the desktop they
+ * also trace a strip along the lawn's edge, which shares its points exactly and is no overlap. They reload
+ * with nothing lost, and publish. The untouched zones keep every number they were imported with. Runs on a site of its
  * own on the synthetic zone review project (`scripts/e2e-local.sh --zones`).
  */
 
@@ -32,6 +33,7 @@ const imported = (edge: readonly Position[]) => ({ type: "MultiPolygon", coordin
 
 const RECTANGLE = "Synthetic drawn rectangle";
 const SHAPE = "Synthetic drawn shape";
+const STRIP = "Synthetic traced strip";
 const METRES_PER_DEGREE = 111_320;
 
 const map = (page: Page) => page.getByRole("main").locator('[aria-roledescription="map"]');
@@ -65,6 +67,7 @@ test("a manager draws, edits, checks, fixes, reloads and publishes zones", async
 	const lawn = "Synthetic editor lawn";
 	const beds = "Synthetic editor beds";
 	const zonesHref = `${path}/sites/${site.code}/zones`;
+	const drawn = [lawn, beds, RECTANGLE, SHAPE, ...(touch ? [] : [STRIP])];
 	const main = page.getByRole("main");
 	const list = main.getByRole("listbox", { name: "Zones" });
 	const row = (label: string) => list.getByRole("option", { name: new RegExp(label) });
@@ -242,11 +245,52 @@ test("a manager draws, edits, checks, fixes, reloads and publishes zones", async
 		await expect(problems).not.toContainText("overlap");
 	});
 
+	if (!touch)
+		await test.step("a strip traced along the lawn's edge shares its points, and DECA Mark accepts it", async () => {
+			await row(lawn).click();
+			await main.getByRole("button", { name: "Fit zone" }).click();
+			await page.waitForTimeout(400);
+			// The lawn's outer edge runs south-west, south-east, north-east, north-west.
+			const corner = (n: number) => onPlan(page, new RegExp(`^Point ${n} of 4, ${lawn}, outer edge$`));
+			const [lawnSw, lawnSe, lawnNe] = [await corner(1), await corner(2), await corner(3)];
+			const lawnMetres =
+				(FRESH.a[1][0] - FRESH.a[0][0]) * METRES_PER_DEGREE * Math.cos((FRESH.a[0][1] * Math.PI) / 180);
+			const step = ((lawnSe.x - lawnSw.x) / lawnMetres) * 5;
+			const clickAt = async ({ x, y }: { x: number; y: number }, free = false) => {
+				const frame = await mapAtTop(page);
+				if (free) await page.keyboard.down("Alt");
+				await page.mouse.click(frame.x + x, frame.y + y);
+				if (free) await page.keyboard.up("Alt");
+			};
+			await main.getByRole("radio", { name: "Draw shape" }).click();
+			// Two of the lawn's corners, a little off: snapping lands on them exactly.
+			await clickAt({ x: lawnSw.x + 2, y: lawnSw.y - 2 });
+			await clickAt({ x: lawnNe.x - 2, y: lawnNe.y + 2 });
+			await main.getByRole("button", { name: `Follow the edge of ${lawn}` }).click();
+			await expect(
+				page.getByRole("status").filter({ hasText: `Following the edge of ${lawn}: 1 point copied.` })
+			).toHaveCount(1);
+			// 5 m outside the lawn, placed freely (Alt), and back to the first point to finish.
+			await clickAt({ x: lawnNe.x + step, y: lawnNe.y }, true);
+			await clickAt({ x: lawnSe.x + step, y: lawnSe.y + step }, true);
+			await clickAt({ x: lawnSw.x, y: lawnSw.y + step }, true);
+			await clickAt(lawnSw);
+			await expect(page.locator(":focus")).toHaveAttribute("id", /zone-name$/);
+			await page.keyboard.type(STRIP);
+			const draft = await saved(found => zone(found, STRIP) !== undefined);
+			const edge = outer(zone(draft, STRIP)!).map(position => JSON.stringify(position));
+			for (const shared of FRESH.a.slice(0, 3)) expect(edge).toContain(JSON.stringify(shared));
+			await main.getByRole("button", { name: "Check boundaries", exact: true }).click();
+			const problems = main.getByRole("region", { name: "Problems" });
+			await expect(problems).toContainText(`Checked revision ${draft.revision} at`, { timeout: 30_000 });
+			await expect(problems).not.toContainText("overlap");
+		});
+
 	await test.step("a reload loses nothing", async () => {
 		const before = await read();
 		await page.reload();
 		await expect(main).toContainText(`· revision ${before.revision}`, { timeout: 30_000 });
-		for (const label of [lawn, beds, RECTANGLE, SHAPE]) await expect(row(label)).toBeVisible();
+		for (const label of drawn) await expect(row(label)).toBeVisible();
 		expect((await read()).zones).toEqual(before.zones);
 		// The imported zones keep every number they came with.
 		expect(zone(before, lawn)!.geometry).toEqual(imported(FRESH.a));
@@ -271,6 +315,6 @@ test("a manager draws, edits, checks, fixes, reloads and publishes zones", async
 		await main.getByRole("button", { name: "Publish v2" }).click();
 		await expect(page).toHaveURL(new RegExp(`${zonesHref}$`), { timeout: 30_000 });
 		const zones = main.getByRole("region", { name: "Zones of v2" });
-		for (const label of [lawn, beds, RECTANGLE, SHAPE]) await expect(zones).toContainText(label);
+		for (const label of drawn) await expect(zones).toContainText(label);
 	});
 });

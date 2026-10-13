@@ -175,7 +175,7 @@ export function PublishReview(props: PublishReviewProps) {
 
 	const saveFile = () =>
 		saveText(
-			draftGeoJson(queue.local.zones),
+			draftGeoJson(queue.local),
 			draftFileName(siteCode, queue.acknowledged.revision),
 			"application/geo+json"
 		);

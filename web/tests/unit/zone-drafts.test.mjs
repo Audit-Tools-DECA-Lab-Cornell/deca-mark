@@ -248,8 +248,9 @@ test("a conflict names the zones that differ, and the edits can be kept as a fil
 		conflictLine(mine, { zones: [meadow], changeNote: "" }),
 		"Zones that differ: Slide. The change note differs too."
 	);
-	const file = JSON.parse(draftGeoJson([meadow]));
+	const file = JSON.parse(draftGeoJson({ zones: [meadow], changeNote: "Moved the meadow" }));
 	assert.equal(file.type, "FeatureCollection");
+	assert.equal(file.change_note, "Moved the meadow");
 	assert.deepEqual(file.features[0].properties, { zone_id: NM, zone_code: "NM", zone_label: "North meadow" });
 	assert.deepEqual(file.features[0].geometry, meadow.geometry);
 	assert.equal(draftFileName("fall-creek", 6), "fall-creek-zones-draft-r6.geojson");

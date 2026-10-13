@@ -487,22 +487,37 @@ Verify: `pnpm --dir web check`, `format:check`, `build`, `test:unit`, `test:auth
 Verified 2026-10-09 (Node 22.22.0, pnpm 10.17.1): `test:unit` 229 of 229, `test:auth` 34 of 34, `test:api-errors` 31 of 31, `test:account` 12 of 12, `pnpm forms:parity` and `pnpm tokens:check`. The full local-stack Playwright run is not recorded here.
 
 ### WEB-28: Build a real manager zone editor
-Status: todo · Phase 3 · Size L · Depends: BE-22, WEB-34, WEB-38, WEB-42 · Blocks: QA-07
+Status: done (2026-10-13; the manual matrix is pending (user), and signing out or an account change mid-edit is not run in a browser) · Phase 3 · Size L · Depends: BE-22, WEB-34, WEB-38, WEB-42 · Blocks: QA-07
 Owner: Claude web owner.
 Planned 2026-10-11: the detailed UI, state architecture, drawing-surface decision and verification are in [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md). This task is now the acceptance gate for editing and QGIS uploads; WEB-30 to WEB-38 and WEB-42 do the work.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 1, 3, 5 and 10.
 Do: Run the editing evidence in UI plan section 10 against the local stack with the real API: create, edit, validate, publish, two-manager conflict, lost-response replay, direct-URL refusal, network loss, leave guard, keyboard, touch emulation and the manual iPad Safari check.
 Done when: Real API browser flow and two-manager conflict pass; no fake saves or complex-geometry loss; manual evidence is recorded or marked pending.
 Verify: `pnpm web:check`, `pnpm --dir web build`, `pnpm --dir web test:unit`, `sh scripts/e2e-local.sh` with the zones-* specs, and the manual matrix in UI plan section 10.
+Verified 2026-10-13 on the local stack against the real API, production build, desktop-1440 and phone-390 (`sh scripts/e2e-local.sh --prod --zones`): the zones-* specs, 36 of 36. By UI plan section 10 item:
+1. `zones-editor.spec.ts`: a draft is started from the Zones page. A rectangle is drawn by mouse (touch drag on the phone), with sides exactly on longitude and latitude. A shape is drawn by keyboard at the cross. On the phone a point is dragged by touch, and only that point moves. A point moved by keyboard into the lawn is DECA Mark's "overlap" for that revision, and one Undo puts it back to the imported numbers. On the desktop a strip is traced along the lawn's edge ("Follow the edge", 1 point copied): it must hold the lawn's three corners exactly, with no overlap found (this step was added after the 36 of 36 run; its own run is pending). A reload keeps every zone, and v2 is published with all of them. The imported zones keep every number they came with.
+2. `zones-conflict.spec.ts`: two managers in two browsers on one revision: the second gets the dialog with its edits intact, saves them as a file, decides later, then replaces the saved draft. Two publications from one base: the first is v2, the second says "v2 was published while you were reviewing" with its draft kept. Two tabs of one manager publish one revision with their own request IDs: the second says "This draft was already published as v2." with "Open v2". Editor → review → Back to the editor → edit saves without a conflict.
+3. `zones-publish.spec.ts`: a lost answer is sent again with the same request and publishes once; a replay after a newer publication says "A later version is current now."; a note saved elsewhere during review asks which to keep, and the file kept from it has the note.
+4. `zones-access.spec.ts` and `zones-draft.spec.ts`: a viewer opening a draft or its review directly is told only managers can, and nothing of the draft is shown; an observer never reaches the zones; a viewer sees every version.
+5. `zones-network.spec.ts`: an edit made offline says so, stays in the tab and saves as the next revision on reconnecting; meanwhile a `g` chord, the command palette and a breadcrumb link each ask first, and after the save the link leaves without asking.
+8. `zones-honesty.spec.ts`: the Zones page (current, an earlier version, a site with no package), the editor and the review as a manager, and the Zones page and a draft as a viewer, read honestly in Day and Dusk: no banned words, one primary action, no sideways scroll, axe clean.
+- **Checks:** `pnpm --dir web check`, `test:unit` 351 of 351.
+- **Not run in a browser:** signing out or another account signing in mid-edit (WEB-35; unit-tested).
+- **Pending (user), UI plan section 10 manual matrix:** keyboard-only full edit, publish and review; VoiceOver with Safari and NVDA; iPad Safari on the LAN (drag, pinch, draw, 44 px handles, leave guard; WEB-30 gates 4 and 8); Chrome and Firefox at 1440 and 1024, Safari at 1440, iPad portrait and landscape; reduced motion; the WEB-30 timings on the final build.
 
 ### WEB-29: Display and filter historical zone versions
-Status: todo · Phase 3 · Size L · Depends: BE-22, WEB-40, WEB-41 · Blocks: QA-07
+Status: done (2026-10-13; the refusal above 10,000 is unit-tested only) · Phase 3 · Size L · Depends: BE-22, WEB-40, WEB-41 · Blocks: QA-07
 Owner: Claude web owner.
 Planned 2026-10-11: see [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md) section 7. This task is now the acceptance gate for review; WEB-36 and WEB-39 to WEB-41 do the work.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 7 and 10.
 Do: Run the review evidence in UI plan section 10 with more than 500 synthetic observations across two map versions: totals, paging, zone filters by identity and by version, map version picker, inventory, record detail and complete exports.
 Done when: Map/table/export agree beyond 500 without reclassification against current boundaries.
 Verify: Web checks/unit tests and real browser history/filter/export scenarios (`data-history.spec.ts`, `export-v2.spec.ts`).
+Verified 2026-10-13 on the local stack (`sh scripts/e2e-local.sh --prod --zones`, desktop-1440 and phone-390), on the zone review project's 520 observations across v1 and v2, the zone renamed between them:
+- **Data (`data-history.spec.ts`, UI plan section 10 item 6):** "Showing 1–500 of 520", the next page loads the rest once each, and nothing says "Based on the newest 500". A zone filter matches by identity on every version, named as today's map names it. Choosing one map version narrows to what was recorded on it. Inventories are whole-zone records. Back undoes a filter. Search says it covers the loaded observations only.
+- **The plan:** the current version is drawn and v1's points are dimmed rather than placed on it. v1 draws its own boundaries. Choosing an inventory switches to the version it was recorded on. A v1 record is drawn on v1 and says v2 is current.
+- **Exports (item 7, in the same spec):** the ZIP's `observations.csv` has the 260 rows of v1, which equals `metadata.json`'s `total_matching`. `codebook.csv`, `forms.json` and `historical-zones.geojson` come with it. The v1 name starting with "=" is written as `'=Synthetic lawn v1`. QGIS (`qgis-reports.spec.ts`) exports every record and downloads a version's boundaries. `export-v2.spec.ts` was not written: its cases are these.
+- **Not run in a browser:** more than 10,000 matching observations, refused with "One export holds up to 10,000 observations…" (`tests/unit/export-files.test.mjs`); seeding that many on the local stack is not part of the fixture.
 
 ### WEB-30: Spike the zone editor drawing surface
 Status: done (2026-10-12; gates 4 and 8 pending (user) on a real iPad) · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-33
@@ -542,7 +557,7 @@ Verify: `pnpm web:check`, `pnpm --dir web test:unit`, a Playwright run of the sp
 Verified: `MapFrame` has `edit`/`draw` modes with free panning, 1 cm-per-pixel zoom, a camera context, `data-map-keys` key ownership, two-pointer pinch, frame-batched drags and a border-correct pointer position; `src/features/zones/editor/` has the handles (one tab stop per ring, 44 px targets, snapping, midpoints), Zones list, Selected zone, Points table, Problems island, toolbar and visible key list, and `/dev/zone-editor` is the in-memory specimen (no save, publish or network code). `pnpm --dir web test:specimen`: 51 passed, 3 skipped by design, at desktop-1440 and phone-390, covering keyboard-only and touch-emulated editing of every fixture set with holes and parts kept, point names and announcements, and axe with no violations in both palettes and both themes. Fixed on the way: Layers-menu presses reaching the plan through the React portal and deselecting the zone, touch drags ending at once, the plan image wrapping buttons (axe `nested-interactive`). `pnpm --dir web check` passes; `test:unit` 301 of 302 (the pre-existing collector-rule failure).
 
 ### WEB-34: Add zone drawing, snapping and tracing tools
-Status: done (2026-10-12; server validation of a traced pair waits for WEB-28) · Phase 3 · Size M · Depends: WEB-33 · Blocks: WEB-28
+Status: done (2026-10-12; DECA Mark's check of a traced pair runs in WEB-28's `zones-editor.spec.ts`) · Phase 3 · Size M · Depends: WEB-33 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.4, 5.5 and WUI-8.
 Do: Add Draw shape, Draw rectangle, keyboard drawing at the centre cross, snap feedback, edge tracing between two snapped vertices of one ring, and removing a hole or part.
@@ -551,7 +566,7 @@ Verify: `pnpm --dir web test:unit` (exactness tests), specimen Playwright run; s
 Verified: Draw shape and Draw rectangle by pointer, touch and the keyboard cross (P, R, V; Space, Enter, Backspace, T, Escape), exact-vertex snapping with a marker and Alt to place freely, "Follow the edge" between two snapped points of one zone or the site boundary (again for the other way round), and Remove hole and Remove part. `tests/unit/zone-drawing.test.mjs`: a traced neighbour shares the very same position arrays (so the same pairs), an unfinished shape never enters the zones, refusals say why, and drawing undoes as one step. `e2e/specimen/zone-drawing.specimen.ts` at desktop-1440 and phone-390: the concave fixture's notch drawn by mouse with a traced edge shares its three points exactly; rectangles by mouse and touch drag align to longitude and latitude; a shape tapped out by touch; holes and parts removed and undone; axe clean while drawing in both palettes. Full specimen suite 60 passed, 6 skipped by design; `pnpm --dir web check` passes; `test:unit` 305 of 306 (the pre-existing collector-rule failure). Review fixes (2026-10-13): a second finger during a point or rectangle drag pinches instead (the point goes back, nothing is drawn), drawing works over plain HTTP on a LAN address, overlapping parts stay filled and hit, outlines keep zoom-dependent precision, and the save queue recovers after a too-large refusal or a failed conflict read; specimen suite 64 passed, 8 skipped by design, `test:unit` 310 of 311.
 
 ### WEB-35: Persist zone drafts with conditional autosave
-Status: done (2026-10-13; offline, signed-out and account-change paths unit-tested only, browser runs with WEB-28) · Phase 3 · Size L · Depends: BE-22, WEB-33, DB-18 · Blocks: WEB-37, WEB-38
+Status: done (2026-10-13; offline runs in a browser in WEB-28's `zones-network.spec.ts`; signed-out and account-change paths are unit-tested only) · Phase 3 · Size L · Depends: BE-22, WEB-33, DB-18 · Blocks: WEB-37, WEB-38
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-3, WUI-4, WUI-11, WUI-12, 5.8, 5.9, 6.3 and 6.4; [contract](../docs/plan/zone-boundaries/contract.md) manager endpoints and errors; `src/lib/api/{browser,errors}.ts`; `src/features/shell/useLeaveGuard.ts`.
 Do: Add zod schemas, `src/lib/api/zones-browser.ts` with If-Match, ETag and caller abort, the new error kinds with issues and conflict details, the autosave queue wiring, save status, the conflict dialog, validation with the Problems list and canvas markers, the shell navigation guard, the account fence, the mount-time draft GET, and the manager-gated editor route with removal of only the `zones/:path*` redirect (and its REMOVED_ROUTES entry).
@@ -639,7 +654,14 @@ Verified:
   - an answer aborted after DECA Mark received the request, with the same request sent again: "already published as v2 · v2 is the current version" and exactly two packages;
   - a version published elsewhere during review refused with the draft still open;
   - Discard asking first, then the draft discarded.
-  - `zones-conflict.spec.ts` is covered by `zones-draft.spec.ts` (two writers on one draft) and the publish conflict step here. Two managers publishing in two browsers, and two tabs of one manager, run with WEB-28.
+  - `zones-conflict.spec.ts` (WEB-28) adds two managers in two browsers and two tabs of one manager.
+- **After review (2026-10-13):**
+  - the review asks the editor's conflict question when someone else saved the draft (`ConflictChoice`, shared with the editor), and says whether the zones or the note differ;
+  - the note is read only while publishing;
+  - an answer that arrives after the person left does not take them back;
+  - a replay no longer current says "A later version is current now.";
+  - a draft another tab published says "already published as v2" with "Open v2" while v2 is current;
+  - a draft kept as a file keeps its change note.
 
 ### WEB-39: Read observations with server filters and paging
 Status: done (2026-10-13) · Phase 3 · Size L · Depends: BE-22, WEB-36 · Blocks: WEB-40, WEB-41

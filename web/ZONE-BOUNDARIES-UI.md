@@ -655,6 +655,8 @@ Each request is precise and additive unless marked. "Accept" is the acceptance c
   7. `export.spec.ts`: unzip; `observations.csv` data rows equal `metadata.json`'s total; `codebook.csv` and `historical-zones.geojson` are present; a formula-leading label is protected; above 10,000 the action is disabled with its reason.
   8. Honesty and axe scans include every new route in Day and Dusk: no serious or critical axe findings, one primary action, no banned words.
 
+Amended 2026-10-13 (WEB-28, WEB-29), as run: items 1–5 are `zones-editor`, `zones-conflict`, `zones-publish`, `zones-access` with `zones-draft`, and `zones-network`. Item 7's cases are the export step of `data-history.spec.ts`, and the refusal above 10,000 is unit-tested (the fixture holds 520 observations). Item 8 for the zone routes is `zones-honesty.spec.ts`, on the zone review project. The touch drag in item 1 runs on the phone project; the traced strip, which needs exact mouse positions, runs on the desktop one.
+
 ### Manual (recorded with commit, browser and screenshots)
 
 - **Keyboard only:** full edit, publish and review without a mouse. Screen reader (VoiceOver with Safari, NVDA with Firefox or Chrome): handle names, announcements and dialogs.
