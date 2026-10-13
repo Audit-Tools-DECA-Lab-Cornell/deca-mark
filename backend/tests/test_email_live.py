@@ -1,7 +1,8 @@
 """API → committed outbox → Brevo boundary on disposable local Postgres."""
 
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from typing import override
+from datetime import UTC, datetime, timedelta, tzinfo
 from uuid import uuid4
 
 import anyio
@@ -189,17 +190,19 @@ def test_scheduled_replay_survives_expired_scheduling_window(
     }
     original = email_client.post(path, json=body)
     assert original.status_code == 202, original.text
-    identifier = original.json()["id"]
+    identifier = Delivery.model_validate_json(original.content).id
 
     class Later(datetime):
         @classmethod
-        def now(cls, tz=None) -> datetime:  # noqa: ANN001 - mirrors datetime.now.
-            return datetime.now(tz) + timedelta(hours=3)
+        @override
+        def now(cls, tz: tzinfo | None = None) -> "Later":
+            shifted = datetime.now(tz) + timedelta(hours=3)
+            return cls.fromtimestamp(shifted.timestamp(), tz)
 
     monkeypatch.setattr("fieldmaps_api.routers.emails.datetime", Later)
     retry = email_client.post(path, json=body)
     assert retry.status_code == 202, retry.text
-    assert retry.json()["id"] == identifier
+    assert Delivery.model_validate_json(retry.content).id == identifier
     assert email_client.post(path, json={**body, "heading": "Changed"}).status_code == 409
     # A brand-new request cannot bypass the time validation.
     assert (
