@@ -309,11 +309,12 @@ Amended 2026-10-13 (WEB-38), as built:
 - **Readiness and changes:** the check runs half a second after the review opens, and again after each saved change to the note. Readiness and the changes list (DECA Mark's `zones[].change`, changed zones first) are for that revision only.
 - **Publish and its answers:**
   - The button reads "Publish v3" (current + 1). It is enabled only for a saved, checked, ready revision of a draft based on the current version, with the box ticked.
-  - A 201 opens the Zones page with the toast.
-  - A 200 replay shows its result on the page.
+  - A 201 opens the Zones page with the toast. If the person left the review while it was publishing, the toast still says so and they stay where they went. The change note is read only while publishing, so nothing typed then is left behind.
+  - A 200 replay shows its result on the page. When its version is no longer current, it says "This draft was already published as v2. A later version is current now.": the answer does not carry the current version, and the one this page read may be older, so it is not named (this replaces "v3 is current now." above).
   - No answer, or a 5xx, reads the draft. If it is published, the same request is sent again (same ID, same revision's ETag), which returns the first answer. Otherwise it offers Try again with that same request.
   - Any 409 reads the draft first: published as above, discarded as its outcome, and otherwise the publication conflict copy with "Start a draft from v2" and "Save this draft as a file".
   - A 412 reads and checks the draft again.
+  - When someone else saves the draft while the note is being edited, the review asks the editor's conflict question (5.9): keep the edits in this tab, load the saved draft, or save the edits as a file. The dialog says whether the zones or the note differ.
   - A 429 says "Publishing paused for 20 s. Nothing was published."
 - **Discard:** offered in the editor, on the review page and on each row of the Zones page's drafts list. It sends DELETE with the draft's ETag, then `zonesChangedAction` revalidates the site's paths.
 - **The editor's "Review and publish"** saves first and then opens the review. A restored version opens straight on its review page, with the note "Restores v1 boundaries".

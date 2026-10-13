@@ -92,13 +92,7 @@ export function publishUnavailable(input: {
 }
 
 /** What a publication's answer says (UI plan 5.10). A replay never claims to be current when it is not. */
-export function publishedLine(
-	publication: Publication,
-	currentVersion: number | null
-): {
-	readonly title: string;
-	readonly body: string;
-} {
+export function publishedLine(publication: Publication): { readonly title: string; readonly body: string } {
 	const version = publication.package.package_version;
 	const current = publication.current_package_id === publication.package.package_id;
 	if (!publication.replayed)
@@ -106,10 +100,9 @@ export function publishedLine(
 			title: `v${version} is published.`,
 			body: "Observers use it after they download it in the DECA Mark app."
 		};
-	return current
-		? { title: `This draft was already published as v${version}.`, body: `v${version} is the current version.` }
-		: {
-				title: `This draft was already published as v${version}.`,
-				body: currentVersion !== null ? `v${currentVersion} is current now.` : "A later version is current now."
-			};
+	// The answer names this draft's version only; the later one is not read here, so it is not named.
+	return {
+		title: `This draft was already published as v${version}.`,
+		body: current ? `v${version} is the current version.` : "A later version is current now."
+	};
 }

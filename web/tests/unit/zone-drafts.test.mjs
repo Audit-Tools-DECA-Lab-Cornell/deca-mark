@@ -8,7 +8,9 @@ const q = await load("features/zones/editor/save-queue.ts");
 const { canCheck, checkIsCurrent, checkLine, checkProblems, checkUnavailable } = await load(
 	"features/zones/editor/checks.ts"
 );
-const { differingZones, draftFileName, draftGeoJson, nameList } = await load("features/zones/editor/conflict.ts");
+const { conflictLine, differingZones, draftFileName, draftGeoJson, nameList } = await load(
+	"features/zones/editor/conflict.ts"
+);
 const { queueFailure } = await load("features/zones/editor/failure.ts");
 const { historicalDraftZones, historicalZonesSchema, savedDraft, zoneDraftSchema, zoneValidationSchema } =
 	await load("lib/zones/schemas.ts");
@@ -232,6 +234,20 @@ test("a conflict names the zones that differ, and the edits can be kept as a fil
 	assert.deepEqual(differingZones([{ ...meadow, zone_label: " North meadow " }], [meadow]), []);
 	assert.equal(nameList(["A", "B"]), "A and B");
 	assert.equal(nameList(["A", "B", "C", "D", "E"]), "A, B, C and 2 more");
+	const mine = { zones: [meadow, slide], changeNote: "Moved the meadow" };
+	assert.equal(
+		conflictLine(mine, { ...mine, changeNote: " Moved the meadow " }),
+		"The saved draft has the same zones and change note as yours."
+	);
+	assert.equal(
+		conflictLine(mine, { ...mine, changeNote: "" }),
+		"The saved draft has the same zones as yours. Its change note differs."
+	);
+	assert.equal(conflictLine(mine, { ...mine, zones: [moved, slide] }), "Zones that differ: North meadow.");
+	assert.equal(
+		conflictLine(mine, { zones: [meadow], changeNote: "" }),
+		"Zones that differ: Slide. The change note differs too."
+	);
 	const file = JSON.parse(draftGeoJson([meadow]));
 	assert.equal(file.type, "FeatureCollection");
 	assert.deepEqual(file.features[0].properties, { zone_id: NM, zone_code: "NM", zone_label: "North meadow" });

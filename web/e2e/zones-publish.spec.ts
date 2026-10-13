@@ -174,6 +174,29 @@ test("a draft is reviewed and published once, a conflict keeps it, and Discard a
 		expect((await history(site.site_id)).packages).toHaveLength(2);
 	});
 
+	await test.step("a note saved elsewhere meanwhile asks which to keep", async () => {
+		const { site, v1 } = await freshSite(call);
+		const draft = await renamedDraft(call, site.site_id, v1, "Conflict lawn");
+		await page.goto(`${path}/sites/${site.code}/zones/drafts/${draft.draft_id}/publish`);
+		await expect(main.getByRole("region", { name: "Ready to publish?" })).toContainText("Ready to publish", {
+			timeout: 30_000
+		});
+		await call(
+			"PUT",
+			`/v1/projects/${projectId}/sites/${site.site_id}/zone-drafts/${draft.draft_id}`,
+			{ zones: draft.zones, change_note: "Their note" },
+			draft.etag
+		);
+		await main.getByLabel("Change note").fill("My note");
+		const dialog = page.getByRole("dialog", { name: "Someone else saved this draft" });
+		await expect(dialog).toContainText("The saved draft has the same zones as yours. Its change note differs.", {
+			timeout: 30_000
+		});
+		await dialog.getByRole("button", { name: "Discard my edits and load the saved draft" }).click();
+		await expect(dialog).toHaveCount(0);
+		await expect(main.getByLabel("Change note")).toHaveValue("Their note");
+	});
+
 	await test.step("a version published elsewhere meanwhile is refused, and the draft is kept", async () => {
 		const { site, v1 } = await freshSite(call);
 		const mine = await renamedDraft(call, site.site_id, v1, "Mine lawn");

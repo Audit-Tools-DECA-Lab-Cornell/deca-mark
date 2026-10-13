@@ -1,5 +1,6 @@
 import { type DraftZone, sameGeometry } from "@/lib/zones/geometry";
 
+import type { DraftSnapshot } from "./save-queue";
 import { zoneName } from "./state";
 
 /**
@@ -35,6 +36,19 @@ export function nameList(names: readonly string[], shown = 3): string {
 	if (rest > 0) return `${head.join(", ")} and ${rest} more`;
 	if (head.length === 1) return head[0]!;
 	return `${head.slice(0, -1).join(", ")} and ${head.at(-1)}`;
+}
+
+/** What differs between the edits in this tab and the saved draft, as the conflict dialog says it. */
+export function conflictLine(mine: DraftSnapshot, theirs: DraftSnapshot): string {
+	const zones = differingZones(mine.zones, theirs.zones);
+	const note = mine.changeNote.trim() !== theirs.changeNote.trim();
+	if (zones.length === 0)
+		return note
+			? "The saved draft has the same zones as yours. Its change note differs."
+			: "The saved draft has the same zones and change note as yours.";
+	return note
+		? `Zones that differ: ${nameList(zones)}. The change note differs too.`
+		: `Zones that differ: ${nameList(zones)}.`;
 }
 
 /** The edits in this tab as a GeoJSON file for QGIS: every zone with its identity, code and name. */

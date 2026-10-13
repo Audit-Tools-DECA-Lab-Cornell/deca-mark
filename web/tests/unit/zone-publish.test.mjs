@@ -84,13 +84,13 @@ test("a publication's answer never claims a replay is current when it is not", (
 		current_package_id: current,
 		replayed
 	});
-	assert.deepEqual(publishedLine(publication(false, uuid(102)), 1), {
+	assert.deepEqual(publishedLine(publication(false, uuid(102))), {
 		title: "v2 is published.",
 		body: "Observers use it after they download it in the DECA Mark app."
 	});
-	assert.equal(publishedLine(publication(true, uuid(102)), 2).body, "v2 is the current version.");
-	assert.deepEqual(publishedLine(publication(true, uuid(103)), 3), {
+	assert.equal(publishedLine(publication(true, uuid(102))).body, "v2 is the current version.");
+	assert.deepEqual(publishedLine(publication(true, uuid(103))), {
 		title: "This draft was already published as v2.",
-		body: "v3 is current now."
+		body: "A later version is current now."
 	});
 });

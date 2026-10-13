@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { Button, ButtonLink } from "@/components/contour/Button";
 import { Checkbox } from "@/components/contour/Checkbox";
@@ -30,6 +30,7 @@ import { CHANGE_NOTE_MAX, codePoints, type DraftZone } from "@/lib/zones/geometr
 import { issueText } from "@/lib/zones/issues";
 
 import { zonesChangedAction } from "../actions";
+import { ConflictChoice } from "../ConflictChoice";
 import { DiscardDraft } from "../DiscardDraft";
 import { checkIsCurrent, checkLine, checkProblems } from "../editor/checks";
 import { draftFileName, draftGeoJson } from "../editor/conflict";
@@ -108,6 +109,14 @@ export function PublishReview(props: PublishReviewProps) {
 	const confirmId = useId();
 	const [confirmed, setConfirmed] = useState(false);
 	const [attempt, setAttempt] = useState<Attempt>({ kind: "idle" });
+	// A publication answered after the person left this page never takes them back to the zones.
+	const mounted = useRef(true);
+	useEffect(() => {
+		mounted.current = true;
+		return () => {
+			mounted.current = false;
+		};
+	}, []);
 
 	const siteHref = projectHref(org, project, `sites/${siteCode}`);
 	const zonesHref = `${siteHref}/zones`;
@@ -196,9 +205,9 @@ export function PublishReview(props: PublishReviewProps) {
 			setAttempt({ kind: "replayed", publication });
 			return;
 		}
-		const line = publishedLine(publication, currentVersion);
+		const line = publishedLine(publication);
 		toast({ title: line.title, description: line.body, tone: "saved" });
-		guard.go(zonesHref);
+		if (mounted.current) guard.go(zonesHref);
 	}
 
 	/** After any 409 or a lost answer: what the draft says now decides what happened. */
@@ -374,7 +383,7 @@ export function PublishReview(props: PublishReviewProps) {
 		);
 
 	if (attempt.kind === "replayed") {
-		const line = publishedLine(attempt.publication, currentVersion);
+		const line = publishedLine(attempt.publication);
 		return (
 			<div className="flex flex-col gap-6">
 				{header}
@@ -448,6 +457,14 @@ export function PublishReview(props: PublishReviewProps) {
 					</span>
 				</Note>
 			)}
+			<ConflictChoice
+				pause={queue.pause}
+				local={queue.local}
+				time={iso => clock.time(iso)}
+				onKeepMine={saving.keepMine}
+				onTakeSaved={saving.takeSaved}
+				onSaveFile={saveFile}
+			/>
 			{attempt.kind === "conflict" && (
 				<Note tone="attention" live="assertive" title="Not published.">
 					<span className="flex flex-col items-start gap-3">
@@ -627,6 +644,8 @@ export function PublishReview(props: PublishReviewProps) {
 						<Textarea
 							id={noteId}
 							value={queue.local.changeNote}
+							// The note publishes as it was checked; an edit made meanwhile would be left behind.
+							readOnly={attempt.kind === "sending"}
 							maxLength={CHANGE_NOTE_MAX}
 							showCount
 							rows={3}

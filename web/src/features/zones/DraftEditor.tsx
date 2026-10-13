@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button, ButtonLink } from "@/components/contour/Button";
-import { Dialog, DialogClose } from "@/components/contour/Dialog";
 import { Note } from "@/components/contour/Note";
 import { PageHeader } from "@/components/contour/PageHeader";
 import { ScreenState } from "@/components/contour/ScreenState";
@@ -16,9 +15,10 @@ import type { ProjectedSite } from "@/lib/plan";
 import { clock as makeClock } from "@/lib/time";
 import { type DraftZone, type PolygonRings, structureIssues } from "@/lib/zones/geometry";
 
+import { ConflictChoice } from "./ConflictChoice";
 import { DiscardDraft } from "./DiscardDraft";
 import { checkIsCurrent, checkLine, checkProblems, checkUnavailable } from "./editor/checks";
-import { differingZones, draftFileName, draftGeoJson, nameList } from "./editor/conflict";
+import { draftFileName, draftGeoJson } from "./editor/conflict";
 import { blockingReason, editorProblems } from "./editor/problems";
 import { isDirty, type SavedDraft, saveStatus } from "./editor/save-queue";
 import { useDraftSaving } from "./editor/useDraftSaving";
@@ -65,8 +65,6 @@ export function DraftEditor(props: DraftEditorProps) {
 	const saving = useDraftSaving(address, draft);
 	const { queue } = saving;
 	const clock = useMemo(() => makeClock(timeZone), [timeZone]);
-	const [dismissed, setDismissed] = useState<string | null>(null);
-	const [replacing, setReplacing] = useState(false);
 	// Where "Save and leave" was going: it leaves once everything is saved, and waits while saving is stopped.
 	const [leaveFor, setLeaveFor] = useState<string | null>(null);
 
@@ -266,11 +264,6 @@ export function DraftEditor(props: DraftEditorProps) {
 			</div>
 		);
 
-	const conflict =
-		(pause?.kind === "conflict" || pause?.kind === "precondition") && pause.server ? pause.server : null;
-	const conflictKey = conflict ? `${conflict.revision}:${pause?.kind}` : null;
-	const differing = conflict ? differingZones(queue.local.zones, conflict.zones) : [];
-
 	return (
 		<div className="flex flex-col gap-6">
 			{header}
@@ -287,16 +280,14 @@ export function DraftEditor(props: DraftEditorProps) {
 					{`This draft is based on v${baseVersion}, so it cannot be published as it is. Start a new draft from v${currentVersion} to publish.`}
 				</Note>
 			)}
-			{conflict && dismissed === conflictKey && (
-				<Note tone="attention" title="Not saved.">
-					<span className="flex flex-col items-start gap-3">
-						<span>Someone else saved this draft. Choose which edits to keep.</span>
-						<Button variant="outline" size="sm" onClick={() => setDismissed(null)}>
-							Choose what to keep
-						</Button>
-					</span>
-				</Note>
-			)}
+			<ConflictChoice
+				pause={pause}
+				local={queue.local}
+				time={iso => clock.time(iso)}
+				onKeepMine={saving.keepMine}
+				onTakeSaved={saving.takeSaved}
+				onSaveFile={saveFile}
+			/>
 			{(pause?.kind === "no-access" || pause?.kind === "too-large") && (
 				<Note tone="attention" title="Not saved.">
 					<span className="flex flex-col items-start gap-3">
@@ -343,61 +334,6 @@ export function DraftEditor(props: DraftEditorProps) {
 					)
 				}}
 			/>
-
-			<Dialog
-				open={conflict !== null && dismissed !== conflictKey}
-				onOpenChange={open => {
-					if (!open) {
-						setDismissed(conflictKey);
-						setReplacing(false);
-					}
-				}}
-				title={replacing ? "Replace the saved draft?" : "Someone else saved this draft"}
-				description={
-					replacing
-						? `The draft saved at ${conflict ? clock.time(conflict.updatedAt) : ""} is replaced by the edits in this tab. Its own changes are lost.`
-						: `${conflict?.updatedBy ?? "Another manager"} saved it at ${conflict ? clock.time(conflict.updatedAt) : ""}. Your edits are still here and are not saved.`
-				}
-				footer={
-					replacing ? (
-						<>
-							<Button variant="outline" onClick={() => setReplacing(false)}>
-								Back
-							</Button>
-							<Button
-								variant="danger-solid"
-								onClick={() => {
-									setReplacing(false);
-									saving.keepMine();
-								}}>
-								Replace the saved draft
-							</Button>
-						</>
-					) : (
-						<>
-							<DialogClose asChild>
-								<Button variant="outline">Decide later</Button>
-							</DialogClose>
-							<Button variant="outline" icon="download" onClick={saveFile}>
-								Save my edits as a file
-							</Button>
-							<Button variant="outline" onClick={saving.takeSaved}>
-								Discard my edits and load the saved draft
-							</Button>
-							<Button variant="ink" onClick={() => setReplacing(true)}>
-								Replace the saved draft with my edits
-							</Button>
-						</>
-					)
-				}>
-				{!replacing && (
-					<p className="type-body text-ink-2">
-						{differing.length === 0
-							? "The saved draft has the same zones as yours."
-							: `Zones that differ: ${nameList(differing)}.`}
-					</p>
-				)}
-			</Dialog>
 
 			{leaveDialog}
 		</div>
