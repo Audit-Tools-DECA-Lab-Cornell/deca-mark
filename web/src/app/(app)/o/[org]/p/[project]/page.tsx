@@ -72,10 +72,15 @@ export default async function OverviewPage({
 	const nowIso = new Date().toISOString();
 	// Today and the last 7 days in the project's time zone, counted by the server for every record.
 	const todayKey = projectClock.dayKey(nowIso);
+	// A record dated after today (a device clock set ahead) is not counted as today's.
+	const tomorrow = projectClock.dayStart(addDays(todayKey, 1));
 	const recentRead = await settle(
 		Promise.all([
-			summarizeObservations(ref.id, { observedFrom: projectClock.dayStart(todayKey) }),
-			summarizeObservations(ref.id, { observedFrom: projectClock.dayStart(addDays(todayKey, -6)) })
+			summarizeObservations(ref.id, { observedFrom: projectClock.dayStart(todayKey), observedBefore: tomorrow }),
+			summarizeObservations(ref.id, {
+				observedFrom: projectClock.dayStart(addDays(todayKey, -6)),
+				observedBefore: tomorrow
+			})
 		]).then(([today, week]) => ({ today: today.total_matching, last7Days: week.total_matching }))
 	);
 

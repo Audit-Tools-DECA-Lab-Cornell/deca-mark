@@ -7,6 +7,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { api, currentPackageVersion, currentZone, newestPackageVersion, siteByCode } from "./support/api";
 import { authFile } from "./support/auth";
 import { manifest, projectPath, runStamp, SEED } from "./support/manifest";
+import { chooseFiles } from "./support/ui";
 
 /**
  * Plan WEB-42: every upload says which zone each zone of the file is. A later version keeps a zone's
@@ -51,9 +52,11 @@ const file = (name: string, value: unknown) => ({
 
 async function openUpload(page: Page, zones: unknown) {
 	await page.goto(projectPath(`sites/${SITE}/packages?step=upload`));
-	await page
-		.getByLabel("Choose files from the QGIS export", { exact: true })
-		.setInputFiles([file("ground.geojson", ground), file("zones.geojson", zones)]);
+	await chooseFiles(
+		page.getByLabel("Choose files from the QGIS export", { exact: true }),
+		[file("ground.geojson", ground), file("zones.geojson", zones)],
+		page.getByLabel("Remove the Ground file", { exact: true })
+	);
 }
 
 async function upload(page: Page, note: string, next: number) {

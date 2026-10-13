@@ -74,6 +74,21 @@ export async function chooseFilter(scope: Locator | Page, field: RegExp, value: 
 	await scope.getByRole("button", { name: value }).first().click();
 }
 
+/**
+ * Chooses files in a file input, again until `chosen` shows them: a choice made before the page has
+ * hydrated reaches no handler and is lost.
+ */
+export async function chooseFiles(
+	input: Locator,
+	files: Parameters<Locator["setInputFiles"]>[0],
+	chosen: Locator
+): Promise<void> {
+	await expect(async () => {
+		await input.setInputFiles(files);
+		await expect(chosen).toBeVisible({ timeout: 2_000 });
+	}).toPass({ timeout: 30_000 });
+}
+
 /** Clicks `trigger` and returns the text of the file the browser downloads, with its suggested name. */
 export async function downloadText(page: Page, trigger: () => Promise<void>): Promise<{ name: string; text: string }> {
 	const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30_000 }), trigger()]);

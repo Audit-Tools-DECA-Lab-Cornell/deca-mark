@@ -427,16 +427,20 @@ export function UploadStep({
 								? { project_file: await readProjectFile(projectSlot.file) }
 								: {})
 						};
-			setUnanswered(null);
+			// The attempt (and the zones its mapping was made against) is kept until DECA Mark answers it: a
+			// resend that is also lost keeps the same one, so the next resend still replays it.
 			let prepared: Publication;
 			try {
 				prepared = await preparePackage(projectId, submission);
 			} catch (raised) {
 				// No answer, or a failure on DECA Mark's side: it may have arrived, so the request is kept to resend.
-				if (!(raised instanceof LayerReadError) && !wasRefused(apiRequestError(raised)))
-					setUnanswered({ submission, inputs, current });
+				const unknown = !(raised instanceof LayerReadError) && !wasRefused(apiRequestError(raised));
+				setUnanswered(
+					unknown ? (resending && unanswered ? unanswered : { submission, inputs, current }) : null
+				);
 				throw raised;
 			}
+			setUnanswered(null);
 			setResult(prepared);
 			setChangeNote("");
 			// The files are uploaded: clear them so one press cannot make the same version twice.
