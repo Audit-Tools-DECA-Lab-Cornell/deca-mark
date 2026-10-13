@@ -1,6 +1,8 @@
 import "server-only";
 
 import type { OrgRole, ProjectRole } from "@/lib/workspace/types";
+import type { DraftZone } from "@/lib/zones/geometry";
+import { type ZoneDraft, zoneDraftSchema } from "@/lib/zones/schemas";
 
 import { call, callEmpty } from "./client";
 import { ApiError } from "./errors";
@@ -226,4 +228,48 @@ export function previewInvitation(credential: InvitationCredential): Promise<Inv
 /** Joins with the invitation. 410 when it expired; an existing member cannot redeem it again. */
 export function redeemInvitation(credential: InvitationCredential): Promise<InvitationRedeemed> {
 	return call(api => api.POST("/v1/invitations/redeem", { body: credential }));
+}
+
+/* ── Zone drafts ──────────────────────────────────────────────────────────── */
+
+/**
+ * Manager: a draft of a site's zones, copied from `base_package_id` (the current version). The same
+ * `request_id` again returns the draft the first request made, so a double click or a retry makes one.
+ */
+export async function createZoneDraft(
+	projectId: string,
+	siteId: string,
+	body: { request_id: string; base_package_id: string }
+): Promise<ZoneDraft> {
+	const data = await call<unknown>(api =>
+		api.POST("/v1/projects/{project_id}/sites/{site_id}/zone-drafts", {
+			params: { path: { project_id: projectId, site_id: siteId } },
+			body
+		})
+	);
+	const parsed = zoneDraftSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
+}
+
+/** Manager: replaces a draft's zones and note, if it is still at `etag`. */
+export async function replaceZoneDraftZones(
+	projectId: string,
+	siteId: string,
+	draftId: string,
+	etag: string,
+	body: { zones: readonly DraftZone[]; change_note: string }
+): Promise<ZoneDraft> {
+	const data = await call<unknown>(api =>
+		api.PUT("/v1/projects/{project_id}/sites/{site_id}/zone-drafts/{draft_id}", {
+			params: {
+				path: { project_id: projectId, site_id: siteId, draft_id: draftId },
+				header: { "if-match": etag }
+			},
+			body: { zones: body.zones as never, change_note: body.change_note }
+		})
+	);
+	const parsed = zoneDraftSchema.safeParse(data);
+	if (!parsed.success) throw new ApiError("unknown", "retry");
+	return parsed.data;
 }

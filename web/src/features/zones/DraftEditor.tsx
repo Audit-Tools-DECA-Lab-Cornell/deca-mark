@@ -132,7 +132,8 @@ export function DraftEditor(props: DraftEditorProps) {
 			breadcrumbs={[
 				{ label: "Sites", href: projectHref(org, project, "sites") },
 				{ label: siteName, href: siteHref },
-				{ label: "Zone draft" }
+				{ label: "Zones", href: `${siteHref}/zones` },
+				{ label: "Draft" }
 			]}
 			title={`Edit zones · ${siteName}`}
 			lead={
@@ -182,8 +183,8 @@ export function DraftEditor(props: DraftEditorProps) {
 					body="Nothing more is saved to it. Your edits in this tab can still be kept as a file."
 					actions={
 						<>
-							<ButtonLink variant="ink" href={siteHref}>
-								Open the site
+							<ButtonLink variant="ink" href={`${siteHref}/zones`}>
+								Open the zones
 							</ButtonLink>
 							<Button variant="outline" icon="download" onClick={saveFile}>
 								Save my edits as a file

@@ -177,6 +177,15 @@ Observers never reach these pages: the project layout already sends them to coll
 - **Versions:** v2 Active, v1 Archived ("Replaced by v2"), with change note, date and author, and a link to `?version=1` (read-only plan and zone table). Mark "current" from `current_package_id`, never newest-ready (`history.ts:31-34` today).
 - **Restore an earlier version:** "Restore v1 boundaries in a new draft" on every archived version. A draft must be based on the current package to publish (contract.md:72; `services/zone_publication.py:122-139` refuses a stale base with 409). So the action creates a draft from `current_package_id`, then PUTs the zones from `GET /zones?package_id=<v1>` (same `zone_id`, code, label and geometry; zones added after v1 show as removed). It opens the review page, which diffs against current and prefills the change note "Restores v1 boundaries".
 
+Amended 2026-10-13 (WEB-37), as built:
+- **Header line:** "Map v2 · published Oct 11, 2026 · drawn on the web". The publisher is not named: a package carries only the publisher's identity, and the member list that would name them is for managers only.
+- **Actions:** a manager with an open draft on the current version gets ink "Open your draft" beside outline "Start another draft"; otherwise ink "Start a draft from v2".
+- **Zone table:** name, code, and parts and holes. Areas come with the review page (WEB-38), from the check of a revision.
+- **Open drafts:** each row has Open and "Save as file". Discard comes with WEB-38.
+- **Restoring an earlier version** opens the new draft in the editor until the review page exists (WEB-38 moves it there). The draft's change note starts as "Restores v1 boundaries". A replayed start is not restored a second time.
+- **`?version=` with a version the site does not have** shows the current version with a note.
+- **Who sees what:** viewers see the versions and none of the draft parts, and nothing about drafts is read for them. The site page's Zones island links "Edit zones" (managers, where editing is available) or "Zone versions". The "Editing zones on the web" note stays only where editing is not available.
+
 ### 5.2 Starting a draft
 
 - A Server Action calls `POST zone-drafts {request_id, base_package_id}`. The request ID is generated when the dialog opens, so a double click or a retry replays. On success, navigate to the editor.

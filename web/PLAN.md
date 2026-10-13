@@ -586,12 +586,29 @@ Verify: `pnpm --dir web test:unit` (package-history, site-view), `pnpm web:check
 Verified: Sites, package histories and package details are parsed at runtime (`src/lib/api/sites.ts`); every API call names a site by `site_id` and web addresses keep codes; the current package comes from `current_package_id` on Sites, the site page, the history (Active only for that package; a replayed upload says it is not current), Overview, QGIS and the upload. Unit: `site-view`, `package-history`, `api-shapes`, `forms-model`, `qgis`, `overview`; `pnpm --dir web check`; local stack `sites.spec`, `packages.spec` at desktop-1440 and phone-390.
 
 ### WEB-37: Build the Zones page, draft start and version history
-Status: todo · Phase 3 · Size L · Depends: WEB-35, WEB-36 · Blocks: WEB-38
+Status: done (2026-10-13) · Phase 3 · Size L · Depends: WEB-35, WEB-36 · Blocks: WEB-38
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-13, section 4, 5.1 and 5.2; `next.config.ts` redirects; `e2e/removed-routes.spec.ts`; `e2e/support/routes.ts`.
 Do: Add the Zones page (current version, drafts, versions, read-only `?version=`, restore an earlier version through a new draft from current), Start draft, the site page entry replacing the NotAvailable note where editing is available, and removal of the root `zones` redirect with its e2e route change.
 Done when: A viewer sees the history; a manager starts, reopens and finds other managers' drafts; observers and viewers opening editor URLs see the no-access state; unsupported sites show their specific reason.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-access.spec.ts` and the honesty scan with the new routes.
+Verified:
+- **The Zones page** `…/sites/[site]/zones` (`src/features/zones/{ZonesScreen.tsx,model.ts}`) shows:
+  - the shown version's plan, its zones (name, code, parts and holes) and its facts;
+  - the open drafts (managers only), each with Open and "Save as file";
+  - every version, with Active or Archived, "Replaced by v2", how it was made, its change note and a read-only `?version=1` view.
+- **Starting a draft:** a Server Action with a request ID chosen when the dialog opens, so retries make one draft. The dialog names other managers' drafts on the same version ("JL has a draft based on v2… only the first one published becomes v3").
+- **Restoring v1:** starts a draft from the current version with v1's zones and the note "Restores v1 boundaries".
+- **The site page:** the Zones island links to it ("Edit zones" or "Zone versions"). The root `zones` redirect and its removed-route entry are gone, and the honesty scan covers the Zones page as manager and viewer, plus the no-package site.
+- **Checks:** unit `zones-page` (5 tests; `test:unit` 347 of 347) and `pnpm --dir web check`.
+- **Local stack at desktop-1440 and phone-390** (`zones-access.spec.ts`):
+  - A manager finds their own and the other manager's drafts, opens their own, and starts another with the other-drafts note.
+  - `?version=1` shows v1's names.
+  - Restoring v1 makes a draft with v1's zones.
+  - A viewer sees the versions and no drafts or start buttons.
+  - The no-package site says "No map package yet".
+  - An observer opening the Zones page or a draft address never reaches either.
+  - Also `zones-draft`, `sites`, `removed-routes` and the honesty scan of every route (118 passed).
 
 ### WEB-38: Build zone publication review and discard
 Status: todo · Phase 3 · Size L · Depends: WEB-35, WEB-37 · Blocks: WEB-28

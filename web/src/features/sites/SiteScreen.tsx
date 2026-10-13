@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { ButtonLink } from "@/components/contour/Button";
 import { type Fact, FactsList } from "@/components/contour/FactsList";
 import { Icon } from "@/components/contour/Icon";
@@ -14,6 +16,7 @@ import { LoadFailure } from "@/components/shell/LoadFailure";
 import { NotAvailable } from "@/components/shell/NotAvailable";
 import { DownloadPackageButton } from "@/features/packages/DownloadPackageButton";
 import { projectHref } from "@/features/shell/navigation";
+import type { ZoneEntry } from "@/features/zones/model";
 import { plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
 import type { Failure } from "@/lib/workspace/types";
@@ -23,8 +26,9 @@ import type { SiteView, ZoneRow } from "./view";
 
 /**
  * A site: its plan from the current map package, its zones with how many observations each holds, the
- * current package with Download and Upload a new version, and the details a manager can edit. Zones come
- * from the zones layer in QGIS, so the page offers no way to draw them here.
+ * current package with Download and Upload a new version, and the details a manager can edit. The Zones
+ * island leads to the Zones page: "Edit zones" for managers where the web can edit them, "Zone versions"
+ * otherwise.
  */
 export function SiteScreen({
 	org,
@@ -35,7 +39,8 @@ export function SiteScreen({
 	plan,
 	planFailure,
 	zoneRows,
-	countsFailure
+	countsFailure,
+	zoneEntry
 }: {
 	org: string;
 	project: string;
@@ -49,6 +54,7 @@ export function SiteScreen({
 	zoneRows: ZoneRow[];
 	/** Why the observations could not be counted, when they could not: the zones show without counts. */
 	countsFailure: Failure | null;
+	zoneEntry: ZoneEntry;
 }) {
 	const sitesHref = projectHref(org, project, "sites");
 	const base = `${sitesHref}/${site.code}`;
@@ -78,6 +84,13 @@ export function SiteScreen({
 
 				<div className="flex min-w-0 flex-col gap-6">
 					<ZonesIsland
+						entryLink={
+							zoneEntry === "no-package" ? null : (
+								<TextLink href={`${base}/zones`} tone="ink">
+									{canManage && zoneEntry === "editable" ? "Edit zones" : "Zone versions"}
+								</TextLink>
+							)
+						}
 						hasPackage={current !== null}
 						rows={zoneRows}
 						failure={countsFailure}
@@ -100,11 +113,12 @@ export function SiteScreen({
 			</div>
 
 			<div className="grid gap-4 lg:grid-cols-3">
-				<NotAvailable
-					title="Editing zones on the web"
-					reason="Zones come from the zones layer in QGIS."
-					instead="To change one, edit it in QGIS and upload a new package."
-				/>
+				{zoneEntry === "unavailable" && (
+					<NotAvailable
+						title="Editing zones on the web for this site"
+						instead="Edit the zones layer in QGIS and upload a new package."
+					/>
+				)}
 				<NotAvailable
 					title="Device readiness"
 					reason="DECA Mark does not record which phones have downloaded this map."
@@ -135,11 +149,14 @@ function MapSlot({ site, plan, failure }: { site: SiteView; plan: ProjectedSite 
 }
 
 function ZonesIsland({
+	entryLink,
 	hasPackage,
 	rows,
 	failure,
 	zoneHref
 }: {
+	/** The way to the Zones page, when the site has zones to show. */
+	entryLink: ReactNode;
 	hasPackage: boolean;
 	rows: ZoneRow[];
 	failure: Failure | null;
@@ -150,6 +167,7 @@ function ZonesIsland({
 			flush
 			title="Zones"
 			meta={hasPackage ? plural(rows.length, "zone") : undefined}
+			actions={entryLink}
 			footnote="Counts cover every map version of this site.">
 			{rows.length === 0 ? (
 				<ScreenState

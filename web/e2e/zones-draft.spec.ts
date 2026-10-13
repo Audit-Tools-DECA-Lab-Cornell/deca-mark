@@ -1,10 +1,18 @@
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
 
 import { expect, type Page, test } from "@playwright/test";
 
-import { authFile, PASSWORD } from "./support/auth";
-import { loopbackOrigin, projectPath, SEED } from "./support/manifest";
+import { authFile } from "./support/auth";
+import { projectPath, SEED } from "./support/manifest";
+import {
+	REVIEW_SITE,
+	REVIEW_SITE_NAME,
+	signInToZones,
+	ZONE_MANIFEST,
+	zoneApi,
+	type ZoneDraftRead,
+	zoneFixture
+} from "./support/zones";
 
 /**
  * Plan WEB-35: a zone draft saves itself to DECA Mark a moment after each change, with a new revision
@@ -14,65 +22,16 @@ import { loopbackOrigin, projectPath, SEED } from "./support/manifest";
  * never touched.
  */
 
-type ZoneManifest = {
-	apiUrl: string;
-	supabaseUrl: string;
-	publishableKey: string;
-	projectId: string;
-	siteId: string;
-	path: string;
-	accounts: Record<string, { email: string }>;
-};
-
-const MANIFEST = process.env.E2E_ZONE_MANIFEST;
-const SITE = "review-site";
-const SITE_NAME = "Synthetic review-site";
+const MANIFEST = ZONE_MANIFEST;
+const SITE = REVIEW_SITE;
+const SITE_NAME = REVIEW_SITE_NAME;
 const LAWN = "Synthetic smaller lawn v2";
+const fixture = zoneFixture;
 
-function fixture(): ZoneManifest {
-	const read = JSON.parse(readFileSync(MANIFEST!, "utf8")) as ZoneManifest;
-	loopbackOrigin(read.apiUrl, "The zone fixture's API address");
-	loopbackOrigin(read.supabaseUrl, "The zone fixture's Auth address");
-	return read;
-}
+type Draft = ZoneDraftRead;
 
-type Draft = { draft_id: string; revision: number; etag: string; zones: { zone_label: string }[] };
-
-/** The zone manager's API calls, to make the run's draft, change it elsewhere and discard it. */
-async function managerApi() {
-	const { supabaseUrl, publishableKey, apiUrl, accounts } = fixture();
-	const signedIn = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-		method: "POST",
-		headers: { apikey: publishableKey, "Content-Type": "application/json" },
-		body: JSON.stringify({ email: accounts.manager!.email, password: PASSWORD }),
-		signal: AbortSignal.timeout(20_000)
-	});
-	if (!signedIn.ok) throw new Error(`Zone manager sign-in: HTTP ${signedIn.status}`);
-	const { access_token: token } = (await signedIn.json()) as { access_token: string };
-	return async function call<T>(method: string, path: string, body?: unknown, etag?: string): Promise<T> {
-		const response = await fetch(`${apiUrl}${path}`, {
-			method,
-			redirect: "error",
-			signal: AbortSignal.timeout(20_000),
-			headers: {
-				Authorization: `Bearer ${token}`,
-				...(etag ? { "If-Match": etag } : {}),
-				...(body === undefined ? {} : { "Content-Type": "application/json" })
-			},
-			...(body === undefined ? {} : { body: JSON.stringify(body) })
-		});
-		if (!response.ok) throw new Error(`${method} ${path}: HTTP ${response.status}`);
-		return (response.status === 204 ? undefined : await response.json()) as T;
-	};
-}
-
-async function signInAsZoneManager(page: Page) {
-	await page.goto("/sign-in");
-	await page.getByLabel("Email address").fill(fixture().accounts.manager!.email);
-	await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
-	await page.getByRole("button", { name: "Sign in", exact: true }).click();
-	await expect(page).not.toHaveURL(/\/sign-in(\?|$)/, { timeout: 30_000 });
-}
+const managerApi = () => zoneApi("manager");
+const signInAsZoneManager = (page: Page) => signInToZones(page, "manager");
 
 test.describe("the zone draft editor", () => {
 	test.skip(!MANIFEST, "Needs the zone review fixture: scripts/e2e-local.sh --zones");

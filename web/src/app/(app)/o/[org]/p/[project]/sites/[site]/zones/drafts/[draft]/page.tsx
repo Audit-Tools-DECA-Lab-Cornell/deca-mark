@@ -80,7 +80,8 @@ export default async function ZoneDraftPage({ params }: { params: Promise<Params
 					breadcrumbs={[
 						{ label: "Sites", href: projectHref(org, code, "sites") },
 						{ label: site.data.name, href: siteHref },
-						{ label: "Zone draft" }
+						{ label: "Zones", href: `${siteHref}/zones` },
+						{ label: "Draft" }
 					]}
 					title={`Edit zones · ${site.data.name}`}
 				/>
