@@ -48,6 +48,26 @@ const definition = {
   }],
 };
 
+export function workspacePackageRequest(siteId, formVersion, layers) {
+  return {
+    site_id: siteId, form_version: formVersion, inventory_form_version: formVersion, layers,
+    request_id: "70000000-0000-4000-8000-000000000010", expected_current_package_id: null,
+    zone_identity_map: [{ source_feature_id: "A", zone_id: "70000000-0000-4000-8000-000000000011", zone_code: "A" }],
+    change_note: "Synthetic browser acceptance map",
+  };
+}
+
+export function workspaceObservation(index, siteId, packageId, zone) {
+  const round = index < 4 ? "standard" : index < 6 ? "reliability" : "inventory";
+  return {
+    site_id: siteId, package_id: packageId, zone_id: zone.zone_id, form_version: definition.version,
+    observer: "OB", observed_at: `2026-10-07T14:${String(index).padStart(2, "0")}:00Z`,
+    round_type: round, placement: round === "inventory" ? "zone" : "hand",
+    ...(round === "inventory" ? {} : { first_round: index % 2 === 0, coordinates: zone.display_anchor }),
+    answers: { note: `Synthetic record ${index + 1} — 🌿` },
+  };
+}
+
 export async function main(args = process.argv.slice(2)) {
   const { values } = parseArgs({ args, options: {
     "api-url": { type: "string", default: "http://127.0.0.1:8001" },
@@ -138,32 +158,21 @@ export async function main(args = process.argv.slice(2)) {
   }
   const layers = Object.fromEntries(["ground", "zones"].map((layer) => [layer,
     JSON.parse(readFileSync(join(root, "qgis/fall-creek/upload-sample", `${layer}.geojson`), "utf8"))]));
-  const submission = { site_code: "fall-creek", form_version: version.code, layers };
-  let packages = await api(`${base}/packages?site=fall-creek`);
-  if (!packages.some((item) => item.state === "ready")) {
-    const prepared = await api(`${base}/packages`, "POST", submission);
-    if (prepared.state !== "ready") throw new Error("The fixture package is unexpectedly blocked.");
-  }
-  packages = await api(`${base}/packages?site=fall-creek`);
-  if (!packages.some((item) => item.state === "blocked")) {
-    const qgs = '<qgis><projectlayers><maplayer type="raster"><layername>Unlicensed</layername>'
-      + '<provider>wms</provider><datasource>type=xyz&amp;url=https://tiles.example.invalid/xyz</datasource>'
-      + '</maplayer></projectlayers></qgis>';
-    const blocked = await api(`${base}/packages`, "POST", { ...submission,
-      project_file: { file_name: "blocked.qgs", content: Buffer.from(qgs).toString("base64") } });
-    if (blocked.state !== "blocked") throw new Error("The blocked fixture package was unexpectedly accepted.");
-  }
+  // The QGIS sample's display label becomes the current import contract's required name.
+  layers.zones.features = layers.zones.features.map(feature => ({ ...feature,
+    properties: { ...feature.properties, name: feature.properties.label },
+  }));
+  const site = (await api(`${base}/sites`)).find(item => item.code === "fall-creek");
+  const prepared = await api(`${base}/packages`, "POST", workspacePackageRequest(site.site_id, version.code, layers));
+  if (prepared.package.state !== "ready") throw new Error("The fixture package is unexpectedly blocked.");
+  // Invalid imports are rejected by the current API; no artificial blocked package is stored.
+  const history = await api(`${base}/sites/${site.site_id}/zones?package_id=${prepared.package.package_id}`);
+  const zone = history.zones.find(item => item.zone_code === "A");
+  if (!zone) throw new Error("The fixture package has no zone A.");
   const observations = [];
   for (let index = 0; index < 8; index++) {
     const id = `70000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`;
-    const round = index < 4 ? "standard" : index < 6 ? "reliability" : "inventory";
-    const payload = {
-      site_id: "fall-creek", form_version: version.code, coordinates: [-76.4857, 42.4483],
-      observer: "OB", observed_at: `2026-10-07T14:${String(index).padStart(2, "0")}:00Z`,
-      zone: "A", round_type: round, placement: round === "inventory" ? "zone" : "hand",
-      ...(round === "inventory" ? {} : { first_round: index % 2 === 0 }),
-      note: `Synthetic record ${index + 1} — 🌿`,
-    };
+    const payload = workspaceObservation(index, site.site_id, prepared.package.package_id, zone);
     await accounts.observer.api(`${base}/observations/${id}`, "PUT", payload);
     observations.push(id);
   }

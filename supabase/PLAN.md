@@ -669,10 +669,10 @@ Do: add one forward migration, `rename_to_decamark`. Never edit an applied migra
 Done when: `pnpm db:test` passes on a fresh local stack and on one upgraded from the old names, and `grep -rni fieldmaps supabase database` finds only applied migrations and history. After the authorized apply, `database/hosted/verify.sql` passes on staging.
 
 ### DB-18: Seed and enable a local zone acceptance stack
-Status: todo · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-35, WEB-42
+Status: doing (2026-10-12: real local Auth/API seed passed twice with identical manifests and 520 immutable records; unchanged browser acceptance awaits web contract consumers; [evidence](../docs/reviews/zone-boundaries-2026-10-12/db18.md)) · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-35, WEB-42
 Owner: Database agent; the API owner approves the local configuration.
 Read first: [web UI plan](../web/ZONE-BOUNDARIES-UI.md) section 10; [mobile UI plan](../mobile/ZONE-BOUNDARIES-UI.md) section 9; `scripts/e2e-local.sh`; `database/seed-web-workspace.mjs`; `backend/config.auth-local.json`.
-Do: Add an opt-in `--zones` option to `scripts/e2e-local.sh` that runs `database/seed-zone-review.mjs` (publication has no switch after BE-22). The seed uses only the real local API to create a separate project with a site at v7 and v8, a site with no package, two managers' open drafts, and more than 500 observations across v7 and v8, including inventory. Leave the existing seed and specs unchanged.
+Do: Add an opt-in `--zones` option to `scripts/e2e-local.sh` that runs `database/seed-zone-review.mjs` (publication has no switch after BE-22). The seed uses only the real local API to create a separate project with a site at v1 and v2, a site with no package, two managers' open drafts, and more than 500 observations across v1 and v2, including inventory. Version numbers follow the updated web UI plan section 10 and the pre-launch policy. Preserve existing specs. The user approved adapting the existing seed to BE-22's current contract on 2026-10-12; no compatibility API is introduced.
 Done when: `sh scripts/e2e-local.sh --zones` seeds idempotently against the reset local stack; the existing specs still pass without the option.
 Verify: Run the seed twice against the local stack; run the existing e2e suite without `--zones`. Never target hosted services.
 
