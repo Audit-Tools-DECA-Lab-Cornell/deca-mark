@@ -15,12 +15,16 @@ from sqlalchemy.pool import NullPool
 
 from fieldmaps_api.config import Settings
 from fieldmaps_api.database import database_connection
+from fieldmaps_api.domain.zone_package_schemas import PreparedZonePackage
 from fieldmaps_api.form_schemas import FormVersionDetail
-from fieldmaps_api.repositories import forms, sites
+from fieldmaps_api.repositories import forms
+from fieldmaps_api.services import zone_publication
+from fieldmaps_api.services.zone_publication import PublicationRequest
+from fieldmaps_api.zone_response_schemas import Publication
 from tests.local_database import admin_sql, database_url, password_file
+from tests.package_fixtures import submission
 from tests.signing import Signer
 from tests.tenant_fixtures import Tenant, cleanup_tenant, create_tenant, sign_in
-from tests.test_site_packages import submission
 from tests.test_workspace_api import inventory, start_inventory
 
 pytestmark = pytest.mark.integration
@@ -115,29 +119,42 @@ def test_simultaneous_version_creation_returns_a_conflict_without_partial_rows(
 ) -> None:
     base = f"/v1/projects/{tenant.project}"
     barrier = Barrier(2, timeout=10)
-    original_package = sites.next_package_version
     original_form = forms.next_version
+    original_finalize = zone_publication.finalize
 
-    async def package_number(session: AsyncSession, project: UUID, site: UUID) -> int:
-        version = await original_package(session, project, site)
+    async def package_finalize(
+        session: AsyncSession,
+        request: PublicationRequest,
+        prepared: PreparedZonePackage | None,
+    ) -> tuple[Publication, bool]:
         await anyio.to_thread.run_sync(barrier.wait)
-        return version
+        return await original_finalize(session, request, prepared)
 
     async def form_number(session: AsyncSession, form: UUID) -> int:
         version = await original_form(session, form)
         await anyio.to_thread.run_sync(barrier.wait)
         return version
 
+    payloads: list[dict[str, object]]
     if resource == "packages":
-        url, payload = f"{base}/packages", submission()
+        url = f"{base}/packages"
+        payloads = [
+            submission(site_id=str(tenant.site)),
+            submission(site_id=str(tenant.site)),
+        ]
     else:
         start_inventory(api_client, base)
-        url, payload = f"{base}/forms/inventory/versions", {}
+        url = f"{base}/forms/inventory/versions"
+        payloads = [{}, {}]
     with monkeypatch.context() as patch:
-        patch.setattr(sites, "next_package_version", package_number)
-        patch.setattr(forms, "next_version", form_number)
+        if resource == "packages":
+            patch.setattr(zone_publication, "finalize", package_finalize)
+        else:
+            patch.setattr(forms, "next_version", form_number)
         with ThreadPoolExecutor(max_workers=2) as pool:
-            futures = [pool.submit(api_client.post, url, json=payload) for _ in range(2)]
+            futures = [
+                pool.submit(api_client.post, url, json=payload) for payload in payloads
+            ]
             responses = [future.result(timeout=20) for future in futures]
     assert sorted(response.status_code for response in responses) == [201, 409]
     if resource == "packages":
@@ -159,4 +176,6 @@ def test_simultaneous_version_creation_returns_a_conflict_without_partial_rows(
             )
             == "1"
         )
-    assert api_client.post(url, json=payload).status_code == 201
+    winner = next(index for index, response in enumerate(responses) if response.status_code == 201)
+    expected_retry_status = 200 if resource == "packages" else 201
+    assert api_client.post(url, json=payloads[winner]).status_code == expected_retry_status

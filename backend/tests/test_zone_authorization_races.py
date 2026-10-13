@@ -23,7 +23,7 @@ from fieldmaps_api.repositories import zones as zone_db
 from fieldmaps_api.routers import identity as identity_router
 from fieldmaps_api.services import zone_archives
 from tests.local_database import admin_sql, database_url
-from tests.test_site_packages import submission
+from tests.package_fixtures import submission
 from tests.test_zone_api_live import LiveApi
 from tests.zone_api_fixtures import document
 
@@ -132,9 +132,13 @@ def setup_race(api: LiveApi, change: Change, monkeypatch: pytest.MonkeyPatch) ->
     project = f"/v1/projects/{api.tenant.project}"
     drafts = f"{project}/sites/{api.tenant.site}/zone-drafts"
     with api.client("admin" if change == "inherited_admin" else "manager") as client:
-        package = client.post(f"{project}/packages", json=submission())
+        package = client.post(
+            f"{project}/packages", json=submission(site_id=str(api.tenant.site))
+        )
         assert package.status_code == 201, package.text
-        base = str(document(package.content)["package_id"])
+        published = document(package.content)["package"]
+        assert isinstance(published, dict)
+        base = str(published["package_id"])
         created = client.post(drafts, json={"request_id": str(uuid4()), "base_package_id": base})
         assert created.status_code == 201, created.text
     return Race(
@@ -253,7 +257,7 @@ def test_publication_wins_and_authorization_change_waits_for_commit(
             "SELECT count(*) FROM fieldmaps.zone_publications WHERE project_id=:'project';",
             *live_api.tenant.variables(),
         )
-        == "1"
+        == "2"
     )
     after = race.snapshot()
     replay = race.publish()
@@ -314,7 +318,7 @@ def test_demotion_waits_while_finalizer_is_blocked_on_the_site(
             "SELECT count(*) FROM fieldmaps.zone_publications WHERE project_id=:'project';",
             *live_api.tenant.variables(),
         )
-        == "1"
+        == "2"
     )
 
 

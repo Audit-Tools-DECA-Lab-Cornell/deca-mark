@@ -8,6 +8,16 @@ This is a development reader for the practice project. Real research projects ne
 
 The website can read a QGIS project with uploaded GeoPackage, shapefile or GeoJSON sources before saving the site's map package. GeoJSON exports are optional replacements. A `.qgz` normally references external datasets, so include those files or zip the project folder when they are not embedded. Follow the [project import guide](../docs/QGIS-Project-Import.md) for the website steps, supported formats and verification limits.
 
+## Recorded zone boundaries and inventories
+
+Use the [recorded-boundary analysis guide](zone-boundaries/README.md) for versioned zone
+snapshots, point events and whole-zone inventories. It consumes the API's complete
+authorized export and preserves old package/zone bindings in separate QGIS layers.
+Inventory compatibility anchors never enter its point-event layer. Legacy boundaries
+remain explicitly unknown. Companion SQL views retain request-scoped API permissions;
+the training GIS login below receives no additional grants. Local synthetic acceptance
+does not establish hosted migration, device or live-reader readiness.
+
 ## Connection
 
 | Setting            | Value                                         |

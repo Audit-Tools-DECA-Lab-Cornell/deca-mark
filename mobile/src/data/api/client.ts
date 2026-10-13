@@ -6,6 +6,8 @@ import {
   formSummariesSchema,
   formVersionSchema,
   type HostedSite,
+  type PackageDetail,
+  packageDetailSchema,
   sitesSchema,
 } from "../../packages/hosted/schemas";
 import { ApiError, readApiError } from "./errors";
@@ -88,6 +90,18 @@ export function createApiClient(apiUrl: string, getToken: () => Promise<string |
     /** `GET /v1/projects/{project}/sites`: the project's sites and each one's current package. */
     sites(projectId: string, signal: AbortSignal): Promise<HostedSite[]> {
       return request("get", `v1/projects/${projectId}/sites`, sitesSchema, signal);
+    },
+    packageDetail(
+      projectId: string,
+      packageId: string,
+      signal: AbortSignal,
+    ): Promise<PackageDetail> {
+      return request(
+        "get",
+        `v1/projects/${projectId}/packages/${packageId}`,
+        packageDetailSchema,
+        signal,
+      );
     },
     /** `GET /v1/projects/{project}/forms`: its forms and their published and retired versions. */
     forms(projectId: string, signal: AbortSignal): Promise<FormSummary[]> {

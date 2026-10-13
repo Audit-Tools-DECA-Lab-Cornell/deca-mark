@@ -8,12 +8,7 @@ FILTER: Final = """
 o.project_id = :project AND o.deleted_at IS NULL
 AND (CAST(:site AS uuid) IS NULL OR o.site_id = CAST(:site AS uuid))
 AND (CAST(:package AS uuid) IS NULL OR o.package_id = CAST(:package AS uuid))
-AND ((CAST(:package AS uuid) IS NULL AND cardinality(CAST(:zones AS uuid[])) = 0)
- OR o.upload_protocol = 2)
 AND (cardinality(CAST(:zones AS uuid[])) = 0 OR o.zone_id = ANY(CAST(:zones AS uuid[])))
-AND (CAST(:basis AS text) IS NULL OR
-  CASE WHEN o.package_id IS NULL THEN 'legacy_unversioned' ELSE 'recorded_package' END = :basis)
-AND (CAST(:legacy_code AS text) IS NULL OR o.zone_code = :legacy_code)
 AND (CAST(:round AS text) IS NULL OR o.round_type = :round)
 AND (CAST(:observer AS text) IS NULL OR o.observer_code = :observer)
 AND (CAST(:from AS timestamptz) IS NULL OR o.observed_at >= CAST(:from AS timestamptz))
@@ -29,22 +24,11 @@ LEFT JOIN fieldmaps.package_zones z ON z.package_id=o.package_id AND z.zone_id=o
 LEFT JOIN fieldmaps.zone_identities zi ON zi.id=z.zone_id
 """
 
-SUPPORT: Final = """CASE WHEN o.round_type='inventory' THEN 'zone'
- WHEN o.package_id IS NOT NULL OR (o.round_type IN ('standard','reliability')
- AND o.placement_source='hand') THEN 'point' ELSE 'legacy_unknown' END"""
-BASIS: Final = (
-    "CASE WHEN o.package_id IS NULL THEN 'legacy_unversioned' ELSE 'recorded_package' END"
-)
-GROUP_DATA: Final = (
-    """
+SUPPORT: Final = "CASE WHEN o.round_type='inventory' THEN 'zone' ELSE 'point' END"
+GROUP_DATA: Final = """
 jsonb_build_object('site_id',o.site_id,'package_id',o.package_id,'package_version',p.version,
-'zone_id',o.zone_id,'zone_code',coalesce(zi.code,o.zone_code),'zone_label',z.label,
-'round_type',o.round_type,'assignment_basis',"""
-    + BASIS
-    + ", 'spatial_support',"
-    + SUPPORT
-    + ")"
-)
+'zone_id',o.zone_id,'zone_code',zi.code,'zone_label',z.label,
+'round_type',o.round_type,'spatial_support',""" + SUPPORT + ")"
 ROW_DATA: Final = (
     """
 jsonb_build_object(
@@ -53,15 +37,11 @@ jsonb_build_object(
  'observed_at',o.observed_at,'received_at',o.received_at,'revision',o.revision,
  'answers',o.answers,'form_version',f.code,'placement',o.placement_source,'first_round',o.first_round,
  'geometry',CASE WHEN o.round_type IS DISTINCT FROM 'inventory'
- AND (o.package_id IS NOT NULL OR (o.round_type IN ('standard','reliability')
- AND o.placement_source='hand')) THEN jsonb_build_object('type','Point','coordinates',
+   THEN jsonb_build_object('type','Point','coordinates',
  jsonb_build_array(fieldmaps.longitude(o.geom),fieldmaps.latitude(o.geom))) ELSE NULL END,
  'display_anchor',CASE WHEN o.round_type='inventory' THEN jsonb_build_object('type','Point',
- 'coordinates',CASE WHEN o.package_id IS NULL THEN jsonb_build_array(
- fieldmaps.longitude(o.geom),fieldmaps.latitude(o.geom)) ELSE jsonb_build_array(
- extensions.ST_X(z.display_anchor),extensions.ST_Y(z.display_anchor)) END) ELSE NULL END,
- 'display_anchor_basis',CASE WHEN o.round_type='inventory' THEN
- CASE WHEN o.package_id IS NULL THEN 'legacy_compatibility' ELSE 'snapshot' END ELSE NULL END
+ 'coordinates',jsonb_build_array(extensions.ST_X(z.display_anchor),
+   extensions.ST_Y(z.display_anchor))) ELSE NULL END
  ) || """
     + GROUP_DATA
 )
@@ -105,7 +85,6 @@ SUMMARY: Final = text(
 SELECT data || jsonb_build_object('count',count(*)) AS data FROM matched GROUP BY data)
 SELECT jsonb_build_object('groups',coalesce((SELECT jsonb_agg(data ORDER BY data::text)
 FROM groups),'[]'::jsonb),'total_matching',(SELECT count(*) FROM matched),
-'legacy_count',(SELECT count(*) FROM matched WHERE data->>'assignment_basis'='legacy_unversioned'),
 'generated_at',statement_timestamp())::text
 """
 )

@@ -32,12 +32,13 @@ SELECT pg_temp.assert_true((SELECT count(*) = 1 AND bool_and(role = 'observer')
   FROM fieldmaps.project_memberships WHERE project_id = '10000000-0000-4000-8000-000000000102'),
   'ensure_profile enrolls the caller once as Training observer');
 INSERT INTO fieldmaps.observations(id, organization_id, project_id, site_id, form_version_id,
-  observer_code, observed_at, geom, answers, created_by, upload_hash)
+  observer_code, observed_at, geom, answers, created_by, upload_hash, package_id, zone_id, round_type, first_round, placement_source)
 VALUES ('53000000-0000-4000-8000-000000000011', '10000000-0000-4000-8000-000000000101',
   '10000000-0000-4000-8000-000000000102', '10000000-0000-4000-8000-000000000103',
   '10000000-0000-4000-8000-000000000104', 'T1', now(),
   extensions.ST_SetSRID(extensions.ST_MakePoint(-76.485,42.448),4326), '{}',
-  fieldmaps.request_user_id(), repeat('a',64));
+  fieldmaps.request_user_id(), repeat('a',64),'91000000-0000-4000-8000-000000000003',
+  '92000000-0000-4000-8000-000000000003','standard',true,'hand');
 SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM fieldmaps.observations
   WHERE project_id = '10000000-0000-4000-8000-000000000102'), 'trainee reads own upload');
 SELECT set_config('fieldmaps.user_id', '53000000-0000-4000-8000-000000000002', true);
@@ -84,10 +85,19 @@ VALUES ('53000000-0000-4000-8000-000000000103','20000000-0000-4000-8000-00000000
 INSERT INTO fieldmaps.form_versions(id,organization_id,project_id,code,definition)
 VALUES ('53000000-0000-4000-8000-000000000104','20000000-0000-4000-8000-000000000001',
   '53000000-0000-4000-8000-000000000102','other-v1','{}');
+SELECT pg_temp.fixture_package('53000000-0000-4000-8000-000000000103','91000000-0000-4000-8000-000000000004',
+  '92000000-0000-4000-8000-000000000004','53000000-0000-4000-8000-000000000104');
 INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,form_version_id,
-  observer_code,observed_at,received_at,geom,answers)
+  observer_code,observed_at,received_at,geom,answers,created_by,upload_hash,package_id,zone_id,round_type,first_round,placement_source)
 SELECT id, org, project, site, form, 'QA', now()-interval '90 days', received,
-  extensions.ST_SetSRID(extensions.ST_MakePoint(-76.485,42.448),4326), '{}'
+  extensions.ST_SetSRID(extensions.ST_MakePoint(-76.485,42.448),4326), '{}',
+  '50000000-0000-4000-8000-000000000001',repeat('a',64),
+  CASE WHEN site='10000000-0000-4000-8000-000000000103' THEN '91000000-0000-4000-8000-000000000003'::uuid
+    WHEN site='10000000-0000-4000-8000-000000000003' THEN '91000000-0000-4000-8000-000000000001'::uuid
+    ELSE '91000000-0000-4000-8000-000000000004'::uuid END,
+  CASE WHEN site='10000000-0000-4000-8000-000000000103' THEN '92000000-0000-4000-8000-000000000003'::uuid
+    WHEN site='10000000-0000-4000-8000-000000000003' THEN '92000000-0000-4000-8000-000000000001'::uuid
+    ELSE '92000000-0000-4000-8000-000000000004'::uuid END,'standard',true,'hand'
 FROM (VALUES
  ('53000000-0000-4000-8000-000000000021'::uuid,'10000000-0000-4000-8000-000000000101'::uuid,'10000000-0000-4000-8000-000000000102'::uuid,'10000000-0000-4000-8000-000000000103'::uuid,'10000000-0000-4000-8000-000000000104'::uuid,now()-interval '31 days'),
  ('53000000-0000-4000-8000-000000000022'::uuid,'10000000-0000-4000-8000-000000000101'::uuid,'10000000-0000-4000-8000-000000000102'::uuid,'10000000-0000-4000-8000-000000000103'::uuid,'10000000-0000-4000-8000-000000000104'::uuid,now()-interval '30 days'),

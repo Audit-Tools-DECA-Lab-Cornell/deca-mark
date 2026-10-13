@@ -4,7 +4,10 @@ import staging from "../../config/staging.json";
 import { publicConfigSchema } from "./config-schema";
 
 it("accepts local public anon and hosted publishable configurations", () => {
-  expect(publicConfigSchema.parse(development).supabaseUrl).toBe("http://127.0.0.1:54321");
+  const localAuth = new URL(publicConfigSchema.parse(development).supabaseUrl);
+  expect(localAuth.protocol).toBe("http:");
+  expect(localAuth.hostname).toBe("127.0.0.1");
+  expect(Number(localAuth.port)).toBeGreaterThan(0);
   expect(publicConfigSchema.parse(staging).bundleIdSuffix).toBe(".dev");
   expect(publicConfigSchema.parse({ ...staging, powersyncUrl: undefined }).powersyncUrl).toBeNull();
 });

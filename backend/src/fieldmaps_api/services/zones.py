@@ -10,13 +10,11 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.deps import user_transaction
-from fieldmaps_api.domain.packages import PackageError
 from fieldmaps_api.errors import DomainError, NotFoundError, StorageUnavailableError
 from fieldmaps_api.queries import zones as q
 from fieldmaps_api.repositories import zones as db
-from fieldmaps_api.services import zone_archives
-from fieldmaps_api.services.sites import get_package, read_package_archive
-from fieldmaps_api.zone_draft_schemas import DraftCreate, DraftReplace
+from fieldmaps_api.services.sites import get_package
+from fieldmaps_api.zone_draft_schemas import DraftReplace, ZoneDraftCreate
 from fieldmaps_api.zone_preconditions import assert_zone_etag, zone_etag
 from fieldmaps_api.zone_response_schemas import (
     Draft,
@@ -109,7 +107,7 @@ async def create(
     user: UUID,
     project: UUID,
     site: UUID,
-    payload: DraftCreate,
+    payload: ZoneDraftCreate,
 ) -> tuple[Draft, bool]:
     async with transaction(sessions, user) as session:
         await db.scope(session, project, site)
@@ -127,23 +125,6 @@ async def create(
         if base is not None and base.state != "ready":
             msg = "package_not_ready"
             raise issue(msg)
-        archive = (
-            await read_package_archive(session, project, payload.base_package_id)
-            if base is not None and base.format == 1
-            else None
-        )
-    ground: str | None = None
-    zones: str | None = None
-    if archive is not None:
-        try:
-            extracted = await zone_archives.extract(archive)
-        except PackageError as error:
-            message = "unversioned_package"
-            raise issue(message) from error
-        ground = extracted.ground.model_dump_json()
-        zones = orjson.dumps(
-            [zone.model_dump(mode="json") for zone in extracted.legacy_zones]
-        ).decode()
     async with transaction(sessions, user) as session:
         await db.scope(session, project, site)
         await db.invoke(
@@ -163,10 +144,6 @@ async def create(
                     "site": site,
                     "request": payload.request_id,
                     "base": payload.base_package_id,
-                    "ground": ground,
-                    "zones": zones,
-                    "inventory_supplied": "inventory_form_version" in payload.model_fields_set,
-                    "inventory": payload.inventory_form_version,
                 },
             )
         )
@@ -239,16 +216,13 @@ async def historical(
     authorized = await db.scope(session, project, site, manager=False)
     selected = package or authorized.current_package_id
     if selected is None:
-        message = "unversioned_package"
-        raise issue(message)
+        message = "Package not found"
+        raise NotFoundError(message)
     if not await db.package_belongs(session, project, site, selected):
         message = "Package not found"
         raise NotFoundError(message)
     metadata = await get_package(session, project, selected)
     if metadata.state != "ready":
         message = "package_not_ready"
-        raise issue(message)
-    if metadata.zone_contract_version is None:
-        message = "unversioned_package"
         raise issue(message)
     return await db.history(session, project, site, selected)

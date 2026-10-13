@@ -12,7 +12,39 @@ from fieldmaps_api.domain import qgis_project
 from fieldmaps_api.domain.project_import import ProjectImportRequest
 from fieldmaps_api.errors import ValidationFailedError
 from fieldmaps_api.services.project_import import import_project
-from tests.test_packages import ground_layer, zones_layer
+
+type Json = dict[str, object]
+
+
+def collection(*features: Json) -> Json:
+    return {"type": "FeatureCollection", "features": list(features)}
+
+
+def polygon(west: float, south: float, east: float, north: float, **properties: object) -> Json:
+    return {
+        "type": "Feature",
+        "properties": properties,
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [[west, south], [east, south], [east, north], [west, north], [west, south]]
+            ],
+        },
+    }
+
+
+def ground_layer() -> Json:
+    return collection(
+        polygon(-76.4865, 42.447, -76.4835, 42.449, kind="site"),
+        polygon(-76.4861, 42.4481, -76.4852, 42.4487, kind="structure"),
+    )
+
+
+def zones_layer() -> Json:
+    return collection(
+        polygon(-76.4864, 42.4478, -76.485, 42.4489, id="A", label="Zone A · West lawn"),
+        polygon(-76.485, 42.448, -76.4836, 42.4489, id="B"),
+    )
 
 
 def packed(files: dict[str, bytes]) -> bytes:

@@ -1,30 +1,31 @@
+"""Prepare a validated zone snapshot as the sole package archive format."""
+
 import zipfile
 from hashlib import sha256
 from io import BytesIO
 from typing import Final, assert_never
 
 from fieldmaps_api.domain.packages import (
-    EXTENT_MARGIN_DEGREES,
     LAYER_ORDER,
     MAX_ARCHIVE_BYTES,
-    Extent,
-    LayerRecord,
+    LayerName,
     PackageError,
     PreparationCheck,
     write_archive_entry,
 )
 from fieldmaps_api.domain.zone_package_schemas import (
+    ArchiveLayer,
     BaseArchive,
     GroundGeometry,
     GroundMultiPolygon,
     GroundPolygon,
-    ManifestV2,
-    ManifestZoneV2,
+    ManifestZone,
     PackageIdentity,
     PreparedZonePackage,
     ZoneLayer,
     ZoneLayerFeature,
     ZoneLayerProperties,
+    ZonePackageManifest,
 )
 from fieldmaps_api.zone_geometry_schemas import (
     MAX_PACKAGE_POSITIONS,
@@ -55,20 +56,26 @@ def _ground_positions(ground: GroundGeometry) -> list[tuple[float, float]]:
     assert_never(ground)
 
 
-def _manifest_zone(zone: CanonicalZone) -> ManifestZoneV2:
-    every = _zone_positions(zone)
-    return ManifestZoneV2(
-        id=zone.zone_code,
-        label=zone.zone_label,
+def _manifest_zone(zone: CanonicalZone) -> ManifestZone:
+    points = _zone_positions(zone)
+    return ManifestZone(
         zone_id=zone.zone_id,
         zone_code=zone.zone_code,
-        west=min(point[0] for point in every),
-        south=min(point[1] for point in every),
-        east=max(point[0] for point in every),
-        north=max(point[1] for point in every),
+        label=zone.zone_label,
+        bbox=(
+            min(point[0] for point in points),
+            min(point[1] for point in points),
+            max(point[0] for point in points),
+            max(point[1] for point in points),
+        ),
         display_anchor=zone.display_anchor,
         geometry_sha256=zone.geometry_sha256,
     )
+
+
+def _empty_layer(name: LayerName) -> ArchiveLayer:
+    payload = b'{"type":"FeatureCollection","features":[]}'
+    return ArchiveLayer(name, payload, 0, ())
 
 
 def prepare_zone_package(
@@ -85,9 +92,6 @@ def prepare_zone_package(
         sum(position_count(zone.geometry) for zone in zones) > MAX_PACKAGE_POSITIONS
     ):
         message = "The zone set exceeds the publication complexity limits"
-        raise PackageError(message)
-    if forms.play.form_version != base.manifest.form_version:
-        message = "The frozen play form does not match the base package"
         raise PackageError(message)
     published_positions = [
         *_ground_positions(base.ground),
@@ -107,6 +111,7 @@ def prepare_zone_package(
     ):
         message = "The site and zones exceed the supported publication extent"
         raise PackageError(message)
+
     zone_layer = ZoneLayer(
         features=tuple(
             ZoneLayerFeature(
@@ -114,7 +119,6 @@ def prepare_zone_package(
                     type="MultiPolygon", coordinates=zone.geometry.coordinates
                 ),
                 properties=ZoneLayerProperties(
-                    id=zone.zone_code,
                     zone_id=zone.zone_id,
                     zone_code=zone.zone_code,
                     name=zone.zone_label,
@@ -125,48 +129,29 @@ def prepare_zone_package(
             for zone in zones
         )
     )
-    layer_bytes = zone_layer.model_dump_json().encode()
-    payloads = {layer.name: layer.payload for layer in base.layers if layer.name != "zones"}
-    payloads["zones"] = layer_bytes
-    retained = [
-        LayerRecord(
-            name=layer.name, features=layer.features, sha256=sha256(layer.payload).hexdigest()
-        )
-        for layer in base.layers
-        if layer.name != "zones"
-    ]
-    retained.append(
-        LayerRecord(name="zones", features=len(zones), sha256=sha256(layer_bytes).hexdigest())
-    )
-    all_positions = [
-        point for layer in base.layers if layer.name != "zones" for point in layer.positions
-    ]
-    all_positions.extend(point for zone in zones for point in _zone_positions(zone))
-    extent = Extent(
-        west=max(-180, min(point[0] for point in all_positions) - EXTENT_MARGIN_DEGREES),
-        south=max(-90, min(point[1] for point in all_positions) - EXTENT_MARGIN_DEGREES),
-        east=min(180, max(point[0] for point in all_positions) + EXTENT_MARGIN_DEGREES),
-        north=min(90, max(point[1] for point in all_positions) + EXTENT_MARGIN_DEGREES),
-    )
-    manifest = ManifestV2(
-        site_code=identity.site_code,
-        form_version=forms.play.form_version,
-        extent=extent,
-        centre=extent.centre(),
-        zones=tuple(_manifest_zone(zone) for zone in zones),
-        layers=tuple(retained),
-        source_project=base.manifest.source_project,
+    zone_layer_bytes = zone_layer.model_dump_json().encode()
+    layer_map = {layer.name: layer for layer in base.layers}
+    payloads = {
+        name: layer.payload
+        for name, layer in layer_map.items()
+        if name != "zones"
+    }
+    payloads["zones"] = zone_layer_bytes
+    for name in LAYER_ORDER:
+        payloads.setdefault(name, _empty_layer(name).payload)
+    manifest = ZonePackageManifest(
         site_id=identity.site_id,
+        site_code=identity.site_code,
         package_id=identity.package_id,
         package_version=identity.package_version,
         forms=forms,
+        zones=tuple(_manifest_zone(zone) for zone in zones),
     )
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         write_archive_entry(archive, "manifest.json", manifest.model_dump_json(indent=2).encode())
         for name in LAYER_ORDER:
-            if name in payloads:
-                write_archive_entry(archive, f"layers/{name}.json", payloads[name])
+            write_archive_entry(archive, f"layers/{name}.json", payloads[name])
     archive_bytes = buffer.getvalue()
     if len(archive_bytes) > MAX_ARCHIVE_BYTES:
         message = "The prepared archive exceeds the 16 MB package size ceiling"
@@ -176,9 +161,14 @@ def prepare_zone_package(
         PreparationCheck(
             step="archive",
             state="passed",
-            detail=f"{len(payloads)} layers, {len(zones)} zones, {len(archive_bytes) // 1024} KB",
+            detail=f"4 layers, {len(zones)} zones, {len(archive_bytes) // 1024} KB",
         ),
     )
     return PreparedZonePackage(
-        manifest, zone_layer, layer_bytes, checks, archive_bytes, sha256(archive_bytes).hexdigest()
+        manifest,
+        zone_layer,
+        zone_layer_bytes,
+        checks,
+        archive_bytes,
+        sha256(archive_bytes).hexdigest(),
     )

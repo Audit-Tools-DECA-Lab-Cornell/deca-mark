@@ -5,78 +5,134 @@ import {
   placementSchema,
   roundContextSchema,
 } from "../domain/observation";
+import {
+  bindingMatchesContext,
+  identityKey,
+  packageBindingSchema,
+} from "../domain/package-binding";
+import { databaseTransaction, databaseWrite } from "./database-write";
 import type { LocalDatabase } from "./observation-store";
+import { requireAuthorizedPackage } from "./package-catalog-read";
 
 /**
  * An observation in progress. Every answer is written here as it is tapped, so a force quit
  * costs nothing. Drafts are account-scoped and deliberately separate from the upload queue:
  * an incomplete form is not a record and must never reach the server.
  */
-export const observationDraftSchema = z.object({
-  id: z.uuid(),
-  /** The account scope that started it. Stored in the payload so recovery can verify it. */
-  owner: z.string().min(1),
-  formVersion: z.string().min(1),
-  packageId: z.string().min(1),
-  siteId: z.string().min(1),
-  context: roundContextSchema,
-  coordinates: coordinateSchema.nullable(),
-  placement: placementSchema.nullable(),
-  answers: z.record(z.string(), answerValueSchema),
-  questionIndex: z.number().int().min(0),
-  startedAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
+export const observationDraftSchema = z
+  .object({
+    id: z.uuid(),
+    /** The account scope that started it. Stored in the payload so recovery can verify it. */
+    owner: z.string().min(1),
+    formVersion: z.string().min(1),
+    packageId: z.string().min(1),
+    siteId: z.string().min(1),
+    context: roundContextSchema,
+    binding: packageBindingSchema.optional(),
+    coordinates: coordinateSchema.nullable(),
+    placement: placementSchema.nullable(),
+    answers: z.record(z.string(), answerValueSchema),
+    questionIndex: z.number().int().min(0),
+    startedAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .refine(
+    (draft) =>
+      !draft.binding ||
+      (draft.siteId === draft.binding.siteId &&
+        draft.packageId === draft.binding.packageId &&
+        bindingMatchesContext(draft.binding, draft.context)),
+    "The frozen package binding must match the draft context.",
+  );
 export type ObservationDraft = Readonly<z.infer<typeof observationDraftSchema>>;
 
-export async function saveDraft(
+export function saveDraft(
   db: LocalDatabase,
   scope: string,
   draft: ObservationDraft,
 ): Promise<void> {
-  await db.runAsync(
-    `INSERT INTO observation_drafts (owner_scope, id, updated_at, payload) VALUES (?, ?, ?, ?)
+  const parsed = observationDraftSchema.parse(draft);
+  if (parsed.owner !== scope) return Promise.reject(new DraftOwnerError());
+  return databaseTransaction(db, async () => {
+    const rows = z
+      .array(z.object({ id: z.string() }))
+      .parse(
+        await db.getAllAsync("SELECT id FROM observation_drafts WHERE owner_scope = ?", scope),
+      );
+    if (rows[0] && rows[0].id !== parsed.id) throw new DraftConflictError();
+    if (parsed.binding) await requireAuthorizedPackage(db, scope, parsed.binding);
+    await db.runAsync(
+      `INSERT INTO observation_drafts (owner_scope, id, updated_at, payload, package_key) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(owner_scope) DO UPDATE SET
-         id = excluded.id, updated_at = excluded.updated_at, payload = excluded.payload`,
-    scope,
-    draft.id,
-    draft.updatedAt,
-    JSON.stringify(draft),
-  );
-}
-
-export async function readDraft(
-  db: LocalDatabase,
-  scope: string,
-): Promise<ObservationDraft | null> {
-  const rows = z
-    .array(z.object({ payload: z.string() }))
-    .parse(
-      await db.getAllAsync(
-        "SELECT payload FROM observation_drafts WHERE owner_scope = ? LIMIT 1",
-        scope,
-      ),
+         id = excluded.id, updated_at = excluded.updated_at, payload = excluded.payload, package_key = excluded.package_key`,
+      scope,
+      draft.id,
+      draft.updatedAt,
+      JSON.stringify(parsed),
+      parsed.binding ? identityKey(parsed.binding) : "",
     );
-  const row = rows[0];
-  if (!row) return null;
-  const parsed = observationDraftSchema.safeParse(JSON.parse(row.payload));
-  // A draft written by a version this app no longer understands is dropped rather than
-  // offered for resume, which would restore answers against the wrong question stack.
-  if (!parsed.success) {
-    await clearDraft(db, scope);
-    return null;
-  }
-  // The row is keyed by account scope and the payload names its owner. If they disagree the
-  // draft has been moved between accounts, and research answers must not change hands.
-  if (parsed.data.owner !== scope) {
-    await clearDraft(db, scope);
-    return null;
-  }
-  return parsed.data;
+  });
 }
 
-export async function clearDraft(db: LocalDatabase, scope: string): Promise<void> {
-  await db.runAsync("DELETE FROM observation_drafts WHERE owner_scope = ?", scope);
+class DraftOwnerError extends Error {
+  constructor() {
+    super("A draft cannot move between accounts.");
+    this.name = "DraftOwnerError";
+  }
+}
+
+export class DraftConflictError extends Error {
+  constructor() {
+    super(
+      "An unfinished draft is retained on this account. Resume or explicitly discard it first.",
+    );
+    this.name = "DraftConflictError";
+  }
+}
+
+export function hasDraft(db: LocalDatabase, scope: string): Promise<boolean> {
+  return databaseWrite(db, async () => {
+    const rows = z
+      .array(z.object({ total: z.number().int().nonnegative() }))
+      .parse(
+        await db.getAllAsync(
+          "SELECT COUNT(*) total FROM observation_drafts WHERE owner_scope = ?",
+          scope,
+        ),
+      );
+    return (rows[0]?.total ?? 0) > 0;
+  });
+}
+
+export function readDraft(db: LocalDatabase, scope: string): Promise<ObservationDraft | null> {
+  return databaseWrite(db, async () => {
+    const rows = z
+      .array(z.object({ payload: z.string() }))
+      .parse(
+        await db.getAllAsync(
+          "SELECT payload FROM observation_drafts WHERE owner_scope = ? LIMIT 1",
+          scope,
+        ),
+      );
+    const row = rows[0];
+    if (!row) return null;
+    let payload: unknown;
+    try {
+      payload = JSON.parse(row.payload);
+    } catch (error) {
+      if (error instanceof SyntaxError) return null;
+      throw error;
+    }
+    const parsed = observationDraftSchema.safeParse(payload);
+    if (!parsed.success || parsed.data.owner !== scope) return null;
+    return parsed.data;
+  });
+}
+
+export function clearDraft(db: LocalDatabase, scope: string): Promise<void> {
+  return databaseWrite(db, async () => {
+    await db.runAsync("DELETE FROM observation_drafts WHERE owner_scope = ?", scope);
+  });
 }
 
 /** How much of the draft is worth offering back, for the recovery prompt's own sentence. */

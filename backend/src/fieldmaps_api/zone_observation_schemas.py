@@ -41,7 +41,6 @@ type AnswerValue = (
 
 class BoundObservationBase(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
-    schema_version: Literal[2]
     site_id: UUID
     package_id: UUID
     zone_id: UUID
@@ -89,7 +88,5 @@ class BoundUploadReceipt(BaseModel):
     user_id: UUID
     accepted_revision: Literal[1]
     received_at: AwareDatetime
-    schema_version: Literal[2]
     package_id: UUID
     zone_id: UUID
-    assignment_basis: Literal["recorded_package"]

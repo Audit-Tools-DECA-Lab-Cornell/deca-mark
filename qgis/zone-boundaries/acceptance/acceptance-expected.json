@@ -1,0 +1,26 @@
+{
+  "synthetic": true,
+  "project_id": "1ca2c4df-ef0f-4952-bea7-1b8a49224ac9",
+  "site_id": "692d40e4-8707-4a6c-833a-7941cda75e84",
+  "zone_id": "aac3efb5-6235-455e-99b6-fdda8fd52858",
+  "package_v7": "57d503a7-311c-4aaf-a243-0e0c0683e18a",
+  "package_v8": "5aaa5303-23a2-48b2-9222-ae6f3be3909a",
+  "delayed_point": "c9690043-7a47-4b2f-b146-4f3f14170485",
+  "bound_inventory": "014bbcbb-1538-4f6e-b849-c930a21ff96d",
+  "current_point": "aa09e92f-ba5e-40a2-8947-1372089ddeca",
+  "legacy_point": "216d5776-1314-4ba4-b890-02ca5a7c94c3",
+  "legacy_inventory": "a54b92c4-d455-46c3-82db-18e06c887171",
+  "counts": {
+    "legacy": 2,
+    "points": 3,
+    "recorded": 5,
+    "inventory": 2,
+    "snapshots": 2
+  },
+  "topology": {
+    "parts": 2,
+    "new_covers": false,
+    "old_covers": true,
+    "inventory_exact": true
+  }
+}

@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 import orjson
-from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.domain.packages import PackageError
@@ -12,9 +10,8 @@ from fieldmaps_api.domain.zone_package_schemas import PackageIdentity, PreparedZ
 from fieldmaps_api.errors import DomainError, RoleRequiredError
 from fieldmaps_api.queries import zones as q
 from fieldmaps_api.repositories import zones as db
-from fieldmaps_api.schemas import PackageDetail
 from fieldmaps_api.services import zone_archives, zones
-from fieldmaps_api.services.sites import get_package, prepare_package, read_package_archive
+from fieldmaps_api.services.sites import get_package, read_package_archive
 from fieldmaps_api.zone_draft_schemas import DraftPublish
 from fieldmaps_api.zone_import_schemas import PackageRequest
 from fieldmaps_api.zone_response_schemas import ImportValidation, PackageForms, Publication
@@ -25,7 +22,7 @@ class PublicationRequest:
     project: UUID
     site: UUID
     request: UUID
-    expected: UUID
+    expected: UUID | None
     draft: UUID | None
     revision: int | None
     import_body: str | None = None
@@ -56,7 +53,17 @@ async def finalize(
 ) -> tuple[Publication, bool]:
     identifier, replayed = await db.finalize(session, request.parameters(prepared))
     package = await get_package(session, request.project, identifier)
-    return Publication(site_id=request.site, draft_id=request.draft, package=package), replayed
+    current = await db.scope(session, request.project, request.site, manager=False)
+    return (
+        Publication(
+            site_id=request.site,
+            draft_id=request.draft,
+            package=package,
+            current_package_id=current.current_package_id,
+            replayed=replayed,
+        ),
+        replayed,
+    )
 
 
 async def replay(
@@ -72,12 +79,6 @@ async def replay(
         },
     )
     return await finalize(session, request, None) if found is not None else None
-
-
-def require_enabled(*, enabled: bool) -> None:
-    if not enabled:
-        message = "unsupported_operation"
-        raise DomainError(message, "Zone publication is not enabled", 503)
 
 
 def require_ready(validation: ImportValidation) -> None:
@@ -96,8 +97,6 @@ async def publish(
     user: UUID,
     reference: zones.DraftReference,
     payload: DraftPublish,
-    *,
-    enabled: bool,
 ) -> tuple[Publication, bool]:
     project, site, identifier, etag = (
         reference.project,
@@ -119,7 +118,6 @@ async def publish(
         previous = await replay(session, request)
         if previous is not None:
             return previous
-        require_enabled(enabled=enabled)
         scope = await db.scope(session, project, site)
         if (
             scope.current_package_id != payload.expected_current_package_id
@@ -162,37 +160,21 @@ async def import_package(
     user: UUID,
     project: UUID,
     payload: PackageRequest,
-    *,
-    enabled: bool,
-) -> tuple[Publication, bool] | None:
+) -> tuple[Publication, bool]:
     async with zones.transaction(sessions, user) as session:
         site = await db.identifier(
-            session, q.SITE_BY_CODE, {"project": project, "code": payload.site_code}
+            session, q.SITE_BY_ID, {"project": project, "site": payload.site_id}
         )
         if site is None:
             msg = "Manager access to the site and form is required"
             raise RoleRequiredError(msg)
         scope = await db.scope(session, project, site)
-        if not scope.managed:
-            return None
-        if (
-            "expected_current_package_id" in payload.model_fields_set
-            and payload.expected_current_package_id is None
-        ):
-            msg_0 = "invalid_structure"
-            raise zones.issue(msg_0)
-        if (
-            payload.request_id is None
-            or payload.expected_current_package_id is None
-            or payload.zone_identity_map is None
-            or payload.change_note is None
-        ):
+        if not scope.manager:
+            msg = "Manager access to the site is required"
+            raise RoleRequiredError(msg)
+        if "expected_current_package_id" not in payload.model_fields_set:
             message = "precondition_required"
-            raise DomainError(
-                message,
-                "Managed imports require current package, request ID and identity mapping",
-                428,
-            )
+            raise DomainError(message, "expected_current_package_id is required", 428)
         request = PublicationRequest(
             project,
             scope.site_id,
@@ -209,7 +191,6 @@ async def import_package(
         previous = await replay(session, request)
         if previous is not None:
             return previous
-        require_enabled(enabled=enabled)
         validation = ImportValidation.model_validate_json(
             await db.invoke(
                 session,
@@ -223,9 +204,6 @@ async def import_package(
             )
         )
         require_ready(validation)
-        if scope.current_package_id is None:
-            message = "unversioned_package"
-            raise zones.issue(message)
         forms = PackageForms.model_validate_json(
             await db.invoke(
                 session,
@@ -255,19 +233,6 @@ async def prepare_submission(
     user: UUID,
     project: UUID,
     payload: PackageRequest,
-    *,
-    enabled: bool,
-) -> tuple[PackageDetail, int]:
-    managed = await import_package(sessions, user, project, payload, enabled=enabled)
-    if managed is not None:
-        publication, replayed = managed
-        async with zones.transaction(sessions, user) as session:
-            detail = await get_package(session, project, publication.package.package_id)
-        return detail, 200 if replayed else 201
-    try:
-        legacy = payload.legacy()
-    except ValidationError as error:
-        raise RequestValidationError(error.errors()) from error
-    async with zones.transaction(sessions, user) as session:
-        detail = await prepare_package(session, project, user, legacy)
-    return detail, 201
+) -> tuple[Publication, int]:
+    publication, replayed = await import_package(sessions, user, project, payload)
+    return publication, 200 if replayed else 201

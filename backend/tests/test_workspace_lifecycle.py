@@ -1,25 +1,27 @@
 """Access changes and package selection as the live workspace uses them."""
 
 from collections.abc import Iterator
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import TypeAdapter
 
 from fieldmaps_api.identity_schemas import Identity
-from fieldmaps_api.schemas import PackageDetail, PackageSummary
+from fieldmaps_api.schemas import PackageHistory
 from fieldmaps_api.site_schemas import Site
 from fieldmaps_api.tenancy_schemas import Project
+from fieldmaps_api.zone_response_schemas import Publication
+from tests.package_fixtures import qgz, submission
 from tests.signing import Signer
 from tests.tenant_fixtures import (
     Tenant,
     cleanup_tenant,
+    create_package,
     create_tenant,
     observation_payload,
     sign_in,
 )
-from tests.test_site_packages import qgz, submission
+from tests.zone_api_fixtures import document
 
 pytestmark = pytest.mark.integration
 
@@ -65,13 +67,12 @@ def test_removal_revokes_record_and_archive_access_on_the_next_request(
     api_client: TestClient, signer: Signer, tenant: Tenant
 ) -> None:
     base = f"/v1/projects/{tenant.project}"
-    package = PackageDetail.model_validate_json(
-        api_client.post(f"{base}/packages", json=submission()).content
-    )
+    created = api_client.post(f"{base}/packages", json=submission(site_id=str(tenant.site)))
+    assert created.status_code == 201, created.text
+    package = Publication.model_validate_json(created.content).package
     paths = [
         base,
         f"{base}/observations",
-        f"{base}/observations/{tenant.observation}",
         f"{base}/sites",
         f"{base}/forms",
         f"{base}/packages/{package.package_id}/archive",
@@ -90,12 +91,26 @@ def test_archive_is_a_status_change_and_does_not_strand_offline_uploads(
     api_client: TestClient, signer: Signer, tenant: Tenant
 ) -> None:
     base = f"/v1/projects/{tenant.project}"
+    package_id = UUID(str(create_package(api_client, signer, tenant)))
+    zones = document(
+        api_client.get(
+            f"{base}/sites/{tenant.site}/zones", params={"package_id": str(package_id)}
+        ).content
+    )["zones"]
+    assert isinstance(zones, list)
+    assert zones
+    zone = zones[0]
+    assert isinstance(zone, dict)
+    zone_id = UUID(str(zone["zone_id"]))
     changed = api_client.patch(base, json={"status": "archived", "timezone": "America/New_York"})
     assert changed.status_code == 200
     sign_in(api_client, signer, tenant.users["observer"])
     assert Project.model_validate_json(api_client.get(base).content).status == "archived"
     assert (
-        api_client.put(f"{base}/observations/{uuid4()}", json=observation_payload()).status_code
+        api_client.put(
+            f"{base}/observations/{uuid4()}",
+            json=observation_payload(tenant.site, package_id, zone_id),
+        ).status_code
         == 200
     )
     sign_in(api_client, signer, tenant.users["owner"])
@@ -108,41 +123,39 @@ def test_archive_is_a_status_change_and_does_not_strand_offline_uploads(
     )
 
 
-def test_newer_blocked_packages_do_not_replace_a_sites_ready_package(
-    api_client: TestClient, tenant: Tenant
+def test_invalid_new_source_does_not_replace_a_sites_ready_package(
+    api_client: TestClient, signer: Signer, tenant: Tenant
 ) -> None:
     base = f"/v1/projects/{tenant.project}"
-    first = PackageDetail.model_validate_json(
-        api_client.post(f"{base}/packages", json=submission()).content
-    )
+    first_id = create_package(api_client, signer, tenant)
     project_file = qgz(
         '<qgis><projectlayers><maplayer type="raster"><layername>Unlicensed</layername>'
         "<provider>wms</provider><datasource>type=xyz&amp;url=https://tiles.example.invalid/xyz</datasource>"
         "</maplayer></projectlayers></qgis>"
     )
-    blocked = PackageDetail.model_validate_json(
-        api_client.post(
-            f"{base}/packages",
-            json=submission(project_file={"file_name": "blocked.qgz", "content": project_file}),
-        ).content
+    refused = api_client.post(
+        f"{base}/packages",
+        json=submission(
+            site_id=str(tenant.site),
+            request_id=str(uuid4()),
+            expected_current_package_id=str(first_id),
+            project_file={"file_name": "blocked.qgz", "content": project_file},
+        ),
     )
-    assert blocked.state == "blocked"
-    assert blocked.version > first.version
+    assert refused.status_code == 422, refused.text
+    created = api_client.post(f"{base}/sites", json={"code": "second-site", "name": "Second site"})
+    assert created.status_code == 201, created.text
+    second = Site.model_validate_json(created.content)
     assert (
         api_client.post(
-            f"{base}/sites", json={"code": "second-site", "name": "Second site"}
+            f"{base}/packages", json=submission(site_id=str(second.site_id))
         ).status_code
         == 201
     )
-    assert (
-        api_client.post(f"{base}/packages", json=submission(site_code="second-site")).status_code
-        == 201
-    )
-    site = Site.model_validate_json(api_client.get(f"{base}/sites/sample-garden").content)
+    site = Site.model_validate_json(api_client.get(f"{base}/sites/{tenant.site}").content)
     assert site.package is not None
-    assert site.package.package_id == first.package_id
-    assert api_client.get(f"{base}/packages/{blocked.package_id}/archive").status_code == 409
-    packages = TypeAdapter(list[PackageSummary]).validate_json(
-        api_client.get(f"{base}/packages", params={"site": "sample-garden"}).content
+    assert site.package.package_id == first_id
+    packages = PackageHistory.model_validate_json(
+        api_client.get(f"{base}/packages", params={"site_id": str(tenant.site)}).content
     )
-    assert [package.package_id for package in packages] == [blocked.package_id, first.package_id]
+    assert [package.package_id for package in packages.packages] == [first_id]

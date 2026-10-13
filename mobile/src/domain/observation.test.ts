@@ -122,32 +122,28 @@ describe("Observation boundaries", () => {
   });
 });
 
-describe("Round context across the move to round types", () => {
-  const legacy = {
+describe("Current round context", () => {
+  const context = {
     packageId: "riverside-play-study",
     packageVersion: "v4",
     zoneId: "B",
     zoneLabel: "Zone B · North playground",
-    round: 2,
+    roundType: "standard",
     freshPeriod: false,
     inheritedFrom: "",
   };
 
-  it("reads a draft or record saved with a round number as a Standard round, keeping the number", () => {
-    const parsed = roundContextSchema.parse(legacy);
-    expect(parsed.roundType).toBe("standard");
-    expect(parsed.round).toBe(2);
-  });
-
-  it("keeps the round type an observer chose", () => {
-    const { round: _unused, ...rest } = legacy;
-    expect(roundContextSchema.parse({ ...rest, roundType: "inventory" }).roundType).toBe(
+  it("requires a current round type instead of upgrading numeric rounds", () => {
+    expect(roundContextSchema.parse(context).roundType).toBe("standard");
+    const { roundType: _type, ...rest } = context;
+    expect(roundContextSchema.safeParse({ ...rest, round: 2 }).success).toBe(false);
+    expect(roundContextSchema.parse({ ...context, roundType: "inventory" }).roundType).toBe(
       "inventory",
     );
-    expect(roundContextSchema.safeParse({ ...rest, roundType: "weekly" }).success).toBe(false);
+    expect(roundContextSchema.safeParse({ ...context, roundType: "weekly" }).success).toBe(false);
   });
 
-  it("stores a whole-zone inventory as a zone placement, never as a hand-placed point", () => {
+  it("stores whole-zone inventory as zone placement rather than a hand point", () => {
     expect(placementSchema.parse({ source: "zone", gpsAccuracyMetres: null }).source).toBe("zone");
     expect(placementSchema.safeParse({ source: "gps", gpsAccuracyMetres: 3 }).success).toBe(false);
   });

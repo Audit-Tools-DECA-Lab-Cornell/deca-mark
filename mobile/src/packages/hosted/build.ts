@@ -1,11 +1,13 @@
 import type { StyleSpecification } from "@maplibre/maplibre-react-native";
 import type { FeatureCollection } from "geojson";
-import type { Coordinate } from "../../domain/observation";
+import type { PackageIdentity } from "../../domain/package-binding";
 import type { FormDefinition } from "../../forms/definition";
 import { hexWithAlpha, type MapPalette, mapPalettes } from "../../maps/palette";
 import type { SiteZone } from "../../maps/sample-site";
 import type { LayerPaint, PackageLayer, SitePackage } from "../site-package";
-import type { LayerData, ManifestZone, StoredPackage } from "./schemas";
+import { boundFeatureSchema } from "./bound-manifest";
+import { packageCamera } from "./package-camera";
+import type { LayerData, StoredPackage } from "./schemas";
 
 /**
  * A downloaded site as the field map draws it. The plan is built from the package's own layers in the
@@ -101,53 +103,25 @@ function overlays(stored: StoredPackage): PackageLayer[] {
   ];
 }
 
-function isPosition(value: unknown): value is Coordinate {
-  return (
-    Array.isArray(value) &&
-    value.length >= 2 &&
-    typeof value[0] === "number" &&
-    typeof value[1] === "number"
-  );
-}
-
-/** One polygon's rings, an outer ring then its holes, when it has at least a triangle. */
-function polygonRings(polygon: unknown): Coordinate[][] | undefined {
-  if (!Array.isArray(polygon)) return undefined;
-  const parsed = polygon.map((ring) =>
-    Array.isArray(ring) ? ring.filter(isPosition).map(([x, y]) => [x, y] as Coordinate) : [],
-  );
-  return parsed.length > 0 && (parsed[0]?.length ?? 0) >= 3 ? parsed : undefined;
-}
-
-/** A zone feature's parts: a Polygon's own rings, or each part of a MultiPolygon. */
-function parts(geometry: LayerData["features"][number]["geometry"]): Coordinate[][][] {
-  const polygons =
-    geometry.type === "MultiPolygon" && Array.isArray(geometry.coordinates)
-      ? geometry.coordinates
-      : geometry.type === "Polygon"
-        ? [geometry.coordinates]
-        : [];
-  return polygons.flatMap((polygon) => {
-    const rings = polygonRings(polygon);
-    return rings ? [rings] : [];
-  });
-}
-
-function siteZone(zone: ManifestZone, layer: LayerData): SiteZone {
-  const feature = layer.features.find(
-    (entry) => String(entry.properties?.["id"] ?? "") === zone.id,
-  );
-  const [polygon, ...moreParts] = feature ? parts(feature.geometry) : [];
+function siteZone(zone: StoredPackage["manifest"]["zones"][number], layer: LayerData): SiteZone {
+  const feature = layer.features.find((entry) => entry.properties?.["zone_id"] === zone.zone_id);
+  const { geometry } = boundFeatureSchema.parse(feature);
+  const [polygon, ...moreParts] = geometry.coordinates;
+  if (!polygon) throw new Error("The zone has no full boundary.");
+  const [west, south, east, north] = zone.bbox;
   return {
-    id: zone.id,
+    id: zone.zone_code,
     label: zone.label,
-    centre: [(zone.west + zone.east) / 2, (zone.south + zone.north) / 2],
-    west: zone.west,
-    south: zone.south,
-    east: zone.east,
-    north: zone.north,
-    ...(polygon ? { polygon } : {}),
-    ...(moreParts.length > 0 ? { moreParts } : {}),
+    centre: zone.display_anchor,
+    zoneId: zone.zone_id,
+    displayAnchor: zone.display_anchor,
+    geometrySha256: zone.geometry_sha256,
+    west,
+    south,
+    east,
+    north,
+    polygon,
+    ...(moreParts.length ? { moreParts } : {}),
   };
 }
 
@@ -160,31 +134,29 @@ function megabytes(bytes: number): string {
 export function hostedSitePackage(
   stored: StoredPackage,
   forms: { readonly play: FormDefinition; readonly inventory: FormDefinition | null },
+  identity?: PackageIdentity,
 ): SitePackage {
   const { manifest, layers } = stored;
+  const camera = packageCamera(layers);
   const zones = manifest.zones.map((zone) => siteZone(zone, layers.zones));
   const count = `${zones.length} ${zones.length === 1 ? "zone" : "zones"}`;
   return {
     id: stored.packageId,
+    ...(identity ? { packageIdentity: identity } : {}),
     name: stored.siteName,
     meta: `${count} · package v${stored.packageVersion}`,
     availability: "on-device",
     formVersion: forms.play.version,
     inventoryFormVersion: forms.inventory?.version ?? "",
     version: `v${stored.packageVersion}`,
-    siteId: stored.siteCode,
+    siteId: stored.siteId,
     sizeOnDevice: `${megabytes(stored.archiveBytes)} on device`,
     zones,
     inheritedContext: forms.inventory
       ? "Climate and the loose parts on hand come from this zone's latest Inventory round."
       : "A round inherits only its zone; this project has no inventory form.",
-    centre: manifest.centre,
-    bounds: [
-      manifest.extent.west,
-      manifest.extent.south,
-      manifest.extent.east,
-      manifest.extent.north,
-    ],
+    centre: camera.centre,
+    bounds: camera.bounds,
     bases: {
       day: plan(`${stored.siteName} plan (day)`, mapPalettes.day, layers.ground),
       night: plan(`${stored.siteName} plan (night)`, mapPalettes.night, layers.ground),

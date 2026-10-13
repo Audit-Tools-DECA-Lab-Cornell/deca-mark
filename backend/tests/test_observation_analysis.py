@@ -9,27 +9,11 @@ from fieldmaps_api.observation_analysis_schemas import (
     ObservationPage,
     ObservationSummary,
 )
-from tests.bound_upload_fixtures import BoundSite
 from tests.observation_analysis_fixtures import AnalysisSite, read_page, seed_copies
 from tests.signing import Signer
 from tests.tenant_fixtures import sign_in
 
 pytest_plugins = ("tests.observation_analysis_fixtures",)
-
-
-def test_historical_page_when_project_has_legacy_record(
-    api_client: TestClient, bound_site: BoundSite
-) -> None:
-    # Given an authorized project with one unversioned observation.
-    url = f"/v2/projects/{bound_site.site.tenant.project}/observations"
-    # When its historical page is requested.
-    response = api_client.get(url)
-    # Then its unknown support and historical nulls are explicit.
-    assert response.status_code == 200, response.text
-    data = ObservationPage.model_validate_json(response.content)
-    assert data.total_matching == 1
-    assert data.items[0].spatial_support == "legacy_unknown"
-    assert data.items[0].zone_label is None
 
 
 def test_complete_cursor_pages_when_601_timestamps_tie(
@@ -69,9 +53,6 @@ def test_complete_cursor_pages_when_601_timestamps_tie(
         {"observed_from": "0001-01-01T00:00:00+01:00"},
         {"observed_before": "9999-12-31T23:59:59-01:00"},
         {"observed_from": "2026-10-11T00:00:00Z", "observed_before": "2026-10-11T00:00:00Z"},
-        {"assignment_basis": "legacy_unversioned", "package_id": str(uuid4())},
-        {"legacy_zone_code": "lawn"},
-        {"assignment_basis": "not-a-basis"},
     ],
 )
 def test_invalid_filter_when_query_is_not_scoped(
@@ -123,6 +104,7 @@ def test_cursor_mismatch_when_filter_changes(
     api_client: TestClient, analysis_site: AnalysisSite
 ) -> None:
     # Given a cursor for the unfiltered project.
+    seed_copies(analysis_site, 1)
     page = read_page(api_client, analysis_site.url, limit=1)
     assert page.next_cursor is not None
     # When an observer filter is added.

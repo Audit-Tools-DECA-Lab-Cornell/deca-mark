@@ -10,7 +10,7 @@ The web uses real API data and SVG site plans. A session-only editor was removed
 
 ## WEB-28: required manager behavior
 
-A manager opens a site's current package, starts/reopens a server-backed draft, draws/edits named polygons, sees validation, and deliberately publishes a new version. Viewers/observers cannot access mutation routes even by direct URL. Site adoption from legacy packages and unsupported/missing ground need explicit states, not fake controls.
+A manager opens a site's current package, starts/reopens a server-backed draft, draws/edits named polygons, sees validation, and deliberately publishes a new version. Viewers/observers cannot access mutation routes even by direct URL. A site without a package or usable ground shows the QGIS-upload prerequisite, never fake editing controls. Every archive uses the sole zone-aware `format: 1`; every request uses `/v1` and UUID site identifiers. Integration waits for DB-19 and BE-22's generated contract and real API acceptance.
 
 Suggested essentials: add polygon/rectangle, edit vertices, name zone, undo/redo, discard, validation overlays, draft save state and publication confirmation. Holes/MultiPolygon must be displayed and preserved losslessly even if advanced editing tools come later; never convert an unsupported shape to a rectangle. Code/UUID are separate from editable display label. Client-generated new UUIDs remain stable through local undo and retry. Removing a zone affects only the proposed next version.
 
@@ -22,9 +22,9 @@ Use the existing authenticated fetch/Server Action patterns for small operations
 
 ## WEB-29: data/map/filter behavior
 
-Default table label is recorded zone from the pinned package. Show map version in detail and as an available table column; exact column placement is Claude's decision. Legacy rows say “Boundary version not recorded” and retain their zone code, never a label fabricated from today's package. Distinguish sites with the same zone code.
+Default table label is recorded zone from the pinned package. Show map version in detail and as an available table column; exact column placement is Claude's decision. Every observation has its recorded package and zone UUID. Distinguish sites with the same zone code.
 
-Zone selection must filter both map and table through v2 server queries. Filter by stable identity across versions or exact package+zone; communicate which. Keep URL state and browser navigation. Reset pagination when filters change. A map displaying only a page must state that limit; totals/coverage use server summary. Do not equate the visible 500 or visible viewport with all matching observations.
+Zone selection must filter both map and table through `/v1` server queries. Filter by stable identity across versions or exact package+zone; communicate which. Keep URL state and browser navigation. Reset pagination when filters change. A map displaying only a page must state that limit; totals/coverage use server summary. Do not equate the visible 500 or visible viewport with all matching observations.
 
 Historical record detail loads its original package geometry. If results mix versions, do not draw a single current boundary and label it historical. Claude can choose a version selector, separate layers or an explicit mixed-version state. Retired zones remain in historical filter choices. Inventory appears as a zone-level record, not an ordinary point at its anchor. A zone with no events can still have an inventory; neither implies the protocol round is complete.
 

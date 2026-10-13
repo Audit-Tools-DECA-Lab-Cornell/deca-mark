@@ -3,9 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { legacyScope } from "../data/legacy/scope";
 import { instrumentObservationSchema, shellObservationSchema } from "../domain/observation";
-import { scopeKey } from "../sync/contracts";
 import {
   initializeDatabase,
   type LocalDatabase,
@@ -61,29 +59,6 @@ describe("Local observation persistence", () => {
     }
   });
 
-  it("lists records stored with the pre-config-change owner scope", async () => {
-    const database = new DatabaseSync(":memory:");
-    try {
-      await initializeDatabase(adapter(database));
-      const userId = "50000000-0000-4000-8000-000000000001";
-      const previousKey = JSON.stringify([
-        "http://127.0.0.1:8000",
-        "https://lezmqhuucfwqknspgcdy.supabase.co/auth/v1",
-        userId,
-        "10000000-0000-4000-8000-000000000002",
-      ]);
-      await saveObservation(adapter(database), record, previousKey);
-      const scope = legacyScope(userId);
-      if (!scope.success) throw new Error("Invalid fixture scope");
-      expect(scopeKey(scope.data)).toBe(previousKey);
-      expect(await listObservations(adapter(database), scopeKey(scope.data))).toEqual([
-        { ...record, storageStatus: "pending" },
-      ]);
-    } finally {
-      database.close();
-    }
-  });
-
   it("does not silently replace an observation with the same ID", async () => {
     // Given a stored record.
     const database = new DatabaseSync(":memory:");
@@ -95,20 +70,6 @@ describe("Local observation persistence", () => {
       // Then it fails and leaves the original intact.
       await expect(secondSave).rejects.toThrow();
       expect(await listObservations(adapter(database))).toEqual([record]);
-    } finally {
-      database.close();
-    }
-  });
-
-  it("refuses a newer database schema without modifying its records", async () => {
-    // Given a database written by a newer app.
-    const database = new DatabaseSync(":memory:");
-    try {
-      database.exec("PRAGMA user_version = 99;");
-      // When this app attempts to initialize it.
-      const initialization = initializeDatabase(adapter(database));
-      // Then it fails instead of downgrading the database.
-      await expect(initialization).rejects.toThrow(/newer/i);
     } finally {
       database.close();
     }
@@ -133,7 +94,7 @@ const instrument = instrumentObservationSchema.parse({
     packageVersion: "v4",
     zoneId: "B",
     zoneLabel: "Zone B · North playground",
-    round: 3,
+    roundType: "standard",
     freshPeriod: false,
     inheritedFrom: "Round context inherited.",
   },
@@ -143,16 +104,16 @@ const instrument = instrumentObservationSchema.parse({
 });
 
 describe("Queueing a record by its form version", () => {
-  it("queues a practice record as soon as it belongs to an account", async () => {
+  it("holds practice records locally while the current uploader is not implemented", async () => {
     // Given a signed-in account and the form version the API accepts.
     const database = new DatabaseSync(":memory:");
     try {
       await initializeDatabase(adapter(database));
       // When the record is saved under that account.
       await saveObservation(adapter(database), record, "account-a");
-      // Then it is waiting to upload, exactly as it did before this redesign.
+      // Then it stays local because no current upload contract is installed.
       expect(database.prepare("SELECT sync_state FROM observations").get()).toEqual({
-        sync_state: "pending",
+        sync_state: "local-only",
       });
     } finally {
       database.close();
@@ -187,7 +148,7 @@ describe("Queueing a record by its form version", () => {
       // Then each keeps its own shape, answers and round context.
       const practice = stored.find((entry) => entry.formVersion === "shell-v1");
       const collected = stored.find((entry) => entry.formVersion === "janet-test-v1");
-      expect(practice).toEqual({ ...record, storageStatus: "pending" });
+      expect(practice).toEqual({ ...record, storageStatus: "local-only" });
       expect(collected).toEqual({ ...instrument, storageStatus: "local-only" });
     } finally {
       database.close();

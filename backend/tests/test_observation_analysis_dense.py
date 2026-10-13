@@ -27,7 +27,6 @@ def test_dense_synthetic_serializer_when_answers_and_polygon_are_nontrivial(
                 "package_id": package,
                 "zone_id": zone,
                 "package_version": 1,
-                "assignment_basis": "recorded_package",
             }
         )
         for _ in range(count)

@@ -3,7 +3,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from fieldmaps_api.schemas import Code
 from fieldmaps_api.zone_geometry_schemas import (
     MAX_PACKAGE_POSITIONS,
     MAX_PACKAGE_ZONES,
@@ -28,11 +27,10 @@ class ZoneInput(BaseModel):
     geometry: ZoneGeometry
 
 
-class DraftCreate(BaseModel):
+class ZoneDraftCreate(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
     request_id: UUID
     base_package_id: UUID
-    inventory_form_version: Code | None = None
 
 
 class DraftReplace(BaseModel):

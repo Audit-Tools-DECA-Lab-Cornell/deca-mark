@@ -208,9 +208,10 @@ Do: build a QGIS Python plugin that exports the required layers from the open pr
 Done when: a manager publishes a package from QGIS without the web upload.
 
 ### GIS-09: Expose historical zones and inventory semantics
-Status: todo · Phase 3 · Size M · Depends: DB-16, BE-19 · Blocks: QA-07
+Status: done · Phase 3 · Size M · Depends: DB-16, BE-19 · Blocks: QA-07
 Owner: GIS owner; database agent writes migrations.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Specify scoped point/zone/inventory projections and exports; preserve existing reader permissions and sample view.
 Done when: Exact package-zone joins and counts agree; no inventory anchor counted as point event; record QGIS evidence.
 Verify: Local SQL/export readback and QGIS synthetic historical rendering; no implicit credentials.
+Evidence: [Projection/export guide](zone-boundaries/README.md) and [local acceptance](../docs/reviews/zone-boundaries-2026-10-11/gis09.md). Exact signed SQL/API exports agree with installed QGIS readback and rendering; Desktop canvas and point/legacy table screenshots recorded. Hosted/live reader acceptance remains QA-07.

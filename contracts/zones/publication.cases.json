@@ -1,18 +1,17 @@
 {
-  "contract_version": 1,
   "synthetic": true,
   "scenarios": [
     {
       "id": "create_and_retry",
       "given": {
-        "current": "20000000-0000-4000-8000-000000000007",
+        "current": "20000000-0000-4000-8000-000000000001",
         "role": "manager"
       },
       "steps": [
         {
           "action": "create",
           "request_id": "create-1",
-          "base": "20000000-0000-4000-8000-000000000007",
+          "base": "20000000-0000-4000-8000-000000000001",
           "expected": {
             "status": 201,
             "draft": "d1",
@@ -22,7 +21,7 @@
         {
           "action": "create",
           "request_id": "create-1",
-          "base": "20000000-0000-4000-8000-000000000007",
+          "base": "20000000-0000-4000-8000-000000000001",
           "expected": {
             "status": 200,
             "draft": "d1",
@@ -66,7 +65,7 @@
     {
       "id": "two_publications",
       "given": {
-        "current": "20000000-0000-4000-8000-000000000007",
+        "current": "20000000-0000-4000-8000-000000000001",
         "drafts": [
           "d1",
           "d2"
@@ -77,36 +76,37 @@
           "action": "publish",
           "draft": "d1",
           "request_id": "pub-1",
-          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected_current": "20000000-0000-4000-8000-000000000001",
           "expected": {
             "status": 201,
-            "package": "20000000-0000-4000-8000-000000000008",
-            "current": "20000000-0000-4000-8000-000000000008"
+            "package": "20000000-0000-4000-8000-000000000002",
+            "current": "20000000-0000-4000-8000-000000000002",
+            "replayed": false
           }
         },
         {
           "action": "publish",
           "draft": "d2",
           "request_id": "pub-2",
-          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected_current": "20000000-0000-4000-8000-000000000001",
           "expected": {
             "status": 409,
             "code": "publication_conflict",
-            "current": "20000000-0000-4000-8000-000000000008"
+            "current": "20000000-0000-4000-8000-000000000002"
           }
         }
       ]
     },
     {
-      "id": "old_replay_after_newer_publish",
+      "id": "prior_success_replay_after_newer_publish",
       "given": {
-        "current": "20000000-0000-4000-8000-000000000009",
+        "current": "20000000-0000-4000-8000-000000000003",
         "completed_request": "pub-1",
-        "completed_result": "20000000-0000-4000-8000-000000000008",
+        "completed_result": "20000000-0000-4000-8000-000000000002",
         "original_request": {
           "draft": "d1",
           "if_match": "\"zone-draft:d1:1\"",
-          "expected_current": "20000000-0000-4000-8000-000000000007"
+          "expected_current": "20000000-0000-4000-8000-000000000001"
         }
       },
       "steps": [
@@ -115,12 +115,14 @@
           "draft": "d1",
           "request_id": "pub-1",
           "if_match": "\"zone-draft:d1:1\"",
-          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected_current": "20000000-0000-4000-8000-000000000001",
           "expected": {
             "status": 200,
-            "package": "20000000-0000-4000-8000-000000000008",
-            "current": "20000000-0000-4000-8000-000000000009",
-            "new_versions": 0
+            "package": "20000000-0000-4000-8000-000000000002",
+            "current": "20000000-0000-4000-8000-000000000003",
+            "new_versions": 0,
+            "replayed": true,
+            "current_package_id": "20000000-0000-4000-8000-000000000003"
           }
         }
       ]
@@ -192,7 +194,7 @@
         {
           "action": "publish",
           "if_match": "\"zone-draft:d1:1\"",
-          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected_current": "20000000-0000-4000-8000-000000000001",
           "expected": {
             "status": 412,
             "code": "revision_conflict"
@@ -203,7 +205,7 @@
     {
       "id": "archive_prepare_failure",
       "given": {
-        "current": "20000000-0000-4000-8000-000000000007"
+        "current": "20000000-0000-4000-8000-000000000001"
       },
       "steps": [
         {
@@ -212,7 +214,7 @@
           "expected": {
             "status": 503,
             "code": "storage_unavailable",
-            "current": "20000000-0000-4000-8000-000000000007",
+            "current": "20000000-0000-4000-8000-000000000001",
             "visible_partial_package": false
           }
         }
@@ -264,52 +266,9 @@
       ]
     },
     {
-      "id": "managed_legacy_import",
-      "given": {
-        "managed": true,
-        "current": "20000000-0000-4000-8000-000000000008"
-      },
-      "steps": [
-        {
-          "action": "legacy_package_post",
-          "expected": {
-            "status": 428,
-            "code": "precondition_required",
-            "current": "20000000-0000-4000-8000-000000000008"
-          }
-        }
-      ]
-    },
-    {
-      "id": "adoption_only_on_publish",
-      "given": {
-        "managed": false,
-        "current": "20000000-0000-4000-8000-000000000007"
-      },
-      "steps": [
-        {
-          "action": "create",
-          "expected": {
-            "status": 201,
-            "managed": false
-          }
-        },
-        {
-          "action": "publish",
-          "expected_current": "20000000-0000-4000-8000-000000000007",
-          "expected": {
-            "status": 201,
-            "current": "20000000-0000-4000-8000-000000000008",
-            "legacy_package": "20000000-0000-4000-8000-000000000007",
-            "managed": true
-          }
-        }
-      ]
-    },
-    {
       "id": "rename_and_remove",
       "given": {
-        "current": "20000000-0000-4000-8000-000000000007",
+        "current": "20000000-0000-4000-8000-000000000001",
         "historic_zone": "30000000-0000-4000-8000-000000000001",
         "historic_label": "North"
       },
@@ -324,7 +283,8 @@
           "expected": {
             "status": 201,
             "historic_label": "North",
-            "historic_zone_readable": true
+            "historic_zone_readable": true,
+            "replayed": false
           }
         }
       ]
@@ -351,7 +311,7 @@
     {
       "id": "topology_save_publish",
       "given": {
-        "current": "20000000-0000-4000-8000-000000000007"
+        "current": "20000000-0000-4000-8000-000000000001"
       },
       "steps": [
         {
@@ -373,12 +333,12 @@
         },
         {
           "action": "publish",
-          "expected_current": "20000000-0000-4000-8000-000000000007",
+          "expected_current": "20000000-0000-4000-8000-000000000001",
           "expected": {
             "status": 422,
             "code": "validation_failed",
             "issue": "self_intersection",
-            "current": "20000000-0000-4000-8000-000000000007"
+            "current": "20000000-0000-4000-8000-000000000001"
           }
         }
       ]
@@ -386,7 +346,7 @@
     {
       "id": "empty_draft",
       "given": {
-        "current": "20000000-0000-4000-8000-000000000007"
+        "current": "20000000-0000-4000-8000-000000000001"
       },
       "steps": [
         {
@@ -437,74 +397,192 @@
       ]
     },
     {
-      "id": "adoption_inventory_selected",
+      "id": "first_upload_explicit_identities",
       "given": {
-        "base_format": 1,
-        "form_authorized": true,
-        "form_state": "published"
-      },
-      "steps": [
-        {
-          "action": "create",
-          "inventory_form_version": "janet-inventory-v1",
-          "expected": {
-            "status": 201,
-            "inventory_binding": "janet-inventory-v1"
-          }
-        }
-      ]
-    },
-    {
-      "id": "adoption_inventory_unavailable",
-      "given": {
-        "base_format": 1
-      },
-      "steps": [
-        {
-          "action": "create",
-          "expected": {
-            "status": 201,
-            "inventory_binding": null,
-            "choose_latest_inventory": false
-          }
-        }
-      ]
-    },
-    {
-      "id": "existing_bound_form_override",
-      "given": {
-        "base_format": 2,
-        "inventory_binding": "janet-inventory-v1"
-      },
-      "steps": [
-        {
-          "action": "create",
-          "inventory_form_version": "other-v1",
-          "expected": {
-            "status": 422,
-            "code": "validation_failed",
-            "issue": "form_not_in_package"
-          }
-        }
-      ]
-    },
-    {
-      "id": "adoption_legacy_mapping_note",
-      "given": {
-        "base_format": 1,
-        "legacy_codes": [
-          "A"
+        "current": null,
+        "role": "manager",
+        "source_zone_ids": [
+          "A",
+          "B"
         ],
-        "change_note": ""
+        "forms_published": true
       },
       "steps": [
         {
-          "action": "publish",
+          "action": "upload",
+          "request_id": "upload-1",
+          "expected_current": null,
+          "zone_identity_map": [
+            {
+              "source_feature_id": "A",
+              "zone_id": "30000000-0000-4000-8000-000000000001",
+              "zone_code": "A"
+            },
+            {
+              "source_feature_id": "B",
+              "zone_id": "30000000-0000-4000-8000-000000000002",
+              "zone_code": "B"
+            }
+          ],
+          "expected": {
+            "status": 201,
+            "package": "20000000-0000-4000-8000-000000000001",
+            "package_version": 1,
+            "current": "20000000-0000-4000-8000-000000000001",
+            "state": "ready",
+            "zone_count": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "first_upload_missing_identity",
+      "given": {
+        "current": null,
+        "role": "manager",
+        "source_zone_ids": [
+          "A",
+          "B"
+        ],
+        "forms_published": true
+      },
+      "steps": [
+        {
+          "action": "upload",
+          "request_id": "upload-1",
+          "expected_current": null,
+          "zone_identity_map": [
+            {
+              "source_feature_id": "A",
+              "zone_id": "30000000-0000-4000-8000-000000000001",
+              "zone_code": "A"
+            }
+          ],
           "expected": {
             "status": 422,
             "code": "validation_failed",
-            "issue": "legacy_mapping_required",
-            "legacy_rows_unchanged": true
+            "issue": "identity_conflict",
+            "current": null,
+            "new_versions": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "validation_change_added",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "zone_id": "30000000-0000-4000-8000-000000000001",
+        "current_geometry": null,
+        "draft_geometry": "square"
+      },
+      "steps": [
+        {
+          "action": "validate",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected": {
+            "status": 200,
+            "revision": 1,
+            "change": "added",
+            "zone_id": "30000000-0000-4000-8000-000000000001",
+            "geometry_sha256_present": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "validation_change_removed",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "zone_id": "30000000-0000-4000-8000-000000000001",
+        "current_geometry": "square",
+        "draft_geometry": null
+      },
+      "steps": [
+        {
+          "action": "validate",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected": {
+            "status": 200,
+            "revision": 1,
+            "change": "removed",
+            "zone_id": "30000000-0000-4000-8000-000000000001",
+            "geometry_sha256_present": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "validation_change_geometry_changed",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "zone_id": "30000000-0000-4000-8000-000000000001",
+        "current_geometry": "square",
+        "draft_geometry": "adjacent"
+      },
+      "steps": [
+        {
+          "action": "validate",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected": {
+            "status": 200,
+            "revision": 1,
+            "change": "geometry_changed",
+            "zone_id": "30000000-0000-4000-8000-000000000001",
+            "geometry_sha256_present": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "validation_change_label_changed",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "zone_id": "30000000-0000-4000-8000-000000000001",
+        "current_geometry": "square",
+        "draft_geometry": "square",
+        "current_label": "North",
+        "draft_label": "Meadow"
+      },
+      "steps": [
+        {
+          "action": "validate",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected": {
+            "status": 200,
+            "revision": 1,
+            "change": "label_changed",
+            "zone_id": "30000000-0000-4000-8000-000000000001",
+            "geometry_sha256_present": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "validation_change_unchanged",
+      "given": {
+        "current": "20000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "zone_id": "30000000-0000-4000-8000-000000000001",
+        "current_geometry": "square",
+        "draft_geometry": "square",
+        "current_label": "North",
+        "draft_label": "North"
+      },
+      "steps": [
+        {
+          "action": "validate",
+          "if_match": "\"zone-draft:d1:1\"",
+          "expected": {
+            "status": 200,
+            "revision": 1,
+            "change": "unchanged",
+            "zone_id": "30000000-0000-4000-8000-000000000001",
+            "geometry_sha256_present": true
           }
         }
       ]

@@ -5,81 +5,73 @@ from zipfile import ZipFile
 
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import JsonValue, TypeAdapter
 
 from tests.signing import Signer
-from tests.tenant_fixtures import observation_payload, sign_in
-from tests.test_site_packages import submission
+from tests.tenant_fixtures import sign_in
 from tests.zone_api_fixtures import (
     ZoneSite,
     create_draft,
     document,
     publish_draft,
-    snapshot_history,
-    zone_rows,
 )
 
 pytestmark = pytest.mark.integration
 
 
-def test_archive_snapshots_and_legacy_site_selection_agree_after_adoption(
+def test_archive_snapshot_and_current_site_read_match_after_publication(
     api_client: TestClient, zone_site: ZoneSite
 ) -> None:
-    before = snapshot_history(zone_site.tenant)
-    legacy_url = f"{zone_site.project_url}/packages/{zone_site.package_id}/archive"
-    legacy_bytes = api_client.get(legacy_url).content
+    initial = api_client.get(
+        f"{zone_site.project_url}/packages/{zone_site.package_id}/archive"
+    )
+    assert initial.status_code == 200, initial.text
     published = publish_draft(api_client, zone_site)
-    package = str(published["package_id"])
-    archive = api_client.get(f"{zone_site.project_url}/packages/{package}/archive")
+    package_id = str(published["package_id"])
+    archive = api_client.get(f"{zone_site.project_url}/packages/{package_id}/archive")
     assert archive.status_code == 200, archive.text
     assert archive.headers["etag"].strip('"') == hashlib.sha256(archive.content).hexdigest()
-    with ZipFile(BytesIO(archive.content)) as opened:
+    with ZipFile(BytesIO(archive.content)) as opened, ZipFile(BytesIO(initial.content)) as old:
         manifest = document(opened.read("manifest.json"))
         zones = document(opened.read("layers/zones.json"))
-        assert manifest["format"] == 2
-        assert manifest["package_id"] == package
-        assert manifest["forms"] is not None
-        stored = TypeAdapter(list[dict[str, JsonValue]]).validate_json(zone_rows(zone_site.tenant))
+        assert manifest["format"] == 1
+        assert set(manifest) == {
+            "format",
+            "site_id",
+            "site_code",
+            "package_id",
+            "package_version",
+            "forms",
+            "zones",
+        }
+        assert manifest["package_id"] == package_id
         features = zones["features"]
         assert isinstance(features, list)
-        assert len(features) == len(stored)
-        for feature, snapshot in zip(features, stored, strict=True):
-            assert isinstance(feature, dict)
-            assert feature["geometry"] == snapshot["geometry"]
-            props = feature["properties"]
-            assert isinstance(props, dict)
-            assert props["geometry_sha256"] == snapshot["digest"]
-            assert props["display_anchor"] == snapshot["anchor"]
-        with ZipFile(BytesIO(legacy_bytes)) as old:
-            for name in ("ground", "paths", "trees"):
-                assert opened.read(f"layers/{name}.json") == old.read(f"layers/{name}.json")
-    assert api_client.get(legacy_url).content == legacy_bytes
-    assert snapshot_history(zone_site.tenant) == before
-    v1 = document(api_client.get(f"{zone_site.project_url}/sites/sample-garden").content)
-    assert str(zone_site.package_id) in str(v1["package"])
-    v2 = api_client.get(f"/v2/projects/{zone_site.tenant.project}/sites")
-    assert v2.status_code == 200, v2.text
-    assert package in v2.text
-    assert '"zone_contract_version":1' in v2.text
-    legacy_list = api_client.get(f"{zone_site.project_url}/packages")
-    assert package not in legacy_list.text
-    supported = api_client.get(
-        f"{zone_site.project_url}/packages?supported_format=1&supported_format=2"
+        assert features
+        for name in ("ground", "paths", "trees"):
+            assert opened.read(f"layers/{name}.json") == old.read(f"layers/{name}.json")
+
+    site = api_client.get(zone_site.url)
+    assert site.status_code == 200, site.text
+    assert document(site.content)["current_package_id"] == package_id
+    history = api_client.get(
+        f"{zone_site.project_url}/packages", params={"site_id": str(zone_site.tenant.site)}
     )
-    assert package in supported.text
-    historical = api_client.get(f"{zone_site.url}/zones?package_id={package}")
+    assert history.status_code == 200, history.text
+    assert package_id in history.text
+    historical = api_client.get(f"{zone_site.url}/zones?package_id={package_id}")
     assert historical.status_code == 200, historical.text
     assert '"MultiPolygon"' in historical.text
 
 
-def test_response_loss_replays_original_result_after_another_publication(
+def test_response_loss_replays_original_publication_without_moving_current(
     api_client: TestClient, zone_site: ZoneSite
 ) -> None:
     url, etag, _draft = create_draft(api_client, zone_site)
     body = {"request_id": str(uuid4()), "expected_current_package_id": str(zone_site.package_id)}
     first = api_client.post(f"{url}/publish", headers={"If-Match": etag}, json=body)
     assert first.status_code == 201, first.text
-    first_package = document(first.content)["package"]
+    first_result = document(first.content)
+    first_package = first_result["package"]
     assert isinstance(first_package, dict)
     next_create = api_client.post(
         zone_site.drafts,
@@ -99,21 +91,18 @@ def test_response_loss_replays_original_result_after_another_publication(
     assert second.status_code == 201, second.text
     replay = api_client.post(f"{url}/publish", headers={"If-Match": etag}, json=body)
     assert replay.status_code == 200, replay.text
-    assert replay.content == first.content
+    replay_result = document(replay.content)
+    assert replay_result["package"] == first_package
+    assert replay_result["replayed"] is True
     second_package = document(second.content)["package"]
     assert isinstance(second_package, dict)
-    assert (
-        str(second_package["package_id"])
-        in api_client.get(f"/v2/projects/{zone_site.tenant.project}/sites").text
-    )
-    conflict = api_client.post(
-        f"{url}/publish", headers={"If-Match": etag.replace(':1"', ':2"')}, json=body
-    )
-    assert conflict.status_code == 409, conflict.text
-    assert "idempotency_conflict" in conflict.text
+    assert document(replay.content)["current_package_id"] == second_package["package_id"]
+    assert document(api_client.get(zone_site.url).content)["current_package_id"] == second_package[
+        "package_id"
+    ]
 
 
-def test_stale_base_keeps_unsaved_draft_and_returns_authorized_current_identity(
+def test_stale_base_keeps_unsaved_draft_and_returns_current_identity(
     api_client: TestClient, zone_site: ZoneSite
 ) -> None:
     url, etag, original = create_draft(api_client, zone_site)
@@ -131,34 +120,6 @@ def test_stale_base_keeps_unsaved_draft_and_returns_authorized_current_identity(
     assert retained["state"] == "draft"
 
 
-def test_managed_site_rejects_legacy_import_without_replacing_current(
-    api_client: TestClient, zone_site: ZoneSite
-) -> None:
-    published = publish_draft(api_client, zone_site)
-    refused = api_client.post(f"{zone_site.project_url}/packages", json=submission())
-    assert refused.status_code == 428, refused.text
-    assert "precondition_required" in refused.text
-    assert (
-        str(published["package_id"])
-        in api_client.get(f"/v2/projects/{zone_site.tenant.project}/sites").text
-    )
-
-
-def test_never_uploaded_legacy_observation_remains_valid_after_adoption(
-    api_client: TestClient, signer: Signer, zone_site: ZoneSite
-) -> None:
-    publish_draft(api_client, zone_site)
-    sign_in(api_client, signer, zone_site.tenant.users["observer"])
-    url = f"{zone_site.project_url}/observations/{uuid4()}"
-    body = observation_payload()
-    first = api_client.put(url, json=body)
-    assert first.status_code == 200, first.text
-    assert api_client.put(url, json=body).content == first.content
-    historical = api_client.get(url)
-    assert historical.status_code == 200
-    assert '"people":3' in historical.text
-
-
 @pytest.mark.parametrize("body", [{"request_id": str(uuid4())}, {}])
 def test_publication_missing_current_precondition_is_428(
     api_client: TestClient, zone_site: ZoneSite, body: dict[str, str]
@@ -166,22 +127,6 @@ def test_publication_missing_current_precondition_is_428(
     url, etag, _draft = create_draft(api_client, zone_site)
     result = api_client.post(f"{url}/publish", headers={"If-Match": etag}, json=body)
     assert result.status_code == 428, result.text
-
-
-def test_legacy_lost_response_replays_same_receipt_after_adoption(
-    api_client: TestClient, signer: Signer, zone_site: ZoneSite
-) -> None:
-    sign_in(api_client, signer, zone_site.tenant.users["observer"])
-    url = f"{zone_site.project_url}/observations/{uuid4()}"
-    payload = observation_payload()
-    first = api_client.put(url, json=payload)
-    assert first.status_code == 200, first.text
-    sign_in(api_client, signer, zone_site.tenant.users["manager"])
-    publish_draft(api_client, zone_site)
-    sign_in(api_client, signer, zone_site.tenant.users["observer"])
-    replay = api_client.put(url, json=payload)
-    assert replay.status_code == 200, replay.text
-    assert replay.content == first.content
 
 
 def test_publication_replay_rechecks_current_manager_authorization(

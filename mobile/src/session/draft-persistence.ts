@@ -1,0 +1,96 @@
+import { useEffect, useRef } from "react";
+import type { Coordinate, Placement, RoundContext } from "../domain/observation";
+import type { SessionState } from "../forms/session";
+import type { SitePackage } from "../packages/site-package";
+import {
+  hasDraft,
+  type ObservationDraft,
+  observationDraftSchema,
+  readDraft,
+  saveDraft,
+} from "../storage/draft-store";
+import type { LocalDatabase } from "../storage/observation-store";
+import { type ObservationIdentity, ownershipProblem } from "./ownership";
+
+export function useDraftRecovery(input: {
+  readonly database: LocalDatabase;
+  readonly key: string;
+  readonly ready: boolean;
+  readonly setUnreadableDraft: (value: boolean) => void;
+  readonly setRecovered: (draft: ObservationDraft | null) => void;
+  readonly setStatus: (message: string) => void;
+}) {
+  const callbacks = useRef(input);
+  callbacks.current = input;
+  useEffect(() => {
+    if (!input.ready) return;
+    let active = true;
+    callbacks.current.setRecovered(null);
+    callbacks.current.setUnreadableDraft(false);
+    void readDraft(input.database, input.key)
+      .then(async (draft) => {
+        if (!active) return;
+        if (draft) callbacks.current.setRecovered(draft);
+        else if (await hasDraft(input.database, input.key)) {
+          if (!active) return;
+          callbacks.current.setUnreadableDraft(true);
+          callbacks.current.setStatus(
+            "An unfinished observation cannot be read by this build. Its stored data is retained; recover or explicitly discard it before starting another.",
+          );
+        }
+      })
+      .catch((error: unknown) => {
+        if (active && error instanceof Error)
+          callbacks.current.setStatus("Saved drafts could not be read on this device.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [input.database, input.key, input.ready]);
+}
+export function persistDraft(input: {
+  readonly database: LocalDatabase;
+  readonly key: string;
+  readonly ready: boolean;
+  readonly site: SitePackage | null;
+  readonly context: RoundContext | null;
+  readonly owner: ObservationIdentity | null;
+  readonly formVersion: string | undefined;
+  readonly placement: Placement["source"];
+  readonly next: SessionState;
+  readonly coordinate: Coordinate | null;
+  readonly failed: () => void;
+}): void {
+  const { site, context, owner, next, coordinate } = input;
+  if (
+    !input.ready ||
+    !site ||
+    !context ||
+    !owner ||
+    ownershipProblem(owner, input.key, site.id) !== null
+  )
+    return;
+  const draft = observationDraftSchema.safeParse({
+    id: owner.id,
+    owner: owner.owner,
+    formVersion: input.formVersion ?? site.formVersion,
+    packageId: site.id,
+    siteId: site.siteId,
+    context,
+    ...(owner.binding ? { binding: owner.binding } : {}),
+    coordinates: coordinate,
+    placement: coordinate ? { source: input.placement, gpsAccuracyMetres: null } : null,
+    answers: next.answers,
+    questionIndex: next.index,
+    startedAt: owner.startedAt,
+    updatedAt: new Date().toISOString(),
+  });
+  if (!draft.success) {
+    input.failed();
+    return;
+  }
+  void saveDraft(input.database, input.key, draft.data).catch((error: unknown) => {
+    if (error instanceof Error) input.failed();
+    else throw error;
+  });
+}

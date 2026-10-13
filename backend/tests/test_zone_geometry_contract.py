@@ -29,7 +29,6 @@ class CoverageCase(BaseModel):
 
 class GeometryCases(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
-    contract_version: Literal[1]
     synthetic: Literal[True]
     geometries: dict[str, JsonValue]
     structure_cases: tuple[StructureCase, ...]

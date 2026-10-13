@@ -1,87 +1,231 @@
-# Zone boundary contract, version 1
+# Zone boundary contract
 
-[Master plan](README.md). CON-05 freezes the following interfaces and authored [shared cases](../../../contracts/zones/README.md). BE-18 implements authoring, historical-zone reads and v2 site discovery in local source with publication disabled by default; BE-19 adds bound v2 observation uploads and preserves v1 retries. BE-20 adds historical observation list/detail/summary and complete bounded exports. Backend-generated OpenAPI and client declarations expose those routes. Backend input models live in `zone_geometry_schemas.py`, `zone_draft_schemas.py`, `zone_observation_schemas.py` and `observation_analysis_schemas.py`. Local implementation does not establish hosted availability. Any incompatible deviation requires lead review and coordinated consumer changes.
+[Master plan](README.md) · [Shared cases](../../../contracts/zones/README.md) · Tasks CON-05 (frozen 2026-10-10) and CON-06 (single-path rewrite, 2026-10-11) in [contracts.md](../contracts.md)
+
+This contract follows the owner's [pre-launch compatibility policy](../README.md#pre-launch-compatibility-policy-2026-10-11). There are no real users, server and device data are reset when the schema changes, and nothing here exists to keep old data, old clients, old formats or an older API version working. The 2026-10-11 rewrite replaces CON-05's dual-path design. BE-22 and DB-19 now implement the single API path and current schema locally; the earlier BE-18 through BE-20 implementation served dual paths. Hosted and client-device acceptance remains part of QA-07. The [cleanup](#what-the-rewrite-removed) records the removed behavior. Any change to this contract needs a coordinated update of backend, database, both clients and the shared cases.
+
+## What the rewrite removed
+
+Every item below is deleted. None is retained or emulated:
+
+- **Second API version:** the `/v2/` routes. Their behaviour moves to the existing `/v1/` paths, and the old `/v1/` site-list, observation-upload and observation-list behaviour is deleted.
+- **Second package format:** format 1 as a separate older format, and `supported_format` filtering.
+- **Legacy observations:** unversioned and legacy rows, `assignment_basis`, `legacy_unversioned`, `legacy_zone_code`, `spatial_support: legacy_unknown`, `legacy_count`.
+- **Legacy site handling:** `legacy_package_id`, the frozen legacy package for old site lists, and unmanaged-site uploads.
+- **Adoption bootstrap:** drafts based on a format-1 package, `legacy_codes_requiring_mapping` and `legacy_mapping_required`.
+- **Old upload protocol:** `upload_protocol`, `upload_hash_version`, the v1 fingerprint and its goldens, `schema_version` in the upload envelope and receipt.
+- **Metadata that only told formats apart:** `zone_contract_version` and `map_revision`.
+- **Publication switch:** `zone_publication_enabled`, a rollout guard for old clients. Publication is always on.
+- **Old-client tests:** mobile capability detection and older-server fallback, and every test that preserves an older schema or older client behaviour.
+
+## Names and versions
+
+There is one of everything, and every counter starts at 1:
+
+| Thing | Name | Meaning |
+| --- | --- | --- |
+| API | `/v1/…` | The only API version. A future breaking change replaces it while pre-launch. |
+| Map package version | `package_version`, shown as `v1`, `v2`, … | Per-site counter. A site's first package is `v1`; each publication or upload adds one. A reset starts every site at `v1` again |
+| Package archive format | manifest `format: 1` | The only format: the zone-aware archive below. Readers reject anything else |
+| Observation fingerprint | `canonicalization_version: "observation-jcs-1"` | The only upload hash |
+| Contract | this document | No version number is carried on the wire |
+
+Examples use `v1` and `v2`. Earlier drafts said `v7` and `v8` only to illustrate a site with history.
 
 ## Identity vocabulary
 
 | Field | Meaning |
 | --- | --- |
-| `site_id` | Actual site UUID in new APIs; v1 observation `site_id` remains a site code |
-| `package_id` | Immutable server package UUID; this is the boundary-set version identity |
-| `package_version` | Human-readable monotonically increasing integer within one site |
-| `zone_id` | Stable zone UUID, unique to one tenant/project/site |
-| `zone_code` | Immutable human code; legacy `zone`/mobile `context.zoneId` remain code fields |
-| `zone_label` | Label frozen in the referenced package, never obtained from the latest package |
-| `draft_id`, `revision` | Mutable manager draft identity and monotonic concurrency revision |
-| `assignment_basis` | Read-side `recorded_package` or `legacy_unversioned`; not client-asserted truth |
+| `site_id` | Site UUID. Every API path and body addresses a site by UUID. `site_code` is a unique human field used in web addresses and labels, never as an API identifier |
+| `package_id` | Immutable package UUID; the boundary-set version identity |
+| `package_version` | Per-site integer, from 1 |
+| `zone_id` | Stable zone UUID within one tenant, project and site |
+| `zone_code` | Immutable human code of a zone identity |
+| `zone_label` | Label frozen in the referenced package, never taken from a later package |
+| `draft_id`, `revision` | Mutable manager draft identity and its monotonic concurrency revision |
+| `spatial_support` | `point` (Standard, Reliability) or `zone` (Inventory) |
 
-Do not trust redundant submitted labels, versions or project/organization identifiers. Derive them from authorized package/zone rows. UUIDs identify; foreign keys and RLS authorize.
+Do not trust submitted labels, versions or project or organization identifiers. Derive them from authorized package and zone rows. UUIDs identify; foreign keys and RLS authorize.
 
-## Geometry contract
+## Geometry
 
-New published geometry uses GeoJSON Polygon/MultiPolygon, 2D `[longitude, latitude]`, EPSG:4326. Reject NaN/infinity, out-of-range coordinates, extra dimensions, empty components, unclosed rings, rings with fewer than three distinct vertices, zero-area rings, invalid holes, self-intersections and invalid multipart topology. Normalize Polygon to MultiPolygon server-side without changing its area. Normalize ring orientation/order deterministically before publication; return the canonical geometry to the client. Keep full accepted precision in storage and archives; round only UI text.
+Published geometry is GeoJSON Polygon or MultiPolygon, 2D `[longitude, latitude]`, EPSG:4326.
 
-Publication requires every zone to be covered by the package's actual site polygon (the `ground` feature whose `kind` is `site`). Positive-area interior intersections between zones are forbidden; boundary-only touching is valid. Test containment as well as ordinary crossing: `ST_Overlaps` alone misses one zone completely inside another. Use a tested interior-intersection predicate such as the relevant DE-9IM relation. No silent buffer, `ST_MakeValid`, simplification or clipping. A preview may offer a correction only as an explicit manager edit followed by validation.
+- **Reject:**
+  - NaN or infinity;
+  - out-of-range coordinates;
+  - extra dimensions;
+  - empty components;
+  - unclosed rings;
+  - rings with fewer than three distinct vertices;
+  - zero-area rings;
+  - invalid holes;
+  - self-intersections;
+  - invalid multipart topology.
+- **Normalize** Polygon to MultiPolygon on the server without changing its area. Normalize ring orientation and order deterministically at publication (normalization rules below).
+- **Precision:** keep full accepted precision in storage and archives; round only UI text.
 
-Gaps in site coverage and very small zones are warnings; do not declare an unsampled gap “complete.” Allow holes and MultiPolygon through all readers even if Claude's initial drawing UI does not author every geometry operation. New publication supports latitudes from -85 through 85 inclusive and an unwrapped longitude/latitude bounding-box span at most 1 degree on either axis for the complete site and zone set. Reject antimeridian-crossing, polar/global and larger shapes as `unsupported_extent`; do not wrap coordinates to make them pass. These limits apply to new format-2 publication, never old archives or migration rows. Existing site fixtures range from latitude 42.4419159 to 42.4513721; the widest fixture spans 0.0037554 degrees of longitude. Fall Creek has no site ground polygon and still requires an import with usable ground before adoption.
+Publication requires every zone to be covered by the package's site polygon: the `ground` feature whose `kind` is `site`. Positive-area interior intersections between zones are forbidden, including one zone inside another. Boundary-only touching is valid. Use a tested interior-intersection predicate (DE-9IM), not `ST_Overlaps` alone. No silent buffer, `ST_MakeValid`, simplification or clipping. A correction is always an explicit manager edit followed by validation.
 
-Frozen input bounds: 250 zones/package, 2,000 coordinate positions/zone, 20,000 positions/package, 4,194,304 bytes per draft replacement body. Counts include every ring/part and closing positions. Limits are inclusive. Count actual decoded UTF-8 body bytes, including streamed bodies without Content-Length; refuse unsupported content encoding rather than bypassing the limit. Structural limits apply at draft save and are repeated at publication. An empty draft can be saved, but publication requires at least one zone. Existing site fixtures contain at most three zones and 1,558 total geometry positions including non-zone layers. Existing format-1 preparation's 64-zone limit remains unchanged; the format-2 builder must use the new limit rather than routing through that legacy cap. Bound CPU time for topology checks and use spatial index/bbox candidate reduction. The editor does not upload raster data. Existing ZIP/package limits still apply. Limit changes require coordinated contract, schema, body-limiter and client-test updates.
+Gaps in site coverage (`site_gap`) and zones under 1 m² (`small_zone`) are warnings. Readers display holes and MultiPolygon losslessly. Publication supports latitudes from −85 to 85 inclusive and a site and zone set whose unwrapped bounding box spans at most 1° on either axis. Antimeridian-crossing, polar, global and larger shapes are refused as `unsupported_extent`; coordinates are never wrapped to pass.
 
-**Point attribution:** use `ST_Covers(selected_zone.geom, point)` on valid geometry. This includes outer and hole boundary edges, but not hole interiors. On a shared edge, accept the explicitly selected covering zone; no implicit “first match.” Client membership math must agree through shared authored cases. Near-edge points are not snapped/toleranced by validation; optional editor snapping changes the submitted geometry explicitly.
+Input bounds, inclusive, counting every ring, part and closing position:
 
-**Inventory:** references the complete zone snapshot. v2 returns `geometry: null` for the event and a `display_anchor` from the package's canonical interior point. The database may keep that anchor in the existing non-null `geom` column for v1 compatibility, with `placement_source = zone`. New v2 upload sends no coordinate for inventory; the server derives the anchor. GIS/export uses zone geometry or null event geometry, never a fabricated observation point. The chosen form version must match the package's frozen play/inventory binding and round type.
+| Bound | Limit |
+| --- | --- |
+| Zones per package | 250 |
+| Positions per zone | 2,000 |
+| Positions per package | 20,000 |
+| Draft replacement body (decoded UTF-8, `Content-Length` or not) | 4,194,304 bytes |
 
-## Manager authoring endpoints
+Encoded request bodies are refused. Structural limits apply at draft save and again at publication. An empty draft can be saved; publication needs at least one zone. Topology checks have bounded CPU time and use spatial-index candidate reduction. The editor never uploads raster data.
 
-All paths below start with `/v1/projects/{project_id}/sites/{site_id}`. All mutations require manager ability including inherited organization-admin ability. No Supabase browser-table access is introduced.
+**Point attribution:** `ST_Covers(selected_zone.geom, point)` on valid geometry. It includes outer and hole edges, but not hole interiors. On a shared edge the explicitly selected covering zone is accepted; there is no implicit first match. Client membership math must agree with the shared cases. Near-edge points are never snapped or toleranced by validation.
 
-The existing base site detail/update paths use `{site_code}`, not UUID. Keep those shipped routes unchanged; the new nested zone resources use an explicitly documented UUID parameter. Generated operation IDs and client adapters must distinguish these identities. If implementation prefers an unambiguous v2 site prefix, coordinate that change through CON-05 before clients are built; do not infer whether an arbitrary string is a UUID or code dynamically.
+**Inventory:** references the whole zone snapshot. The upload sends no coordinate. Reads return event `geometry: null` and the snapshot's `display_anchor`. GIS and exports use the zone geometry or a null event geometry, never a fabricated point. The form must match the package's inventory binding and the round type.
 
-| Method and path | Request | Result |
-| --- | --- | --- |
-| `POST /zone-drafts` | `{request_id, base_package_id, inventory_form_version?}` | `201` draft cloned from a permitted ready package; preserve ground/forms/other layers; replay returns same draft; inventory selection only bootstraps format-1 adoption |
-| `GET /zone-drafts/{draft_id}` | None | Full draft, `revision`, base and current package IDs, ETag |
-| `PUT /zone-drafts/{draft_id}` | Full zones array and change note, `If-Match` | Updated draft/revision/ETag; whole-draft compare-and-swap, not last-writer-wins |
-| `POST /zone-drafts/{draft_id}/validate` | `If-Match` | Validation issues, area/extent summaries and readiness against that revision; does not publish |
-| `POST /zone-drafts/{draft_id}/publish` | `{request_id, expected_current_package_id}`, `If-Match` | `201` immutable package result; identical retry returns original `200` result |
+## Packages: how a site gets versions
 
-Add manager list `GET /zone-drafts?state=draft|published|discarded` and conditional discard `DELETE /zone-drafts/{draft_id}` (soft state transition, `204`). Published drafts cannot be edited/discarded. Store the published result pointer so response loss is recoverable. Draft reads never appear in observer site lists.
+A site has no zone versions until its first package. Two writers create packages, and both go through one finalization path under the site lock: QGIS upload, and draft publication. Blocked packages never become current. There is no separate adoption or activation step.
 
-Draft zone entry: `{zone_id, zone_code, zone_label, geometry}`. New entries use a client-generated UUID as an idempotent provisional identity; server checks it is either new or already belongs to the same site. Only publication creates a durable stable identity. Labels are trimmed, 1–200 Unicode code points. Codes are case-sensitive, untrimmed ASCII, 1–100 characters, matching the entire expression `[A-Za-z0-9][A-Za-z0-9_.-]*`; code and UUID never substitute for one another. Existing same-site UUID requires its original code. Duplicate UUID/code fails. Existing identity omitted from a draft is removed from that next snapshot only. Historical codes that do not fit this syntax require explicit adoption mapping; old data is not rewritten.
+### QGIS upload
 
-Save structurally valid but topologically invalid draft shapes so work is not lost; validation/publish must reject them. Structural validity requires finite 2D coordinates in WGS84 range, nonempty components, closed rings with at least four positions and three distinct nonclosing vertices. Zero area, invalid holes, self-intersection, unsupported extent and multipart topology are publish-time checks, so structurally complete work can be saved before repair. Null/empty geometry and unfinished drawing gestures stay client-local. A draft response includes `draft_id`, `site_id`, `base_package_id`, `base_package_version`, `current_package_id`, `revision`, `state`, `zones`, `change_note`, `updated_at`, `updated_by`, and nullable `published_package_id`. Change notes are trimmed and limited to 2,000 Unicode code points; replacement requires the field, allowing an empty string. The strong ETag is exactly `"zone-draft:<lowercase draft UUID>:<positive decimal revision>"`, starting at revision 1. Missing required precondition returns `428`; stale ETag returns `412`; stale current package at publication returns `409 publication_conflict` with authorized current identity. Preserve unsaved work; no automatic geometry merge/rebase.
+`POST /v1/projects/{p}/packages/import` stays a conversion-only helper: it converts QGIS layers and saves nothing.
 
-All mutation request IDs are scoped to caller/project/operation and persist with normalized request identity. Reuse with a different request returns `409 idempotency_conflict`. Publication replay resolves the stored result before checking whether its old ETag/current pointer is now stale. It must not update the site's current pointer again. Every replay still checks current authorization. ETag compare/update runs atomically; two drafts based on the same package cannot both activate unnoticed.
-
-### Historical reads and capabilities
-
-`GET /v1/projects/{p}/sites/{s}/zones?package_id={uuid}` returns `{site_id, package_id, package_version, zones:[...]}` with full GeoJSON, UUID/code/label and display anchors. Omitting package uses the site's explicit current pointer. Historical authorized packages remain readable. Draft IDs are invalid here.
-
-Extend site/package metadata additively with `zone_contract_version: 1 | null`, `map_revision`, `current_package_id`, and `zone_editing_available`. Package manifest format 2 contains stable zone UUIDs and frozen play/inventory form bindings, with legacy code IDs retained in the zones layer for older readers. Do not assume old clients can parse format 2; test actual old schemas/builds. Existing format-1 packages remain unchanged and readable.
-
-Compatibility evidence to test explicitly: current mobile `manifestSchema` accepts any format >=1 and strips unrecognized fields, while its local stored-package wrapper is fixed at format 1. Therefore an old app may open format 2 yet discard UUID bindings and choose an unrelated current inventory form. Keep v1 collection visibly unversioned in upgraded management reports and require the upgraded collector for the feature's reproducibility guarantee. Test actual installed client behavior using the compatibility selection below. Do not claim server capability alone upgrades an old app or that an old app can display newly introduced warnings.
-
-**Selected compatibility mechanism:** add `GET /v2/projects/{p}/sites` with the same base site fields plus the above capability/version metadata; updated mobile and web use it. On site adoption freeze `legacy_package_id` to the site's last ready format-1 package. For managed sites the existing v1 site list/detail continues returning that legacy package and its matching zones, not the new managed current pointer. Unmanaged sites keep existing v1 selection. No v1 latest-ready query may accidentally discover a format-2 package. Package-by-ID reads remain authorized and available for recovery; package list clients must filter by supported format. A site with no compatible legacy package returns no downloadable v1 package. Old apps' uploads remain accepted as legacy; manager reports distinguish them, and the launch guide requires the upgraded observer app for version-bound research. Avoid changing a legacy package's form choices or archive bytes to emulate v2.
-
-An upgraded client uses bound collection only when both server capability and a verified format-2 package are present. Format-1 collection remains v1 and visibly legacy. Unsupported servers must not receive v2 bodies via silent fallback. No WebSocket/subscription is required: discover package changes on site refresh/foreground/manual refresh, and install only for a later session. Collection makes no extra network call per point.
-
-### Existing import/publication route
-
-Keep `POST /v1/projects/{p}/packages/import` as conversion-only. Extend `POST /v1/projects/{p}/packages` for managed-site imports with explicit zone identity mapping, expected current package and idempotency request ID; route its finalization through the same validation/activation service as zone editing. A legacy submission to a managed site without those preconditions returns `428 precondition_required`, not an unnoticed replacement. Unmanaged sites retain the documented legacy upload behavior until adoption. Blocked packages never become current.
-
-A draft whose base is no longer current can still be read/exported/discarded. For initial implementation, create a new draft from current and explicitly reapply edits; do not implement automatic rebase. A rollback republishes a selected old geometry as a **new** version through this same path.
-
-## New observation protocol
-
-Use `PUT /v2/projects/{project_id}/observations/{observation_id}`. Keep existing v1 uploads and hashes untouched. A separate v2 envelope avoids colliding with instrument answers currently spread into v1's top-level fields.
-
-Point example (illustrative synthetic identifiers; package and zone must exist together):
+`POST /v1/projects/{p}/packages` creates the next version from layers:
 
 ```json
 {
-  "schema_version": 2,
+  "site_id": "uuid",
+  "request_id": "uuid",
+  "expected_current_package_id": "uuid or null for the first package",
+  "form_version": "play form code",
+  "inventory_form_version": "inventory form code, null for none, omitted to inherit",
+  "layers": { "ground": {}, "zones": {}, "paths": {}, "trees": {} },
+  "zone_identity_map": [{ "source_feature_id": "A", "zone_id": "uuid", "zone_code": "A" }],
+  "change_note": ""
+}
+```
+
+- **Identity map:**
+  - Source IDs are the exact zones-layer `properties.id` strings (1–200 code points). Each is mapped exactly once; a missing, duplicate or unused mapping fails `identity_conflict`.
+  - A known UUID must stay in the same site with its original code. An unknown UUID creates a new identity; continuity is never inferred from a label or code.
+  - On a first upload every entry is a new identity. The map selects identity, and the feature's `name` supplies the label.
+- **Preconditions:** `expected_current_package_id` must equal the current package, `null` meaning "no package yet". A mismatch is 409 `publication_conflict`, and a missing field is 428 `precondition_required`. `request_id` replay returns the original result without moving the current pointer.
+- **Forms:**
+  - `form_version` selects a published play form.
+  - `inventory_form_version` selects a published inventory form; `null` disables Inventory, and omission inherits the current binding (none on a first upload).
+  - The latest form is never chosen implicitly.
+  - A form version still bound by a current package cannot be retired (409 `conflict`): publish a successor first.
+
+### Archive
+
+Every package archive keeps the layer paths `layers/{ground,zones,paths,trees}.json` and a manifest:
+
+```json
+{
+  "format": 1,
+  "site_id": "uuid",
+  "site_code": "riverside",
+  "package_id": "uuid",
+  "package_version": 1,
+  "forms": {
+    "play": { "form_version_id": "uuid", "form_version": "study-play-v1" },
+    "inventory": { "form_version_id": "uuid", "form_version": "study-inventory-v1" }
+  },
+  "zones": [
+    { "zone_id": "uuid", "zone_code": "A", "label": "North meadow", "bbox": [0, 0, 0, 0],
+      "display_anchor": [0, 0], "geometry_sha256": "hex" }
+  ]
+}
+```
+
+- **Zones layer:** each feature is the canonical MultiPolygon with properties `{zone_id, zone_code, name, display_anchor, geometry_sha256}`.
+- **Consistency:** manifest and layer must agree on UUID, code, label, count, anchor and digest. There is no bounding-box geometry fallback.
+- **Inventory binding:** `forms.inventory: null` means Inventory is unavailable on this map; readers never search for another form.
+- **Anchor:** `display_anchor` is computed once by the server with `ST_PointOnSurface` on the normalized snapshot, then reused everywhere. Clients never compute their own anchor.
+
+### Reads
+
+| Route | Result |
+| --- | --- |
+| `GET /v1/projects/{p}/sites` | Array of `{site_id, code, name, description, created_at, observation_count, current_package_id, package, zones, extent, centre, zone_editing_available}`. `package` is the current package's summary, or null; `zones` are its zones with `zone_id`, `zone_code`, `label`, `bbox`, `display_anchor`, `geometry_sha256` |
+| `GET /v1/projects/{p}/sites/{site_id}` | One site, same shape |
+| `GET /v1/projects/{p}/packages?site_id=` | Every package of the site with `{package_id, site_id, package_version, state, prepared_at, archive_bytes, archive_sha256, forms, zone_count, change_note, published_by, source: upload \| draft}`, plus the site's `current_package_id` |
+| `GET /v1/projects/{p}/packages/{package_id}` and `/archive` | Any project member, including observers, for recovery of an older version. The archive response carries its SHA-256 as a strong ETag |
+| `GET /v1/projects/{p}/sites/{site_id}/zones?package_id=` | `{site_id, package_id, package_version, zones:[{zone_id, zone_code, zone_label, geometry, display_anchor, geometry_sha256}]}`. Omitting `package_id` means current. Superseded packages stay readable; draft or blocked package IDs are invalid |
+
+`zone_editing_available` is true only for an authorized manager (including inherited organization admins) on a site whose current package has a usable site polygon and published forms. It is a display hint; every write re-checks authority. Package changes are discovered by refreshing the site list. No subscription is required, and collection makes no network call per point.
+
+## Manager drafts
+
+All paths start with `/v1/projects/{project_id}/sites/{site_id}`. Every mutation requires manager ability, including inherited organization-admin ability. No browser access to Supabase tables is introduced.
+
+| Method and path | Request | Result |
+| --- | --- | --- |
+| `POST /zone-drafts` | `{request_id, base_package_id}` | 201 with a draft cloned from a ready package of the site (its zones, ground, forms and other layers); an identical replay returns 200 with the same draft |
+| `GET /zone-drafts?state=draft\|published\|discarded` | — | Every draft summary of the site (all managers' drafts), `state` defaulting to `draft` |
+| `GET /zone-drafts/{draft_id}` | — | Full draft and `ETag` |
+| `PUT /zone-drafts/{draft_id}` | `{zones, change_note}` with `If-Match` | Whole-draft compare-and-swap; new revision and `ETag` |
+| `POST /zone-drafts/{draft_id}/validate` | `If-Match` | Issues, warnings, per-zone summaries and readiness for that revision; never changes the revision |
+| `POST /zone-drafts/{draft_id}/publish` | `{request_id, expected_current_package_id}` with `If-Match` | 201 with the new package; an identical retry returns the original result with 200 |
+| `DELETE /zone-drafts/{draft_id}` | `If-Match` | 204; soft discard |
+
+**Draft fields:**
+
+- `draft_id`, `site_id`, `base_package_id`, `base_package_version`, `current_package_id`, `current_package_version`;
+- `revision`, `etag` (the same string as the header), `state`, `zones`, `change_note`, `forms`;
+- `created_at`, `created_by`, `updated_at`, `updated_by`;
+- display names for both people, inherited admins included;
+- `published_package_id` (nullable).
+
+A summary omits `zones`.
+
+**Zone entries:** `{zone_id, zone_code, zone_label, geometry}`.
+
+- New entries carry a client-generated lowercase UUID, which stays stable through local undo and retries. The server checks that a UUID is new or already belongs to the site with the same code. Only publication makes an identity durable.
+- Labels are trimmed and 1–200 code points. Codes are case-sensitive ASCII, 1–100 characters, matching `[A-Za-z0-9][A-Za-z0-9_.-]*` in full.
+- Duplicate UUIDs or codes fail. An identity omitted from a draft is absent from the next version only. A zone reshaped or relabelled keeps its identity; a split or merge creates new identities.
+
+**Saving:** structurally valid but topologically invalid shapes are saved, so work is never lost; validation and publication reject them.
+
+- **Structural validity:** finite 2D in-range coordinates, non-empty components, and closed rings of at least four positions with three distinct vertices.
+- **Not saved:** null geometry and unfinished drawing gestures stay in the client.
+- **Echo:** the server stores and returns geometry exactly as submitted, keeping the same type, ring order, start vertex and numbers. It only trims labels and lowercases UUIDs. Normalized geometry appears only in validation summaries and published packages.
+- **Change note:** trimmed, at most 2,000 code points, required in every replacement (an empty string is allowed).
+
+**Preconditions:**
+
+- The strong ETag is exactly `"zone-draft:<lowercase draft UUID>:<revision>"`, starting at revision 1.
+- Every write, including validate and discard, refuses a missing, malformed, weak, wildcard or multiple ETag with 428 `precondition_required`. A valid ETag for another revision is 412 `revision_conflict`.
+- A missing `expected_current_package_id` is 428, while a malformed value is 422.
+- A draft can be published only while its base is the current package and `expected_current_package_id` matches. Otherwise the answer is 409 `publication_conflict`, whose details carry the current package and its version.
+- A stale draft stays readable, exportable and discardable. Restoring older boundaries means creating a new draft from current, writing the older zones into it and publishing it as a new version. There is no automatic merge or rebase.
+
+**Idempotency and locking:**
+
+- Request IDs are scoped to caller, project and operation, and stored with the normalized request. Reuse with a different request is 409 `idempotency_conflict`.
+- A publication replay resolves the stored result first and never moves the current pointer again. Its response says `replayed: true` and carries the site's `current_package_id`, so a client never presents an old result as current.
+- Authorization is checked on every replay.
+- Mutations take the caller's account advisory lock, then the project's organization lock, then site and draft row locks. Membership changes and account deletion share those locks, so a publication either commits before a revocation or is refused without side effects. Archive building happens outside these locks and is rechecked at finalization.
+
+**Validation response:** `{draft_id, revision, ready, issues, warnings, zones, site_gap_area_m2}`.
+
+- Zone summaries are `{zone_id, area_m2, extent, display_anchor, geometry_sha256, change}`, with `change` one of `added`, `removed`, `geometry_changed`, `label_changed` or `unchanged` against the current package. They are null where the zone is invalid.
+- A removed-zone summary describes its retained current-package snapshot; other summaries describe the proposed zone. If geometry and label both change, `geometry_changed` takes precedence.
+- `extent` is `{west, south, east, north}`; anchors are `[longitude, latitude]`; areas are geography square metres.
+- `ready` covers that exact revision and never bypasses revalidation at publication.
+
+**Publication response:** `{site_id, draft_id, package, current_package_id, replayed}`, where `package` is a ready package summary.
+
+## Observation upload
+
+`PUT /v1/projects/{project_id}/observations/{observation_id}` is the only upload. Point example (synthetic identifiers):
+
+```json
+{
   "site_id": "10000000-0000-4000-8000-000000000001",
-  "package_id": "20000000-0000-4000-8000-000000000007",
+  "package_id": "20000000-0000-4000-8000-000000000001",
   "zone_id": "30000000-0000-4000-8000-000000000001",
   "form_version": "study-play-v1",
   "round_type": "standard",
@@ -94,92 +238,132 @@ Point example (illustrative synthetic identifiers; package and zone must exist t
 }
 ```
 
-The empty answers above only illustrates the envelope; form-required answers must still validate. Inventory uses `round_type: inventory`, `placement: zone`, omits `coordinates` and `first_round`, and selects the frozen inventory form. Point variants require finite coordinates and `first_round`. Reject conflicting or extra envelope fields; answers are confined to `answers`.
+**Variants:**
 
-Server resolves tenant/site/package/zone and form, checks package finalized and point coverage, then atomically stores observation and binding before returning receipt. Current-package equality is **not** required. Superseded and archived-site packages remain acceptable for authorized late uploads under existing archive semantics. Draft/blocked/nonexistent/cross-site packages cannot bind records.
+- Inventory uses `round_type: inventory` and `placement: zone`, omits `coordinates` and `first_round`, and uses the package's inventory form.
+- Point variants (`standard`, `reliability`) require `placement: hand`, finite coordinates and a strict boolean `first_round`.
+- All shown fields are required, and none has a default. Extra fields are refused, including a null `coordinates` or `first_round` on Inventory. Answers live only in `answers`.
 
-V2 fingerprint uses `zone-upload-v2-jcs-1` and the precise normalization below, covering the immutable client envelope and authenticated owner, excluding server-derived labels/anchor/current pointer. Preserve the old v1 fingerprint algorithm for old requests. Same UUID, owner, protocol and payload returns original receipt; different content/protocol is conflict. Look up and verify an existing receipt before reevaluating mutable publication state; authorization is still required. Never allow a v1 retry to claim a v2 row or vice versa.
+**Answers:** strings, finite JSON numbers (|x| ≤ 9,007,199,254,740,991) or arrays of strings, with at most 200 keys.
 
-V2 receipt extends the existing identity/time/revision fields with `schema_version`, `package_id`, `zone_id`, `assignment_basis: recorded_package`. Mobile verifies all identities against its frozen record before acknowledging. Store `upload_protocol` and frozen upload representation/hash version locally at record creation; protocol selection is not recalculated during retry. All pre-upgrade rows remain v1, including rows carrying local package context whose server acceptance status is unknown.
+- Booleans, nulls and objects are refused.
+- Duplicate JSON keys and invalid Unicode are refused at the boundary.
+- `observed_at` is an RFC 3339 string with a timezone and at most six fractional digits.
 
-### Error handling
+**Server checks:** the server resolves tenant, site, package, zone and form. It checks that the package is ready, that the zone belongs to it, and that the point is covered (or that the inventory semantics hold). Then it stores the observation and its binding atomically before the receipt.
 
-| HTTP / code | Meaning | Client action |
-| --- | --- | --- |
-| `401 token_invalid` / existing unauthenticated | Session unavailable | Pause uploads; preserve local data; sign in |
-| `403 role_required` / existing access code | Current authorization insufficient | Preserve record/draft; explain permission; no automated re-homing |
-| `404 not_found` | Resource absent or hidden by authorization | No cross-tenant existence disclosure |
-| `409 publication_conflict`, `idempotency_conflict`, `conflict` | Concurrent publish or mismatched retry | Retain draft/record and expose conflict; no overwrite |
-| `412 revision_conflict`, `428 precondition_required` | Stale/missing manager write precondition | Reload metadata while preserving edits |
-| `422 validation_failed` | Invalid geometry or observation binding | Structured safe issue details; keep local record as needs attention |
-| `413 payload_too_large`, `429 rate_limited`, `503 storage_unavailable` | Limits or temporary inability | Actionable size issue; retry/backoff for 429/503; preserve data |
+- The package need not be current: superseded packages stay valid for authorized late uploads.
+- Draft, blocked, missing or cross-site packages never bind.
+- The server derives `zone_code` and the inventory anchor; clients never assert them.
 
-Geometry issue shape in the existing error envelope: `{code, zone_ids, path, message}` inside `details.issues`, with exact mappings below. Details contain only authorized submitted resource identities and safe coordinates when useful; logs omit shapes/answers. Unknown/malformed responses remain retryable under current mobile behavior.
+**Fingerprint:** SHA-256 over the [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785) JCS bytes of `{canonicalization_version: "observation-jcs-1", observation_id, project_id, user_id, payload}`.
+
+- The identities come from the path and the authenticated user.
+- Normalization: lowercase hyphenated UUIDs, trimmed observer only, `observed_at` as UTC `YYYY-MM-DDTHH:mm:ss.ffffffZ`, and answers unchanged (no trimming, Unicode normalization or pruning before hashing).
+- Key order, equivalent timezone notation, integer versus integral float and negative zero do not change the hash. Answers, array order, binding, owner, project and observation identity do.
+- The same UUID, owner and payload returns the original receipt; a different payload is 409 `conflict`. An existing receipt is checked before mutable publication state; authorization is still required.
+
+**Receipt:** `{observation_id, project_id, user_id, accepted_revision, received_at, package_id, zone_id}`. The collector verifies every identity against its stored record before marking it uploaded. The collector stores the exact envelope at record creation and retries that same body.
 
 ## Observation reads, filters and exports
 
-Introduce `GET /v2/projects/{p}/observations` returning `{items, next_cursor, total_matching, generated_at}`. Keep v1 array/list contract unchanged. V2 filters: `site_id`, `package_id`, `zone_id` (repeated values OR together, at most 500 supplied values), `assignment_basis`, `round_type`, `observer`, `observed_from`, `observed_before`, and `cursor`, `limit` (1–500). Different filter dimensions AND together. Zone IDs must belong to the requested permitted site/project. Exact recorded snapshot filter is package+zone; stable zone only intentionally spans versions. No-zone/legacy filtering uses explicit basis/legacy code parameters rather than an overloaded empty UUID. Define `legacy_zone_code` and require `site_id` for it.
+| Route | Result |
+| --- | --- |
+| `GET /v1/projects/{p}/observations` | `{items, next_cursor, total_matching, generated_at}` |
+| `GET /v1/projects/{p}/observations/summary` | `{groups, total_matching, generated_at}` |
+| `GET /v1/projects/{p}/observations/export?format=csv\|geojson` | One ZIP |
+| `GET /v1/projects/{p}/observations/{observation_id}` | Detail |
 
-All rows return historical `zone_id`, `zone_code`, `zone_label`, `package_id`, `package_version`, `assignment_basis`, and `spatial_support: point | zone | legacy_unknown`. Legacy rows have null binding fields and retain recorded code; never fill a historical label from current zones. `geometry` is a Point for point events, null for zone events; `display_anchor` is separately available for inventories. A detail route at the same v2 path includes historical zone references and the recorded form.
+Static routes are registered before `/{observation_id}`.
 
-Keyset ordering: `(observed_at DESC, observation_id ASC)` with cursor carrying both values and the canonical filter identity. Malformed/mismatched cursors return 422. API owner must implement the mixed-direction predicate correctly. Interactive pages are live reads: `total_matching` is exact for that response's DB snapshot, not a permanent export snapshot. Concurrent late uploads can alter later pages; surface refresh availability and deduplicate by ID. Do not claim a time cutoff alone provides transaction-snapshot consistency.
+**Filters**, shared by list, summary and export:
 
-Add `GET /v2/projects/{p}/observations/summary` and `/export?format=csv|geojson` using the same authorized filter builder. Register static routes before `/{observation_id}`. Summary returns zone/package/round grouped totals and legacy/unversioned counts. Export executes within one bounded repeatable-read snapshot or one streaming SQL statement; rows/count/scope agree. Start with a documented row/byte/time ceiling measured in BE-20. If scope exceeds the ceiling, return an explicit narrowing requirement before emitting a partial success, never truncate at 500. Client-side export of loaded pages is not an “all matching” export.
+- `site_id`; `package_id`; `zone_id`, repeatable and ORed together, at most 500 values;
+- `round_type`; `observer` (exact recorded string, 1–12 characters);
+- `observed_from` (inclusive) and `observed_before` (exclusive), as aware UTC timestamps;
+- on the list only, `cursor` and `limit` (1–500).
 
-Existing observer/day/search filters must not silently keep applying only to one page. Move supported filters server-side; any deferred full-text search stays explicitly “search this page” until implemented. Export scope includes timezone interpretation, UTC interval bounds, filter values, generation time, versions and assignment basis. CSV adds stable zone/package fields and neutralizes spreadsheet formula prefixes in human text. GeoJSON emits null geometry for inventory events and links a separate zone layer by package+zone. Map and table use the same filtered result scope; if map only renders loaded pages it must say so. Large-scope overview totals come from summary, not visible markers.
+Rules:
 
-## Frozen normalization and wire details
+- Different dimensions AND together.
+- Zone filters need one `site_id`, and a `package_id` must belong to it. Package plus zone is an exact snapshot; a zone without a package intentionally spans versions.
+- Invalid combinations or intervals are 422 `invalid_filter`.
 
-### Geometry normalization
+**Items:** observation fields plus the following:
 
-After topology validation, normalize every Polygon to MultiPolygon. Remove consecutive duplicate positions (including redundant closing positions), orient shells counterclockwise and holes clockwise in longitude/latitude, rotate each open ring to its lexicographically smallest numeric `(longitude, latitude)` sequence, and close it once. If the smallest vertex repeats, compare full rotations to break ties. Sort holes by their canonical coordinate sequences and polygon parts by shell then holes. Normalize negative zero to zero. Do not simplify, clip, round or alter any other coordinate. The geometry digest is SHA-256 of RFC 8785 canonical UTF-8 for this normalized GeoJSON object. Ring reversal/rotation and part/hole ordering therefore cannot create different digests for the same accepted representation. PostGIS must validate the normalized result again and prove unchanged coverage; duplicate/retraced segments that invalidate topology are not repaired.
+- `site_id`, `site_code`, `site_name`;
+- the recorded binding: `zone_id`, `zone_code`, `zone_label` (from the recorded snapshot), `package_id`, `package_version`;
+- `spatial_support`; `geometry` (a Point for point events, null for inventories) and `display_anchor` (inventories only);
+- `answers`, `form_version`, `observer`, `observed_at`, `received_at`, `revision`, `round_type`, `placement`, `first_round`.
 
-### Observation input and fingerprints
+Detail adds the stored form definition JSON. A label is never taken from the current package.
 
-All v2 envelope fields are required as shown by the point or inventory variant; none have implicit defaults. Answers use the existing form value types: strings, finite JSON numbers or arrays of strings. Reject booleans, nulls, objects, more than 200 answer keys and numbers whose absolute magnitude exceeds 9,007,199,254,740,991. This preserves interoperable numeric precision for research counts; it does not permit converting a number to text to evade form validation. Reject JSON duplicate keys and invalid Unicode at the request boundary. Require an RFC 3339 string with timezone and at most six fractional second digits for `observed_at`; numeric epoch input is not supported. Point coordinates are strict finite JSON numbers; no numeric-string/bool coercion. `first_round` is a strict JSON boolean. Extra envelope fields, including null `coordinates`/`first_round` on Inventory, are rejected.
+**Paging:** keyset order is `(observed_at DESC, observation_id ASC)`. The cursor carries both values and is bound to the project and the normalized filters (sorted unique zone IDs, normalized UTC bounds); `limit` may change between pages. The predicate is `observed_at < t OR (observed_at = t AND observation_id > id)`. A malformed or mismatched cursor is 422 `invalid_cursor`. `total_matching` is exact for that response's snapshot; later pages may see late uploads, so clients de-duplicate by ID.
 
-Normalize UUIDs to lowercase hyphenated form, trim only observer whitespace, and normalize capture time to UTC as `YYYY-MM-DDTHH:mm:ss.ffffffZ` (exactly six fractional digits). Preserve answer strings, array order and values without trimming, Unicode normalization or hidden-answer pruning. Hash the validated envelope before form answer pruning. The canonical document is `{canonicalization_version, observation_id, project_id, user_id, payload}`, with `canonicalization_version: "zone-upload-v2-jcs-1"`; the four identities come from the path/authenticated request, not client-added envelope fields. SHA-256 over [RFC 8785 JCS](https://www.rfc-editor.org/rfc/rfc8785) UTF-8 bytes is the fingerprint. JCS sorts object names by UTF-16 code units and uses ECMAScript number serialization; ordinary Python sorted JSON is not a substitute. Key order, equivalent timezone notation, integer versus integral float and negative zero do not change the hash. Different answers, array order, binding, owner, project or observation identity do. BE-19 implements this algorithm and runs the golden canonical-byte cases; CON-05 does not claim that service exists.
+**Summary:** `groups` are keyed by `{site_id, package_id, package_version, zone_id, zone_code, zone_label, round_type, spatial_support}`, each with a `count`. Empty results return empty groups and zero counts.
 
-V1 remains exactly SHA-256 of `ObservationUpload.model_dump_json(exclude_unset=True).encode()`, with its existing schema declaration order, UTC datetime serialization, extra-answer order and omitted-versus-explicit-null handling. Golden cases freeze omitted context, explicit-null context, point context and inventory. Do not apply JCS or v2 normalization to v1.
+**Export:**
 
-### Manager responses and preconditions
+- **Contents:** one `application/zip` holding `observations.csv` or `observations.geojson`, plus `codebook.csv`, `metadata.json`, `forms.json` and `historical-zones.geojson`, all from one authorized snapshot.
+- **Metadata:** the project timezone, the UTC interval interpretation, the normalized filters, the generation time, the matching count and the package versions in scope.
+- **Forms and codebook:** the exact form definitions used to read the answers. The codebook keeps each version's option meanings.
+- **CSV:** neutralizes spreadsheet formula prefixes in text cells.
+- **GeoJSON:** null geometry for inventories, joined to the zone file by package plus zone UUID.
+- **Limits:** 10,000 records, 33,554,432 uncompressed bytes, 33,554,432 archive bytes and 10 seconds, with a 67,108,864-byte source budget. Exceeding a limit returns 422 `validation_failed` with issue `export_scope_too_large` before any success starts. `cursor` and `limit` are invalid on summary and export.
 
-Draft create returns the full draft with an ETag (201 first creation, 200 identical replay). Replace/get return that same shape. List returns an array of draft summaries containing all draft fields except `zones`; `state` defaults to `draft` and accepts exactly `draft`, `published`, `discarded`. DELETE requires If-Match; an already discarded draft with its acknowledged revision may return 204 again, but published drafts return 409 `conflict`. A successful replace increments revision once; validate does not mutate revision. All writes, including validate/discard, reject missing, malformed, weak, wildcard or multiple ETags as 428 `precondition_required`; a syntactically valid ETag for another draft or revision returns 412 `revision_conflict`.
+## Errors
 
-Validation returns `{draft_id, revision, ready, issues, warnings, zones, site_gap_area_m2}`; zone summaries contain `{zone_id, area_m2, extent, display_anchor}` (null summaries where invalid). `extent` uses `{west,south,east,north}` and anchors use `[longitude,latitude]`. Ready means no blocking issues for that exact revision, not permission to bypass publication revalidation. Warn with `site_gap` for positive uncovered area and `small_zone` for valid zones below 1 m²; areas use PostGIS geography square metres. Publication returns `{site_id, draft_id, package}` where `package` is the existing PackageSummary plus the format-2 capability metadata below, always a finalized `ready` package. Replay returns the original immutable result, not a claim it is still current.
+The envelope is `{error: {code, message, details}}`.
 
-Missing `expected_current_package_id` is specifically 428, even though the input model requires it: BE-18 must map that missing-field error before its ordinary 422 handler. A malformed/null value is 422. Replayed publication compares the persisted normalized original request before checking stale revision/current state. Its fingerprint covers operation, caller, project, site, draft ID, If-Match revision and submitted body; normalized request IDs are UUIDs. A changed revision under an old request ID conflicts rather than publishing again. Authorization is evaluated on every replay. Zone mutations acquire the caller account advisory lock, the project organization advisory lock, then site and draft/resource row locks. Membership/organization-role changes and account deletion share those advisory locks. Recheck active account and manager authority after waiting: either publication commits with protected authority before revocation, or revocation commits first and publication is refused without side effects. Archive preparation occurs outside these locks.
+**Issues:** geometry and binding issues live in `details.issues: [{code, zone_ids, path, message}]`.
 
-### Package format 2 and capabilities
+- `path` is an RFC 6901 pointer into the submitted body or stored draft. Point it at the ring or vertex where it is known, and at least at the zone.
+- `zone_ids` is empty when no submitted authorized zone can be named.
 
-**Adoption bootstrap decision:** format 1 does not freeze inventory form selection or zone UUIDs. A format-1 base draft allocates and persists provisional new UUIDs for its legacy zone entries; replay returns those same UUIDs. It does not infer continuity with historical observations. `inventory_form_version` optionally selects an authorized published form code at creation; omitted/null means Inventory unavailable. Store its resolved UUID on the draft, return `forms` in full draft/summary metadata and freeze it at publication. The base package supplies the play form. For a format-2 draft base, inherit its exact bindings and reject an explicitly supplied different inventory code/null as `form_not_in_package`. To change forms, publish an explicit managed successor import: its required `form_version` selects the published play version; optional `inventory_form_version` selects a published inventory version, explicit null disables Inventory, and omission inherits the current package binding. Resolve authorized same-project definitions during preparation and recheck them under deterministic form row locks at finalization. Never choose the latest form implicitly. Refuse retirement with 409 `conflict` while any current managed package still binds that version; publish a successor first. Superseded packages, their archives and historical bindings remain immutable and readable after retirement. New publication still requires eligible published forms, while historical uploads/restoration permit retained retired definitions.
+Issue codes:
 
-If any submitted code appears in legacy site history, publication requires a nonempty `change_note` explicitly documenting the manager's code-to-provisional-UUID mapping. Return `legacy_mapping_required` in validation/publish until that note exists; draft reads expose the affected codes in `legacy_codes_requiring_mapping`. The submitted UUID/code entries plus note are retained in the publication audit. This is deliberate adoption mapping, never a backfill or proof that legacy sampled areas match. A fresh unused code avoids ambiguity. DB-15/DB-16 must enforce this bootstrap under the site lock; BE-18 and Claude's editor expose the missing form/mapping states. This resolves the proposal's missing bootstrap mechanics without adding an activation endpoint or rewriting old data; new draft-create consumers must support the optional inventory field.
+- **Geometry:** `invalid_structure`, `self_intersection`, `invalid_topology`, `zero_area`, `outside_site`, `interior_overlap`, `unsupported_extent`, `too_complex`, `empty_zone_set`.
+- **Identity:** `duplicate_code`, `duplicate_zone_id`, `identity_conflict`.
+- **Binding:** `point_outside_zone`, `package_not_in_site`, `package_not_ready`, `zone_not_in_package`, `form_not_in_package`.
+- **Reads and export:** `invalid_filter`, `invalid_cursor`, `export_scope_too_large`.
+- **Warnings:** `site_gap`, `small_zone`.
 
-Keep existing manifest fields and layer paths. Add manifest `site_id`, `package_id`, `package_version`, `zone_contract_version: 1`, and `forms: {play: {form_version_id, form_version}, inventory: {form_version_id, form_version} | null}`. Root `form_version` equals `forms.play.form_version`. Null inventory binding explicitly means Inventory unavailable, never search for another form. Manifest zone entries retain existing `id` as the legacy code, `label` and bounding box; add `zone_id`, `zone_code`, `display_anchor`, `geometry_sha256`. Each zones-layer feature has canonical full MultiPolygon plus properties `{id: zone_code, zone_id, zone_code, name: zone_label, display_anchor, geometry_sha256}`. Manifest and layer UUID/code/label/count/anchor/digest must agree; no bbox geometry fallback. `display_anchor` is computed once by the server from the normalized snapshot using ST_PointOnSurface, stored and reused in manifest/layer/read responses; clients never recompute an alternative anchor. UUIDs and checksums are not interchangeable.
+| HTTP and code | Meaning | Client action |
+| --- | --- | --- |
+| 401 `unauthenticated` / `token_invalid` | Sign-in needed | Pause uploads, keep local data, sign in |
+| 403 access codes | Not permitted now | Keep the draft or record and explain |
+| 404 `not_found` | Missing or hidden | No existence disclosure; on the site list this means no access |
+| 409 `publication_conflict`, `idempotency_conflict`, `conflict` | Concurrent publication or a changed retry | Keep local work and show the conflict |
+| 412 `revision_conflict`, 428 `precondition_required` | Stale or missing write precondition | Reload metadata, keep edits |
+| 413 `payload_too_large` | Over a body limit | Show the size problem, keep data |
+| 422 `validation_failed` | Invalid shape, binding or filter | Show the issues; uploads become needs attention |
+| 429 `rate_limited`, 503 `storage_unavailable` | Temporary | Retry with backoff (`Retry-After`), keep data |
 
-V2 site discovery keeps the existing array/base site shape, adding `current_package_id`, `map_revision`, `zone_contract_version` and `zone_editing_available`. Package metadata adds `format`, `zone_contract_version` and `map_revision`. `map_revision` means the selected immutable package version, not draft revision or a second zone-version counter. On legacy data these two version-capability fields are null, `format` is 1, and `current_package_id` names the selected ready legacy package or null. `zone_editing_available` is true only for an authorized manager with usable site ground/forms and enabled server publication capability; false for observers, viewers or unsupported sites. The new feature never treats this client flag as authorization. V1 managed-site list/detail returns frozen `legacy_package_id` and matching old zones. Extend package-list discovery with repeated `supported_format=1|2` (default `[1]`, both values OR together, unknown values 422); updated discovery explicitly supplies its supported formats. Authorized package-by-ID archive/detail remains usable for recovery.
+Conflict details carry only authorized `draft_id`, `revision`, `etag`, `current_package_id` and `current_package_version`. Error copy is local UI text, never a discriminator. Logs never contain shapes or answers. Validate is limited to 30 requests a minute; publication and uploads of packages to 10 a minute.
 
-For a managed-site package import, extend the existing package submission with `request_id`, `expected_current_package_id`, and `zone_identity_map: [{source_feature_id, zone_id, zone_code}]` plus `change_note` and the optional successor `inventory_form_version` choice described above. Source IDs are exact zones-layer `properties.id` strings (1–200 Unicode code points), unique and mapped exactly once; missing, duplicate or unused mappings fail `identity_conflict`. Known supplied UUIDs must remain in the same site with their original code. Unknown identities become new, never inferred from a label or code. The map selects identity; the submitted feature's name supplies the version-specific label. Legacy source IDs/code syntax that cannot map cleanly require explicit manager correction. Managed imports require all preconditions/mapping; preserve the existing conversion-only import route and byte-identical unmanaged format-1 preparation.
+## Normalization
 
-Historical `/zones` entries use `{zone_id, zone_code, zone_label, geometry, display_anchor, geometry_sha256}`. Package selection must resolve within the requested site/project before returning shape data. An authorized package of the same site with no indexed snapshots returns 422 `validation_failed` / `unversioned_package`; it must not fabricate snapshots from current zones. A request omitting package ID for an unadopted site gets this same explicit unsupported state. Draft or blocked package IDs are invalid here.
+**Geometry.**
 
-### Errors and historical reads
+- **Steps after topology validation:**
+  1. Turn every Polygon into a MultiPolygon.
+  2. Remove consecutive duplicate positions.
+  3. Orient shells counterclockwise and holes clockwise.
+  4. Rotate each open ring to its lexicographically smallest `(longitude, latitude)` sequence, breaking ties by full rotation, and close it once.
+  5. Sort holes by their canonical sequence, and parts by shell then holes.
+  6. Turn negative zero into zero.
+- **Unchanged:** nothing else is altered: no simplification, clipping or rounding.
+- **Digest:** `geometry_sha256` is SHA-256 of the RFC 8785 bytes of the normalized GeoJSON.
+- **Recheck:** PostGIS validates the normalized result again and proves coverage is unchanged. Retraced segments that break topology are not repaired.
 
-Keep the envelope `{error:{code,message,details}}`. Geometry/binding issues live in `details.issues: [{code, zone_ids, path, message}]`; `path` is an RFC 6901 JSON Pointer into the submitted body (empty string for the body). Zone UUID arrays are empty when no submitted authorized zone can be named. Freeze issue codes: `invalid_structure`, `self_intersection`, `invalid_topology`, `zero_area`, `outside_site`, `interior_overlap`, `duplicate_code`, `duplicate_zone_id`, `identity_conflict`, `legacy_mapping_required`, `unsupported_extent`, `too_complex`, `empty_zone_set`, `point_outside_zone`, `package_not_in_site`, `package_not_ready`, `zone_not_in_package`, `form_not_in_package`, `unversioned_package`, `invalid_filter`, `invalid_cursor`, `export_scope_too_large`. Warnings use `site_gap` / `small_zone`. Do not expose SQL errors or another tenant's geometry.
+**Observations.** See the fingerprint rule above. There is no second algorithm.
 
-Add the new envelope codes only when routes are integrated: `publication_conflict` / `idempotency_conflict` (409), `revision_conflict` (412), `precondition_required` (428), `payload_too_large` (413). Resource/structure/topology issues otherwise use 422 `validation_failed`; publication state changes use 409 `conflict`; temporary resource failures use existing 429/503. Conflict details expose only authorized `draft_id`, `revision`, `etag`, `current_package_id`. Error copy is local UI text, never a machine discriminator. Old endpoint error behavior is unchanged.
+## Shared cases
 
-Legacy v2 rows have null `package_id`, `package_version`, `zone_id` and `zone_label`, with their recorded `zone_code` retained. Legacy point events can use `spatial_support: point` only when existing round/placement evidence proves a point. Legacy Inventory is `zone`, has null event geometry and a separately marked compatibility `display_anchor`; unknown support is `legacy_unknown` with null event geometry. None acquires a contemporary polygon. Bound points have Point geometry and null display_anchor; bound Inventory has null event geometry and its snapshot anchor. Detail also returns `answers`, `form_version`, historical form definition, observation/project/owner IDs, timestamps, revision, site code/name, observer and recorded round/placement/first_round.
+`contracts/zones/geometry.cases.json`, `publication.cases.json` and `upload.cases.json` hold independently authored expected results on synthetic fixtures. Map examples begin at version 1. Cases cover explicit identity mapping on first upload, publish replay with `replayed: true` and a live current pointer, all five validation `change` values, nested-answer uploads and one canonical fingerprint.
 
-Filter `observed_from` inclusive / `observed_before` exclusive uses aware UTC timestamps; invalid or empty intervals return `invalid_filter`. `observer` is an exact, case-sensitive recorded observer string (1–12 trimmed characters), not an authenticated-account UUID or full-text query. Legacy-code filtering requires `site_id` and `assignment_basis=legacy_unversioned`; reject it combined with package/zone UUID filters. A legacy basis combined with bound IDs is invalid. Zone UUID filters require a single `site_id`; package IDs must belong to it when supplied. Cursor binds project plus normalized filters (sorted unique zone IDs, normalized UTC bounds); `limit` may change between pages. After `(time, id)`, the predicate is `observed_at < time OR (observed_at = time AND observation_id > id)`.
+CON-06 verifies these artifacts without claiming production runtime compliance. DB-19 and BE-22 consume them in SQL/API acceptance. The backend owns Pydantic and OpenAPI; BE-22 runs `pnpm contracts:generate` twice and checks that the second run is stable. Clients validate downloaded and cached data at runtime. Generated OpenAPI and TypeScript are never hand-edited.
 
-Summary returns `{groups, total_matching, legacy_count, generated_at}` with groups keyed by `{site_id, package_id, package_version, zone_id, zone_code, zone_label, round_type, assignment_basis, spatial_support}` plus `count`; null legacy bindings remain explicit. Empty results return empty items/groups, zero counts and null next_cursor. Row/byte/time export ceilings are measured/frozen by BE-20 before that route is shipped; they do not change upload/publication contracts. Exceeding a ceiling returns 422 `validation_failed` with `export_scope_too_large` before streaming a success.
+## Data reset
 
-**BE-20 export delivery:** `format=csv|geojson` selects the observation file inside a self-contained `application/zip` download. The archive contains `observations.csv` or `observations.geojson`, `codebook.csv`, `metadata.json`, `forms.json` and `historical-zones.geojson`. All files describe the same authorized database snapshot. Metadata records the project timezone, UTC interval interpretation, normalized filters, generation time, matching count, recorded package versions and assignment bases. Forms retain the exact definitions used to interpret exported answers, including stored extension properties; detail returns the same original definition JSON. Parsed planning views must not replace the stored JSON. Codebooks retain each historical version and dynamic option set's meanings when columns are shared. Reserved metadata column names must not discard unrelated answers. Historical polygons occupy the separate zone file and are linked by package plus zone UUID; no contemporary polygon is assigned to legacy records.
-
-Synchronous exports permit at most 10,000 records, 33,554,432 combined uncompressed asset bytes, 33,554,432 final archive bytes and 10 seconds of export work. Limits include codebook, metadata, forms and polygon assets. A separate 67,108,864-byte source-snapshot budget bounds input fetching and memory; it is not an estimate of the final CSV/GeoJSON size. A ceiling or deadline failure returns the structured narrowing issue before a success response begins. The serializer uses bounded process capacity and terminates on cancellation/deadline; export does not introduce an asynchronous job platform. BE-20 acceptance records measured behavior at these bounds. Export accepts the shared scope filters, excluding page-only `cursor` and `limit`; those parameters are invalid on summary/export.
-
-## Shared contract artifacts
-
-`contracts/zones/geometry.cases.json`, `publication.cases.json`, and `upload.cases.json` contain independently authored expected results, synthetic fixtures, legacy hashes and new v2 examples. The adjacent README documents case adapters and evidence limits. Backend owns Pydantic/OpenAPI; coordinator runs `pnpm contracts:generate` and checks second-run stability. Input-model tests exercise structural rules now; DB/API/mobile owners must run the topology/concurrency/history scenarios against their actual implementations. Mobile/web runtime schemas validate downloaded/cached data, not just compile-time types. Never hand-edit generated OpenAPI or TypeScript declarations.
+Implementing this contract resets server data (DB-19 squashes migrations into one baseline) and local device data (the collector drops its database on a schema mismatch, MOB-28). Seeds create fresh sites whose first package is `v1`. Hosted resets and deployments still need explicit approval of the exact target.

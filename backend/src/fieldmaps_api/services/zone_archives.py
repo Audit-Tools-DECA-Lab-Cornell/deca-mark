@@ -16,7 +16,11 @@ from fieldmaps_api.domain.zone_archive_jobs import (
     Job,
     PublishJob,
 )
-from fieldmaps_api.domain.zone_package_schemas import ManifestV2, PreparedZonePackage, ZoneLayer
+from fieldmaps_api.domain.zone_package_schemas import (
+    PreparedZonePackage,
+    ZoneLayer,
+    ZonePackageManifest,
+)
 from fieldmaps_api.errors import StorageUnavailableError
 
 INVALID_SOURCE: Final = 2
@@ -66,7 +70,7 @@ async def prepare(
     with TemporaryDirectory(prefix="zone-archive-") as temporary:
         directory = Path(temporary)
         await run(directory, job, archive)
-        manifest = ManifestV2.model_validate_json(
+        manifest = ZonePackageManifest.model_validate_json(
             await anyio.Path(directory / "manifest.json").read_bytes()
         )
         layer_bytes = await anyio.Path(directory / "zones.json").read_bytes()

@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 const container = process.argv[2];
-assert.match(container ?? '', /^fieldmaps-zone-(rehearsal-\d+|db16-work)$/);
+assert.match(container ?? '', /^(decamark-baseline-\d+|fieldmaps-db19-baseline)$/);
 const numbers = [0, -0, 5e-324, -5e-324, 2.2250738585072014e-308,
   0.000001, 0.0000009999999999999999, 0.0000010000000000000002,
   1e-7, 9.999999999999997e-7, 0.1, 1.0000000000000002, 142.49574323423423,

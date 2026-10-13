@@ -1,0 +1,1 @@
+{"shell-v1":{"fields":[{"code":"people","type":"integer","maximum":999,"minimum":0,"required":true},{"code":"notes","type":"text","required":false,"maxLength":1000}],"status":"practice-only"}}

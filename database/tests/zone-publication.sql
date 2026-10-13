@@ -5,15 +5,11 @@ GRANT SELECT ON pg_temp.bounded_zone_sets TO fieldmaps_api;
 \set site '80000000-0000-4000-8000-000000000001'
 \set base '81000000-0000-4000-8000-000000000001'
 \set geometry_cases `cat /tmp/fieldmaps-tests/zone-geometry.cases.json`
-CREATE FUNCTION pg_temp.zone_create(p_request uuid, p_inventory boolean DEFAULT false) RETURNS fieldmaps.zone_drafts LANGUAGE sql AS $$
-  SELECT fieldmaps_private.create_zone_draft('10000000-0000-4000-8000-000000000002', '80000000-0000-4000-8000-000000000001',
-    p_request, '81000000-0000-4000-8000-000000000001',
-    '{"type":"Polygon","coordinates":[[[0,0],[0.03,0],[0.03,0.02],[0,0.02],[0,0]]]}',
-    '[{"zone_code":"A","zone_label":"Original A","geometry":{"type":"Polygon","coordinates":[[[0,0],[0.01,0],[0.01,0.01],[0,0.01],[0,0]],[[0.003,0.003],[0.003,0.007],[0.007,0.007],[0.007,0.003],[0.003,0.003]]]}},
-      {"zone_code":"B","zone_label":"Original B","geometry":{"type":"Polygon","coordinates":[[[0.01,0],[0.02,0],[0.02,0.01],[0.01,0.01],[0.01,0]]]}}]',
-    p_inventory, CASE WHEN p_inventory THEN 'db16-inventory-v1' ELSE NULL END);
+CREATE FUNCTION pg_temp.zone_create(p_request uuid) RETURNS fieldmaps.zone_drafts LANGUAGE sql AS $$
+ SELECT fieldmaps_private.create_zone_draft('10000000-0000-4000-8000-000000000002','80000000-0000-4000-8000-000000000001',
+   p_request,'81000000-0000-4000-8000-000000000001');
 $$;
-GRANT EXECUTE ON FUNCTION pg_temp.zone_create(uuid, boolean) TO fieldmaps_api;
+GRANT EXECUTE ON FUNCTION pg_temp.zone_create(uuid) TO fieldmaps_api;
 SET LOCAL ROLE fieldmaps_api;
 SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000001', true);
 SELECT pg_temp.assert_rejected($q$SELECT pg_temp.zone_create('84000000-0000-4000-8000-000000000001')$q$,
@@ -30,25 +26,23 @@ SELECT pg_temp.assert_true(:'admin_draft'::uuid IS NOT NULL, 'inherited organiza
 SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000004', true);
 \ir zone-set-validation.sql
 \ir zone-publication-limits.sql
-SELECT (pg_temp.zone_create('84000000-0000-4000-8000-000000000001', true)).id AS d1 \gset
+SELECT (pg_temp.zone_create('84000000-0000-4000-8000-000000000001')).id AS d1 \gset
 SELECT (pg_temp.zone_create('84000000-0000-4000-8000-000000000002')).id AS d2 \gset
-SELECT pg_temp.assert_true((pg_temp.zone_create('84000000-0000-4000-8000-000000000001', true)).id = :'d1'
+SELECT pg_temp.assert_true((pg_temp.zone_create('84000000-0000-4000-8000-000000000001')).id = :'d1'
   AND (SELECT inventory_form_version_id = '80000000-0000-4000-8000-000000000004' FROM zone_drafts WHERE id = :'d1'),
   'create replay retains provisional UUIDs and explicitly selected inventory form');
-SELECT pg_temp.assert_true((SELECT inventory_form_version_id IS NULL FROM zone_drafts WHERE id = :'d2')
-  AND NOT EXISTS (SELECT FROM site_zone_state WHERE site_id = :'site')
-  AND NOT EXISTS (SELECT FROM zone_identities WHERE site_id = :'site'), 'draft creation does not adopt or infer inventory/identity');
-SELECT pg_temp.assert_rejected($q$SELECT pg_temp.zone_create('84000000-0000-4000-8000-000000000001', false)$q$,
-  'ZB004', 'create request reuse with different form selection conflicts');
-SELECT pg_temp.assert_true(fieldmaps_private.validate_zone_draft(:'project', :'site', :'d1', 1)
-  #>> '{issues,0,code}' = 'legacy_mapping_required', 'legacy code publication requires an explicit mapping note');
+SELECT pg_temp.assert_true((SELECT inventory_form_version_id='80000000-0000-4000-8000-000000000004' FROM zone_drafts WHERE id=:'d2')
+  AND (SELECT current_package_id=:'base' FROM site_zone_state WHERE site_id=:'site'), 'draft creation keeps the exact forms and current pointer');
+SELECT pg_temp.assert_rejected($q$SELECT fieldmaps_private.create_zone_draft('10000000-0000-4000-8000-000000000002',
+ '80000000-0000-4000-8000-000000000001','84000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000002')$q$,
+ 'ZB004','create request reuse with a different base conflicts');
 SELECT pg_temp.assert_rejected(format('SELECT fieldmaps_private.change_zone_draft(%L,%L,%L,NULL,%L,%L)',
   :'project', :'site', :'d1', '[]', ''), 'ZB006', 'missing draft revision requires a precondition');
 SELECT fieldmaps_private.change_zone_draft(:'project', :'site', :'d1', 1,
   (SELECT jsonb_set(zones,'{0,zone_label}',to_jsonb(chr(160)||'Original A'||chr(8199))) FROM zone_drafts WHERE id = :'d1'),
-  chr(160)||'Map legacy A to the submitted new UUID; old records remain unversioned.'||chr(12288));
+  chr(160)||'Preserve recorded identity A.'||chr(12288));
 SELECT pg_temp.assert_true((SELECT zones #>> '{0,zone_label}' = 'Original A'
-  AND change_note = 'Map legacy A to the submitted new UUID; old records remain unversioned.' FROM zone_drafts WHERE id = :'d1'),
+  AND change_note = 'Preserve recorded identity A.' FROM zone_drafts WHERE id = :'d1'),
   'draft mutation trims Unicode whitespace from labels and notes');
 SELECT pg_temp.assert_rejected(format('SELECT fieldmaps_private.change_zone_draft(%L,%L,%L,1,%L,%L)',
   :'project', :'site', :'d1', '[]', ''), 'ZB002', 'stale whole-draft replacement cannot overwrite work');
@@ -67,7 +61,7 @@ SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_publish(%L,2,%L,%L,%L
   '85000000-0000-4000-8000-000000000001', :'base', '81000000-0000-4000-8000-000000000003', 'check'),
   '23514', 'check failure after package insertion rolls back the transaction');
 SELECT pg_temp.assert_true(NOT EXISTS (SELECT FROM site_packages WHERE id = '81000000-0000-4000-8000-000000000003')
-  AND NOT EXISTS (SELECT FROM site_zone_state WHERE site_id = :'site')
+  AND (SELECT current_package_id=:'base' FROM site_zone_state WHERE site_id=:'site')
   AND (SELECT state = 'draft' AND revision = 2 FROM zone_drafts WHERE id = :'d1'), 'failed finalization leaves no package, activation or draft transition');
 RESET ROLE;
 CREATE FUNCTION pg_temp.abort_final_draft_transition() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -82,19 +76,19 @@ SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_publish(%L,2,%L,%L,%L
   '85000000-0000-4000-8000-000000000001', :'base', '81000000-0000-4000-8000-000000000003'),
   'P0001', 'failure after snapshot, audit and activation rolls back the full publication');
 SELECT pg_temp.assert_true(NOT EXISTS (SELECT FROM site_packages WHERE id = '81000000-0000-4000-8000-000000000003')
-  AND NOT EXISTS (SELECT FROM zone_identities WHERE site_id = :'site') AND NOT EXISTS (SELECT FROM zone_publications WHERE site_id = :'site')
-  AND NOT EXISTS (SELECT FROM site_zone_state WHERE site_id = :'site') AND (SELECT revision = 2 AND state = 'draft' FROM zone_drafts WHERE id = :'d1'),
-  'late failure retains only original legacy artifacts and editable draft');
+  AND (SELECT count(*)=2 FROM zone_identities WHERE site_id=:'site') AND (SELECT count(*)=1 FROM zone_publications WHERE site_id=:'site')
+  AND (SELECT current_package_id=:'base' FROM site_zone_state WHERE site_id=:'site') AND (SELECT revision = 2 AND state = 'draft' FROM zone_drafts WHERE id = :'d1'),
+  'late failure retains the original package and editable draft');
 RESET ROLE;
 DROP TRIGGER synthetic_publication_failure ON fieldmaps.zone_drafts;
 SET LOCAL ROLE fieldmaps_api;
 SELECT (pg_temp.zone_publish(:'d1', 2, '85000000-0000-4000-8000-000000000001', :'base',
   '81000000-0000-4000-8000-000000000003', 3)).id AS p3 \gset
-SELECT pg_temp.assert_true((SELECT revision = 3 AND legacy_package_id = :'base' AND current_package_id = :'p3'
+SELECT pg_temp.assert_true((SELECT revision = 3 AND current_package_id = :'p3'
   FROM site_zone_state WHERE site_id = :'site') AND (SELECT state = 'published' AND revision = 3 AND published_package_id = :'p3'
-  FROM zone_drafts WHERE id = :'d1'), 'first publication atomically adopts, freezes legacy selection and skips blocked version 2');
+  FROM zone_drafts WHERE id = :'d1'), 'publication atomically activates, freezes the draft and skips blocked version 2');
 SELECT pg_temp.assert_true((SELECT count(*) = 2 FROM package_zones WHERE package_id = :'p3')
-  AND (SELECT count(*) = 2 FROM zone_identities WHERE site_id = :'site'), 'only successful publication creates complete durable identities and snapshots');
+  AND (SELECT count(*) = 2 FROM zone_identities WHERE site_id = :'site'), 'successful publication creates the complete snapshot set with stable identities');
 SELECT pg_temp.assert_rejected(format('SELECT pg_temp.zone_publish(%L,1,%L,%L,%L,4)', :'d2',
   '85000000-0000-4000-8000-000000000002', :'base', '81000000-0000-4000-8000-000000000004'),
   'ZB003', 'distinct stale publication does not activate a second package');
@@ -104,14 +98,13 @@ SELECT pg_temp.assert_rejected($q$INSERT INTO site_packages(id,organization_id,p
   manifest,archive,archive_sha256,prepared_by) VALUES ('81000000-0000-4000-8000-000000000099',
   '10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','80000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000004',99,'ready','{"format":1}','\x01',repeat('a',64),fieldmaps.request_user_id())$q$,
-  'ZB006', 'managed-site direct legacy import cannot bypass finalization');
+  '42501', 'direct package inserts cannot bypass finalization');
 SELECT pg_temp.assert_rejected($q$INSERT INTO package_checks VALUES ('81000000-0000-4000-8000-000000000003',99,'archive','passed','Late append')$q$,
-  'ZB006', 'runtime cannot append checks to a managed publication');
+  '42501', 'runtime cannot append checks to a managed publication');
+\ir zone-validation-changes.sql
 SELECT (fieldmaps_private.create_zone_draft(:'project', :'site', '84000000-0000-4000-8000-000000000003', :'p3')).id AS d3 \gset
 SELECT pg_temp.assert_true((SELECT inventory_form_version_id = '80000000-0000-4000-8000-000000000004'
-  FROM zone_drafts WHERE id = :'d3'), 'format-2 draft inherits exact frozen forms');
-SELECT pg_temp.assert_rejected(format('SELECT fieldmaps_private.create_zone_draft(%L,%L,%L,%L,NULL,NULL,true,NULL)',
-  :'project', :'site', '84000000-0000-4000-8000-000000000004', :'p3'), 'ZB001', 'explicit null cannot override inherited inventory');
+  FROM zone_drafts WHERE id = :'d3'), 'a successor draft inherits exact frozen forms');
 SELECT fieldmaps_private.change_zone_draft(:'project', :'site', :'d3', 1,
   (SELECT jsonb_build_array(jsonb_set(zones -> 0, '{zone_label}', '"Renamed A"')) FROM zone_drafts WHERE id = :'d3'), 'Retain A, remove B.');
 SELECT (pg_temp.zone_publish(:'d3', 2, '85000000-0000-4000-8000-000000000003', :'p3',
@@ -131,12 +124,9 @@ SELECT fieldmaps_private.change_zone_draft(:'project', :'site', :'d4', 1,
   (SELECT zones FROM zone_drafts WHERE id = :'d1'), 'Explicit rollback by publishing original boundaries as a new package.');
 SELECT (pg_temp.zone_publish(:'d4', 2, '85000000-0000-4000-8000-000000000004', :'p4',
   '81000000-0000-4000-8000-000000000005', 5)).id AS p5 \gset
-SELECT pg_temp.assert_true((SELECT revision = 5 AND current_package_id = :'p5' AND legacy_package_id = :'base'
+SELECT pg_temp.assert_true((SELECT revision = 5 AND current_package_id = :'p5'
   FROM site_zone_state WHERE site_id = :'site'), 'rollback publishes a higher version and retains all prior artifacts');
 SELECT fieldmaps_private.change_zone_draft(:'project', :'site', :'d2', 1, NULL, NULL, true);
 SELECT pg_temp.assert_true((fieldmaps_private.change_zone_draft(:'project', :'site', :'d2', 2, NULL, NULL, true)).revision = 2,
   'discard replay accepts the acknowledged discarded revision');
 RESET ROLE;
-SELECT pg_temp.assert_true((SELECT upload_protocol = 1 AND package_id IS NULL AND zone_id IS NULL AND first_round = false
-  AND upload_hash = repeat('e',64) AND revision = 1 FROM observations WHERE id = '83000000-0000-4000-8000-000000000001'),
-  'adoption never backfills legacy inventory, hash or revision');

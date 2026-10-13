@@ -11,9 +11,10 @@ import { type Gate, useGate } from "../src/features/auth/gate";
 import { ProfileQueue } from "../src/features/auth/profile-sync";
 import { DataSourceProvider, PREVIEW_ALLOWED } from "../src/features/preview/data-source";
 import { useOrientationPreference } from "../src/layout/orientation";
+import { resetHostedPackages } from "../src/packages/hosted/device";
 import { HostedSitesProvider } from "../src/packages/hosted/provider";
 import { FieldSessionProvider } from "../src/session/provider";
-import { initializeDatabase } from "../src/storage/observation-store";
+import { initializeCollectorDatabase } from "../src/storage/initialize-collector";
 import { SyncProvider } from "../src/sync/provider";
 import { interFonts } from "../src/theme-fonts";
 import {
@@ -102,7 +103,7 @@ export default function RootLayout() {
             >
               <SQLiteProvider
                 databaseName="fieldmaps-shell.db"
-                onInit={initializeDatabase}
+                onInit={(db) => initializeCollectorDatabase(db, resetHostedPackages)}
                 useSuspense
               >
                 <AuthProvider>

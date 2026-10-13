@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
-from fieldmaps_api.zone_draft_schemas import DraftCreate, DraftPublish, DraftReplace
+from fieldmaps_api.zone_draft_schemas import DraftPublish, DraftReplace, ZoneDraftCreate
 from fieldmaps_api.zone_geometry_schemas import ZoneGeometry
 
 
@@ -99,21 +99,16 @@ def test_invalid_label_when_draft_is_saved(label: str) -> None:
 def test_missing_binding_when_manager_requests_are_parsed() -> None:
     # Given incomplete requests, when parsed, then no package identity is inferred.
     with pytest.raises(ValidationError):
-        DraftCreate.model_validate({"request_id": str(uuid4())})
+        ZoneDraftCreate.model_validate({"request_id": str(uuid4())})
     with pytest.raises(ValidationError):
         DraftPublish.model_validate({"request_id": str(uuid4())})
 
 
-def test_inventory_selection_when_adoption_draft_is_created() -> None:
-    # Given an explicit published inventory code, when creating a draft, then selection is retained.
-    draft = DraftCreate.model_validate(
-        {
-            "request_id": str(uuid4()),
-            "base_package_id": str(uuid4()),
-            "inventory_form_version": "janet-inventory-v1",
-        }
-    )
-    assert draft.inventory_form_version == "janet-inventory-v1"
+def test_zone_draft_creation_requires_a_base_package_and_rejects_form_overrides() -> None:
+    payload = {"request_id": str(uuid4()), "base_package_id": str(uuid4())}
+    assert ZoneDraftCreate.model_validate(payload).base_package_id
+    with pytest.raises(ValidationError):
+        ZoneDraftCreate.model_validate(payload | {"inventory_form_version": "inventory-v1"})
 
 
 @pytest.mark.parametrize("multipart", [False, True])

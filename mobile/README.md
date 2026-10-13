@@ -23,6 +23,8 @@ both, and its content spans the full window width — a deliberate departure fro
 
 ## What is implemented
 
+- **Offline package lifecycle (MOB-28).** Verified immutable installs, account grants, selected versus available versions, exact recovery and reference-checked removal. Pre-launch schema changes reset incompatible collection data and package caches; same-schema restarts preserve current work. See [the data handoff](PACKAGE-LIFECYCLE.md). Bound collection/read models and uploads remain MOB-33/MOB-29.
+
 - **Collect on Contour (MOB-26), one route with internal steps.** `app/(app)/collect.tsx` and
   `src/features/collect/` run Place → Answer → Review → Saved for play events, and Zone → Answer →
   Review → Saved for an Inventory round. MapLibre stays mounted across every step. Phones stack the

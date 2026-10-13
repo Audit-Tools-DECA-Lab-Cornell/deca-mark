@@ -13,32 +13,23 @@ the imagery under them may be redistributed offline.
 
 from __future__ import annotations
 
-import json
 import zipfile
-from hashlib import sha256
-from io import BytesIO
 from typing import ClassVar, Final, Literal
 
 from pydantic import Base64Bytes, BaseModel, ConfigDict, Field
 
 from fieldmaps_api.domain import qgis_project
-from fieldmaps_api.domain.geojson import FeatureCollection, declared_crs_is_wgs84, positions
-
-PACKAGE_FORMAT: Final = 1
+from fieldmaps_api.domain.geojson import FeatureCollection, declared_crs_is_wgs84
 
 #: Tile hosts the lab has established it may redistribute offline. Empty until one is named:
 #: permission to repackage somebody else's imagery is granted, never assumed.
 NO_PERMITTED_HOSTS: Final[frozenset[str]] = frozenset()
 
 MAX_FEATURES_PER_LAYER: Final = 20_000
-MAX_ZONES: Final = 64
 MAX_PROJECT_BYTES: Final = 8 * 1024 * 1024
 MAX_ARCHIVE_BYTES: Final = 16 * 1024 * 1024
-#: A margin around the drawn site so the map can be panned to its edge without hitting the stop.
-EXTENT_MARGIN_DEGREES: Final = 0.0004
 
 LayerName = Literal["ground", "paths", "trees", "zones"]
-REQUIRED_LAYERS: Final[tuple[LayerName, ...]] = ("ground", "zones")
 LAYER_ORDER: Final[tuple[LayerName, ...]] = ("ground", "paths", "trees", "zones")
 
 #: Providers that read a file the institution holds. Redistribution is the lab's own decision.
@@ -51,37 +42,6 @@ NETWORK_PROVIDERS: Final = frozenset(
 
 class PackageError(ValueError):
     """A submission that cannot become a package, with a reason worth showing the manager."""
-
-
-class Extent(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-
-    west: float
-    south: float
-    east: float
-    north: float
-
-    def centre(self) -> tuple[float, float]:
-        return ((self.west + self.east) / 2, (self.south + self.north) / 2)
-
-
-class Zone(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-
-    id: str
-    label: str
-    west: float
-    south: float
-    east: float
-    north: float
-
-
-class LayerRecord(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-
-    name: LayerName
-    features: int
-    sha256: str
 
 
 class SourceProject(BaseModel):
@@ -125,32 +85,6 @@ class PreparationCheck(BaseModel):
     detail: str
 
 
-class Manifest(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-
-    format: int = PACKAGE_FORMAT
-    site_code: str
-    form_version: str
-    extent: Extent
-    centre: tuple[float, float]
-    zones: tuple[Zone, ...]
-    layers: tuple[LayerRecord, ...]
-    source_project: SourceProject | None
-
-
-class PreparedPackage(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-
-    manifest: Manifest
-    checks: tuple[PreparationCheck, ...]
-    archive: bytes
-    archive_sha256: str
-
-    @property
-    def blocked(self) -> bool:
-        return any(check.state == "blocked" for check in self.checks)
-
-
 class PackageSubmission(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
 
@@ -158,65 +92,6 @@ class PackageSubmission(BaseModel):
     form_version: str = Field(min_length=1, max_length=100)
     layers: dict[LayerName, FeatureCollection]
     project_file: ProjectFile | None = None
-
-
-def prepare(
-    submission: PackageSubmission,
-    *,
-    permitted_tile_hosts: frozenset[str] = NO_PERMITTED_HOSTS,
-) -> PreparedPackage:
-    """Run every check, then build the archive. Blocking checks still return their reasons."""
-    checks: list[PreparationCheck] = []
-    _require_layers(submission)
-
-    project = _read_source_project(submission.project_file, checks)
-    _check_layer_sources(submission, project, checks)
-    _check_coordinate_reference(submission, project, checks)
-    _check_imagery_licence(project, permitted_tile_hosts, checks)
-
-    zones = _derive_zones(submission.layers["zones"])
-    extent = _derive_extent(submission)
-    records = tuple(
-        LayerRecord(
-            name=name,
-            features=len(submission.layers[name].features),
-            sha256=_digest(_layer_bytes(submission.layers[name])),
-        )
-        for name in LAYER_ORDER
-        if name in submission.layers
-    )
-    manifest = Manifest(
-        site_code=submission.site_code,
-        form_version=submission.form_version,
-        extent=extent,
-        centre=extent.centre(),
-        zones=zones,
-        layers=records,
-        source_project=project,
-    )
-    archive = _build_archive(manifest, submission)
-    if len(archive) > MAX_ARCHIVE_BYTES:
-        message = (
-            f"The prepared package is {len(archive) // 1024} KB, over the "
-            f"{MAX_ARCHIVE_BYTES // 1024 // 1024} MB ceiling. Simplify the geometry and re-export."
-        )
-        raise PackageError(message)
-    checks.append(
-        PreparationCheck(
-            step="archive",
-            state="passed",
-            detail=(
-                f"{len(records)} layers, {sum(record.features for record in records)} features, "
-                f"{len(zones)} zones, {len(archive) // 1024} KB"
-            ),
-        )
-    )
-    return PreparedPackage(
-        manifest=manifest,
-        checks=tuple(checks),
-        archive=archive,
-        archive_sha256=_digest(archive),
-    )
 
 
 def _read_source_project(
@@ -278,37 +153,6 @@ def _read_source_project(
         )
     )
     return project
-
-
-def _require_layers(submission: PackageSubmission) -> None:
-    missing = [name for name in REQUIRED_LAYERS if name not in submission.layers]
-    if missing:
-        message = f"A package needs a {' and a '.join(missing)} layer"
-        raise PackageError(message)
-    for name, collection in submission.layers.items():
-        if len(collection.features) > MAX_FEATURES_PER_LAYER:
-            message = (
-                f"The {name} layer holds {len(collection.features)} features, over the "
-                f"{MAX_FEATURES_PER_LAYER} a package may carry"
-            )
-            raise PackageError(message)
-    if not submission.layers["zones"].features:
-        message = "The zones layer is empty; an observer has to choose a zone to collect in"
-        raise PackageError(message)
-    if len(submission.layers["zones"].features) > MAX_ZONES:
-        message = f"A site may define up to {MAX_ZONES} zones"
-        raise PackageError(message)
-    site_features = [
-        feature
-        for feature in submission.layers["ground"].features
-        if feature.text("kind") == "site"
-    ]
-    if len(site_features) != 1:
-        message = (
-            f"The ground layer needs exactly one feature with kind = site; it has "
-            f"{len(site_features)}"
-        )
-        raise PackageError(message)
 
 
 def _check_coordinate_reference(
@@ -451,92 +295,6 @@ def _check_imagery_licence(
     )
 
 
-def _derive_zones(collection: FeatureCollection) -> tuple[Zone, ...]:
-    """Read each zone's bounds: the collector stores a zone as a west/south/east/north box."""
-    zones: list[Zone] = []
-    for index, feature in enumerate(collection.features):
-        identifier = feature.text("id")
-        if identifier is None:
-            message = (
-                f"Zone {index + 1} has no id. Give every zone feature an id field — it is "
-                "what an observation records."
-            )
-            raise PackageError(message)
-        bounds = _bounds(positions(feature.geometry))
-        if bounds is None:
-            message = f"Zone {identifier} has no coordinates"
-            raise PackageError(message)
-        west, south, east, north = bounds
-        zones.append(
-            Zone(
-                id=identifier,
-                label=feature.text("label") or identifier,
-                west=west,
-                south=south,
-                east=east,
-                north=north,
-            )
-        )
-    identifiers = [zone.id for zone in zones]
-    duplicates = sorted({name for name in identifiers if identifiers.count(name) > 1})
-    if duplicates:
-        message = f"Zone ids have to be distinct; repeated: {', '.join(duplicates)}"
-        raise PackageError(message)
-    return tuple(zones)
-
-
-def _derive_extent(submission: PackageSubmission) -> Extent:
-    every = [
-        position
-        for collection in submission.layers.values()
-        for feature in collection.features
-        for position in positions(feature.geometry)
-    ]
-    bounds = _bounds(every)
-    if bounds is None:
-        message = "The supplied layers hold no coordinates"
-        raise PackageError(message)
-    west, south, east, north = bounds
-    return Extent(
-        west=west - EXTENT_MARGIN_DEGREES,
-        south=south - EXTENT_MARGIN_DEGREES,
-        east=east + EXTENT_MARGIN_DEGREES,
-        north=north + EXTENT_MARGIN_DEGREES,
-    )
-
-
-def _bounds(every: list[list[float]]) -> tuple[float, float, float, float] | None:
-    if not every:
-        return None
-    longitudes = [position[0] for position in every]
-    latitudes = [position[1] for position in every]
-    return (min(longitudes), min(latitudes), max(longitudes), max(latitudes))
-
-
-def _layer_bytes(collection: FeatureCollection) -> bytes:
-    return json.dumps(
-        collection.model_dump(mode="json", exclude_none=True),
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode()
-
-
-def _digest(payload: bytes) -> str:
-    return sha256(payload).hexdigest()
-
-
-def _build_archive(manifest: Manifest, submission: PackageSubmission) -> bytes:
-    """Build a deterministic zip, so the same submission yields the same bytes and digest."""
-    buffer = BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-        _write(archive, "manifest.json", manifest.model_dump_json(indent=2).encode())
-        for name in LAYER_ORDER:
-            collection = submission.layers.get(name)
-            if collection is not None:
-                _write(archive, f"layers/{name}.json", _layer_bytes(collection))
-    return buffer.getvalue()
-
-
 def _write(archive: zipfile.ZipFile, name: str, payload: bytes) -> None:
     # A fixed timestamp keeps the archive reproducible; the real one is in the manifest.
     info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
@@ -549,6 +307,4 @@ read_source_project = _read_source_project
 check_layer_sources = _check_layer_sources
 check_coordinate_reference = _check_coordinate_reference
 check_imagery_licence = _check_imagery_licence
-derive_extent = _derive_extent
-layer_bytes = _layer_bytes
 write_archive_entry = _write

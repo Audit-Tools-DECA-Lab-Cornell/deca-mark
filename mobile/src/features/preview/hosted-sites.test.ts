@@ -1,23 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { HostedSite } from "../../packages/hosted/schemas";
+import { boundFixture } from "../../packages/hosted/bound-fixture";
+import { siteSchema } from "../../packages/hosted/schemas";
 import { hostedDownload, hostedPreviewSite } from "./hosted-sites";
 
-const site: HostedSite = {
-  site_id: "30000000-0000-4000-8000-0000000000cc",
+const base = boundFixture().site;
+const site = siteSchema.parse({
+  ...base,
   code: "fall-creek",
   name: "Fall Creek playground",
-  description: null,
-  package: {
-    package_id: "20000000-0000-4000-8000-0000000000bb",
-    version: 3,
-    form_version: "play-v1",
-    archive_bytes: 2_621_440,
-    archive_sha256: "a".repeat(64),
-    prepared_at: "2026-10-08T01:00:00Z",
-  },
-  zones: [{ id: "A", label: "Zone A", west: 0, south: 0, east: 1, north: 1 }],
+  package: { ...base.package, package_version: 3, archive_bytes: 2_621_440 },
+  zones: base.zones.map((zone) => ({ ...zone, label: "Zone A" })),
   observation_count: 4,
-};
+});
 
 describe("A hosted site on the Project and Site screens", () => {
   it("names its package version, size and zones", () => {

@@ -1,11 +1,10 @@
-from datetime import datetime
 from typing import Annotated, ClassVar, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from fieldmaps_api.schemas import PackageDetail, PackageSummary
-from fieldmaps_api.site_schemas import Extent, ManifestZone, SitePackageInfo
+from fieldmaps_api.schemas import PackageSummary
+from fieldmaps_api.site_schemas import Extent
 from fieldmaps_api.zone_draft_schemas import ZoneInput
 from fieldmaps_api.zone_geometry_schemas import MultiPolygonInput, Position
 
@@ -30,14 +29,19 @@ class DraftSummary(ZoneResponse):
     base_package_id: UUID
     base_package_version: int
     current_package_id: UUID | None
+    current_package_version: int | None
     revision: Annotated[int, Field(ge=1)]
+    etag: str
     state: Literal["draft", "published", "discarded"]
     change_note: str
+    created_at: AwareDatetime
+    created_by: UUID
     updated_at: AwareDatetime
     updated_by: UUID
+    created_by_name: str | None
+    updated_by_name: str | None
     published_package_id: UUID | None
     forms: PackageForms
-    legacy_codes_requiring_mapping: tuple[str, ...] = ()
 
 
 class Draft(DraftSummary):
@@ -56,6 +60,8 @@ class ZoneValidationSummary(ZoneResponse):
     area_m2: float | None
     extent: Extent | None
     display_anchor: Position | None
+    geometry_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")] | None
+    change: Literal["added", "removed", "geometry_changed", "label_changed", "unchanged"] | None
 
 
 class ValidationResult(ZoneResponse):
@@ -99,37 +105,5 @@ class Publication(ZoneResponse):
     site_id: UUID
     draft_id: UUID | None
     package: PackageSummary
-
-
-class SitePackageInfoV2(SitePackageInfo):
-    format: Literal[1, 2] = 1
-    zone_contract_version: Literal[1] | None = None
-    map_revision: int | None = None
-
-
-class SiteZoneV2(ManifestZone):
-    zone_id: UUID | None = None
-    zone_code: str | None = None
-    display_anchor: Position | None = None
-    geometry_sha256: str | None = None
-
-
-class SiteV2(ZoneResponse):
-    site_id: UUID
-    code: str
-    name: str
-    description: str | None
-    created_at: datetime
-    package: SitePackageInfoV2 | None
-    zones: list[SiteZoneV2] = Field(default_factory=list[SiteZoneV2])
-    extent: Extent | None = None
-    centre: tuple[float, float] | None = None
-    observation_count: int
     current_package_id: UUID | None
-    map_revision: int | None
-    zone_contract_version: Literal[1] | None
-    zone_editing_available: bool
-
-
-class PackageDetailV2(PackageDetail):
-    pass
+    replayed: bool

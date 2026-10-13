@@ -8,15 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from fieldmaps_api.deps import Authentication
 from fieldmaps_api.errors import ERROR_RESPONSES
 from fieldmaps_api.repositories import zones as db
-from fieldmaps_api.services import zone_discovery, zone_publication, zones
-from fieldmaps_api.zone_draft_schemas import DraftCreate, DraftPublish, DraftReplace
+from fieldmaps_api.services import zone_publication, zones
+from fieldmaps_api.zone_draft_schemas import DraftPublish, DraftReplace, ZoneDraftCreate
 from fieldmaps_api.zone_preconditions import zone_etag
 from fieldmaps_api.zone_response_schemas import (
     Draft,
     DraftSummary,
     HistoricalZones,
     Publication,
-    SiteV2,
     ZoneValidation,
 )
 
@@ -32,19 +31,8 @@ class ZoneContext:
 def read_router(
     sessions: async_sessionmaker[AsyncSession],
     authenticate: Authentication,
-    *,
-    enabled: bool,
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
-    cache = zone_discovery.LegacyCapabilities()
-
-    @router.get("/v2/projects/{project_id}/sites", operation_id="listSitesV2")
-    async def site_list(
-        project_id: UUID, user: Annotated[UUID, Depends(authenticate)]
-    ) -> list[SiteV2]:
-        return await zone_discovery.list_sites(
-            sessions, user, project_id, enabled=enabled, cache=cache
-        )
 
     @router.get(
         "/v1/projects/{project_id}/sites/{site_id}/zones", operation_id="getHistoricalZones"
@@ -65,7 +53,6 @@ def create_router(
     sessions: async_sessionmaker[AsyncSession],
     authenticate: Authentication,
     *,
-    enabled: bool,
     work: zones.ZoneWork | None = None,
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
@@ -97,7 +84,7 @@ def create_router(
         },
     )
     async def create(
-        payload: DraftCreate,
+        payload: ZoneDraftCreate,
         response: Response,
         context: Annotated[ZoneContext, Depends(manager)],
     ) -> Draft:
@@ -201,12 +188,11 @@ def create_router(
                 context.user,
                 zones.DraftReference(context.project, context.site, draft_id, etag),
                 payload,
-                enabled=enabled,
             )
         response.status_code = 200 if replayed else 201
         context.request.scope["fieldmaps_zone_archive_bytes"] = result.package.archive_bytes
         return result
 
-    router.include_router(read_router(sessions, authenticate, enabled=enabled))
+    router.include_router(read_router(sessions, authenticate))
 
     return router

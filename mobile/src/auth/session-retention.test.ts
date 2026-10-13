@@ -97,7 +97,7 @@ it("keeps only account A's records after a failed refresh and an app restart", a
     const lost = sessionChange(accountA, "SIGNED_OUT", null, issuer, null);
     expect(lost.session).toBeNull();
     expect(await listObservations(adapter(database), accountWorkspace(lost.account).key)).toEqual([
-      { ...record, storageStatus: "pending" },
+      { ...record, storageStatus: "local-only" },
     ]);
     database.close();
     database = new DatabaseSync(filename);
@@ -109,7 +109,7 @@ it("keeps only account A's records after a failed refresh and an app restart", a
     expect(restarted.account).toEqual(accountA);
     expect(
       await listObservations(adapter(database), accountWorkspace(restarted.account).key),
-    ).toEqual([{ ...record, storageStatus: "pending" }]);
+    ).toEqual([{ ...record, storageStatus: "local-only" }]);
     expect(signInRecovery(restarted.account, restarted.session, restored.deletedUserId)).toEqual({
       email: accountA.email,
     });
@@ -165,7 +165,7 @@ it("hides deliberately signed-out account records after restart but retains them
     const signedIn = sessionChange(null, "SIGNED_IN", { user: accountA }, issuer, null);
     expect(
       await listObservations(adapter(database), accountWorkspace(signedIn.account).key),
-    ).toEqual([{ ...record, storageStatus: "pending" }]);
+    ).toEqual([{ ...record, storageStatus: "local-only" }]);
     expect(signInRecovery(signedIn.account, signedIn.session, null)).toBeNull();
   } finally {
     database.close();

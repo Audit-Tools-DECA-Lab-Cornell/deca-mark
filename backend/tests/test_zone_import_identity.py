@@ -6,15 +6,16 @@ from fastapi.testclient import TestClient
 from pydantic import JsonValue
 
 from tests.local_database import admin_sql
-from tests.test_site_packages import submission
+from tests.package_fixtures import submission
 from tests.zone_api_fixtures import JSON_DOCUMENT, ZoneSite, document, publish_draft
 
 pytestmark = pytest.mark.integration
 
 
-def import_body(current: dict[str, JsonValue]) -> dict[str, JsonValue]:
+def import_body(current: dict[str, JsonValue], site_id: str) -> dict[str, JsonValue]:
     body = JSON_DOCUMENT.validate_python(
         submission(
+            site_id=site_id,
             request_id=str(uuid4()),
             expected_current_package_id=current["package_id"],
             change_note="Exact source identity regression",
@@ -82,7 +83,7 @@ def test_managed_import_requires_string_id_without_activation(
     api_client: TestClient, zone_site: ZoneSite, invalid_id: JsonValue, target: str
 ) -> None:
     current = publish_draft(api_client, zone_site)
-    body = import_body(current)
+    body = import_body(current, str(zone_site.tenant.site))
     if target == "feature":
         properties(body)["id"] = invalid_id
     else:
@@ -102,7 +103,7 @@ def test_managed_import_requires_present_identity_without_activation(
     api_client: TestClient, zone_site: ZoneSite, target: str
 ) -> None:
     current = publish_draft(api_client, zone_site)
-    body = import_body(current)
+    body = import_body(current, str(zone_site.tenant.site))
     if target == "feature":
         del properties(body)["id"]
     else:
@@ -120,7 +121,7 @@ def test_managed_import_rejects_duplicate_identities_without_activation(
     api_client: TestClient, zone_site: ZoneSite, target: str
 ) -> None:
     current = publish_draft(api_client, zone_site)
-    body = import_body(current)
+    body = import_body(current, str(zone_site.tenant.site))
     other_feature = deepcopy(features(body)[0])
     other_mapping = deepcopy(mappings(body)[0])
     assert isinstance(other_feature, dict)
@@ -146,7 +147,7 @@ def test_managed_import_rejects_unmatched_string_identity_without_activation(
     api_client: TestClient, zone_site: ZoneSite
 ) -> None:
     current = publish_draft(api_client, zone_site)
-    body = import_body(current)
+    body = import_body(current, str(zone_site.tenant.site))
     properties(body)["id"] = "0123"
     before = snapshot(zone_site)
     response = api_client.post(f"{zone_site.project_url}/packages", json=body)
@@ -160,16 +161,23 @@ def test_managed_import_accepts_exact_string_identity_and_replays(
     api_client: TestClient, zone_site: ZoneSite, source_id: str
 ) -> None:
     current = publish_draft(api_client, zone_site)
-    body = import_body(current)
+    body = import_body(current, str(zone_site.tenant.site))
     properties(body)["id"] = source_id
     mapping = mappings(body)[0]
     assert isinstance(mapping, dict)
     mapping["source_feature_id"] = source_id
     response = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert response.status_code == 201, response.text
-    assert document(response.content)["format"] == 2
+    published = document(response.content)
+    package = published["package"]
+    assert isinstance(package, dict)
+    assert published["replayed"] is False
     after = snapshot(zone_site)
     replay = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert replay.status_code == 200, replay.text
-    assert replay.content == response.content
+    replayed = document(replay.content)
+    replay_package = replayed["package"]
+    assert isinstance(replay_package, dict)
+    assert replay_package["package_id"] == package["package_id"]
+    assert replayed["replayed"] is True
     assert snapshot(zone_site) == after

@@ -1,12 +1,24 @@
 CREATE FUNCTION pg_temp.zone_validate_set(p_zones jsonb, p_ground jsonb DEFAULT
   '{"type":"Polygon","coordinates":[[[0,0],[0.03,0],[0.03,0.02],[0,0.02],[0,0]]]}') RETURNS jsonb LANGUAGE plpgsql AS $$
-DECLARE draft fieldmaps.zone_drafts; detail text;
+DECLARE body jsonb; detail text; draft fieldmaps.zone_drafts;
 BEGIN
   draft := fieldmaps_private.create_zone_draft('10000000-0000-4000-8000-000000000002',
-    '80000000-0000-4000-8000-000000000001',gen_random_uuid(),'81000000-0000-4000-8000-000000000001',p_ground,
-    '[{"zone_code":"NEW","zone_label":"Synthetic","geometry":{"type":"Polygon","coordinates":[[[0,0],[0.01,0],[0.01,0.01],[0,0.01],[0,0]]]}}]');
-  PERFORM fieldmaps_private.change_zone_draft(draft.project_id,draft.site_id,draft.id,1,p_zones,'Explicit test identity mapping.');
-  RETURN fieldmaps_private.validate_zone_draft(draft.project_id,draft.site_id,draft.id,2);
+    '80000000-0000-4000-8000-000000000001',gen_random_uuid(),'81000000-0000-4000-8000-000000000001');
+  draft := fieldmaps_private.change_zone_draft(draft.project_id,draft.site_id,draft.id,1,p_zones,'Synthetic geometry case');
+  p_zones := draft.zones;
+  SELECT jsonb_build_object('site_id','80000000-0000-4000-8000-000000000001',
+    'expected_current_package_id','81000000-0000-4000-8000-000000000001','form_version','db16-play-v1','inventory_form_version','db16-inventory-v1','change_note','Synthetic geometry case',
+    'zone_identity_map',coalesce(jsonb_agg(jsonb_build_object('source_feature_id',n::text,'zone_id',z->'zone_id','zone_code',z->'zone_code') ORDER BY n),'[]'),
+    'layers',jsonb_build_object('ground',jsonb_build_object('type','FeatureCollection','features',jsonb_build_array(
+      jsonb_build_object('type','Feature','properties',jsonb_build_object('kind','site'),'geometry',p_ground))),
+      'zones',jsonb_build_object('type','FeatureCollection','features',coalesce(jsonb_agg(jsonb_build_object('type','Feature',
+        'properties',jsonb_build_object('id',n::text,'name',z->'zone_label'),'geometry',z->'geometry') ORDER BY n),'[]')))) INTO body
+  FROM jsonb_array_elements(p_zones) WITH ORDINALITY entries(z,n);
+  IF jsonb_array_length(p_zones)=0 THEN
+    RETURN fieldmaps_private.validate_zone_draft(draft.project_id,draft.site_id,draft.id,2);
+  END IF;
+  RETURN fieldmaps_private.validate_zone_import('10000000-0000-4000-8000-000000000002',
+    '80000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000001',body);
 EXCEPTION WHEN SQLSTATE 'ZB001' THEN
   GET STACKED DIAGNOSTICS detail = PG_EXCEPTION_DETAIL;
   RETURN detail::jsonb;

@@ -7,6 +7,9 @@ import {
   listObservations,
   saveObservation,
 } from "./observation-store";
+import { installPackage } from "./package-catalog";
+import { boundRecord, entry, identity, memoryDatabase, owner } from "./package-store.fixture";
+import { acknowledge, deferObservation, pendingObservations, retryAttention } from "./sync-store";
 
 function adapter(database: DatabaseSync): LocalDatabase {
   return {
@@ -35,32 +38,49 @@ const record = shellObservationSchema.parse({
 });
 
 describe("Account-scoped local work", () => {
-  it("keeps existing practice records unassigned when upgrading", async () => {
-    const sqlite = new DatabaseSync(":memory:");
-    const db = adapter(sqlite);
+  it("does not upload or mutate a bound record prematurely marked pending", async () => {
+    const { sqlite, db } = await memoryDatabase();
     try {
-      sqlite.exec(
-        "CREATE TABLE observations(id TEXT PRIMARY KEY, created_at TEXT, payload TEXT); PRAGMA user_version=1;",
-      );
-      sqlite
-        .prepare("INSERT INTO observations VALUES (?, ?, ?)")
-        .run(record.id, record.createdAt, JSON.stringify(record));
-      await initializeDatabase(db);
-      expect(await listObservations(db, "account-a")).toEqual([]);
-      expect(await listObservations(db)).toEqual([record]);
+      await installPackage(db, owner, entry);
+      await saveObservation(db, boundRecord, owner);
+      sqlite.exec("UPDATE observations SET sync_state = 'pending';");
+      expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
+      await acknowledge(db, owner, {
+        observation_id: boundRecord.id,
+        project_id: identity.projectId,
+        user_id: "40000000-0000-4000-8000-000000000001",
+        accepted_revision: 1,
+        received_at: boundRecord.createdAt,
+      });
+      await deferObservation(db, owner, boundRecord.id, "Should not apply", 99, true);
+      expect(
+        sqlite
+          .prepare("SELECT sync_state,server_receipt,sync_error,attempts FROM observations")
+          .get(),
+      ).toEqual({
+        sync_state: "pending",
+        server_receipt: "",
+        sync_error: "",
+        attempts: 0,
+      });
+      sqlite.exec("UPDATE observations SET sync_state = 'needs-attention';");
+      await retryAttention(db, owner);
+      expect(sqlite.prepare("SELECT sync_state FROM observations").get()).toEqual({
+        sync_state: "needs-attention",
+      });
     } finally {
       sqlite.close();
     }
   });
 
-  it("atomically queues a signed-in save and hides it from other accounts", async () => {
+  it("atomically holds a signed-in save and hides it from other accounts", async () => {
     const sqlite = new DatabaseSync(":memory:");
     const db = adapter(sqlite);
     try {
       await initializeDatabase(db);
       await saveObservation(db, record, "account-a");
       expect(await listObservations(db, "account-a")).toEqual([
-        { ...record, storageStatus: "pending" },
+        { ...record, storageStatus: "local-only" },
       ]);
       expect(await listObservations(db, "account-b")).toEqual([]);
       expect(await listObservations(db)).toEqual([]);

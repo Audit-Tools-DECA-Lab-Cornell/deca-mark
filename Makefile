@@ -26,7 +26,7 @@ db-up:
 	sh database/local-supabase.sh start
 
 db-test:
-	@if [ "$(ZONE_REHEARSAL)" = 1 ]; then sh database/zone-rehearsal.sh; else sh database/local-supabase.sh test; fi
+	@if [ "$(ZONE_REHEARSAL)" = 1 ]; then sh database/baseline-rehearsal.sh; else sh database/local-supabase.sh test; fi
 
 api-hosted-up:
 	$(HOSTED_COMPOSE) up -d --build

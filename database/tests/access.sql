@@ -1,12 +1,13 @@
 -- Given a second organization's observation and the restricted sample GIS role.
 INSERT INTO observations (
   id, organization_id, project_id, site_id, form_version_id,
-  observer_code, observed_at, geom, answers
+  observer_code, observed_at, geom, answers, created_by, upload_hash, package_id, zone_id, round_type, first_round, placement_source
 ) VALUES (
   '30000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000001',
   '20000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000003',
   '20000000-0000-4000-8000-000000000004', 'OTHER', now(),
-  ST_SetSRID(ST_MakePoint(0, 0), 4326), '{"people":9}'
+  ST_SetSRID(ST_MakePoint(0, 0), 4326), '{"people":9}', '50000000-0000-4000-8000-000000000001', repeat('a',64),
+  '91000000-0000-4000-8000-000000000002','92000000-0000-4000-8000-000000000002','standard',true,'hand'
 );
 SET LOCAL ROLE fieldmaps_sample_reader;
 -- When that role queries its approved GIS layer, only the sample project is visible.

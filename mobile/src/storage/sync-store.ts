@@ -1,46 +1,59 @@
 import { z } from "zod";
-import { observationSchema } from "../domain/observation";
+import { isBoundObservation, observationSchema } from "../domain/observation";
 import { isUploadableRecord } from "../forms/registry";
 import type { Receipt } from "../sync/contracts";
+import { databaseWrite } from "./database-write";
 import type { LocalDatabase } from "./observation-store";
 
-/**
- * Records ready for another upload attempt: practice records, and instrument records that name the
- * project they upload to. The filter repeats the queueing rule, so a record that should never have
- * been queued is never sent against a contract that would reject it.
- */
-export async function pendingObservations(db: LocalDatabase, scope: string, now: number) {
+async function eligibleRows(db: LocalDatabase, sql: string, ...parameters: (string | number)[]) {
   const rows = z
     .array(z.object({ payload: z.string(), attempts: z.number().int() }))
-    .parse(
-      await db.getAllAsync(
-        "SELECT payload, attempts FROM observations WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at <= ? ORDER BY created_at, id LIMIT 25",
-        scope,
-        now,
-      ),
-    );
+    .parse(await db.getAllAsync(sql, ...parameters));
   return rows
     .map((row) => ({
       record: observationSchema.parse(JSON.parse(row.payload)),
       attempts: row.attempts,
     }))
-    .filter((item) => isUploadableRecord(item.record));
+    .filter((item) => isBoundObservation(item.record) && isUploadableRecord(item.record));
 }
 
-export async function acknowledge(
-  db: LocalDatabase,
-  scope: string,
-  receipt: Receipt,
-): Promise<void> {
-  await db.runAsync(
-    "UPDATE observations SET sync_state = 'synced', sync_error = '', server_receipt = ? WHERE id = ? AND owner_scope = ? AND sync_state = 'pending'",
-    JSON.stringify(receipt),
-    receipt.observation_id,
-    scope,
+async function eligiblePending(db: LocalDatabase, scope: string, id: string): Promise<boolean> {
+  return (
+    (
+      await eligibleRows(
+        db,
+        "SELECT payload, attempts FROM observations WHERE owner_scope = ? AND id = ? AND sync_state = 'pending'",
+        scope,
+        id,
+      )
+    ).length > 0
   );
 }
 
-export async function deferObservation(
+export function pendingObservations(db: LocalDatabase, scope: string, now: number) {
+  return databaseWrite(db, () =>
+    eligibleRows(
+      db,
+      "SELECT payload, attempts FROM observations WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at <= ? ORDER BY created_at, id LIMIT 25",
+      scope,
+      now,
+    ),
+  );
+}
+
+export function acknowledge(db: LocalDatabase, scope: string, receipt: Receipt): Promise<void> {
+  return databaseWrite(db, async () => {
+    if (!(await eligiblePending(db, scope, receipt.observation_id))) return;
+    await db.runAsync(
+      "UPDATE observations SET sync_state = 'synced', sync_error = '', server_receipt = ? WHERE id = ? AND owner_scope = ? AND sync_state = 'pending'",
+      JSON.stringify(receipt),
+      receipt.observation_id,
+      scope,
+    );
+  });
+}
+
+export function deferObservation(
   db: LocalDatabase,
   scope: string,
   id: string,
@@ -48,19 +61,31 @@ export async function deferObservation(
   nextAttempt: number,
   rejected: boolean,
 ): Promise<void> {
-  await db.runAsync(
-    "UPDATE observations SET sync_state = ?, sync_error = ?, attempts = attempts + 1, next_attempt_at = ? WHERE id = ? AND owner_scope = ? AND sync_state = 'pending'",
-    rejected ? "needs-attention" : "pending",
-    message,
-    nextAttempt,
-    id,
-    scope,
-  );
+  return databaseWrite(db, async () => {
+    if (!(await eligiblePending(db, scope, id))) return;
+    await db.runAsync(
+      "UPDATE observations SET sync_state = ?, sync_error = ?, attempts = attempts + 1, next_attempt_at = ? WHERE id = ? AND owner_scope = ? AND sync_state = 'pending'",
+      rejected ? "needs-attention" : "pending",
+      message,
+      nextAttempt,
+      id,
+      scope,
+    );
+  });
 }
 
-export async function retryAttention(db: LocalDatabase, scope: string): Promise<void> {
-  await db.runAsync(
-    "UPDATE observations SET sync_state = 'pending', sync_error = '', next_attempt_at = 0 WHERE owner_scope = ? AND sync_state IN ('pending', 'needs-attention')",
-    scope,
-  );
+export function retryAttention(db: LocalDatabase, scope: string): Promise<void> {
+  return databaseWrite(db, async () => {
+    const rows = await eligibleRows(
+      db,
+      "SELECT payload, attempts FROM observations WHERE owner_scope = ? AND sync_state IN ('pending', 'needs-attention')",
+      scope,
+    );
+    for (const row of rows)
+      await db.runAsync(
+        "UPDATE observations SET sync_state = 'pending', sync_error = '', next_attempt_at = 0 WHERE owner_scope = ? AND id = ? AND sync_state IN ('pending', 'needs-attention')",
+        scope,
+        row.record.id,
+      );
+  });
 }

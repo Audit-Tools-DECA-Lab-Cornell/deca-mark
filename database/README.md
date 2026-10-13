@@ -20,18 +20,21 @@ Local confirmation and recovery templates in `supabase/templates/` display six-d
 
 `pnpm db:test` runs the SQL suite and `hosted/verify.sql` on the local database. Fixtures and temporary role grants roll back. API tests use generated UUIDs and the restricted runtime login; their committed observations/packages remain until an explicit local reset. No integration test silently skips when the stack is unavailable.
 
-For the DB-15/DB-16 migration and publication rehearsal, run `pnpm db:test ZONE_REHEARSAL=1`.
-It creates an isolated PostgreSQL 17/PostGIS container using the cached Supabase Postgres
-image, applies the canonical baseline, inserts synthetic legacy points/inventories,
-blocked packages and duplicate codes across sites, then applies the forward migration.
-It compares every original observation/package field and archive byte, runs the SQL,
-Auth-hook role and verification-script suites, and removes only its own test container.
-It also compares coordinate serialization and geometry checksums with Node 24, exercises
-publication/CAS/import races in separate restricted-role sessions with observed lock
-barriers, and rechecks historical rows after those committed synthetic operations.
-No ports, existing volumes, passwords or hosted services are used. The small Auth-user
-table supplies SQL identity fixtures; this rehearsal does not exercise the Auth HTTP
-service or replace the full Supabase/API integration gates.
+DB-19 replaces the migration chain with one current baseline. Validate it from scratch
+without changing the persistent local database:
+
+```sh
+pnpm db:reset --disposable
+pnpm db:test ZONE_REHEARSAL=1
+```
+
+Both commands use `database/baseline-rehearsal.sh` and a fresh isolated PostgreSQL 17/PostGIS
+container from the cached Supabase image. The first applies the single baseline and seeds;
+the second independently applies them and runs current SQL, Auth-hook-role and verification
+checks, coordinate/digest comparisons and restricted-role publication/CAS/import races.
+Only the command's own test container is removed. No ports, existing volumes, passwords or
+hosted services are used. Synthetic Auth-user fixtures do not exercise the Auth HTTP service
+or replace real API acceptance. Ordinary start/test commands still never reset a database.
 
 The separate Auth-hook suite connects through Docker as local `supabase_admin`, then switches to the actual restricted Auth role for behavioral checks. Supabase reserves that role, so the ordinary `postgres` test connection cannot grant itself membership. Application SQL tests and the hosted verification script still run as `postgres`.
 
@@ -54,6 +57,27 @@ Profile initialization now enrolls active users in the separate Training project
 
 `gis.sample_observations` remains a fixed practice-project view, read-only to `fieldmaps_sample_reader`. Its readback tests exercise PostgreSQL, not QGIS Desktop.
 
+The current baseline supplies four read-only views: `gis.recorded_observations`, `gis.point_events`,
+`gis.zone_snapshots` and `gis.inventory_records`. They use the existing
+`fieldmaps_api` caller identity and underlying RLS; existing GIS reader accounts receive no new
+grants. Exact package+zone joins preserve historical labels and polygons. Inventory records
+remain separate from point-event counts, with null event geometry and an exact recorded zone reference.
+The full projection and QGIS/export workflow are documented in
+[qgis/ZONE-BOUNDARIES.md](../qgis/ZONE-BOUNDARIES.md). General scoped GIS login provisioning
+remains GIS-01/GIS-02.
+
+After DB-19 and BE-22 pass, rerun the signed HTTP/SQL/export agreement fixture:
+
+```sh
+sh database/gis09-api-rehearsal.sh -q
+```
+
+The API fixture must use the sole `/v1` surface and map versions 1 and 2, upload a delayed
+map-v1 event after map-v2 publication, and compare restricted GIS reads with complete API
+exports. Its earlier success is historical evidence; BE-22 aligns the fixture before reuse.
+Current SQL acceptance verifies that Training snapshots cannot expose another creator's
+activity. These checks do not apply hosted migrations or provision a QGIS database reader.
+
 The Before User Created hook blocks disposable email domains at signup. Only Supabase Auth can invoke it or read its RLS-protected blocklist; browser and application roles have no access. The hook uses a pinned community list with no network request during signup. See [the email policy](Blocked-Email-Domains.md) for source attribution, updates and hosted activation boundaries.
 
 ## Verification
@@ -66,11 +90,12 @@ pnpm db:test ZONE_REHEARSAL=1
 ```
 
 Each command creates its own disposable PostgreSQL 17/PostGIS container from the cached
-Supabase image, applies canonical migrations and synthetic fixtures, and stops only its
+Supabase image, applies the current baseline and synthetic fixtures, and stops only its
 own container on exit. It does not reset existing databases or read their password files.
 The API harness publishes only an ephemeral loopback port, checks paired local database
 overrides, and exercises application SQL as the restricted `fieldmaps_api` role. Auth
 tables/signing keys are synthetic; these rehearsals do not exercise the hosted Auth service.
+BE-22 must align its runtime fixtures before the new baseline is considered API-accepted.
 
 Verified locally on 2026-10-03: all 131 backend tests, the application SQL suite, Auth-hook suite and hosted verification script run against local Supabase pass. The project-list checks now initialize the profile and assert both the study and automatic Training membership, so prior identity test runs cannot invalidate the expected project list. Ruff and BasedPyright pass. Docker Desktop started normally when launched outside the restricted shell; no reinstall, database reset or hosted operation was required.
 
@@ -84,4 +109,8 @@ The SQL tests cover geometry, immutable forms, replay ledger, restricted GIS rea
 
 DB-03 retired the historical Docker migration track after [all five CI jobs passed](https://github.com/Audit-Tools-DECA-Lab-Cornell/Field-Maps/actions/runs/36273492260). See [the canonical-migrations decision](../docs/decisions/0001-canonical-migrations.md).
 
-Hosted migration application remains a separate operation. `hosted/verify.sql` now requires the DB-04 through DB-08 migrations and checks their security boundary; applying files locally does not deploy them or enable a hosted Auth hook.
+Hosted schema replacement remains a separate operation. `hosted/verify.sql` requires the current baseline and checks its security boundary; applying files locally does not deploy them or enable a hosted Auth hook.
+
+### Mobile package acceptance
+
+`sh database/mobile-package-rehearsal.sh -q -s` uses Node 24, pnpm and a disposable local PostGIS/API fixture. Its earlier success preceded the current contract. The mobile reader accepts only the zone-aware `format: 1` archive on `/v1`; real API acceptance requires DB-19 and BE-22 and must be rerun after those land. No hosted configuration is used. Schema mismatch resets incompatible data under the [pre-launch reset policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11).

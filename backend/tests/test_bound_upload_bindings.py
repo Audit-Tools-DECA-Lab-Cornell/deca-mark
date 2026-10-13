@@ -4,6 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import JsonValue
 
+from fieldmaps_api.observation_analysis_schemas import HistoricalObservationDetail
+from fieldmaps_api.zone_response_schemas import HistoricalZones, Publication
 from tests.bound_upload_fixtures import BoundSite
 from tests.local_database import admin_sql
 from tests.signing import Signer
@@ -52,18 +54,6 @@ def test_invalid_binding_is_rejected_without_inserting(
         )
         == "0"
     )
-
-
-def test_legacy_package_cannot_supply_bound_provenance(
-    api_client: TestClient, bound_site: BoundSite
-) -> None:
-    # Given: the same site has its retained format-1 package.
-    payload = bound_site.point(package_id=str(bound_site.site.package_id))
-    # When: that unversioned package is used as a v2 binding.
-    response = api_client.put(bound_site.url(uuid4()), json=payload)
-    # Then: it cannot claim finalized format-2 provenance.
-    assert response.status_code == 422, response.text
-    assert "package_not_ready" in response.text
 
 
 def test_cross_site_package_is_rejected_with_binding_issue(
@@ -131,7 +121,7 @@ def test_late_upload_uses_retired_form_and_superseded_package(
     assert document(response.content)["package_id"] == str(bound_site.package)
 
 
-def test_inventory_uses_explicit_package_role_and_stores_zone_anchor(
+def test_inventory_uses_explicit_package_role_and_projects_its_zone_anchor(
     api_client: TestClient, bound_site: BoundSite
 ) -> None:
     # Given: a form without an inventory prefix is pinned to the inventory role.
@@ -141,7 +131,7 @@ def test_inventory_uses_explicit_package_role_and_stores_zone_anchor(
     body["inventory_form_version"] = inventory
     prepared = api_client.post(f"{site.project_url}/packages", json=body)
     assert prepared.status_code == 201, prepared.text
-    package = str(document(prepared.content)["package_id"])
+    package = str(Publication.model_validate_json(prepared.content).package.package_id)
     payload = bound_site.point(
         package_id=package,
         form_version=inventory,
@@ -158,13 +148,21 @@ def test_inventory_uses_explicit_package_role_and_stores_zone_anchor(
     assert response.status_code == 200, response.text
     stored = admin_sql(
         "SELECT o.round_type || ':' || o.placement_source || ':' || "
-        "(o.first_round IS NULL)::text || ':' || "
-        "extensions.ST_Equals(o.geom,z.display_anchor)::text "
+        "(o.first_round IS NULL)::text || ':' || (o.geom IS NULL)::text "
         "FROM fieldmaps.observations o JOIN fieldmaps.package_zones z ON z.package_id=o.package_id "
         "AND z.zone_id=o.zone_id WHERE o.id=:'id';",
         f"id={observation}",
     )
     assert stored == "inventory:zone:true:true"
+    detail = api_client.get(f"/v1/projects/{site.tenant.project}/observations/{observation}")
+    assert detail.status_code == 200, detail.text
+    historical = HistoricalObservationDetail.model_validate_json(detail.content)
+    assert historical.geometry is None
+    assert historical.display_anchor is not None
+    zone_history = api_client.get(f"{site.url}/zones", params={"package_id": package})
+    assert zone_history.status_code == 200, zone_history.text
+    zones = HistoricalZones.model_validate_json(zone_history.content)
+    assert historical.display_anchor.coordinates == zones.zones[0].display_anchor
 
 
 def test_revoked_observer_cannot_replay_a_previous_receipt(

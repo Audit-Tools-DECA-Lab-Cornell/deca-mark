@@ -2,9 +2,13 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
+from fieldmaps_api.zone_response_schemas import HistoricalZones
 from tests.local_database import admin_sql
+from tests.package_fixtures import submission
 from tests.signing import PROJECT, Signer
-from tests.test_site_packages import submission
+from tests.zone_api_fixtures import document
+
+SITE = "10000000-0000-4000-8000-000000000003"
 
 
 def test_org_admin_without_project_membership_can_list_upload_and_prepare(
@@ -26,16 +30,31 @@ def test_org_admin_without_project_membership_can_list_upload_and_prepare(
         assert listed.status_code == 200
         assert listed.json()[0]["project_id"] == str(PROJECT)
         assert listed.json()[0]["role"] == "manager"
-        prepared = api_client.post(f"/v1/projects/{PROJECT}/packages", json=submission())
+        prepared = api_client.post(
+            f"/v1/projects/{PROJECT}/packages", json=submission(site_id=SITE)
+        )
         assert prepared.status_code == 201, prepared.text
+        package = document(prepared.content)["package"]
+        assert isinstance(package, dict)
+        historical = api_client.get(
+            f"/v1/projects/{PROJECT}/sites/{SITE}/zones",
+            params={"package_id": str(package["package_id"])},
+        )
+        assert historical.status_code == 200, historical.text
+        zone = HistoricalZones.model_validate_json(historical.content).zones[0]
         uploaded = api_client.put(
             f"/v1/projects/{PROJECT}/observations/{uuid4()}",
             json={
-                "site_id": "sample-garden",
+                "site_id": SITE,
+                "package_id": package["package_id"],
+                "zone_id": str(zone.zone_id),
                 "form_version": "shell-v1",
-                "coordinates": [1, 2],
+                "coordinates": [-76.485, 42.448],
                 "observer": "QA",
-                "people": 1,
+                "round_type": "standard",
+                "first_round": True,
+                "placement": "hand",
+                "answers": {"people": 1, "notes": ""},
                 "observed_at": "2026-09-26T12:00:00Z",
             },
         )

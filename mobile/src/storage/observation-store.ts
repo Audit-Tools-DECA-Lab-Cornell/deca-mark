@@ -1,6 +1,14 @@
 import { z } from "zod";
-import { type Observation, observationSchema, storageStatusSchema } from "../domain/observation";
+import {
+  isBoundObservation,
+  type Observation,
+  observationSchema,
+  storageStatusSchema,
+} from "../domain/observation";
+import { identityKey } from "../domain/package-binding";
 import { isUploadableRecord } from "../forms/registry";
+import { databaseTransaction, databaseWrite } from "./database-write";
+import { requireAuthorizedPackage } from "./package-catalog-read";
 
 export interface LocalDatabase {
   execAsync(sql: string): Promise<void>;
@@ -8,109 +16,40 @@ export interface LocalDatabase {
   getAllAsync(sql: string, ...parameters: (string | number)[]): Promise<unknown[]>;
 }
 
-class NewerDatabaseError extends Error {
-  constructor(readonly version: number) {
-    super("This database belongs to a newer app. Update DECA Mark to open it.");
-    this.name = "NewerDatabaseError";
-  }
-}
+export {
+  completePackageFileReset,
+  initializeDatabase,
+  packageFileResetPending,
+  SCHEMA_VERSION,
+} from "./database-migrations";
 
-export const SCHEMA_VERSION = 3;
-
-export async function initializeDatabase(db: LocalDatabase): Promise<void> {
-  const versions = z
-    .array(z.object({ user_version: z.number().int() }))
-    .parse(await db.getAllAsync("PRAGMA user_version"));
-  const version = versions[0]?.user_version ?? 0;
-  if (version > SCHEMA_VERSION) throw new NewerDatabaseError(version);
-  await db.execAsync("PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;");
-  if (version === 0) {
-    try {
-      await db.execAsync(`
-        BEGIN IMMEDIATE;
-        CREATE TABLE observations (
-          id TEXT PRIMARY KEY NOT NULL,
-          created_at TEXT NOT NULL,
-          payload TEXT NOT NULL
-        );
-        CREATE INDEX observations_created_at ON observations(created_at DESC);
-        PRAGMA user_version = 1;
-        COMMIT;
-      `);
-    } catch (error) {
-      await db.execAsync("ROLLBACK;");
-      throw error;
-    }
-  }
-  if (version < 2) {
-    try {
-      await db.execAsync(`
-        BEGIN IMMEDIATE;
-        ALTER TABLE observations ADD COLUMN owner_scope TEXT NOT NULL DEFAULT 'local';
-        ALTER TABLE observations ADD COLUMN sync_state TEXT NOT NULL DEFAULT 'local-only'
-          CHECK (sync_state IN ('local-only', 'pending', 'synced', 'needs-attention'));
-        ALTER TABLE observations ADD COLUMN sync_error TEXT NOT NULL DEFAULT '';
-        ALTER TABLE observations ADD COLUMN server_receipt TEXT NOT NULL DEFAULT '';
-        ALTER TABLE observations ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0;
-        ALTER TABLE observations ADD COLUMN next_attempt_at INTEGER NOT NULL DEFAULT 0;
-        CREATE INDEX observations_pending ON observations(owner_scope, sync_state, next_attempt_at);
-        PRAGMA user_version = 2;
-        COMMIT;
-      `);
-    } catch (error) {
-      await db.execAsync("ROLLBACK;");
-      throw error;
-    }
-  }
-  if (version < 3) {
-    // An unfinished observation is not an uploadable record. It lives in its own table so a
-    // half-answered form can never reach the upload queue, and so an interrupted observation
-    // survives a force quit.
-    try {
-      await db.execAsync(`
-        BEGIN IMMEDIATE;
-        CREATE TABLE observation_drafts (
-          owner_scope TEXT PRIMARY KEY NOT NULL,
-          id TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          payload TEXT NOT NULL
-        );
-        PRAGMA user_version = 3;
-        COMMIT;
-      `);
-    } catch (error) {
-      await db.execAsync("ROLLBACK;");
-      throw error;
-    }
-  }
-}
-
-/**
- * A record is queued for upload only when it belongs to an account and has somewhere to go: a
- * practice record, or an instrument record naming the project that published its form. Anything else
- * stays `local-only`, so nothing is sent against a contract the server would reject and nothing is
- * silently lost.
- */
 export function initialSyncState(record: Observation, scope: string) {
-  return scope === "local" || !isUploadableRecord(record) ? "local-only" : "pending";
+  return scope === "local" || !isBoundObservation(record) || !isUploadableRecord(record)
+    ? "local-only"
+    : "pending";
 }
 
-const INSERT_OBSERVATION =
-  "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state) VALUES (?, ?, ?, ?, ?)";
-
-export async function saveObservation(
-  db: LocalDatabase,
-  record: Observation,
-  scope = "local",
-): Promise<void> {
+async function insertObservation(db: LocalDatabase, record: Observation, scope: string) {
+  const binding = isBoundObservation(record) ? record.binding : null;
+  if (binding) await requireAuthorizedPackage(db, scope, binding);
   await db.runAsync(
-    INSERT_OBSERVATION,
+    "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state, package_key) VALUES (?, ?, ?, ?, ?, ?)",
     record.id,
     record.createdAt,
     JSON.stringify(record),
     scope,
     initialSyncState(record, scope),
+    binding ? identityKey(binding) : "",
   );
+}
+
+export function saveObservation(
+  db: LocalDatabase,
+  record: Observation,
+  scope = "local",
+): Promise<void> {
+  const snapshot = observationSchema.parse(record);
+  return databaseTransaction(db, () => insertObservation(db, snapshot, scope));
 }
 
 /**
@@ -120,47 +59,42 @@ export async function saveObservation(
  * observations table already holds — recovery would offer it back, and saving it again would
  * fail the primary key forever.
  */
-export async function commitObservation(
+export function commitObservation(
   db: LocalDatabase,
   record: Observation,
   scope = "local",
 ): Promise<void> {
-  await db.execAsync("BEGIN IMMEDIATE;");
-  try {
+  const snapshot = observationSchema.parse(record);
+  return databaseTransaction(db, async () => {
+    await insertObservation(db, snapshot, scope);
     await db.runAsync(
-      INSERT_OBSERVATION,
-      record.id,
-      record.createdAt,
-      JSON.stringify(record),
+      "DELETE FROM observation_drafts WHERE owner_scope = ? AND id = ?",
       scope,
-      initialSyncState(record, scope),
+      snapshot.id,
     );
-    await db.runAsync("DELETE FROM observation_drafts WHERE owner_scope = ?", scope);
-    await db.execAsync("COMMIT;");
-  } catch (error) {
-    await db.execAsync("ROLLBACK;");
-    throw error;
-  }
+  });
 }
 
-export async function listObservations(db: LocalDatabase, scope = "local"): Promise<Observation[]> {
-  const rows = z
-    .array(
-      z.object({
-        payload: z.string(),
-        sync_state: storageStatusSchema,
-        sync_error: z.string(),
-      }),
-    )
-    .parse(
-      await db.getAllAsync(
-        "SELECT payload, sync_state, sync_error FROM observations WHERE owner_scope = ? ORDER BY created_at DESC, id DESC",
-        scope,
-      ),
-    );
-  return rows.map((row) => ({
-    ...observationSchema.parse(JSON.parse(row.payload)),
-    storageStatus: row.sync_state,
-    syncError: row.sync_error,
-  }));
+export function listObservations(db: LocalDatabase, scope = "local"): Promise<Observation[]> {
+  return databaseWrite(db, async () => {
+    const rows = z
+      .array(
+        z.object({
+          payload: z.string(),
+          sync_state: storageStatusSchema,
+          sync_error: z.string(),
+        }),
+      )
+      .parse(
+        await db.getAllAsync(
+          "SELECT payload, sync_state, sync_error FROM observations WHERE owner_scope = ? ORDER BY created_at DESC, id DESC",
+          scope,
+        ),
+      );
+    return rows.map((row) => ({
+      ...observationSchema.parse(JSON.parse(row.payload)),
+      storageStatus: row.sync_state,
+      syncError: row.sync_error,
+    }));
+  });
 }

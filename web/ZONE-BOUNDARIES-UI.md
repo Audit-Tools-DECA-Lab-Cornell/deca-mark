@@ -1,14 +1,14 @@
 # Web UI plan: zone boundary editor and historical review
 
-[Web handoff](ZONE-BOUNDARIES.md) · [Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Mobile UI plan](../mobile/ZONE-BOUNDARIES-UI.md) · Tasks WEB-28 to WEB-41 in [PLAN.md](PLAN.md)
+[Web handoff](ZONE-BOUNDARIES.md) · [Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Mobile UI plan](../mobile/ZONE-BOUNDARIES-UI.md) · Tasks WEB-28 to WEB-42 in [PLAN.md](PLAN.md)
 
-Status: a plan, not built. Baseline: local source on 2026-10-11. During this planning, BE-18 appeared in the working tree as uncommitted source while its task still read `todo`:
+Status: a plan; the web side is not built. Source inspection baseline: `33faa58` on 2026-10-11; contract aligned by CON-06.
 
-- **Present in source:** the routes `zone-drafts` (create, list, get, PUT, DELETE, validate, publish), historical `/zones`, and `GET /v2/projects/{p}/sites`. They are in the regenerated `contracts/openapi.json` and `src/lib/api/schema.d.ts`.
-- **Off by default:** publication (`zone_publication_enabled = false`).
-- **Not present:** v2 observation upload and the v2 read, summary and export routes (BE-19, BE-20) exist nowhere.
+BE-18 through BE-20 established draft, bound-upload and historical-read behavior under the previous implementation. Their evidence does not establish compliance with the rewritten contract. DB-19 supplies the current schema; BE-22 implements the sole `/v1` surface and regenerates OpenAPI and client declarations before dependent frontend integration.
 
-Treat the BE-18 source as moving until BE-18 is marked done: re-check any field before wiring it. Every screen below stays behind the server capability and the real API, and nothing may be wired to invented success responses. Line references can drift; re-read the cited function before editing it.
+**Pre-launch rule (2026-10-11):** there are no real users. Every archive uses the zone-aware manifest `format: 1`, every site starts at map version 1, and every observation references an immutable package and zone. Experimental incompatible data is reset rather than converted. Current-schema historical observations retain their recorded attribution.
+
+Re-check fields against BE-22's generated types before wiring them. Every screen uses real API responses and server authorization; `zone_editing_available` is a display hint, not permission. Line references below describe the inspection baseline and can drift; re-read the cited function before editing it.
 
 [web/ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md) holds the required behaviour. This file holds the interface design, state architecture, tasks and verification that satisfy it. The contract wins on wire semantics. Where it is insufficient, section 9 proposes changes for the lead. Do not build a divergent client.
 
@@ -16,7 +16,7 @@ Treat the BE-18 source as moving until BE-18 is marked done: re-check any field 
 
 **Managers editing boundaries.** A manager opens a site and sees its current map version. They start or reopen a draft that the server saves as they work. They draw zones as shapes or rectangles, move, add and remove points, and rename zones. Undo and redo work. Problems show next to the zone, with what to do. Publishing goes through a review page that shows exactly what changes and what observers will experience, and it creates a new immutable version. A second manager's edit or publication never silently overwrites anyone's work. Polygons with holes and multi-part zones open, display and save without losing a coordinate.
 
-**Managers and viewers reviewing data.** Every observation shows the zone label and map version it was recorded with. Filters, the table, the map and exports cover every matching observation, not the newest 500. They filter by a zone across versions, or by one exact version, and the page says which. Records from before versioning say "Boundary version not recorded" and keep their code. An inventory reads as a whole-zone record, never a point. Nothing is reclassified against today's boundaries.
+**Managers and viewers reviewing data.** Every observation shows the zone label and map version it was recorded with. Filters, the table, the map and exports cover every matching observation, not the newest 500. They filter by a zone across versions, or by one exact version, and the page says which. An inventory reads as a whole-zone record, never a point. Nothing is reclassified against today's boundaries.
 
 Never:
 
@@ -37,10 +37,11 @@ Never:
 | Zone editing | The site page shows NotAvailable "Editing zones on the web". `/sites/:site/zones` and `/zones/*` redirect to the site page, and e2e asserts that the route is gone. A fixture-only editor was deleted in `4922f2b`; it rounded vertices to whole plan units (about 0.26 m at Fall Creek, ~176 m at a 1° site) and had undo but no redo. | `src/features/sites/SiteScreen.tsx:106-111`, `next.config.ts:29-30`, `e2e/removed-routes.spec.ts`, `git show 4922f2b^:web/src/features/sites/VertexHandles.tsx` |
 | Server reads | `client.ts`: request-scoped `cache()`, bearer token, `no-store`, 15 s timeout. It returns data only (no headers) and casts responses to generated types. Only `/v1/me`, error envelopes and archive contents are zod-validated. | `src/lib/api/client.ts:30-91`, `identity.ts`, `errors.ts:39-47` |
 | Writes | Server Actions (zod input, role re-check, one mutation, `revalidatePath` of the project layout). Body limit 2 MB. Packages and archives go browser-direct through `browser.ts`, with a refreshed Supabase token. The timeout signal replaces any caller signal, so callers cannot abort. | `src/features/sites/actions.ts:59-140`, `next.config.ts:40`, `src/lib/api/browser.ts:30-65` |
-| CORS | At HEAD, a preflight requesting `if-match` returns 400 "Disallowed CORS headers" (reader probe). The BE-18 working tree adds `if-match` to `allow_headers`. `etag` is already exposed. | `backend/src/fieldmaps_api/main.py:84-93` |
-| Body limits | At HEAD, every zone path falls to the 256 KiB default. The working tree adds 4 MiB for draft PUT, answers 413 `payload_too_large` on zone routes, and refuses encoded bodies. A maximal 20,000-position draft is about 0.78 MB of compact JSON. | `backend/src/fieldmaps_api/body_limits.py`; reader computation |
-| Zone routes (working tree) | ETag is sent as a header on create, get, PUT and DELETE (OpenAPI declares it only for create 201). Bodies carry `revision` but no `etag`; the strong ETag format is frozen, so the client can derive it. The draft list returns every draft on the site, not only the caller's. Drafts carry `forms` and `legacy_codes_requiring_mapping`, but no `current_package_version`, creator or display names. Publication returns `{site_id, draft_id, package}`. Structural request errors become `details.issues` with JSON Pointer paths; a missing `expected_current_package_id` is 428. The zone and forms `DraftCreate` collide in OpenAPI (`fieldmaps_api__…__DraftCreate`). | `backend/src/fieldmaps_api/{routers/zones.py,zone_response_schemas.py,zone_preconditions.py,errors.py}` |
-| Package list (working tree) | Takes repeated `supported_format` and defaults to `[1]`, so a client that does not ask for format 2 never sees new versions. `PackageSummary` gains `format`, `zone_contract_version` and `map_revision`. Managed-site uploads take `request_id`, `expected_current_package_id`, `zone_identity_map` and `change_note` (`PackageRequest`). | `backend/src/fieldmaps_api/{routers/sites.py,schemas.py,zone_import_schemas.py}` |
+| CORS | BE-18 added `if-match` to `allow_headers`; `etag` is exposed. `if-none-match` and `Content-Disposition` are not. | `backend/src/fieldmaps_api/main.py:84-93` |
+| Body limits | BE-18 sets 4 MiB for draft PUT (other zone paths keep 256 KiB), answers 413 `payload_too_large` on zone routes, and refuses encoded bodies. A maximal 20,000-position draft is about 0.78 MB of compact JSON. | `backend/src/fieldmaps_api/body_limits.py`; reader computation |
+| Zone routes (BE-22 target) | Strong ETag headers and body `etag`, exact revision, current package/version, creator/updater IDs and display names. Lists include every manager's draft. Publication returns `{site_id, draft_id, package, current_package_id, replayed}`. Structural errors carry JSON Pointer paths; missing publication preconditions return 428. Zone request model names must not collide with form draft models. | [Contract: manager drafts](../docs/plan/zone-boundaries/contract.md#manager-drafts) |
+| Package list (BE-22 target) | A site-UUID filter returns all immutable versions and the site's explicit current pointer. Package summaries carry version, exact forms, archive digest/size, zone count, change note, publisher and `source: upload \| draft`. First upload requires an explicit null current precondition and complete identity mapping. | [Contract: packages and reads](../docs/plan/zone-boundaries/contract.md#reads) |
+| Draft storage (BE-22 target) | Save echoes geometry exactly, trims labels and lowercases UUIDs. Validation returns canonical digest and change classification against current. Publication revalidates, builds the immutable archive and commits it ready with snapshots and current pointer atomically. No rollout switch gates publication. | [Backend specification](../backend/ZONE-BOUNDARIES.md) |
 | Error model | Was closed over 19 codes. The contract coordinator added the five new codes with copy, mapped to `rejected`, so they no longer retry as `unknown`. `details.issues` and conflict details are still dropped. | `src/lib/api/errors.ts:13-34,94-200` |
 | Unsaved changes | `useLeaveGuard` covers beforeunload, same-origin anchors and popstate, but not `router.push` from the `g` shortcut chords or the command palette. The forms draft editor saves a snapshot and keeps later edits dirty, with no If-Match. | `src/features/shell/useLeaveGuard.ts:23-106`, `useShortcuts.ts:50-62`, `src/features/forms/DraftEditorScreen.tsx:143-179` |
 | Data review | v1 list capped at 500. Site and round are filtered on the server. Zone, observer, day and search are filtered in the browser over the loaded rows. Labels come from current site zones. The zone filter is not scoped by site. Filters use `replaceState`, so Back does not undo them (despite the README). Every map is drawn on the current package. Inventory is drawn and exported as a point. CSV does not neutralise formula prefixes. | `src/features/data/view.ts:169-265`, `DataScreen.tsx:103-144,180-198`, `data/[observation]/page.tsx:37-64`, `src/lib/export/columns.ts:71-79` |
@@ -55,15 +56,21 @@ Prompt facts confirmed: MapFrame and SitePlan are SVG; zone editing is NotAvaila
 
 Build a dedicated editing layer on `MapFrame`/`SitePlan`. Use one pure geometry module (`src/lib/zones/`) that keeps GeoJSON longitude/latitude as the only source of truth. The plan projection is for drawing only: `fromPlan` runs only on vertices the manager moves or adds.
 
-Evidence:
+Evidence (the 2026-10-11 desk and scratch spike; packages installed only under `$TMPDIR`, nothing added to the repo):
 
-- **Terra Draw** stores Point, LineString and Polygon only; its store guide says MultiPolygon is not supported. Its adapter ignores non-primary pointers ("We don't support multitouch"). It also needs a host map (MapLibre, Leaflet, OpenLayers or Google). Contract zones are MultiPolygon after normalization (contract "Geometry normalization").
-- **MapLibre GL JS** costs about 285 KB gzipped plus a 144 KB worker. It needs WebGL and a style rebuilt from `map-palettes.json`. "MapLibre on the web" is on the post-pilot backlog ([docs/plan/README.md](../docs/plan/README.md), "Post-pilot backlog"), so adopting it is a lead decision, not a side effect.
-- **OpenLayers** Draw/Modify handle MultiPolygon and holes, but bring their own projection transforms (`fromUserCoordinate`/`toUserCoordinate` on every edit), styling, keyboard model and bundle. Its precision and accessibility would still need proving.
-- **No candidate** gives DESIGN's focusable 44 px handles with arrow nudges, a synced vertex table, or the palette-only canvas without custom work. Every option still needs the `plan.ts`/`archive.ts` model fix, because the read-only screens draw zones too.
-- **The SVG path already has** the children slot meant for "vertex handles" (`SitePlan.tsx:76`), the camera math, the armed mode, palette and chrome theming, marker accessibility patterns, and about 900 lines of deleted editor UX to reuse without its rounding. The geometry is small: at most 250 zones, 2,000 positions per zone and 20,000 per package (contract "Frozen input bounds").
+- **Terra Draw 1.37:** its store, validator and render mode reject holes and MultiPolygon ("Feature has holes", "Feature is not Point, LineString or Polygon"), and a vertex drag rewrites ring 0 only. Its default `coordinatePrecision` of 9 rejected 2,000 of 2,000 full-precision server polygons; only precision 17 or more accepted all of them. Its decimal counter loops forever on a subnormal coordinate such as `1e-320`, which the backend range check accepts. It handles the primary pointer only and has no arrow-key or ARIA support. Contract zones are MultiPolygon after normalization, so Terra Draw is out.
+- **OpenLayers 10.11:** Modify edits every ring and part. Geometry kept in EPSG:4326 (`useGeographic`) round-trips bitwise. A 3857 round trip changes values by up to 4.3e-14°, which would change `geometry_sha256`. About 97 KB gzipped for Map, View, Vector, Modify, Draw, Snap, Select and GeoJSON. No keyboard vertex editing and no undo.
+- **mapbox-gl-draw 1.5.2 on MapLibre GL JS 6:** keeps rings and MultiPolygon. No undo, no keyboard, no type definitions. MapLibre adds about 285 KB plus a 144 KB worker gzipped, needs WebGL2 and needs worker-URL wiring under bundling. "MapLibre on the web" is on the post-pilot backlog ([docs/plan/README.md](../docs/plan/README.md)), so adopting it would be a lead decision.
+- **Leaflet with Geoman:** reverses WEB-27, and Leaflet's `toGeoJSON` rounds to 6 decimal places by default.
+- **No library** provides keyboard vertex selection and movement. Every canvas option would still need a DOM handle overlay synced to its camera, plus the `plan.ts`/`archive.ts` model fix that the read-only screens need anyway.
+- **Edge snapping is never exact.** In 10,000 float interpolations, 0 points were exactly collinear (robust `orient2d`), so library edge snapping creates slivers the server rejects without tolerance. Only vertex-to-vertex snapping copying exact numbers is safe.
+- **The SVG path:**
+  - It has the children slot meant for "vertex handles" (`SitePlan.tsx:76`), the camera math, the armed mode, palette and chrome theming, marker accessibility patterns, and about 900 lines of deleted editor UX to reuse without its rounding.
+  - `toPlan`/`fromPlan` changed 0 of about 163,000 numbers in the spike's round trip, but are not guaranteed exact near 0°,0° (errors up to 6e-18°). That is why longitude/latitude must stay the source of truth (WUI-2).
+  - The geometry is small: at most 250 zones, 2,000 positions per zone and 20,000 per package (contract "Frozen input bounds").
+- **Preview validators:** `@turf/boolean-valid` disagreed with 14 of 29 authored structure cases and passed the bow-tie. jsts matched every topology and relation case, but costs about 109 KB gzipped under EDL/EPL and was last released in 2024. Neither is adopted (WUI-5).
 
-What would change this: the spike shows SVG handles cannot hold interactive frame rates with a 2,000-point ring at 60 Hz pointer input on a mid-range laptop after memoisation, or touch editing on iPad Safari cannot be made reliable. The fallback is OpenLayers Modify on the same geometry module, with the lead's approval for the dependency. Spike criteria are in WEB-30 (section 8).
+What would change this: the in-repo spike (WEB-30) fails its touch gate (real iPad Safari) or its performance gate (a 2,000-vertex drag). Then rerun every gate against OpenLayers 10.11 with `useGeographic`, Modify and vertex-only Snap, and a DOM handle overlay, on the same `src/lib/zones` model. The lead approves the dependency. Gates are in section 8.
 
 ### WUI-2 Geometry fidelity rules
 
@@ -73,13 +80,14 @@ What would change this: the spike shows SVG handles cannot hold interactive fram
 4. A ring stays closed: moving vertex 0 also moves the closing position to the identical pair.
 5. Never derive a coordinate from the DOM, an SVG string, a rounded label or `archive.ts` (which repairs geometry). Draft and snapshot geometry go through a strict reader that reports problems instead of fixing them.
 6. Unchanged-draft test: load, save and reload a draft without edits, and every number must be identical. Run it on every contract fixture geometry.
-7. The client computes no geometry digest and no canonical form. Normalization belongs to the server (contract). Draft GET/PUT must return zones as submitted (CR-W4).
+7. The client computes no geometry digest and no canonical form. Normalization belongs to the server (contract). In BE-18, a save stores geometry as submitted, but trims labels and lowercases `zone_id` (`normalize_zone_draft_values`, `20261011121000_zone_drafts.sql:10-55`). The editor therefore sends trimmed labels and lowercase UUIDs (`crypto.randomUUID()` is lowercase), and compares after the same normalization. CR-W4 asks to freeze this.
+8. A draft starts from its base package's canonical snapshots: MultiPolygons, rings rotated, ordered by code. Vertex addresses are fixed from the first load, and later saves keep them.
 
 ### WUI-3 Transport: browser-direct for draft operations
 
 Draft GET (after the first render), PUT, validate, publish and DELETE go from the browser to the API through a new `src/lib/api/zones-browser.ts` built on `browserApi()`. Draft create, the draft list and historical reads run on the server.
 
-Why: drafts may reach 4 MiB by contract; autosave runs every few seconds; the editor must abort superseded requests and read the ETag; and the repository already sends large package writes browser-direct. The browser could already read `etag` at HEAD but could not send `If-Match`. The BE-18 working tree fixes CORS (CR-W1) and the body limit (CR-W2); confirm both with a real preflight when BE-18 lands.
+Why: drafts may reach 4 MiB by contract; autosave runs every few seconds; the editor must abort superseded requests and read the ETag; and the repository already sends large package writes browser-direct. The browser could already read `etag` at HEAD but could not send `If-Match`. BE-18 fixed CORS (CR-W1) and the body limit (CR-W2); confirm both with a real browser preflight in WEB-35.
 
 Fallback if the CORS change does not ship: Server Actions carry the PUT. A maximal compact draft (~0.8 MB) fits the 2 MB limit. Server Actions cannot be aborted and are serialized by Next.js; the save queue already allows only one write in flight, so it tolerates both. Build one transport, not both.
 
@@ -90,8 +98,9 @@ The server draft is the only persistence. There is no browser storage of geometr
 ### WUI-5 Validation: local structure always, server topology per revision
 
 - Local structural checks run on every change and block saving. They cover closed rings, three distinct vertices, finite in-range numbers, the counts from `contracts/zones/geometry.cases.json` `limit_cases`, the label and code syntax, duplicate codes and the change-note length.
-- Local topology hints are optional and never authoritative: ring self-intersection and vertices outside the site boundary. They are labelled "Found while editing".
-- Server validation runs for the acknowledged revision, 3 s after saves settle, with at most one request in flight. A result for an older revision is discarded. The review page always validates its exact revision. If BE-18 rate-limits validation, switch to a "Check boundaries" button and validation on entering review.
+- Local topology hints are optional and never authoritative: ring self-intersection (a small in-house segment test) and vertices outside the site boundary. They are labelled "Found while editing". No geometry library: turf disagrees with the authored cases, and jsts's size and licence are not justified while the server validates.
+- Server issues locate a zone, not a vertex. BE-18 sends paths like `/zones/3/geometry` and keeps only the first geometry issue per zone (`20261011121000_zone_drafts.sql:215-254`). The Problems list therefore points to the zone and fits it in view; local hints add the vertex when they find it. CR-W7 asks for an optional issue location.
+- Server validation is sent only when no PUT is in flight and local equals acknowledged: after 10 s idle, from "Check boundaries", and on entering review. BE-18 limits validate to 30 per minute and publish to 10 per minute. A 412 on validate is never a conflict by itself: if a PUT is in flight or the acknowledged revision moved past the validated one, drop it and reschedule; otherwise GET the draft and follow the 412 path. A 429 waits for `Retry-After` and shows "Checking paused for 20 s". A result for an older revision is discarded.
 
 ### WUI-6 Publication is its own page
 
@@ -105,12 +114,12 @@ No merge, no rebase, no silent overwrite. Every conflict keeps the local geometr
 
 - Arrow keys nudge a focused point 10 cm, and Shift+arrow 1 m. DESIGN §8 says "1 map unit / 10", which has no meaning in longitude/latitude. Propose the amendment to the design owner (section 9, CR-W17).
 - The maximum editing zoom is set by ground resolution (1 cm per screen pixel), not 8x the fitted frame. Today a 0.1° site bottoms out at about 2.5 m per pixel.
-- Snapping is on by default. It snaps to exact vertices of other draft zones and of the site boundary within 10 screen pixels, copying the exact number pair. Hold Alt (Option) to disable it while dragging. There is no edge snapping: a computed point on a segment is not exactly on it in float arithmetic, and the server rejects any positive-area overlap without tolerance (contract). Shared edges come from shared vertices and tracing (section 5.5).
+- Snapping is on by default. It snaps to exact vertices of other draft zones and of the site boundary within 10 screen pixels, copying the exact number pair. Hold Alt (Option) to disable it while dragging. There is no edge snapping: a computed point on a segment is not exactly on it in float arithmetic, and the server rejects any positive-area overlap without tolerance (contract). Shared edges come from shared vertices and tracing (section 5.4). To start a shared edge partway along a neighbour's edge, first insert a point on the neighbour (an explicit edit, which shows that zone as changed), then snap to it.
 - "Move shared points together" is on by default. Dragging a vertex also moves vertices in other draft zones with an identical coordinate pair. It is one undo step, and both zones show as changed.
 
 ### WUI-9 Review defaults
 
-- Labels: the zone label recorded at collection, with the map version. Legacy rows: "Boundary version not recorded" plus their code.
+- Labels: the zone label recorded at collection, with the map version.
 - Zone filters need one site (contract). Default matching is "any map version" of the stable zone identity, shown as "North meadow · all map versions". "One map version" narrows to package plus zone.
 - Totals and summaries come from the server. Loaded pages are labelled as such.
 - The Data map shows one map version at a time, with a version picker and dimmed points from other versions. It never shows today's boundary under historical points as if it were theirs.
@@ -119,7 +128,7 @@ No merge, no rebase, no silent overwrite. Every conflict keeps the local geometr
 
 ### WUI-10 State and caching: no new library
 
-- Server components read: v2 site, draft, base package plan, historical zones and forms. They pass serializable props.
+- Server components read: the site, draft, base package plan, historical zones and forms. They pass serializable props.
 - The editor is one client root with a reducer (`state.ts`) and a save-queue hook. Selection, mode and history are local.
 - No SWR or TanStack Query. Package-pinned zone snapshots are immutable, so the client may memoise them in a `Map` keyed `${userId}:${projectId}:${packageId}`. Current-pointer reads are never memoised.
 - Autosave never calls `revalidatePath`. A layout revalidation re-downloads the archive and `/v1/me` (`actions.ts:59-61`, `workspace.ts:178-207`). Publish and discard call one Server Action that revalidates the site, zones and packages paths, then `router.refresh()`.
@@ -140,23 +149,21 @@ Reuse the glossary word. The `/sites/:site/zones` redirects come out of `next.co
 
 | Route | Who | What |
 | --- | --- | --- |
-| `…/sites/[site]/zones` | Managers and viewers | Current version, version history, and `?version=7` read-only view; managers also see drafts and "Start a draft" |
+| `…/sites/[site]/zones` | Managers and viewers | Current version, version history, and `?version=1` read-only view; managers also see drafts and "Start a draft" |
 | `…/sites/[site]/zones/drafts/[draft]` | Managers | Editor |
 | `…/sites/[site]/zones/drafts/[draft]/publish` | Managers | Review and publish |
 
-`[site]` stays the site code in URLs. The v2 site supplies the UUID for API paths (contract: never infer UUID versus code).
+`[site]` stays the site code in URLs. The site list supplies the UUID for API paths (contract: never infer UUID versus code).
 
 ## 4. Entry points and site states
 
-The site page's zone island and the Zones page derive one state from the v2 site (`zone_contract_version`, `current_package_id`, `zone_editing_available`) and the role:
+The site page's zone island and the Zones page derive one state from the site (`current_package_id`, `zone_editing_available`) and the role:
 
 | State | Managers see | Viewers see |
 | --- | --- | --- |
-| Server has no v2 site capability | NotAvailable "Editing zones on the web is not available yet." + "Edit the zones layer in QGIS and upload a new package." (as today) | As today |
 | No ready package | "No map package yet" ScreenState with "Upload package" | "No map package yet" |
-| Package without a usable site boundary or form (`zone_editing_available` false) | "Zone editing needs a map package with a site boundary and a published form. Upload a package from QGIS first." (CR-W12 asks for the reason code) | Version history only |
-| Unadopted (format 1) | "Edit zones" leads to Start draft with the adoption explanation (5.2) | Current zones, "Boundary versions start when a manager publishes zones here" |
-| Adopted (format 2) | "Edit zones" and "Zone versions", current version line "Map v7 · published Oct 10 by JL" | "Zone versions" and the current version line |
+| `zone_editing_available` false (no usable site boundary or published form) | Cause-neutral until CR-W12 adds a reason: "Editing zones on the web is not available for this site yet." + "Edit the zones layer in QGIS and upload a new package." Reason-specific wording only from `zone_editing_unavailable_reason` | Version history only |
+| Site with a map package | "Edit zones" and "Zone versions", current version line "Map v1 · published Oct 10 by JL" | "Zone versions" and the current version line |
 
 Observers never reach these pages: the project layout already sends them to collect.
 
@@ -164,20 +171,16 @@ Observers never reach these pages: the project layout already sends them to coll
 
 ### 5.1 Zones page (`…/sites/[site]/zones`)
 
-- **Header:** "Zones · Riverside", eyebrow "MAP v7", and actions for managers: ink "Start a draft from v7", or "Open your draft" when the manager has one.
+- **Header:** "Zones · Riverside", eyebrow "MAP v1", and actions for managers: ink "Start a draft from v1", or "Open your draft" when the manager has one.
 - **Current version island:** the plan with zones (lossless, WEB-31), a zone table (label, code in mono, parts and holes, area when available) and facts (published at and by, change note, how it was made: "Drawn on the web" or "Imported from QGIS"; CR-W11).
-- **Open drafts** (managers): one row per draft with "Based on v7", last edited by and at, and revision. A stale draft (base is not current) reads "Based on v6 · v7 is current", with Open, Save as file and Discard.
-- **Versions:** v8 Active, v7 Archived ("Replaced by v8"), with change note, date and author, and a link to `?version=7` (read-only plan and zone table). Mark "current" from `current_package_id`, never newest-ready (`history.ts:31-34` today).
-- **Rollback:** "Start a draft from v6" on an archived version. Whether publishing a stale-base draft is allowed is an open contract question (CR-W14); until it is answered, show the action only when `base == current` or the lead confirms.
+- **Open drafts** (managers): one row per draft with "Based on v1", last edited by and at, and revision. A stale draft (base is not current) reads "Based on v1 · v2 is current", with Open, Save as file and Discard.
+- **Versions:** v2 Active, v1 Archived ("Replaced by v2"), with change note, date and author, and a link to `?version=1` (read-only plan and zone table). Mark "current" from `current_package_id`, never newest-ready (`history.ts:31-34` today).
+- **Restore an earlier version:** "Restore v1 boundaries in a new draft" on every archived version. A draft must be based on the current package to publish (contract.md:72; `services/zone_publication.py:122-139` refuses a stale base with 409). So the action creates a draft from `current_package_id`, then PUTs the zones from `GET /zones?package_id=<v1>` (same `zone_id`, code, label and geometry; zones added after v1 show as removed). It opens the review page, which diffs against current and prefills the change note "Restores v1 boundaries".
 
 ### 5.2 Starting a draft
 
 - A Server Action calls `POST zone-drafts {request_id, base_package_id}`. The request ID is generated when the dialog opens, so a double click or a retry replays. On success, navigate to the editor.
-- **Another open draft on the same base:** "JL has a draft based on v7, edited 11:32. Both can be edited, but only the first one published becomes v8. Open JL's draft / Start my own draft."
-- **Adoption (format-1 base):**
-  - Explain: "Riverside's zones have no versions yet. Publishing starts versioning. Earlier observations stay as they are and are labelled 'Boundary version not recorded'."
-  - Inventory form: `RadioRows` of eligible published inventory forms (reuse `features/packages/forms.ts::isInventoryDefinition`), plus "No inventory on this map". Omitted means unavailable (contract).
-  - Show the draft's `legacy_codes_requiring_mapping` as a Note: "Codes A and B were used before versioning. Before publishing, describe in the change note how they relate to these zones. Or give the zones new codes."
+- **Another open draft on the same base:** "JL has a draft based on v1, edited 11:32. Both can be edited, but only the first one published becomes v2. Open JL's draft / Start my own draft."
 
 ### 5.3 Editor layout (`…/zones/drafts/[draft]`)
 
@@ -186,14 +189,14 @@ Observers never reach these pages: the project layout already sends them to coll
 - **Map island (left):** a toolbar row, then MapFrame.
   - Toolbar: `Segmented` tools (Select · Draw shape · Draw rectangle), IconButtons (Undo, Redo, Fit zone, Remove point), and switches (Snap to points, Move shared points together).
   - Canvas: base package background (ground, paths, trees). All draft zones are dashed, with faint fill and labels. The selected zone is hatched with focus dashes, and the others are dimmed (DESIGN §9). The selected ring shows vertex and midpoint handles. Problem zones carry a numbered ink pill.
-  - Overlay label: "Riverside · Day plan / Draft from v7", or the mode instructions.
-  - Scale chip: "0–25 m · Map v7 draft · north ↑".
+  - Overlay label: "Riverside · Day plan / Draft from v1", or the mode instructions.
+  - Scale chip: "0–25 m · Map v1 draft · north ↑".
 - **Panel (right):**
   1. **Zones** island: roving rows (label, code, "New", "Changed" or "Unchanged" in words, problem count) and outline "Add a zone".
   2. **Selected zone** island:
      - Label field (1–200 characters, trimmed).
      - Code field: editable only for a zone new in this draft. An existing code is locked with the visible reason "Codes never change. A new code makes a new zone."
-     - Identity line: "Same zone as in v7" or "New zone in this draft".
+     - Identity line: "Same zone as in v1" or "New zone in this draft".
      - Shape facts: "1 part · 1 hole · 214 points".
      - Actions: Remove hole n, Remove part n, Remove zone. Removing a zone reads "Removes North meadow from the next version. Earlier versions and their observations keep it."
   3. **Points** island (the text equivalent of the map, DESIGN §9): a ring picker ("Part 1 · outer edge", "Part 1 · hole 1"), then a table with "Point 12", longitude and latitude in mono shown to 7 decimals, editable at full precision, and actions Insert after and Remove. Paginated 100 at a time, with "214 points · decimal degrees". The selected row follows the selected handle.
@@ -209,7 +212,7 @@ Observers never reach these pages: the project layout already sends them to coll
 | Move point | Drag a handle. | Focus a handle (Tab enters the selected ring at the selected point), arrows 10 cm, Shift+arrows 1 m, `[` and `]` previous and next point, Home and End | One history step per drag or per burst of nudges within 1 s |
 | Insert point | Drag or click a midpoint handle (shown when the edge is at least 24 px long on screen). | `I` inserts after the focused point, at the edge midpoint | Exact midpoint in plan space through `fromPlan`; neighbours untouched |
 | Remove point | Remove point button, or Delete. | Delete or Backspace | Refused below three distinct vertices, with the reason announced |
-| Draw shape | Click to add points; click the first point, double-click or press Enter to finish; Esc cancels; Backspace removes the last point. | `P`. A centre cross appears; arrows pan; Space adds a point at the cross; Enter finishes | New zone with a client UUID, a suggested unused code and an empty label to fill in. Unfinished shapes stay local (contract) |
+| Draw shape | Click to add points; click the first point, double-click or press Enter to finish; Esc cancels; Backspace removes the last point. | `P`. A centre cross appears; arrows move the cross (5.5); Space adds a point at the cross; Enter finishes | New zone with a client UUID, a suggested unused code and an empty label to fill in. Unfinished shapes stay local (contract) |
 | Draw rectangle | Drag. | `R`. Space sets the first corner at the cross, Space again the opposite corner | Four corners aligned to longitude and latitude (the plan axes are independent) |
 | Trace an edge | While drawing, two consecutive points snapped to the same ring offer "Follow the edge of Slide" (`T`, press again for the other direction). | Same | Copies the exact intermediate vertices, so zones share edges without slivers |
 | Remove hole or part | Selected zone island | Same buttons | Zone keeps its identity |
@@ -221,6 +224,8 @@ Deferred: drawing a hole, adding a part, split and merge tools. Holes and parts 
 - `MapFrame` gains a mode (`pan`, `edit` or `draw`), a camera context (`usePlanCamera()`: camera, pixels per plan unit, `clientToLngLat`), and key ownership: a focused child marked `data-map-keys` consumes arrows, Delete and Escape, so the frame does not pan (today it pans for any descendant, `MapFrame.tsx:258-295`).
 - Fix `frameUnits` to measure the SVG box, or use `getScreenCTM().inverse()`, so it is not off by the 1–2 px border (`MapFrame.tsx:219-224`).
 - Two-pointer pinch and pan in `edit` and `draw` modes, with `touch-action: none` on the canvas. Drags are batched per animation frame.
+- The selected ring is one tab stop (roving tabindex): only the current handle has `tabIndex=0`. `[`/`]`, Home and End move focus within the ring. Tab and Shift+Tab leave the canvas, and Esc returns focus from a handle to the zone's row in the Zones list. Reuse the deleted editor's names and announcements, not its per-vertex tab stops.
+- In draw mode the arrow keys move the centre cross itself (10 cm, Shift 1 m, position announced). The camera follows only when the cross nears the frame edge, and the pan clamp is lifted in `edit` and `draw` modes, so keyboard drawing reaches every site-boundary vertex at any zoom.
 - Handles are map chrome, not map data: island fill with an ink ring, scoped with `mapChromeTheme(palette)` like marker focus rings. They have a 44 px hit area, `role="button"`, the name "Point 12 of 214, North meadow, outer edge", and `aria-pressed` for the selected one. Above about 300 visible points, draw non-interactive dots and say "Zoom in to edit points, or use the points table."
 - The static background is memoised separately from the editable layer, so a drag re-renders only the selected ring. Replace `Math.min(...spread)` in `plan.ts:130-135,217-223` and `archive.ts:349-352` with loops; they throw at about 125,000 arguments (measured).
 - Problems are marked on the canvas only with palette means and chrome: hatch, heavier dashes, a numbered ink pill. The attention colour and words live in the Problems island (rule 03).
@@ -257,37 +262,39 @@ Save feedback stays out of `StateBadge`: the state vocabulary has no saving or c
 | Response | Editor result | Choices |
 | --- | --- | --- |
 | 412 `revision_conflict` on PUT | Stop the queue and keep local. GET the draft to show who saved and when, and a map overlay of their version (dashed) under yours | "Replace the saved draft with my edits" (explicit PUT with the new ETag, after confirmation), "Discard my edits and load the saved draft", "Save my edits as a file" |
-| 409 `conflict` (draft published or discarded elsewhere) | Read-only with the outcome: "This draft was published as v8 by JL at 11:41" or "discarded" | "Open v8", "Start a draft from v8", "Save my edits as a file" |
+| 409 `conflict` (draft published or discarded elsewhere) | Read-only with the outcome: "This draft was published as v2 by JL at 11:41" or "discarded" | "Open v2", "Start a draft from v2", "Save my edits as a file" |
 | 428 `precondition_required` | A client defect. Stop, report the request ID, and reload the draft metadata while preserving edits | Same as 412 |
 | 413 or `too_complex` | "Not saved · this draft is larger than DECA Mark accepts (20,000 points per site, 2,000 per zone, 250 zones)." Point to the largest zone | Edit, or save as file |
 | 422 structural issues | Map issues to zones by `zone_ids`, falling back to `path` | Fix and continue |
 | 401 | Status "signed out" (5.8). Keep the queue paused until the token refreshes | Sign in in another tab |
 | 403 or 404 | "You no longer have access to this draft." Keep local in memory | Save my edits as a file |
 | Network, timeout or 5xx | Treat as unconfirmed. GET the draft: if `revision == sent + 1` and the zones deep-equal the sent snapshot, acknowledge; if the revision is unchanged, retry; otherwise treat as a conflict | Automatic |
-| 409 `publication_conflict` on publish | "Not published. v8 was published while you were reviewing. Your draft is based on v7 and is unchanged." | "Start a draft from v8" (this draft stays readable as a reference), "Save this draft as a file" |
+| 429 on validate or publish | Wait for `Retry-After`; "Checking paused for 20 s" or "Publishing paused for 20 s. Nothing was published." | Automatic retry for validate; explicit retry for publish (same `request_id`) |
+| Any 409 on publish | First GET the draft. If `state == published`: "This draft was already published as v{n}." with "Open v{n}" (from `published_package_id`). If discarded: the discarded outcome. Only if still a draft, the row below | — |
+| 409 `publication_conflict` on publish | "Not published. v2 was published while you were reviewing. Your draft is based on v1 and is unchanged." | "Start a draft from v2" (this draft stays readable as a reference), "Save this draft as a file" |
 
 ### 5.10 Review and publish (`…/publish`)
 
-- **Header:** "Publish zones · Riverside", eyebrow "MAP v7 → NEXT VERSION". It shows "v8" only if the server returns an advisory next version (CR-W8). Otherwise: "Publishing creates the next version after v7. v7 never changes."
+- **Header:** "Publish zones · Riverside", eyebrow "MAP v1 → NEXT VERSION". Use the server's current version to say "Publishing creates the next version after v1. v1 never changes." A proposed next number is provisional until the publication succeeds.
 - **Readiness for revision n:** blocking problems link back to the editor; warnings (site gap, small zone) are listed; "Ready to publish" only when `ready` is true for this exact revision.
-- **Changes:** added, removed, label changed and boundary changed zones. Use server `changes` (CR-W7) when present. Otherwise compare against the base snapshot (`/zones?package_id=base`): a new UUID is added, a missing UUID is removed, a different label is relabelled, and different coordinate arrays are "Boundary changed". A format-1 base has no snapshots, so everything is new.
-- **Map:** base boundaries dashed and changed zones hatched, labelled "Hatched: boundary changed since v7" (DESIGN §9).
-- **What observers experience:** "Observers who are collecting keep v7 until they next start collecting at this site. Their observations keep v7. New downloads get the new version. Observers using an older version of the app keep receiving map v{legacy}, and their observations upload without a map version." The last sentence appears only for adopted sites, using the frozen legacy package version.
+- **Changes:** use required validation `zones[].change` and `geometry_sha256` at the acknowledged revision, classified against the current package. Raw coordinate-array differences are not authoritative: equivalent geometry can use different ring order or type spelling. If the current pointer changed, show the conflict and prevent publication until the manager creates a draft from current.
+- **Map:** base boundaries dashed and validated geometry changes hatched, labelled "Hatched: boundary changed since v1" when base is current (DESIGN §9). A stale draft's base overlay is labelled as its base and never presented as the current comparison.
+- **What observers experience:** "Observers keep v1 for observations they have started and for anything not yet uploaded. They get the new version once they download it in the DECA Mark app, and use it from their next collection after that. Until then they can keep collecting on v1, and those observations keep v1."
 - **Forms:** play form version, and inventory form or "No inventory on this map".
-- **Change note:** a Textarea of up to 2,000 characters. It is part of the draft, so editing it saves a revision. It is required when `legacy_codes_requiring_mapping` is not empty, with that reason shown.
-- **Confirm:** a checkbox "I understand published boundaries cannot be edited. Changes need a new version." It enables primary "Publish new version" ("Publish v8" when the next version is known).
+- **Change note:** a Textarea of up to 2,000 characters, recommended but optional. It is part of the draft, so editing it saves a revision.
+- **Confirm:** a checkbox "I understand published boundaries cannot be edited. Changes need a new version." It enables primary "Publish new version" ("Publish v2" when the next version is known).
 
 Submitting:
 
 - Generate `request_id` when the page opens for revision n, and keep it in `sessionStorage` under `zone-publish:${draftId}:${revision}` so a reload reuses it. Send `{request_id, expected_current_package_id}` with If-Match.
-- 201: show the result, revalidate, and open the Zones page with a Toast "v8 is published. Observers get it the next time they start collecting." (no celebration).
-- 200 replay: if the result package is not the current one (CR-W9), say "This draft was already published as v8. v9 is current now." Never claim it is current.
+- 201: show the result, revalidate, and open the Zones page with a Toast "v2 is published. Observers use it after they download it in the DECA Mark app." (no celebration).
+- 200 replay: if the result package is not the current one (CR-W9), say "This draft was already published as v2. v3 is current now." Never claim it is current.
 - Unconfirmed: "DECA Mark could not confirm whether this was published. Nothing is lost." Then automatically GET the draft. If its state is published, show that result. Otherwise offer "Try again", which reuses the same `request_id`.
 - 422 issues: return to the problems list. 412: reload the draft and validate again.
 
-### 5.11 Uploading a QGIS package to an adopted site
+### 5.11 Uploading a QGIS package
 
-After a site is adopted, a package upload goes through the same activation rules (contract "Existing import/publication route"). The existing upload, which sends no identity map, then gets 428. `UploadStep` therefore gains a mapping step for adopted sites only; unadopted sites keep today's flow byte-for-byte.
+Every package upload goes through the same activation rules as publishing (contract "QGIS upload"). Missing, duplicate or unused identity mappings return 422 `validation_failed` with an `identity_conflict` issue. Missing `expected_current_package_id` returns 428; the first upload must explicitly send null. `UploadStep` gains a mapping step. On a site's first upload there are no current zones, so every feature becomes a new zone and the step only asks for codes where the source ID does not fit.
 
 1. After "Read project" and the layer checks, list each source zones-layer feature by its `properties.id` and name.
 2. For each feature, the manager picks "Same zone as …" (the current version's zones, by label and code) or "New zone".
@@ -295,12 +302,25 @@ After a site is adopted, a package upload goes through the same activation rules
    - A feature whose code or label merely matches is shown as a suggestion and left unselected. Labels and codes do not prove continuity (master plan).
    - A new zone gets a client UUID and uses the source ID as its code when it fits the code syntax; otherwise the manager types a code.
 3. Current zones that no feature maps to are listed: "Removed from the next version: Swings. Earlier versions and their observations keep it."
-4. A change note is required when the contract requires it (legacy mapping), and recommended otherwise.
+4. A change note is recommended.
 5. Submit with `request_id` (kept for this attempt, so a retry replays), `expected_current_package_id`, `zone_identity_map` and `change_note`.
 6. Results:
-   - 409 `publication_conflict`: "Not uploaded. v8 was published meanwhile. Read the current version and map again."
+   - 409 `publication_conflict`: "Not uploaded. v2 was published meanwhile. Read the current version and map again."
    - 422 `identity_conflict`: the issue copy names the feature.
-   - Success: "Version 9 is the site's current map."
+   - 503 `storage_unavailable`: "Not uploaded. The map could not be saved. Your file stays available. Try again."
+   - Success: show the returned package version. Refresh the current pointer before calling that version current, because a retry may return a historical result.
+
+### 5.12 Screen states for the new routes
+
+| State | Zones page | Editor | Publish page |
+| --- | --- | --- | --- |
+| Loading | Still rows after 400 ms, "Loading zone versions…" | Still panel rows plus the base plan, "Loading the draft…" (also while the mount GET runs) | "Checking this draft…" |
+| Read failure | `LoadFailure` | `LoadFailure` | `LoadFailure` |
+| Empty | "No open drafts." / no package: "No zone versions yet. Upload a package from QGIS to create v1." | — | — |
+| Draft not found or discarded | — | "This draft is no longer open. Published versions are not affected." + ink "Return to zones" | Same |
+| Draft already published | — | Read-only, "Published as v2 by JL at 11:41." + "Open v2" | Same outcome |
+| Offline | `waitingSoft` banner "You are offline. Showing what loaded at 11:36." | `waitingSoft` banner "You are offline. Your changes stay in this tab and save when you reconnect. Do not close the tab."; Review and Discard disabled with that reason | Banner; Publish disabled with the reason |
+| No access | No-access state (managers only for drafts) | No-access state before any read | No-access state before any read |
 
 ## 6. Architecture
 
@@ -312,18 +332,18 @@ New files, owned by the web agent:
 | --- | --- |
 | `src/lib/zones/geometry.ts` | Types, strict reader, vertex addressing `{zoneId, part, ring, index}`, closed-ring maintenance, immutable edits, nudge in metres, rectangle, midpoint, structural checks with limits, equality |
 | `src/lib/zones/hints.ts` | Snapping (exact vertex index with a grid bucket over at most 20,000 positions), tracing between two vertices of one ring, ring self-intersection, vertex outside site |
-| `src/lib/zones/schemas.ts` | zod runtime schemas for ZoneDraft, ZoneDraftSummary, Validation, Publication, HistoricalZones, V2Site, PackageSummary format-2 fields, issues and conflict details. Provisional until OpenAPI, then `satisfies z.ZodType<components[…]>` (the `identity.ts` pattern) |
+| `src/lib/zones/schemas.ts` | zod runtime schemas for ZoneDraft, ZoneDraftSummary, Validation, Publication, HistoricalZones, Site, PackageSummary, issues and conflict details. Provisional until BE-22 OpenAPI, then `satisfies z.ZodType<components[…]>` (the `identity.ts` pattern) |
 | `src/lib/zones/copy.ts` | Issue code to manager copy (6.7) |
 | `src/lib/api/zones-browser.ts` | Draft GET/PUT/validate/publish/DELETE returning `{data, etag}`. The caller's signal is combined with the timeout through `AbortSignal.any` (add the same option to `browserApi`). Includes the user check (WUI-12) |
 | `src/features/zones/` | `ZonesPage.tsx`, `StartDraft.tsx`, `editor/{ZoneEditor,state,history,save-queue,EditorCanvas,Handles,DrawLayer,Toolbar,ZoneList,ZoneProperties,PointsTable,Problems,SaveStatus,ConflictDialog}.tsx/ts`, `publish/{PublishReview,diff}.ts(x)`, `history/VersionList.tsx` |
 | `src/features/shell/NavigationGuard.tsx` | Guard context for programmatic navigation |
-| `src/features/data/v2.ts`, `query.ts` | v2 list, summary and export adapters; URL ↔ server filter builder |
+| `src/features/data/observations.ts`, `query.ts` | Observation page, summary and export adapters; URL ↔ server filter builder |
 
 Changed files:
 
 - `src/components/map/MapFrame.tsx` (mode, camera context, key ownership, pinch, `frameUnits`, zoom by ground resolution).
 - `src/components/map/SitePlan.tsx` (zones with parts and rings under `evenodd`, `zone_id` keys, memoised background).
-- `src/lib/plan.ts`, `src/lib/sites/archive.ts` (lossless zones; no bounding-box stand-in for format 2; format-1 fallbacks marked).
+- `src/lib/plan.ts`, `src/lib/sites/archive.ts` (lossless zones; strict reader; no bounding-box stand-in).
 - `src/lib/api/{errors,workspace,browser,types}.ts`, `src/lib/time.ts` (project day to UTC instant).
 - `src/features/{sites,packages,data,observation,overview,reports,qgis}/*`, `src/lib/export/*`.
 - `next.config.ts`, `e2e/support/routes.ts`, `e2e/removed-routes.spec.ts`.
@@ -334,7 +354,7 @@ Shared files that need a coordinator: `contracts/contour.json`, DESIGN.md and bo
 
 ```mermaid
 flowchart LR
-  P[Editor page server] -->|v2 site, draft, base plan, base zones, forms| E[ZoneEditor client]
+  P[Editor page server] -->|site, draft, base plan, base zones, forms| E[ZoneEditor client]
   E -->|reducer edits| S[Local zones + history]
   S -->|debounced snapshot| Q[Save queue]
   Q -->|PUT If-Match| A[(API)]
@@ -357,6 +377,8 @@ State: `acknowledged {revision, etag, zones, changeNote, updatedAt, updatedBy}`,
 5. Failures follow 5.9. A pause holds until the manager acts or the token refreshes.
 6. Each response carries its sequence number. A response that does not match the current flight is ignored, so a late response can never roll local state back.
 
+On mount (including after Back from the review page, when the router restores old server props), the editor GETs the draft browser-direct before accepting edits or scheduling a save. If the server revision is newer than the props, it adopts the server draft (zones, note, ETag). If `state != draft`, it opens read-only with the 409 outcome. The first If-Match never comes from props alone. Until that GET returns, the editor shows its loading state.
+
 The queue is a pure reducer (`save-queue.ts`) plus a thin effect hook, so every branch is a unit test.
 
 ### 6.4 Runtime validation and errors
@@ -366,8 +388,6 @@ The queue is a pure reducer (`save-queue.ts`) plus a thin effect hook, so every 
   - `revision_conflict`, `precondition_required`, `publication_conflict` and `idempotency_conflict` get a `conflict` kind that the editor handles per 5.9;
   - `payload_too_large` gets a size kind;
   - `details.issues` and the conflict details are kept in `ApiError` and in a serializable form for Server Action results.
-
-  Treat a 413 `validation_failed` with field `body` (HEAD behaviour) as the size kind too, so either backend generation works.
 
 ### 6.5 Capability, not flags
 
@@ -390,7 +410,6 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 | `interior_overlap` | "North meadow and Slide overlap. Zones may share an edge but not area. Move the shared edge so they only touch." |
 | `duplicate_code` / `duplicate_zone_id` | "Two zones use code NM. Give one a different code." |
 | `identity_conflict` | "Zone NM's identity belongs to another site or code. Remove it and draw it as a new zone." |
-| `legacy_mapping_required` | "Codes A and B were used before versioning. Describe in the change note how they relate to these zones." |
 | `unsupported_extent` | "This site is too large or crosses the date line or a pole. DECA Mark supports sites up to 1° across." |
 | `too_complex` | "Too many points: at most 2,000 per zone and 20,000 per site." |
 | `empty_zone_set` | "Add at least one zone before publishing." |
@@ -402,15 +421,14 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 
 ### 7.1 Data page
 
-- **Server load:** parse the URL, resolve `site` (code) to `site_id` through the v2 sites list, convert project-timezone days to half-open UTC instants (new `time.ts` helper, DST-tested), call `GET /v2/…/observations?limit=500`, and parse it.
+- **Server load:** parse the URL, resolve `site` (code) to `site_id` through the site list, convert project-timezone days to half-open UTC instants (new `time.ts` helper, DST-tested), call `GET /v1/…/observations?limit=500`, and parse it.
 - **More pages:** a Server Action `loadObservations({query, cursor})` returns the next page. The cursor stays in memory, never in the URL. Rows are de-duplicated by ID. Changing a filter resets to the first page.
 - **Counts:**
   - "Showing 1–500 of 1,284 matching observations · counted at 11:32", from `total_matching` and `generated_at`.
   - "Show the next 500".
   - "Refresh" re-runs the query from the first page.
   - Remove every "Based on the newest 500 observations" note this replaces.
-- **Columns:** Observation, Observed, Site, Zone (label at capture, with the code in mono under it), Map (`v7` or "Not recorded"), Round, Observer, Answer.
-  - Legacy rows: Zone shows the code with "Boundary version not recorded".
+- **Columns:** Observation, Observed, Site, Zone (label at capture, with the code in mono under it), Map (`v1`), Round, Observer, Answer.
   - Inventory rows: Zone shows "Whole zone".
 - **Search:** there is no server text search, so the box reads "Search loaded observations" and its count says "12 of 1,284 loaded match" (contract: "search this page").
 
@@ -421,20 +439,18 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 | Site | `site=<code>` | `site_id` |
 | Zone (needs a site; disabled with the reason "Choose a site to filter by zone" otherwise) | `zone=<uuid>` (repeatable) | `zone_id` (OR) |
 | Zone match: "All map versions" or "One map version" | `version=7` when one | adds `package_id` |
-| Recorded before versioning | `basis=legacy&code=A` | `assignment_basis=legacy_unversioned&legacy_zone_code=A` |
 | Round | `round=standard` | `round_type` |
 | Observer (exact) | `observer=AB` | `observer` |
 | Days in the project timezone | `from=2026-10-01&to=2026-10-07` | `observed_from`, `observed_before` (start of `to + 1`) |
 
-- **Zone options:** the union of summary groups for the scope (without the zone filter) and the current package's zones. Each option shows its label history and versions ("North meadow · v7–v8", "Swings · v5–v6 · not in the current map"). Legacy codes form a group "Recorded before versioning". CR-W13 proposes an identity catalogue endpoint so options can include zones with no records yet.
+- **Zone options:** the union of summary groups for the scope (without the zone filter) and the current package's zones. Each option shows its label history and versions ("North meadow · v1–v2", "Swings · v1 · not in the current map"). CR-W13 proposes an identity catalogue endpoint so options can include zones with no records yet.
 - **History:** discrete filter changes push a history entry, so Back undoes them, as the README promises. Search typing replaces the entry, debounced 300 ms.
-- **Old links:** `?zone=<code>` without a UUID resolves to the bound identity with that code at that site when one exists, with a Note "Observations recorded before versioning with code A are not included. Show them." Otherwise it resolves to the legacy code.
 
 ### 7.3 Data map
 
 - **Version choice:** with one site chosen, the map draws one version. Default order: the filter's version if one is set; otherwise the current version if any result uses it; otherwise the newest version in the results.
-- **Version picker:** "Boundaries: v8 (current) ▾" lists the versions present, with counts from the summary.
-- **Points from other versions:** dimmed, with the note "Points recorded on v7 and before versioning are dimmed. Their zones may differ from these boundaries."
+- **Version picker:** "Boundaries: v2 (current) ▾" lists the versions present, with counts from the summary.
+- **Points from other versions:** dimmed, with the note "Points recorded on v1 are dimmed. Their zones may differ from these boundaries."
 - **Geometry:** recorded package geometry through `getSitePlan(packageId)`, plus `/zones?package_id`, memoised per package. Zones keep their holes and parts (WEB-31).
 - **Inventory:** never a marker. Show a "Zone inventories in this view" list under the map (zone, version, count). Selecting an inventory row hatches its zone, switching the picker to its version.
 - **Subset note:** "The map shows the 500 loaded of 1,284 matching observations." Totals come from the summary.
@@ -443,26 +459,29 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 
 | Record | Map | Facts |
 | --- | --- | --- |
-| Bound point | Recorded package (`package_id`) with its zone hatched. "Map v7, the version this observation was recorded with." plus "v8 is current." when it differs | Zone "North meadow (NM) · map v7" |
+| Bound point | Recorded package (`package_id`) with its zone hatched. "Map v1, the version this observation was recorded with." plus "v2 is current." when it differs | Zone "North meadow (NM) · map v1" |
 | Bound inventory | Recorded zone hatched, no point. "An inventory of the whole zone. No point was recorded." | Same |
-| Legacy point | Point on the current ground with zones hidden. A toggle "Show today's zones (v8) for reference" is labelled as reference only | "Zone A · boundary version not recorded" |
-| Legacy inventory | No marker. "Recorded before map versions. Its stored location is not an observed point." | Same |
-| Historical map cannot load | "We could not load map v7 for this observation. The record and its zone are unchanged." with Try again | Facts unaffected |
+| Historical map cannot load | "We could not load map v1 for this observation. The record and its zone are unchanged." with Try again | Facts unaffected |
 
 ### 7.5 Overview, Reports and the site page
 
-- **Coverage:** from `GET /v2/…/observations/summary?site_id=…`. Rows are recorded snapshots: the current version's zones first (zero rows from the current package zones), then "Recorded on earlier versions" (`v7 · North meadow`), then "Recorded before versioning" (`Zone A`). Columns are the round types. Keep "Coverage is the records present, not completion."
+- **Coverage:** from `GET /v1/…/observations/summary?site_id=…`. Rows are recorded snapshots: the current version's zones first (zero rows from the current package zones), then "Recorded on earlier versions" (`v1 · North meadow`). Columns are the round types. Keep "Coverage is the records present, not completion."
 - **Field return:** the total from the summary; today and the last 7 days from the summary with date bounds.
 - **Panels with no server dimension** (observer, day, play type, last received): keep them, but compute them from the newest 500 with the existing note, until CR-W15 adds facets. Never mix exact and page-limited numbers without saying which is which.
 - **Reports:** zone and round from the summary. Observer and day follow the rule above.
-- **Site page zone island:** counts "recorded on v8" from the summary filtered to the current package, plus "N on earlier versions" and "N before versioning".
+- **Site page zone island:** counts "recorded on v2" from the summary filtered to the current package, plus "N on earlier versions".
 
 ### 7.6 Exports
 
-- **Data export dialog:** "Export 1,284 matching observations" as CSV or GeoJSON, fetched browser-direct with the bearer token (`GET /v2/…/export`, a GET, so no CORS change). The file name is built in the browser, because `Content-Disposition` is not exposed. The dialog repeats the scope: site, zones and match basis, version, rounds, observer, local days and their UTC bounds, the timezone, and the generation time.
-- **Too large:** 422 `export_scope_too_large` reads "This view has 48,210 observations. One file can hold up to 20,000. Narrow the dates or choose one site." It uses numbers only when the error carries them (CR-W15).
-- **Codebook:** stays client-generated per form version, and neutralises formula prefixes (`=`, `+`, `-`, `@`, tab, CR) in text cells. Numeric columns are left alone, because negative coordinates start with `-`. Until a form-version facet exists, it covers every form version of the project and says so.
-- **QGIS page:** "Records out" uses the same server export. "Maps for QGIS in" adds, per adopted site, "Download zone boundaries of v7 (.geojson)" built from `/zones?package_id`, with UUID, code, label and version properties.
+- **Data export dialog:**
+  - "Export 1,284 matching observations" as CSV or GeoJSON downloads the server ZIP. It is fetched browser-direct with the bearer token (`GET /v1/…/observations/export?format=csv|geojson`, the same filters, no cursor or limit).
+  - The ZIP holds `observations.csv` or `observations.geojson`, `codebook.csv`, `metadata.json`, `forms.json` and `historical-zones.geojson` (`routers/observation_analysis.py:46-70`). The browser names it `<site-or-project>-observations-<yyyy-mm-dd>.zip`.
+  - The dialog repeats the scope: filters, match basis, local days with their UTC bounds and the timezone.
+- **Limits:** 10,000 rows, 32 MiB and 10 s per export (`domain/observation_export.py:21-24`).
+  - When `total_matching` exceeds 10,000, disable Export with the visible reason "One export holds up to 10,000 observations. Narrow the dates or choose one site."
+  - A 422 `validation_failed` whose issue code is `export_scope_too_large` gets the same text, without counts until CR-W15.
+- **Codebook and formula protection:** the server writes the codebook and protects every CSV cell. The client builds neither. Any remaining client CSV (none planned) must neutralise `=`, `+`, `-`, `@`, tab and CR in text cells.
+- **QGIS page:** "Records out" uses the same server export. "Maps for QGIS in" adds, per site, "Download zone boundaries of v1 (.geojson)" built from `/zones?package_id` (UUID, code, label and version properties). Exports already carry `historical-zones.geojson` for their own scope.
 
 ## 8. Tasks and order
 
@@ -470,60 +489,70 @@ Status lives in [PLAN.md](PLAN.md). WEB-28 and WEB-29 remain the acceptance gate
 
 | Task | Size | Depends | Builds | Done when |
 | --- | --- | --- | --- | --- |
-| WEB-30 | M | CON-05 | Spike: SVG editing layer versus OpenLayers Modify on the same geometry | Recorded decision with measurements against the criteria below |
-| WEB-31 | M | CON-05 | Lossless zone model in `plan.ts`, `archive.ts` and `SitePlan`: parts, holes, `zone_id`, strict format-2 reader, marked format-1 fallbacks, loops instead of spreads, memoised background | Fixture round trips are number-identical; holes render; every existing map screen passes its tests |
-| WEB-32 | L | WEB-30, WEB-31 | Pure editor core: geometry ops, history, structural checks from `limit_cases`, snapping, tracing, hints, save-queue reducer | Unit tests cover every operation and save-queue branch; `structure_cases` agree |
-| WEB-33 | L | WEB-32 | Canvas: MapFrame modes, camera context, key ownership, pinch, handles, select/move/insert/remove, Zones list, selected zone, Points table, keyboard map, dev specimen | Keyboard-only and touch-emulated editing of every fixture shape, holes preserved |
+| WEB-30 | M | CON-05 | In-repo spike of Option A against the nine gates; OpenLayers only if gate 4 or 8 fails | Gate results recorded below; harness deleted |
+| WEB-31 | M | CON-05 | Lossless zone model in `plan.ts`, `archive.ts` and `SitePlan`: parts, holes, `zone_id`, strict reader with no box stand-in, loops instead of spreads, memoised background | Fixture round trips are number-identical; holes render; every existing map screen passes its tests |
+| WEB-32 | L | WEB-31 | Pure editor core: geometry ops, history, structural checks from `limit_cases`, snapping, tracing, hints, save-queue reducer | Unit tests cover every operation and save-queue branch; `structure_cases` agree |
+| WEB-33 | L | WEB-30, WEB-32 | Canvas: MapFrame modes, camera context, key ownership, pinch, handles, select/move/insert/remove, Zones list, selected zone, Points table, keyboard map, dev specimen | Keyboard-only and touch-emulated editing of every fixture shape, holes preserved |
 | WEB-34 | M | WEB-33 | Drawing: shape, rectangle, keyboard drawing at the cross, snap feedback, tracing, remove hole or part | Two adjacent zones drawn with a traced shared edge show no overlap issue at server validation (verified in WEB-28) |
-| WEB-35 | L | BE-18, WEB-33 | Persistence: schemas, `zones-browser.ts`, error kinds, autosave queue wiring, save status, conflict dialog, validate and Problems, navigation guard, account fence | Unit tests with contract-shaped responses; local stack PUT/validate round trip |
-| WEB-36 | M | BE-18 | v2 site discovery and explicit current pointer across Sites, site page, package history copy, QGIS page and plan selection; `siteId` in views; package history requests `supported_format=1&supported_format=2` | No screen derives current or managed boundaries from v1 site reads; format-2 versions appear in history |
-| WEB-42 | M | BE-18, WEB-36 | Adopted-site QGIS upload: identity mapping step, removed-zone list, change note, request ID retry, conflict and identity errors (5.11) | Upload into an adopted site with a mapped, a new and a removed zone succeeds; unadopted upload unchanged |
-| WEB-37 | L | WEB-35, WEB-36 | Zones page, Start draft with adoption, drafts list, version history and read-only versions, site page entry, route and redirect change | e2e: viewer sees history, manager starts and reopens drafts, observer and viewer are refused editor URLs |
-| WEB-38 | L | WEB-35, WEB-37 | Review and publish: changes, base versus new map, observer effect, change note and legacy mapping, confirm, request ID retry, replay, publication conflict, revalidation, discard | e2e publish, replay and conflict pass on the local stack |
-| WEB-39 | L | BE-20, WEB-36 | v2 Data list: adapter, filters, URL history, old links, pagination, totals, columns, legacy and inventory rows, search labelling | Above-500 fixture: table counts and paging agree with the summary |
-| WEB-40 | M | WEB-39, WEB-31 | Historical maps: version picker, dimming, inventory list, subset note, record detail on the recorded package, legacy detail, memo keys | Mixed-version fixture never draws current boundaries as historical |
-| WEB-41 | L | WEB-39 | Summaries and exports: coverage, field return, reports, site counts, server CSV and GeoJSON, scope text, ceiling error, codebook neutralisation, QGIS zones download | Export rows equal `total_matching`; formula cells are neutralised |
-| WEB-28 | L | BE-18, WEB-34, WEB-38, WEB-42 | Acceptance for editing and adopted-site uploads | Section 10 editing evidence |
-| WEB-29 | L | BE-20, WEB-40, WEB-41 | Acceptance for review | Section 10 review evidence |
+| WEB-35 | L | BE-22, WEB-33, DB-18 | Persistence: schemas, `zones-browser.ts`, error kinds, autosave queue wiring, save status, conflict dialog, validate and Problems, navigation guard, account fence; the manager-gated editor route and removal of only the `zones/:path*` redirect | Unit tests with contract-shaped responses; local stack PUT/validate round trip |
+| WEB-36 | M | BE-22 | Single site API and explicit current pointer across Sites, site page, package history copy, QGIS page and plan selection; `siteId` in views; package history queries use the site UUID | Every version appears in history; the explicit pointer alone identifies current |
+| WEB-42 | M | BE-22, WEB-36, DB-18 | QGIS upload with zone identity mapping: identity mapping step, removed-zone list, change note, request ID retry, conflict and identity errors (5.11) | A first upload creates v1; a later upload with a mapped, a new and a removed zone creates v2 |
+| WEB-37 | L | WEB-35, WEB-36 | Zones page, Start draft, drafts list, version history, read-only versions and restore, site page entry, removal of the root `zones` redirect | e2e: viewer sees history, manager starts and reopens drafts, observer and viewer are refused editor URLs |
+| WEB-38 | L | WEB-35, WEB-37 | Review and publish: changes, base versus new map, observer effect, change note, confirm, request ID retry, replay, publication conflict, revalidation, discard | e2e publish, replay and conflict pass on the local stack |
+| WEB-39 | L | BE-22, WEB-36 | Observation list: adapter, filters, URL history, pagination, totals, columns, inventory rows, search labelling | Above-500 fixture: table counts and paging agree with the summary |
+| WEB-40 | M | WEB-39, WEB-31 | Historical maps: version picker, dimming, inventory list, subset note, record detail on the recorded package, memo keys | Mixed-version fixture never draws current boundaries as historical |
+| WEB-41 | L | WEB-39 | Summaries and exports: coverage, field return, reports, site counts, the server ZIP export with scope text and the 10,000 ceiling, QGIS zones download | `observations.csv` in the ZIP has exactly `total_matching` rows; above 10,000 the action is disabled |
+| WEB-28 | L | BE-22, WEB-34, WEB-38, WEB-42 | Acceptance for editing and QGIS uploads | Section 10 editing evidence |
+| WEB-29 | L | BE-22, WEB-40, WEB-41 | Acceptance for review | Section 10 review evidence |
 
 Parallel work (explicit file ownership, no reverting others): WEB-30 to WEB-34 are one agent's lane in `src/lib/zones/`, `src/features/zones/editor/` and `src/components/map/`. WEB-36 and WEB-39 to WEB-41 can be a second lane in `src/features/{data,observation,overview,reports,qgis,sites,packages}/`, `src/lib/export/` and `src/lib/time.ts`. The two lanes share `src/components/map/*` and `src/lib/plan.ts`: WEB-31 lands first, and later map changes go through the editor lane. Integration gate after each task: `pnpm web:check`, `pnpm --dir web test:unit`, and the e2e specs it touches.
 
-### WEB-30 spike criteria
+### WEB-30 spike gates
 
-- **Inputs:** every geometry in `contracts/zones/geometry.cases.json`; Fall Creek package layers; a synthetic 2,000-point ring and a 250-zone, 20,000-position site.
-- **Pass:**
-  1. Moving one vertex leaves every other number identical, including holes and every MultiPolygon part.
-  2. Typed coordinates round-trip exactly.
-  3. Keyboard: Tab to a point, nudge, remove, insert, undo and redo, all with screen-reader names.
-  4. Touch: drag a point and pinch on iPad Safari (manual; Playwright has no WebKit here).
-  5. Day and Night palettes from `contracts/map-palettes.json`, no tiles.
-  6. Dragging a point on the 2,000-point ring keeps at least 50 frames per second on a 2020-class laptop, measured.
-  7. Added bundle for the editor route: at most 60 KB gzipped for the SVG path. Report the library path's cost.
-- **Output:** a short decision record appended to this section, with measurements. The SVG option wins ties.
+The desk spike settled the library question (WUI-1). WEB-30 now proves Option A in the repository, as a dev-gated throwaway harness under `src/app/dev/` (gated like `/dev/contour`). It uses a pure model with `node:test` tests and spike copies of the zone rendering with rings and parts. It deletes the harness afterwards and records the results here.
+
+- **Fixtures:**
+  - from `contracts/zones/geometry.cases.json`: square, holed, multipart, concave, reversed, duplicate_vertex, bow_tie, outside_hole, collinear, multipart_overlap, multipart_shared_edge;
+  - synthetic full-precision variants (15–17 significant digits, plus one coordinate needing more than 20 decimals);
+  - a 2,000-position zone and a 250-zone, 20,000-position site (`limit_cases`);
+  - one real ready package from the local stack (Fall Creek upload sample).
+- **Gates:**
+  1. **Lossless.** Load then serialise with no edit gives identical JSON. After one pointer move and one keyboard move, every other position is `JSON.stringify`-equal at its address, ring and part counts are unchanged, and the closing position equals the first.
+  2. **Shapes.** Holes render unfilled. Hole and part vertices can be selected and moved. Nothing collapses to a box. Removing below four positions in a ring is refused.
+  3. **Keyboard.** Tab onto a vertex; arrows and Shift+arrows move it, Delete removes it, Escape cancels, and ⌘/Ctrl+Z and ⇧⌘/Ctrl+⇧+Z undo and redo. MapFrame does not pan while a handle has focus. Announcements go through a live region. Axe reports no violations.
+  4. **Touch, real iPad Safari** (Chromium `hasTouch` emulation does not count): vertex drag without page scroll or zoom, pinch zoom, 44 px targets, no long-press callout.
+  5. **Palette.** Day and Night come from `contracts/map-palettes.json` with no hard-coded colours. Handles have at least 3:1 contrast in both palettes.
+  6. **No tiles.** The request log shows no tile or glyph requests.
+  7. **Bundle.** The editor route adds at most 60 KB gzipped of its own code and nothing to other routes.
+  8. **Performance.** A 2,000-vertex drag holds at least 50 fps on an iPad, and the 20,000-position site renders in under 200 ms.
+  9. **Hints.** The local hints flag bow_tie and outside_hole, and do not flag holed, multipart, duplicate_vertex or reversed. Collinear and overlap cases are left to the server.
+- **Failure rule:** if gate 4 or 8 fails, rerun gates 1–9 against OpenLayers (`useGeographic`, Modify, vertex-only Snap, DOM handle overlay) before choosing.
 
 ## 9. Contract and backend change requests (send to the lead)
 
-Each request is precise and additive unless marked. "Accept" is the acceptance case. Status was checked against the BE-18 working tree on 2026-10-11. "In BE-18 source" means verify it when BE-18 lands; do not re-request it.
+Each request is precise and additive unless marked. "Accept" is the acceptance case. Status as of the 2026-10-11 single-path contract. "Done" means verify it in the consuming task. "In contract (BE-22)" means the rewritten contract adopted it and BE-22 implements it.
 
 | ID | Status | Change | Reason | Affects | Accept |
 | --- | --- | --- | --- | --- | --- |
-| CR-W1 | In BE-18 source | `if-match` in CORS `allow_headers`, with preflight tests for PUT, POST and DELETE | Browser-direct conditional writes failed preflight at HEAD | Web editor | PUT preflight with `authorization, content-type, if-match` returns 200 |
-| CR-W2 | In BE-18 source | 4 MiB limit for draft PUT; 413 `payload_too_large` on zone routes | HEAD's 256 KiB admitted about 6,700 positions | Web editor | 4,194,304 bytes accepted, one more refused |
-| CR-W3 | Open | Declare the `ETag` response header on get, PUT and DELETE (only create 201 declares it); optionally add `etag` to the draft body; rename the zone `DraftCreate`, `DraftReplace` and `DraftPublish` to `ZoneDraft*` so the forms `DraftCreate` keeps its generated name | Generated types should carry the header; the collision already renamed both components | Web types | Types carry the header; `components["schemas"]["DraftCreate"]` is the forms model again |
-| CR-W4 | Open | State, with a test, that draft GET and PUT return zones exactly as submitted (Polygon stays Polygon, no ring rotation); normalized geometry only in validation or publication | Vertex addressing, undo and the unchanged-draft test break if a save rewrites geometry; contract.md says "return the canonical geometry" without saying when | Web editor | A Polygon with an odd ring start comes back with equal JSON values |
-| CR-W5 | Partly in BE-18 source | Response models now exist for authoring, historical zones and v2 sites. Publish the BE-20 models (V2ObservationPage, ObservationDetailV2, Summary) unrouted before the routes | Clients otherwise write schemas from prose | Web and mobile | Generated types exist before WEB-39 starts |
-| CR-W6 | Mostly in BE-18 source | New codes, 412 and 428, issue translation with JSON Pointer paths, and 428 for a missing `expected_current_package_id` exist. Add a typed conflict-details schema (`draft_id`, `revision`, `etag`, `current_package_id`) to OpenAPI | Clients branch on details | Web and mobile | The conflict details are typed in schema.d.ts |
-| CR-W7 | Open | Validation adds per-zone `geometry_sha256` and `change: added \| removed \| geometry_changed \| label_changed \| unchanged` against the base; optionally an issue `location` geometry | Truthful review diff and "boundary changed since v7" hatching without recomputing canonical forms | Web review | Changes match an authored fixture |
-| CR-W8 | Partly in BE-18 source | Drafts already carry `forms` and `legacy_codes_requiring_mapping`. Add `current_package_version`, an advisory `next_package_version`, `created_at`, `created_by` and display names for `created_by`/`updated_by` (inherited org admins included) | "Publishing creates v8" and "edited by JL" cannot be honest otherwise; members lists omit inherited admins (`queries/tenancy.py:36-39`) | Web editor and publish | Fields present; a stale next version yields 409 at publish |
-| CR-W9 | Open | Publication responses and replays include `current_package_id` and `replayed` | An old replay must not read as current; wrappers lose the 200/201 distinction | Web publish | Old replay after a newer publish returns `replayed: true` and the newer current ID |
-| CR-W10 | Partly in BE-18 source | The draft list already returns every draft on the site. Add author names, and state in the contract that there is no presence or locking and that 412/409 are the only concurrency signals | The entry flow offers "Open JL's draft" | Web Zones page | Second manager sees the first's draft with a name |
-| CR-W11 | Partly in BE-18 source | `format`, `zone_contract_version`, `map_revision` and `supported_format` exist. Add `site_id`, `zone_count`, `change_note`, `published_by` (+ display name), `publication_operation` and `source_draft_id` to PackageSummary, and the site's `current_package_id` to the package list | Version history needs these; the client still guesses current | Web history, mobile CR-M1 | History renders from the list alone |
-| CR-W12 | Open | v2 site adds `zone_editing_unavailable_reason` (`not_manager`, `no_site_boundary`, `no_eligible_form`, `publication_disabled`) and `legacy_package_version`; add `GET /v2/projects/{p}/sites/{site_id}` | Specific unsupported-site copy; the working tree returns only a boolean and reads every archive to compute it | Web site page, mobile | Each reason renders its copy |
-| CR-W13 | Open | Add `GET …/sites/{site_id}/zone-identities` → `[{zone_id, zone_code, versions:[{package_id, package_version, zone_label}]}]` plus the legacy codes seen; let historical `/zones` accept repeated `package_id` with immutable caching headers for pinned packages | Filter choices with retired zones; mixed-version maps without N requests | Web filters and maps | Retired zone appears with its versions |
-| CR-W14 | Open | Say whether a draft whose base is not current may be published when `expected_current_package_id` matches (rollback depends on it) | The contract mentions rollback by republishing old geometry but also "create a new draft from current" | Web Zones page | Documented, with a publication case |
-| CR-W15 | Open (BE-20) | Freeze the v2 list item (ObservationRow fields + `site_id`, binding fields, `geometry`, `display_anchor`, answers); add optional summary facets (observer, project-day, form_version) and `latest_received_at`; give `export_scope_too_large` details `{matching_rows, limit_rows}`; a terminal scope record in exports; expose `Content-Disposition`; `export?layer=zones` for GeoJSON; a `no_zone` legacy filter; export metadata echoes the timezone and UTC bounds | Table, reports and exports need them; page-limited panels otherwise remain | Web review | Each field or facet is in OpenAPI and used once |
+| CR-W1 | Done (BE-18) | `if-match` in CORS `allow_headers`, with preflight tests for PUT, POST and DELETE | Browser-direct conditional writes failed preflight at HEAD | Web editor | PUT preflight with `authorization, content-type, if-match` returns 200 |
+| CR-W2 | Done (BE-18) | 4 MiB limit for draft PUT; 413 `payload_too_large` on zone routes | HEAD's 256 KiB admitted about 6,700 positions | Web editor | 4,194,304 bytes accepted, one more refused |
+| CR-W3 | In contract (BE-22) | Declare the `ETag` response header on get, PUT and DELETE (only create 201 declares it); optionally add `etag` to the draft body; rename the zone `DraftCreate`, `DraftReplace` and `DraftPublish` to `ZoneDraft*` so the forms `DraftCreate` keeps its generated name | Generated types should carry the header; the collision already renamed both components | Web types | Types carry the header; `components["schemas"]["DraftCreate"]` is the forms model again |
+| CR-W4 | In contract (BE-22) | State, with a test, that draft GET and PUT return zones exactly as submitted (Polygon stays Polygon, no ring rotation); normalized geometry only in validation or publication | Vertex addressing, undo and the unchanged-draft test break if a save rewrites geometry; contract.md says "return the canonical geometry" without saying when | Web editor | A Polygon with an odd ring start comes back with equal JSON values |
+| CR-W5 | Partly done (BE-18) | Folded into the single-path contract; BE-22 publishes every response model | Clients otherwise write schemas from prose | Web and mobile | Generated types exist before WEB-39 starts |
+| CR-W6 | In contract (BE-22) | New codes, 412 and 428, issue translation with JSON Pointer paths, and 428 for a missing `expected_current_package_id` exist. Add a typed conflict-details schema (`draft_id`, `revision`, `etag`, `current_package_id`) to OpenAPI | Clients branch on details | Web and mobile | The conflict details are typed in schema.d.ts |
+| CR-W7 | In contract (BE-22) | Validation adds per-zone `geometry_sha256` and `change: added \| removed \| geometry_changed \| label_changed \| unchanged` against current. Issue-location geometry remains an unapproved extension | Truthful review diff without recomputing canonical forms | Web review | Changes match an authored fixture |
+| CR-W8 | In contract (BE-22) | Drafts carry `forms`, current/base package versions, timestamps, creator/updater IDs and display names (inherited admins included). Compute the proposed next version from current and label it provisional; no `next_package_version` wire field is promised | Honest version and author copy | Web editor and publish | Fields present; changed current yields 409 at publish |
+| CR-W9 | In contract (BE-22) | Publication responses and replays include `current_package_id` and `replayed` | An old replay must not read as current; wrappers lose the 200/201 distinction | Web publish | Old replay after a newer publish returns `replayed: true` and the newer current ID |
+| CR-W10 | In contract (BE-22) | The draft list already returns every draft on the site. Add author names, and state in the contract that there is no presence or locking and that 412/409 are the only concurrency signals | The entry flow offers "Open JL's draft" | Web Zones page | Second manager sees the first's draft with a name |
+| CR-W11 | In contract (BE-22) | PackageSummary carries `site_id`, `package_version`, exact forms, digest/size, `zone_count`, `change_note`, `published_by` and `source: upload \| draft`; the list carries `current_package_id`. Additional publisher display names and draft-operation identifiers are not promised | Version history must use authoritative fields | Web history, mobile CR-M1 | History renders from the list alone |
+| CR-W12 | Open | Propose `zone_editing_unavailable_reason` (`not_manager`, `no_site_boundary`, `no_eligible_form`) for specific copy. Current contract promises the boolean and UUID site detail only | Specific unavailable-site copy | Web site page, mobile | Lead approves the extension before a client depends on it |
+| CR-W13 | Open | Add `GET …/sites/{site_id}/zone-identities` → `[{zone_id, zone_code, versions:[{package_id, package_version, zone_label}]}]` ; let historical `/zones` accept repeated `package_id` with immutable caching headers for pinned packages | Filter choices with retired zones; mixed-version maps without N requests | Web filters and maps | Retired zone appears with its versions |
+| CR-W14 | Closed | A draft must be based on the current package to publish (contract.md:72, `zone_publication.py:122-139`). Restore works through a new draft from current (5.1) | — | Web Zones page | — |
+| CR-W15 | Open (BE-20) | The list item is now frozen in the contract. Still open: add optional summary facets (observer, project-day, form_version) and `latest_received_at`; give `export_scope_too_large` details `{matching_rows, limit_rows}`; a terminal scope record in exports; expose `Content-Disposition`; `export?layer=zones` for GeoJSON; export metadata echoes the timezone and UTC bounds | Table, reports and exports need them; page-limited panels otherwise remain | Web review | Each field or facet is in OpenAPI and used once |
 | CR-W16 | Open (designer) | Add a `boundary` state kind (draft, published, discarded) to `contracts/contour.json`, or approve label overrides of form states; confirm save feedback stays as meta text | DESIGN forbids inventing state words; the code already relabels | Both apps | `pnpm tokens:check` passes; both galleries show the states |
-| CR-W17 | Open (designer) | Amend DESIGN §8's zone editor rules to "Arrow 10 cm, Shift+arrow 1 m"; add Redo (⇧⌘Z), the points table unit "decimal degrees", tool icons (`redo-2`, `pen-tool`, `square-dashed`) in both registries; mark the section built when WEB-28 ships; record a decision superseding D30's "zone editor not available" for adopted sites; correct the Leaflet mentions in `contracts/map-palettes.json` and `contracts/README.md` | DESIGN, PRODUCT, `web/README.md` and D30 all say the editor is not built | Docs, both apps | Docs agree with the shipped editor |
+| CR-W18 | Closed | The publication switch is deleted (contract "What the rewrite removed") | — | — | — |
+| CR-W19 | In progress | Compatibility deletion is now CON-06, DB-19 and BE-22 | — | All | — |
+| CR-W17 | Open (designer) | Amend DESIGN §8's zone editor rules to "Arrow 10 cm, Shift+arrow 1 m"; add Redo (⇧⌘Z), the points table unit "decimal degrees", tool icons (`redo-2`, `pen-tool`, `square-dashed`) in both registries; mark the section built when WEB-28 ships; record a decision superseding D30's "zone editor not available"; correct the Leaflet mentions in `contracts/map-palettes.json` and `contracts/README.md`; reconcile DESIGN §9's collector hatch rule with the shipped spotlight and halo (`mobile/src/features/collect/CollectMap.tsx:592-614`); replace the `preview` wording in DESIGN's overlay example, which the web honesty scan bans | DESIGN, PRODUCT, `web/README.md` and D30 all say the editor is not built | Docs, both apps | Docs agree with the shipped editor |
 
 ## 10. Verification and done evidence
 
@@ -542,14 +571,15 @@ Each request is precise and additive unless marked. "Accept" is the acceptance c
   - summary-to-coverage adapter;
   - CSV formula neutralisation;
   - zod schemas against contract-shaped examples.
+- Local stack (DB-18 after DB-19/BE-22): an opt-in seed that uses only the real local API. The seed creates map versions 1 and 2, a site with no package, two managers' open drafts, and more than 500 observations across both versions, including Inventory. No hosted mutations are part of acceptance.
 - e2e on the local stack (`sh scripts/e2e-local.sh`), real API, desktop-1440 and phone-390:
   1. `zones-editor.spec.ts`: manager starts a draft, draws a rectangle and a shape, edits points by keyboard and by touch emulation, sees a topology problem, fixes it, reloads (state persisted), then publishes.
-  2. `zones-conflict.spec.ts`: two browser contexts as two managers. Both save on the same revision: one wins, the other gets the conflict dialog with its edits intact. Two publications from one base: one activates, the other gets 409.
+  2. `zones-conflict.spec.ts`: two browser contexts as two managers. Both save on the same revision: one wins, the other gets the conflict dialog with its edits intact. Two publications from one base: one activates, the other gets 409. Two tabs of one manager publish the same revision with different request IDs: the second shows "already published as v2". Editor → review → Back → edit saves without a conflict.
   3. `zones-publish.spec.ts`: lost response simulated by aborting the request after send; retry with the same request ID returns the original package. Replay after a newer publication shows it is not current.
   4. `zones-access.spec.ts`: viewer and observer open editor and publish URLs directly and see no access; viewer sees history.
   5. `zones-network.spec.ts`: offline mid-edit, then reconnect, saves; navigation with unsaved changes asks first, including `g` chords and the command palette.
-  6. `data-history.spec.ts`: seeded above 500 observations across v7, v8 and legacy. Totals, paging, zone filter by identity and by version, map version picker, inventory list, record detail on v7.
-  7. `export-v2.spec.ts`: downloaded CSV row count equals `total_matching`; the scope header matches; formula cells are neutralised.
+  6. `data-history.spec.ts`: seeded above 500 observations across v1 and v2. Totals, paging, zone filter by identity and by version, map version picker, inventory list, record detail on v1.
+  7. `export.spec.ts`: unzip; `observations.csv` data rows equal `metadata.json`'s total; `codebook.csv` and `historical-zones.geojson` are present; a formula-leading label is protected; above 10,000 the action is disabled with its reason.
   8. Honesty and axe scans include every new route in Day and Dusk: no serious or critical axe findings, one primary action, no banned words.
 
 ### Manual (recorded with commit, browser and screenshots)
@@ -563,9 +593,8 @@ Done means WEB-28 and WEB-29 evidence exists for each item above. Compilation, m
 
 ## 11. Open questions for the lead
 
-1. WUI-3: confirm browser-direct draft writes now that the BE-18 source allows `if-match` cross-origin. The alternative is the Server Action transport.
-2. CR-W14: may a stale-base draft be published, which is what rollback needs?
+1. WUI-3: confirm browser-direct draft writes now that BE-18 allows `if-match` cross-origin. The alternative is the Server Action transport.
 3. WUI-8: snapping and "move shared points together" on by default?
 4. WUI-1: if the spike favours a library, who approves the dependency and the change to the "MapLibre on the web" post-pilot backlog?
 5. Product defaults the editor enforces: no interior overlap (adjacent edges allowed), a site boundary required, and edits only over an existing imported package. Confirm, or revise CON-05 first.
-6. CR-W16 and CR-W17: designer approval for the state kind, the nudge distances, the icons and the decision row that supersedes D30 for adopted sites.
+6. CR-W16 and CR-W17: designer approval for the state kind, the nudge distances, the icons and the decision row that supersedes D30.

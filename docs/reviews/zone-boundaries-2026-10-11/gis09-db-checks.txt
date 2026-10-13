@@ -1,0 +1,31 @@
+PASS: GIS addition preserves legacy view definition, feature columns and ACLs exactly
+PASS: all companion GIS views enforce invoker RLS and security barriers
+PASS: new GIS views grant no access to browser, service or existing sample readers
+PASS: companion GIS interface remains read-only
+PASS: existing sample reader cannot access new project-wide GIS metadata
+PASS: existing sample reader cannot access new zone snapshot geometry
+PASS: viewer GIS metadata count matches live authorized observations
+PASS: Inventory anchors and unknown legacy geometry never enter event counts
+PASS: superseded Inventory retains recorded version and original label
+PASS: Inventory polygon and anchor come from exact immutable package-zone snapshot
+PASS: multipart geometry cannot multiply Inventory or snapshot rows
+PASS: legacy Inventory preserves unknown binding and null analysis polygon
+PASS: legacy stored anchor remains available with an explicit compatibility role
+PASS: snapshot projection exposes historical area and real publication metadata
+PASS: GIS metadata excludes foreign project observations
+PASS: new runtime GIS usage does not grant the legacy sample view
+PASS: guessed site and package identities cannot cross tenant scope
+PASS: Training creator sees own event and its recorded snapshot
+PASS: Training manager cannot infer another creator activity from GIS snapshots
+PASS: missing caller identity exposes no GIS data
+PASS: 2545 coordinate numbers match Node v24.18.0; geometry JCS digest matches.
+PASS: two managers race first adoption; one complete publication, one publication_conflict.
+PASS: concurrent identical retries return one durable result and create one version.
+PASS: two managers race whole-draft CAS; one revision advance and no lost update.
+PASS: legacy importer waits for the publication lock and cannot bypass managed finalization.
+PASS: legacy import winning first makes adoption stale; draft and unmanaged site remain intact.
+PASS: adoption winning first blocks a waiting legacy import on the previously unmanaged site.
+Zone migration rehearsal passed on disposable PostgreSQL 17/PostGIS; existing databases untouched.
+SQL assertion total: 445
+1 passed, 4 warnings in 8.59s
+PASS: direct SQL/API JSON/CSV/GeoJSON metadata and event geometry agreement.

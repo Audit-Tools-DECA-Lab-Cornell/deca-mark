@@ -20,7 +20,7 @@ def test_creation_replays_provisional_identity_without_adoption(
     assert second.status_code == 200, second.text
     assert first.content == second.content
     assert first.headers["etag"] == second.headers["etag"]
-    before = document(api_client.get(f"{zone_site.project_url}/sites/sample-garden").content)
+    before = document(api_client.get(zone_site.url).content)
     assert str(zone_site.package_id) in str(before["package"])
     data = document(first.content)
     assert data["revision"] == 1
@@ -46,23 +46,66 @@ def test_whole_draft_compare_and_swap_keeps_the_first_save(
     api_client: TestClient, zone_site: ZoneSite
 ) -> None:
     url, etag, draft = create_draft(api_client, zone_site)
+    historical = api_client.get(f"{zone_site.url}/zones?package_id={zone_site.package_id}")
+    assert historical.status_code == 200, historical.text
+    base_zones = document(historical.content)["zones"]
+    assert isinstance(base_zones, list)
+    base_zone = base_zones[0]
+    assert isinstance(base_zone, dict)
+    draft_zones = draft["zones"]
+    assert isinstance(draft_zones, list)
+    draft_zone = draft_zones[0]
+    assert isinstance(draft_zone, dict)
+    assert draft_zone["zone_id"] == base_zone["zone_id"]
+    first_save = [{**draft_zone, "zone_label": base_zone["zone_label"]}]
     saved = api_client.put(
         url,
-        headers={"If-Match": etag, "Content-Type": "application/json"},
-        content=zones_body(draft),
+        headers={"If-Match": etag},
+        json={
+            "zones": first_save,
+            "change_note": "Preserve current package zone",
+        },
     )
     assert saved.status_code == 200, saved.text
     assert document(saved.content)["revision"] == 2
     stale = api_client.put(
         url,
-        headers={"If-Match": etag, "Content-Type": "application/json"},
-        content=zones_body(draft, label="Lost"),
+        headers={"If-Match": etag},
+        json={
+            "zones": [{**draft_zone, "zone_label": "Lost"}],
+            "change_note": "Stale replacement",
+        },
     )
     assert stale.status_code == 412, stale.text
     assert document(api_client.get(url).content) == document(saved.content)
     validated = api_client.post(f"{url}/validate", headers={"If-Match": saved.headers["etag"]})
     assert validated.status_code == 200, validated.text
+    summaries = document(validated.content)["zones"]
+    assert isinstance(summaries, list)
+    assert len(summaries) == 1
+    unchanged = summaries[0]
+    assert isinstance(unchanged, dict)
+    assert unchanged["change"] == "unchanged"
+    assert isinstance(unchanged["geometry_sha256"], str)
     assert document(api_client.get(url).content)["revision"] == 2
+
+    replacement_zone = dict(draft_zone)
+    replacement_zone["zone_id"] = str(uuid4())
+    replacement_zone["zone_code"] = f"added-{uuid4().hex[:8]}"
+    replacement_zone["zone_label"] = "Replacement zone"
+    changed = api_client.put(
+        url,
+        headers={"If-Match": saved.headers["etag"]},
+        json={"zones": [replacement_zone], "change_note": "Replace zone identity"},
+    )
+    assert changed.status_code == 200, changed.text
+    validated = api_client.post(f"{url}/validate", headers={"If-Match": changed.headers["etag"]})
+    assert validated.status_code == 200, validated.text
+    summaries = document(validated.content)["zones"]
+    assert isinstance(summaries, list)
+    changes = {summary["change"]: summary for summary in summaries if isinstance(summary, dict)}
+    assert set(changes) == {"added", "removed"}
+    assert all(isinstance(summary["geometry_sha256"], str) for summary in changes.values())
 
 
 def test_invalid_topology_is_saved_and_reported_safely(
@@ -91,6 +134,13 @@ def test_invalid_topology_is_saved_and_reported_safely(
     assert saved.status_code == 200, saved.text
     validated = api_client.post(f"{url}/validate", headers={"If-Match": saved.headers["etag"]})
     assert validated.status_code == 200, validated.text
+    summaries = document(validated.content)["zones"]
+    assert isinstance(summaries, list)
+    assert len(summaries) == 1
+    invalid_summary = summaries[0]
+    assert isinstance(invalid_summary, dict)
+    assert invalid_summary["geometry_sha256"] is None
+    assert invalid_summary["change"] is None
     assert "self_intersection" in validated.text
     assert "SQL" not in validated.text
     assert "TopologyException" not in validated.text
@@ -141,7 +191,7 @@ def test_create_request_reuse_with_changed_form_is_idempotency_conflict(
     created = api_client.post(zone_site.drafts, json=original)
     assert created.status_code == 201, created.text
     changed = api_client.post(
-        zone_site.drafts, json={**original, "inventory_form_version": "shell-v1"}
+        zone_site.drafts, json={**original, "base_package_id": str(uuid4())}
     )
     assert changed.status_code == 409, changed.text
     assert "idempotency_conflict" in changed.text

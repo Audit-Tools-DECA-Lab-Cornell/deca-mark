@@ -14,7 +14,8 @@ from pydantic import JsonValue
 from fieldmaps_api.domain.zone_archive_jobs import ImportJob, PublishJob
 from fieldmaps_api.domain.zone_package_schemas import PreparedZonePackage
 from fieldmaps_api.services import zone_archives
-from tests.test_site_packages import submission
+from fieldmaps_api.zone_response_schemas import Publication
+from tests.package_fixtures import submission
 from tests.zone_api_fixtures import ZoneSite, document, publish_draft, snapshot_history
 
 pytestmark = pytest.mark.integration
@@ -67,6 +68,7 @@ def successor_body(
     body = document(
         orjson.dumps(
             submission(
+                site_id=str(site.tenant.site),
                 form_version=play,
                 request_id=str(uuid4()),
                 expected_current_package_id=current["package_id"],
@@ -118,7 +120,9 @@ def test_current_play_retirement_requires_successor_and_preserves_history(
     body = successor_body(api_client, zone_site, current, play)
     result = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert result.status_code == 201, result.text
-    successor = document(result.content)
+    publication = document(result.content)
+    successor = publication["package"]
+    assert isinstance(successor, dict)
     forms = package_forms(api_client, zone_site, str(successor["package_id"]))
     assert isinstance(forms["play"], dict)
     assert forms["play"]["form_version"] == play
@@ -127,7 +131,9 @@ def test_current_play_retirement_requires_successor_and_preserves_history(
     )
     replay = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert replay.status_code == 200, replay.text
-    assert replay.content == result.content
+    replay_publication = Publication.model_validate_json(replay.content)
+    assert str(replay_publication.package.package_id) == str(successor["package_id"])
+    assert replay_publication.replayed is True
     assert package_forms(api_client, zone_site, str(current["package_id"])) == old
     assert snapshot_history(zone_site.tenant) == before
 
@@ -145,7 +151,9 @@ def test_inventory_can_be_enabled_replaced_inherited_and_disabled(
             body["inventory_form_version"] = selected
         result = api_client.post(f"{zone_site.project_url}/packages", json=body)
         assert result.status_code == 201, result.text
-        current = document(result.content)
+        publication = document(result.content)
+        current = publication["package"]
+        assert isinstance(current, dict)
         forms = package_forms(api_client, zone_site, str(current["package_id"]))
         if expected is None:
             assert forms["inventory"] is None
@@ -174,7 +182,7 @@ def test_unknown_successor_binding_does_not_activate(
     refused = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert refused.status_code == 422, refused.text
     assert "form_not_in_package" in refused.text
-    response = api_client.get(f"/v2/projects/{zone_site.tenant.project}/sites")
+    response = api_client.get(f"/v1/projects/{zone_site.tenant.project}/sites")
     assert str(current["package_id"]) in response.text
 
 
@@ -211,5 +219,5 @@ def test_retirement_during_successor_preparation_refuses_activation(
     assert "form_not_in_package" in response.text
     assert (
         str(current["package_id"])
-        in api_client.get(f"/v2/projects/{zone_site.tenant.project}/sites").text
+        in api_client.get(f"/v1/projects/{zone_site.tenant.project}/sites").text
     )

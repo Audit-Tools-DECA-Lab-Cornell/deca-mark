@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.test_site_packages import submission
+from tests.package_fixtures import submission
 from tests.zone_api_fixtures import JSON_DOCUMENT, ZoneSite, create_draft, document, publish_draft
 
 pytestmark = pytest.mark.integration
@@ -22,7 +22,7 @@ def test_managed_import_uses_exact_mapping_and_same_publication_replay(
     assert isinstance(zones, list)
     zone = zones[0]
     assert isinstance(zone, dict)
-    body = JSON_DOCUMENT.validate_python(submission())
+    body = JSON_DOCUMENT.validate_python(submission(site_id=str(zone_site.tenant.site)))
     layers = body["layers"]
     assert isinstance(layers, dict)
     zone_layer = layers["zones"]
@@ -52,11 +52,18 @@ def test_managed_import_uses_exact_mapping_and_same_publication_replay(
     result = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert result.status_code == 201, result.text
     imported = document(result.content)
-    assert imported["format"] == 2
+    imported_package = imported["package"]
+    assert isinstance(imported_package, dict)
+    package_id = imported_package["package_id"]
+    assert imported["replayed"] is False
     replay = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert replay.status_code == 200, replay.text
-    assert replay.content == result.content
-    historical = api_client.get(f"{zone_site.url}/zones?package_id={imported['package_id']}")
+    replayed = document(replay.content)
+    replayed_package = replayed["package"]
+    assert isinstance(replayed_package, dict)
+    assert replayed_package["package_id"] == package_id
+    assert replayed["replayed"] is True
+    historical = api_client.get(f"{zone_site.url}/zones?package_id={package_id}")
     assert historical.status_code == 200, historical.text
     assert str(zone["zone_id"]) in historical.text
     assert "Imported renamed lawn" in historical.text
@@ -71,6 +78,7 @@ def test_managed_import_with_unused_mapping_does_not_activate_package(
 ) -> None:
     current = publish_draft(api_client, zone_site)
     body = submission(
+        site_id=str(zone_site.tenant.site),
         request_id=str(uuid4()),
         expected_current_package_id=current["package_id"],
         change_note="Explicit mapping",
@@ -85,19 +93,9 @@ def test_managed_import_with_unused_mapping_does_not_activate_package(
     refused = api_client.post(f"{zone_site.project_url}/packages", json=body)
     assert refused.status_code == 422, refused.text
     assert "identity_conflict" in refused.text
-    assert (
-        str(current["package_id"])
-        in api_client.get(f"/v2/projects/{zone_site.tenant.project}/sites").text
-    )
-
-
-def test_historical_legacy_package_does_not_fabricate_new_snapshots(
-    api_client: TestClient, zone_site: ZoneSite
-) -> None:
-    publish_draft(api_client, zone_site)
-    response = api_client.get(f"{zone_site.url}/zones?package_id={zone_site.package_id}")
-    assert response.status_code == 422, response.text
-    assert "unversioned_package" in response.text
+    current_site = api_client.get(zone_site.url)
+    assert current_site.status_code == 200, current_site.text
+    assert document(current_site.content)["current_package_id"] == current["package_id"]
 
 
 def test_missing_current_and_unsupported_content_encoding_preserve_draft(
@@ -121,16 +119,27 @@ def test_missing_current_and_unsupported_content_encoding_preserve_draft(
     assert document(api_client.get(url).content)["revision"] == initial["revision"]
 
 
-def test_explicit_null_managed_current_is_malformed_not_missing(
+def test_explicit_null_first_package_precondition_conflicts_after_publication(
     api_client: TestClient, zone_site: ZoneSite
 ) -> None:
     publish_draft(api_client, zone_site)
     body = submission(
+        site_id=str(zone_site.tenant.site),
         request_id=str(uuid4()),
         expected_current_package_id=None,
         zone_identity_map=[],
         change_note="",
     )
     refused = api_client.post(f"{zone_site.project_url}/packages", json=body)
-    assert refused.status_code == 422, refused.text
-    assert "validation_failed" in refused.text
+    assert refused.status_code == 409, refused.text
+    assert '"code":"publication_conflict"' in refused.text
+
+
+def test_missing_managed_package_precondition_is_428(
+    api_client: TestClient, zone_site: ZoneSite
+) -> None:
+    body = submission(site_id=str(zone_site.tenant.site))
+    body.pop("expected_current_package_id")
+    response = api_client.post(f"{zone_site.project_url}/packages", json=body)
+    assert response.status_code == 428, response.text
+    assert response.json()["error"]["code"] == "precondition_required"

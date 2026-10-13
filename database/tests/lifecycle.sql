@@ -1,11 +1,11 @@
--- Sites, the form lifecycle and round context (supabase/migrations/20261007120000_sites_forms_collection.sql).
+-- Sites, the form lifecycle and round context (current baseline).
 -- Fixture users come from supabase/seed.sql (…0001 observer, …0003 viewer, …0004 manager on the
 -- sample project) and tenancy.sql (51…0002, a manager of the other organization's project).
 RESET ROLE;
 SELECT pg_temp.assert_true(EXISTS (
   SELECT FROM fieldmaps.forms f JOIN fieldmaps.form_versions v ON v.form_id = f.id
   WHERE v.code = 'training-v1' AND f.code = 'training' AND v.version = 1 AND v.state = 'published'),
-  'the Training form version has its form after the backfill');
+  'the Training form version has its form in the current baseline');
 SELECT pg_temp.assert_true(EXISTS (
   SELECT FROM fieldmaps.forms f JOIN fieldmaps.form_versions v ON v.form_id = f.id
   WHERE v.code = 'other-v1' AND f.code = 'other' AND v.published_at IS NOT NULL),
@@ -98,24 +98,26 @@ SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.retire_form_version(
   '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003')$$,
   'FM008', 'a version is retired once');
 
--- Round context on observations.
+-- Round context is checked on the required package-zone attribution.
 SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000001', true);
 INSERT INTO fieldmaps.observations (id, organization_id, project_id, site_id, form_version_id,
   observer_code, observed_at, geom, answers, created_by, upload_hash,
-  zone_code, round_type, first_round, placement_source)
+  zone_code, round_type, first_round, placement_source, package_id, zone_id)
 VALUES ('54000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000003',
   '10000000-0000-4000-8000-000000000004', 'JL', now(), fieldmaps.make_point(-76.485, 42.448),
   '{"people":0,"notes":""}', fieldmaps.request_user_id(), repeat('c', 64),
-  'B', 'inventory', false, 'zone');
-SELECT pg_temp.assert_true((SELECT round_type = 'inventory' AND placement_source = 'zone' AND zone_code = 'B'
+  'UNTRUSTED', 'reliability', false, 'hand','91000000-0000-4000-8000-000000000001','92000000-0000-4000-8000-000000000001');
+SELECT pg_temp.assert_true((SELECT round_type = 'reliability' AND placement_source = 'hand' AND zone_code = 'FIXTURE' AND first_round = false
   FROM fieldmaps.observations WHERE id = '54000000-0000-4000-8000-000000000005'),
-  'an observer stores the zone, round type and placement of a record');
+  'an observer stores round context while SQL derives the immutable zone code');
 SELECT pg_temp.assert_rejected($$INSERT INTO fieldmaps.observations (id, organization_id, project_id,
-  site_id, form_version_id, observer_code, observed_at, geom, answers, created_by, upload_hash, round_type)
+  site_id, form_version_id, observer_code, observed_at, geom, answers, created_by, upload_hash, round_type,
+  package_id,zone_id,first_round,placement_source)
   VALUES ('54000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000003',
   '10000000-0000-4000-8000-000000000004', 'JL', now(), fieldmaps.make_point(-76.485, 42.448),
-  '{"people":0,"notes":""}', fieldmaps.request_user_id(), repeat('d', 64), 'weekly')$$,
-  '23514', 'only the three round types are stored');
+  '{"people":0,"notes":""}', fieldmaps.request_user_id(), repeat('d', 64), 'weekly',
+  '91000000-0000-4000-8000-000000000001','92000000-0000-4000-8000-000000000001',true,'hand')$$,
+  'ZB001', 'only the three round types are stored');
 RESET ROLE;

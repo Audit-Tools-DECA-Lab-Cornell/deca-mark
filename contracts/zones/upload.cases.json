@@ -1,33 +1,11 @@
 {
-  "contract_version": 1,
   "synthetic": true,
   "envelopes": [
     {
-      "id": "legacy_omitted_context",
-      "protocol": 1,
-      "payload": {
-        "site_id": "sample-garden",
-        "form_version": "shell-v1",
-        "coordinates": [
-          -76.485,
-          42.448
-        ],
-        "observer": "QA",
-        "observed_at": "2026-09-17T12:00:00Z",
-        "people": 3,
-        "notes": "Offline café"
-      },
-      "valid": true,
-      "canonical": "{\"site_id\":\"sample-garden\",\"form_version\":\"shell-v1\",\"coordinates\":[-76.485,42.448],\"observer\":\"QA\",\"observed_at\":\"2026-09-17T12:00:00Z\",\"people\":3,\"notes\":\"Offline café\"}",
-      "sha256": "d4bcfc4e655ce761cb8eeaca554a8d05c4658a8140d0959d7f19fc2e0b2d56c1"
-    },
-    {
       "id": "bound_point",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -48,11 +26,9 @@
     },
     {
       "id": "bound_reliability",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "reliability",
@@ -73,11 +49,9 @@
     },
     {
       "id": "bound_inventory",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "janet-inventory-v1",
         "round_type": "inventory",
@@ -91,58 +65,10 @@
       "valid": true
     },
     {
-      "id": "legacy_with_context",
-      "protocol": 1,
-      "payload": {
-        "site_id": "sample-garden",
-        "form_version": "shell-v1",
-        "coordinates": [
-          -76.485,
-          42.448
-        ],
-        "observer": "QA",
-        "observed_at": "2026-09-17T12:00:00Z",
-        "people": 3,
-        "notes": "Offline café",
-        "zone": "A",
-        "round_type": "standard",
-        "first_round": true,
-        "placement": "hand"
-      },
-      "valid": true,
-      "canonical": "{\"site_id\":\"sample-garden\",\"form_version\":\"shell-v1\",\"coordinates\":[-76.485,42.448],\"observer\":\"QA\",\"observed_at\":\"2026-09-17T12:00:00Z\",\"zone\":\"A\",\"round_type\":\"standard\",\"first_round\":true,\"placement\":\"hand\",\"people\":3,\"notes\":\"Offline café\"}",
-      "sha256": "a8362624baba9d338d63ffe52ab4f347800e315050cfa249daefd38d78d95483"
-    },
-    {
-      "id": "legacy_explicit_null_context",
-      "protocol": 1,
-      "payload": {
-        "site_id": "sample-garden",
-        "form_version": "shell-v1",
-        "coordinates": [
-          -76.485,
-          42.448
-        ],
-        "observer": "QA",
-        "observed_at": "2026-09-17T12:00:00Z",
-        "people": 3,
-        "notes": "Offline café",
-        "zone": null,
-        "round_type": null,
-        "first_round": null,
-        "placement": null
-      },
-      "valid": true,
-      "canonical": "{\"site_id\":\"sample-garden\",\"form_version\":\"shell-v1\",\"coordinates\":[-76.485,42.448],\"observer\":\"QA\",\"observed_at\":\"2026-09-17T12:00:00Z\",\"zone\":null,\"round_type\":null,\"first_round\":null,\"placement\":null,\"people\":3,\"notes\":\"Offline café\"}",
-      "sha256": "58d74a131f8c1b79846a1517358bd14743f52e0a493d3f97fc42e8db768ff9bc"
-    },
-    {
       "id": "point_zone_placement",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -163,11 +89,9 @@
     },
     {
       "id": "point_null_first_round",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -188,11 +112,9 @@
     },
     {
       "id": "point_string_first_round",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -213,11 +135,9 @@
     },
     {
       "id": "point_extra_label",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -239,11 +159,9 @@
     },
     {
       "id": "top_level_answer",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -265,11 +183,9 @@
     },
     {
       "id": "site_code_in_uuid_field",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "sample-garden",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -290,11 +206,9 @@
     },
     {
       "id": "extra_coordinate_dimension",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -316,11 +230,9 @@
     },
     {
       "id": "coordinates_as_strings",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -341,11 +253,9 @@
     },
     {
       "id": "coordinates_as_boolean",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -366,11 +276,9 @@
     },
     {
       "id": "coordinate_out_of_range",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -391,11 +299,9 @@
     },
     {
       "id": "answer_boolean",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -415,11 +321,9 @@
     },
     {
       "id": "answer_object",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -441,11 +345,9 @@
     },
     {
       "id": "answer_unsafe_integer",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -465,11 +367,9 @@
     },
     {
       "id": "unknown_round",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "other",
@@ -489,38 +389,10 @@
       "valid": false
     },
     {
-      "id": "client_assignment_claim",
-      "protocol": 2,
-      "payload": {
-        "schema_version": 2,
-        "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
-        "zone_id": "30000000-0000-4000-8000-000000000001",
-        "form_version": "shell-v1",
-        "round_type": "standard",
-        "first_round": true,
-        "placement": "hand",
-        "coordinates": [
-          -76.48,
-          42.44
-        ],
-        "observer": "AB",
-        "observed_at": "2026-10-10T14:00:00Z",
-        "answers": {
-          "people": 3,
-          "notes": "Synthetic"
-        },
-        "assignment_basis": "recorded_package"
-      },
-      "valid": false
-    },
-    {
       "id": "inventory_coordinate",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "janet-inventory-v1",
         "round_type": "inventory",
@@ -539,11 +411,9 @@
     },
     {
       "id": "inventory_false_first_round",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "janet-inventory-v1",
         "round_type": "inventory",
@@ -559,11 +429,9 @@
     },
     {
       "id": "inventory_null_first_round",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "janet-inventory-v1",
         "round_type": "inventory",
@@ -579,11 +447,9 @@
     },
     {
       "id": "inventory_hand_placement",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "janet-inventory-v1",
         "round_type": "inventory",
@@ -598,9 +464,7 @@
     },
     {
       "id": "missing_package_id",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
@@ -622,11 +486,9 @@
     },
     {
       "id": "missing_zone_id",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
         "first_round": true,
@@ -646,11 +508,9 @@
     },
     {
       "id": "missing_answers",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -667,11 +527,9 @@
     },
     {
       "id": "missing_first_round",
-      "protocol": 2,
       "payload": {
-        "schema_version": 2,
         "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001",
         "form_version": "shell-v1",
         "round_type": "standard",
@@ -688,136 +546,46 @@
         }
       },
       "valid": false
-    },
-    {
-      "id": "missing_schema_version",
-      "protocol": 2,
-      "payload": {
-        "site_id": "10000000-0000-4000-8000-000000000001",
-        "package_id": "20000000-0000-4000-8000-000000000007",
-        "zone_id": "30000000-0000-4000-8000-000000000001",
-        "form_version": "shell-v1",
-        "round_type": "standard",
-        "first_round": true,
-        "placement": "hand",
-        "coordinates": [
-          -76.48,
-          42.44
-        ],
-        "observer": "AB",
-        "observed_at": "2026-10-10T14:00:00Z",
-        "answers": {
-          "people": 3,
-          "notes": "Synthetic"
-        }
-      },
-      "valid": false
-    },
-    {
-      "id": "legacy_inventory_omitted_first_round",
-      "protocol": 1,
-      "payload": {
-        "site_id": "sample-garden",
-        "form_version": "shell-v1",
-        "coordinates": [
-          -76.485,
-          42.448
-        ],
-        "observer": "QA",
-        "observed_at": "2026-09-17T12:00:00Z",
-        "people": 3,
-        "notes": "Offline café",
-        "zone": "A",
-        "round_type": "inventory",
-        "placement": "zone"
-      },
-      "valid": true,
-      "canonical": "{\"site_id\":\"sample-garden\",\"form_version\":\"shell-v1\",\"coordinates\":[-76.485,42.448],\"observer\":\"QA\",\"observed_at\":\"2026-09-17T12:00:00Z\",\"zone\":\"A\",\"round_type\":\"inventory\",\"placement\":\"zone\",\"people\":3,\"notes\":\"Offline café\"}",
-      "sha256": "825e65fa7ee3a75d531612c71da597cc0ee8b62421d49a0c7471a5f4a4af5db4"
     }
   ],
   "scenarios": [
     {
-      "id": "late_v7_after_v8",
+      "id": "late_v1_after_v2",
       "given": {
-        "current_package_id": "20000000-0000-4000-8000-000000000008",
-        "referenced_package_id": "20000000-0000-4000-8000-000000000007",
+        "current_package_id": "20000000-0000-4000-8000-000000000002",
+        "referenced_package_id": "20000000-0000-4000-8000-000000000001",
         "authorized": true,
         "form_state": "retired"
       },
-      "when": "put_v2_point",
+      "when": "put_point",
       "expected": {
         "status": 200,
-        "package_id": "20000000-0000-4000-8000-000000000007",
-        "assignment_basis": "recorded_package",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "rows_added": 1
       }
     },
     {
-      "id": "lost_receipt_replay_v2",
+      "id": "lost_receipt_replay",
       "given": {
-        "existing_protocol": 2,
         "same_owner": true,
         "same_payload": true,
-        "referenced_package_id": "20000000-0000-4000-8000-000000000007",
-        "current_package_id": "20000000-0000-4000-8000-000000000008"
+        "referenced_package_id": "20000000-0000-4000-8000-000000000001",
+        "current_package_id": "20000000-0000-4000-8000-000000000002"
       },
-      "when": "retry_put_v2",
+      "when": "retry_put",
       "expected": {
         "status": 200,
         "original_receipt": true,
         "rows_added": 0
-      }
-    },
-    {
-      "id": "lost_receipt_replay_v1_after_adoption",
-      "given": {
-        "existing_protocol": 1,
-        "same_payload": true,
-        "site_managed": true
-      },
-      "when": "retry_put_v1",
-      "expected": {
-        "status": 200,
-        "original_receipt": true,
-        "rows_added": 0
-      }
-    },
-    {
-      "id": "unsent_v1_after_upgrade",
-      "given": {
-        "local_package_context": true,
-        "frozen_protocol": 1,
-        "site_managed": true
-      },
-      "when": "upload",
-      "expected": {
-        "protocol": 1,
-        "assignment_basis": "legacy_unversioned",
-        "package_id": null
-      }
-    },
-    {
-      "id": "protocol_collision",
-      "given": {
-        "existing_protocol": 1,
-        "same_observation_id": true
-      },
-      "when": "put_v2",
-      "expected": {
-        "status": 409,
-        "code": "conflict",
-        "original_unchanged": true
       }
     },
     {
       "id": "changed_answer_retry",
       "given": {
-        "existing_protocol": 2,
         "same_observation_id": true,
         "same_payload": false
       },
-      "when": "retry_put_v2",
+      "when": "retry_put",
       "expected": {
         "status": 409,
         "code": "conflict",
@@ -829,7 +597,7 @@
       "given": {
         "package_belongs_to_other_site": true
       },
-      "when": "put_v2",
+      "when": "put",
       "expected": {
         "status": 422,
         "code": "validation_failed",
@@ -842,7 +610,7 @@
       "given": {
         "zone_removed_from_referenced_package": true
       },
-      "when": "put_v2",
+      "when": "put",
       "expected": {
         "status": 422,
         "code": "validation_failed",
@@ -855,7 +623,7 @@
       "given": {
         "covered_by_selected_zone": false
       },
-      "when": "put_v2_point",
+      "when": "put_point",
       "expected": {
         "status": 422,
         "code": "validation_failed",
@@ -868,7 +636,7 @@
       "given": {
         "form_matches_package_role": false
       },
-      "when": "put_v2",
+      "when": "put",
       "expected": {
         "status": 422,
         "code": "validation_failed",
@@ -878,10 +646,10 @@
     {
       "id": "inventory_support",
       "given": {
-        "package_id": "20000000-0000-4000-8000-000000000007",
+        "package_id": "20000000-0000-4000-8000-000000000001",
         "zone_id": "30000000-0000-4000-8000-000000000001"
       },
-      "when": "put_v2_inventory",
+      "when": "put_inventory",
       "expected": {
         "geometry": null,
         "spatial_support": "zone",
@@ -894,7 +662,7 @@
         "original_receipt_exists": true,
         "authorized": false
       },
-      "when": "retry_put_v2",
+      "when": "retry_put",
       "expected": {
         "status": 403,
         "code": "membership_required",
@@ -906,23 +674,11 @@
       "given": {
         "package_from_other_tenant": true
       },
-      "when": "put_v2",
+      "when": "put",
       "expected": {
         "status": 404,
         "code": "not_found",
         "disclose_identity": false
-      }
-    },
-    {
-      "id": "old_server_v2",
-      "given": {
-        "frozen_protocol": 2,
-        "v2_supported": false
-      },
-      "when": "upload",
-      "expected": {
-        "downgrade": false,
-        "local_record_retained": true
       }
     },
     {
@@ -983,46 +739,27 @@
     {
       "id": "historical_label_read",
       "given": {
-        "recorded_package_version": 7,
-        "current_package_version": 8,
+        "recorded_package_version": 1,
+        "current_package_version": 2,
         "recorded_label": "North",
         "current_label": "Meadow"
       },
-      "when": "v2_list_detail_export",
+      "when": "list_detail_export",
       "expected": {
-        "package_version": 7,
-        "zone_label": "North",
-        "assignment_basis": "recorded_package"
-      }
-    },
-    {
-      "id": "legacy_read_no_invented_binding",
-      "given": {
-        "protocol": 1,
-        "recorded_zone_code": "A",
-        "current_label": "Meadow"
-      },
-      "when": "v2_list_detail_export",
-      "expected": {
-        "package_id": null,
-        "package_version": null,
-        "zone_id": null,
-        "zone_code": "A",
-        "zone_label": null,
-        "assignment_basis": "legacy_unversioned"
+        "package_version": 1,
+        "zone_label": "North"
       }
     }
   ],
   "fingerprints": [
     {
-      "id": "v2_point",
+      "id": "point",
       "document": {
-        "canonicalization_version": "zone-upload-v2-jcs-1",
+        "canonicalization_version": "observation-jcs-1",
         "observation_id": "40000000-0000-4000-8000-000000000001",
         "payload": {
-          "schema_version": 2,
           "site_id": "10000000-0000-4000-8000-000000000001",
-          "package_id": "20000000-0000-4000-8000-000000000007",
+          "package_id": "20000000-0000-4000-8000-000000000001",
           "zone_id": "30000000-0000-4000-8000-000000000001",
           "form_version": "shell-v1",
           "round_type": "standard",
@@ -1042,18 +779,17 @@
         "project_id": "50000000-0000-4000-8000-000000000001",
         "user_id": "60000000-0000-4000-8000-000000000001"
       },
-      "canonical": "{\"canonicalization_version\":\"zone-upload-v2-jcs-1\",\"observation_id\":\"40000000-0000-4000-8000-000000000001\",\"payload\":{\"answers\":{\"notes\":\"Synthetic\",\"people\":3},\"coordinates\":[-76.48,42.44],\"first_round\":true,\"form_version\":\"shell-v1\",\"observed_at\":\"2026-10-10T14:00:00.000000Z\",\"observer\":\"AB\",\"package_id\":\"20000000-0000-4000-8000-000000000007\",\"placement\":\"hand\",\"round_type\":\"standard\",\"schema_version\":2,\"site_id\":\"10000000-0000-4000-8000-000000000001\",\"zone_id\":\"30000000-0000-4000-8000-000000000001\"},\"project_id\":\"50000000-0000-4000-8000-000000000001\",\"user_id\":\"60000000-0000-4000-8000-000000000001\"}",
-      "sha256": "998d6cb3f7c73a61ea3b223e2f97c934a119b26628f533df8598d9ec6e9171a2"
+      "canonical": "{\"canonicalization_version\":\"observation-jcs-1\",\"observation_id\":\"40000000-0000-4000-8000-000000000001\",\"payload\":{\"answers\":{\"notes\":\"Synthetic\",\"people\":3},\"coordinates\":[-76.48,42.44],\"first_round\":true,\"form_version\":\"shell-v1\",\"observed_at\":\"2026-10-10T14:00:00.000000Z\",\"observer\":\"AB\",\"package_id\":\"20000000-0000-4000-8000-000000000001\",\"placement\":\"hand\",\"round_type\":\"standard\",\"site_id\":\"10000000-0000-4000-8000-000000000001\",\"zone_id\":\"30000000-0000-4000-8000-000000000001\"},\"project_id\":\"50000000-0000-4000-8000-000000000001\",\"user_id\":\"60000000-0000-4000-8000-000000000001\"}",
+      "sha256": "098ea7735a92186eaadcb118c29cd346aaa34d3d8a8c0d1cb74fa7c1a6b394e1"
     },
     {
-      "id": "v2_jcs_numbers_and_utf16_order",
+      "id": "jcs_numbers_and_utf16_order",
       "document": {
-        "canonicalization_version": "zone-upload-v2-jcs-1",
+        "canonicalization_version": "observation-jcs-1",
         "observation_id": "40000000-0000-4000-8000-000000000001",
         "payload": {
-          "schema_version": 2,
           "site_id": "10000000-0000-4000-8000-000000000001",
-          "package_id": "20000000-0000-4000-8000-000000000007",
+          "package_id": "20000000-0000-4000-8000-000000000001",
           "zone_id": "30000000-0000-4000-8000-000000000001",
           "form_version": "shell-v1",
           "round_type": "standard",
@@ -1076,8 +812,8 @@
         "project_id": "50000000-0000-4000-8000-000000000001",
         "user_id": "60000000-0000-4000-8000-000000000001"
       },
-      "canonical": "{\"canonicalization_version\":\"zone-upload-v2-jcs-1\",\"observation_id\":\"40000000-0000-4000-8000-000000000001\",\"payload\":{\"answers\":{\"integer\":3,\"small\":0.000001,\"zero\":0,\"😀\":\"café\",\"\":1e-7},\"coordinates\":[-76.48,42.44],\"first_round\":true,\"form_version\":\"shell-v1\",\"observed_at\":\"2026-10-10T14:00:00.000000Z\",\"observer\":\"AB\",\"package_id\":\"20000000-0000-4000-8000-000000000007\",\"placement\":\"hand\",\"round_type\":\"standard\",\"schema_version\":2,\"site_id\":\"10000000-0000-4000-8000-000000000001\",\"zone_id\":\"30000000-0000-4000-8000-000000000001\"},\"project_id\":\"50000000-0000-4000-8000-000000000001\",\"user_id\":\"60000000-0000-4000-8000-000000000001\"}",
-      "sha256": "a2bfd7ba4020fe9676a2ebe2eeebbf739c41d328e0f72e37f96e68b1efd15dc5"
+      "canonical": "{\"canonicalization_version\":\"observation-jcs-1\",\"observation_id\":\"40000000-0000-4000-8000-000000000001\",\"payload\":{\"answers\":{\"integer\":3,\"small\":0.000001,\"zero\":0,\"😀\":\"café\",\"\":1e-7},\"coordinates\":[-76.48,42.44],\"first_round\":true,\"form_version\":\"shell-v1\",\"observed_at\":\"2026-10-10T14:00:00.000000Z\",\"observer\":\"AB\",\"package_id\":\"20000000-0000-4000-8000-000000000001\",\"placement\":\"hand\",\"round_type\":\"standard\",\"site_id\":\"10000000-0000-4000-8000-000000000001\",\"zone_id\":\"30000000-0000-4000-8000-000000000001\"},\"project_id\":\"50000000-0000-4000-8000-000000000001\",\"user_id\":\"60000000-0000-4000-8000-000000000001\"}",
+      "sha256": "2c7ea5cef87514ea815a32eabc6de120f04d67477e634310304055cd372ae1d3"
     }
   ]
 }

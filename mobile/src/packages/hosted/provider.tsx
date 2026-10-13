@@ -1,84 +1,57 @@
-import {
-  createContext,
-  type PropsWithChildren,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { randomUUID } from "expo-crypto";
+import { useSQLiteContext } from "expo-sqlite";
+import { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { useAccount } from "../../auth/provider";
 import { type ApiClient, createApiClient } from "../../data/api/client";
 import { ApiError } from "../../data/api/errors";
 import { useMe } from "../../data/api/me-provider";
+import type { PackageIdentity } from "../../domain/package-binding";
 import { connection } from "../../platform/config";
+import { setPackageAccessOwner } from "./access";
+import { HostedContext, type HostedDownload } from "./context";
 import {
   apiPackageSource,
-  hasStoredPackage,
+  devicePackageFiles,
+  deviceSha256,
   readSiteList,
-  removeStoredPackage,
   writeSiteList,
-  writeStoredPackage,
 } from "./device";
-import { PrepareError, type PreparePart, preparePackage } from "./prepare";
+import { reconcileStaging } from "./installation";
+import { type InstalledVersion, PackageOperations } from "./operations";
+import { PrepareError } from "./prepare";
 import type { HostedSite } from "./schemas";
 
-/**
- * A project's hosted sites for the signed-in account (MOB-14, on the existing upload path rather than
- * PowerSync): each project's site list, kept on the device so it opens offline and refreshed whenever
- * the app is active and signed in, and the downloads that make a site ready offline.
- */
-
-export type HostedDownload =
-  | { readonly state: "downloading"; readonly part: PreparePart }
-  | { readonly state: "failed"; readonly message: string };
-
-type HostedValue = {
-  /** Sites by project, as last read from the API or this device. Absent: never read for this project. */
-  readonly sites: Readonly<Record<string, readonly HostedSite[]>>;
-  /** Why the latest refresh failed, by project; cached sites stay usable. */
-  readonly errors: Readonly<Record<string, string>>;
-  readonly downloads: Readonly<Record<string, HostedDownload>>;
-  /** Increments whenever a package is saved or removed, so readers re-check what is stored. */
-  readonly revision: number;
-  /** Signed in with a session, so the API can be asked. Says nothing about the network itself. */
-  readonly signedIn: boolean;
-  refresh: (projectId: string) => Promise<void>;
-  download: (projectId: string, siteId: string) => Promise<void>;
-  cancel: (siteId: string) => void;
-  remove: (siteId: string) => void;
-};
-
-const HostedContext = createContext<HostedValue>({
-  sites: {},
-  errors: {},
-  downloads: {},
-  revision: 0,
-  signedIn: false,
-  refresh: async () => {},
-  download: async () => {},
-  cancel: () => {},
-  remove: () => {},
-});
+export { type HostedDownload, isStored, useHostedSites } from "./context";
 
 function message(error: unknown): string {
-  if (error instanceof PrepareError) return error.message;
-  if (error instanceof ApiError) return error.message;
-  return "The download stopped. Check the connection and try again.";
+  return error instanceof PrepareError || error instanceof ApiError || error instanceof Error
+    ? error.message
+    : "The download stopped. Check the connection and try again.";
 }
 
 export function HostedSitesProvider({ children }: PropsWithChildren) {
-  const { client, session, account } = useAccount();
+  const database = useSQLiteContext();
+  const { client, session, account, key, scope } = useAccount();
   const { projects } = useMe();
   const userId = account?.id ?? null;
+  const issuer = scope?.issuer ?? null;
+  const owner = issuer && userId ? key : null;
+  const currentOwner = useRef(owner);
+  currentOwner.current = owner;
+  setPackageAccessOwner(owner);
+  const projectIds = useMemo(
+    () => projects.filter((project) => !project.is_training).map((project) => project.project_id),
+    [projects],
+  );
+  const allowed = useRef(projectIds);
+  allowed.current = projectIds;
+  const [viewOwner, setViewOwner] = useState(owner);
   const [sites, setSites] = useState<Record<string, readonly HostedSite[]>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [downloads, setDownloads] = useState<Record<string, HostedDownload>>({});
+  const [installed, setInstalled] = useState<readonly InstalledVersion[]>([]);
   const [revision, setRevision] = useState(0);
-  const running = useRef(new Map<string, AbortController>());
-
   const api = useMemo<ApiClient | null>(
     () =>
       client && session && userId
@@ -89,133 +62,169 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
         : null,
     [client, session, userId],
   );
-
-  // Another account on the same phone starts from its own cached lists.
-  const studyProjects = useMemo(
-    () => projects.filter((project) => !project.is_training).map((project) => project.project_id),
-    [projects],
-  );
-  useEffect(() => {
-    if (!userId) {
-      setSites({});
-      setErrors({});
-      return;
+  const generation = useRef(0);
+  const operations = useMemo(() => {
+    const epoch = ++generation.current;
+    return owner && issuer
+      ? new PackageOperations({
+          database,
+          owner,
+          issuer,
+          files: devicePackageFiles,
+          hash: deviceSha256,
+          api,
+          source: apiPackageSource,
+          current: () => currentOwner.current === owner && generation.current === epoch,
+          authorizedProject: (project) => allowed.current.includes(project),
+          attempt: randomUUID,
+        })
+      : null;
+  }, [api, database, issuer, owner]);
+  const reload = useCallback(async () => {
+    if (!operations) return;
+    const versions = await operations.catalog();
+    if (operations.runtime.current()) {
+      setInstalled(versions);
+      setRevision((value) => value + 1);
     }
-    setSites(
-      Object.fromEntries(
-        studyProjects.flatMap((projectId) => {
-          const cached = readSiteList(userId, projectId);
-          return cached ? [[projectId, cached]] : [];
-        }),
-      ),
-    );
+  }, [operations]);
+  useEffect(() => {
+    setViewOwner(owner);
     setErrors({});
-  }, [studyProjects, userId]);
-
+    setDownloads({});
+    setInstalled([]);
+    setSites(
+      issuer && userId
+        ? Object.fromEntries(
+            projectIds.flatMap((project) => {
+              const cached = readSiteList(issuer, userId, project);
+              return cached ? [[project, cached]] : [];
+            }),
+          )
+        : {},
+    );
+    reconcileStaging(devicePackageFiles);
+    void reload().catch((error: unknown) => {
+      if (operations?.runtime.current()) setErrors({ storage: message(error) });
+    });
+    return () => operations?.dispose();
+  }, [issuer, operations, owner, projectIds, reload, userId]);
   const refresh = useCallback(
-    async (projectId: string) => {
-      if (!api || !userId) return;
-      const controller = new AbortController();
+    async (project: string) => {
+      if (!operations || !issuer || !userId) return;
       try {
-        const list = await api.sites(projectId, controller.signal);
-        writeSiteList(userId, projectId, list);
-        setSites((current) => ({ ...current, [projectId]: list }));
-        setErrors(({ [projectId]: _cleared, ...rest }) => rest);
+        const list = await operations.refresh(project, sites[project] ?? []);
+        if (!list || !operations.runtime.current()) return;
+        writeSiteList(issuer, userId, project, list);
+        setSites((current) => ({ ...current, [project]: list }));
+        setErrors(({ [project]: _cleared, ...rest }) => rest);
       } catch (error) {
-        setErrors((current) => ({ ...current, [projectId]: message(error) }));
+        if (operations.runtime.current())
+          setErrors((current) => ({ ...current, [project]: message(error) }));
       }
     },
-    [api, userId],
+    [issuer, operations, sites, userId],
   );
-
-  // Every study project's list is refreshed on sign-in and whenever the app comes back to the front.
+  // Refresh uses a ref so a list response does not recreate the foreground subscription and loop.
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
   useEffect(() => {
     if (!api) return;
     const all = () => {
-      for (const projectId of studyProjects) void refresh(projectId);
+      for (const project of projectIds) void refreshRef.current(project);
     };
     all();
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") all();
     });
     return () => subscription.remove();
-  }, [api, refresh, studyProjects]);
-
+  }, [api, projectIds]);
   const download = useCallback(
-    async (projectId: string, siteId: string) => {
-      const site = sites[projectId]?.find((entry) => entry.site_id === siteId);
-      if (!api || !site || running.current.has(siteId)) return;
-      const controller = new AbortController();
-      running.current.set(siteId, controller);
-      const report = (part: PreparePart) => {
-        if (!controller.signal.aborted)
-          setDownloads((current) => ({ ...current, [siteId]: { state: "downloading", part } }));
-      };
+    async (project: string, siteId: string, packageId?: string) => {
+      const site = sites[project]?.find((entry) => entry.site_id === siteId);
+      if (!operations || !site) return;
       try {
-        const stored = await preparePackage(
-          projectId,
+        const saved = await operations.download(
+          project,
           site,
-          apiPackageSource(api, projectId, controller.signal),
-          report,
+          (part) =>
+            setDownloads((current) => ({ ...current, [siteId]: { state: "downloading", part } })),
+          packageId,
         );
-        if (controller.signal.aborted) return;
-        writeStoredPackage(stored);
+        if (!saved || !operations.runtime.current()) return;
         setDownloads(({ [siteId]: _done, ...rest }) => rest);
-        setRevision((value) => value + 1);
+        await reload();
       } catch (error) {
-        if (controller.signal.aborted) return;
-        setDownloads((current) => ({
-          ...current,
-          [siteId]: { state: "failed", message: message(error) },
-        }));
-      } finally {
-        // A cancelled attempt settles after its retry may have started; only its own entry is cleared.
-        if (running.current.get(siteId) === controller) running.current.delete(siteId);
+        if (operations.runtime.current() && !operations.running.get(siteId)?.signal.aborted)
+          setDownloads((current) => ({
+            ...current,
+            [siteId]: { state: "failed", message: message(error) },
+          }));
       }
     },
-    [api, sites],
+    [operations, reload, sites],
   );
-
-  const cancel = useCallback((siteId: string) => {
-    running.current.get(siteId)?.abort();
-    running.current.delete(siteId);
-    setDownloads(({ [siteId]: _cancelled, ...rest }) => rest);
-  }, []);
-
-  const remove = useCallback(
-    (siteId: string) => {
-      const site = Object.values(sites)
-        .flat()
-        .find((entry) => entry.site_id === siteId);
-      if (site?.package) removeStoredPackage(site.package.package_id);
-      setDownloads(({ [siteId]: _removed, ...rest }) => rest);
-      setRevision((value) => value + 1);
+  const cancel = useCallback(
+    (site: string) => {
+      operations?.cancel(site);
+      setDownloads(({ [site]: _cancelled, ...rest }) => rest);
     },
-    [sites],
+    [operations],
   );
-
-  const value = useMemo<HostedValue>(
-    () => ({
-      sites,
-      errors,
-      downloads,
-      revision,
-      signedIn: api !== null,
-      refresh,
-      download,
-      cancel,
-      remove,
-    }),
-    [sites, errors, downloads, revision, api, refresh, download, cancel, remove],
+  const removeVersion = useCallback(
+    async (identity: PackageIdentity) => {
+      if (!operations)
+        return {
+          removed: false,
+          reasons: { sessions: 0, drafts: 0, records: 0 },
+          contentRetained: true as const,
+        };
+      const result = await operations.remove(identity);
+      if (operations.runtime.current()) await reload();
+      return result;
+    },
+    [operations, reload],
   );
-  return <HostedContext value={value}>{children}</HostedContext>;
-}
-
-export function useHostedSites(): HostedValue {
-  return useContext(HostedContext);
-}
-
-/** Whether a site's current package is on this device. */
-export function isStored(site: HostedSite): boolean {
-  return site.package !== null && hasStoredPackage(site.package.package_id);
+  const remove = useCallback(
+    (site: string) => {
+      const entry = installed
+        .filter((version) => version.identity.siteId === site)
+        .sort((a, b) => b.identity.packageVersion - a.identity.packageVersion)[0];
+      if (entry)
+        void removeVersion(entry.identity)
+          .then((result) => {
+            if (!result.removed && operations?.runtime.current())
+              setErrors((current) => ({
+                ...current,
+                [site]:
+                  "This map is retained by a session, unfinished observation or saved record.",
+              }));
+          })
+          .catch((error: unknown) => {
+            if (operations?.runtime.current())
+              setErrors((current) => ({ ...current, [site]: message(error) }));
+          });
+    },
+    [installed, operations, removeVersion],
+  );
+  const visible = viewOwner === owner;
+  return (
+    <HostedContext
+      value={{
+        sites: visible ? sites : {},
+        errors: visible ? errors : {},
+        downloads: visible ? downloads : {},
+        installed: visible ? installed : [],
+        revision,
+        signedIn: api !== null,
+        refresh,
+        download,
+        cancel,
+        remove,
+        removeVersion,
+      }}
+    >
+      {children}
+    </HostedContext>
+  );
 }

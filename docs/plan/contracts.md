@@ -266,10 +266,19 @@ Done when:
 Verify: unit tests in both apps for three codes each.
 
 ### CON-05: Freeze zone contracts and shared cases
-Status: done (2026-10-10) · Phase 3 · Size M · Depends: CON-03 · Blocks: DB-15, MOB-28, WEB-30, WEB-31
+Status: done (2026-10-10) · Phase 3 · Size M · Depends: CON-03 · Blocks: CON-06, DB-15, MOB-28, WEB-30, WEB-31
 Verified: Frozen identity/code/extent/normalization rules, exact draft preconditions and response shapes, format-2 manifests/capabilities, adoption inventory selection and legacy-code mapping note, v2 inputs/receipts/reads/errors and RFC 8785 fingerprint specification. Three authored synthetic case files cover geometry, publication, historical uploads, read semantics and four shipped v1 hash goldens. Reusable backend geometry/draft/upload input models exercise the structural contract with 102 tests. Full backend non-integration suite: 315 passed, 99 integration tests excluded; Ruff, BasedPyright and the programming audit passed. OpenAPI and both client declarations regenerated twice through the existing exporter/generators with Node 24; hashes stayed identical to the starting artifacts. Node 24 ran the plan-check target successfully. Separate specification and code-quality self-reviews passed. SQL topology/concurrency, live routes, device retention, browser and GIS scenarios remain gates of their owning tasks; no hosted changes or commits made.
 Owner: Contract coordinator.
 Read first: [Master plan](zone-boundaries/README.md) and [component specification](zone-boundaries/contract.md).
 Do: Freeze identity/geometry rules, draft preconditions, v2 payloads/reads/errors, capabilities, legacy fingerprints and input limits; author independent geometry/publication/upload cases.
 Done when: All owners can implement without guessing; examples cover points, inventory, old v1 and conflicts.
 Verify: Review cases and source paths; pnpm plan:check. OpenAPI remains backend-generated.
+
+### CON-06: Collapse the zone contract to one path
+Status: done (2026-10-12: single-path specifications and authored cases verified) · Phase 3 · Size M · Depends: CON-05 · Blocks: BE-22, DB-19
+Owner: Contract coordinator.
+Read first: [pre-launch policy](README.md#pre-launch-compatibility-policy-2026-10-11); [master plan](zone-boundaries/README.md); [contract](zone-boundaries/contract.md) "What the rewrite removed" and "Names and versions".
+Do: Finish the single-path rewrite: remove the v1 envelopes and hash goldens, legacy, adoption and protocol cases from `contracts/zones/*.json` and its README, renumber example versions from 1, and add first-upload, replay (`replayed: true`) and validation `change` cases. Rewrite the component plans (`supabase/ZONE-BOUNDARIES.md`, `backend/ZONE-BOUNDARIES.md`, `mobile/ZONE-BOUNDARIES.md`, `qgis/ZONE-BOUNDARIES.md`, `zone-boundaries/verification.md`) so none requires a compatibility path.
+Done when: No zone document or shared case asks for a second API version, package format, upload protocol or legacy row; the backend case-integrity tests are updated with the cases.
+Verify: `pnpm plan:check`; a grep of the zone docs and `contracts/zones` for `/v2`, `legacy`, `format 2`, `upload_protocol` and `assignment_basis` finds only the contract's removal list.
+Evidence: [CON-06 acceptance and review](../reviews/zone-boundaries-2026-10-12/con06.md). Focused artifact tests: 91 passed; two explicit production-model/fingerprint obligations remain BE-22 gates. Ruff, formatting, focused BasedPyright and the programming audit pass. Reviewed handoffs now distinguish the sole `/v1` API from map versions, use zone-aware `format: 1`, required recorded bindings and one `observation-jcs-1` fingerprint. First-upload, replay/live-current and all five validation changes are independently authored. DB-19/BE-22 implementation, generated OpenAPI and runtime compliance remain pending; CON-06 does not claim those checks.

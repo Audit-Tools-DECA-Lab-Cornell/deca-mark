@@ -22,7 +22,6 @@ def signer() -> Signer:
 def api_client(signer: Signer) -> Iterator[TestClient]:
     settings = Settings(
         database_url=database_url(),
-        zone_publication_enabled=True,
         database_password_file=password_file(),
     )
     with TestClient(create_app(settings, JwksVerifier(ISSUER, "authenticated", signer))) as client:

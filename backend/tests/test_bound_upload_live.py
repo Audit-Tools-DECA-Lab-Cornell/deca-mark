@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from fieldmaps_api.schemas import StoredObservation
+from fieldmaps_api.observation_analysis_schemas import HistoricalObservationDetail
 from fieldmaps_api.zone_observation_schemas import BoundUploadReceipt
 from tests.bound_upload_fixtures import BoundSite
 from tests.local_database import admin_sql
@@ -49,9 +49,9 @@ def test_loopback_http_historical_upload_readback_and_lost_receipt(
             live_bound_site.package,
             live_bound_site.zone,
         )
-        read = collector.get(url.replace("/v2/", "/v1/"))
+        read = collector.get(url)
         assert read.status_code == 200, read.text
-        stored = StoredObservation.model_validate_json(read.content)
+        stored = HistoricalObservationDetail.model_validate_json(read.content)
         assert stored.answers == payload["answers"]
 
 

@@ -2,7 +2,7 @@ from typing import Annotated, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
-from fieldmaps_api.domain.zone_package_schemas import GroundGeometry, LegacyZone, PackageIdentity
+from fieldmaps_api.domain.zone_package_schemas import GroundGeometry, PackageIdentity, PackageZone
 from fieldmaps_api.zone_import_schemas import PackageRequest
 from fieldmaps_api.zone_response_schemas import ImportValidation, PackageForms
 
@@ -36,4 +36,4 @@ JOBS = TypeAdapter[Job](Job)
 
 class Bootstrap(ArchiveJob):
     ground: GroundGeometry
-    legacy_zones: tuple[LegacyZone, ...]
+    zones: tuple[PackageZone, ...]

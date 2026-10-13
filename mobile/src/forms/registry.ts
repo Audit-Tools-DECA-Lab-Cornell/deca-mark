@@ -1,4 +1,4 @@
-import { isShellObservation, type Observation } from "../domain/observation";
+import type { Observation } from "../domain/observation";
 import type { FormDefinition } from "./definition";
 import { janetInventoryV1 } from "./fixtures/janet-inventory-v1";
 import { janetTestV1 } from "./fixtures/janet-test-v1";
@@ -26,15 +26,9 @@ export function isUploadable(version: string): boolean {
   return formFor(version)?.status === "published";
 }
 
-/**
- * Whether a record can be queued for upload. A practice record goes to the practice project. An
- * instrument record goes to the project it names, which published its form; one made on a site that
- * ships with the app names none, and stays on the device rather than being sent where no one expects it.
- */
-export function isUploadableRecord(record: Observation): boolean {
-  return isShellObservation(record)
-    ? isUploadable(record.formVersion)
-    : record.projectId !== undefined;
+/** Bound upload eligibility is enabled by MOB-29 after the single API is implemented. */
+export function isUploadableRecord(_record: Observation): boolean {
+  return false;
 }
 
 /**

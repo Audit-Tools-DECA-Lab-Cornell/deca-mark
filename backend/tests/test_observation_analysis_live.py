@@ -14,6 +14,7 @@ import anyio
 import pytest
 
 from fieldmaps_api.observation_analysis_schemas import ObservationPage, ObservationSummary
+from fieldmaps_api.zone_response_schemas import Publication
 from tests.bound_upload_fixtures import BoundSite
 from tests.observation_analysis_fixtures import AnalysisSite, seed_copies
 from tests.test_observation_analysis_domain import canonical, question
@@ -110,7 +111,7 @@ def test_disconnect_terminates_worker_when_signed_peer_closes_socket(
         with socket.create_connection(("127.0.0.1", address.port), timeout=5) as peer:
             token = live_api.signer.issue(live_api.tenant.users["manager"])
             request = (
-                f"GET /v2/projects/{live_api.tenant.project}/observations/export HTTP/1.1\r\n"
+                f"GET /v1/projects/{live_api.tenant.project}/observations/export HTTP/1.1\r\n"
                 f"Host: localhost\r\nAuthorization: Bearer {token}\r\n\r\n"
             )
             peer.sendall(request.encode())
@@ -118,7 +119,7 @@ def test_disconnect_terminates_worker_when_signed_peer_closes_socket(
     else:
         monkeypatch.setattr("fieldmaps_api.services.observation_exports.TIME_LIMIT", 0.5)
         with live_api.client() as reader:
-            refused = reader.get(f"/v2/projects/{live_api.tenant.project}/observations/export")
+            refused = reader.get(f"/v1/projects/{live_api.tenant.project}/observations/export")
         assert refused.status_code == 422, refused.text
         assert "export_scope_too_large" in refused.text
         assert started.is_set()
@@ -127,7 +128,7 @@ def test_disconnect_terminates_worker_when_signed_peer_closes_socket(
     monkeypatch.setattr("fieldmaps_api.services.observation_exports.anyio.run_process", run_process)
     # Then the child/temp directory/capacity are reclaimed and a real subsequent export succeeds.
     with live_api.client() as reader:
-        response = reader.get(f"/v2/projects/{live_api.tenant.project}/observations/export")
+        response = reader.get(f"/v1/projects/{live_api.tenant.project}/observations/export")
     assert response.status_code == 200, response.text
     assert all(not directory.exists() for directory in directories)
     for pid in pids:
@@ -179,7 +180,7 @@ def test_signed_canonical_dynamic_export_when_historical_form_is_published(
         body = successor_body(manager, site, {"package_id": str(live_bound_site.package)}, code)
         package = manager.post(site.project_url + "/packages", json=body)
         assert package.status_code == 201, package.text
-        package_id = str(document(package.content)["package_id"])
+        package_id = str(Publication.model_validate_json(package.content).package.package_id)
         observation = uuid4()
         uploaded = manager.put(
             live_bound_site.url(observation),
@@ -188,12 +189,12 @@ def test_signed_canonical_dynamic_export_when_historical_form_is_published(
             ),
         )
         assert uploaded.status_code == 200, uploaded.text
-        detail = manager.get(f"/v2/projects/{site.tenant.project}/observations/{observation}")
+        detail = manager.get(f"/v1/projects/{site.tenant.project}/observations/{observation}")
         assert detail.status_code == 200, detail.text
         recorded = document(detail.content)["definition"]
         # When that canonical historical scope is exported in a subprocess.
         exported = manager.get(
-            f"/v2/projects/{site.tenant.project}/observations/export",
+            f"/v1/projects/{site.tenant.project}/observations/export",
             params={"package_id": package_id},
         )
     # Then aliases and omitted fields survive with the dynamic named column.

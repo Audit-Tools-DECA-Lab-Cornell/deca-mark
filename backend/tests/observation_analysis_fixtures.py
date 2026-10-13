@@ -18,7 +18,7 @@ class AnalysisSite:
 
     @property
     def url(self) -> str:
-        return f"/v2/projects/{self.bound.site.tenant.project}/observations"
+        return f"/v1/projects/{self.bound.site.tenant.project}/observations"
 
 
 def seed_copies(site: AnalysisSite, count: int) -> None:
@@ -26,11 +26,10 @@ def seed_copies(site: AnalysisSite, count: int) -> None:
         """
 INSERT INTO fieldmaps.observations
 (id,organization_id,project_id,site_id,form_version_id,observer_code,observed_at,geom,answers,
-created_by,upload_hash,round_type,first_round,placement_source,package_id,zone_id,upload_protocol,
-upload_hash_version)
+created_by,upload_hash,round_type,first_round,placement_source,package_id,zone_id)
 SELECT gen_random_uuid(),organization_id,project_id,site_id,form_version_id,observer_code,
 observed_at,geom,answers,created_by,upload_hash,round_type,first_round,placement_source,
-package_id,zone_id,upload_protocol,upload_hash_version
+package_id,zone_id
 FROM fieldmaps.observations CROSS JOIN generate_series(1,:copies) WHERE id=:'point';
 """,
         *site.bound.site.tenant.variables(),

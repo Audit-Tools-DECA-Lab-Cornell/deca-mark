@@ -9,16 +9,13 @@ VALUES ('80000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-0000000
 INSERT INTO fieldmaps.form_versions(id, organization_id, project_id, code, definition)
 VALUES ('80000000-0000-4000-8000-000000000010','10000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000002','db16-play-v1','{"fields":[]}');
-INSERT INTO fieldmaps.site_packages(id, organization_id, project_id, site_id, form_version_id,
-  version, state, manifest, archive, archive_sha256, prepared_by)
-SELECT ('81000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
-  '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002',
-  '80000000-0000-4000-8000-000000000001', '80000000-0000-4000-8000-000000000010', n,
-  CASE WHEN n = 1 THEN 'ready' ELSE 'blocked' END, '{"format":1}', decode('0102', 'hex'), repeat('a', 64),
-  '50000000-0000-4000-8000-000000000004' FROM generate_series(1, 2) n;
-INSERT INTO fieldmaps.observations(id, organization_id, project_id, site_id, form_version_id,
-  observer_code, observed_at, geom, answers, created_by, upload_hash, zone_code, round_type, first_round, placement_source)
-VALUES ('83000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
-  '10000000-0000-4000-8000-000000000002', '80000000-0000-4000-8000-000000000001',
-  '80000000-0000-4000-8000-000000000010', 'QA', now(), fieldmaps.make_point(0.005,0.005), '{}',
-  '50000000-0000-4000-8000-000000000001', repeat('e',64), 'A', 'inventory', false, 'zone');
+SELECT pg_temp.fixture_package('80000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000001',
+ '82000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000010','80000000-0000-4000-8000-000000000004',1,
+ '[{"zone_id":"82000000-0000-4000-8000-000000000001","zone_code":"A","zone_label":"Original A","geometry":{"type":"Polygon","coordinates":[[[0,0],[0.01,0],[0.01,0.01],[0,0.01],[0,0]],[[0.003,0.003],[0.003,0.007],[0.007,0.007],[0.007,0.003],[0.003,0.003]]]}},
+   {"zone_id":"82000000-0000-4000-8000-000000000002","zone_code":"B","zone_label":"Original B","geometry":{"type":"Polygon","coordinates":[[[0.01,0],[0.02,0],[0.02,0.01],[0.01,0.01],[0.01,0]]]}}]',
+ '{"type":"Polygon","coordinates":[[[0,0],[0.03,0],[0.03,0.02],[0,0.02],[0,0]]]}');
+INSERT INTO fieldmaps.site_packages(id,organization_id,project_id,site_id,form_version_id,
+  inventory_form_version_id,version,state,manifest,archive,archive_sha256,prepared_by,site_boundary)
+SELECT '81000000-0000-4000-8000-000000000002',organization_id,project_id,site_id,form_version_id,
+  inventory_form_version_id,2,'blocked',manifest,archive,archive_sha256,prepared_by,site_boundary
+FROM fieldmaps.site_packages WHERE id='81000000-0000-4000-8000-000000000001';

@@ -1,33 +1,26 @@
 # Zone contracts and authored cases
 
-The [version-1 contract](../../docs/plan/zone-boundaries/contract.md) is authoritative. These fixtures are synthetic test data, never study observations. Expectations are authored independently of production algorithms; do not regenerate expected results from a geometry or publication engine.
+The [single-path contract](../../docs/plan/zone-boundaries/contract.md) is authoritative: one `/v1` API, one zone-aware `format: 1` archive and one `observation-jcs-1` fingerprint. These fixtures are synthetic test data, never study observations. Expectations are authored independently of production algorithms; do not regenerate them from a geometry, publication or upload engine.
 
-| Artifact | Input and expected result | Owner consuming it |
+| Artifact | Inputs and expected results | Acceptance owner |
 | --- | --- | --- |
-| `geometry.cases.json` | Named GeoJSON; draft structural validity; publish issues; all covering zones for a point; selected-zone acceptance; overlap/containment/normalization and inclusive limits | Backend input models now; DB-16 topology, BE-18 publication and MOB-29 geometry adapters later |
-| `publication.cases.json` | Initial state (`given`) and ordered operations (`steps`) with expected status, conflict code and retained state | DB-16 and BE-18 restricted-role/concurrent HTTP tests |
-| `upload.cases.json` | V1/v2 `envelopes`, frozen v1 canonical strings/hashes, v2 fingerprint vectors and stateful `scenarios` | Input schema/hash regressions now; BE-19/MOB-29 real upload/receipt tests later |
+| `geometry.cases.json` | Named GeoJSON, structural validity, topology, point coverage, containment, normalization and inclusive limits | Backend geometry tests, database topology tests and MOB-29 geometry adapters |
+| `publication.cases.json` | Initial state and ordered operations; explicit first-upload identity mapping; concurrency, replay and validation change classifications | DB-19 and BE-22 real SQL/API acceptance |
+| `upload.cases.json` | One nested-answer envelope, canonical fingerprint vectors, receipt and historical-attribution scenarios | CON-06 artifact integrity; BE-22 production upload; MOB-29 serializer and receipt acceptance |
 
-All files declare `contract_version: 1`, `synthetic: true` and unique case IDs within each section. GeoJSON numbers are literal full-precision fixture coordinates. `coverage_cases.covering` is a candidate set: ordering is not an assignment decision. Geometry names are aliases, not zone codes or UUIDs. Adapters assign stable synthetic UUIDs within their local fixture scope. `relation_cases.interior_overlap` means a positive-area intersection, including containment; `containment_cases.covered` means the actual site shape covers the zone, not its bbox. `publish_issue: null` means topology/extent valid in isolation, not that an entire package is publishable without ground/form checks.
+Every file declares `synthetic: true` and unique case IDs within each section. Geometry aliases refer to the literal full-precision coordinates in `geometry.cases.json`, not zone codes or UUIDs. `coverage_cases.covering` is a candidate set, never an assignment decision. `relation_cases.interior_overlap` means positive-area intersection, including containment; `containment_cases.covered` means actual site-shape coverage, never bbox coverage. `publish_issue: null` means validity in isolation, not readiness of an entire package.
 
-Publication aliases `d1`/`d2`, `create-1`, `pub-1`/`pub-2` resolve to distinct synthetic UUIDs in the harness. Substitute the same aliases in ETags as in path/body IDs. Missing steps fields mean omitted preconditions only in the explicitly named missing-precondition cases; otherwise adapters supply the acknowledged revision/request/current identity from the fixture. Run racing steps concurrently where the case names two managers; assert one winner, not which manager wins. Scenario fields are fixture setup instructions, not new wire fields. A stored result/current pointer assertion is a database/runtime assertion, never evidence from reading this JSON.
+Publication aliases such as `d1`, `create-1` and `pub-1` resolve to distinct synthetic UUIDs in the harness. Substitute the same draft alias in ETags and path/body IDs. Except in explicitly named missing-precondition cases, adapters supply the acknowledged revision, request ID and current identity. Execute competing managers concurrently and assert one winner. Package UUIDs ending in 001, 002 and 003 identify example map versions 1, 2 and 3; draft revisions are independent.
 
-Envelope `valid` covers schema structure only. The fixture forms/answers do not prove eligibility, package membership, point coverage or successful persistence; actual service tests must supply the authorized site/package/snapshot/form and assert those separately. `canonical`/`sha256` on v1 cases are golden shipped serializer outputs, including omitted versus explicit-null context. `fingerprints` freeze v2 normalized canonical documents and SHA-256 bytes; hashing the authored canonical string only checks fixture integrity. It does not verify a future JCS implementation. V2 vectors include numeric/Unicode ordering cases to expose Python-JSON versus ECMAScript differences.
+First-upload cases start with no current package and explicitly map every zones-layer source feature to a new stable UUID/code. `source_zone_ids` supplies the source features; adapters provide valid ground, forms and named zone geometries. An incomplete mapping creates no package. Publication replay returns its original package, `replayed: true` and the site's current package ID, without activating the returned historical result. Validation cases compare one identity's current and draft geometry/label; removed summaries describe its retained current snapshot. Setup and expected-state instructions are harness data, not additional wire fields.
 
-Current local checks (no API process, database, device or secrets):
+Envelope `valid` means request structure only. Passing it does not establish authority, package/form membership, point coverage or persistence. `fingerprints` freeze independently authored RFC 8785 byte strings and their SHA-256 values, including number normalization and UTF-16 key ordering. Hashing a fixture string checks its integrity; production fingerprint acceptance must also feed the input through the actual serializer.
+
+Run the artifact checks without an API process, database, device or secrets:
 
 ```sh
 cd backend
-.venv/bin/python -m pytest tests/test_zone_upload_contract.py tests/test_zone_geometry_contract.py tests/test_zone_draft_contract.py tests/test_zone_case_integrity.py -q
+.venv/bin/python -m pytest tests/test_zone_case_integrity.py tests/test_zone_geometry_contract.py tests/test_zone_upload_contract.py tests/test_zone_upload_fingerprint.py -q
 ```
 
-The backend models now describe the local BE-18 authoring/discovery routes, BE-19 bound
-upload route and BE-20 historical list/detail/summary/export routes; generated
-`openapi.json` and client declarations expose them. BE-20 query models preserve repeated
-zone UUID filters and distinguish pagination from summary/export scope. Export format
-selects the observation file within the ZIP bundle defined in the canonical contract.
-`test_zone_upload_fingerprint.py` runs the authored v2 canonical-byte vectors through the
-actual serializer. Stateful local API and SQL acceptance uses the disposable rehearsal
-commands documented in the backend README. Keep format-1 payloads, hashes, archives and
-local rows unchanged. Never label unexecuted filesystem or device scenarios as passing
-based on these contract tests.
+CON-06 updates the shared contract and artifact adapters. DB-19 supplies the current database baseline; BE-22 supplies production models, routes, fingerprints and regenerated OpenAPI/client declarations. Until those tasks pass, test-only contract models and independent RFC 8785 checks establish fixture consistency only. Explicitly skipped production obligations remain pending and must be replaced by real implementation checks in BE-22. Stateful publication, uploads, filesystem retention, browser, device and QGIS scenarios require their own runtime evidence.
