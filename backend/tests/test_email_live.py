@@ -1,8 +1,8 @@
 """API → committed outbox → Brevo boundary on disposable local Postgres."""
 
 from collections.abc import Iterator
-from typing import override
 from datetime import UTC, datetime, timedelta, tzinfo
+from typing import override
 from uuid import uuid4
 
 import anyio
