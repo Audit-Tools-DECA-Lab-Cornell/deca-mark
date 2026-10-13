@@ -73,14 +73,16 @@ export default async function DataPage({ params, searchParams }: Props) {
 		total_matching: 0,
 		generated_at: new Date().toISOString()
 	};
-	const [first, zoneCounts] = await Promise.all([
+	const [first, zoneCounts, membership] = await Promise.all([
 		daysBackwards(view)
 			? Promise.resolve({ ok: true as const, data: empty })
 			: settle(listObservations(project.id, filters)),
 		// The zone filter offers every zone this site's records were collected in, on any version.
 		site && !daysBackwards(view)
 			? settle(summarizeObservations(project.id, { ...filters, zoneIds: [], packageId: undefined }))
-			: null
+			: null,
+		// Which map versions have the chosen zones is read for the whole site, whatever else is filtered.
+		site && view.zones.length > 0 ? settle(summarizeObservations(project.id, { siteId: site.site_id })) : null
 	]);
 	// A map version that does not have a chosen zone is refused; every version is shown instead, and says so.
 	let list = first;
@@ -135,11 +137,17 @@ export default async function DataPage({ params, searchParams }: Props) {
 
 	// "One map version" offers the versions that have every chosen zone: those the zones' records were
 	// collected on, and the current one when it still has them all.
+	// The version applied stays offered, so the picker always shows what the list is filtered by.
 	const versions = site
-		? zoneVersions(zoneCounts?.ok ? zoneCounts.data.groups : [], view.zones, {
-				version: site.package?.package_version ?? null,
-				zoneIds: site.zones.map(zone => zone.zone_id)
-			})
+		? [
+				...new Set([
+					...zoneVersions(membership?.ok ? membership.data.groups : [], view.zones, {
+						version: site.package?.package_version ?? null,
+						zoneIds: site.zones.map(zone => zone.zone_id)
+					}),
+					...(effective.version !== null ? [effective.version] : [])
+				])
+			].sort((a, b) => a - b)
 		: [];
 
 	return (

@@ -336,8 +336,9 @@ export function zoneOptions(
 
 /**
  * The map versions "One map version" offers for the chosen zones: each version on which every chosen zone
- * has records, and the site's current version when it still has every chosen zone. A version without one
- * of the zones is never offered (DECA Mark refuses that pair). None without zones.
+ * has records (pass the site's counts for every round, observer and day, so other filters do not hide a
+ * version), and the site's current version when it still has every chosen zone. A version without one of
+ * the zones is never offered (DECA Mark refuses that pair). None without zones.
  */
 export function zoneVersions(
 	groups: readonly ZoneGroup[],

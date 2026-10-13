@@ -155,15 +155,18 @@ export function ReportsScreen({
 		startTransition(() => router.replace(pathname, { scroll: false }));
 	}
 
+	// The sheet names the days its counts are for (the ones applied), never days still being typed or loaded.
+	const appliedFrom = parseDayKey(initialFrom);
+	const appliedTo = parseDayKey(initialTo);
 	const scope = [
 		siteName ?? "All sites",
 		round ? roundLabel(round) : "All rounds",
-		fromKey && toKey
-			? `${projectClock.keyLabel(fromKey)} to ${projectClock.keyLabel(toKey)}`
-			: fromKey
-				? `From ${projectClock.keyLabel(fromKey)}`
-				: toKey
-					? `Until ${projectClock.keyLabel(toKey)}`
+		appliedFrom && appliedTo
+			? `${projectClock.keyLabel(appliedFrom)} to ${projectClock.keyLabel(appliedTo)}`
+			: appliedFrom
+				? `From ${projectClock.keyLabel(appliedFrom)}`
+				: appliedTo
+					? `Until ${projectClock.keyLabel(appliedTo)}`
 					: "All days"
 	].join(" · ");
 
@@ -179,8 +182,14 @@ export function ReportsScreen({
 					<Button
 						variant="primary"
 						icon="printer"
-						disabled={report.total === 0}
-						disabledReason={report.total === 0 ? "There is nothing to print." : undefined}
+						disabled={report.total === 0 || pending}
+						disabledReason={
+							pending
+								? "The counts for these filters are loading."
+								: report.total === 0
+									? "There is nothing to print."
+									: undefined
+						}
 						onClick={() => window.print()}>
 						Print
 					</Button>
