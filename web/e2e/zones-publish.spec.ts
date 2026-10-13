@@ -2,7 +2,17 @@ import { randomUUID } from "node:crypto";
 
 import { expect, test } from "@playwright/test";
 
-import { REVIEW_SITE, signInToZones, ZONE_MANIFEST, zoneApi, type ZoneDraftRead, zoneFixture } from "./support/zones";
+import {
+	freshSite,
+	renamedDraft,
+	REVIEW_SITE,
+	signInToZones,
+	ZONE_MANIFEST,
+	zoneApi,
+	type ZoneDraftRead,
+	zoneFixture,
+	type ZoneHistory
+} from "./support/zones";
 
 /**
  * Plan WEB-38: publishing a zone draft and discarding one. A draft is reviewed for its exact revision and
@@ -14,79 +24,7 @@ import { REVIEW_SITE, signInToZones, ZONE_MANIFEST, zoneApi, type ZoneDraftRead,
 
 test.skip(!ZONE_MANIFEST, "Needs the zone review fixture: scripts/e2e-local.sh --zones");
 
-type Call = Awaited<ReturnType<typeof zoneApi>>;
-type Site = { site_id: string; code: string; name: string };
-type History = {
-	current_package_id: string | null;
-	packages: { package_id: string; package_version: number; change_note: string }[];
-};
-
-const ring = (west: number, south: number, east: number, north: number) => [
-	[west, south],
-	[east, south],
-	[east, north],
-	[west, north],
-	[west, south]
-];
-
-/** A site of its own with a first map package of two zones, A and B. */
-async function freshSite(call: Call): Promise<{ site: Site; v1: string }> {
-	const { projectId } = zoneFixture();
-	const tag = randomUUID().slice(0, 8);
-	const site = await call<Site>("POST", `/v1/projects/${projectId}/sites`, {
-		code: `publish-${tag}`,
-		name: `Synthetic publish ${tag}`
-	});
-	const first = await call<{ package: { package_id: string } }>("POST", `/v1/projects/${projectId}/packages`, {
-		site_id: site.site_id,
-		request_id: randomUUID(),
-		expected_current_package_id: null,
-		form_version: "zone-review-play-v1",
-		inventory_form_version: "zone-review-inventory-v1",
-		change_note: "Synthetic first map; local acceptance only",
-		zone_identity_map: [
-			{ source_feature_id: "A", zone_id: randomUUID(), zone_code: "A" },
-			{ source_feature_id: "B", zone_id: randomUUID(), zone_code: "B" }
-		],
-		layers: {
-			ground: {
-				type: "FeatureCollection",
-				features: [
-					{
-						type: "Feature",
-						properties: { kind: "site" },
-						geometry: { type: "Polygon", coordinates: [ring(-76.4865, 42.447, -76.4835, 42.449)] }
-					}
-				]
-			},
-			zones: {
-				type: "FeatureCollection",
-				features: [
-					{
-						type: "Feature",
-						properties: { id: "A", name: "Synthetic publish lawn" },
-						geometry: { type: "Polygon", coordinates: [ring(-76.4864, 42.4478, -76.485, 42.4489)] }
-					},
-					{
-						type: "Feature",
-						properties: { id: "B", name: "Synthetic publish beds" },
-						geometry: { type: "Polygon", coordinates: [ring(-76.4849, 42.4477, -76.4845, 42.448)] }
-					}
-				]
-			}
-		}
-	});
-	return { site, v1: first.package.package_id };
-}
-
-/** A draft from `base`, with zone A renamed so it differs from it. */
-async function renamedDraft(call: Call, siteId: string, base: string, name: string): Promise<ZoneDraftRead> {
-	const { projectId } = zoneFixture();
-	const drafts = `/v1/projects/${projectId}/sites/${siteId}/zone-drafts`;
-	const draft = await call<ZoneDraftRead>("POST", drafts, { request_id: randomUUID(), base_package_id: base });
-	const zones = draft.zones.map(zone => (zone.zone_code === "A" ? { ...zone, zone_label: name } : zone));
-	return call<ZoneDraftRead>("PUT", `${drafts}/${draft.draft_id}`, { zones, change_note: "" }, draft.etag);
-}
+type History = ZoneHistory;
 
 test("a draft is reviewed and published once, a conflict keeps it, and Discard asks first", async ({ page }) => {
 	test.setTimeout(240_000);
@@ -172,6 +110,39 @@ test("a draft is reviewed and published once, a conflict keeps it, and Discard a
 		await expect(main).toContainText("This draft was already published as v2.", { timeout: 30_000 });
 		await expect(main).toContainText("v2 is the current version.");
 		expect((await history(site.site_id)).packages).toHaveLength(2);
+	});
+
+	await test.step("a replay after a newer publication says a later version is current", async () => {
+		const { site, v1 } = await freshSite(call);
+		const draft = await renamedDraft(call, site.site_id, v1, "Replayed lawn");
+		await page.goto(`${path}/sites/${site.code}/zones/drafts/${draft.draft_id}/publish`);
+		await expect(main.getByRole("region", { name: "Ready to publish?" })).toContainText("Ready to publish", {
+			timeout: 30_000
+		});
+		// This publication reaches DECA Mark as v2, then another manager publishes v3 before its answer
+		// arrives, and the answer never does.
+		const other = await zoneApi("manager2");
+		await page.route(
+			/\/zone-drafts\/[0-9a-f-]{36}\/publish$/,
+			async route => {
+				await route.fetch();
+				const v2 = (await history(site.site_id)).current_package_id!;
+				const next = await renamedDraft(other, site.site_id, v2, "Later lawn");
+				await other(
+					"POST",
+					`/v1/projects/${projectId}/sites/${site.site_id}/zone-drafts/${next.draft_id}/publish`,
+					{ request_id: randomUUID(), expected_current_package_id: v2 },
+					next.etag
+				);
+				await route.abort("connectionreset");
+			},
+			{ times: 1 }
+		);
+		await main.getByText("I understand published boundaries cannot be edited.").click();
+		await main.getByRole("button", { name: "Publish v2" }).click();
+		await expect(main).toContainText("This draft was already published as v2.", { timeout: 30_000 });
+		await expect(main).toContainText("A later version is current now.");
+		expect((await history(site.site_id)).packages).toHaveLength(3);
 	});
 
 	await test.step("a note saved elsewhere meanwhile asks which to keep", async () => {

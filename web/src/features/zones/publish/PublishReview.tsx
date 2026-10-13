@@ -43,8 +43,10 @@ import {
 	CHANGE_WORDS,
 	changeRows,
 	changeSummary,
+	closedLine,
 	hatchedZones,
 	publishedLine,
+	publishedVersion,
 	publishRequestKey,
 	publishUnavailable
 } from "./model";
@@ -74,7 +76,7 @@ type Attempt =
 	| { readonly kind: "sending" }
 	| { readonly kind: "replayed"; readonly publication: Publication }
 	| { readonly kind: "unconfirmed" }
-	| { readonly kind: "closed"; readonly state: "published" | "discarded" }
+	| { readonly kind: "closed"; readonly state: "published" | "discarded"; readonly version: number | null }
 	| { readonly kind: "conflict"; readonly currentVersion: number | null }
 	| { readonly kind: "refused"; readonly message: string; readonly issues: readonly string[] };
 
@@ -219,11 +221,11 @@ export function PublishReview(props: PublishReviewProps) {
 				try {
 					await done(await send(requestId));
 				} catch {
-					setAttempt({ kind: "closed", state: "published" });
+					setAttempt({ kind: "closed", state: "published", version: publishedVersion(draft) });
 				}
 				return;
 			}
-			if (draft.state === "discarded") return setAttempt({ kind: "closed", state: "discarded" });
+			if (draft.state === "discarded") return setAttempt({ kind: "closed", state: "discarded", version: null });
 			if (conflict) return setAttempt({ kind: "conflict", currentVersion: draft.current_package_version });
 			setAttempt({ kind: "unconfirmed" });
 		} catch {
@@ -400,7 +402,17 @@ export function PublishReview(props: PublishReviewProps) {
 		);
 	}
 
-	if (attempt.kind === "closed" || queue.pause?.kind === "closed")
+	if (attempt.kind === "closed" || queue.pause?.kind === "closed") {
+		// The save queue's read names no version; the publish attempt's read does when it is current.
+		const line =
+			attempt.kind === "closed"
+				? closedLine(attempt.state, attempt.version)
+				: closedLine(
+						queue.pause?.kind === "closed" && queue.pause.server?.state === "discarded"
+							? "discarded"
+							: "published",
+						null
+					);
 		return (
 			<div className="flex flex-col gap-6">
 				{header}
@@ -408,24 +420,17 @@ export function PublishReview(props: PublishReviewProps) {
 				<ScreenState
 					kind="empty"
 					icon="info"
-					title={
-						(attempt.kind === "closed"
-							? attempt.state
-							: queue.pause?.kind === "closed"
-								? queue.pause.server?.state
-								: null) === "discarded"
-							? "This draft was discarded."
-							: "This draft was already published."
-					}
-					body="Nothing more can be published from it. The Zones page shows the site's versions."
+					title={line.title}
+					body={line.body}
 					actions={
 						<ButtonLink variant="ink" href={zonesHref}>
-							Open the zones
+							{line.open}
 						</ButtonLink>
 					}
 				/>
 			</div>
 		);
+	}
 
 	return (
 		<div className="flex flex-col gap-6">

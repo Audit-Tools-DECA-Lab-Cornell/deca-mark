@@ -106,3 +106,41 @@ export function publishedLine(publication: Publication): { readonly title: strin
 		body: current ? `v${version} is the current version.` : "A later version is current now."
 	};
 }
+
+/**
+ * The version a published draft became, when its read says so: a draft read names the package it was
+ * published as, and the site's current one with its number, so the number is known only while it is current.
+ */
+export function publishedVersion(draft: {
+	readonly published_package_id: string | null;
+	readonly current_package_id: string | null;
+	readonly current_package_version: number | null;
+}): number | null {
+	return draft.published_package_id !== null && draft.published_package_id === draft.current_package_id
+		? draft.current_package_version
+		: null;
+}
+
+/** What a draft that is no longer open says on its review (UI plan 5.9: "already published as v{n}"). */
+export function closedLine(
+	state: "published" | "discarded",
+	version: number | null
+): { readonly title: string; readonly body: string; readonly open: string } {
+	if (state === "discarded")
+		return {
+			title: "This draft was discarded.",
+			body: "Nothing more can be published from it. The Zones page shows the site's versions.",
+			open: "Open the zones"
+		};
+	return version !== null
+		? {
+				title: `This draft was already published as v${version}.`,
+				body: `v${version} is the current version. Nothing more can be published from this draft.`,
+				open: `Open v${version}`
+			}
+		: {
+				title: "This draft was already published.",
+				body: "Nothing more can be published from it. The Zones page shows the site's versions.",
+				open: "Open the zones"
+			};
+}

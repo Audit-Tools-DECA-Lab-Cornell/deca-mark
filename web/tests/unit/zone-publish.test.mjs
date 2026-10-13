@@ -4,9 +4,16 @@ import test from "node:test";
 import { uuid } from "./fixtures.mjs";
 import { load } from "./support.mjs";
 
-const { changeRows, changeSummary, hatchedZones, publishedLine, publishRequestKey, publishUnavailable } = await load(
-	"features/zones/publish/model.ts"
-);
+const {
+	changeRows,
+	changeSummary,
+	closedLine,
+	hatchedZones,
+	publishedLine,
+	publishedVersion,
+	publishRequestKey,
+	publishUnavailable
+} = await load("features/zones/publish/model.ts");
 
 const A = uuid(301);
 const B = uuid(302);
@@ -93,4 +100,22 @@ test("a publication's answer never claims a replay is current when it is not", (
 		title: "This draft was already published as v2.",
 		body: "A later version is current now."
 	});
+});
+
+test("a draft published elsewhere names its version only while it is current", () => {
+	const read = (published, current, version) => ({
+		published_package_id: published,
+		current_package_id: current,
+		current_package_version: version
+	});
+	assert.equal(publishedVersion(read(uuid(102), uuid(102), 2)), 2);
+	assert.equal(publishedVersion(read(uuid(102), uuid(103), 3)), null);
+	assert.equal(publishedVersion(read(null, uuid(103), 3)), null);
+	assert.deepEqual(closedLine("published", 2), {
+		title: "This draft was already published as v2.",
+		body: "v2 is the current version. Nothing more can be published from this draft.",
+		open: "Open v2"
+	});
+	assert.equal(closedLine("published", null).title, "This draft was already published.");
+	assert.equal(closedLine("discarded", 2).title, "This draft was discarded.");
 });

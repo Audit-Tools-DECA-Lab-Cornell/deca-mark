@@ -114,6 +114,11 @@ test("Data counts, pages and filters every matching observation across map versi
 		const label = columns.indexOf("zone_label_at_capture");
 		const version = columns.indexOf("map_version");
 		expect(rows).toHaveLength(baseline.perVersion);
+		// One snapshot: the metadata's count is the file's rows, and the codebook, forms and the zones as
+		// recorded come with it.
+		expect((JSON.parse(files["metadata.json"]!) as { total_matching: number }).total_matching).toBe(rows.length);
+		for (const name of ["codebook.csv", "forms.json", "historical-zones.geojson"])
+			expect(files[name], `${name} is in the export`).toBeTruthy();
 		for (const row of rows) {
 			const cells = row.split(",");
 			expect(cells[label]).toBe(`'${V1_NAME}`);

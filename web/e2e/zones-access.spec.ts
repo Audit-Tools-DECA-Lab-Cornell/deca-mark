@@ -96,8 +96,8 @@ test("a manager finds the drafts, starts one and restores an earlier version", a
 	}
 });
 
-test("a viewer sees every version and no drafts", async ({ page }) => {
-	const { path } = zoneFixture();
+test("a viewer sees every version and no drafts, and cannot open a draft or its review", async ({ page }) => {
+	const { path, drafts } = zoneFixture();
 	await signInToZones(page, "viewer");
 	await page.goto(`${path}/sites/${REVIEW_SITE}/zones`);
 	const main = page.getByRole("main");
@@ -111,6 +111,15 @@ test("a viewer sees every version and no drafts", async ({ page }) => {
 
 	await page.goto(`${path}/sites/${EMPTY_SITE}/zones`);
 	await expect(main).toContainText("No map package yet");
+
+	// Opened directly, a draft and its review say who can, and show nothing of the draft.
+	const draft = `${path}/sites/${REVIEW_SITE}/zones/drafts/${drafts.manager!.draftId}`;
+	await page.goto(draft);
+	await expect(main).toContainText("Only project managers can edit zones.");
+	await expect(main.getByRole("listbox", { name: "Zones" })).toHaveCount(0);
+	await page.goto(`${draft}/publish`);
+	await expect(main).toContainText("Only project managers can publish zones.");
+	await expect(main.getByRole("button", { name: /^Publish/ })).toHaveCount(0);
 });
 
 test("an observer never reaches the zones or a draft", async ({ page }) => {
