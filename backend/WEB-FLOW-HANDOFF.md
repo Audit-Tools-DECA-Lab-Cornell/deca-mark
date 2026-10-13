@@ -137,11 +137,20 @@ record IDs and expected baseline counts. It contains no access tokens or admin k
 Configure the web app against its local Auth/API URLs and public key using Claude's
 normal configuration flow. The workspace route is `/o/web-acceptance/p/play-study`.
 
-Initial dataset: two sites (Fall Creek and an empty site), a ready package followed by a
-blocked package, a published synthetic test form and a draft, and eight observations on
+Initial dataset (current contract, 2026-10-12): two sites (Fall Creek and an empty site),
+one ready map-v1 package, a published synthetic test form and a draft, and eight observations on
 2026-10-07: four Standard, two Reliability, two Inventory, all in Zone A. They are not
 Janet's real research data. Browser mutation tests should create their own resources or
 account for additional records; rerunning the seed deliberately does not erase them.
+The current seed supplies UUID site/package/zone bindings, nested answers and an
+explicit Inventory form binding. Point locations use the recorded zone's display
+anchor; inventories have no coordinates. Invalid imports are rejected rather than
+persisted as blocked fixture packages. Existing browser specs remain unchanged;
+their API consumers must follow BE-22's current contract through WEB-36/WEB-39/WEB-42.
+
+`sh scripts/e2e-local.sh --zones` also seeds the separate synthetic zone-review project.
+See [the local database guide](../database/README.md#schema-and-access) for its 520-row
+history fixture, public accounts and `E2E_ZONE_MANIFEST`.
 
 ## Release checklist
 

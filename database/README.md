@@ -47,6 +47,41 @@ and can be repeated without a reset. See the [backend handoff](../backend/WEB-FL
 for test credentials, exact counts and the generated public fixture manifest. Run its guard
 tests with `node --test database/seed-web-workspace.test.mjs`.
 
+DB-18 adds an opt-in synthetic zone-review fixture:
+
+```sh
+node --test database/seed-zone-review.test.mjs scripts/e2e-local-seed.test.mjs
+node database/seed-zone-review.mjs
+sh scripts/e2e-local.sh --zones
+```
+
+The separate `zone-review-acceptance/zone-review` project has maps v1/v2, a site
+without a package, two managers' saved open drafts and 520 observations (260 per
+map: 200 Standard, 40 Reliability, 20 Inventory). All records are explicitly
+synthetic. Map v1 has a hole and a multipart zone; v2 shrinks and renames the first
+zone while retaining its identity. Map-v1 records upload after v2 publication.
+Inventory bodies omit coordinates and first-round fields. The seed verifies every
+page and the server summary, including recorded labels, package identities and
+null inventory geometry. Stable request/record IDs make reruns idempotent; altered
+fixtures are refused rather than overwritten.
+
+Public test accounts are `zone-<owner|manager|manager2|observer|viewer>@fieldmaps.test`
+with password `FieldMaps-local-only-42!`. Auth keys/tokens stay in memory; application
+writes use the real local `/v1` API. The ignored public manifest is
+`database/.local/zone-review.json`. The harness exposes it as `E2E_ZONE_MANIFEST`
+only with `--zones`; existing specs keep `E2E_MANIFEST` and the normal workspace.
+`--skip-seed --zones` skips each seed only when its own manifest exists. Neither
+seed resets data or targets hosted services. The API configuration remains
+`backend/config.auth-local.json`; publication has no feature switch.
+
+Verified on 2026-10-12 after the approved local reset to DB-19's baseline: two real
+Auth/API seed runs produced identical manifests, package IDs, draft IDs/ETags and
+520 observation IDs, with every recorded revision still 1. The user also approved
+adapting the older browser seed to BE-22: UUID bindings, nested answers, valid
+in-zone points and coordinate-free inventories. Existing browser specs are unchanged.
+Browser acceptance remains pending until the unchanged suite passes; API fixture
+acceptance alone does not certify the web application.
+
 The schema now includes profiles linked to Auth users, organizations, organization members, projects, project memberships, invitations, sites, immutable form versions, observations, immutable site packages and package checks. Composite foreign keys enforce project/organization boundaries.
 
 Organization owners/admins act as managers on their organization's projects. Project managers can read their collaborators' profiles and memberships, except Training memberships. Browser roles and `service_role` cannot access application tables or execute application functions. `fieldmaps_api` cannot bypass RLS or directly grant membership. Column-limited grants allow only the documented profile, organization and project edits.

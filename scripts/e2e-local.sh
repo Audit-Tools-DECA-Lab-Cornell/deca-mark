@@ -9,6 +9,7 @@
 #   --reuse-web   Use the web app already answering on the port; start nothing for it.
 #   --skip-seed   Skip the seed when its manifest already exists. The seed signs in eight accounts and local
 #                 Auth allows 30 sign-ins per 5 minutes, so reruns within minutes should skip it.
+#   --zones       Also seed the separate synthetic zone-review project; expose E2E_ZONE_MANIFEST to tests.
 #   --stop-web    Stop the web app this script started once Playwright finishes.
 #   --stop        Only stop the web app this script started (Docker, Supabase and the API keep running).
 #
@@ -42,6 +43,7 @@ fail() {
 # ---- Options -----------------------------------------------------------------------------------------------------
 web_mode=dev
 skip_seed=0
+zones=0
 stop_after=0
 only_stop=0
 passthrough=0
@@ -59,6 +61,7 @@ while [ "$index" -lt "$count" ]; do
     --prod) web_mode=prod ;;
     --reuse-web) web_mode=reuse ;;
     --skip-seed) skip_seed=1 ;;
+    --zones) zones=1 ;;
     --stop-web) stop_after=1 ;;
     --stop) only_stop=1 ;;
     --) passthrough=1 ;;
@@ -203,14 +206,8 @@ else
 fi
 
 # ---- Seed --------------------------------------------------------------------------------------------------------
-manifest="$root/database/.local/web-workspace.json"
-if [ "$skip_seed" = 1 ] && [ -f "$manifest" ]; then
-  say "seed skipped (--skip-seed; manifest exists)"
-else
-  node --test database/seed-web-workspace.test.mjs
-  node database/seed-web-workspace.mjs --api-url "$api_url"
-fi
-[ -f "$manifest" ] || fail "The seed did not write $manifest."
+. "$root/scripts/e2e-local-seed.sh"
+seed_e2e "$root" "$api_url" "$skip_seed" "$zones"
 
 # ---- Public Auth configuration, from the pinned CLI's status in memory (as the seed reads it) --------------------
 supabase_env=$(pnpm dlx "$supabase_cli" status --output json 2>/dev/null | node -e '
