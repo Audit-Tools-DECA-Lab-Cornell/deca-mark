@@ -1,18 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import {
-	CHORD_TIMEOUT,
+	chordPending,
+	endChord,
 	isOverlayOpen,
 	isTypingTarget,
 	ORG_GO_KEYS,
 	PAGE_SEARCH_SELECTOR,
-	PROJECT_GO_KEYS
+	PROJECT_GO_KEYS,
+	startChord
 } from "@/lib/shortcuts";
 
 import { ORG_SECTIONS, orgHref, PROJECT_SECTIONS, projectHref } from "./navigation";
+import { guardedPush } from "./navigationGuard";
 import { useShell } from "./ShellProvider";
 import { useWorkspace } from "./WorkspaceProvider";
 
@@ -25,7 +28,6 @@ export function useShortcuts() {
 	const router = useRouter();
 	const { paletteOpen, setPaletteOpen, setShortcutsOpen } = useShell();
 	const workspace = useWorkspace();
-	const chordUntil = useRef(0);
 
 	// `g` chords reach the tabs of the organization and project on screen, when the person belongs there.
 	const org = workspace.org?.slug;
@@ -50,20 +52,20 @@ export function useShortcuts() {
 			if (event.metaKey || event.ctrlKey || event.altKey) return;
 			if (isTypingTarget(event.target) || isOverlayOpen()) return;
 
-			if (Date.now() < chordUntil.current) {
-				chordUntil.current = 0;
+			if (chordPending()) {
+				endChord();
 				if (!org) return;
 				const segment = project ? PROJECT_GO_KEYS[key] : ORG_GO_KEYS[key];
 				if (segment === undefined) return;
 				const section = (project ? PROJECT_SECTIONS : ORG_SECTIONS).find(entry => entry.segment === segment);
 				if (!section || (section.managersOnly && !(project ? managesProject : managesOrg))) return;
 				event.preventDefault();
-				router.push(project ? projectHref(org, project, segment) : orgHref(org, segment));
+				guardedPush(router, project ? projectHref(org, project, segment) : orgHref(org, segment));
 				return;
 			}
 
 			if (key === "g") {
-				chordUntil.current = Date.now() + CHORD_TIMEOUT;
+				startChord();
 				return;
 			}
 			if (key === "?") {

@@ -551,12 +551,30 @@ Verify: `pnpm --dir web test:unit` (exactness tests), specimen Playwright run; s
 Verified: Draw shape and Draw rectangle by pointer, touch and the keyboard cross (P, R, V; Space, Enter, Backspace, T, Escape), exact-vertex snapping with a marker and Alt to place freely, "Follow the edge" between two snapped points of one zone or the site boundary (again for the other way round), and Remove hole and Remove part. `tests/unit/zone-drawing.test.mjs`: a traced neighbour shares the very same position arrays (so the same pairs), an unfinished shape never enters the zones, refusals say why, and drawing undoes as one step. `e2e/specimen/zone-drawing.specimen.ts` at desktop-1440 and phone-390: the concave fixture's notch drawn by mouse with a traced edge shares its three points exactly; rectangles by mouse and touch drag align to longitude and latitude; a shape tapped out by touch; holes and parts removed and undone; axe clean while drawing in both palettes. Full specimen suite 60 passed, 6 skipped by design; `pnpm --dir web check` passes; `test:unit` 305 of 306 (the pre-existing collector-rule failure). Review fixes (2026-10-13): a second finger during a point or rectangle drag pinches instead (the point goes back, nothing is drawn), drawing works over plain HTTP on a LAN address, overlapping parts stay filled and hit, outlines keep zoom-dependent precision, and the save queue recovers after a too-large refusal or a failed conflict read; specimen suite 64 passed, 8 skipped by design, `test:unit` 310 of 311.
 
 ### WEB-35: Persist zone drafts with conditional autosave
-Status: todo · Phase 3 · Size L · Depends: BE-22, WEB-33, DB-18 · Blocks: WEB-37, WEB-38
+Status: done (2026-10-13; offline, signed-out and account-change paths unit-tested only, browser runs with WEB-28) · Phase 3 · Size L · Depends: BE-22, WEB-33, DB-18 · Blocks: WEB-37, WEB-38
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-3, WUI-4, WUI-11, WUI-12, 5.8, 5.9, 6.3 and 6.4; [contract](../docs/plan/zone-boundaries/contract.md) manager endpoints and errors; `src/lib/api/{browser,errors}.ts`; `src/features/shell/useLeaveGuard.ts`.
 Do: Add zod schemas, `src/lib/api/zones-browser.ts` with If-Match, ETag and caller abort, the new error kinds with issues and conflict details, the autosave queue wiring, save status, the conflict dialog, validation with the Problems list and canvas markers, the shell navigation guard, the account fence, the mount-time draft GET, and the manager-gated editor route with removal of only the `zones/:path*` redirect (and its REMOVED_ROUTES entry).
 Done when: Against the local API, edits save with increasing revisions, a stale revision opens the conflict dialog with local edits kept, and validation results attach to their exact revision.
 Verify: `pnpm --dir web test:unit`, `pnpm web:check`, and a local-stack Playwright smoke of save, conflict and validate.
+Verified:
+- **Reads and requests:**
+  - Drafts, draft lists, checks and a version's zones are parsed at runtime (`src/lib/zones/schemas.ts`), with strict geometry: a ring that does not close is a failed read.
+  - Requests from the browser (`src/lib/api/zones-browser.ts`) send `If-Match`, read the ETag and `X-Request-Id`, can be ended by the caller, and are refused while another account is signed in.
+- **The editor route:** `…/sites/[site]/zones/drafts/[draft]` is for managers only. A viewer sees "Only project managers can edit zones." and nothing is read for them. A site without zone editing shows its NotAvailable note.
+- **Saving** (`useDraftSaving`): the save queue runs 1.5 s after the last edit, or 10 s at most. It also runs on blur, when the tab is hidden, and when the connection comes back. The draft is read again before any edit is accepted. Responses for an earlier sequence are dropped.
+  - Statuses read as in 5.8.
+  - A 412 opens "Someone else saved this draft" with the edits kept: replace (after a confirmation), load the saved draft, or save the edits as a file.
+  - Checks run after 10 s without changes or from "Check boundaries", and attach to their revision. A stale check reads the draft as a conflict.
+  - Another account signing in replaces the editor and forgets the kept plans.
+- **Leaving:** links, Back, `g` chords and the palette ask "Save your changes first?". The editor's tool keys leave a pending chord alone.
+- **Checks:** unit `zone-drafts` (10 tests; `test:unit` 342 of 342) and `pnpm --dir web check`.
+- **Local stack at desktop-1440 and phone-390** (`e2e/zones-draft.spec.ts`, 12 passed, on a draft each run makes and discards):
+  - Renames save as revisions 2, 3, …
+  - "Checked revision N" appears for the saved revision.
+  - A rename over another manager's newer revision opens the dialog with the typed name kept. "Replace" saves the next revision with it; "Load the saved draft" shows theirs.
+  - Leaving with a change not yet saved asks first, and "Save and leave" saves it before leaving.
+  - A viewer opening an editor address sees the no-access state.
 
 ### WEB-36: Read sites through the single site API
 Status: done (2026-10-13) · Phase 3 · Size M · Depends: BE-22 · Blocks: WEB-37, WEB-39, WEB-42

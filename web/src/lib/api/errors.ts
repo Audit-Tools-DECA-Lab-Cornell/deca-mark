@@ -121,6 +121,8 @@ export type ApiErrorOptions = {
 	readonly detail?: string;
 	readonly issues?: readonly ZoneIssue[];
 	readonly conflict?: ConflictDetails | null;
+	/** DECA Mark's `X-Request-Id` for the answer, for a report. */
+	readonly requestId?: string;
 };
 
 const issueSchema = z.object({
@@ -183,6 +185,8 @@ export class ApiError extends Error {
 	readonly issues: readonly ZoneIssue[];
 	/** What a conflict says about the current state, when it says anything. */
 	readonly conflict: ConflictDetails | null;
+	/** DECA Mark's `X-Request-Id` for the answer, when it sent one. */
+	readonly requestId: string | undefined;
 
 	constructor(code: ApiErrorCode | "unknown", kind: ErrorKind, options: ApiErrorOptions = {}) {
 		super(messageFor(code, options.retryAfter));
@@ -194,6 +198,7 @@ export class ApiError extends Error {
 		this.detail = code === "validation_failed" ? options.detail : undefined;
 		this.issues = options.issues ?? [];
 		this.conflict = options.conflict ?? null;
+		this.requestId = options.requestId;
 	}
 }
 
@@ -213,7 +218,8 @@ export function parseApiError(status: number, body: unknown, headers?: HeaderSou
 		detail: parsed.success ? parsed.data.error.message : undefined,
 		issues: parsed.success ? zoneIssues(parsed.data.error.details) : [],
 		conflict:
-			parsed.success && (status === 409 || status === 412) ? conflictDetails(parsed.data.error.details) : null
+			parsed.success && (status === 409 || status === 412) ? conflictDetails(parsed.data.error.details) : null,
+		requestId: headers?.get("X-Request-Id") ?? undefined
 	};
 	if (status === 401)
 		return new ApiError(parsed.success ? parsed.data.error.code : "token_invalid", "sign-in", options);

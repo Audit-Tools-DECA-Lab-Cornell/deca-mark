@@ -22,6 +22,7 @@ import type { ZonePlanStyle } from "@/components/map/SitePlan";
 import { newId } from "@/lib/ids";
 import { type MapPaletteName, useMapPalette } from "@/lib/map-palette";
 import { type PlanPoint, pointInParts, type ProjectedSite, toPlan, zoneBounds } from "@/lib/plan";
+import { chordPending } from "@/lib/shortcuts";
 import { type DraftZone, partsOf, type PolygonRings, type Position, ringAt, vertexAt } from "@/lib/zones/geometry";
 import { createSnapIndex, type SnapCandidate, snapCandidates } from "@/lib/zones/hints";
 
@@ -70,6 +71,14 @@ export type ZoneEditorProps = {
 	mapSubtitle: string;
 	palette?: MapPaletteName;
 	onZonesChange?: (zones: readonly DraftZone[]) => void;
+	/** What DECA Mark found checking the saved draft, listed after the browser's own findings. */
+	checks?: {
+		readonly problems: readonly Omit<EditorProblem, "number">[];
+		/** "Checked revision 6 at 11:33 · 2 problems", or null before the first check. */
+		readonly line: string | null;
+		/** "Check boundaries". */
+		readonly action?: ReactNode;
+	};
 	/** Content above the islands, such as a note about what the page is. */
 	children?: ReactNode;
 };
@@ -176,6 +185,7 @@ export function ZoneEditor({
 	mapSubtitle,
 	palette,
 	onZonesChange,
+	checks,
 	children
 }: ZoneEditorProps) {
 	const [state, dispatch] = useReducer(editorReducer, undefined, () =>
@@ -210,9 +220,11 @@ export function ZoneEditor({
 	const drawing = state.drawing;
 	const trace = traceOption(drawing, state.zones, siteBoundary);
 
+	// A drag reports its zones once, when it ends: a save never carries a point mid-drag.
+	const reported = state.gesture ? null : state.zones;
 	useEffect(() => {
-		onZonesChange?.(state.zones);
-	}, [state.zones, onZonesChange]);
+		if (reported) onZonesChange?.(reported);
+	}, [reported, onZonesChange]);
 
 	/* ── Drawing the draft ─────────────────────────────────────────────── */
 
@@ -247,7 +259,15 @@ export function ZoneEditor({
 	/* ── Problems: checked on settled zones, not on every frame of a drag ── */
 
 	const settled = gesture ? gesture.before : state.zones;
-	const problems = useMemo(() => editorProblems(settled, siteBoundary), [settled, siteBoundary]);
+	const checked = checks?.problems;
+	const problems = useMemo(
+		() =>
+			[...editorProblems(settled, siteBoundary), ...(checked ?? [])].map((problem, index) => ({
+				...problem,
+				number: index + 1
+			})),
+		[settled, siteBoundary, checked]
+	);
 	const problemCounts = useMemo(() => {
 		const counts = new Map<string, number>();
 		for (const problem of problems)
@@ -355,6 +375,8 @@ export function ZoneEditor({
 
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
 		if ((event.target as HTMLElement).closest(TYPING)) return;
+		// The second key of a `g` chord belongs to the chord, never to a tool.
+		if (chordPending()) return;
 		const mod = event.metaKey || event.ctrlKey;
 		const key = event.key.toLowerCase();
 		if (mod && key === "z") {
@@ -596,7 +618,12 @@ export function ZoneEditor({
 							}}
 						/>
 					)}
-					<ProblemsIsland problems={problems} onShow={showProblem} />
+					<ProblemsIsland
+						problems={problems}
+						onShow={showProblem}
+						checkedLine={checks?.line ?? null}
+						action={checks?.action}
+					/>
 				</div>
 			</div>
 		</div>

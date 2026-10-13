@@ -19,6 +19,8 @@ export function planKey(userId: string | null, projectId: string, packageId: str
 export type PlanMemo = {
 	recall(key: string | null): ProjectedSite | null;
 	remember(key: string | null, site: ProjectedSite): void;
+	/** Forgets every plan: another account signed in, in this tab or another one. */
+	clear(): void;
 };
 
 export function createPlanMemo(limit = PLAN_MEMO_LIMIT): PlanMemo {
@@ -38,6 +40,9 @@ export function createPlanMemo(limit = PLAN_MEMO_LIMIT): PlanMemo {
 			kept.delete(key);
 			kept.set(key, site);
 			while (kept.size > limit) kept.delete(kept.keys().next().value!);
+		},
+		clear() {
+			kept.clear();
 		}
 	};
 }

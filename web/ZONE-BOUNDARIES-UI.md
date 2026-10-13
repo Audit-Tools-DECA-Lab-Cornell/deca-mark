@@ -394,6 +394,16 @@ The queue is a pure reducer (`save-queue.ts`) plus a thin effect hook, so every 
   - `payload_too_large` gets a size kind;
   - `details.issues` and the conflict details are kept in `ApiError` and in a serializable form for Server Action results.
 
+Amended 2026-10-13 (WEB-35), as built:
+- **Error kinds:** `ErrorKind` keeps its three kinds. The editor reads each failure's status, code, issues, `Retry-After` and `X-Request-Id` through `queueFailure` (`features/zones/editor/failure.ts`); conflict and size are the queue's pauses. `ApiError` now keeps `requestId`. A session that ended before a request was sent counts as signed out, never as a lost answer.
+- **Transport:** browser-direct as WUI-3 planned, confirmed by a real Chromium preflight with `If-Match` against the local API. `browserApi` takes the caller's signal (combined with the timeout through `AbortSignal.any`) and `expectUser`: a request is refused before sending when another account is signed in.
+- **The 412 dialog** names the zones that differ ("Zones that differ: North meadow and Slide") in place of a map overlay of the saved draft. The overlay waits for the WEB-28 acceptance pass. Its choices are as 5.9, with "Decide later", which leaves a "Not saved" note with "Choose what to keep".
+- **A 409 (published or discarded elsewhere)** replaces the editor with the outcome, "Open the site" and "Save my edits as a file". "Open v2" and "Start a draft from v2" come with the Zones page (WEB-37).
+- **Header and checks:** "Review and publish" and "Discard draft" come with WEB-38. "Check boundaries" sits in the Problems island. A check also runs after 10 s without changes, and its line reads "Checked revision 6 at 11:33 · 2 problems · 1 warning". When the draft has changed since, it adds "the draft has changed since, so it is checked again once saved".
+- **Leaving and shell navigation:** WUI-11's guard is a small module (`features/shell/navigationGuard.ts`) rather than a context. `useLeaveGuard` holds shell navigation while it is on, and `useShortcuts` and the command palette go through `guardedPush`. The pending `g` chord lives in `lib/shortcuts.ts`, so the editor leaves the chord's second key alone. "Save and leave" keeps the guard on until the save lands, then leaves.
+- **Saving a drag:** a drag reports its zones once, when it ends, so a save never carries a point mid-drag.
+- **Routes:** only the `zones/:path*` redirect is gone. Unknown paths under `zones/` are not-found pages. `…/zones` still redirects to the site until WEB-37.
+
 ### 6.5 Capability, not flags
 
 Editing appears only when `zone_editing_available` is true for this manager on this site, and the server re-checks every write. There are no client feature flags and no environment toggles. Before BE-18 the pages show the NotAvailable state from section 4.
