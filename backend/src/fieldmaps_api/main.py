@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import ClassVar, Literal
 
+import anyio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from jwt import PyJWKClient
@@ -15,6 +16,9 @@ from fieldmaps_api.body_limits import BodySizeMiddleware
 from fieldmaps_api.config import Settings, read_local_settings
 from fieldmaps_api.database import database_connection
 from fieldmaps_api.deps import Authentication
+from fieldmaps_api.email.config import EmailSettings
+from fieldmaps_api.email.worker import assert_configured as assert_email_configured
+from fieldmaps_api.email.worker import run as email_worker
 from fieldmaps_api.errors import ERROR_RESPONSES, error_response, register_error_handlers
 from fieldmaps_api.observability import (
     RequestIdMiddleware,
@@ -23,6 +27,7 @@ from fieldmaps_api.observability import (
 )
 from fieldmaps_api.routers import (
     collection,
+    emails,
     forms,
     identity,
     observation_analysis,
@@ -41,11 +46,14 @@ class HealthResponse(BaseModel):
 def create_app(
     settings: Settings | None = None,
     verifier: TokenVerifier | None = None,
+    email_settings: EmailSettings | None = None,
 ) -> FastAPI:
     configuration = settings or Settings()
+    mail = email_settings or EmailSettings()
     connection = database_connection(configuration)
     engine = create_async_engine(
         connection.url,
+        hide_parameters=True,
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=0,
@@ -75,10 +83,17 @@ def create_app(
                 # Inside the guard: a malformed SENTRY_DSN fails here, after the log handlers exist.
                 configure_observability()
                 await readiness.assert_safe_role(engine)
+                await assert_email_configured(engine, mail)
             except Exception as error:
                 log_startup_failure(error)
                 raise
-            yield
+            async with anyio.create_task_group() as workers:
+                if mail.enabled and not mail.sandbox:
+                    workers.start_soon(email_worker, sessions, mail)
+                try:
+                    yield
+                finally:
+                    workers.cancel_scope.cancel()
         finally:
             await engine.dispose()
 
@@ -116,7 +131,8 @@ def create_app(
     async def ready() -> readiness.ReadyResponse:
         return await readiness.check_ready(engine, jwks)
 
-    app.include_router(tenancy.create_router(sessions, authenticate))
+    app.include_router(tenancy.create_router(sessions, authenticate, mail))
+    app.include_router(emails.create_router(sessions, authenticate, mail))
     app.include_router(identity.create_router(sessions, authenticate, configuration))
     app.include_router(observation_analysis.create_router(sessions, authenticate))
     app.include_router(collection.create_router(sessions, authenticate))
@@ -136,4 +152,4 @@ def create_app(
 
 
 def create_app_from_config() -> FastAPI:
-    return create_app(read_local_settings())
+    return create_app(read_local_settings(), email_settings=EmailSettings.from_environment())

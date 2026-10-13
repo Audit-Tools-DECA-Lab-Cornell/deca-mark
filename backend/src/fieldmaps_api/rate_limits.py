@@ -32,6 +32,7 @@ class Policy:
 
 ORGANIZATIONS: Final = Policy("organizations", 5, 3600)
 INVITATIONS: Final = Policy("invitations", 60, 3600)
+EMAILS: Final = Policy("project-emails", 60, 3600)
 REDEMPTION: Final = Policy("invitation-access", 10, 600)
 DELETION: Final = Policy("account-deletion", 3, 3600)
 ZONE_VALIDATION: Final = Policy("zone-validation", 30, 60)
@@ -45,6 +46,7 @@ def policy_for(method: str, path: str) -> Policy | None:
     if method != "POST":
         return None
     policies = (
+        (r"/v1/projects/[^/]+/emails", EMAILS),
         (r"/v1/projects/[^/]+/sites/[^/]+/zone-drafts/[^/]+/validate", ZONE_VALIDATION),
         (
             r"/v1/projects/[^/]+/(?:sites/[^/]+/zone-drafts/[^/]+/publish|packages)",

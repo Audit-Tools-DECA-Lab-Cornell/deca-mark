@@ -56,6 +56,7 @@ class Invitation(BaseModel):
 class InvitationCreated(Invitation):
     token: str
     code: str
+    email_delivery: Literal["queued", "not_requested", "unavailable"] = "not_requested"
 
 
 class InvitationCredential(Input):

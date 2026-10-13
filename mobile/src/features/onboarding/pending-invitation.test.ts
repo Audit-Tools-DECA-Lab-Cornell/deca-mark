@@ -27,7 +27,8 @@ const {
   takeFreshInvitation,
 } = await import("./pending-invitation-store");
 
-const NOW = Date.parse("2026-10-05T12:00:00Z");
+// Keep the in-memory store tests within the real-time seven-day expiry window.
+const NOW = Date.now();
 
 describe("join codes from links", () => {
   it("reads the code from every form the app is opened with", () => {

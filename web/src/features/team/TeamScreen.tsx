@@ -54,8 +54,8 @@ export type TeamScreenProps = {
 
 /**
  * Project team (project-04, project-08): who is on the project and what each person can do, the
- * invitations still waiting, and Invite, which makes a link and a join code. DECA Mark does not send
- * email, so the manager sends them. Every list is a real read; a read that failed says so instead of
+ * invitations still waiting, and Invite, which makes a link and a join code and requests delivery
+ * when an email address is given. Every list is a real read; a read that failed says so instead of
  * showing nobody.
  */
 export function TeamScreen({
