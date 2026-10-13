@@ -27,6 +27,8 @@ export type StartDraftProps = {
 	restoreFrom?: string | null;
 	/** The drafts' address: the editor opens at `<draftsHref>/<draft>`. */
 	draftsHref: string;
+	/** What opens on the new draft: the editor, or its review (a restored version is reviewed first). */
+	opens?: "editor" | "review";
 };
 
 /**
@@ -45,7 +47,8 @@ export function StartDraft({
 	description,
 	note = null,
 	restoreFrom = null,
-	draftsHref
+	draftsHref,
+	opens = "editor"
 }: StartDraftProps) {
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
@@ -63,7 +66,7 @@ export function StartDraft({
 				setProblem(result.message);
 				return;
 			}
-			router.push(`${draftsHref}/${result.draftId}`);
+			router.push(`${draftsHref}/${result.draftId}${opens === "review" ? "/publish" : ""}`);
 		} catch {
 			setProblem(
 				"DECA Mark could not confirm whether the draft was started. Try again: it starts one draft at most."

@@ -85,3 +85,20 @@ export async function startDraftAction(
 		return { status: "failed", message: failedWrite(nothing, failure) };
 	}
 }
+
+/**
+ * After a draft is published or discarded: the site, its zones, its drafts and its packages are read again
+ * on the next page (WUI-10). Autosave never calls this.
+ */
+export async function zonesChangedAction(
+	rawScope: { org: string; project: string },
+	rawSiteCode: string
+): Promise<void> {
+	const scope = scopeSchema.parse(rawScope);
+	const siteCode = z.string().min(1).max(200).parse(rawSiteCode);
+	const base = `/o/${scope.org}/p/${scope.project}`;
+	revalidatePath(`${base}/sites/${siteCode}`, "layout");
+	revalidatePath(`${base}/sites`);
+	revalidatePath(`${base}/data`);
+	revalidatePath(`${base}/qgis`);
+}

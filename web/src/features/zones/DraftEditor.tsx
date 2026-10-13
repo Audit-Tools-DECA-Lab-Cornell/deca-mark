@@ -16,6 +16,7 @@ import type { ProjectedSite } from "@/lib/plan";
 import { clock as makeClock } from "@/lib/time";
 import { type DraftZone, type PolygonRings, structureIssues } from "@/lib/zones/geometry";
 
+import { DiscardDraft } from "./DiscardDraft";
 import { checkIsCurrent, checkLine, checkProblems, checkUnavailable } from "./editor/checks";
 import { differingZones, draftFileName, draftGeoJson, nameList } from "./editor/conflict";
 import { blockingReason, editorProblems } from "./editor/problems";
@@ -70,8 +71,10 @@ export function DraftEditor(props: DraftEditorProps) {
 
 	const siteHref = projectHref(org, project, `sites/${siteCode}`);
 	const unsaved = isDirty(queue) || queue.inFlight !== null;
-	// While "Save and leave" waits, the guard stays on: letting go first would step Back over the leave.
-	const guard = useLeaveGuard(saving.ready && !saving.fenced && (unsaved || leaveFor !== null));
+	// "Review and publish" saves first, then opens the review.
+	const [toReview, setToReview] = useState(false);
+	// While "Save and leave" or the review waits, the guard stays on: letting go first would step Back over it.
+	const guard = useLeaveGuard(saving.ready && !saving.fenced && (unsaved || leaveFor !== null || toReview));
 	const status = saveStatus(queue, iso => clock.time(iso));
 	const pause = queue.pause;
 
@@ -84,6 +87,13 @@ export function DraftEditor(props: DraftEditorProps) {
 	useEffect(() => {
 		if (savingToLeave && !unsaved) guard.leave();
 	}, [savingToLeave, unsaved, guard]);
+
+	const zonesHref = `${siteHref}/zones`;
+	const reviewHref = `${zonesHref}/drafts/${address.draftId}/publish`;
+	const savingToReview = toReview && pause === null;
+	useEffect(() => {
+		if (savingToReview && !unsaved) guard.go(reviewHref);
+	}, [savingToReview, unsaved, guard, reviewHref]);
 
 	const { edited, flush } = saving;
 	const changeNote = queue.local.changeNote;
@@ -136,6 +146,44 @@ export function DraftEditor(props: DraftEditorProps) {
 				{ label: "Draft" }
 			]}
 			title={`Edit zones · ${siteName}`}
+			actions={
+				saving.ready && pause?.kind !== "closed" ? (
+					<>
+						<DiscardDraft
+							org={org}
+							project={project}
+							siteCode={siteCode}
+							address={address}
+							etag={queue.acknowledged.etag}
+							zonesHref={zonesHref}
+							disabled={
+								queue.inFlight || queue.reading
+									? "Discarding waits until the save in progress finishes."
+									: null
+							}
+							onDone={guard.go}
+						/>
+						<Button
+							variant="ink"
+							icon="arrow-right"
+							busy={savingToReview}
+							busyLabel="Saving…"
+							disabled={queue.invalid !== null || (pause !== null && pause.kind !== "waiting")}
+							disabledReason={
+								queue.invalid ? `Not saved yet · ${queue.invalid}` : pause ? status.text : undefined
+							}
+							onClick={() => {
+								if (!unsaved) guard.go(reviewHref);
+								else {
+									setToReview(true);
+									flush();
+								}
+							}}>
+							Review and publish
+						</Button>
+					</>
+				) : undefined
+			}
 			lead={
 				<>
 					<span className="block">{`A draft based on map v${baseVersion}. Changes save to the draft a moment after you make them.`}</span>

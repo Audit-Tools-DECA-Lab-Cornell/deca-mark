@@ -5,6 +5,7 @@ import { type ZoneDraft, zoneDraftSchema, type ZoneValidation, zoneValidationSch
 
 import { AccountChangedError, browserApi } from "./browser";
 import { ApiError, apiRequestError, parseApiError } from "./errors";
+import { type Publication, publicationSchema } from "./sites";
 
 /**
  * A draft's requests from the browser (WUI-3): read, replace, check and discard, each sent directly to the
@@ -97,6 +98,35 @@ export async function validateZoneDraft(
 		);
 		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
 		const parsed = zoneValidationSchema.safeParse(data);
+		if (!parsed.success) throw new ApiError("unknown", "retry", { status: response.status });
+		return parsed.data;
+	} catch (error) {
+		throw failureOf(error);
+	}
+}
+
+/**
+ * Publishes the draft at `etag` as the site's next version, if the current version is still
+ * `expectedCurrentPackageId`. The same `requestId` again returns the first answer (200, `replayed`), which
+ * may no longer be the current version.
+ */
+export async function publishZoneDraft(
+	address: DraftAddress,
+	etag: string,
+	body: { readonly requestId: string; readonly expectedCurrentPackageId: string },
+	signal?: AbortSignal
+): Promise<Publication> {
+	try {
+		const api = browserApi({ signal, expectUser: address.userId, timeoutMs: 60_000 });
+		const { response, data, error } = await api.POST(
+			"/v1/projects/{project_id}/sites/{site_id}/zone-drafts/{draft_id}/publish",
+			{
+				params: { path: path(address), header: { "if-match": etag } },
+				body: { request_id: body.requestId, expected_current_package_id: body.expectedCurrentPackageId }
+			}
+		);
+		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
+		const parsed = publicationSchema.safeParse(data);
 		if (!parsed.success) throw new ApiError("unknown", "retry", { status: response.status });
 		return parsed.data;
 	} catch (error) {

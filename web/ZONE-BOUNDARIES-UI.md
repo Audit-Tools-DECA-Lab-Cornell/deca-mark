@@ -304,6 +304,21 @@ Submitting:
 - Unconfirmed: "DECA Mark could not confirm whether this was published. Nothing is lost." Then automatically GET the draft. If its state is published, show that result. Otherwise offer "Try again", which reuses the same `request_id`.
 - 422 issues: return to the problems list. 412: reload the draft and validate again.
 
+Amended 2026-10-13 (WEB-38), as built:
+- **Map:** the draft's zones are drawn over the base version's background, and zones whose boundary changed, or that are new, are hatched ("Hatched: a boundary changed since v1, or a new zone."). The base boundaries are not drawn under them; that overlay waits for the WEB-28 acceptance pass, with the 412 one.
+- **Readiness and changes:** the check runs half a second after the review opens, and again after each saved change to the note. Readiness and the changes list (DECA Mark's `zones[].change`, changed zones first) are for that revision only.
+- **Publish and its answers:**
+  - The button reads "Publish v3" (current + 1). It is enabled only for a saved, checked, ready revision of a draft based on the current version, with the box ticked.
+  - A 201 opens the Zones page with the toast.
+  - A 200 replay shows its result on the page.
+  - No answer, or a 5xx, reads the draft. If it is published, the same request is sent again (same ID, same revision's ETag), which returns the first answer. Otherwise it offers Try again with that same request.
+  - Any 409 reads the draft first: published as above, discarded as its outcome, and otherwise the publication conflict copy with "Start a draft from v2" and "Save this draft as a file".
+  - A 412 reads and checks the draft again.
+  - A 429 says "Publishing paused for 20 s. Nothing was published."
+- **Discard:** offered in the editor, on the review page and on each row of the Zones page's drafts list. It sends DELETE with the draft's ETag, then `zonesChangedAction` revalidates the site's paths.
+- **The editor's "Review and publish"** saves first and then opens the review. A restored version opens straight on its review page, with the note "Restores v1 boundaries".
+- **Fixed on the way:** the editor read its draft again whenever the page re-rendered with new props, which could have replaced edits not yet saved. It now reads the draft once per editor.
+
 ### 5.11 Uploading a QGIS package
 
 Every package upload goes through the same activation rules as publishing (contract "QGIS upload"). Missing, duplicate or unused identity mappings return 422 `validation_failed` with an `identity_conflict` issue. Missing `expected_current_package_id` returns 428; the first upload must explicitly send null. `UploadStep` gains a mapping step. On a site's first upload there are no current zones, so every feature becomes a new zone and the step only asks for codes where the source ID does not fit.

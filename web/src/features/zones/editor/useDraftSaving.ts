@@ -144,6 +144,8 @@ function createSaver(address: DraftAddress, initial: SavedDraft) {
 	}
 
 	return {
+		/** The draft this saver writes to, for the editor's whole life (it is keyed by it). */
+		address,
 		get state() {
 			return state;
 		},
@@ -167,7 +169,16 @@ function createSaver(address: DraftAddress, initial: SavedDraft) {
 	};
 }
 
-export function useDraftSaving(address: DraftAddress, initial: SavedDraft): DraftSaving {
+export type DraftSavingOptions = {
+	/** How long a saved, unchanged revision waits before DECA Mark checks it; the review checks at once. */
+	readonly checkDelayMs?: number;
+};
+
+export function useDraftSaving(
+	address: DraftAddress,
+	initial: SavedDraft,
+	{ checkDelayMs = CHECK_IDLE_MS }: DraftSavingOptions = {}
+): DraftSaving {
 	const [saver] = useState(() => createSaver(address, initial));
 	const [{ queue, fenced }, setState] = useState<SaverState>(saver.state);
 	const [ready, setReady] = useState(false);
@@ -189,9 +200,11 @@ export function useDraftSaving(address: DraftAddress, initial: SavedDraft): Draf
 
 	/* ── The first read, before anything is accepted ───────────────────── */
 
+	// Read once per attempt, never again because the page re-rendered: a second read would adopt the saved
+	// draft over edits not saved yet.
 	useEffect(() => {
 		const { signal, done } = saver.track();
-		getZoneDraft(address, signal)
+		getZoneDraft(saver.address, signal)
 			.then(read => {
 				saver.send({ type: "mounted", draft: savedDraft(read.draft) });
 				setMountProblem(null);
@@ -203,7 +216,7 @@ export function useDraftSaving(address: DraftAddress, initial: SavedDraft): Draf
 				setMountProblem(apiRequestError(error).message);
 			})
 			.finally(done);
-	}, [saver, address, mountAttempt]);
+	}, [saver, mountAttempt]);
 
 	/* ── When to send: leaving the tab, the connection, a wait, the account ── */
 
@@ -238,11 +251,11 @@ export function useDraftSaving(address: DraftAddress, initial: SavedDraft): Draf
 		}
 		const { data } = supabase.auth.onAuthStateChange((event, session) => {
 			if (event !== "SIGNED_IN" && event !== "TOKEN_REFRESHED") return;
-			if (session && session.user.id !== address.userId) saver.fence();
+			if (session && session.user.id !== saver.address.userId) saver.fence();
 			else if (session) saver.send({ type: "signed-in" });
 		});
 		return () => data.subscription.unsubscribe();
-	}, [saver, address.userId]);
+	}, [saver]);
 
 	const waiting = queue.pause?.kind === "waiting" ? queue.pause.seconds : null;
 	useEffect(() => {
@@ -260,7 +273,7 @@ export function useDraftSaving(address: DraftAddress, initial: SavedDraft): Draf
 		const { signal, done } = saver.track();
 		setChecking(true);
 		setCheckProblem(null);
-		validateZoneDraft(address, etag, signal)
+		validateZoneDraft(saver.address, etag, signal)
 			.then(validation => {
 				// A check for a revision the draft has left behind is dropped; the next one follows.
 				if (validation.revision !== revision || saver.state.queue.acknowledged.revision !== revision) return;
@@ -288,16 +301,16 @@ export function useDraftSaving(address: DraftAddress, initial: SavedDraft): Draf
 				done();
 				setChecking(false);
 			});
-	}, [saver, address, checkWaitUntil]);
+	}, [saver, checkWaitUntil]);
 
 	const checkable = ready && !fenced && canCheck(queue) && check?.revision !== queue.acknowledged.revision;
 	const revision = queue.acknowledged.revision;
 	useEffect(() => {
 		if (!checkable || checking) return;
-		const delay = Math.max(CHECK_IDLE_MS, checkWaitUntil - Date.now());
+		const delay = Math.max(checkDelayMs, checkWaitUntil - Date.now());
 		const timer = window.setTimeout(runCheck, delay);
 		return () => window.clearTimeout(timer);
-	}, [checkable, checking, checkWaitUntil, runCheck, revision]);
+	}, [checkable, checking, checkWaitUntil, runCheck, revision, checkDelayMs]);
 
 	const edited = useCallback((local: DraftSnapshot, invalid: string | null) => saver.edited(local, invalid), [saver]);
 	const flush = useCallback(() => saver.flush(), [saver]);

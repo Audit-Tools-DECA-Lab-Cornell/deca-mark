@@ -38,6 +38,8 @@ export type DraftRow = {
 	readonly edited: string;
 	readonly revision: number;
 	readonly owner: string;
+	/** The draft's ETag as listed, for discarding it from the list. */
+	readonly etag: string;
 };
 
 function who(name: string | null, mine: boolean): string {
@@ -64,7 +66,8 @@ export function draftRows(
 				stale,
 				edited: `Edited ${context.clock.dayTime(draft.updated_at)} by ${who(draft.updated_by_name, draft.updated_by === context.userId)}`,
 				revision: draft.revision,
-				owner: mine ? "Your draft" : `${who(draft.created_by_name, false)}’s draft`
+				owner: mine ? "Your draft" : `${who(draft.created_by_name, false)}’s draft`,
+				etag: draft.etag
 			};
 		});
 }

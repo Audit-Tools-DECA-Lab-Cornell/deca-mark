@@ -74,13 +74,13 @@ test("a manager finds the drafts, starts one and restores an earlier version", a
 			await expect(main.getByRole("region", { name: "Zones of v1" })).toContainText(V1_NAME);
 		});
 
-		await test.step("restoring v1 starts a draft from v2 with v1's boundaries", async () => {
+		await test.step("restoring v1 starts a draft from v2 with v1's boundaries, opened for review", async () => {
 			const versions = main.getByRole("region", { name: "Versions" });
 			await versions.getByRole("button", { name: "Restore v1 boundaries in a new draft" }).click();
 			const dialog = page.getByRole("dialog", { name: "Restore v1 boundaries?" });
 			await dialog.getByRole("button", { name: "Start the draft" }).click();
-			await expect(page).toHaveURL(/\/zones\/drafts\/[0-9a-f-]{36}$/, { timeout: 30_000 });
-			const id = draftAt()!;
+			await expect(page).toHaveURL(/\/zones\/drafts\/[0-9a-f-]{36}\/publish$/, { timeout: 30_000 });
+			const id = new URL(page.url()).pathname.match(/\/drafts\/([0-9a-f-]{36})\/publish$/)![1]!;
 			started.push(id);
 			const { projectId, siteId } = zoneFixture();
 			const draft = await (
@@ -88,7 +88,8 @@ test("a manager finds the drafts, starts one and restores an earlier version", a
 			)<ZoneDraftRead>("GET", `/v1/projects/${projectId}/sites/${siteId}/zone-drafts/${id}`);
 			expect(draft.change_note).toBe("Restores v1 boundaries");
 			expect(draft.zones.map(zone => zone.zone_label)).toContain(V1_NAME);
-			await expect(page.getByRole("listbox", { name: "Zones" })).toContainText(V1_NAME);
+			await expect(page.getByLabel("Change note")).toHaveValue("Restores v1 boundaries");
+			await expect(main.getByRole("region", { name: "Changes" })).toContainText(V1_NAME, { timeout: 30_000 });
 		});
 	} finally {
 		await discard(started);

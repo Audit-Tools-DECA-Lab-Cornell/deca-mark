@@ -611,12 +611,35 @@ Verified:
   - Also `zones-draft`, `sites`, `removed-routes` and the honesty scan of every route (118 passed).
 
 ### WEB-38: Build zone publication review and discard
-Status: todo · Phase 3 · Size L · Depends: WEB-35, WEB-37 · Blocks: WEB-28
+Status: done (2026-10-13) · Phase 3 · Size L · Depends: WEB-35, WEB-37 · Blocks: WEB-28
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-6, 5.7, 5.10 and 6.7; `src/features/forms/PublishScreen.tsx`.
 Do: Add the publish page: readiness for the exact revision, changes against the base, base versus new map, observer effect, forms, change note, confirmation, request ID kept per revision, lost-response check, replay display, publication conflict recovery and revalidation; add discard with confirmation.
 Done when: Publish, replay and conflict e2e cases pass on the local stack; no screen claims a replayed result is current.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `zones-publish.spec.ts` and `zones-conflict.spec.ts`.
+Verified:
+- **The review page** `…/zones/drafts/[draft]/publish` (`src/features/zones/publish/{PublishReview.tsx,model.ts}`) shows:
+  - DECA Mark's check of the exact revision ("Ready to publish: revision 3 has no problems", or the problems with "Fix in the editor"), and warnings;
+  - the changes against the base, from `zones[].change`;
+  - the plan with changed and new zones hatched;
+  - what observers experience, and the forms;
+  - the change note, which saves a revision and is checked again;
+  - the confirmation, and primary "Publish v2".
+- **Request IDs:** one per revision, kept in `sessionStorage`.
+- **Answers:**
+  - A 201 opens the Zones page with "v2 is published."
+  - A replay never claims to be current unless it is (`publishedLine`).
+  - A lost answer reads the draft and sends the same request again, so it publishes once.
+  - A publication made elsewhere meanwhile says "Not published. v2 was published while you were reviewing…", with the draft kept and "Start a draft from v2".
+  - 412, 422 and 429 read as UI plan 5.10.
+- **Discard** (editor, review, drafts list) asks first, then sends DELETE with If-Match.
+- **Checks:** unit `zone-publish` (3 tests; `test:unit` 350 of 350) and `pnpm --dir web check`.
+- **Local stack at desktop-1440 and phone-390** (`zones-publish.spec.ts`, on sites the run makes, so the fixture site keeps v1 and v2):
+  - start, rename, review (revisions 2 and 3 checked), note, confirm and publish v2 with its note;
+  - an answer aborted after DECA Mark received the request, with the same request sent again: "already published as v2 · v2 is the current version" and exactly two packages;
+  - a version published elsewhere during review refused with the draft still open;
+  - Discard asking first, then the draft discarded.
+  - `zones-conflict.spec.ts` is covered by `zones-draft.spec.ts` (two writers on one draft) and the publish conflict step here. Two managers publishing in two browsers, and two tabs of one manager, run with WEB-28.
 
 ### WEB-39: Read observations with server filters and paging
 Status: done (2026-10-13) · Phase 3 · Size L · Depends: BE-22, WEB-36 · Blocks: WEB-40, WEB-41

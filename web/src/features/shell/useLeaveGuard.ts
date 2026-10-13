@@ -35,6 +35,8 @@ export function useLeaveGuard(dirty: boolean): {
 	leavingTo: string | null;
 	stay: () => void;
 	leave: () => void;
+	/** The page's own way out (its changes are saved, or it means to drop them): goes to `href` without asking. */
+	go: (href: string) => void;
 } {
 	const router = useRouter();
 	const [leavingTo, setLeavingTo] = useState<string | null>(null);
@@ -108,5 +110,19 @@ export function useLeaveGuard(dirty: boolean): {
 		if (to) router.replace(to);
 	}, [leavingTo, router]);
 
-	return { leavingTo, stay, leave };
+	const go = useCallback(
+		(href: string) => {
+			setLeavingTo(null);
+			if (!dirty) {
+				router.push(href);
+				return;
+			}
+			// Over the copy, so Back from the next page returns here in one step; the copy is not stepped back over.
+			released.current = true;
+			router.replace(href);
+		},
+		[dirty, router]
+	);
+
+	return { leavingTo, stay, leave, go };
 }

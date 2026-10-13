@@ -15,6 +15,7 @@ import { plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
 import type { Failure } from "@/lib/workspace/types";
 
+import { DiscardDraft } from "./DiscardDraft";
 import type { DraftRow, VersionRow, ZoneEntry, ZoneTableRow } from "./model";
 import { SaveDraftFile } from "./SaveDraftFile";
 import { StartDraft } from "./StartDraft";
@@ -241,15 +242,31 @@ export function ZonesScreen(props: ZonesScreenProps) {
 											Open
 										</ButtonLink>
 										{props.userId && (
-											<SaveDraftFile
-												address={{
-													projectId: props.projectId,
-													siteId: site.siteId,
-													draftId: row.draftId,
-													userId: props.userId
-												}}
-												siteCode={site.code}
-											/>
+											<>
+												<SaveDraftFile
+													address={{
+														projectId: props.projectId,
+														siteId: site.siteId,
+														draftId: row.draftId,
+														userId: props.userId
+													}}
+													siteCode={site.code}
+												/>
+												<DiscardDraft
+													org={org}
+													project={project}
+													siteCode={site.code}
+													address={{
+														projectId: props.projectId,
+														siteId: site.siteId,
+														draftId: row.draftId,
+														userId: props.userId
+													}}
+													etag={row.etag}
+													zonesHref={zonesHref}
+													size="sm"
+												/>
+											</>
 										)}
 									</div>
 								</li>
@@ -313,6 +330,7 @@ export function ZonesScreen(props: ZonesScreenProps) {
 											note={props.othersNote}
 											restoreFrom={row.packageId}
 											draftsHref={draftsHref}
+											opens="review"
 										/>
 									)}
 								</div>
