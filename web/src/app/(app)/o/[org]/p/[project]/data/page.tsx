@@ -10,7 +10,8 @@ import {
 	planSiteCode,
 	viewFilters,
 	viewQuery,
-	zoneOptions
+	zoneOptions,
+	zoneVersions
 } from "@/features/data/view";
 import type { ObservationPage } from "@/lib/api/types";
 import {
@@ -63,8 +64,7 @@ export default async function DataPage({ params, searchParams }: Props) {
 		packageId = history.data.packages.find(item => item.package_version === view.version)?.package_id ?? null;
 		if (!packageId) versionNote = `${site.name} has no map v${view.version}, so every version is shown.`;
 	}
-	const filters = viewFilters(view, { siteId: site?.site_id ?? null, packageId }, projectClock);
-	const effective = packageId ? view : { ...view, version: null };
+	let filters = viewFilters(view, { siteId: site?.site_id ?? null, packageId }, projectClock);
 
 	// A first day after the last matches nothing: there is nothing to ask for.
 	const empty: ObservationPage = {
@@ -73,7 +73,7 @@ export default async function DataPage({ params, searchParams }: Props) {
 		total_matching: 0,
 		generated_at: new Date().toISOString()
 	};
-	const [list, zoneCounts] = await Promise.all([
+	const [first, zoneCounts] = await Promise.all([
 		daysBackwards(view)
 			? Promise.resolve({ ok: true as const, data: empty })
 			: settle(listObservations(project.id, filters)),
@@ -82,7 +82,16 @@ export default async function DataPage({ params, searchParams }: Props) {
 			? settle(summarizeObservations(project.id, { ...filters, zoneIds: [], packageId: undefined }))
 			: null
 	]);
+	// A map version that does not have a chosen zone is refused; every version is shown instead, and says so.
+	let list = first;
+	if (!list.ok && packageId && list.failure.kind === "rejected") {
+		versionNote = `Map v${view.version} does not have ${view.zones.length === 1 ? "this zone" : "every chosen zone"}, so every version is shown.`;
+		packageId = null;
+		filters = viewFilters(view, { siteId: site?.site_id ?? null, packageId }, projectClock);
+		list = await settle(listObservations(project.id, filters));
+	}
 	if (!list.ok) return <LoadFailure failure={list.failure} what="the observations" />;
+	const effective = packageId ? view : { ...view, version: null };
 
 	// Each record is read with the form version it was collected with, never the newest one.
 	const formVersions = [...new Set(list.data.items.map(item => item.form_version))];
@@ -124,14 +133,13 @@ export default async function DataPage({ params, searchParams }: Props) {
 		}
 	}
 
-	// The site's map versions, for "One map version": those its records were collected on, and its current one.
+	// "One map version" offers the versions that have every chosen zone: those the zones' records were
+	// collected on, and the current one when it still has them all.
 	const versions = site
-		? [
-				...new Set([
-					...(zoneCounts?.ok ? zoneCounts.data.groups.map(group => group.package_version) : []),
-					...(site.package ? [site.package.package_version] : [])
-				])
-			].sort((a, b) => a - b)
+		? zoneVersions(zoneCounts?.ok ? zoneCounts.data.groups : [], view.zones, {
+				version: site.package?.package_version ?? null,
+				zoneIds: site.zones.map(zone => zone.zone_id)
+			})
 		: [];
 
 	return (

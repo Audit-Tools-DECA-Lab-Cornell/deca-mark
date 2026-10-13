@@ -200,6 +200,7 @@ export function UploadStep({
 	currentZones,
 	currentInventoryFormVersion,
 	forms,
+	inventoryForms,
 	defaultFormVersion,
 	defaultInventoryFormVersion,
 	packagesHref
@@ -217,6 +218,8 @@ export function UploadStep({
 	currentInventoryFormVersion: string | null;
 	/** Published form versions, the most recent first. */
 	forms: PublishedVersion[];
+	/** The published versions that ask only about a zone: the only ones a map can take as its inventory form. */
+	inventoryForms: PublishedVersion[];
 	defaultFormVersion: string;
 	/** On a site's first upload, the inventory form to start on; null starts with Inventory off. */
 	defaultInventoryFormVersion: string | null;
@@ -496,7 +499,11 @@ export function UploadStep({
 						label="Inventory form"
 						htmlFor={`${fieldId}-inventory`}
 						className="mt-4"
-						hint="The published form observers use for a whole-zone inventory. Without one, Inventory is off on this map.">
+						hint={
+							inventoryForms.length > 0
+								? "The published form observers use for a whole-zone inventory. Only forms that ask about a zone alone are offered. Without one, Inventory is off on this map."
+								: "No published form asks about a zone alone, so Inventory stays as it is or is off on this map."
+						}>
 						<Select
 							id={`${fieldId}-inventory`}
 							value={inventory}
@@ -509,7 +516,7 @@ export function UploadStep({
 								</option>
 							)}
 							<option value={NO_INVENTORY}>None: no Inventory on this map</option>
-							{forms.map(version => (
+							{inventoryForms.map(version => (
 								<option key={version.code} value={version.code}>
 									{version.formName} · {version.code}
 								</option>

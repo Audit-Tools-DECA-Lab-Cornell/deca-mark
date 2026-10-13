@@ -264,25 +264,18 @@ async function UploadSection({
 			</Island>
 		);
 
-	// Keep the current package's form while it is published. Otherwise start on the newest play form, which
-	// takes reading the definitions to tell it from an inventory form; a first upload also starts Inventory
-	// on the newest form that asks only about a zone.
-	// Definitions are read eight at a time, newest first, until both a play form and (for a first upload) an
-	// inventory form are known or every published version has been read.
-	const inventory = new Set<string>();
-	if (!currentPackageId || !currentFormVersion || !published.some(version => version.code === currentFormVersion)) {
-		let play = false;
-		for (let start = 0; start < published.length; start += 8) {
-			const batch = published.slice(start, start + 8).map(version => version.code);
-			const { definitions } = await getFormDefinitions(projectId, batch);
-			for (const code of batch) {
-				if (definitions[code] === undefined) continue;
-				if (isInventoryDefinition(definitions[code])) inventory.add(code);
-				else play = true;
-			}
-			if (play && (currentPackageId || inventory.size > 0)) break;
-		}
-	}
+	// Which published forms ask only about a zone: only those can be a map's inventory form, and the play
+	// form starts on the newest one that is not. A form whose definition cannot be read is neither offered as
+	// an inventory form nor taken for one.
+	const { definitions } = await getFormDefinitions(
+		projectId,
+		published.map(version => version.code)
+	);
+	const inventory = new Set(
+		published
+			.map(version => version.code)
+			.filter(code => definitions[code] !== undefined && isInventoryDefinition(definitions[code]))
+	);
 
 	return (
 		<UploadStep
@@ -295,6 +288,7 @@ async function UploadSection({
 			currentZones={currentZones}
 			currentInventoryFormVersion={currentInventoryFormVersion}
 			forms={published}
+			inventoryForms={published.filter(version => inventory.has(version.code))}
 			defaultFormVersion={chooseFormVersion(published, currentFormVersion, inventory) ?? published[0]!.code}
 			defaultInventoryFormVersion={currentPackageId ? null : chooseInventoryForm(published, inventory)}
 			packagesHref={packagesHref}

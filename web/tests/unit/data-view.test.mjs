@@ -20,7 +20,8 @@ const {
 	versionRange,
 	viewFilters,
 	viewQuery,
-	zoneOptions
+	zoneOptions,
+	zoneVersions
 } = await load("features/data/view.ts");
 const { clock } = await load("lib/time.ts");
 
@@ -299,4 +300,19 @@ test("the plan is drawn for the chosen site, the only site, or the only site tha
 	assert.equal(planSiteCode(both, null), null);
 	assert.equal(planSiteCode(both, "b"), "b");
 	assert.equal(planSiteCode(both, "missing"), null);
+});
+
+test("one map version is offered only where every chosen zone is", () => {
+	const groups = [
+		{ zone_id: A, zone_label: "Meadow", package_version: 1, count: 3 },
+		{ zone_id: OLD, zone_label: "Pond", package_version: 1, count: 2 },
+		{ zone_id: A, zone_label: "Meadow", package_version: 2, count: 1 }
+	];
+	const current = { version: 3, zoneIds: [A, B] };
+	assert.deepEqual(zoneVersions(groups, [A], current), [1, 2, 3]);
+	// The pond was left out after v1: only v1 has it, and the current v3 does not.
+	assert.deepEqual(zoneVersions(groups, [OLD], current), [1]);
+	assert.deepEqual(zoneVersions(groups, [A, OLD], current), [1]);
+	assert.deepEqual(zoneVersions(groups, [B], current), [3]);
+	assert.deepEqual(zoneVersions(groups, [], current), []);
 });

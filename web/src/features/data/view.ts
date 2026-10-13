@@ -334,6 +334,30 @@ export function zoneOptions(
 	return [...ofCurrent, ...others];
 }
 
+/**
+ * The map versions "One map version" offers for the chosen zones: each version on which every chosen zone
+ * has records, and the site's current version when it still has every chosen zone. A version without one
+ * of the zones is never offered (DECA Mark refuses that pair). None without zones.
+ */
+export function zoneVersions(
+	groups: readonly ZoneGroup[],
+	zones: readonly string[],
+	current: { readonly version: number | null; readonly zoneIds: readonly string[] }
+): number[] {
+	if (zones.length === 0) return [];
+	const byVersion = new Map<number, Set<string>>();
+	for (const group of groups) {
+		const found = byVersion.get(group.package_version) ?? new Set<string>();
+		found.add(group.zone_id);
+		byVersion.set(group.package_version, found);
+	}
+	const versions = [...byVersion]
+		.filter(([, found]) => zones.every(zone => found.has(zone)))
+		.map(([version]) => version);
+	if (current.version !== null && zones.every(zone => current.zoneIds.includes(zone))) versions.push(current.version);
+	return [...new Set(versions)].sort((a, b) => a - b);
+}
+
 /* ── Counts ───────────────────────────────────────────────────────────────── */
 
 /**
