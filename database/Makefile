@@ -29,4 +29,5 @@ api-test: api-build
 	  -e DECAMARK_CONTAINER_TESTS=1 \
 	  -v /var/run/docker.sock:/var/run/docker.sock \
 	  -v "$(ROOT)/database/.local/fieldmaps-api-password:/database/.local/fieldmaps-api-password:ro" \
-	  -v "$(ROOT)/contracts:/contracts:ro" $(API_TEST_IMAGE)
+	  -v "$(ROOT)/contracts:/contracts:ro" \
+	  -v "$(ROOT)/supabase:/supabase:ro" $(API_TEST_IMAGE)
