@@ -28,6 +28,20 @@ if TYPE_CHECKING:
     from sqlalchemy import Result
 
 
+def validate_new_schedule(when: datetime | None) -> None:
+    """Apply scheduling limits only to newly accepted requests, never idempotent replays."""
+    if when is None:
+        return
+    now = datetime.now(UTC)
+    if (
+        when.tzinfo is None
+        or when < now - timedelta(minutes=1)
+        or when > now + timedelta(days=90)
+    ):
+        msg = "Choose a time with a timezone within the next 90 days"
+        raise ValidationFailedError(msg, "scheduled_at")
+
+
 def create_router(
     sessions: async_sessionmaker[AsyncSession],
     authenticate: Authentication,
@@ -80,14 +94,7 @@ def create_router(
             )
             if replay is not None:
                 return replay
-            now = datetime.now(UTC)
-            if when is not None and (
-                when.tzinfo is None
-                or when < now - timedelta(minutes=1)
-                or when > now + timedelta(days=90)
-            ):
-                msg = "Choose a time with a timezone within the next 90 days"
-                raise ValidationFailedError(msg, "scheduled_at")
+            validate_new_schedule(when)
             return await enqueue(
                 session,
                 created_by=user,
