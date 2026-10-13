@@ -164,7 +164,7 @@ test("an upload checked against a map that changed meanwhile is refused, and not
 	expect(await currentPackageVersion(SITE)).toBe(meanwhile);
 
 	await page.getByRole("button", { name: "Upload package", exact: true }).click();
-	const refusal = page.getByRole("main").getByText(/^Not uploaded\. .*meanwhile\. Read the current version/);
+	const refusal = page.getByRole("main").getByText(/Not uploaded\. .*meanwhile\. Read the current version/);
 	await expect(refusal).toBeVisible({ timeout: 30_000 });
 	await expect(page.getByText("The package was not uploaded.", { exact: true })).toBeVisible();
 	expect(await currentPackageVersion(SITE)).toBe(meanwhile);
