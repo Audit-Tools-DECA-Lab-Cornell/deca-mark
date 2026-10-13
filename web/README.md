@@ -26,7 +26,7 @@ Organizations are created by the bootstrap script (`scripts/bootstrap-study.mjs`
 | `/o/[org]` | The organization's projects; Members and Settings for owners and admins |
 | `/o/[org]/collect` | Where observers land: they collect in the DECA Mark app |
 | `/o/[org]/p/[project]` | Overview: what the field returned, coverage by zone and round, and what needs attention |
-| `…/data`, `…/data/[observation]` | The newest 500 observations as a table and a plan, with filters and export; one record |
+| `…/data`, `…/data/[observation]` | Every matching observation, 500 at a time, as a table and a plan of one map version, with filters and export; one record on the map version it was recorded with |
 | `…/sites`, `…/sites/[site]`, `…/sites/[site]/packages` | Sites, the plan of each, and its map packages: history, checks, upload from QGIS layers |
 | `…/forms`, `…/forms/versions`, `…/forms/versions/[version]` | Forms, their versions, the draft editor and publishing |
 | `…/team`, `…/settings` | Project members and invitations; name, description, timezone and archive (managers only) |

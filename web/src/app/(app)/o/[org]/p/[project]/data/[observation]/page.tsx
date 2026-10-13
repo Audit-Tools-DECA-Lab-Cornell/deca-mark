@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { ObservationDetail, type ObservationPlan } from "@/features/observation/ObservationDetail";
-import { getObservation, getProject, getSitePlan, resolveProject } from "@/lib/api/workspace";
+import { getObservation, getProject, getSitePlan, listSites, resolveProject } from "@/lib/api/workspace";
 import { shortLabel } from "@/lib/labels";
 import { isNotFound, settle } from "@/lib/workspace/result";
 
@@ -35,18 +35,18 @@ export default async function ObservationPage({ params }: { params: Promise<Para
 	}
 	const row = found.data;
 
-	const [details, drawn] = await Promise.all([
+	const [details, drawn, sites] = await Promise.all([
 		settle(getProject(project.id)),
 		// Every member can read a superseded package, so the record's own map version always loads.
-		settle(getSitePlan(project.id, row.package_id, row.site_name))
+		settle(getSitePlan(project.id, row.package_id, row.site_name)),
+		// Only for saying which version is current; the record reads the same without it.
+		settle(listSites(project.id))
 	]);
 	if (!details.ok) return <LoadFailure failure={details.failure} what="the project" />;
 
 	const plan: ObservationPlan | null =
 		drawn.ok && drawn.data ? { site: drawn.data, version: row.package_version } : null;
-	const planNote = plan
-		? null
-		: `Map v${row.package_version} of ${row.site_name}, which this record was collected on, did not load.`;
+	const current = sites.ok ? sites.data.find(site => site.site_id === row.site_id) : undefined;
 
 	return (
 		<ObservationDetail
@@ -56,7 +56,8 @@ export default async function ObservationPage({ params }: { params: Promise<Para
 			timeZone={details.data.timezone}
 			definition={row.definition}
 			plan={plan}
-			planNote={planNote}
+			planProblem={plan ? null : drawn.ok ? "unreadable" : "failed"}
+			currentVersion={current?.package?.package_version ?? null}
 		/>
 	);
 }

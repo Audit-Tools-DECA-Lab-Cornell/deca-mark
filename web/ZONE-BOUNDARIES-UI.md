@@ -459,6 +459,12 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 - **Geometry:** recorded package geometry through `getSitePlan(packageId)`, plus `/zones?package_id`, memoised per package. Zones keep their holes and parts (WEB-31).
 - **Inventory:** never a marker. Show a "Zone inventories in this view" list under the map (zone, version, count). Selecting an inventory row hatches its zone, switching the picker to its version.
 - **Subset note:** "The map shows the 500 loaded of 1,284 matching observations." Totals come from the summary.
+- **Amended 2026-10-13 (WEB-40):**
+  - The geometry is the version's own package archive only. The archive carries that version's zones with their `zone_id`, code and name, so `/zones?package_id` is not read for the plan; QGIS still reads it for the boundaries download.
+  - The picker shows only when the matches span more than one version; the island's meta names the drawn version, with "(current)" when it is.
+  - The counts come from the summary of the same filters (the zone filter included). If it cannot be read, the versions and inventories are counted from the loaded observations, and the picker hint and the inventories footnote say so.
+  - Other versions' plans are read through a Server Action that checks the package belongs to the site, then memoised per `${userId}:${projectId}:${packageId}` (WUI-10), at most 8 per tab. If one fails, the plan keeps the version it shows and says so, with Try again.
+  - The inventories are a flush island under the plan, "Zone inventories in this view": a table with one tab stop (zone, map, inventories). Choosing a row hatches its zone and switches the plan to its version. A whole-zone record selected in the table is hatched too when its version is drawn.
 
 ### 7.4 Record detail
 
@@ -467,6 +473,8 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 | Bound point | Recorded package (`package_id`) with its zone hatched. "Map v1, the version this observation was recorded with." plus "v2 is current." when it differs | Zone "North meadow (NM) · map v1" |
 | Bound inventory | Recorded zone hatched, no point. "An inventory of the whole zone. No point was recorded." | Same |
 | Historical map cannot load | "We could not load map v1 for this observation. The record and its zone are unchanged." with Try again | Facts unaffected |
+
+Amended 2026-10-13 (WEB-40): a package that loads but cannot be drawn as a plan says "Map v1 of Fall Creek cannot be drawn as a plan. The record and its zone are unchanged.", without Try again, because trying again reads the same archive. "v2 is current." comes from the site list. If that read fails, the line is left out and the page still loads.
 
 ### 7.5 Overview, Reports and the site page
 

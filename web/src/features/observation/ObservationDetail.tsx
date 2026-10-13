@@ -15,6 +15,8 @@ import { answerRows, readDefinition } from "@/lib/observations/answers";
 import type { ProjectedSite } from "@/lib/plan";
 import { clock as makeClock } from "@/lib/time";
 
+import { MapRetry } from "./MapRetry";
+
 export type ObservationPlan = {
 	/** The map version the record was collected on, drawn as a plan. */
 	site: ProjectedSite;
@@ -30,8 +32,10 @@ export type ObservationDetailProps = {
 	/** The definition of the form version the observation was collected with. */
 	definition: RawDefinition | null;
 	plan: ObservationPlan | null;
-	/** Why there is no plan. */
-	planNote: string | null;
+	/** Why there is no plan: its package did not load, or it loaded and cannot be drawn. */
+	planProblem: "failed" | "unreadable" | null;
+	/** The site's current map version, when it could be read. */
+	currentVersion: number | null;
 };
 
 function firstRound(observation: Observation): string {
@@ -45,10 +49,17 @@ function placement(observation: Observation): string {
 	return observation.placement === "hand" ? "Placed by hand on the map" : "The whole zone (an inventory)";
 }
 
+/** Which map the plan is, and which is current: "Map v1, the version this observation was recorded with. v2 is current." */
+function versionLine(version: number, currentVersion: number | null): string {
+	const line = `Map v${version}, the version this observation was recorded with.`;
+	return currentVersion !== null && currentVersion !== version ? `${line} v${currentVersion} is current.` : line;
+}
+
 /**
  * One observation: when it was made and by whom, where it sits, and every answer, worded as the form
  * version it was collected with worded it. The page is read-only; the plan is the map version the record
- * was collected on. A point record is drawn as its point; an inventory is the whole zone, highlighted.
+ * was collected on, never today's (UI plan 7.4). A point record is drawn as its point; an inventory is the
+ * whole zone, hatched, with no point.
  */
 export function ObservationDetail({
 	org,
@@ -57,7 +68,8 @@ export function ObservationDetail({
 	timeZone,
 	definition,
 	plan,
-	planNote
+	planProblem,
+	currentVersion
 }: ObservationDetailProps) {
 	const clock = makeClock(timeZone);
 	const label = shortLabel(observation.observation_id);
@@ -127,14 +139,17 @@ export function ObservationDetail({
 									selectedId={point ? observation.observation_id : null}
 								/>
 								<p className="type-small text-ink-2">
-									Drawn on map v{plan.version}, the version it was collected on.
-									{point === null &&
-										" A zone inventory describes the whole zone, so it has no point."}
+									{point === null && "An inventory of the whole zone. No point was recorded. "}
+									{versionLine(plan.version, currentVersion)}
 								</p>
 							</div>
 						</Island>
+					) : planProblem === "failed" ? (
+						<MapRetry version={observation.package_version} />
 					) : (
-						planNote && <Note tone="neutral">{planNote}</Note>
+						<Note tone="neutral">
+							{`Map v${observation.package_version} of ${observation.site_name} cannot be drawn as a plan. The record and its zone are unchanged.`}
+						</Note>
 					)}
 
 					<Island flush title="Facts">
@@ -161,11 +176,22 @@ export function ObservationDetail({
 												href={`${dataHref}${viewQuery({ site: observation.site_code, zones: [zone] })}`}>
 												{zoneText}
 											</TextLink>{" "}
-											<span className="type-mono-data text-ink-2">{observation.zone_code}</span>
+											<span className="type-mono-data text-ink-2">({observation.zone_code})</span>{" "}
+											· map v{observation.package_version}
 										</>
 									)
 								},
-								{ label: "Map version", value: `v${observation.package_version}`, mono: true },
+								{
+									label: "Map version",
+									value: (
+										<>
+											<span className="type-mono-data">v{observation.package_version}</span>
+											{currentVersion !== null &&
+												currentVersion !== observation.package_version &&
+												` · v${currentVersion} is current`}
+										</>
+									)
+								},
 								{ label: "Round", value: roundLabel(round) },
 								{ label: "First round", value: firstRound(observation) },
 								{ label: "Placement", value: placement(observation) },

@@ -593,12 +593,21 @@ Verify: `pnpm --dir web test:unit` (data-view, time), `pnpm web:check`, `data-hi
 Verified: Data reads pages of 500 with the address's filters applied by the API (site, zones by identity, one map version as `package_id`, round, exact observer, project days to UTC through `Clock.dayStart`), "Show the next N" through a Server Action that checks access again, pushed filter history, Refresh, "Showing 1–500 of N … counted at", Zone and Map columns, inventories as "Whole zone", and "Search loaded observations". Unit: `data-view`, `time` (DST, Santiago, ±14 h), `api-shapes`. Local stack `data-history.spec.ts` on the 520-row zone review fixture (`scripts/e2e-local.sh --zones`): 500 of 520, then all 520; zone by identity across v1–v2; one version 260; inventories 20, all whole-zone; Back undoes; search says loaded only; the CSV writes the v1 name `=Synthetic lawn v1` as `'=…`. Also `data.spec` at both widths. Partial, moved ahead from WEB-40: the record page draws the recorded package, and the Data map draws only points of the plan's version (the version picker stays with WEB-40).
 
 ### WEB-40: Draw historical map versions on Data and record pages
-Status: todo · Phase 3 · Size M · Depends: WEB-39, WEB-31 · Blocks: WEB-29
+Status: done (2026-10-13) · Phase 3 · Size M · Depends: WEB-39, WEB-31 · Blocks: WEB-29
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 7.3 and 7.4, WUI-10.
 Do: Add the map version picker with dimmed other-version points, the zone inventory list and highlighting, the loaded-subset note, record detail on the recorded package, inventory detail, and the account-scoped memo for package zones.
 Done when: A mixed-version fixture never draws current boundaries under historical points as theirs; inventory is never a marker.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `data-history.spec.ts` map cases.
+Verified:
+- **Data plan:** one map version at a time (`src/features/data/{DataMap.tsx,map.ts}`). The default is the filter's version, else the current one when a match was recorded on it, else the newest one a match was recorded on.
+  - The Boundaries picker reads "v2 (current) · 260 observations", with counts from the summary of the same filters (or from the loaded observations, which it then says).
+  - Points of other versions are dimmed, with the note "Points recorded on v1 are dimmed. Their zones may differ from these boundaries.", and the subset note says what loaded.
+  - "Zone inventories in this view" lists each zone and version with its count; choosing a row hatches the zone on its own version. An inventory is never a marker.
+  - Other versions' plans load through a Server Action that checks the package belongs to the site, and are kept per `${userId}:${projectId}:${packageId}` (`plans.ts`, at most 8). A failed load keeps the drawn version and offers Try again.
+- **Record page:** "Map v1, the version this observation was recorded with. v2 is current."; an inventory reads "An inventory of the whole zone. No point was recorded."; Zone reads "Name (CODE) · map v1"; a failed map read says "We could not load map v1 for this observation. The record and its zone are unchanged." with Try again.
+- **Checks:** unit `data-map` (7 tests; `test:unit` 332 of 332) and `pnpm --dir web check`.
+- **Local stack at desktop-1440 and phone-390:** `data-history.spec.ts` "The plan draws one map version…" on the 520-row fixture: v2 current by default with v1's points dimmed, the two inventory rows of 10, v1 drawn with v2's dimmed, an inventory switching the plan back to v2, and a v1 record saying v2 is current. Also `data.spec`, `overview`, `qgis-reports`, `sites` and the honesty scan of every route (116 passed).
 
 ### WEB-41: Move summaries and exports to the server scope
 Status: done (2026-10-13) · Phase 3 · Size L · Depends: WEB-39 · Blocks: WEB-29

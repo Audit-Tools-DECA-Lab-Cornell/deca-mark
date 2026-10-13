@@ -8,21 +8,18 @@ import { Island } from "@/components/contour/Island";
 import { Note } from "@/components/contour/Note";
 import { PageHeader } from "@/components/contour/PageHeader";
 import { ScreenState } from "@/components/contour/ScreenState";
-import { TextLink } from "@/components/contour/TextLink";
 import { useToast } from "@/components/contour/Toast";
-import { MapFrame } from "@/components/map/MapFrame";
-import type { PlanObservation, ZonePlanStyle } from "@/components/map/SitePlan";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { projectHref } from "@/features/shell/navigation";
 import { appendPage } from "@/lib/api/observations";
 import type { Observation, ObservationFilters, ObservationPage, RawDefinition } from "@/lib/api/types";
 import { scopeLines } from "@/lib/export/files";
-import { formatCount, plural } from "@/lib/labels";
-import type { ProjectedSite } from "@/lib/plan";
+import { formatCount } from "@/lib/labels";
 import { clock as makeClock } from "@/lib/time";
 import type { Failure } from "@/lib/workspace/types";
 
 import { loadObservationsAction } from "./actions";
+import { DataMap, type DataPlan } from "./DataMap";
 import { DataTable } from "./DataTable";
 import { ExportObservations } from "./ExportObservations";
 import { FilterBar } from "./FilterBar";
@@ -45,15 +42,6 @@ export type DataSite = {
 	readonly observationCount: number;
 	/** Whether the site has a ready map package. */
 	readonly hasPackage: boolean;
-};
-
-export type DataPlan = {
-	site: ProjectedSite;
-	siteCode: string;
-	siteName: string;
-	/** The package the plan is drawn from (the site's current map version). */
-	packageId: string;
-	version: number;
 };
 
 export type DataScreenProps = {
@@ -83,11 +71,6 @@ export type DataScreenProps = {
 	/** Why there is no plan, when a plan was expected. */
 	planNote: string | null;
 };
-
-/** A marker's accessible name. */
-function markerLabel(record: DataRecord): string {
-	return `${record.label}, ${record.zoneLabel}, ${record.roundName}, map ${record.mapVersion}`;
-}
 
 /** How long typing in the search waits before the address follows it. */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -229,32 +212,6 @@ export function DataScreen({
 		const nodes = listRef.current?.querySelectorAll<HTMLElement>(`[data-record-id="${id}"]`) ?? [];
 		[...nodes].find(node => node.offsetParent !== null)?.scrollIntoView({ block: "nearest" });
 	}
-
-	/* ── The plan ──────────────────────────────────────────────────────── */
-
-	// Only records collected on the drawn map version are drawn on it; inventories describe a whole zone.
-	const onPlan = plan ? shown.filter(record => record.siteCode === plan.siteCode) : [];
-	const markers: PlanObservation[] = plan
-		? onPlan
-				.filter(record => record.point !== null && record.packageId === plan.packageId)
-				.map(record => ({
-					id: record.id,
-					lng: record.point![0],
-					lat: record.point![1],
-					label: markerLabel(record)
-				}))
-		: [];
-	const otherVersions = onPlan.filter(record => record.point !== null && record.packageId !== plan?.packageId).length;
-	const wholeZone = onPlan.filter(record => record.wholeZone).length;
-	const zoneStyles: Record<string, ZonePlanStyle> | undefined =
-		plan && view.zones.length > 0
-			? Object.fromEntries(
-					plan.site.zones.map(zone => [
-						zone.id,
-						{ emphasis: view.zones.includes(zone.id) ? "focus" : "dim" } as ZonePlanStyle
-					])
-				)
-			: undefined;
 
 	/* ── What the list says about itself ───────────────────────────────── */
 
@@ -427,46 +384,20 @@ export function DataScreen({
 				</Island>
 
 				{plan && (
-					<Island title="Site plan" meta={`${plan.siteName} · Map v${plan.version}`}>
-						<div className="flex flex-col gap-4">
-							<MapFrame
-								site={plan.site}
-								surface="panel"
-								mapVersion={`v${plan.version}`}
-								title={plan.siteName}
-								subtitle={`${plural(markers.length, "observation")} placed`}
-								observations={markers}
-								zones={zoneStyles}
-								selectedId={
-									selected && markers.some(marker => marker.id === selected.id) ? selected.id : null
-								}
-								onSelectObservation={selectMarker}
-							/>
-							<div aria-live="polite" className="type-body">
-								{selected ? (
-									<p>
-										<span className="type-mono-data font-semibold">{selected.label}</span> ·{" "}
-										{selected.zoneLabel} · {selected.roundName} · Map {selected.mapVersion} ·{" "}
-										{selected.when}{" "}
-										<TextLink tone="ink" href={hrefOf(selected)}>
-											Open observation
-										</TextLink>
-									</p>
-								) : (
-									<p className="text-ink-2">
-										Select a marker or a row to see which observation it is.
-									</p>
-								)}
-							</div>
-							<p className="type-small text-ink-2">
-								{`Drawn on map v${plan.version}, the site's current version, with the loaded observations collected on it.`}
-								{otherVersions > 0 &&
-									` ${plural(otherVersions, "loaded observation")} collected on other map versions ${otherVersions === 1 ? "is" : "are"} not drawn here.`}
-								{wholeZone > 0 &&
-									` ${plural(wholeZone, "zone inventory", "zone inventories")} describe whole zones and are listed, not drawn.`}
-							</p>
-						</div>
-					</Island>
+					<DataMap
+						org={org}
+						project={project}
+						projectId={projectId}
+						plan={plan}
+						loaded={records}
+						shown={shown}
+						total={total}
+						searched={q.trim() !== ""}
+						filterZones={view.zones}
+						selected={selected}
+						onSelectObservation={selectMarker}
+						hrefOf={hrefOf}
+					/>
 				)}
 			</div>
 

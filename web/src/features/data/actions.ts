@@ -4,12 +4,20 @@ import { z } from "zod";
 
 import { apiRequestError } from "@/lib/api/errors";
 import type { Observation, ObservationFilters, RawDefinition } from "@/lib/api/types";
-import { getFormDefinitions, listObservations, resolveProject } from "@/lib/api/workspace";
+import {
+	getFormDefinitions,
+	getSite,
+	getSitePlan,
+	listObservations,
+	listPackages,
+	resolveProject
+} from "@/lib/api/workspace";
+import type { ProjectedSite } from "@/lib/plan";
 
 /**
- * Data's reads from the browser: the next page of the observations the address matches. The filters the
- * page was loaded with come back with the cursor (the cursor is bound to them), and the person's access is
- * checked again on every page.
+ * Data's reads from the browser: the next page of the observations the address matches, and the plan of
+ * another map version of the site in view. The filters the page was loaded with come back with the cursor
+ * (the cursor is bound to them), and the person's access is checked again on every read.
  */
 
 const scopeSchema = z.object({ org: z.string().min(1), project: z.string().min(1) });
@@ -67,5 +75,33 @@ export async function loadObservationsAction(
 		};
 	} catch (error) {
 		return { status: "failed", message: `Nothing more was loaded. ${apiRequestError(error).message}` };
+	}
+}
+
+export type PlanRead =
+	| { readonly status: "loaded"; readonly site: ProjectedSite }
+	| { readonly status: "failed"; readonly message: string };
+
+/** One map version of a site, drawn as a plan from its package: only a package of that site is drawn. */
+export async function loadSitePlanAction(
+	rawScope: { org: string; project: string },
+	rawSiteCode: string,
+	rawPackageId: string
+): Promise<PlanRead> {
+	const scope = scopeSchema.parse(rawScope);
+	const siteCode = z.string().min(1).max(200).parse(rawSiteCode);
+	const packageId = z.uuid().parse(rawPackageId);
+	try {
+		const project = await resolveProject(scope.org, scope.project);
+		if (!project) return { status: "failed", message: "This project is no longer available." };
+		const site = await getSite(project.id, siteCode);
+		const history = await listPackages(project.id, site.site_id);
+		if (!history.packages.some(item => item.package_id === packageId))
+			return { status: "failed", message: `${site.name} has no such map version.` };
+		const plan = await getSitePlan(project.id, packageId, site.name);
+		if (!plan) return { status: "failed", message: "Its map package cannot be drawn as a plan." };
+		return { status: "loaded", site: plan };
+	} catch (error) {
+		return { status: "failed", message: apiRequestError(error).message };
 	}
 }

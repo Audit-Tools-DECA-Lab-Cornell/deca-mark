@@ -7,8 +7,8 @@ import { loopbackOrigin } from "./support/manifest";
 import { chooseOption, csvLines, downloadZip, recordRows } from "./support/ui";
 
 /**
- * Plan WEB-39: Data reads every matching observation from DECA Mark, 500 at a time, with the filters
- * applied by the server, across map versions. Runs on the separate synthetic zone review project
+ * Plans WEB-39 and WEB-40: Data reads every matching observation from DECA Mark, 500 at a time, with the
+ * filters applied by the server, across map versions, and draws one map version at a time. Runs on the separate synthetic zone review project
  * (`scripts/e2e-local.sh --zones`): 520 observations of one zone, 260 on each of two map versions, the zone
  * renamed between them (its v1 name starts with "=", which an export must never let run as a formula).
  */
@@ -119,5 +119,75 @@ test("Data counts, pages and filters every matching observation across map versi
 			expect(cells[label]).toBe(`'${V1_NAME}`);
 			expect(cells[version]).toBe("1");
 		}
+	});
+});
+
+test("The plan draws one map version, dims the others and lists inventories by zone", async ({ page }) => {
+	test.setTimeout(180_000);
+	const { path, baseline } = fixture();
+	await signInAsZoneManager(page);
+	await page.goto(`${path}/data?site=review-site`);
+	const main = page.getByRole("main");
+	const plan = main.getByRole("region", { name: "Site plan" });
+	const boundaries = plan.getByLabel("Boundaries", { exact: true });
+	const inventories = main.getByRole("region", { name: "Zone inventories in this view" });
+	const half = baseline.inventory / 2;
+
+	await test.step("the current version is drawn, and v1's points are dimmed rather than placed on it", async () => {
+		await expect(boundaries.locator("option")).toHaveText([
+			`v2 (current) · ${baseline.perVersion} observations`,
+			`v1 · ${baseline.perVersion} observations`
+		]);
+		await expect(plan).toContainText("Map v2 (current)");
+		await expect(plan).toContainText("Drawn on map v2, the site's current version.");
+		await expect(plan).toContainText(
+			"Points recorded on v1 are dimmed. Their zones may differ from these boundaries."
+		);
+		await expect(plan).toContainText(`The map shows the 500 loaded of ${baseline.total} matching observations.`);
+		await expect(
+			plan.getByRole("button", { name: /, map v1, recorded on another map version$/ }).first()
+		).toBeAttached();
+		await expect(plan.getByRole("button", { name: /, map v2$/ }).first()).toBeAttached();
+	});
+
+	await test.step("inventories are listed by zone and version with every match counted, never drawn", async () => {
+		const rows = inventories.getByRole("row").filter({ hasText: /v\d/ });
+		await expect(rows).toHaveCount(2);
+		await expect(rows.nth(0)).toContainText(V2_NAME);
+		await expect(rows.nth(0)).toContainText(`v2${half}`);
+		await expect(rows.nth(1)).toContainText(V1_NAME);
+		await expect(rows.nth(1)).toContainText(`v1${half}`);
+		await expect(plan.getByRole("button", { name: /inventory/i })).toHaveCount(0);
+	});
+
+	await test.step("v1 draws its own boundaries, and v2's points are dimmed on it", async () => {
+		await chooseOption(boundaries, /^v1 · /);
+		await expect(plan).toContainText("Map v1", { timeout: 30_000 });
+		await expect(plan).toContainText("Drawn on map v1. v2 is current.");
+		await expect(plan).toContainText("Points recorded on v2 are dimmed.");
+		await expect(
+			plan.getByRole("button", { name: /, map v2, recorded on another map version$/ }).first()
+		).toBeAttached();
+	});
+
+	await test.step("choosing an inventory switches the plan to the version it was recorded on", async () => {
+		await inventories.getByRole("row").filter({ hasText: V2_NAME }).click();
+		await expect(boundaries).toHaveValue(
+			(await boundaries.locator("option", { hasText: "v2 (current)" }).getAttribute("value")) ?? ""
+		);
+		await expect(plan).toContainText("Drawn on map v2, the site's current version.");
+		// Back on v1, the plan is the one already read.
+		await chooseOption(boundaries, /^v1 · /);
+		await expect(plan).toContainText("Drawn on map v1. v2 is current.");
+	});
+
+	await test.step("a v1 record is drawn on v1 and says v2 is current", async () => {
+		const row = (await recordRows(main)).filter({ hasText: V1_NAME }).filter({ hasNotText: "Whole zone" }).first();
+		await row.getByRole("link").first().click();
+		await expect(page).toHaveURL(/\/data\/[0-9a-f-]{36}$/);
+		const record = page.getByRole("main");
+		await expect(record).toContainText("Map v1, the version this observation was recorded with. v2 is current.");
+		await expect(record).toContainText("· map v1");
+		await expect(record.getByRole("region", { name: "Where it was placed" })).toContainText("Map v1");
 	});
 });
