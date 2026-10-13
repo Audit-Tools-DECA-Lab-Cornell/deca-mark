@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { expect, type Locator, type Page } from "@playwright/test";
+import { strFromU8, unzipSync } from "fflate";
 
 /**
  * Small, tolerant ways to read the screens by what a person sees: accessible names, visible words and
@@ -95,6 +96,21 @@ export async function downloadText(page: Page, trigger: () => Promise<void>): Pr
 	const path = await download.path();
 	expect(path, "the download finished").toBeTruthy();
 	return { name: download.suggestedFilename(), text: readFileSync(path, "utf8") };
+}
+
+/** Clicks `trigger` and returns the ZIP the browser downloads, with each file in it as text. */
+export async function downloadZip(
+	page: Page,
+	trigger: () => Promise<void>
+): Promise<{ name: string; files: Record<string, string> }> {
+	const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), trigger()]);
+	const path = await download.path();
+	expect(path, "the download finished").toBeTruthy();
+	const entries = unzipSync(new Uint8Array(readFileSync(path)));
+	return {
+		name: download.suggestedFilename(),
+		files: Object.fromEntries(Object.entries(entries).map(([file, bytes]) => [file, strFromU8(bytes)]))
+	};
 }
 
 /** Rows of a simple CSV (no quoted line breaks), header first. */

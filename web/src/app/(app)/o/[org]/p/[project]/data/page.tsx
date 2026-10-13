@@ -140,6 +140,7 @@ export default async function DataPage({ params, searchParams }: Props) {
 			key={`${viewQuery({ ...effective, q: "" })}|${list.data.generated_at}`}
 			org={org}
 			project={code}
+			projectId={project.id}
 			timeZone={details.data.timezone}
 			view={effective}
 			filters={filters}

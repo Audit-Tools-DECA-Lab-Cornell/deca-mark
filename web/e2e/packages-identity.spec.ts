@@ -122,7 +122,8 @@ test("a later upload keeps one zone, adds one and leaves one out, and the record
 	// The records collected in zone A on the first map are still counted in zone A.
 	await page.goto(projectPath(`sites/${SITE}`));
 	const row = page.getByRole("main").locator("li, tr").filter({ hasText: kept.label }).first();
-	await expect(row).toContainText(new RegExp(`\\b${baseline.total} observations\\b`));
+	// Collected on the first map, they are counted under zone A's identity on the earlier versions.
+	await expect(row).toContainText(new RegExp(`\\b${baseline.total} on earlier versions\\b`));
 
 	// 3. Back to the sample's one zone, so the other specs see the seeded site.
 	next += 1;

@@ -15,6 +15,7 @@ test("each site lists the package observers download, or none", () => {
 		site({ code: "empty", name: "Empty", package: null })
 	]);
 	assert.deepEqual(rows[0], {
+		siteId: uuid(1),
 		code: "fall-creek",
 		name: "Fall Creek",
 		zoneCount: 2,
@@ -26,7 +27,7 @@ test("each site lists the package observers download, or none", () => {
 			formVersion: "play-v1"
 		}
 	});
-	assert.deepEqual(rows[1], { code: "empty", name: "Empty", zoneCount: 0, package: null });
+	assert.deepEqual(rows[1], { siteId: uuid(1), code: "empty", name: "Empty", zoneCount: 0, package: null });
 });
 
 test("the export scope names the count, the site and the round", () => {

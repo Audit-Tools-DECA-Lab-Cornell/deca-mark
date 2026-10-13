@@ -7,98 +7,84 @@ import { Dialog, DialogClose } from "@/components/contour/Dialog";
 import { Note } from "@/components/contour/Note";
 import { RadioRows } from "@/components/contour/RadioRows";
 import { useToast } from "@/components/contour/Toast";
-import { saveText } from "@/lib/download";
-import { codebook, EMPTY_CELL_NOTE, exportFileName, toCsv, toGeoJson } from "@/lib/export/observations";
-import { formatCount, plural } from "@/lib/labels";
-import type { Clock } from "@/lib/time";
+import { downloadObservationExport } from "@/lib/api/browser";
+import { apiRequestError } from "@/lib/api/errors";
+import type { ObservationFilters } from "@/lib/api/types";
+import { EXPORT_TOO_LARGE, exportAction, exportBlocked, exportFileName } from "@/lib/export/files";
+import { formatCount } from "@/lib/labels";
 
-import type { DataRecord } from "./view";
-
-type Format = "csv" | "geojson" | "codebook";
-
-const FORMATS: Record<Format, { word: string; extension: "csv" | "geojson"; mime: string }> = {
-	csv: { word: "CSV", extension: "csv", mime: "text/csv" },
-	geojson: { word: "GeoJSON", extension: "geojson", mime: "application/geo+json" },
-	codebook: { word: "codebook", extension: "csv", mime: "text/csv" }
-};
+type Format = "csv" | "geojson";
 
 export type ExportObservationsProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	/** The observations in view: the loaded ones the search finds. */
-	records: readonly DataRecord[];
-	/** Each form version's definition, as it was when the version was published. */
-	definitions: Readonly<Record<string, unknown>>;
-	/** Form versions whose definition could not be read. */
-	missingVersions: readonly string[];
-	/** How many observations match the filters in all. */
+	projectId: string;
+	/** The filters the page applies; the export covers every observation they match. */
+	filters: ObservationFilters;
+	/** How many observations match them, as DECA Mark counted. */
 	matching: number;
-	/** Whether a search narrows the loaded observations. */
+	/** Whether a search narrows the loaded observations on the page (the export does not search). */
 	searched: boolean;
-	projectCode: string;
-	clock: Clock;
+	/** The filters in words, one line each. */
+	scope: readonly string[];
+	/** The site's code, or the project's: the start of the file's name. */
+	fileStem: string;
+	/** Today in the project's time zone, for the file's name. */
+	dayKey: string;
 };
 
+/** What a failed export says: the size limit in the same words as the disabled button, otherwise the cause. */
+function exportFailure(error: unknown): string {
+	const failure = apiRequestError(error);
+	return failure.issues.some(issue => issue.code === "export_scope_too_large") ? EXPORT_TOO_LARGE : failure.message;
+}
+
 /**
- * Export: the observations in view as a CSV or GeoJSON file, or the codebook that explains the columns.
- * The file is written in this browser from the loaded rows on screen, with each row's own form version, so
- * answers keep the wording and option codes they were collected with. It says when more match than loaded.
+ * Export: DECA Mark writes every observation the filters match into one ZIP, as CSV or GeoJSON, with a
+ * codebook of every column, the forms the answers were given with and the zone boundaries each record was
+ * collected on. The dialog repeats the scope, says the search is not applied, and refuses more than 10,000.
  */
 export function ExportObservations({
 	open,
 	onOpenChange,
-	records,
-	definitions,
-	missingVersions,
+	projectId,
+	filters,
 	matching,
 	searched,
-	projectCode,
-	clock
+	scope,
+	fileStem,
+	dayKey
 }: ExportObservationsProps) {
 	const { toast } = useToast();
 	const [format, setFormat] = useState<Format>("csv");
-	const empty = records.length === 0;
-	// Only the form versions the rows in view were collected with: their questions are the file's columns.
-	const inView = new Set(records.map(record => record.row.form_version));
-	const versions = Object.fromEntries(Object.entries(definitions).filter(([code]) => inView.has(code)));
+	const [busy, setBusy] = useState(false);
+	const [problem, setProblem] = useState<string | null>(null);
+	const blocked = exportBlocked(matching);
 
-	function download() {
-		const rows = records.map(record => record.row);
-		const spec = FORMATS[format];
-		const content =
-			format === "csv"
-				? toCsv(rows, versions)
-				: format === "geojson"
-					? toGeoJson(rows, versions)
-					: codebook(versions, rows);
-		const fileName = exportFileName(
-			projectCode,
-			format === "codebook" ? "codebook" : "observations",
-			clock.dayKey(new Date().toISOString()),
-			spec.extension
-		);
-		saveText(content, fileName, spec.mime);
-		onOpenChange(false);
-		toast({ title: `Download started: ${fileName}`, tone: "saved" });
+	async function download() {
+		setBusy(true);
+		setProblem(null);
+		const fileName = exportFileName(fileStem, dayKey);
+		try {
+			await downloadObservationExport(projectId, filters, format, fileName);
+			onOpenChange(false);
+			toast({ title: `Download started: ${fileName}`, tone: "saved" });
+		} catch (error) {
+			setProblem(exportFailure(error));
+		} finally {
+			setBusy(false);
+		}
 	}
-
-	const partial = !searched && matching > records.length;
-	const scope = searched
-		? `The ${plural(records.length, "loaded observation")} the search finds`
-		: partial
-			? `The ${plural(records.length, "loaded observation")} of ${formatCount(matching)} that match`
-			: `${plural(records.length, "observation")} in this view`;
 
 	return (
 		<Dialog
 			open={open}
-			onOpenChange={onOpenChange}
+			onOpenChange={next => {
+				if (!next) setProblem(null);
+				onOpenChange(next);
+			}}
 			title="Export observations"
-			description={
-				format === "codebook"
-					? `A list of every column the files hold, from the ${plural(Object.keys(versions).length, "form version")} in view.`
-					: `${scope}. Filters you set are applied.`
-			}
+			description={`Every observation these filters match: ${formatCount(matching)}, counted by DECA Mark.`}
 			footer={
 				<>
 					<DialogClose asChild>
@@ -107,12 +93,12 @@ export function ExportObservations({
 					<Button
 						variant="primary"
 						icon="download"
-						disabled={empty}
-						disabledReason={
-							empty ? "No observations are in this view. Change the filters to export." : undefined
-						}
-						onClick={download}>
-						Download {FORMATS[format].word}
+						busy={busy}
+						busyLabel="Preparing the file…"
+						disabled={blocked !== null}
+						disabledReason={blocked ?? undefined}
+						onClick={() => void download()}>
+						{exportAction(matching)}
 					</Button>
 				</>
 			}>
@@ -132,28 +118,32 @@ export function ExportObservations({
 							label: "GeoJSON",
 							description:
 								"One feature per observation with its answers, for QGIS. Inventories describe a whole zone and have no point."
-						},
-						{
-							value: "codebook",
-							label: "Codebook",
-							description: "What each column means and what its option codes stand for."
 						}
 					]}
 				/>
-				{partial && (
-					<Note
-						tone="neutral"
-						title={`This file holds the ${formatCount(records.length)} loaded observations.`}>
-						{`${formatCount(matching - records.length)} more match the filters. Show the next 500 on the page before exporting to include them.`}
+				<div className="flex flex-col gap-1">
+					<p className="type-small font-semibold text-ink">What the file holds</p>
+					<ul className="flex flex-col gap-1 type-small text-ink-2">
+						{scope.map(line => (
+							<li key={line}>{line}</li>
+						))}
+					</ul>
+				</div>
+				{searched && (
+					<Note tone="neutral" title="The search is not applied.">
+						The file holds every observation the filters match, not only the ones the search finds.
 					</Note>
 				)}
-				{missingVersions.length > 0 && (
-					<Note tone="attention" title="Some questions could not be loaded.">
-						Answers made with {missingVersions.join(", ")} are written under their question ids.
+				{problem && (
+					<Note tone="attention" live="assertive" title="Nothing was downloaded.">
+						{problem}
 					</Note>
 				)}
-				{format === "csv" && <p className="type-small text-ink-2">{EMPTY_CELL_NOTE}</p>}
-				<p className="type-small text-ink-2">Observations still on observers&apos; devices are not included.</p>
+				<p className="type-small text-ink-2">
+					The ZIP also holds a codebook of every column, the forms the answers were given with, and the zone
+					boundaries of each map version the observations were recorded on. Observations still on
+					observers&apos; devices are not included.
+				</p>
 			</div>
 		</Dialog>
 	);

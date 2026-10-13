@@ -2,17 +2,19 @@
 
 import createClient from "openapi-fetch";
 
-import { saveBlob } from "@/lib/download";
+import { saveBlob, saveText } from "@/lib/download";
+import { zonesGeoJson } from "@/lib/export/files";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 import { ApiError, apiRequestError, parseApiError } from "./errors";
+import { filterQuery, type ObservationFilters } from "./observations";
 import type { paths } from "./schema";
 import { publicationSchema } from "./sites";
 import type { PackageSubmission, ProjectImportRequest, ProjectImportResult, Publication } from "./types";
 
 /**
  * Requests the browser sends to the API itself, as the signed-in person: map package uploads (up to
- * 24 MiB) and archive downloads, which are larger than a Server Action may carry. The API allows the web
+ * 24 MiB), archive and export downloads, which are larger than a Server Action may carry. The API allows the web
  * app's origin (CORS). Every other read and write goes through the server (`workspace.ts`,
  * `mutations.ts`).
  */
@@ -134,6 +136,50 @@ export async function downloadPackageArchive(
 		}
 		saveBlob(data, fileName);
 		return { bytes: data.size };
+	} catch (error) {
+		throw apiRequestError(error);
+	}
+}
+
+/**
+ * Downloads DECA Mark's export of every observation the filters match (no page, no limit of 500) as a ZIP
+ * and saves it as `fileName`. More than 10,000 matching observations are refused (422, with an
+ * `export_scope_too_large` issue).
+ */
+export async function downloadObservationExport(
+	projectId: string,
+	filters: ObservationFilters,
+	format: "csv" | "geojson",
+	fileName: string
+): Promise<{ bytes: number }> {
+	try {
+		const api = browserApi(TRANSFER_TIMEOUT_MS);
+		const { data, error, response } = await api.GET("/v1/projects/{project_id}/observations/export", {
+			params: { path: { project_id: projectId }, query: { ...filterQuery(filters), format } },
+			parseAs: "blob"
+		});
+		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
+		saveBlob(data, fileName);
+		return { bytes: data.size };
+	} catch (error) {
+		throw apiRequestError(error);
+	}
+}
+
+/** Downloads one map version's zone boundaries and saves them as GeoJSON for QGIS. */
+export async function downloadZoneBoundaries(
+	projectId: string,
+	site: { readonly siteId: string; readonly code: string },
+	packageId: string,
+	fileName: string
+): Promise<void> {
+	try {
+		const api = browserApi(TRANSFER_TIMEOUT_MS);
+		const { data, error, response } = await api.GET("/v1/projects/{project_id}/sites/{site_id}/zones", {
+			params: { path: { project_id: projectId, site_id: site.siteId }, query: { package_id: packageId } }
+		});
+		if (!response.ok || !data) throw parseApiError(response.status, error, response.headers);
+		saveText(zonesGeoJson(data, site.code), fileName, "application/geo+json");
 	} catch (error) {
 		throw apiRequestError(error);
 	}

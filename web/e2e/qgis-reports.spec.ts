@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { authFile } from "./support/auth";
 import { manifest, projectPath } from "./support/manifest";
-import { downloadText } from "./support/ui";
+import { downloadText, downloadZip } from "./support/ui";
 
 /** Plan step 8: the QGIS page's GeoJSON export and the reports. */
 
@@ -10,29 +10,20 @@ test.use({ storageState: authFile("manager") });
 
 type Feature = { geometry: { type: string; coordinates: number[] } | null; properties: Record<string, unknown> };
 
-test("the QGIS page exports the records as GeoJSON: points, and inventories as whole-zone records", async ({
+test("the QGIS page exports every record as GeoJSON: points, and inventories as whole-zone records", async ({
 	page
 }) => {
 	const { baseline, observations } = manifest();
 	await page.goto(projectPath("qgis"));
 	const main = page.getByRole("main");
-	const geojson = main.getByRole("button", { name: /geojson/i }).or(main.getByRole("radio", { name: /geojson/i }));
-	await expect(geojson.first()).toBeVisible();
+	await expect(main.getByRole("status")).toContainText(`${baseline.total} observations`);
 
-	const { name, text } = await downloadText(page, async () => {
-		const role = await geojson.first().getAttribute("role");
-		if (role === "radio") {
-			await geojson.first().check();
-			await main
-				.getByRole("button", { name: /(download|export)/i })
-				.first()
-				.click();
-		} else {
-			await geojson.first().click();
-		}
-	});
-	expect(name).toMatch(/\.geojson$/);
-	const collection = JSON.parse(text) as { type: string; features: Feature[] };
+	const { name, files } = await downloadZip(page, () =>
+		main.getByRole("button", { name: "Download GeoJSON", exact: true }).click()
+	);
+	expect(name).toMatch(/\.zip$/);
+	expect(Object.keys(files)).toEqual(expect.arrayContaining(["observations.geojson", "codebook.csv"]));
+	const collection = JSON.parse(files["observations.geojson"]!) as { type: string; features: Feature[] };
 	expect(collection.type).toBe("FeatureCollection");
 	expect(collection.features).toHaveLength(baseline.total);
 	for (const feature of collection.features) {
@@ -45,6 +36,21 @@ test("the QGIS page exports the records as GeoJSON: points, and inventories as w
 		} else expect(feature.geometry?.type).toBe("Point");
 	}
 	expect(collection.features.filter(feature => feature.geometry === null)).toHaveLength(baseline.inventory);
+});
+
+test("the QGIS page downloads a map version's zone boundaries for joining inventories", async ({ page }) => {
+	const { baseline } = manifest();
+	await page.goto(projectPath("qgis"));
+	const button = page.getByRole("button", { name: /^Download the zone boundaries of .+ map v\d+$/ }).first();
+	const { name, text } = await downloadText(page, () => button.click());
+	expect(name).toMatch(/^fall-creek-zones-v\d+\.geojson$/);
+	const zones = JSON.parse(text) as {
+		features: { geometry: { type: string }; properties: Record<string, unknown> }[];
+	};
+	const zone = zones.features.find(feature => feature.properties.zone_code === baseline.zone);
+	expect(zone?.geometry.type).toBe("MultiPolygon");
+	expect(zone?.properties.zone_id).toEqual(expect.any(String));
+	expect(zone?.properties.map_version).toEqual(expect.any(Number));
 });
 
 test("the reports count the records by round type and zone, and can be printed", async ({ page }) => {

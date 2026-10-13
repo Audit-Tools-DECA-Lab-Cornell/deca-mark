@@ -4,7 +4,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { PASSWORD } from "./support/auth";
 import { loopbackOrigin } from "./support/manifest";
-import { chooseOption, csvLines, downloadText, recordRows } from "./support/ui";
+import { chooseOption, csvLines, downloadZip, recordRows } from "./support/ui";
 
 /**
  * Plan WEB-39: Data reads every matching observation from DECA Mark, 500 at a time, with the filters
@@ -99,18 +99,17 @@ test("Data counts, pages and filters every matching observation across map versi
 		await main.getByLabel("Search loaded observations", { exact: true }).fill("");
 	});
 
-	await test.step("an export writes the recorded zone name so a spreadsheet cannot run it", async () => {
+	await test.step("the export is every match, written by DECA Mark, with the recorded zone name made safe", async () => {
 		await main.getByRole("button", { name: "Export", exact: true }).first().click();
 		const dialog = page.getByRole("dialog");
-		const csvChoice = dialog.getByRole("radio", { name: /csv/i });
-		if ((await csvChoice.count()) > 0) await csvChoice.first().check();
-		const { text } = await downloadText(page, () =>
+		await dialog.getByRole("radio", { name: /csv/i }).first().check();
+		await expect(dialog).toContainText("only what was recorded on map v1");
+		const { files } = await downloadZip(page, () =>
 			dialog
-				.getByRole("button", { name: /(download|export)/i })
-				.last()
+				.getByRole("button", { name: `Export ${baseline.perVersion} matching observations`, exact: true })
 				.click()
 		);
-		const [header, ...rows] = csvLines(text);
+		const [header, ...rows] = csvLines(files["observations.csv"]!);
 		const columns = header!.split(",");
 		const label = columns.indexOf("zone_label_at_capture");
 		const version = columns.indexOf("map_version");

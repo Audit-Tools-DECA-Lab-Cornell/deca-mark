@@ -6,6 +6,7 @@ import type { RoundType } from "@/lib/workspace/types";
  */
 
 type SiteLike = {
+	readonly site_id: string;
 	readonly code: string;
 	readonly name: string;
 	readonly zones: readonly unknown[];
@@ -21,6 +22,7 @@ type SiteLike = {
 
 /** A site and the map package observers download for it, as the page's "Maps in" list shows it. */
 export type MapRow = {
+	readonly siteId: string;
 	readonly code: string;
 	readonly name: string;
 	readonly zoneCount: number;
@@ -35,6 +37,7 @@ export type MapRow = {
 
 export function mapRows(sites: readonly SiteLike[]): MapRow[] {
 	return sites.map(site => ({
+		siteId: site.site_id,
 		code: site.code,
 		name: site.name,
 		zoneCount: site.zones.length,

@@ -68,7 +68,7 @@ export default async function SitePage({ params }: { params: Promise<Params> }) 
 			site={view}
 			plan={plan?.ok ? plan.data : null}
 			planFailure={plan && !plan.ok ? plan.failure : null}
-			zoneRows={zoneRows(view.zones, groups)}
+			zoneRows={zoneRows(view.zones, groups, view.package?.version ?? null)}
 			countsFailure={counts && !counts.ok ? counts.failure : null}
 		/>
 	);

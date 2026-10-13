@@ -60,7 +60,7 @@ test("sites sort by name, and thumbnails go to the first six with a package", ()
 	);
 });
 
-test("zone rows count every version's observations by zone identity, and list zones alone when counts failed", () => {
+test("zone rows count by zone identity: on the current version, and on earlier ones", () => {
 	const zones = [
 		{ id: uuid(201), code: "A", label: "Zone A" },
 		{ id: uuid(202), code: "B", label: "Zone B" }
@@ -68,18 +68,20 @@ test("zone rows count every version's observations by zone identity, and list zo
 	const groups = [
 		group({ zone_id: uuid(201), zone_label: "Old name of A", package_version: 1, count: 2 }),
 		group({ zone_id: uuid(201), zone_label: "Zone A", package_version: 2, round_type: "inventory", count: 1 }),
+		group({ zone_id: uuid(202), zone_label: "Zone B", package_version: 2, count: 1 }),
 		// A zone the current version no longer has: named as the newest version that had it named it.
 		group({ zone_id: uuid(209), zone_label: "Pond", package_version: 1, count: 4 }),
-		group({ zone_id: uuid(209), zone_label: "Pond edge", package_version: 2, count: 1 })
+		group({ zone_id: uuid(209), zone_label: "Pond edge", package_version: 1, round_type: "reliability", count: 1 })
 	];
 	assert.deepEqual(
-		zoneRows(zones, groups).map(row => [row.id, row.code, row.current, row.label, row.count, row.countLabel]),
+		zoneRows(zones, groups, 2).map(row => [row.id, row.code, row.current, row.label, row.count, row.countLabel]),
 		[
-			[uuid(201), "A", true, "Zone A", 3, "3 observations"],
-			[uuid(202), "B", true, "Zone B", 0, "0 observations"],
-			[uuid(209), null, false, "Pond edge", 5, "5 observations"]
+			[uuid(201), "A", true, "Zone A", 3, "1 observation on v2 · 2 on earlier versions"],
+			[uuid(202), "B", true, "Zone B", 1, "1 observation on v2"],
+			[uuid(209), null, false, "Pond", 5, "5 observations on earlier versions"]
 		]
 	);
+	assert.equal(zoneRows([], [group({ count: 3 })], null)[0].countLabel, "3 observations");
 	assert.deepEqual(zoneRows(zones, null), [
 		{ id: uuid(201), code: "A", current: true, label: "Zone A", count: null, countLabel: null },
 		{ id: uuid(202), code: "B", current: true, label: "Zone B", count: null, countLabel: null }

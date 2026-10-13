@@ -12,7 +12,7 @@ import { ScreenState } from "@/components/contour/ScreenState";
 import { Select } from "@/components/contour/Select";
 import { TextInput } from "@/components/contour/TextInput";
 import { NotAvailable } from "@/components/shell/NotAvailable";
-import { isRoundType, ROUND_TYPES, roundLabel } from "@/lib/labels";
+import { formatCount, isRoundType, ROUND_TYPES, roundLabel } from "@/lib/labels";
 import { clock } from "@/lib/time";
 import type { RoundType } from "@/lib/workspace/types";
 
@@ -20,9 +20,9 @@ import { CountBars } from "./CountBars";
 import {
 	buildReport,
 	dayRangeIsBackwards,
-	inDays,
 	parseDayKey,
 	type PlayOptions,
+	type ReportGroup,
 	type ReportRow,
 	summarySentence,
 	type ZoneChoice
@@ -33,18 +33,21 @@ export type ReportsScreenProps = {
 	timeZone: string;
 	/** When the page read its data (an ISO time). */
 	loadedAt: string;
-	sites: readonly { code: string; name: string }[];
-	/** The site and round the list was read for ("" for all). */
+	sites: readonly { siteId: string; code: string; name: string }[];
+	/** The site and round the counts are for ("" for all). */
 	site: string;
 	round: RoundType | "";
-	/** The days asked for, as day keys ("2026-10-07") or "". */
+	/** The days the counts are for, as day keys ("2026-10-07") or "". */
 	from: string;
 	to: string;
+	/** DECA Mark's counts of every match, by zone, map version and round. */
+	groups: readonly ReportGroup[];
+	/** Every matching observation. */
+	total: number;
+	/** The newest matching observations (500 at most), which observers, days and play types are counted from. */
 	rows: readonly ReportRow[];
 	zones: readonly ZoneChoice[];
 	playOptions: PlayOptions;
-	/** The list came back with 500 records, so older ones may be missing. */
-	limited: boolean;
 	/** Form versions whose definition could not be read. */
 	unreadableForms: number;
 };
@@ -93,8 +96,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 /**
  * Reports: a summary of the observations DECA Mark holds, in one sentence and bars by zone, round, play
- * type, observer and day, that can be printed. Site and round are chosen on the server before the newest
- * 500 observations are taken; days are chosen here, so they only see the observations that came back.
+ * type, observer and day, that can be printed. Site, round and days are applied by DECA Mark. Zones and
+ * rounds count every match; observers, days and play types are counted from the newest 500, and the report
+ * says so when more match.
  */
 export function ReportsScreen({
 	projectName,
@@ -105,10 +109,11 @@ export function ReportsScreen({
 	round,
 	from: initialFrom,
 	to: initialTo,
+	groups,
+	total,
 	rows,
 	zones,
 	playOptions,
-	limited,
 	unreadableForms
 }: ReportsScreenProps) {
 	const ids = useId();
@@ -122,26 +127,26 @@ export function ReportsScreen({
 	const fromKey = parseDayKey(from);
 	const toKey = parseDayKey(to);
 	const backwards = dayRangeIsBackwards(fromKey, toKey);
-	const inRange = useMemo(() => inDays(rows, projectClock, fromKey, toKey), [rows, projectClock, fromKey, toKey]);
 	const report = useMemo(
-		() => buildReport({ rows: inRange, zones, playOptions, clock: projectClock }),
-		[inRange, zones, playOptions, projectClock]
+		() => buildReport({ groups, total, rows, zones, sites, playOptions, clock: projectClock }),
+		[groups, total, rows, zones, sites, playOptions, projectClock]
 	);
 	const filtered = Boolean(site || round || from || to);
 	const siteName = sites.find(entry => entry.code === site)?.name;
 
-	/** Site and round change what the list holds, so the page asks for it again. */
-	function chooseOnServer(next: { site: string; round: string }) {
+	/** Every filter changes what DECA Mark counts, so the page asks again; the address can be shared. */
+	function choose(next: { site: string; round: string; from: string; to: string }) {
 		startTransition(() => {
-			router.replace(addressWith(pathname, { ...next, from, to }), { scroll: false });
+			router.replace(addressWith(pathname, next), { scroll: false });
 		});
 	}
 
-	/** Days only narrow the rows already here; the address follows so the report can be shared as it is. */
+	/** A day is applied once it is a whole date; the field keeps what is typed meanwhile. */
 	function chooseDays(next: { from: string; to: string }) {
 		setFrom(next.from);
 		setTo(next.to);
-		window.history.replaceState(null, "", addressWith(pathname, { site, round, ...next }));
+		const complete = (value: string) => value === "" || parseDayKey(value) !== null;
+		if (complete(next.from) && complete(next.to)) choose({ site, round, ...next });
 	}
 
 	function clear() {
@@ -162,7 +167,7 @@ export function ReportsScreen({
 					: "All days"
 	].join(" · ");
 
-	const nothingToCount = rows.length === 0 && !filtered;
+	const nothingToCount = total === 0 && !filtered;
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -188,7 +193,7 @@ export function ReportsScreen({
 						<Select
 							id={`${ids}-site`}
 							value={site}
-							onChange={event => chooseOnServer({ site: event.target.value, round })}>
+							onChange={event => choose({ site: event.target.value, round, from, to })}>
 							<option value="">All sites</option>
 							{sites.map(entry => (
 								<option key={entry.code} value={entry.code}>
@@ -202,9 +207,11 @@ export function ReportsScreen({
 							id={`${ids}-round`}
 							value={round}
 							onChange={event =>
-								chooseOnServer({
+								choose({
 									site,
-									round: isRoundType(event.target.value) ? event.target.value : ""
+									round: isRoundType(event.target.value) ? event.target.value : "",
+									from,
+									to
 								})
 							}>
 							<option value="">All rounds</option>
@@ -237,14 +244,12 @@ export function ReportsScreen({
 				</div>
 				<div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
 					<p className="min-w-0 max-w-prose type-small text-ink-2">
-						Site and round are applied before the newest 500 observations are taken. Days are applied to the
-						observations that came back, in the project&apos;s time zone, {timeZone}.
+						Every filter is applied to every observation. Days are in the project&apos;s time zone,{" "}
+						{timeZone}.
 					</p>
 					<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
 						<p role="status" className="type-small text-ink-2">
-							{report.total === rows.length
-								? `${rows.length} ${rows.length === 1 ? "observation" : "observations"} counted`
-								: `${report.total} of ${rows.length} observations counted`}
+							{`${formatCount(report.total)} ${report.total === 1 ? "observation" : "observations"} counted`}
 						</p>
 						{filtered && (
 							<Button variant="outline" size="sm" onClick={clear}>
@@ -269,8 +274,8 @@ export function ReportsScreen({
 							kind="filtered"
 							title="No observations match these filters"
 							body={
-								limited
-									? "Based on the newest 500 observations. Older ones are not searched. Choose a site or a round to narrow the list."
+								backwards
+									? "The last day is before the first day, so nothing can match."
 									: "Change or clear the filters to see a report."
 							}
 							actions={
@@ -296,9 +301,11 @@ export function ReportsScreen({
 					<p className="mt-6 type-section text-ink">
 						{summarySentence(report, { clock: projectClock, round: round || null })}
 					</p>
-					{limited && (
-						<Note className="mt-4" title="Based on the newest 500 observations.">
-							Older observations are not counted. Choose a site or a round to narrow the list.
+					{report.sampled && (
+						<Note
+							className="mt-4"
+							title={`Observers, days and play types are counted from the newest ${formatCount(report.counted)}.`}>
+							{`Zones and rounds count all ${formatCount(report.total)} observations. Narrow the days or choose a site to count every observer, day and play type.`}
 						</Note>
 					)}
 					{unreadableForms > 0 && (
@@ -316,7 +323,7 @@ export function ReportsScreen({
 						<Section title="By round">
 							<CountBars label="Observations by round" rows={report.rounds} />
 						</Section>
-						<Section title="By play type">
+						<Section title={report.sampled ? "By play type, newest observations" : "By play type"}>
 							{report.play ? (
 								<CountBars label="Observations by play type" rows={report.play} />
 							) : (
@@ -326,11 +333,11 @@ export function ReportsScreen({
 								</p>
 							)}
 						</Section>
-						<Section title="By observer">
+						<Section title={report.sampled ? "By observer, newest observations" : "By observer"}>
 							<CountBars label="Observations by observer" rows={report.observerBars} />
 						</Section>
 						<div className="md:col-span-2">
-							<Section title="By day">
+							<Section title={report.sampled ? "By day, newest observations" : "By day"}>
 								<CountBars label="Observations by day" rows={report.days} />
 								{report.daysLeftOut > 0 && (
 									<p className="mt-3 type-small text-ink-2">

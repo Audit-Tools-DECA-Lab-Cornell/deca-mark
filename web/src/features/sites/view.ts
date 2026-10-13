@@ -1,5 +1,5 @@
 import type { Site } from "@/lib/api/types";
-import { formatBytes, plural } from "@/lib/labels";
+import { formatBytes, formatCount, plural } from "@/lib/labels";
 import type { Clock } from "@/lib/time";
 
 /**
@@ -96,13 +96,15 @@ export type ZoneCountGroup = {
 };
 
 /**
- * The site's zones with how many observations each holds, counted by the server for every map version.
- * Zones of older versions that observations still name come after, under the label of the newest version
- * they were recorded on. Without the counts (`null`) the zones are listed without them.
+ * The site's zones with how many observations each holds, counted by the server for every map version:
+ * "5 observations on v2 · 3 on earlier versions". Zones of older versions that observations still name
+ * come after, under the label of the newest version they were recorded on. Without the counts (`null`) the
+ * zones are listed without them.
  */
 export function zoneRows(
 	zones: readonly { id: string; code: string; label: string }[],
-	groups: readonly ZoneCountGroup[] | null
+	groups: readonly ZoneCountGroup[] | null,
+	currentVersion: number | null = null
 ): ZoneRow[] {
 	if (groups === null)
 		return zones.map(zone => ({
@@ -113,10 +115,11 @@ export function zoneRows(
 			count: null,
 			countLabel: null
 		}));
-	const counts = new Map<string, { count: number; label: string; version: number }>();
+	const counts = new Map<string, { onCurrent: number; earlier: number; label: string; version: number }>();
 	for (const group of groups) {
-		const entry = counts.get(group.zone_id) ?? { count: 0, label: group.zone_label, version: 0 };
-		entry.count += group.count;
+		const entry = counts.get(group.zone_id) ?? { onCurrent: 0, earlier: 0, label: group.zone_label, version: 0 };
+		if (group.package_version === currentVersion) entry.onCurrent += group.count;
+		else entry.earlier += group.count;
 		if (group.package_version > entry.version) {
 			entry.version = group.package_version;
 			entry.label = group.zone_label;
@@ -124,19 +127,28 @@ export function zoneRows(
 		counts.set(group.zone_id, entry);
 	}
 	const known = new Set(zones.map(zone => zone.id));
-	const row = (id: string, code: string | null, label: string, count: number): ZoneRow => ({
+	const words = (onCurrent: number, earlier: number, current: boolean): string => {
+		if (currentVersion === null) return plural(onCurrent + earlier, "observation");
+		if (!current) return `${plural(earlier, "observation")} on earlier versions`;
+		const here = `${plural(onCurrent, "observation")} on v${currentVersion}`;
+		return earlier > 0 ? `${here} · ${formatCount(earlier)} on earlier versions` : here;
+	};
+	const row = (id: string, code: string | null, label: string, onCurrent: number, earlier: number): ZoneRow => ({
 		id,
 		code,
 		current: code !== null,
 		label,
-		count,
-		countLabel: plural(count, "observation")
+		count: onCurrent + earlier,
+		countLabel: words(onCurrent, earlier, code !== null)
 	});
 	return [
-		...zones.map(zone => row(zone.id, zone.code, zone.label, counts.get(zone.id)?.count ?? 0)),
+		...zones.map(zone => {
+			const entry = counts.get(zone.id);
+			return row(zone.id, zone.code, zone.label, entry?.onCurrent ?? 0, entry?.earlier ?? 0);
+		}),
 		...[...counts]
 			.filter(([id]) => !known.has(id))
-			.map(([id, entry]) => row(id, null, entry.label, entry.count))
+			.map(([id, entry]) => row(id, null, entry.label, entry.onCurrent, entry.earlier))
 			.sort((a, b) => a.label.localeCompare(b.label, "en"))
 	];
 }

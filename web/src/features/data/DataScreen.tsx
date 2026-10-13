@@ -16,6 +16,7 @@ import { LoadFailure } from "@/components/shell/LoadFailure";
 import { projectHref } from "@/features/shell/navigation";
 import { appendPage } from "@/lib/api/observations";
 import type { Observation, ObservationFilters, ObservationPage, RawDefinition } from "@/lib/api/types";
+import { scopeLines } from "@/lib/export/files";
 import { formatCount, plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
 import { clock as makeClock } from "@/lib/time";
@@ -58,6 +59,8 @@ export type DataPlan = {
 export type DataScreenProps = {
 	org: string;
 	project: string;
+	/** The project's identity, for the export DECA Mark makes. */
+	projectId: string;
 	timeZone: string;
 	/** The view in the address, as the server applied it. */
 	view: DataView;
@@ -98,6 +101,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 export function DataScreen({
 	org,
 	project,
+	projectId,
 	timeZone,
 	view,
 	filters,
@@ -385,12 +389,12 @@ export function DataScreen({
 						<Button
 							variant="primary"
 							icon="download"
-							disabled={shown.length === 0}
+							disabled={total === 0}
 							disabledReason={
-								shown.length === 0
+								total === 0
 									? noneYet
 										? "There is nothing to export yet."
-										: "No observations are in this view."
+										: "No observations match these filters."
 									: undefined
 							}
 							onClick={() => setExportOpen(true)}>
@@ -402,7 +406,7 @@ export function DataScreen({
 
 			{missingVersions.length > 0 && (
 				<Note tone="attention" title="Some questions could not be loaded.">
-					Answers made with {missingVersions.join(", ")} are shown and exported under their question ids.
+					Answers made with {missingVersions.join(", ")} are shown under their question ids.
 				</Note>
 			)}
 			{planNote && <Note tone="neutral">{planNote}</Note>}
@@ -465,13 +469,24 @@ export function DataScreen({
 			<ExportObservations
 				open={exportOpen}
 				onOpenChange={setExportOpen}
-				records={shown}
-				definitions={definitions}
-				missingVersions={missingVersions}
+				projectId={projectId}
+				filters={filters}
 				matching={total}
 				searched={q.trim() !== ""}
-				projectCode={project}
-				clock={clock}
+				scope={scopeLines(
+					{
+						site: sites.find(entry => entry.code === view.site)?.name ?? null,
+						zones: view.zones.map(id => zones.find(option => option.value === id)?.label ?? id),
+						version: view.version,
+						round: view.round,
+						observer: view.observer,
+						from: view.from,
+						to: view.to
+					},
+					clock
+				)}
+				fileStem={view.site ?? project}
+				dayKey={clock.dayKey(new Date().toISOString())}
 			/>
 		</div>
 	);

@@ -473,7 +473,7 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
 - **Coverage:** from `GET /v1/…/observations/summary?site_id=…`. Rows are recorded snapshots: the current version's zones first (zero rows from the current package zones), then "Recorded on earlier versions" (`v1 · North meadow`). Columns are the round types. Keep "Coverage is the records present, not completion."
 - **Field return:** the total from the summary; today and the last 7 days from the summary with date bounds.
 - **Panels with no server dimension** (observer, day, play type, last received): keep them, but compute them from the newest 500 with the existing note, until CR-W15 adds facets. Never mix exact and page-limited numbers without saying which is which.
-- **Reports:** zone and round from the summary. Observer and day follow the rule above.
+- **Reports:** zone and round from the summary. Observer and day follow the rule above. Amended 2026-10-13 (WEB-41): days are filters DECA Mark applies (they were applied in the browser to the newest 500), so every bar covers the same scope; when more match than the newest page holds, the sentence leaves out observers and days, and the observer, day and play type sections are titled "…, newest observations" under a note naming both counts.
 - **Site page zone island:** counts "recorded on v2" from the summary filtered to the current package, plus "N on earlier versions".
 
 ### 7.6 Exports
@@ -486,6 +486,7 @@ Web copy must also pass the honesty scan's banned words (`e2e/support/scan.ts`):
   - When `total_matching` exceeds 10,000, disable Export with the visible reason "One export holds up to 10,000 observations. Narrow the dates or choose one site."
   - A 422 `validation_failed` whose issue code is `export_scope_too_large` gets the same text, without counts until CR-W15.
 - **Codebook and formula protection:** the server writes the codebook and protects every CSV cell. The client builds neither. Any remaining client CSV (none planned) must neutralise `=`, `+`, `-`, `@`, tab and CR in text cells.
+- **Client exports (amended 2026-10-13, WEB-41):** the browser-built CSV, GeoJSON and codebook are removed; Data and QGIS both download the server ZIP. The Data dialog's button reads "Export 1,284 matching observations", lists the scope one filter per line (zones say "every map version, by the zone's identity" or "only what was recorded on map v2"; days give the UTC bounds), and says when the page's search is not applied to the file.
 - **QGIS page:** "Records out" uses the same server export. "Maps for QGIS in" adds, per site, "Download zone boundaries of v1 (.geojson)" built from `/zones?package_id` (UUID, code, label and version properties). Exports already carry `historical-zones.geojson` for their own scope.
 
 ## 8. Tasks and order
