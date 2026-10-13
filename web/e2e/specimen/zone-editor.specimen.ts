@@ -242,6 +242,24 @@ test.describe("pointer and touch (gates 2 and 4, emulated)", () => {
 		expect((await page.locator("[data-zone]").first().getAttribute("d"))!.match(/L/g)).toHaveLength(5);
 	});
 
+	test("overlapping parts are drawn and hit where they overlap", async ({ page }) => {
+		await open(page, "overlap");
+		const zone = page.locator("[data-zone]").first();
+		await zone.scrollIntoViewIfNeeded();
+		// The parts span 0 to 0.015 on both axes and overlap from 0.005 to 0.01: the middle is in both.
+		const box = (await zone.boundingBox())!;
+		const hits = await page.evaluate(
+			({ x, y }) => document.elementsFromPoint(x, y).filter(element => element.hasAttribute("data-zone")).length,
+			{ x: box.x + box.width / 2, y: box.y + box.height / 2 }
+		);
+		expect(hits, "the shared patch is filled, not a false hole").toBe(1);
+		const outside = await page.evaluate(
+			({ x, y }) => document.elementsFromPoint(x, y).filter(element => element.hasAttribute("data-zone")).length,
+			{ x: box.x + box.width * 0.15, y: box.y + box.height * 0.15 }
+		);
+		expect(outside, "the north-west corner, outside both parts").toBe(0);
+	});
+
 	test("a drag moves one point; snapping copies a neighbour's exact pair; Alt places freely", async ({
 		page
 	}, testInfo) => {
@@ -365,6 +383,43 @@ test.describe("pointer and touch (gates 2 and 4, emulated)", () => {
 		await page.waitForTimeout(100);
 		const scale = (transform: string) => Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? 1);
 		expect(scale(await cameraTransform(page))).toBeGreaterThan(scale(zoomBefore));
+	});
+
+	test("touch: a second finger during a handle drag pinches; the point goes back", async ({ page }, testInfo) => {
+		test.skip(testInfo.project.name !== "phone-390", "touch emulation runs on the phone project");
+		await open(page, "holed");
+		const before = await original(page);
+		await zoneRow(page, "Holed square").tap();
+		await page.getByRole("button", { name: "Fit zone" }).tap();
+		await page.locator('[aria-roledescription="map"]').scrollIntoViewIfNeeded();
+		await page.waitForTimeout(400);
+		const from = await centre(page, /^Point 1 of 4, Holed square, outer edge$/);
+		const zoomBefore = await cameraTransform(page);
+		const client = await page.context().newCDPSession(page);
+		const one = (x: number, y: number) => ({ x, y, id: 1 });
+		await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [one(from.x, from.y)] });
+		for (let step = 1; step <= 4; step++)
+			await client.send("Input.dispatchTouchEvent", {
+				type: "touchMove",
+				touchPoints: [one(from.x + step * 4, from.y - step * 3)]
+			});
+		const held = one(from.x + 16, from.y - 12);
+		const second = { x: held.x + 60, y: held.y - 40, id: 2 };
+		await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [held, second] });
+		for (let step = 1; step <= 8; step++)
+			await client.send("Input.dispatchTouchEvent", {
+				type: "touchMove",
+				touchPoints: [
+					one(held.x - step * 5, held.y + step * 4),
+					{ x: second.x + step * 5, y: second.y - step * 4, id: 2 }
+				]
+			});
+		await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+		await page.waitForTimeout(100);
+		expect(changed(before, await current(page)), "no point moved").toEqual([]);
+		const scale = (transform: string) => Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? 1);
+		expect(scale(await cameraTransform(page)), "the plan zoomed").toBeGreaterThan(scale(zoomBefore));
+		await expect(page.getByRole("button", { name: "Undo", exact: true })).toHaveAttribute("aria-disabled", "true");
 	});
 });
 

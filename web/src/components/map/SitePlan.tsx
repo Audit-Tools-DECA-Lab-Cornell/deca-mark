@@ -2,7 +2,15 @@ import { type KeyboardEvent, memo, type ReactNode, useId } from "react";
 
 import { cx } from "@/lib/cx";
 import { MAP_PALETTES, mapChromeTheme, type MapPalette, type MapPaletteName } from "@/lib/map-palette";
-import { type PlanParts, type PlanPoint, type PlanShape, type PlanZone, type ProjectedSite, toPlan } from "@/lib/plan";
+import {
+	type PlanPoint,
+	type PlanShape,
+	type PlanZone,
+	type ProjectedSite,
+	toPlan,
+	zonePath,
+	zonePathDecimals
+} from "@/lib/plan";
 
 /**
  * A site plan as SVG: the ground, the site, its surfaces, paths, structures, equipment and trees, the
@@ -62,6 +70,11 @@ export type SitePlanProps = {
 	/** "meet" shows the whole view box; "slice" fills the element and crops the edges. */
 	fit?: "meet" | "slice";
 	camera?: PlanCamera;
+	/**
+	 * Screen pixels per plan unit at the camera's zoom, when the frame knows its size. Zone outlines keep the
+	 * precision this calls for; without it a plan unit is taken as a pixel at zoom 1.
+	 */
+	pixelsPerUnit?: number;
 	/** Ease camera moves over the `camera` duration. MapFrame turns it off while a drag is under way. */
 	animateCamera?: boolean;
 	/**
@@ -210,14 +223,6 @@ function ringPath(points: readonly PlanPoint[]): string {
 
 function polygonPath(rings: readonly (readonly PlanPoint[])[]): string {
 	return rings.map(ringPath).join("");
-}
-
-/**
- * A zone's outline as SVG path data, one subpath per ring of every part. Drawn with `fill-rule="evenodd"`,
- * holes stay unfilled whichever way their rings wind.
- */
-export function zonePath(parts: PlanParts): string {
-	return parts.map(polygonPath).join("");
 }
 
 function linePath(points: readonly PlanPoint[]): string {
@@ -550,6 +555,7 @@ export function SitePlan({
 	viewBox,
 	fit = "meet",
 	camera = { x: 0, y: 0, zoom: 1 },
+	pixelsPerUnit,
 	animateCamera = false,
 	labelScale = 1,
 	onSelectObservation,
@@ -570,6 +576,7 @@ export function SitePlan({
 	const counterScale = labelScale / camera.zoom;
 
 	const zoneEdge = ZONE_EDGE[detail];
+	const zoneDecimals = zonePathDecimals(pixelsPerUnit ?? camera.zoom);
 	const anyHatched = site.zones.some(zone => zoneStyles[zone.id]?.hatched);
 	// Markers are buttons only with a selection to report; the plan is a group whenever it holds controls.
 	const markersInteractive = Boolean(onSelectObservation);
@@ -645,8 +652,8 @@ export function SitePlan({
 								<path
 									key={zone.id}
 									data-zone={zone.id}
-									d={zonePath(zone.parts)}
-									fillRule="evenodd"
+									d={zonePath(zone.parts, zoneDecimals)}
+									fillRule="nonzero"
 									fill={style.hatched ? `url(#${hatchId})` : palette.zone.fill}
 									fillOpacity={style.hatched ? 1 : palette.zone.fillOpacity}
 									stroke={palette.zone.edge}

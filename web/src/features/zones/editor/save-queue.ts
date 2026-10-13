@@ -160,6 +160,28 @@ function trySend(queue: SaveQueue): QueueStep {
 	);
 }
 
+/**
+ * The read a pause is still waiting for, when none is under way: an unconfirmed save is checked, and a
+ * conflict, a precondition failure or a closed draft whose read got no answer reads the draft again. A pause
+ * that already holds the saved draft needs no read.
+ */
+function readPending(queue: SaveQueue): Reading["reason"] | null {
+	const pause = queue.pause;
+	if (!pause || queue.reading || queue.offline) return null;
+	switch (pause.kind) {
+		case "unconfirmed":
+			return "verify";
+		case "conflict":
+			return pause.server ? null : "conflict";
+		case "precondition":
+			return pause.server ? null : "reload";
+		case "closed":
+			return pause.server ? null : "closed";
+		default:
+			return null;
+	}
+}
+
 function read(queue: SaveQueue, reason: Reading["reason"], pause: Pause | null): QueueStep {
 	const seq = queue.seq + 1;
 	return step({ ...queue, seq, pause, reading: { seq, reason } }, { type: "get", seq, reason });
@@ -182,13 +204,15 @@ export function queueReducer(queue: SaveQueue, event: QueueEvent): QueueStep {
 	switch (event.type) {
 		case "edited": {
 			const next = { ...queue, local: event.local, invalid: event.invalid };
-			// "Fix and continue": the next edit after a refusal is sent again.
-			return step(next.pause?.kind === "rejected" ? { ...next, pause: null } : next);
+			// "Fix and continue": the next edit after a refusal, or after the draft was too large, is sent again.
+			// The structural check behind `invalid` still holds back a draft over the limits.
+			const resumes = next.pause?.kind === "rejected" || next.pause?.kind === "too-large";
+			return step(resumes ? { ...next, pause: null } : next);
 		}
 
 		case "flush": {
-			if (queue.pause?.kind === "unconfirmed" && !queue.reading && !queue.offline)
-				return read(queue, "verify", queue.pause);
+			const unread = readPending(queue);
+			if (unread) return read(queue, unread, queue.pause);
 			if (queue.pause?.kind === "waiting") return trySend({ ...queue, pause: null });
 			return trySend(queue);
 		}
@@ -281,7 +305,7 @@ export function queueReducer(queue: SaveQueue, event: QueueEvent): QueueStep {
 			if (status === 401) return step({ ...done, pause: { kind: "signed-out" } });
 			if (status === 403 || status === 404)
 				return step({ ...done, inFlight: null, pause: { kind: "no-access" } });
-			// No answer: keep the pause; the next flush (or reconnecting) reads again.
+			// No answer: keep the pause, which still needs its read; the next flush (or reconnecting) reads again.
 			return step(done);
 		}
 
@@ -289,7 +313,8 @@ export function queueReducer(queue: SaveQueue, event: QueueEvent): QueueStep {
 			return step({ ...queue, offline: true });
 		case "online": {
 			const back = { ...queue, offline: false };
-			if (back.pause?.kind === "unconfirmed" && !back.reading) return read(back, "verify", back.pause);
+			const unread = readPending(back);
+			if (unread) return read(back, unread, back.pause);
 			return trySend(back);
 		}
 		case "signed-in": {

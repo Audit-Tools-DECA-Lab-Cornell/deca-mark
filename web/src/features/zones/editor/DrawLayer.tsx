@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { usePlanCamera } from "@/components/map/MapFrame";
+import { newId } from "@/lib/ids";
 import { MAP_PALETTES, type MapPaletteName } from "@/lib/map-palette";
 import { fromPlan, type PlanFrame, type PlanPoint, toPlan } from "@/lib/plan";
 import { type DraftZone, nudge, type PolygonRings, type Position, rectangleRing } from "@/lib/zones/geometry";
@@ -126,7 +127,7 @@ export function DrawLayer({
 				type: "draw-point",
 				position: candidate ? candidate.position : fromPlan(plan, frame),
 				snap: candidate ? candidate.source : null,
-				zoneId: crypto.randomUUID(),
+				zoneId: newId(),
 				at: eventTime()
 			});
 		},
@@ -177,7 +178,7 @@ export function DrawLayer({
 						type: "draw-point",
 						position: crossCandidate ? crossCandidate.position : cross,
 						snap: crossCandidate ? crossCandidate.source : null,
-						zoneId: crypto.randomUUID(),
+						zoneId: newId(),
 						at: eventTime()
 					});
 				break;
@@ -215,6 +216,19 @@ export function DrawLayer({
 	}
 
 	/* ── Rectangles by dragging ───────────────────────────────────────── */
+
+	// A second finger turns the press into a pinch: the corner it started is dropped, and the plan zooms.
+	const { onPinchStart } = camera;
+	useEffect(
+		() =>
+			onPinchStart(() => {
+				dragRef.current = null;
+				setDragEnd(null);
+				setDragStart(null);
+				setHover(null);
+			}),
+		[onPinchStart]
+	);
 
 	function onPointerDown(event: PointerEvent<SVGRectElement>) {
 		if (drawing.tool !== "rectangle" || (event.pointerType === "mouse" && event.button !== 0)) return;
@@ -255,7 +269,7 @@ export function DrawLayer({
 		const plan = camera.clientToPlan(event.clientX, event.clientY);
 		const candidate = plan ? snapAt(plan, event.altKey) : null;
 		const end = candidate ? candidate.position : plan ? fromPlan(plan, frame) : null;
-		const zoneId = crypto.randomUUID();
+		const zoneId = newId();
 		if (points.length === 0)
 			dispatch({ type: "draw-point", position: drag.start, snap: null, zoneId, at: eventTime() });
 		// A drag sets both corners; a click sets one corner, and the next click the other.

@@ -130,6 +130,22 @@ export function RingHandles({
 		if (position) dispatch({ type: "drag-move", position });
 	}
 
+	// A second finger turns the press into a pinch: the point goes back where it was, and the plan zooms.
+	const { onPinchStart } = camera;
+	useEffect(
+		() =>
+			onPinchStart(() => {
+				if (!dragRef.current) return;
+				dragRef.current = null;
+				pendingRef.current = null;
+				if (frameRequest.current !== null) cancelAnimationFrame(frameRequest.current);
+				frameRequest.current = null;
+				onSnap(null);
+				dispatch({ type: "cancel-move" });
+			}),
+		[onPinchStart, onSnap, dispatch]
+	);
+
 	function startDrag(event: PointerEvent<SVGGElement>, index: number, insert: boolean) {
 		if (event.pointerType === "mouse" && event.button !== 0) return;
 		// The handle owns this press: the frame must not pan under it.

@@ -11,11 +11,11 @@ import { StateBadge } from "@/components/contour/StateBadge";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/contour/Table";
 import { TextLink } from "@/components/contour/TextLink";
 import { MapFrame } from "@/components/map/MapFrame";
-import { zonePath,type ZonePlanStyle } from "@/components/map/SitePlan";
+import type { ZonePlanStyle } from "@/components/map/SitePlan";
 import { cx } from "@/lib/cx";
 import { plural, ROUND_TYPES, roundName } from "@/lib/labels";
 import type { Coverage } from "@/lib/observations/summary";
-import type { ProjectedSite } from "@/lib/plan";
+import { type ProjectedSite, zonePath } from "@/lib/plan";
 
 export type CoverageIslandProps = {
 	/** The site the counts are about, and the version of its current map package. */
@@ -124,7 +124,7 @@ export function CoverageIsland({
 								<path
 									key={zone.id}
 									d={zonePath(zone.parts)}
-									fillRule="evenodd"
+									fillRule="nonzero"
 									fill="none"
 									pointerEvents="all"
 									onPointerEnter={() => setHovered(zone.code ?? zone.id)}

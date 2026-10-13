@@ -97,7 +97,9 @@ test("structure checks: names, codes, identities and the change note", () => {
 	for (const code of ["A", "a.b_c-1", "9", "A".repeat(100)]) assert.ok(geometry.validCode(code), code);
 	assert.deepEqual(issues([zone(1, square), zone(2, square, { zone_code: "Z1" })]), ["duplicate_code"]);
 	assert.deepEqual(issues([zone(1, square), zone(1, square, { zone_code: "Z2" })]), ["duplicate_zone_id"]);
-	assert.deepEqual(issues([zone(1, square, { zone_id: "3000000A-0000-4000-8000-00000000000B" })]), ["invalid_zone_id"]);
+	assert.deepEqual(issues([zone(1, square, { zone_id: "3000000A-0000-4000-8000-00000000000B" })]), [
+		"invalid_zone_id"
+	]);
 	assert.deepEqual(issues([zone(1, fixture("unclosed"))]), ["invalid_structure"]);
 	assert.deepEqual(
 		geometry.structureIssues([zone(1, square)], "x".repeat(2001)).map(issue => issue.code),

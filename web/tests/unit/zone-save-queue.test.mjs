@@ -186,6 +186,18 @@ test("413 and too_complex: too large; other 422s list their issues until the nex
 		const { queue } = fail(inFlight(), failure);
 		assert.equal(queue.pause.kind, "too-large");
 		assert.match(q.saveStatus(queue, time).text, /larger than DECA Mark accepts/);
+		assert.equal(play(queue, { type: "flush" }).queue.inFlight, null, "not resent unchanged");
+		// An edit that is still over the limits stays held back by the structural check.
+		const over = play(queue, edit(zones(0.03), "This draft has more than 2,000 points in one zone."), {
+			type: "flush"
+		});
+		assert.deepEqual(over.commands, []);
+		// A smaller draft saves again.
+		const resumed = play(over.queue, edit(zones(0.03)), { type: "flush" });
+		assert.deepEqual(
+			resumed.commands.map(command => [command.type, command.etag]),
+			[["put", etag(6)]]
+		);
 	}
 	const issues = [{ code: "invalid_structure", zoneIds: [ID], path: "/zones/0/geometry" }];
 	let { queue } = fail(inFlight(), { kind: "http", status: 422, code: "validation_failed", issues });
@@ -259,6 +271,42 @@ test("a failed read keeps checking: the next flush reads again", () => {
 	});
 	assert.equal(queue.pause.kind, "unconfirmed");
 	assert.deepEqual(play(queue, { type: "flush" }).commands, [{ type: "get", seq: 3, reason: "verify" }]);
+});
+
+test("a failed read after a conflict, a refused precondition or a closed draft is read again", () => {
+	for (const [status, reason, kind] of [
+		[412, "conflict", "conflict"],
+		[428, "reload", "precondition"],
+		[409, "closed", "closed"]
+	]) {
+		let { queue, commands } = fail(inFlight(), { kind: "http", status });
+		assert.deepEqual(commands, [{ type: "get", seq: 2, reason }]);
+		// The read gets no answer: the pause stays, without the saved draft, and nothing is sent.
+		({ queue, commands } = play(queue, { type: "get-failed", seq: 2, failure: { kind: "http", status: 503 } }));
+		assert.equal(queue.pause.kind, kind);
+		assert.equal(queue.pause.server, null);
+		assert.deepEqual(commands, []);
+		// The next flush reads again; the answer lets the manager choose.
+		({ queue, commands } = play(queue, { type: "flush" }));
+		assert.deepEqual(commands, [{ type: "get", seq: 3, reason }]);
+		({ queue } = play(queue, { type: "get-ok", seq: 3, draft: saved(8, zones(0.04)) }));
+		assert.ok(queue.pause.server, `${kind}: the saved draft is read`);
+		// Reconnecting reads again too, after a read lost to the connection.
+		({ queue } = play(
+			fail(inFlight(), { kind: "http", status }).queue,
+			{ type: "get-failed", seq: 2, failure: { kind: "network" } },
+			{ type: "offline" }
+		));
+		assert.deepEqual(play(queue, { type: "flush" }).commands, [], "no read while offline");
+		assert.deepEqual(play(queue, { type: "online" }).commands, [{ type: "get", seq: 3, reason }]);
+	}
+	// Once the saved draft is in hand, a flush reads nothing more.
+	const { queue } = play(
+		fail(inFlight(), { kind: "http", status: 412 }).queue,
+		{ type: "get-ok", seq: 2, draft: saved(8, zones(0.04)) },
+		edit(zones(0.05))
+	);
+	assert.deepEqual(play(queue, { type: "flush" }).commands, []);
 });
 
 test("offline: nothing is sent; a save lost to the connection is checked on reconnecting", () => {

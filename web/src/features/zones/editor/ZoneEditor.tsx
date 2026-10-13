@@ -19,6 +19,7 @@ import { Kbd } from "@/components/contour/Kbd";
 import { Segmented } from "@/components/contour/Segmented";
 import { type MapController, MapFrame } from "@/components/map/MapFrame";
 import type { ZonePlanStyle } from "@/components/map/SitePlan";
+import { newId } from "@/lib/ids";
 import { type MapPaletteName, useMapPalette } from "@/lib/map-palette";
 import { type PlanPoint, pointInParts, type ProjectedSite, toPlan, zoneBounds } from "@/lib/plan";
 import { type DraftZone, partsOf, type PolygonRings, type Position, ringAt, vertexAt } from "@/lib/zones/geometry";
@@ -339,7 +340,7 @@ export function ZoneEditor({
 		if (crossToken > 0) document.getElementById(crossId)?.focus({ preventScroll: true });
 	}, [crossToken, crossId]);
 
-	const finishDrawing = () => dispatch({ type: "draw-finish", zoneId: crypto.randomUUID(), at: eventTime() });
+	const finishDrawing = () => dispatch({ type: "draw-finish", zoneId: newId(), at: eventTime() });
 
 	// A zone just drawn has no name yet: focus goes to its Name field.
 	const lastStep = state.history.past[state.history.past.length - 1];

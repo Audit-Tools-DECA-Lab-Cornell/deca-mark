@@ -190,6 +190,63 @@ test("touch: tapping out a shape, and dragging a rectangle", async ({ page }, te
 	expect(zones[4]!.geometry.coordinates[0]).toHaveLength(5);
 });
 
+test("touch: a second finger during a rectangle drag pinches, and draws nothing", async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== "phone-390", "touch emulation runs on the phone project");
+	await open(page, "neighbours");
+	const before = await current(page);
+	const map = page.locator('[aria-roledescription="map"]');
+	await map.scrollIntoViewIfNeeded();
+	await page.getByRole("radio", { name: "Draw rectangle" }).tap();
+	await map.scrollIntoViewIfNeeded();
+	const box = (await map.boundingBox())!;
+	const transform = () =>
+		page
+			.locator('[aria-roledescription="map"] svg > g')
+			.first()
+			.evaluate(element => (element as SVGGElement).style.transform);
+	const scale = (value: string) => Number(/scale\(([\d.]+)\)/.exec(value)?.[1] ?? 1);
+	const zoomBefore = scale(await transform());
+	const from = { x: box.x + box.width * 0.35, y: box.y + box.height * 0.6, id: 1 };
+	const client = await page.context().newCDPSession(page);
+	await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [from] });
+	for (let step = 1; step <= 4; step++)
+		await client.send("Input.dispatchTouchEvent", {
+			type: "touchMove",
+			touchPoints: [{ x: from.x + step * 8, y: from.y + step * 4, id: 1 }]
+		});
+	const held = { x: from.x + 32, y: from.y + 16, id: 1 };
+	const second = { x: held.x + 50, y: held.y + 30, id: 2 };
+	await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [held, second] });
+	for (let step = 1; step <= 8; step++)
+		await client.send("Input.dispatchTouchEvent", {
+			type: "touchMove",
+			touchPoints: [
+				{ x: held.x - step * 5, y: held.y - step * 3, id: 1 },
+				{ x: second.x + step * 5, y: second.y + step * 3, id: 2 }
+			]
+		});
+	// The fingers lift one at a time: neither is a corner.
+	await client.send("Input.dispatchTouchEvent", {
+		type: "touchEnd",
+		touchPoints: [{ x: held.x - 40, y: held.y - 24, id: 1 }]
+	});
+	await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+	await page.waitForTimeout(100);
+	expect(await current(page), "no rectangle was added").toEqual(before);
+	expect(scale(await transform()), "the plan zoomed").toBeGreaterThan(zoomBefore);
+	// The tool is still on, with no corner set: one drag still draws one rectangle.
+	await expect(page.getByRole("radio", { name: "Draw rectangle" })).toHaveAttribute("data-state", "on");
+	const start = { x: box.x + box.width * 0.3, y: box.y + box.height * 0.7 };
+	await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [start] });
+	for (let step = 1; step <= 8; step++)
+		await client.send("Input.dispatchTouchEvent", {
+			type: "touchMove",
+			touchPoints: [{ x: start.x + step * 10, y: start.y + step * 4 }]
+		});
+	await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+	expect(await current(page)).toHaveLength(before.length + 1);
+});
+
 test("holes and parts come off whole, the zone keeps its identity, and undo brings them back", async ({ page }) => {
 	await open(page, "holed");
 	const [before] = await current(page);

@@ -62,6 +62,11 @@ export type PlanCameraState = {
 	view: PlanBounds;
 	/** Eases the camera so a plan point is comfortably in view, when it is not. */
 	showPoint: (point: PlanPoint) => void;
+	/**
+	 * Calls `cancel` when a second finger lands and the press becomes a pinch, so a layer drops the drag or
+	 * the drawing gesture its first finger started (the frame zooms instead). Returns the unsubscribe.
+	 */
+	onPinchStart: (cancel: () => void) => () => void;
 };
 
 const PlanCameraContext = createContext<PlanCameraState | null>(null);
@@ -272,6 +277,13 @@ export function MapFrame({
 	const dragRef = useRef<Drag | null>(null);
 	const pointersRef = useRef(new Map<number, { x: number; y: number }>());
 	const pinchRef = useRef<Pinch | null>(null);
+	const pinchListeners = useRef(new Set<() => void>());
+	const onPinchStart = useCallback((cancel: () => void) => {
+		pinchListeners.current.add(cancel);
+		return () => {
+			pinchListeners.current.delete(cancel);
+		};
+	}, []);
 	const editing = mode !== "pan";
 	// Placement armed, or a drawing tool on: the frame and its label turn accent, as the collector's armed map does.
 	const accentFrame = armed || mode === "draw";
@@ -472,31 +484,67 @@ export function MapFrame({
 		event.preventDefault();
 	};
 
+	/*
+	 * Fingers in edit and draw modes are counted on the way down to the layers (the capture phase), because a
+	 * handle or a drawing tool keeps its own presses from bubbling here. A second finger turns the press into
+	 * a pinch: the layers drop what the first finger started, and neither finger reaches them until the pinch
+	 * ends, so a pinch never moves a point or draws a shape.
+	 */
+	const onPointerDownCapture = (event: PointerEvent<HTMLDivElement>) => {
+		if (!editing || !controls || !event.currentTarget.contains(event.target as Node)) return;
+		if ((event.target as Element).closest("[data-map-overlay]")) return;
+		// The first pointer of its kind: any still counted lost their release (outside the window, say).
+		if (event.isPrimary) pointersRef.current.clear();
+		pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+		if (pointersRef.current.size < 2) return;
+		event.stopPropagation();
+		// A third finger joins the pinch without changing it.
+		if (pinchRef.current) return;
+		const [a, b] = [...pointersRef.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
+		pinchRef.current = { distance: Math.hypot(a.x - b.x, a.y - b.y), midX: (a.x + b.x) / 2, midY: (a.y + b.y) / 2 };
+		dragRef.current = null;
+		for (const cancel of pinchListeners.current) cancel();
+		event.currentTarget.setPointerCapture(event.pointerId);
+		setEasing(false);
+		setDragging(true);
+	};
+
+	const onPointerMoveCapture = (event: PointerEvent<HTMLDivElement>) => {
+		if (!editing || !pointersRef.current.has(event.pointerId)) return;
+		pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+		const pinch = pinchRef.current;
+		if (!pinch) return;
+		event.stopPropagation();
+		if (pointersRef.current.size < 2) return;
+		const [a, b] = [...pointersRef.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
+		const distance = Math.hypot(a.x - b.x, a.y - b.y);
+		const midX = (a.x + b.x) / 2;
+		const midY = (a.y + b.y) / 2;
+		const scale = size ? layoutOf(size, site).scale : 1;
+		scheduleCamera(
+			(midX - pinch.midX) / scale,
+			(midY - pinch.midY) / scale,
+			pinch.distance > 0 ? distance / pinch.distance : 1,
+			frameUnits(midX, midY)
+		);
+		pinchRef.current = { distance, midX, midY };
+	};
+
+	const onPointerEndCapture = (event: PointerEvent<HTMLDivElement>) => {
+		if (!editing || !pointersRef.current.delete(event.pointerId) || !pinchRef.current) return;
+		// A pinch's fingers lifting end the pinch: not a drag, a click or a drawn point.
+		event.stopPropagation();
+		if (pointersRef.current.size < 2) {
+			pinchRef.current = null;
+			setDragging(false);
+		}
+	};
+
 	const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
 		// Presses in the Layers menu reach here through the React tree from its portal: they are not the plan's.
 		if (!controls || !event.currentTarget.contains(event.target as Node)) return;
 		// The overlay controls handle their own presses.
 		if ((event.target as Element).closest("[data-map-overlay]")) return;
-		if (editing) {
-			pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-			if (pointersRef.current.size === 2) {
-				// A second finger: the press becomes a pinch, and the first finger's drag stops.
-				const [a, b] = [...pointersRef.current.values()] as [
-					{ x: number; y: number },
-					{ x: number; y: number }
-				];
-				pinchRef.current = {
-					distance: Math.hypot(a.x - b.x, a.y - b.y),
-					midX: (a.x + b.x) / 2,
-					midY: (a.y + b.y) / 2
-				};
-				dragRef.current = null;
-				event.currentTarget.setPointerCapture(event.pointerId);
-				setEasing(false);
-				setDragging(true);
-				return;
-			}
-		}
 		if (event.button !== 0) return;
 		dragRef.current = {
 			pointerId: event.pointerId,
@@ -509,29 +557,6 @@ export function MapFrame({
 	};
 
 	const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-		if (editing && pointersRef.current.has(event.pointerId)) {
-			pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-			const pinch = pinchRef.current;
-			if (pinch && pointersRef.current.size >= 2) {
-				const [a, b] = [...pointersRef.current.values()] as [
-					{ x: number; y: number },
-					{ x: number; y: number }
-				];
-				const distance = Math.hypot(a.x - b.x, a.y - b.y);
-				const midX = (a.x + b.x) / 2;
-				const midY = (a.y + b.y) / 2;
-				const scale = size ? layoutOf(size, site).scale : 1;
-				const about = frameUnits(midX, midY);
-				scheduleCamera(
-					(midX - pinch.midX) / scale,
-					(midY - pinch.midY) / scale,
-					pinch.distance > 0 ? distance / pinch.distance : 1,
-					about
-				);
-				pinchRef.current = { distance, midX, midY };
-				return;
-			}
-		}
 		const drag = dragRef.current;
 		if (!drag || drag.pointerId !== event.pointerId || !canPan) return;
 		if (!drag.active) {
@@ -552,16 +577,6 @@ export function MapFrame({
 	};
 
 	const endDrag = (event: PointerEvent<HTMLDivElement>, cancelled: boolean) => {
-		if (editing) {
-			pointersRef.current.delete(event.pointerId);
-			if (pinchRef.current) {
-				if (pointersRef.current.size < 2) {
-					pinchRef.current = null;
-					setDragging(false);
-				}
-				return;
-			}
-		}
 		const drag = dragRef.current;
 		if (!drag || drag.pointerId !== event.pointerId) return;
 		dragRef.current = null;
@@ -605,9 +620,21 @@ export function MapFrame({
 				return point ? toPlanUnits(point[0], point[1]) : null;
 			},
 			view: { minX, minY, maxX, maxY },
-			showPoint
+			showPoint,
+			onPinchStart
 		};
-	}, [camera, layout?.scale, layout?.offsetX, layout?.offsetY, size, site.width, site.height, frameUnits, showPoint]);
+	}, [
+		camera,
+		layout?.scale,
+		layout?.offsetX,
+		layout?.offsetY,
+		size,
+		site.width,
+		site.height,
+		frameUnits,
+		showPoint,
+		onPinchStart
+	]);
 
 	const shownObservations = observations.map(observation => ({
 		...observation,
@@ -626,6 +653,10 @@ export function MapFrame({
 			aria-describedby={controls ? hintId : undefined}
 			tabIndex={controls ? 0 : undefined}
 			onKeyDown={onKeyDown}
+			onPointerDownCapture={onPointerDownCapture}
+			onPointerMoveCapture={onPointerMoveCapture}
+			onPointerUpCapture={onPointerEndCapture}
+			onPointerCancelCapture={onPointerEndCapture}
 			onPointerDown={onPointerDown}
 			onPointerMove={onPointerMove}
 			onPointerUp={event => endDrag(event, false)}
@@ -656,6 +687,7 @@ export function MapFrame({
 				title={label}
 				className="absolute inset-0 size-full"
 				camera={camera}
+				pixelsPerUnit={layout ? layout.scale * camera.zoom : undefined}
 				animateCamera={easing && !dragging}
 				labelScale={labelScale}
 				onSelectObservation={controls ? onSelectObservation : undefined}
@@ -678,7 +710,11 @@ export function MapFrame({
 						<>
 							<p className="type-small font-semibold">{label}</p>
 							{/* A phone-width frame keeps only the first line, so the plan stays visible. */}
-							<p className={cx("type-small @max-sm:hidden", accentFrame ? "text-on-accent" : "text-ink-2")}>
+							<p
+								className={cx(
+									"type-small @max-sm:hidden",
+									accentFrame ? "text-on-accent" : "text-ink-2"
+								)}>
 								{detail}
 							</p>
 						</>

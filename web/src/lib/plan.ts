@@ -267,9 +267,73 @@ function inPart(point: PlanPoint, rings: readonly (readonly PlanPoint[])[]): boo
 	return inside;
 }
 
-/** Whether a point lies inside a zone: in one of its parts and not in a hole. */
+/**
+ * Whether a zone's ring is drawn backwards. Outer edges are drawn winding one way and holes the other,
+ * whichever way the rings wind in the data, so under `fill-rule="nonzero"` holes stay unfilled and parts
+ * that overlap stay filled where they overlap (an even–odd fill over the whole zone would empty that patch).
+ */
+function drawnBackwards(ring: readonly PlanPoint[], index: number): boolean {
+	const area = signedArea(ring);
+	return index === 0 ? area < 0 : area > 0;
+}
+
+/** How many times a ring winds round a point, counted by the sign of its turns. */
+function windingNumber([px, py]: PlanPoint, ring: readonly PlanPoint[]): number {
+	let winding = 0;
+	for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+		const [xa, ya] = ring[j]!;
+		const [xb, yb] = ring[i]!;
+		const side = (xb - xa) * (py - ya) - (px - xa) * (yb - ya);
+		if (ya <= py) {
+			if (yb > py && side > 0) winding++;
+		} else if (yb <= py && side < 0) winding--;
+	}
+	return winding;
+}
+
+/**
+ * Whether a point lies inside a zone as {@link zonePath} draws it: in one of its parts and not in that part's
+ * hole, and inside wherever parts overlap. It counts each ring's winding the way the ring is drawn, as the
+ * browser's nonzero fill does, so a point the plan shows filled is the point that selects the zone.
+ */
 export function pointInParts(point: PlanPoint, parts: PlanParts): boolean {
-	return parts.some(rings => inPart(point, rings));
+	let winding = 0;
+	for (const rings of parts)
+		rings.forEach((ring, index) => {
+			const turns = windingNumber(point, ring);
+			winding += drawnBackwards(ring, index) ? -turns : turns;
+		});
+	return winding !== 0;
+}
+
+/**
+ * Decimals for a zone outline at `pixelsPerUnit` screen pixels per plan unit: enough that every drawn point
+ * lies within a twentieth of a pixel of its exact place, so at the editor's closest zoom (1 cm of ground per
+ * pixel) an edge still meets its handles and snap markers.
+ */
+export function zonePathDecimals(pixelsPerUnit: number): number {
+	return Math.min(9, Math.max(2, Math.ceil(Math.log10(Math.max(pixelsPerUnit, 1) * 20))));
+}
+
+/**
+ * A zone's outline as SVG path data at `decimals`, one subpath per ring of every part, for
+ * `fill-rule="nonzero"`: outer edges are walked one way and holes the other (see {@link drawnBackwards}).
+ * Only the drawing changes; the zone's longitude and latitude are never touched.
+ */
+export function zonePath(parts: PlanParts, decimals = 2): string {
+	const scale = 10 ** decimals;
+	const at = (value: number) => Math.round(value * scale) / scale;
+	let d = "";
+	for (const rings of parts)
+		rings.forEach((ring, index) => {
+			const backwards = drawnBackwards(ring, index);
+			for (let n = 0; n < ring.length; n++) {
+				const [x, y] = ring[backwards ? ring.length - 1 - n : n]!;
+				d += `${n === 0 ? "M" : "L"}${at(x)} ${at(y)}`;
+			}
+			d += "Z";
+		});
+	return d;
 }
 
 function distanceToRings(point: PlanPoint, rings: readonly (readonly PlanPoint[])[]): number {
