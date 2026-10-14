@@ -81,12 +81,13 @@ export default function PrivacyPage() {
 						<tr>
 							<td>Account details</td>
 							<td>
-								Anyone can create an account, in the app or on the website, with an email address and a
-								password of 8 to 128 characters. We email a six-digit code to confirm the address, and
-								another if you reset your password. The app and the website send your password only to
-								our sign-in provider and never store it; if you use a password manager, your device may
-								offer to save it there. An account uploads to a research project only after it joins
-								that project with an invitation or a join code from the project’s team.
+								Anyone can create an account on the website with an email address and a password of 8 to
+								128 characters, then sign in with it on the website or in the app. The app cannot create
+								accounts yet. We email a six-digit code to confirm the address, and another if you reset
+								your password. The app and the website send your password only to our sign-in provider
+								and never store it; if you use a password manager, your device may offer to save it
+								there. An account uploads to a research project only after it joins that project with an
+								invitation or a join code from the project’s team.
 							</td>
 							<td>To sign you in and confirm the address is yours.</td>
 						</tr>

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { loopbackOrigin } from "./support/manifest";
+import { codeFrom } from "./support/mail";
 
 /**
  * Plan WEB-04 (and WEB-15's sign-up and password reset): the Contour identity screens against local
@@ -9,37 +9,8 @@ import { loopbackOrigin } from "./support/manifest";
  * through the recovery code and signs in with the new one. Nothing here leaves this machine.
  */
 
-const MAILPIT = loopbackOrigin(process.env.E2E_MAILPIT_URL ?? "http://127.0.0.1:54324", "Mailpit");
 const PASSWORD = "DecamarkFlows!1014";
 const NEXT_PASSWORD = "DecamarkFlowsReset!1014";
-
-type Listing = { messages: { ID: string; Subject: string; To: { Address: string }[] }[] };
-
-/** The six-digit code in the newest email to `email` whose subject contains `subject`. */
-async function codeFrom(email: string, subject: string): Promise<string> {
-	let found = "";
-	await expect
-		.poll(
-			async () => {
-				const listing = (await fetch(`${MAILPIT}/api/v1/messages`).then(answer => answer.json())) as Listing;
-				const message = listing.messages.find(
-					item => item.Subject.includes(subject) && item.To.some(to => to.Address === email)
-				);
-				if (!message) return "";
-				const detail = (await fetch(`${MAILPIT}/api/v1/message/${message.ID}`).then(answer =>
-					answer.json()
-				)) as {
-					Text: string;
-					HTML: string;
-				};
-				found = /\b(\d{6})\b/.exec(`${detail.Text} ${detail.HTML}`)?.[1] ?? "";
-				return found;
-			},
-			{ timeout: 20_000, message: `an email "${subject}" to ${email}` }
-		)
-		.toMatch(/^\d{6}$/);
-	return found;
-}
 
 async function signOutFromAccount(page: Page) {
 	await page.goto("/account");

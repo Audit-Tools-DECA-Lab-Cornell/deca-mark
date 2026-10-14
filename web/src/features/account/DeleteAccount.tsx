@@ -40,6 +40,8 @@ function isRedirect(error: unknown): boolean {
 }
 
 export type DeleteAccountProps = {
+	/** The signed-in account this page shows. Every try names it, and deletes nothing if another is signed in. */
+	accountId: string;
 	/** Each membership as "Name (Role)", organizations first. */
 	organizations: string[];
 	projects: string[];
@@ -63,7 +65,7 @@ function names(items: string[]): string {
  * On 204 the session ends and sign in shows "Account deleted"; every other answer is said here, with what
  * did or did not change.
  */
-export function DeleteAccount({ organizations, projects, blockers }: DeleteAccountProps) {
+export function DeleteAccount({ accountId, organizations, projects, blockers }: DeleteAccountProps) {
 	const [open, setOpen] = useState(false);
 	const [typed, setTyped] = useState("");
 	const [state, action, pending] = useActionState<Shown, FormData>(async (previous, form) => {
@@ -76,7 +78,9 @@ export function DeleteAccount({ organizations, projects, blockers }: DeleteAccou
 			const tries = (previous.tries ?? 0) + 1;
 			// After a 202 the profile and memberships are already gone, so a try that fails leaves the deletion
 			// recorded and finishing; it never reads as "Nothing was deleted".
-			return result?.status === "pending" ? { ...result, tries } : { status: "pending", tries, gaveUp: true };
+			return result?.status === "pending"
+				? { ...result, tries }
+				: { status: "pending", tries, gaveUp: true, otherAccount: result?.otherAccount };
 		} catch (error) {
 			if (!isRedirect(error)) clearFlash();
 			throw error;
@@ -100,10 +104,11 @@ export function DeleteAccount({ organizations, projects, blockers }: DeleteAccou
 		const timer = window.setTimeout(() => {
 			const form = new FormData();
 			form.set("confirm", CONFIRM_WORD);
+			form.set("account", accountId);
 			startTransition(() => action(form));
 		}, waitMs);
 		return () => window.clearTimeout(timer);
-	}, [waitMs, pending, action, state]);
+	}, [waitMs, pending, action, state, accountId]);
 
 	function submit(event: FormEvent<HTMLFormElement>) {
 		if (pending || !confirmed) event.preventDefault();
@@ -133,14 +138,21 @@ export function DeleteAccount({ organizations, projects, blockers }: DeleteAccou
 						<div ref={messageRef} tabIndex={-1} className="rounded-note">
 							<Note tone="waiting" title="Deletion is finishing." live="polite">
 								Your profile and memberships are removed.{" "}
-								{deletionFinishingLine(state.tries ?? 0, state.gaveUp ?? false)}
+								{deletionFinishingLine(
+									state.tries ?? 0,
+									state.gaveUp ?? false,
+									state.otherAccount ?? false
+								)}
 							</Note>
 						</div>
-						<form action={signOut} className="flex justify-end">
-							<Button type="submit" variant="ink" icon="log-out">
-								Sign out
-							</Button>
-						</form>
+						{/* Signing out here would sign out the other account. */}
+						{!state.otherAccount && (
+							<form action={signOut} className="flex justify-end">
+								<Button type="submit" variant="ink" icon="log-out">
+									Sign out
+								</Button>
+							</form>
+						)}
 					</div>
 				) : (
 					<form
@@ -149,6 +161,7 @@ export function DeleteAccount({ organizations, projects, blockers }: DeleteAccou
 						onSubmit={submit}
 						className="flex flex-col gap-5"
 						aria-busy={pending || undefined}>
+						<input type="hidden" name="account" value={accountId} />
 						<FactsList
 							labelWidth="8.5rem"
 							items={[

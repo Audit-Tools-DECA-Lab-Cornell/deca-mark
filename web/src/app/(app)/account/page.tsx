@@ -107,7 +107,13 @@ export default async function AccountPage() {
 					</div>
 					<div className="flex min-w-0 flex-col gap-6">
 						<SecurityIsland email={email} />
-						{identity && <DeleteAccount {...memberships(identity)} blockers={possibleBlockers(identity)} />}
+						{identity && (
+							<DeleteAccount
+								accountId={claims.sub}
+								{...memberships(identity)}
+								blockers={possibleBlockers(identity)}
+							/>
+						)}
 					</div>
 				</div>
 			</ShellMain>
