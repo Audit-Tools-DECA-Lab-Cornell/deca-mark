@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProjectScreen from "../../../app/(app)/(tabs)/(projects)/[project]";
+import SiteScreen from "../../../app/(app)/(tabs)/(projects)/[project]/[site]";
 import BriefScreen from "../../../app/(app)/(tabs)/(projects)/[project]/[site]/brief";
 import ProjectsHome from "../../../app/(app)/(tabs)/(projects)/index";
 import { shellV1 } from "../../forms/fixtures/shell-v1";
@@ -102,6 +103,9 @@ vi.mock("../../packages/zone-read-models", () => ({
   }),
 }));
 vi.mock("../../session/provider", () => ({ useFieldSession: () => data.session }));
+// The bundled sample maps load images; no bundled site is drawn here.
+vi.mock("../../packages/bundled", () => ({ bundledPackage: () => undefined }));
+vi.mock("../../packages/open", () => ({ packageFacts: () => null }));
 
 const MB = 1024 * 1024;
 const none = { unfinished: 0, unsent: 0, attention: 0, retained: 0, openSession: false };
@@ -216,6 +220,16 @@ describe("map v1 installed and map v2 published, on device data (UI plan 4.1 to 
     expect(screen.controls()).toContain(
       "Fall Creek, 3 zones · map v1 · v2 available · 12.0 MB, Ready offline",
     );
+  });
+
+  it("Site: says the map is on this device, as the package island does, though v2 is not", () => {
+    data.params = { project: "proj-1", site: "site-1" };
+    const screen = render(<SiteScreen />);
+    expect(screen.says("3 zones: North meadow, Slide, Swings.")).toBe(true);
+    expect(screen.says("The map opens on the collect screen.")).toBe(true);
+    expect(screen.says("Download once. Verify here. Collect without signal.")).toBe(false);
+    expect(screen.says("Map package v1")).toBe(true);
+    expect(isDisabled(screen.control("Set up this session"))).toBe(false);
   });
 
   it("Brief: says which map this session uses, beside the published one", () => {

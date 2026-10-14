@@ -282,8 +282,9 @@ function RecoveredCard({ unfinished }: { unfinished: Extract<Unfinished, { kind:
 
 /**
  * "Kept for later" on Projects: observations parked because they could not be resumed. Each keeps its
- * exact map, zone and answers. Resume makes it the unfinished observation again, then opens collect,
- * once nothing else is unfinished; otherwise it waits.
+ * exact map, zone and answers. Resume restores it through the field session, which reopens it on its
+ * own map and zone, then opens collect; once nothing else is unfinished, otherwise it waits. A restore
+ * that cannot reopen it (its map or access changed since) says so and leaves it kept.
  */
 export function ParkedDrafts() {
   const s = useStyles(cardStyles);
@@ -292,23 +293,42 @@ export function ParkedDrafts() {
   const haptics = useHaptics();
   const online = useOnline();
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [settled, setSettled] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
   const occupied = session.recovered !== null || session.inProgress !== null;
 
-  // Once the restored draft is the session's unfinished observation, open it as Resume does.
-  const { recovered, resumeRecovered } = session;
+  // Once a restore has settled, the session either holds the draft open on its map, or it does not.
+  const { inProgress } = session;
   useEffect(() => {
-    if (!restoring || recovered?.id !== restoring) return;
-    setRestoring(null);
-    void resumeRecovered().then((opened) => {
-      if (opened) router.push("/collect");
-      else announce(NOT_REOPENED);
-    });
-  }, [restoring, recovered, resumeRecovered]);
+    if (!settled) return;
+    setSettled(false);
+    if (inProgress) {
+      router.push("/collect");
+      return;
+    }
+    setProblem(NOT_REOPENED);
+    announce(NOT_REOPENED);
+  }, [settled, inProgress]);
+
+  async function restore(draftId: string) {
+    if (restoring) return;
+    setProblem(null);
+    setRestoring(draftId);
+    try {
+      await recovery.restoreParked(draftId);
+    } catch {
+      // A failed restore leaves the draft kept; the effect above says it could not be reopened.
+    } finally {
+      setRestoring(null);
+      setSettled(true);
+    }
+  }
 
   if (recovery.parked.length === 0) return null;
   return (
     <Island eyebrow="Kept for later" title={`${recovery.parked.length} unfinished on this device`}>
       <View style={s.body}>
+        {problem ? <Text tone="attention">{problem}</Text> : null}
         {recovery.parked.map((model) => {
           const card = recoveryCard(model, online);
           return (
@@ -329,10 +349,7 @@ export function ParkedDrafts() {
                     busyLabel="Opening…"
                     disabled={occupied}
                     disabledReason="Resume or discard the unfinished observation above first."
-                    onPress={() => {
-                      setRestoring(model.draftId);
-                      void recovery.restoreParked(model.draftId);
-                    }}
+                    onPress={() => void restore(model.draftId)}
                   />
                 ) : null}
                 {card.actions.includes("redownload") && card.redownloadLabel ? (

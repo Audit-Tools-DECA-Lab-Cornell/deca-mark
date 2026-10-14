@@ -27,6 +27,9 @@ const data = vi.hoisted(() => ({
   active: null as unknown,
   parked: [] as unknown[],
   occupied: false,
+  inProgress: null as unknown,
+  /** What the session's restoreParked does: reopen the draft, leave it kept, or fail. */
+  restore: "reopens" as "reopens" | "keeps" | "throws",
   calls: [] as string[],
 }));
 vi.mock("../../ui/OnlineIndicator", () => ({
@@ -48,6 +51,8 @@ vi.mock("../../packages/zone-read-models", () => ({
     },
     restoreParked: async (id: string) => {
       data.calls.push(`restoreParked ${id}`);
+      if (data.restore === "throws") throw new Error("The package could not be opened.");
+      if (data.restore === "reopens") data.inProgress = { packageId: "pkg-v1" };
     },
     discard: async () => {
       data.calls.push("discard");
@@ -63,7 +68,7 @@ vi.mock("../../packages/zone-read-models", () => ({
 vi.mock("../../session/provider", () => ({
   useFieldSession: () => ({
     recovered: data.occupied ? { id: "draft-1" } : null,
-    inProgress: null,
+    inProgress: data.inProgress,
     parked: [],
     resumeRecovered: async () => true,
   }),
@@ -101,6 +106,8 @@ beforeEach(() => {
   data.active = null;
   data.parked = [];
   data.occupied = false;
+  data.inProgress = null;
+  data.restore = "reopens";
   data.calls = [];
   takeAlerts();
   takeAnnouncements();
@@ -199,7 +206,28 @@ describe("observations kept for later", () => {
     expect(isDisabled(screen.control("Resume"))).toBe(false);
     await screen.press("Resume");
     expect(data.calls).toEqual(["restoreParked draft-2"]);
+    expect(takeNavigation()).toEqual(["/collect"]);
   });
+
+  for (const outcome of ["keeps", "throws"] as const)
+    it(`says so when the restore cannot reopen it (${outcome === "keeps" ? "its map changed" : "the restore fails"}), and stays ready to try again`, async () => {
+      data.parked = [parked];
+      data.restore = outcome;
+      const screen = render(<ParkedDrafts />);
+      await screen.press("Resume");
+      expect(takeNavigation()).toEqual([]);
+      expect(screen.says("This draft could not be reopened here. It stays on this device.")).toBe(
+        true,
+      );
+      expect(takeAnnouncements()).toContain(
+        "This draft could not be reopened here. It stays on this device.",
+      );
+      const resume = screen.control("Resume");
+      expect(isDisabled(resume)).toBe(false);
+      expect(
+        (resume.props as { accessibilityState?: { busy?: boolean } }).accessibilityState?.busy,
+      ).toBeFalsy();
+    });
 
   it("waits while another observation is unfinished, and says why", () => {
     data.parked = [parked];

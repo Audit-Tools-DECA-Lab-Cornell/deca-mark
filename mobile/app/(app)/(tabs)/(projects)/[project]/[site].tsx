@@ -19,6 +19,7 @@ import {
 import { SitePlanFrame } from "../../../../../src/features/projects/SitePlan";
 import { bundledPackage } from "../../../../../src/packages/bundled";
 import { packageFacts } from "../../../../../src/packages/open";
+import { useSiteVersions } from "../../../../../src/packages/zone-read-models";
 import { useFieldSession } from "../../../../../src/session/provider";
 import {
   announce,
@@ -97,6 +98,7 @@ export default function SiteScreen() {
   const haptics = useHaptics();
   const [opening, setOpening] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const versions = useSiteVersions(siteId);
 
   const state = site?.download.state;
   const previous = useRef(state);
@@ -144,6 +146,10 @@ export default function SiteScreen() {
   // A hosted site opens the newest verified map on this device, which may be older than the one
   // published (MUI-1): the site list's current package is not the session's.
   const hosted = device && !site.bundled;
+  // On this device: for a hosted site, any verified map (the catalog's), not only the published one.
+  const onDevice = hosted
+    ? versions.nextSessionPackageId !== null
+    : site.download.state === "ready";
 
   async function setUp(packageId: string = site?.packageId ?? "") {
     if (!site || !project || opening) return;
@@ -194,7 +200,7 @@ export default function SiteScreen() {
             eyebrow={`${project.name} · Site`}
             title={site.name}
             lead={
-              site.download.state === "ready"
+              onDevice
                 ? zonesSentence(site.zones)
                 : "Download once. Verify here. Collect without signal."
             }
@@ -202,17 +208,13 @@ export default function SiteScreen() {
           <PreviewData>Sample download. Nothing is fetched from the DECA Mark server.</PreviewData>
         </View>
 
-        {site.download.state === "ready" && PLANNED_SITES.has(site.id) ? (
+        {onDevice && PLANNED_SITES.has(site.id) ? (
           <SitePlanFrame siteName={site.name} version={site.packageVersion} />
         ) : (
-          <InnerPanel dashed={site.download.state !== "ready"} style={s.slot}>
-            <Icon
-              name={site.download.state === "ready" ? "map-pinned" : "layers"}
-              size={28}
-              color={t.c.ink2}
-            />
+          <InnerPanel dashed={!onDevice} style={s.slot}>
+            <Icon name={onDevice ? "map-pinned" : "layers"} size={28} color={t.c.ink2} />
             <Text variant="small" tone="ink2" align="center">
-              {site.download.state === "ready"
+              {onDevice
                 ? "The map opens on the collect screen."
                 : "The map appears here once the package is on this device."}
             </Text>
