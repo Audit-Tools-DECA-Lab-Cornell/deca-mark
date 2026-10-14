@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type { PackageIdentity } from "../../domain/package-binding";
 import type { SiteVersions } from "../zone-model-types";
-import { hasStoredPackage } from "./access";
+import { hasStoredSitePackage } from "./access";
 import type { InstalledVersion, PackageOperations } from "./operations";
 import type { PreparePart } from "./prepare";
 import type { HostedSite } from "./schemas";
@@ -54,5 +54,5 @@ export function useHostedSites(): HostedValue {
   return useContext(HostedContext);
 }
 export function isStored(site: HostedSite): boolean {
-  return site.package !== null && hasStoredPackage(site.package.package_id);
+  return hasStoredSitePackage(site.site_id);
 }

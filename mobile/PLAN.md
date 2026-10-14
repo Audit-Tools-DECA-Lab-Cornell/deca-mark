@@ -620,12 +620,13 @@ Evidence: [local implementation and final review](../docs/reviews/zone-boundarie
 Acceptance: Current-contract installation/restart was rerun after DB-19 and BE-22 against a disposable live loopback API. Physical-device collection/upload remains MOB-29 and QA-07.
 
 ### MOB-29: Collect and upload pinned zone observations
-Status: todo · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
+Status: todo (2026-10-14: MOB-33 acknowledged and MOB-30 to MOB-32 code complete; ready to start upload/receipt integration, no longer waiting on those UI tasks) · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
 Owner: Mobile data agent with Claude UI owner.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 4.5, 6, 7 and 9.
 Do: Freeze session forms/package/zone, apply geometry parity (reusing MOB-31's `coveringZones`) and the sole `/v1` upload/receipt validation; store structured rejection codes for the needs-attention copy in UI plan 4.5; run the physical-device scenario.
 Done when: Physical-device draft survives newer publication and restart, uploads with original attribution; inventory is whole-zone.
 Verify: Mobile checks/tests and physical-device acceptance matrix; missing evidence remains pending.
+Data decision (2026-10-14): retain the historical Depends/Blocks links to completed UI prerequisites; they do not block starting this task. Exact closed coverage is shared through `zoneCovers` and now has the sloping-edge regression checks. The sole bound uploader, receipt/rejection integration and physical-device/server/QGIS scenario remain outstanding; this review does not claim them complete.
 
 ### MOB-30: Show map versions, updates and safe removal
 Status: done (2026-10-14; component tests on device data; simulator screenshots pending (user)) · Phase 3 · Size L · Depends: MOB-33 · Blocks: MOB-29
@@ -663,3 +664,4 @@ Read first: [component specification](ZONE-BOUNDARIES.md) MOB-29; [UI plan](ZONE
 Do: Add site discovery on the single site API (MUI-11); package readiness with no box fallback; the frozen bound session context with zone UUIDs; exact-version form loading; parked drafts; persist a zone change on an open observation in the same handler; and write `src/packages/zone-read-models.ts` (SiteVersions, Pinned, Recovered, hooks and an in-memory fake), extending `SiteZone` with `zoneId` and `displayAnchor` and removing the box fallback. A local schema change resets local data instead of migrating it (pre-launch rule).
 Done when: The read models are populated from real stores in unit tests; a 404 shows as no access; switching zone on a shared edge then killing the app restores the chosen zone; the UI owner has acknowledged the interface file.
 Verify: `pnpm mobile:check`, `pnpm mobile:test` with site-list failure, parking and zone-persistence cases.
+Data follow-up (2026-10-14): `Recovered.formVersion` now names the retained draft's exact form in all bound recovery states; `isStored(site)` counts any account-authorized verified install independently of the current published pointer. Exact `zoneCovers` uses a filtered orientation with BigInt fallback and winding coverage, including a subnormal-bound guard. Decisions and UI-owner follow-ups are recorded in [MOB-33-HANDOFF.md](MOB-33-HANDOFF.md). Three UI-owned typed fixtures need the required form field before the full TypeScript gate can pass; the data agent leaves their card text and fixtures to the UI owner.

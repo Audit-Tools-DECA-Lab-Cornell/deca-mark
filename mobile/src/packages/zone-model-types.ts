@@ -37,6 +37,7 @@ export type Pinned = {
 };
 export type Recovered = {
   readonly draftId: string;
+  readonly formVersion: string;
   readonly pinned: Pinned;
   readonly placed: boolean;
   readonly answered: number;

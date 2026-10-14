@@ -30,6 +30,7 @@ export function recoveredDraftModel(
   const questions = form ? visibleQuestions(form, draft.answers) : [];
   return {
     draftId: draft.id,
+    formVersion: draft.formVersion,
     pinned: {
       packageId: binding.packageId,
       version: binding.packageVersion,

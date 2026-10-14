@@ -68,11 +68,30 @@ it.each([
 }) => {
   const model = recoveredDraftModel(boundDraft, state);
   expect(model?.status).toBe(expected);
+  expect(model?.formVersion).toBe(boundDraft.formVersion);
   expect(model?.redownload.possible).toBe(downloadable);
   expect(model?.pinned).toMatchObject({
     packageId: boundDraft.packageId,
     version: 7,
     zone: { id: boundDraft.binding?.zoneId },
+  });
+});
+it("names the retained inventory form even when the package or its exact form is missing", () => {
+  const draft = {
+    ...boundDraft,
+    formVersion: "inventory-v7",
+    context: { ...boundDraft.context, roundType: "inventory" as const },
+  };
+  expect(recoveredDraftModel(draft, input)?.formVersion).toBe("inventory-v7");
+  const model = recoveredDraftModel(draft, {
+    ...input,
+    package: { ...pkg, inventoryFormVersion: "inventory-v8" },
+    parked: true,
+  });
+  expect(model).toMatchObject({
+    formVersion: "inventory-v7",
+    status: "form_missing",
+    parked: true,
   });
 });
 it("the UI fake parks unresumable data and refuses to overwrite an active observation", () => {

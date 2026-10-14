@@ -48,6 +48,13 @@ export function hasStoredPackage(packageId: string): boolean {
   return readStoredPackage(packageId) !== null;
 }
 
+/** Readiness follows this account's verified installs, independently of publication. */
+export function hasStoredSitePackage(siteId: string): boolean {
+  if (owner === null) return false;
+  for (const stored of packages.values()) if (stored.siteId === siteId) return true;
+  return false;
+}
+
 export function verifiedIdentity(packageId: string): PackageIdentity | undefined {
   return owner === null ? undefined : identities.get(packageId);
 }
