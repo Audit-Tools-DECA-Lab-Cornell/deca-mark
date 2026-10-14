@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useActionState, useEffect, useRef, useState } from "react";
+import { type FormEvent, startTransition, useActionState, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/contour/Button";
 import { Dialog, DialogClose } from "@/components/contour/Dialog";
@@ -14,8 +14,12 @@ import { clearFlash, leaveFlash } from "@/features/auth/flash";
 import { signOut } from "@/lib/auth/actions";
 
 import { type DeletionState, requestAccountDeletion } from "./actions";
+import { deletionFinishingLine, nextDeletionRetry } from "./deletion";
 
-const IDLE: DeletionState = { status: "idle" };
+/** What the dialog shows: the last answer, and after a 202 how many tries followed and whether they stopped. */
+type Shown = DeletionState & { readonly tries?: number; readonly gaveUp?: boolean };
+
+const IDLE: Shown = { status: "idle" };
 const CONFIRM_WORD = "DELETE";
 
 /** The toast sign in shows once the account is gone. Left before the request; dropped if it fails. */
@@ -62,12 +66,17 @@ function names(items: string[]): string {
 export function DeleteAccount({ organizations, projects, blockers }: DeleteAccountProps) {
 	const [open, setOpen] = useState(false);
 	const [typed, setTyped] = useState("");
-	const [state, action, pending] = useActionState<DeletionState, FormData>(async (previous, form) => {
+	const [state, action, pending] = useActionState<Shown, FormData>(async (previous, form) => {
+		const retry = previous.status === "pending";
 		leaveFlash(DELETED_FLASH);
 		try {
 			const result = await requestAccountDeletion(previous, form);
 			clearFlash();
-			return result ?? previous;
+			if (!retry) return result ?? previous;
+			const tries = (previous.tries ?? 0) + 1;
+			// After a 202 the profile and memberships are already gone, so a try that fails leaves the deletion
+			// recorded and finishing; it never reads as "Nothing was deleted".
+			return result?.status === "pending" ? { ...result, tries } : { status: "pending", tries, gaveUp: true };
 		} catch (error) {
 			if (!isRedirect(error)) clearFlash();
 			throw error;
@@ -83,6 +92,18 @@ export function DeleteAccount({ organizations, projects, blockers }: DeleteAccou
 		handled.current = state;
 		messageRef.current?.focus();
 	}, [state]);
+
+	// After a 202, send the deletion again while the session is still valid; a 204 redirects to sign in.
+	const waitMs = state.status === "pending" ? nextDeletionRetry(state.tries ?? 0, state.gaveUp ?? false) : null;
+	useEffect(() => {
+		if (waitMs === null || pending) return;
+		const timer = window.setTimeout(() => {
+			const form = new FormData();
+			form.set("confirm", CONFIRM_WORD);
+			startTransition(() => action(form));
+		}, waitMs);
+		return () => window.clearTimeout(timer);
+	}, [waitMs, pending, action, state]);
 
 	function submit(event: FormEvent<HTMLFormElement>) {
 		if (pending || !confirmed) event.preventDefault();
@@ -111,8 +132,8 @@ export function DeleteAccount({ organizations, projects, blockers }: DeleteAccou
 					<div className="flex flex-col gap-5">
 						<div ref={messageRef} tabIndex={-1} className="rounded-note">
 							<Note tone="waiting" title="Deletion is finishing." live="polite">
-								Your profile and memberships are removed. Removing your sign-in did not finish yet. It
-								is recorded, and the person who runs DECA Mark will complete it.
+								Your profile and memberships are removed.{" "}
+								{deletionFinishingLine(state.tries ?? 0, state.gaveUp ?? false)}
 							</Note>
 						</div>
 						<form action={signOut} className="flex justify-end">

@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 import { authFile } from "./support/auth";
-import { orgPath, person, SEED } from "./support/manifest";
-import { orgTabs, tab } from "./support/ui";
+import { orgPath, person, runStamp, SEED } from "./support/manifest";
+import { orgTabs, projectTabs, tab } from "./support/ui";
 
 /** Plan step 10: the organization's pages open for its owner, and only for those who may see them. */
 
@@ -43,5 +43,25 @@ test.describe("the owner of another organization", () => {
 		const response = await page.goto(orgPath());
 		expect(response?.status()).toBe(404);
 		await expect(page.getByRole("main")).not.toContainText(SEED.projectName);
+	});
+
+	// J1 step 2 as D30 has it: the organization comes from the bootstrap script, and its owner creates the
+	// project on the web. In the other organization, so the acceptance organization keeps its one project.
+	test("creates a project in their own organization and lands in it as its manager", async ({ page }, info) => {
+		const name = `Synthetic study ${info.project.name} ${runStamp()}`;
+		await page.goto(`/o/${SEED.otherOrgSlug}`);
+		const main = page.getByRole("main");
+		await main.getByRole("button", { name: "Create project" }).click();
+		const dialog = page.getByRole("dialog", { name: "Create project" });
+		await dialog.getByLabel("Name", { exact: true }).fill(name);
+		await expect(dialog.getByLabel("Project code")).not.toHaveValue("");
+		const code = await dialog.getByLabel("Project code").inputValue();
+		await dialog.getByRole("button", { name: "Create project" }).click();
+		await expect(page).toHaveURL(url => url.pathname === `/o/${SEED.otherOrgSlug}/p/${code}`, {
+			timeout: 30_000
+		});
+		await expect(page.getByRole("button", { name: new RegExp(`project: ${name}$`, "i") })).toBeVisible();
+		await expect(projectTabs(page).getByRole("link", { name: "Team" })).toBeVisible();
+		await expect(projectTabs(page).getByRole("link", { name: "Settings" })).toBeVisible();
 	});
 });
