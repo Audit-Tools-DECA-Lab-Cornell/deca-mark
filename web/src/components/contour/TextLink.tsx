@@ -28,13 +28,22 @@ const TONE = {
  * A link that reads as words. It takes the size of the text around it, so it is not held to the 44 px
  * target that standalone controls meet.
  */
-export function TextLink({ href, arrow, icon, tone = "accent", className, children, ...rest }: TextLinkProps) {
+export function TextLink({
+	href,
+	arrow,
+	icon,
+	tone = "accent",
+	className,
+	children,
+	prefetch = false,
+	...rest
+}: TextLinkProps) {
 	const direction = arrow ?? (tone === "accent" ? "right" : false);
 	const hasGlyph = Boolean(icon || direction);
 
 	if (!hasGlyph)
 		return (
-			<Link {...rest} href={href} className={cx(TONE[tone], className)}>
+			<Link {...rest} prefetch={prefetch} href={href} className={cx(TONE[tone], className)}>
 				{children}
 			</Link>
 		);
@@ -42,7 +51,11 @@ export function TextLink({ href, arrow, icon, tone = "accent", className, childr
 	// Glyphs sit centred on the line and stay out of baseline alignment, so the link lines up with the
 	// text beside it by its words, not by the bottom of an icon.
 	return (
-		<Link {...rest} href={href} className={cx("inline-flex items-baseline gap-1.5", TONE[tone], className)}>
+		<Link
+			{...rest}
+			prefetch={prefetch}
+			href={href}
+			className={cx("inline-flex items-baseline gap-1.5", TONE[tone], className)}>
 			{direction === "left" && <Icon name="arrow-left" size={16} className="shrink-0 self-center" />}
 			{icon && <Icon name={icon} size={16} className="shrink-0 self-center" />}
 			<span>{children}</span>

@@ -39,6 +39,7 @@ function Row({ orgSlug, row }: { orgSlug: string; row: ProjectRow }) {
 				<h2 className="flex flex-wrap items-baseline gap-x-4 gap-y-1 wrap-anywhere">
 					<Link
 						href={projectLink(orgSlug, row)}
+						prefetch={false}
 						className="type-section text-ink [--ct-size-focus-ring:0px] before:absolute before:inset-0">
 						{row.name}
 					</Link>

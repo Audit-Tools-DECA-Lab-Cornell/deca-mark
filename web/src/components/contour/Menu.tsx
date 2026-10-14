@@ -91,7 +91,9 @@ export function MenuItem({
 	if (href)
 		return (
 			<DropdownMenu.Item asChild disabled={disabled} onSelect={onSelect} className={classes}>
-				<Link href={href}>{content}</Link>
+				<Link prefetch={false} href={href}>
+					{content}
+				</Link>
 			</DropdownMenu.Item>
 		);
 

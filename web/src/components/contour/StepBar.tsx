@@ -76,6 +76,7 @@ export function StepBar({ steps, current, done, label, className }: StepBarProps
 							{step.href && state !== "upcoming" ? (
 								<Link
 									href={step.href}
+									prefetch={false}
 									aria-current={state === "current" ? "step" : undefined}
 									className={cx(
 										classes,

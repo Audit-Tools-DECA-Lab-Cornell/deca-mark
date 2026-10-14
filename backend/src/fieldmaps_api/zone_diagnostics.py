@@ -5,7 +5,7 @@ from starlette.types import Scope
 
 ZONE_OPERATIONS: Final = frozenset(
     {
-        "listSitesV2",
+        "listSites",
         "createZoneDraft",
         "listZoneDrafts",
         "getZoneDraft",
@@ -34,9 +34,11 @@ def metadata(scope: Scope) -> dict[str, JsonValue]:
     if route is None:
         return {}
     operation = RouteOperation.model_validate(route, from_attributes=True).operation_id
-    if operation not in ZONE_OPERATIONS:
+    if operation is None:
         return {}
     result: dict[str, JsonValue] = {"operation": operation}
+    if operation not in ZONE_OPERATIONS:
+        return result
     counts = SafeCounts.model_validate(scope)
     if counts.fieldmaps_zone_count is not None:
         result["zone_count"] = counts.fieldmaps_zone_count

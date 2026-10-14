@@ -839,6 +839,7 @@ function ServerResult({
 				)}
 				<Link
 					href={`${packagesHref}?package=${pkg.package_id}`}
+					prefetch={false}
 					className="font-semibold text-accent underline-offset-4 hover:underline">
 					See version {pkg.package_version}
 				</Link>

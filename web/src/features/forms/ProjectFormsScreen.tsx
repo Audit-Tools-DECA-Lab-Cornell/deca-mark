@@ -87,6 +87,7 @@ export function ProjectFormsScreen({
 								<div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
 									<h3 className="type-section text-ink">
 										<Link
+											prefetch={false}
 											href={projectHref(
 												org,
 												project,
@@ -102,7 +103,10 @@ export function ProjectFormsScreen({
 									<Fact label="Published">
 										{form.published ? (
 											<>
-												<Link href={editor(form.published.code)} className={LINK}>
+												<Link
+													prefetch={false}
+													href={editor(form.published.code)}
+													className={LINK}>
 													<Mono>{form.published.code}</Mono>
 												</Link>
 												{form.published.publishedAt && (
@@ -124,6 +128,7 @@ export function ProjectFormsScreen({
 													{form.drafts.map(draft => (
 														<Link
 															key={draft.code}
+															prefetch={false}
 															href={editor(draft.code)}
 															className="w-fit">
 															<StateBadge
@@ -152,6 +157,7 @@ export function ProjectFormsScreen({
 												{form.sites.map(site => (
 													<li key={site.code}>
 														<Link
+															prefetch={false}
 															href={projectHref(
 																org,
 																project,

@@ -185,6 +185,7 @@ export type ButtonLinkProps = ButtonLook & Omit<ComponentPropsWithRef<typeof Lin
 
 /** A link that looks like a Button, for an action that navigates ("Review observations →"). */
 export function ButtonLink({
+	prefetch = false,
 	variant = "primary",
 	size = "md",
 	icon,
@@ -195,7 +196,11 @@ export function ButtonLink({
 	...rest
 }: ButtonLinkProps) {
 	return (
-		<Link {...rest} data-variant={variant} className={cx(buttonClasses({ variant, size, fullWidth }), className)}>
+		<Link
+			{...rest}
+			prefetch={prefetch}
+			data-variant={variant}
+			className={cx(buttonClasses({ variant, size, fullWidth }), className)}>
 			<ButtonContent icon={icon} iconRight={iconRight} size={size}>
 				{children}
 			</ButtonContent>

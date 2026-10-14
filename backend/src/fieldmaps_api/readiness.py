@@ -1,5 +1,5 @@
 from json import JSONDecodeError
-from typing import ClassVar, Literal
+from typing import TYPE_CHECKING, ClassVar, Final, Literal
 
 import anyio
 from jwt import PyJWKClient, PyJWTError
@@ -9,6 +9,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from fieldmaps_api.errors import StorageUnavailableError
+
+if TYPE_CHECKING:
+    from sqlalchemy import Result
+
+SCHEMA_READY: Final = text("""
+SELECT to_regprocedure('fieldmaps_private.zone_package_metadata(uuid)') IS NOT NULL
+   AND to_regprocedure('fieldmaps_private.zone_authoring_available(uuid,uuid)') IS NOT NULL
+""")
 
 
 class DatabaseRole(BaseModel):
@@ -39,7 +47,10 @@ def require_restricted_role(role: DatabaseRole) -> None:
 async def check_ready(engine: AsyncEngine, jwks: PyJWKClient | None) -> ReadyResponse:
     try:
         async with engine.connect() as connection:
-            await connection.execute(text("SELECT 1"))
+            result: Result[tuple[bool]] = await connection.execute(SCHEMA_READY)
+            if not result.scalar_one():
+                message = "Database schema does not match this API"
+                raise StorageUnavailableError(message)
     except (SQLAlchemyError, OSError) as error:
         raise StorageUnavailableError from error
     if jwks is None:

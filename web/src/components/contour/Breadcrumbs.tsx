@@ -39,6 +39,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
 								// The ::before box makes the 20 px line a 44 px tall target without moving the text.
 								<Link
 									href={item.href}
+									prefetch={false}
 									className={cx(
 										"relative text-ink-2 underline decoration-1 underline-offset-4 hover:text-ink hover:decoration-2",
 										"transition-[color] duration-(--ct-duration-quick) ease-standard",

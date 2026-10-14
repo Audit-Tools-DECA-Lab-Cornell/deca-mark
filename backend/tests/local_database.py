@@ -4,6 +4,11 @@ from os import environ
 from pathlib import Path
 from shutil import which
 
+from sqlalchemy.engine import URL
+
+from fieldmaps_api.config import Settings
+from fieldmaps_api.database import database_connection
+
 
 def disposable_database_selected() -> bool:
     has_url = "DECAMARK_TEST_DATABASE_URL" in environ
@@ -77,3 +82,12 @@ def password_file() -> Path | None:
         if disposable_database_selected()
         else Path(__file__).resolve().parents[2] / "database/.local/fieldmaps-api-password"
     )
+
+
+def database_settings() -> Settings:
+    """Use the same local credentials for TestClient, loopback HTTP and direct SQL."""
+    return Settings(database_url=database_url(), database_password_file=password_file())
+
+
+def connection_url() -> URL:
+    return database_connection(database_settings()).url

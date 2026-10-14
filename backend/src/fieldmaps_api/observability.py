@@ -2,6 +2,7 @@ import logging
 import os
 import re
 from contextvars import ContextVar
+from http import HTTPStatus
 from time import monotonic
 from typing import Final, override
 from uuid import UUID, uuid4
@@ -132,15 +133,23 @@ class RequestIdMiddleware:
         async def send_response(message: Message) -> None:
             if message["type"] == "http.response.start":
                 MutableHeaders(scope=message)["X-Request-Id"] = request_id
+                diagnostic = metadata(scope)
+                healthy_probe = (
+                    diagnostic.get("operation") in {"health", "ready"}
+                    and message["status"] == HTTPStatus.OK
+                )
                 # No raw URLs: invitation codes and query strings can be credentials.
-                LOGGER.info(
+                # Render and container probes are frequent; keep failed probes visible.
+                log_response = LOGGER.debug if healthy_probe else LOGGER.info
+                log_response(
                     orjson.dumps(
                         {
                             "event": "http_response",
                             "request_id": request_id,
+                            "method": scope["method"],
                             "status": message["status"],
                             "duration_ms": round((monotonic() - started) * 1000),
-                            **metadata(scope),
+                            **diagnostic,
                         }
                     ).decode()
                 )

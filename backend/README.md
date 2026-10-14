@@ -20,7 +20,7 @@ pnpm backend:test
 
 From `backend/`, start the API with `uv run --frozen uvicorn fieldmaps_api.main:create_app_from_config --factory --app-dir src --port 8000`. Stop any existing API on that port first. `config.local.json` points to local Supabase port 54322 and its generated ignored password file. `pnpm db:stop` preserves local database volumes; `pnpm db:reset` explicitly recreates the local schema and fictional fixtures.
 
-Tests use ephemeral signing keys and fictional accounts on local Supabase, with real RLS through `fieldmaps_api`. `config.local.json` retains the hosted identity provider for existing development installs. To use local Auth as well as local Postgres, start from `backend/` with `DECAMARK_CONFIG=config.auth-local.json uv run --frozen uvicorn fieldmaps_api.main:create_app_from_config --factory --app-dir src --port 8001`. Set the web server's `DECAMARK_API_URL` to `http://127.0.0.1:8001`. HTTP identity URLs are allowed only on literal loopback hosts. There is no test-user bypass in the running API. `/health` is liveness. `/ready` checks the database and the cached signing-key set; it returns 503 when either is unavailable. Startup refuses database roles that are superusers or can bypass row security.
+Tests use ephemeral signing keys and fictional accounts on local Supabase, with real RLS through `fieldmaps_api`. `config.local.json` retains the hosted identity provider for existing development installs. To use local Auth as well as local Postgres, start from `backend/` with `DECAMARK_CONFIG=config.auth-local.json uv run --frozen uvicorn fieldmaps_api.main:create_app_from_config --factory --app-dir src --port 8001`. Set the web server's `DECAMARK_API_URL` to `http://127.0.0.1:8001`. HTTP identity URLs are allowed only on literal loopback hosts. There is no test-user bypass in the running API. `/health` is liveness. `/ready` checks the database, the current site/package read helpers and the cached signing-key set; it returns 503 when any is unavailable. Startup refuses database roles that are superusers or can bypass row security.
 
 `make -C database api-build api-test` builds separate runtime and test images and runs the API suite against the existing local database. The test image includes pytest and Docker tooling for SQL fixtures; the runtime image contains neither and runs as UID 10001. Runtime-mounted password files must be readable by that user. The runtime health check uses the configured `PORT` and calls `/health`.
 
@@ -96,6 +96,8 @@ Two things a deployment still needs that are not in this repository: the web app
 origin must appear in `browser_origins` before a browser there can call the API, and
 `NEXT_PUBLIC_DECAMARK_API_URL` in the web deployment must name the API. Missing either one and
 base map upload fails in the browser rather than at the API.
+
+Successful `/health` and `/ready` probes are logged at DEBUG, so normal INFO logs do not fill with host probes. Failed probes remain at INFO. Other request logs include the static operation ID and HTTP method, without URL values, query strings, headers or bodies. The container probes `/health` every 30 seconds; the hosting platform also runs its own checks. A steady stream of zero-millisecond 200s can be probes rather than workspace reads.
 
 ## Organizations, projects and invitations
 
