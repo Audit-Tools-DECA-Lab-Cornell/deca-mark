@@ -11,6 +11,7 @@
 // tokens and join codes are printed once; the server keeps only their hashes. Plain Node 24, no
 // dependencies.
 
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createInterface } from "node:readline/promises";
@@ -101,7 +102,10 @@ async function api(method, path, body) {
   const parsed = text ? JSON.parse(text) : null;
   if (!response.ok) {
     const message = parsed?.error?.message ?? text;
-    throw new Error(`${method} ${path} → ${response.status}: ${message}`);
+    const issues = (parsed?.error?.details?.issues ?? [])
+      .map((issue) => `\n  - ${issue.message ?? issue.code}${issue.path ? ` (${issue.path})` : ""}`)
+      .join("");
+    throw new Error(`${method} ${path} → ${response.status}: ${message}${issues}`);
   }
   return parsed;
 }
@@ -188,6 +192,7 @@ function fallCreek() {
   const outline = readJson(join(sample, "ground.geojson"));
   const surfaces = readJson(join(drawings, "surfaces.json"));
   const equipment = readJson(join(drawings, "equipment.json"));
+  const zones = readJson(join(sample, "zones.geojson"));
   return {
     ground: {
       type: "FeatureCollection",
@@ -202,7 +207,14 @@ function fallCreek() {
       ],
     },
     trees: readJson(join(drawings, "trees.json")),
-    zones: readJson(join(sample, "zones.geojson")),
+    // The QGIS sample's display label is the zone's name, which the import requires.
+    zones: {
+      ...zones,
+      features: zones.features.map((feature) => ({
+        ...feature,
+        properties: { ...feature.properties, name: feature.properties.name ?? feature.properties.label },
+      })),
+    },
   };
 }
 
@@ -218,21 +230,32 @@ function folder(path) {
   return layers;
 }
 
+/** Zone codes the API accepts (contract "Zone identity"). */
+const ZONE_CODE = /^[A-Za-z0-9][A-Za-z0-9_.-]*$/;
+
 if (site.package) {
-  step(`Site ${site.name} already has package v${site.package.version}`);
+  step(`Site ${site.name} already has map v${site.package.package_version}`);
 } else {
   const layers = values.package === "fall-creek" ? fallCreek() : folder(values.package);
-  const prepared = await api("POST", `${base}/packages`, {
-    site_code: site.code,
-    form_version: published["behaviour-mapping"],
-    layers,
-  });
-  const blocked = prepared.checks?.filter((check) => check.state === "blocked") ?? [];
-  if (prepared.state !== "ready") {
-    console.error(`The package was blocked:\n${blocked.map((check) => `  - ${check.detail}`).join("\n")}`);
+  // A first map: every feature of the zones layer becomes a new zone, coded by its `id`. A refused
+  // package is answered with its reasons, which `api` prints.
+  const zones = (layers.zones?.features ?? []).map((feature) => String(feature.properties?.id ?? ""));
+  const unusable = zones.filter((code) => code.length > 100 || !ZONE_CODE.test(code));
+  if (unusable.length > 0) {
+    console.error(`Each zone needs an \`id\` of letters, digits, ".", "_" or "-": ${JSON.stringify(unusable)}`);
     process.exit(1);
   }
-  step(`Prepared map package v${prepared.version} for ${site.name}`);
+  const publication = await api("POST", `${base}/packages`, {
+    site_id: site.site_id,
+    request_id: randomUUID(),
+    expected_current_package_id: site.current_package_id ?? null,
+    form_version: published["behaviour-mapping"],
+    inventory_form_version: published["zone-inventory"],
+    change_note: "First map, set up with the bootstrap script",
+    zone_identity_map: zones.map((code) => ({ source_feature_id: code, zone_id: randomUUID(), zone_code: code })),
+    layers,
+  });
+  step(`Published map v${publication.package.package_version} for ${site.name}`);
 }
 
 // 7. Invitations and join codes, printed once.
