@@ -222,7 +222,7 @@ def test_server_logs_strip_raw_urls_and_exception_messages(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     with TestClient(create_app()) as client:
-        client.get("/health?token=secret", headers={"Authorization": "Bearer secret"})
+        client.get("/missing/secret?token=secret", headers={"Authorization": "Bearer secret"})
         logging.getLogger("uvicorn.error").error("secret exception")
         detail = "secret detail"
         try:
@@ -236,3 +236,18 @@ def test_server_logs_strip_raw_urls_and_exception_messages(
     # The kind of failure is kept; its text, which may carry request data, is not.
     assert '"exception":["builtins.ValueError"]' in captured
     assert "secret" not in captured
+
+
+def test_successful_health_probes_are_quiet_but_failed_readiness_is_logged(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with TestClient(create_app()) as client:
+        health = client.get("/health", headers={"X-Request-Id": "health-probe"})
+        assert health.status_code == 200
+        assert health.headers["X-Request-Id"] == "health-probe"
+        assert '"event":"http_response"' not in capsys.readouterr().err
+        assert client.get("/ready").status_code == 503
+    captured = capsys.readouterr().err
+    assert '"operation":"ready"' in captured
+    assert '"status":503' in captured
+    assert '"method":"GET"' in captured

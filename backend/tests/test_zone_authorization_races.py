@@ -22,7 +22,7 @@ from fieldmaps_api.repositories import tenancy as tenancy_db
 from fieldmaps_api.repositories import zones as zone_db
 from fieldmaps_api.routers import identity as identity_router
 from fieldmaps_api.services import zone_archives
-from tests.local_database import admin_sql, database_url
+from tests.local_database import admin_sql, connection_url
 from tests.package_fixtures import submission
 from tests.test_zone_api_live import LiveApi
 from tests.zone_api_fixtures import document
@@ -280,7 +280,7 @@ def test_demotion_waits_while_finalizer_is_blocked_on_the_site(
         return result
 
     async def hold_site() -> None:
-        engine = create_async_engine(database_url())
+        engine = create_async_engine(connection_url())
         try:
             async with user_transaction(
                 async_sessionmaker(engine), live_api.tenant.users["owner"]

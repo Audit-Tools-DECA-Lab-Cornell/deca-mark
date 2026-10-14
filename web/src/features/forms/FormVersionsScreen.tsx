@@ -307,7 +307,7 @@ function VersionsTable({
 				{form.versions.map(version => (
 					<li key={version.code} className="flex flex-col gap-2 px-island-pad py-4">
 						<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-							<Link href={editor(version.code)} className={LINK}>
+							<Link prefetch={false} href={editor(version.code)} className={LINK}>
 								<Mono>{version.code}</Mono>
 							</Link>
 							<StateBadge kind="form" state={version.state} label={stateLabel(version)} />
@@ -340,7 +340,7 @@ function VersionsTable({
 						{form.versions.map(version => (
 							<Tr key={version.code}>
 								<Td nowrap>
-									<Link href={editor(version.code)} className={LINK}>
+										<Link prefetch={false} href={editor(version.code)} className={LINK}>
 										<Mono>{version.code}</Mono>
 									</Link>
 								</Td>

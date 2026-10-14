@@ -112,6 +112,16 @@ def test_readiness_jwks_failure(fault_client: TestClient, monkeypatch: pytest.Mo
     assert "private" not in response.text
 
 
+def test_readiness_rejects_a_reachable_database_with_missing_api_helpers(
+    fault_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The database connection succeeds, but a pre-cutover schema is not ready for this API.
+    monkeypatch.setattr("fieldmaps_api.readiness.SCHEMA_READY", text("SELECT false"))
+    response = fault_client.get("/ready")
+    assert response.status_code == 503
+    assert '"code":"storage_unavailable"' in response.text
+
+
 def test_real_deadlock_returns_retryable_error(fault_client: TestClient) -> None:
     response = fault_client.get("/deadlock")
     assert response.status_code == 503

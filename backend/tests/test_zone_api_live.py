@@ -12,9 +12,8 @@ import uvicorn
 from pydantic import TypeAdapter
 
 from fieldmaps_api.auth import JwksVerifier
-from fieldmaps_api.config import Settings
 from fieldmaps_api.main import create_app
-from tests.local_database import database_url
+from tests.local_database import database_settings
 from tests.package_fixtures import submission
 from tests.signing import ISSUER, Signer
 from tests.tenant_fixtures import Tenant, create_tenant
@@ -62,7 +61,7 @@ class LiveApi:
 def live_api(signer: Signer) -> Iterator[LiveApi]:
     tenant = Tenant.new()
     create_tenant(tenant)
-    settings = Settings(database_url=database_url())
+    settings = database_settings()
     app = create_app(settings, JwksVerifier(ISSUER, "authenticated", signer))
     server = ReadyServer(uvicorn.Config(app, host="127.0.0.1", port=0, log_level="error"))
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
