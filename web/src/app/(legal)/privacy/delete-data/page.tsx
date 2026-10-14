@@ -21,8 +21,29 @@ export default function DeleteDataPage() {
 			<DraftNotice />
 
 			<p className={styles.lead}>
-				You can remove {policy.appName} data from your device yourself. To delete your account and the
-				observations uploaded under it, send a request to the team that runs the app.
+				You can delete your {policy.appName} account yourself on the website, without the app, and remove data
+				from your device. To delete the observations uploaded under your account, or if you cannot sign in, send
+				a request to the team that runs {policy.appName}.
+			</p>
+
+			<h2 id="yourself">Delete your account yourself</h2>
+			<ol>
+				<li>
+					On the website, open <Link href="/account">Account</Link>. If you are not signed in, it asks you to
+					sign in first and then opens.
+				</li>
+				<li>
+					Under <strong>Delete account</strong>, choose <strong>Review account deletion</strong>. The page
+					lists what is removed. Type DELETE and choose <strong>Request account deletion</strong>.
+				</li>
+				<li>
+					Your profile and your memberships of organizations and projects are removed, and you are signed out.
+					If removing your sign-in takes longer, the page says so, and we finish it.
+				</li>
+			</ol>
+			<p>
+				If you are the only owner of an organization, or the only manager of a project, that has other members,
+				the page names it: hand it over first. The app cannot delete accounts yet.
 			</p>
 
 			<h2 id="on-device">Remove data from your device</h2>
@@ -50,7 +71,7 @@ export default function DeleteDataPage() {
 				</li>
 			</ol>
 
-			<h2 id="request">Request deletion of your account and uploaded data</h2>
+			<h2 id="request">Ask us to delete your account and uploaded data</h2>
 			<ol>
 				<li>
 					Email <Contact email={policy.contactEmail} /> from the email address you use to sign in, with the

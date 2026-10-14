@@ -32,13 +32,17 @@ export default function PrivacyPage() {
 				{policy.appName} is an app research teams use to record observations at a study site: an observer marks
 				a point on a site map and answers the study’s questions, often without a signal. This policy explains
 				what the app collects, why, who can see it and what you can do about it. It covers the {policy.appName}{" "}
-				app for Android and iOS and the server it uploads to.
+				app for Android and iOS, the {policy.appName} website where accounts and studies are managed, and the
+				server they both use.
 			</p>
 
 			<section className={styles.summary} aria-labelledby="summary">
 				<h2 id="summary">In short</h2>
 				<ul>
-					<li>We collect your sign-in email address and the observations you record.</li>
+					<li>
+						We collect the email address you sign up with, the profile you enter, and the observations you
+						record.
+					</li>
 					<li>
 						The app does not read your contacts, photos, camera or microphone. It reads your device’s
 						location only if you turn on “Show my location”, and only to draw where you are on the map.
@@ -49,7 +53,8 @@ export default function PrivacyPage() {
 						Our hosting provider stores it for us.
 					</li>
 					<li>
-						You can <Link href="/privacy/delete-data">ask us to delete your account and data</Link>.
+						You can delete your account yourself on the website, or{" "}
+						<Link href="/privacy/delete-data">ask us to delete your account and data</Link>.
 					</li>
 				</ul>
 			</section>
@@ -76,13 +81,23 @@ export default function PrivacyPage() {
 						<tr>
 							<td>Account details</td>
 							<td>
-								Your email address and password when you sign in. The app sends your password only to
-								our sign-in provider and never stores it; if you use a password manager, your device may
-								offer to save it there. Our administrators create accounts for research team members.
-								The app has no sign-up screen, and an account can upload only after an administrator
-								adds it to a project.
+								Anyone can create an account, in the app or on the website, with an email address and a
+								password of 8 to 128 characters. We email a six-digit code to confirm the address, and
+								another if you reset your password. The app and the website send your password only to
+								our sign-in provider and never store it; if you use a password manager, your device may
+								offer to save it there. An account uploads to a research project only after it joins
+								that project with an invitation or a join code from the project’s team.
 							</td>
-							<td>To sign you in.</td>
+							<td>To sign you in and confirm the address is yours.</td>
+						</tr>
+						<tr>
+							<td>Profile</td>
+							<td>
+								The name and observer initials you enter, and your language setting. Your initials
+								become the observer code on each observation you record. We also keep which
+								organizations and projects you belong to, and your role in each.
+							</td>
+							<td>To label your observations and decide what you can see and do.</td>
 						</tr>
 						<tr>
 							<td>Account ID</td>
@@ -122,11 +137,19 @@ export default function PrivacyPage() {
 				</table>
 			</div>
 
-			<h3>Signed in or not</h3>
+			<h3>The Training project</h3>
 			<p>
-				You can use the app without signing in. Records you make while signed out stay on your device and are
-				never uploaded, even if you sign in later. Records you make while signed in upload to your project,
-				including those on the “Sample garden practice” training map.
+				Every new account joins a shared Training project, so you can practise before joining a study. Only you
+				can see the practice observations you upload there; other people in Training cannot. Practice
+				observations are deleted {policy.trainingRetention ?? <Missing>Training retention period</Missing>}.
+			</p>
+
+			<h3>On the website</h3>
+			<p>
+				The website keeps you signed in with cookies, and remembers the project you opened last. While you
+				confirm your email address or reset your password, it keeps the address in a cookie only the website can
+				read, for up to 30 minutes, and removes it when you finish. Your screen theme, map colours and recent
+				searches are kept in your browser.
 			</p>
 
 			<h3>The map point is not your GPS location</h3>
@@ -207,15 +230,15 @@ export default function PrivacyPage() {
 					and GIS analysts do not see your email address.
 				</li>
 				<li>
-					<strong>The people who run {policy.appName}.</strong> Our administrators create accounts and manage
-					the database, so they can see all accounts and observations, including which account uploaded each
-					observation.
+					<strong>The people who run {policy.appName}.</strong> Our administrators manage the database, so
+					they can see all accounts and observations, including which account uploaded each observation.
 				</li>
 				<li>
 					<strong>Our service providers.</strong> Supabase runs our sign-in service and hosts the database, on
 					Amazon Web Services servers in the United States (US East, Northern Virginia). Our upload server is
-					hosted by {policy.serverHost ?? <Missing>server host</Missing>}. They process the data on our behalf
-					to provide those services.
+					hosted by {policy.serverHost ?? <Missing>server host</Missing>}. Sign-in codes and invitations are
+					emailed through {policy.emailProvider ?? <Missing>email delivery provider</Missing>}. They process
+					the data on our behalf to provide those services.
 				</li>
 				<li>
 					<strong>A connectivity check on iOS.</strong> While an account is on the device and the app is open,
@@ -235,7 +258,7 @@ export default function PrivacyPage() {
 				<li>The app connects to our sign-in service and server only over encrypted connections (HTTPS).</li>
 				<li>
 					Every upload must carry a valid sign-in token, and the database accepts an upload only from an
-					account an administrator has added to that project as an observer or manager.
+					account that has joined that project as an observer or manager.
 				</li>
 				<li>Your password is never sent to our own server; it goes only to the sign-in provider.</li>
 			</ul>
@@ -249,8 +272,9 @@ export default function PrivacyPage() {
 				</li>
 				<li>
 					Accounts and uploaded observations are kept{" "}
-					{policy.retention ?? <Missing>retention period</Missing>}. We delete an account when its holder
-					leaves the research team, or sooner if they ask.
+					{policy.retention ?? <Missing>retention period</Missing>}. You can delete your account at any time;
+					we also delete it when you ask. Practice observations in the Training project are deleted{" "}
+					{policy.trainingRetention ?? <Missing>Training retention period</Missing>}.
 				</li>
 				<li>
 					Server request logs and our sign-in provider’s record of sign-ins are kept{" "}
@@ -263,7 +287,12 @@ export default function PrivacyPage() {
 
 			<h2 id="your-choices">Your choices and rights</h2>
 			<ul>
-				<li>Use the app without signing in. Nothing you record while signed out is uploaded.</li>
+				<li>
+					Delete your account yourself: sign in on the website, open <Link href="/account">Account</Link> and
+					choose <strong>Delete account</strong>. The app cannot delete accounts yet. Your profile and
+					memberships are removed; observations already uploaded stay with their study, as{" "}
+					<Link href="/privacy/delete-data#what-may-be-kept">described here</Link>.
+				</li>
 				<li>
 					Sign out in <strong>Account and synchronisation</strong>. If you have been offline for a while, you
 					may need a connection before the <strong>Sign out</strong> button appears. Signing out removes your
@@ -285,9 +314,9 @@ export default function PrivacyPage() {
 
 			<h2 id="children">Children</h2>
 			<p>
-				{policy.appName} is a tool for adult researchers and is not directed at children. Our administrators
-				create accounts only for members of research teams. We do not knowingly collect personal information
-				from children who use the app. If you think a child has an account, contact us and we will delete it.
+				{policy.appName} is a tool for adult researchers and is not directed at children. Accounts are for adult
+				members of research teams. We do not knowingly collect personal information from children who use the
+				app. If you think a child has an account, contact us and we will delete it.
 			</p>
 
 			<h2 id="changes">Changes to this policy</h2>

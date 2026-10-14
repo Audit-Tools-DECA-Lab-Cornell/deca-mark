@@ -35,8 +35,16 @@ export const policy = {
 	logRetention: "for up to 90 days" as string | null,
 	/** Assumed. How many days a deletion request may take. */
 	deletionDays: 30 as number | null,
+	/**
+	 * How long practice observations in the Training project are kept; completes a sentence. The database
+	 * deletes them 30 days after they arrive (the daily `fieldmaps_training_purge` job). Q2 (IRB constraints)
+	 * may change the window; keep this and the job in step.
+	 */
+	trainingRetention: "30 days after they arrive" as string | null,
+	/** Who delivers the sign-in codes and invitation emails. Not yet confirmed for the hosted service. */
+	emailProvider: null as string | null,
 	/** The date this version of the policy takes effect. */
-	effectiveDate: "October 8, 2026"
+	effectiveDate: "October 14, 2026"
 };
 
 export const missingFacts: readonly string[] = [
@@ -45,5 +53,7 @@ export const missingFacts: readonly string[] = [
 	policy.serverHost === null ? "who hosts the upload server" : null,
 	policy.retention === null ? "how long accounts and uploaded observations are kept" : null,
 	policy.logRetention === null ? "how long server logs and sign-in records are kept" : null,
-	policy.deletionDays === null ? "how many days a deletion request may take" : null
+	policy.deletionDays === null ? "how many days a deletion request may take" : null,
+	policy.trainingRetention === null ? "how long practice observations in the Training project are kept" : null,
+	policy.emailProvider === null ? "who delivers sign-in codes and invitation emails" : null
 ].filter((fact): fact is string => fact !== null);
