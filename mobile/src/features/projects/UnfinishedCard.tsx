@@ -1,9 +1,9 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import type { Answers } from "../../forms/definition";
 import { isAnswered, visibleQuestions } from "../../forms/engine";
-import { formFor } from "../../forms/registry";
+import { type Recovered, useRecoveredDraft } from "../../packages/zone-read-models";
 import { useFieldSession } from "../../session/provider";
 import {
   announce,
@@ -13,20 +13,26 @@ import {
   TextLink,
   type Theme,
   useHaptics,
+  useOnline,
   useStyles,
 } from "../../ui";
 import { useDataSource } from "../preview/data-source";
 import { unfinishedSentence, unfinishedTitle } from "./readiness";
+import { type RecoveryAction, recoveryCard } from "./recovery";
 
 /** The bundled package the preview's sample draft belongs to (Riverside, as Mobile 10 draws it). */
 const PREVIEW_PACKAGE = "riverside-play-study";
 
-type Unfinished = {
-  /** recovered: a draft left by a force quit; open: an observation still open in this session. */
-  kind: "recovered" | "open" | "sample";
-  title: string;
-  sentence: string;
-};
+type Unfinished =
+  /** A draft left by a force quit or a restart, with its exact map and zone (MUI-7). */
+  | {
+      readonly kind: "recovered";
+      readonly model: Recovered | null;
+      readonly problem: string | null;
+    }
+  /** An observation still open in this session. */
+  | { readonly kind: "open"; readonly title: string; readonly sentence: string }
+  | { readonly kind: "sample"; readonly title: string; readonly sentence: string };
 
 function countAnswered(answers: Answers): number {
   return Object.values(answers).filter((value) => isAnswered(value)).length;
@@ -41,21 +47,11 @@ const NOT_REOPENED = "This draft could not be reopened here. It stays on this de
  */
 export function useUnfinished(): Unfinished | null {
   const session = useFieldSession();
+  const recovery = useRecoveredDraft();
   const { mode } = useDataSource();
   const { recovered, inProgress } = session;
 
-  if (recovered) {
-    const form = formFor(recovered.formVersion);
-    return {
-      kind: "recovered",
-      title: unfinishedTitle(recovered.context.zoneLabel, recovered.context.roundType),
-      sentence: unfinishedSentence({
-        placed: recovered.coordinates !== null,
-        answered: countAnswered(recovered.answers),
-        asked: form ? visibleQuestions(form, recovered.answers).length : 0,
-      }),
-    };
-  }
+  if (recovered) return { kind: "recovered", model: recovery.active, problem: recovery.problem };
   if (inProgress) {
     const answers = session.state.answers;
     return {
@@ -80,6 +76,7 @@ export function useUnfinished(): Unfinished | null {
 function cardStyles(t: Theme) {
   return StyleSheet.create({
     body: { gap: t.space.s5 },
+    lines: { gap: t.space.s2 },
     actions: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -92,10 +89,16 @@ function cardStyles(t: Theme) {
 
 /**
  * "Unfinished observation" on Projects (Mobile 10): the accent card for the one thing to pick up again.
- * Resume returns to collect with every answer as it was written; "Discard draft" asks first, because
- * it removes the point and answers from this device.
+ * Resume returns to collect on the observation's own map, zone and answers. When that map is missing
+ * the card says so and offers it again; when it cannot be resumed it can be kept for later, which frees
+ * collection without discarding it. "Discard draft" asks first.
  */
 export function UnfinishedCard({ unfinished }: { unfinished: Unfinished }) {
+  if (unfinished.kind === "recovered") return <RecoveredCard unfinished={unfinished} />;
+  return <OpenCard unfinished={unfinished} />;
+}
+
+function OpenCard({ unfinished }: { unfinished: Exclude<Unfinished, { kind: "recovered" }> }) {
   const s = useStyles(cardStyles);
   const session = useFieldSession();
   const haptics = useHaptics();
@@ -114,16 +117,6 @@ export function UnfinishedCard({ unfinished }: { unfinished: Unfinished }) {
     }
     setBusy(true);
     try {
-      if (unfinished.kind === "recovered") {
-        const opened = await session.resumeRecovered();
-        if (opened) router.push("/collect");
-        else {
-          // Another account's draft leaves the card; a package this device no longer has keeps it.
-          setProblem(NOT_REOPENED);
-          announce(NOT_REOPENED);
-        }
-        return;
-      }
       // Preview: the sample has no answers to restore, so collect opens on its bundled package.
       const outcome = await session.openPackage(PREVIEW_PACKAGE);
       if (outcome.ok) router.push("/collect");
@@ -137,24 +130,12 @@ export function UnfinishedCard({ unfinished }: { unfinished: Unfinished }) {
   }
 
   function discard() {
-    Alert.alert(
-      "Discard this draft?",
-      "The point and answers in this unfinished observation are removed from this device. Nothing was uploaded.",
-      [
-        { text: "Keep it", style: "cancel" },
-        {
-          text: "Discard draft",
-          style: "destructive",
-          onPress: () => {
-            haptics.warning();
-            if (unfinished.kind === "recovered") void session.discardRecovered();
-            else if (unfinished.kind === "open") session.discard();
-            else setHidden(true);
-            announce("Draft discarded.");
-          },
-        },
-      ],
-    );
+    confirmDiscard(() => {
+      haptics.warning();
+      if (unfinished.kind === "open") session.discard();
+      else setHidden(true);
+      announce("Draft discarded.");
+    });
   }
 
   return (
@@ -180,6 +161,203 @@ export function UnfinishedCard({ unfinished }: { unfinished: Unfinished }) {
             testID="projects-discard"
           />
         </View>
+      </View>
+    </Island>
+  );
+}
+
+function confirmDiscard(onDiscard: () => void) {
+  Alert.alert(
+    "Discard this draft?",
+    "The point and answers in this unfinished observation are removed from this device. Nothing was uploaded.",
+    [
+      { text: "Keep draft", style: "cancel" },
+      { text: "Discard draft", style: "destructive", onPress: onDiscard },
+    ],
+  );
+}
+
+function RecoveredCard({ unfinished }: { unfinished: Extract<Unfinished, { kind: "recovered" }> }) {
+  const s = useStyles(cardStyles);
+  const recovery = useRecoveredDraft();
+  const haptics = useHaptics();
+  const online = useOnline();
+  const [busy, setBusy] = useState<RecoveryAction | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const model = unfinished.model;
+
+  if (!model)
+    return (
+      <Island tone="accent" eyebrow="Unfinished observation" title="Kept on this device">
+        <Text tone={unfinished.problem ? "attention" : "ink2"}>
+          {unfinished.problem ?? "Reading the map and zone this observation was opened on…"}
+        </Text>
+      </Island>
+    );
+  const card = recoveryCard(model, online);
+
+  async function run(action: RecoveryAction) {
+    if (busy) return;
+    setProblem(null);
+    setBusy(action);
+    try {
+      if (action === "resume") {
+        const opened = await recovery.resume();
+        if (opened) router.push("/collect");
+        else {
+          setProblem(NOT_REOPENED);
+          announce(NOT_REOPENED);
+        }
+      }
+      if (action === "redownload") await recovery.redownload(model?.draftId ?? "");
+      if (action === "park") {
+        await recovery.park();
+        announce("Kept for later. You can start collecting again.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <Island tone="accent" eyebrow="Unfinished observation" title={card.title}>
+      <View style={s.body}>
+        <View style={s.lines}>
+          {card.lines.map((line) => (
+            <Text key={line} tone="ink2">
+              {line}
+            </Text>
+          ))}
+        </View>
+        {problem ? <Text tone="attention">{problem}</Text> : null}
+        <View style={s.actions}>
+          {card.actions.includes("resume") ? (
+            <Button
+              label="Resume"
+              icon="arrow-right"
+              busy={busy === "resume"}
+              busyLabel="Opening…"
+              onPress={() => void run("resume")}
+              accessibilityHint={`Returns to collect on ${card.title}, with the point and answers as they were.`}
+              testID="projects-resume"
+            />
+          ) : null}
+          {card.actions.includes("redownload") && card.redownloadLabel ? (
+            <Button
+              variant="outline"
+              label={card.redownloadLabel}
+              icon="download"
+              busy={busy === "redownload"}
+              busyLabel="Downloading…"
+              onPress={() => void run("redownload")}
+              testID="projects-redownload"
+            />
+          ) : null}
+          {card.actions.includes("park") ? (
+            <TextLink
+              label={card.parkLabel}
+              onPress={() => void run("park")}
+              accessibilityHint="Keeps this observation and its answers on this device, and frees collection for new work."
+              testID="projects-park"
+            />
+          ) : null}
+          <TextLink
+            label="Discard draft"
+            tone="ink"
+            onPress={() =>
+              confirmDiscard(() => {
+                haptics.warning();
+                void recovery.discard();
+                announce("Draft discarded.");
+              })
+            }
+            accessibilityHint="Asks before removing the draft from this device."
+            testID="projects-discard"
+          />
+        </View>
+      </View>
+    </Island>
+  );
+}
+
+/**
+ * "Kept for later" on Projects: observations parked because they could not be resumed. Each keeps its
+ * exact map, zone and answers. Resume makes it the unfinished observation again, then opens collect,
+ * once nothing else is unfinished; otherwise it waits.
+ */
+export function ParkedDrafts() {
+  const s = useStyles(cardStyles);
+  const recovery = useRecoveredDraft();
+  const session = useFieldSession();
+  const haptics = useHaptics();
+  const online = useOnline();
+  const [restoring, setRestoring] = useState<string | null>(null);
+  const occupied = session.recovered !== null || session.inProgress !== null;
+
+  // Once the restored draft is the session's unfinished observation, open it as Resume does.
+  const { recovered, resumeRecovered } = session;
+  useEffect(() => {
+    if (!restoring || recovered?.id !== restoring) return;
+    setRestoring(null);
+    void resumeRecovered().then((opened) => {
+      if (opened) router.push("/collect");
+      else announce(NOT_REOPENED);
+    });
+  }, [restoring, recovered, resumeRecovered]);
+
+  if (recovery.parked.length === 0) return null;
+  return (
+    <Island eyebrow="Kept for later" title={`${recovery.parked.length} unfinished on this device`}>
+      <View style={s.body}>
+        {recovery.parked.map((model) => {
+          const card = recoveryCard(model, online);
+          return (
+            <View key={model.draftId} style={s.lines}>
+              <Text variant="bodyStrong">{card.title}</Text>
+              {card.lines.map((line) => (
+                <Text key={line} tone="ink2">
+                  {line}
+                </Text>
+              ))}
+              <View style={s.actions}>
+                {card.actions.includes("resume") ? (
+                  <Button
+                    variant="outline"
+                    label="Resume"
+                    icon="arrow-right"
+                    busy={restoring === model.draftId}
+                    busyLabel="Opening…"
+                    disabled={occupied}
+                    disabledReason="Resume or discard the unfinished observation above first."
+                    onPress={() => {
+                      setRestoring(model.draftId);
+                      void recovery.restoreParked(model.draftId);
+                    }}
+                  />
+                ) : null}
+                {card.actions.includes("redownload") && card.redownloadLabel ? (
+                  <Button
+                    variant="outline"
+                    label={card.redownloadLabel}
+                    icon="download"
+                    onPress={() => void recovery.redownload(model.draftId)}
+                  />
+                ) : null}
+                <TextLink
+                  label="Discard draft"
+                  tone="ink"
+                  onPress={() =>
+                    confirmDiscard(() => {
+                      haptics.warning();
+                      void recovery.discardParked(model.draftId);
+                      announce("Draft discarded.");
+                    })
+                  }
+                />
+              </View>
+            </View>
+          );
+        })}
       </View>
     </Island>
   );

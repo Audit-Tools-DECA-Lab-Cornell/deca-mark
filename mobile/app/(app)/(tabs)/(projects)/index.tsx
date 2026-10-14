@@ -15,7 +15,14 @@ import {
 } from "../../../../src/features/preview";
 import { AccountMark, PageIntro, PreviewData } from "../../../../src/features/projects/parts";
 import { projectReadiness } from "../../../../src/features/projects/readiness";
-import { UnfinishedCard, useUnfinished } from "../../../../src/features/projects/UnfinishedCard";
+import {
+  ParkedDrafts,
+  UnfinishedCard,
+  useUnfinished,
+} from "../../../../src/features/projects/UnfinishedCard";
+import { hasUpdate, updatesPhrase } from "../../../../src/features/projects/versions";
+import { useHostedSites } from "../../../../src/packages/hosted/context";
+import { siteVersionSnapshot } from "../../../../src/packages/zone-read-models";
 import {
   Button,
   Island,
@@ -86,6 +93,7 @@ export default function ProjectsHome() {
         </View>
         <PendingInvitationProjectsNote />
         {unfinished ? <UnfinishedCard unfinished={unfinished} /> : null}
+        <ParkedDrafts />
         {loading ? (
           <ScreenState kind="loading" body="Reading your projects…" />
         ) : projects.length === 0 ? (
@@ -128,8 +136,23 @@ export default function ProjectsHome() {
 }
 
 function ProjectRow({ project, first }: { project: PreviewProject; first: boolean }) {
-  const sites = useSites(project.id);
-  const readiness = projectReadiness(project, sites);
+  const listed = useSites(project.id);
+  const { mode } = useDataSource();
+  const hosted = useHostedSites();
+  // Hosted sites are ready while a verified map is on this device, even after a newer one is
+  // published; the row also counts the sites with a newer map to download (MUI-10).
+  const catalog = listed.map((site) =>
+    mode === "device" && !site.bundled ? siteVersionSnapshot(hosted, site.id) : null,
+  );
+  const sites = listed.map((site, index) => {
+    const versions = catalog[index];
+    return versions?.nextSessionPackageId
+      ? { ...site, download: { ...site.download, state: "ready" as const } }
+      : site;
+  });
+  const updates = catalog.filter((versions) => versions !== null && hasUpdate(versions)).length;
+  const base = projectReadiness(project, sites);
+  const readiness = { ...base, label: `${base.label}${updatesPhrase(updates)}` };
   return (
     <ListRow
       divider={!first}

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { useProject, useSites } from "../../../../src/features/preview";
+import { useDataSource, useProject, useSites } from "../../../../src/features/preview";
 import { AccountMark, PageIntro, PreviewData } from "../../../../src/features/projects/parts";
 import {
   downloadsSummary,
@@ -9,6 +9,9 @@ import {
   siteSubtitle,
 } from "../../../../src/features/projects/readiness";
 import { SiteGlyphThumb, SitePlanThumb } from "../../../../src/features/projects/SitePlan";
+import { hostedReadiness, siteVersionLine } from "../../../../src/features/projects/versions";
+import { useHostedSites } from "../../../../src/packages/hosted/context";
+import { siteVersionSnapshot } from "../../../../src/packages/zone-read-models";
 import {
   Button,
   Island,
@@ -38,8 +41,8 @@ const PLANNED_SITES = new Set(["riverside", "practice-garden"]);
 /**
  * A project (Mobile 11): its sites, each with its download state as this device knows it, and the
  * total on the device at the foot. A site opens to its package (not downloaded, downloading or ready).
- * On device data only the sites whose packages ship with the app are listed; hosted packages arrive
- * with MOB-14, and a project without any says so instead of borrowing sites.
+ * On device data a hosted site reads its maps from the verified catalog: the newest verified version
+ * on this device, and a newer published one beside it (MOB-30). A project without sites says so.
  */
 export default function ProjectScreen() {
   const s = useStyles(projectStyles);
@@ -101,8 +104,8 @@ export default function ProjectScreen() {
           <ScreenState
             kind="empty"
             icon="layers"
-            title="No sites on this device yet"
-            body="A site appears here once its map package can reach this device. Package delivery is not built yet, so only the sites that ship with the app are listed."
+            title="No sites yet"
+            body="A site appears here once a project manager adds it on the web. When it has a map package, you can download it to this device."
           />
         ) : (
           <View style={s.list}>
@@ -133,9 +136,14 @@ function SiteRow({
   projectId: string;
   first: boolean;
 }) {
-  const readiness = siteReadiness(site);
-  const ready = site.download.state === "ready";
-  const subtitle = siteSubtitle(site);
+  const { mode } = useDataSource();
+  const hostedSites = useHostedSites();
+  // A hosted site's state and versions come from the verified catalog, not the site list's package.
+  const versions =
+    mode === "device" && !site.bundled ? siteVersionSnapshot(hostedSites, site.id) : null;
+  const readiness = versions ? hostedReadiness(versions) : siteReadiness(site);
+  const ready = versions ? versions.nextSessionPackageId !== null : site.download.state === "ready";
+  const subtitle = versions ? siteVersionLine(site.zones.length, versions) : siteSubtitle(site);
   return (
     <ListRow
       divider={!first}

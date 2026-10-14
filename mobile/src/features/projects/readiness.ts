@@ -44,7 +44,13 @@ export function siteReadiness(site: SiteWithDownload): ReadinessLine {
         ? { state: "alwaysAvailable", label: "Ships with the app" }
         : { state: "readyOffline", label: "Ready offline" };
     case "downloading":
-      return { state: "downloading", label: `Downloading · ${percentOf(site.download)}%` };
+      // A hosted download says which of the four parts it is on; it never estimates a percentage.
+      return {
+        state: "downloading",
+        label: site.download.detail
+          ? `Downloading · ${(site.download.detail.split(" · ")[0] ?? "").toLowerCase()}`
+          : `Downloading · ${percentOf(site.download)}%`,
+      };
     case "notDownloaded":
       return { state: "notDownloaded", label: "Not downloaded" };
   }

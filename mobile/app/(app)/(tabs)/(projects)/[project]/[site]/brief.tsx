@@ -9,6 +9,17 @@ import {
 } from "../../../../../../src/domain/rounds";
 import { useSite } from "../../../../../../src/features/preview";
 import { PageIntro, useAccountInitials } from "../../../../../../src/features/projects/parts";
+import { startBlock } from "../../../../../../src/features/projects/recovery";
+import {
+  UnfinishedCard,
+  useUnfinished,
+} from "../../../../../../src/features/projects/UnfinishedCard";
+import { briefVersionNote } from "../../../../../../src/features/projects/versions";
+import { useHostedSites } from "../../../../../../src/packages/hosted/context";
+import {
+  useRecoveredDraft,
+  useSiteVersions,
+} from "../../../../../../src/packages/zone-read-models";
 import { useFieldSession } from "../../../../../../src/session/provider";
 import { offersRound } from "../../../../../../src/session/round-forms";
 import {
@@ -83,6 +94,10 @@ export default function BriefScreen() {
   const haptics = useHaptics();
   const [notesOpen, setNotesOpen] = useState(false);
   const { sitePackage, form, zone, roundType, freshPeriod, inProgress } = session;
+  const unfinished = useUnfinished();
+  const recovery = useRecoveredDraft();
+  const hosted = useHostedSites();
+  const versions = useSiteVersions(siteId);
 
   const observerQuestion = form?.questions.find(
     (question) => question.exportColumn === OBSERVER_COLUMN && question.kind === "text",
@@ -104,7 +119,14 @@ export default function BriefScreen() {
       dispatch({ kind: "write", question: questionId, value: initials });
   }, [questionId, packageId, observerAnswer, initials, dispatch]);
 
-  const opened = sitePackage && form && zone && site && sitePackage.id === site.packageId;
+  // The session's map is the newest verified one on this device, which may be older than the site
+  // list's published package (MUI-1): the Brief opens for either, as long as it is this site's.
+  const opened =
+    sitePackage &&
+    form &&
+    zone &&
+    site &&
+    (sitePackage.id === site.packageId || sitePackage.siteId === site.id);
   if (!opened)
     return (
       <Screen scroll dock testID="brief-closed">
@@ -140,6 +162,30 @@ export default function BriefScreen() {
   }));
   const inventory = !placesPoints(roundType);
   const openHere = inProgress !== null && inProgress.packageId === sitePackage.id;
+  // Only a resumable observation holding the active slot stops a new visit (MUI-7); it names its site.
+  const activeSite = recovery.active
+    ? Object.values(hosted.sites)
+        .flat()
+        .find((entry) => entry.site_id === recovery.active?.pinned.siteId)
+    : undefined;
+  const blocked = startBlock(
+    recovery.active,
+    activeSite?.name ??
+      (recovery.active?.pinned.siteId === sitePackage.siteId ? sitePackage.name : null),
+    openHere,
+  );
+  // Which map this session uses, and why it differs from the published one (MUI-10).
+  const versionText = session.pinned ? briefVersionNote(session.pinned.version, versions) : null;
+  const versionNote = versionText
+    ? {
+        text: versionText,
+        published: (versions.available?.version ?? 0) > (session.pinned?.version ?? 0),
+      }
+    : null;
+  const unfinishedHere =
+    unfinished?.kind === "recovered" && unfinished.model?.pinned.siteId === sitePackage.siteId
+      ? unfinished
+      : null;
   const notes = form.protocolNotes;
 
   return (
@@ -160,6 +206,7 @@ export default function BriefScreen() {
           title="Before you begin"
           lead="Choose the round, then where you are observing."
         />
+        {unfinishedHere ? <UnfinishedCard unfinished={unfinishedHere} /> : null}
 
         <Field label="Round">
           <RadioRows
@@ -242,6 +289,11 @@ export default function BriefScreen() {
           testID="brief-fresh"
         />
 
+        {versionNote ? (
+          <Note tone={versionNote.published ? "waiting" : "neutral"} icon="layers">
+            {versionNote.text}
+          </Note>
+        ) : null}
         <View
           style={s.locked}
           accessible
@@ -270,6 +322,8 @@ export default function BriefScreen() {
             size="collector"
             fullWidth
             onPress={() => router.push("/collect")}
+            disabled={blocked !== null}
+            disabledReason={blocked ?? undefined}
             accessibilityHint={`${zone.label}, ${ROUNDS[roundType].label}.`}
             testID="brief-start"
           />

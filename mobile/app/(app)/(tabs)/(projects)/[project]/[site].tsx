@@ -7,6 +7,7 @@ import {
   useProject,
   useSite,
 } from "../../../../../src/features/preview";
+import { HostedPackageIsland } from "../../../../../src/features/projects/HostedPackageIsland";
 import { PageIntro, PreviewData } from "../../../../../src/features/projects/parts";
 import {
   type AssetCheck,
@@ -140,12 +141,16 @@ export default function SiteScreen() {
     : site.download.assets;
   const ready = site.download.state === "ready" && allVerified(assets);
 
-  async function setUp() {
+  // A hosted site opens the newest verified map on this device, which may be older than the one
+  // published (MUI-1): the site list's current package is not the session's.
+  const hosted = device && !site.bundled;
+
+  async function setUp(packageId: string = site?.packageId ?? "") {
     if (!site || !project || opening) return;
     setOpening(true);
     setProblem(null);
     try {
-      const outcome = await session.openPackage(site.packageId);
+      const outcome = await session.openPackage(packageId);
       if (!outcome.ok) {
         haptics.warning();
         setProblem(outcome.reason);
@@ -214,25 +219,35 @@ export default function SiteScreen() {
           </InnerPanel>
         )}
 
-        <PackageIsland
-          site={site}
-          assets={assets}
-          ready={ready}
-          device={device}
-          canDownload={data.canDownload}
-          opening={opening}
-          problem={problem}
-          onDownload={() => {
-            data.startDownload(site.id);
-            announce(`Downloading ${site.name}.`);
-          }}
-          onCancel={() => {
-            data.cancelDownload(site.id);
-            announce("Download cancelled. Nothing was kept.");
-          }}
-          onSetUp={() => void setUp()}
-          onRemove={remove}
-        />
+        {hosted ? (
+          <HostedPackageIsland
+            siteId={site.id}
+            siteName={site.name}
+            opening={opening}
+            problem={problem}
+            onSetUp={(packageId) => void setUp(packageId)}
+          />
+        ) : (
+          <PackageIsland
+            site={site}
+            assets={assets}
+            ready={ready}
+            device={device}
+            canDownload={data.canDownload}
+            opening={opening}
+            problem={problem}
+            onDownload={() => {
+              data.startDownload(site.id);
+              announce(`Downloading ${site.name}.`);
+            }}
+            onCancel={() => {
+              data.cancelDownload(site.id);
+              announce("Download cancelled. Nothing was kept.");
+            }}
+            onSetUp={() => void setUp()}
+            onRemove={remove}
+          />
+        )}
       </View>
     </Screen>
   );
