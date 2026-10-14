@@ -24,7 +24,8 @@ export type IconButtonProps = {
 
 const SIZE = {
 	md: "size-11",
-	sm: "relative size-9 before:absolute before:-inset-1"
+	// A 44 px ::before box centred on the glyph; sized rather than inset, so the map and outline edges do not cut it.
+	sm: "relative size-9 before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-1/2"
 } as const;
 
 const ICON_SIZE = { md: 20, sm: 18 } as const;

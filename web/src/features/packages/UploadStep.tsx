@@ -119,7 +119,7 @@ function FilePick({
 					"relative inline-flex min-h-control-sm cursor-pointer items-center justify-center gap-2 rounded-pill border-2 border-ink bg-island px-4 py-1.5 text-sm font-semibold text-ink",
 					"transition-[background-color] duration-(--ct-duration-quick) ease-standard hover:bg-well",
 					"peer-disabled:cursor-not-allowed peer-disabled:border-transparent peer-disabled:bg-well peer-disabled:text-ink-2 peer-disabled:hover:bg-well",
-					"before:absolute before:inset-x-0 before:-inset-y-1",
+					"before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2",
 					"peer-focus-visible:outline-(length:--ct-size-focus-ring) peer-focus-visible:outline-offset-(--ct-size-focus-gap) peer-focus-visible:outline-focus peer-focus-visible:outline-solid"
 				)}>
 				{children}
