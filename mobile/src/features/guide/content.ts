@@ -36,8 +36,34 @@ export const GUIDE: readonly GuideSection[] = [
     title: "Zones",
     body: [
       "The session's zone is outlined and the rest of the site is dimmed, so it is easy to see where you are collecting.",
-      "If the cross is outside your zone, the Place step says so and names the zone it is in. Switch zones there if the play really is in the other zone.",
-      "During an Inventory round, tap a zone on the map or choose it from the list to record it.",
+      "If the cross is outside your zone, the Place step says so and names the zone it is in. Switch zones there if the play really is in the other zone. On a map from DECA Mark, a point can only be placed in the zone it is recorded in.",
+      "During an Inventory round, tap a zone on the map or choose it from the list to record it. A tap on the edge between two zones selects neither: choose one in the list.",
+    ],
+  },
+  {
+    id: "map-versions",
+    title: "Map versions",
+    body: [
+      "Each site's map has a version: map v1, then v2 when a coordinator changes a boundary or a name. The version shows on the site, in the session brief, in the collect header and on every saved observation.",
+      "A session keeps the map it started with, from Start collection until you leave the collect screen. A newer map never replaces it while you are collecting, and an unfinished observation keeps its own map even after a restart.",
+      "When a newer map is published, the site says so. Download it when you have a connection: your next session uses it. Observations you already saved keep the map they were recorded on, and still upload.",
+      "An older map stays on this device while an unfinished observation or a record that has not uploaded uses it. Remove says what still uses a map, and waits until nothing does.",
+    ],
+  },
+  {
+    id: "zone-edges",
+    title: "Zone edges",
+    body: [
+      'Zones can share an edge. When the cross is exactly on one, the Place step says "On the edge of" both zones and asks which one the play belongs to. Your session\'s zone stays chosen unless you pick the other.',
+      "Close to an edge, the Place step suggests zooming in to check. Zoom in until it is clear which side the play is on; the hint never changes your zone by itself.",
+    ],
+  },
+  {
+    id: "outside-zones",
+    title: "Outside every zone",
+    body: [
+      'Some ground belongs to no zone: a gap between zones, a hole such as a sandpit left out, or beyond the site. The Place step says "Outside every zone", and the point cannot be placed there on a map from DECA Mark.',
+      "Move the cross into a zone. Nothing you have answered is lost: while you move the point or change zone, the unfinished observation stays on this device.",
     ],
   },
   {

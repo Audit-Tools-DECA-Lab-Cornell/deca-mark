@@ -28,6 +28,8 @@ type Props = {
   /** For an inventory: the next zone without one in this session, if any. */
   readonly nextZone: SiteZone | null;
   readonly formVersion: string;
+  /** "map v3": the map the observation was recorded on (MUI-5). */
+  readonly mapVersion: string;
   readonly onNext: () => void;
   readonly onInventoryZone: (zone: SiteZone) => void;
   readonly onChangeRound: () => void;
@@ -60,6 +62,7 @@ export function SavedStep({
   save,
   nextZone,
   formVersion,
+  mapVersion,
   onNext,
   onInventoryZone,
   onChangeRound,
@@ -97,6 +100,10 @@ export function SavedStep({
           <FactsList
             surface="ground"
             items={[
+              {
+                label: "Map and form",
+                value: `${mapVersion.charAt(0).toUpperCase()}${mapVersion.slice(1)} · form ${formVersion}`,
+              },
               {
                 label: "Carried forward",
                 value: inventory ? "Observer code and the round" : "Observer code, zone and round",

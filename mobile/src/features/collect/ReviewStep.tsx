@@ -30,6 +30,10 @@ type Props = {
   readonly onBack: () => void;
   readonly onSave: () => Promise<{ problems: readonly ReviewProblem[]; message?: string } | null>;
   readonly onDiscard: () => void;
+  /** On a bound map, why the point cannot be saved in this zone now (MUI-4), or null. */
+  readonly placementBlock?: string | null | undefined;
+  /** Moves the point again, keeping every answer. */
+  readonly onAdjust?: (() => void) | undefined;
 };
 
 const REASON: Record<ReviewProblem["reason"], string> = {
@@ -72,7 +76,17 @@ function reviewStyles(t: Theme) {
  * question. Validation happens here and only here: missing answers are named on their rows and the
  * save says how many remain. Saving stores the record on this device; uploading follows on its own.
  */
-export function ReviewStep({ form, state, summary, onJump, onBack, onSave, onDiscard }: Props) {
+export function ReviewStep({
+  form,
+  state,
+  summary,
+  onJump,
+  onBack,
+  onSave,
+  onDiscard,
+  placementBlock = null,
+  onAdjust,
+}: Props) {
   const s = useStyles(reviewStyles);
   const t = useTheme();
   const [problems, setProblems] = useState<readonly ReviewProblem[]>([]);
@@ -116,6 +130,20 @@ export function ReviewStep({ form, state, summary, onJump, onBack, onSave, onDis
             title={`${problems.length} ${problems.length === 1 ? "answer needs" : "answers need"} attention.`}
           >
             They are marked below. Tap one to answer it; nothing you entered is lost.
+          </Note>
+        ) : null}
+        {placementBlock ? (
+          <Note
+            tone="attention"
+            live="assertive"
+            title="Not saved yet."
+            action={
+              onAdjust ? (
+                <TextLink label="Adjust point" icon="crosshair" onPress={onAdjust} />
+              ) : undefined
+            }
+          >
+            {placementBlock.replace(/^Not saved yet\. /, "")}
           </Note>
         ) : null}
         {failure !== "" ? (
@@ -191,6 +219,8 @@ export function ReviewStep({ form, state, summary, onJump, onBack, onSave, onDis
           fullWidth
           busy={saving}
           busyLabel="Saving on this device…"
+          disabled={placementBlock !== null}
+          disabledReason={placementBlock ?? undefined}
           onPress={() => {
             void save();
           }}

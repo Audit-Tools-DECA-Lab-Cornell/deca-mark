@@ -19,6 +19,8 @@ type Props = {
   /** The inventories saved in this session, newest first. */
   readonly saves: readonly SessionSave[];
   readonly blocked: string | null;
+  /** A map tap on an edge between zones: say so, and leave the choice to the list (MUI-9). */
+  readonly tapNote?: string | null | undefined;
   readonly onChoose: (zone: SiteZone) => void;
   readonly onStart: () => void;
   readonly onFinish: () => void;
@@ -47,7 +49,16 @@ function zoneStyles(t: Theme) {
  * they are entering it for"). Zones done in this session say when; the next one not done is the
  * obvious choice. A tap on a zone on the map chooses it too.
  */
-export function ZoneStep({ zones, zone, saves, blocked, onChoose, onStart, onFinish }: Props) {
+export function ZoneStep({
+  zones,
+  zone,
+  saves,
+  blocked,
+  tapNote = null,
+  onChoose,
+  onStart,
+  onFinish,
+}: Props) {
   const s = useStyles(zoneStyles);
   const done = new Map<string, string>();
   for (const save of [...saves].reverse())
@@ -89,6 +100,11 @@ export function ZoneStep({ zones, zone, saves, blocked, onChoose, onStart, onFin
             if (next) onChoose(next);
           }}
         />
+        {tapNote && !blocked ? (
+          <Note tone="neutral" icon="map-pin" live="polite">
+            {tapNote}
+          </Note>
+        ) : null}
         {blocked ? (
           <Note tone="waiting" icon="lock">
             {blocked}

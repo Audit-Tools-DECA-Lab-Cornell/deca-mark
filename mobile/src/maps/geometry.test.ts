@@ -7,7 +7,6 @@ import {
   placementPrecision,
   pointInZone,
   scaleBar,
-  zoneAnchor,
   zoneAt,
   zoneBounds,
   zoneFeature,
@@ -69,44 +68,34 @@ describe("zones", () => {
     expect(pointInZone([-76.4859, 42.4487], lShape)).toBe(true);
   });
 
-  it("stores a whole-zone record at a point inside the zone", () => {
-    expect(pointInZone(zoneAnchor(zoneA), zoneA)).toBe(true);
-    const anchor = zoneAnchor(lShape);
-    expect(pointInZone(anchor, lShape)).toBe(true);
-  });
-
-  it("stores a two-part zone's record inside a part, not in the gap between them", () => {
-    // A thin L whose centroid falls outside it, and a second part far to the north: the box's centre
-    // lies in the gap, and lines across the whole zone's extent all pass north of the L.
-    const at = (u: number, v: number): Coordinate => [-76.486 + u * 1e-4, 42.448 + v * 1e-4];
-    const split: SiteZone = {
-      zoneId: "practice:S",
-      displayAnchor: at(0.5, 0.5),
-      id: "S",
-      label: "Zone S",
-      centre: at(5, 50),
-      west: at(0, 0)[0],
-      south: at(0, 0)[1],
-      east: at(10, 101)[0],
-      north: at(10, 101)[1],
-      polygon: [[at(0, 0), at(10, 0), at(10, 1), at(1, 1), at(1, 10), at(0, 10)]],
-      moreParts: [[[at(0, 100), at(10, 100), at(10, 101), at(0, 101)]]],
-    };
-    expect(pointInZone(split.centre, split)).toBe(false);
-    expect(pointInZone(zoneAnchor(split), split)).toBe(true);
-  });
-
   it("bounds a zone by its outer ring", () => {
     expect(zoneBounds(lShape)).toEqual([-76.486, 42.448, -76.485, 42.449]);
   });
 
   it("cuts the zone out of the spotlight and closes every ring", () => {
     const spotlight = zoneSpotlight(zoneB, [-76.487, 42.4466, -76.483, 42.4494]);
-    const [outer, hole] = spotlight.geometry.coordinates;
+    const [[outer, hole] = []] = spotlight.geometry.coordinates;
     expect(outer?.[0]).toEqual(outer?.[outer.length - 1]);
     expect(hole?.[0]).toEqual(hole?.[hole.length - 1]);
     const ring = zoneFeature(lShape).geometry.coordinates[0];
     expect(ring?.[0]).toEqual(ring?.[ring.length - 1]);
+  });
+
+  it("dims a zone's holes, so a hole never looks inside the focused zone", () => {
+    const at = (u: number, v: number): Coordinate => [-76.486 + u * 1e-4, 42.448 + v * 1e-4];
+    const ring = (w: number, s: number, e: number, n: number) => [
+      at(w, s),
+      at(e, s),
+      at(e, n),
+      at(w, n),
+    ];
+    const holed: SiteZone = { ...lShape, id: "H", polygon: [ring(0, 0, 10, 10), ring(3, 3, 6, 6)] };
+    const parts = zoneSpotlight(holed, [-76.487, 42.4466, -76.483, 42.4494]).geometry.coordinates;
+    // The site with the zone's outline cut out, then the hole as a dimmed part of its own.
+    expect(parts).toHaveLength(2);
+    expect(parts[0]?.[1]?.slice(0, 4)).toEqual(ring(0, 0, 10, 10));
+    expect(parts[1]?.[0]?.slice(0, 4)).toEqual(ring(3, 3, 6, 6));
+    expect(parts[1]?.[0]?.[0]).toEqual(parts[1]?.[0]?.[4]);
   });
 });
 

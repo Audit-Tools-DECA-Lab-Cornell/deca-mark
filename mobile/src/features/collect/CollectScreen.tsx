@@ -16,6 +16,7 @@ import {
   IconButton,
   type ModeStep,
   ModeStrip,
+  Mono,
   ScreenState,
   StatusLine,
   Text,
@@ -27,6 +28,7 @@ import {
 import { createAimStore } from "./aim-store";
 import { CollectMap, type CollectMapHandle, type CollectMapMode } from "./CollectMap";
 import { NUDGE_METRES, PlaceStep } from "./PlaceStep";
+import { mapVersionLabel, saveBlock } from "./placement";
 import { QuestionStep } from "./QuestionStep";
 import { ReviewStep } from "./ReviewStep";
 import { inventoriedZones, lastSavedLine, mapRecords, nextZoneToInventory } from "./records";
@@ -85,6 +87,8 @@ export function CollectScreen() {
   const [step, setStep] = useState<Step>(initialStep);
   const [adjusting, setAdjusting] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  /** A map tap on an edge between zones while choosing an inventory's zone (MUI-9). */
+  const [zoneNote, setZoneNote] = useState<string | null>(null);
   const [aim] = useState(() =>
     createAimStore({
       centre: placed ?? zone?.centre ?? [0, 0],
@@ -187,6 +191,12 @@ export function CollectScreen() {
       </SafeAreaView>
     );
 
+  // The pinned map of this visit (MUI-5): its integer version, or a practice map's own label.
+  const bound = session.pinned !== null;
+  const version = session.pinned?.version ?? sitePackage.version;
+  const mapLabel = mapVersionLabel(version);
+  const placementBlock =
+    placementSource === "hand" ? saveBlock(placed, zone, sitePackage.zones, bound, version) : null;
   const visible = visibleQuestions(form, state.answers);
   const index = Math.min(state.index, Math.max(visible.length - 1, 0));
   const question = visible[index];
@@ -226,6 +236,7 @@ export function CollectScreen() {
 
   function switchZone(next: SiteZone) {
     haptics.selection();
+    setZoneNote(null);
     session.chooseZone(next);
     announce(`Zone changed to ${next.label}.`);
   }
@@ -277,11 +288,16 @@ export function CollectScreen() {
         if (session.zoneBlock) return;
         switchZone(next);
       }}
+      onZoneNote={(note) => {
+        if (session.zoneBlock) return;
+        setZoneNote(note);
+        announce(note);
+      }}
       title={zoneName}
       detail={
         step === "place"
           ? "Move the map to put the × on the spot"
-          : `${roundLabel(roundType)} · ${planName} · Map ${sitePackage.version}`
+          : `${roundLabel(roundType)} · ${planName} · ${mapLabel.charAt(0).toUpperCase()}${mapLabel.slice(1)}`
       }
       expanded={expanded}
       onToggleExpanded={() => setExpanded(!expanded)}
@@ -295,6 +311,8 @@ export function CollectScreen() {
           aim={aim}
           zones={sitePackage.zones}
           zone={zone}
+          bound={bound}
+          version={version}
           roundType={roundType}
           adjusting={adjusting}
           lastSaved={lastSavedLine(saves)}
@@ -320,6 +338,7 @@ export function CollectScreen() {
           zone={zone}
           saves={saves}
           blocked={session.zoneBlock}
+          tapNote={zoneNote}
           onChoose={switchZone}
           onStart={() => {
             session.startZoneRecord();
@@ -355,7 +374,9 @@ export function CollectScreen() {
         <ReviewStep
           form={form}
           state={state}
-          summary={`${zone.label} · ${roundLabel(roundType)} · form ${form.version}`}
+          summary={`${zone.label} · ${roundLabel(roundType)} · ${mapLabel} · form ${form.version}`}
+          placementBlock={placementBlock}
+          onAdjust={placementSource === "hand" ? adjustPoint : undefined}
           onJump={(target) => {
             session.dispatch({ kind: "jump", index: target });
             setStep("answer");
@@ -386,6 +407,7 @@ export function CollectScreen() {
           save={last}
           nextZone={inventory ? nextZoneToInventory(sitePackage.zones, zone, doneZones) : null}
           formVersion={form.version}
+          mapVersion={mapLabel}
           onNext={() => setStep(inventory ? "zone" : "place")}
           onInventoryZone={(next) => {
             session.chooseZone(next);
@@ -420,7 +442,12 @@ export function CollectScreen() {
         <IconButton icon="x" variant="outline" label="Leave collecting" onPress={leave} />
         <View style={s.titles}>
           <Text variant="bodyStrong">{sitePackage.name}</Text>
-          <Text variant="small" tone="ink2">{`${zoneName} · ${roundLabel(roundType)}`}</Text>
+          <Text variant="small" tone="ink2">
+            {`${zoneName} · ${roundLabel(roundType)} · `}
+            <Mono variant="data" tone="ink2">
+              {mapLabel}
+            </Mono>
+          </Text>
         </View>
       </View>
       {step !== "saved" ? (
