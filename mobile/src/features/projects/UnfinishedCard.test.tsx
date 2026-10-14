@@ -100,6 +100,7 @@ const MB = 1024 * 1024;
 function draft(status: Recovered["status"], overrides: Partial<Recovered> = {}): Recovered {
   return {
     draftId: "draft-1",
+    formVersion: "janet-test-v1",
     pinned: {
       packageId: "pkg-v1",
       version: 1,

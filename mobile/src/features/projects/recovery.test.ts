@@ -5,6 +5,7 @@ import { recoveryCard, redownloadProblem, sizeLabel, startBlock } from "./recove
 function draft(status: Recovered["status"], overrides: Partial<Recovered> = {}): Recovered {
   return {
     draftId: "d1",
+    formVersion: "janet-test-v1",
     pinned: {
       packageId: "p1",
       version: 1,

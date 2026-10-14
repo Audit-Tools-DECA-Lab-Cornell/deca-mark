@@ -58,7 +58,8 @@ display labels. `Recovered.formVersion` is required and comes from the retained
 draft, even when its package or form is missing; it never comes from a newer
 package. Only exact verified forms interpret answers. The UI owner should
 use `model.formVersion` in `features/projects/recovery.ts`'s `form_missing`
-line and add it to its three typed recovery fixtures before typechecking.
+line. The three typed recovery fixtures now include that field, with the
+user's explicit approval for those test-only edits.
 
 Park only an unresumable active draft. Parking retains its bytes and map
 reference while freeing the active slot. `restoreParked` verifies the exact
@@ -108,8 +109,9 @@ mobile suite passes 656 tests, with one local-API acceptance test skipped.
 Biome reports the existing 12 informational findings; the plan check passes
 158 tasks. Expo exports iOS (4,137 modules) and Android (4,223 modules).
 
-The full `mobile:check` TypeScript step is blocked by the three UI-owned
-`Recovered` fixtures missing required `formVersion`; lint was run separately.
+After the user-approved fixture updates, the full `mobile:check` passes:
+TypeScript is clean and Biome remains at the 12-info baseline. The user chose
+to keep all fixes committed locally; the source branch is not restored or pushed.
 No native/device/server attribution acceptance is claimed by these tests.
 
 ## UI test adapter

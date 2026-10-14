@@ -246,6 +246,7 @@ describe("map v1 installed and map v2 published, on device data (UI plan 4.1 to 
   it("Brief: an unfinished observation here is offered first, and a new visit waits for it", () => {
     const screen = brief({
       draftId: "draft-1",
+      formVersion: "janet-test-v1",
       pinned: {
         packageId: "pkg-v1",
         version: 1,
