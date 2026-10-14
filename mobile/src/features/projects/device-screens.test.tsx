@@ -84,6 +84,7 @@ vi.mock("../../packages/hosted/context", () => ({
   useHostedSites: () => ({
     sites: { "proj-1": [{ site_id: "site-1", name: "Fall Creek" }] },
     installed: [],
+    downloads: {},
   }),
 }));
 vi.mock("../../packages/zone-read-models", () => ({
@@ -177,7 +178,7 @@ function brief(active: Recovered | null) {
     roundType: "standard",
     freshPeriod: false,
     inProgress: null,
-    recovered: active ? { id: active.draftId } : null,
+    recovered: active ? { id: active.draftId, binding: {} } : null,
     parked: [],
     pinned: {
       packageId: "pkg-v1",

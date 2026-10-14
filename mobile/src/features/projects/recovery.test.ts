@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Recovered } from "../../packages/zone-read-models";
-import { recoveryCard, sizeLabel, startBlock } from "./recovery";
+import { recoveryCard, redownloadProblem, sizeLabel, startBlock } from "./recovery";
 
 function draft(status: Recovered["status"], overrides: Partial<Recovered> = {}): Recovered {
   return {
@@ -112,5 +112,40 @@ describe("startBlock", () => {
     expect(startBlock(draft("package_missing"), "Riverside", false)).toBeNull();
     expect(startBlock(draft("ready", { parked: true }), "Riverside", false)).toBeNull();
     expect(startBlock(null, "Riverside", false)).toBeNull();
+  });
+});
+
+describe("redownloadProblem", () => {
+  const model = draft("package_missing");
+  const failure = (state: "failed" | "verify_failed", unavailable = false) => ({
+    state,
+    packageId: model.pinned.packageId,
+    part: 1 as const,
+    message: "",
+    unavailable,
+  });
+
+  it("says why the observation's own map did not come back, and what to do", () => {
+    expect(redownloadProblem(model, failure("failed"))).toBe(
+      "Map v1 did not finish downloading. Your point and answers are kept. Try again with a connection.",
+    );
+    expect(redownloadProblem(model, failure("failed", true))).toBe(
+      "Map v1 cannot be downloaded with your current access. Your point and answers are kept. Ask your coordinator.",
+    );
+    expect(redownloadProblem(model, failure("verify_failed"))).toBe(
+      "Map v1 could not be checked. Your point and answers are kept. Tell your coordinator.",
+    );
+  });
+
+  it("says nothing while it downloads, or about another version's download", () => {
+    expect(redownloadProblem(model, undefined)).toBeNull();
+    expect(
+      redownloadProblem(model, {
+        state: "downloading",
+        packageId: model.pinned.packageId,
+        part: 1,
+      }),
+    ).toBeNull();
+    expect(redownloadProblem(model, { ...failure("failed"), packageId: "p2" })).toBeNull();
   });
 });

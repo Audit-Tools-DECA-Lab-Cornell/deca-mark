@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Recovered } from "../../packages/zone-read-models";
 import { takeAlerts, takeAnnouncements, takeNavigation } from "../../ui/native.fixture";
 import { isDisabled, render } from "../../ui/screen.fixture";
-import { ParkedDrafts, UnfinishedCard } from "./UnfinishedCard";
+import { ParkedDrafts, UnfinishedCard, useUnfinished } from "./UnfinishedCard";
 
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
 vi.mock(
@@ -30,7 +30,20 @@ const data = vi.hoisted(() => ({
   inProgress: null as unknown,
   /** What the session's restoreParked does: reopen the draft, leave it kept, or fail. */
   restore: "reopens" as "reopens" | "keeps" | "throws",
+  /** A practice draft recovered after a restart: it ships with the app, so it has no binding. */
+  unbound: null as unknown,
+  /** The hosted downloads by site, as the data layer keeps their failures. */
+  downloads: {} as Record<string, unknown>,
   calls: [] as string[],
+}));
+vi.mock("../../packages/hosted/context", () => ({
+  useHostedSites: () => ({
+    sites: {},
+    installed: [],
+    errors: {},
+    revision: 0,
+    downloads: data.downloads,
+  }),
 }));
 vi.mock("../../ui/OnlineIndicator", () => ({
   OnlineIndicator: () => null,
@@ -67,10 +80,17 @@ vi.mock("../../packages/zone-read-models", () => ({
 }));
 vi.mock("../../session/provider", () => ({
   useFieldSession: () => ({
-    recovered: data.occupied ? { id: "draft-1" } : null,
+    recovered: data.unbound ?? (data.occupied ? { id: "draft-1", binding: {} } : null),
     inProgress: data.inProgress,
     parked: [],
-    resumeRecovered: async () => true,
+    state: { answers: {} },
+    resumeRecovered: async () => {
+      data.calls.push("session resume");
+      return true;
+    },
+    discardRecovered: async () => {
+      data.calls.push("session discard");
+    },
   }),
 }));
 vi.mock("../preview/data-source", () => ({ useDataSource: () => ({ mode: "device" }) }));
@@ -108,6 +128,8 @@ beforeEach(() => {
   data.occupied = false;
   data.inProgress = null;
   data.restore = "reopens";
+  data.unbound = null;
+  data.downloads = {};
   data.calls = [];
   takeAlerts();
   takeAnnouncements();
@@ -192,6 +214,75 @@ describe("an unfinished observation after a restart (MUI-7)", () => {
     expect(data.calls).toEqual([]);
     alert?.buttons?.find((button) => button.text === "Discard draft")?.onPress?.();
     expect(data.calls).toEqual(["discard"]);
+  });
+});
+
+describe("a practice draft after a restart", () => {
+  function Home() {
+    const unfinished = useUnfinished();
+    return unfinished ? <UnfinishedCard unfinished={unfinished} /> : null;
+  }
+
+  beforeEach(() => {
+    data.unbound = {
+      id: "practice-1",
+      formVersion: "shell-v1",
+      context: { zoneLabel: "Practice lawn", roundType: "standard" },
+      coordinates: [0.5, 0.5],
+      answers: {},
+    };
+  });
+
+  it("keeps its Resume and Discard, through the field session, though it has no hosted map", async () => {
+    const screen = render(<Home />);
+    expect(screen.says("Reading the map and zone")).toBe(false);
+    expect(screen.controls()).toEqual(["Resume", "Discard draft"]);
+    await screen.press("Resume");
+    expect(data.calls).toEqual(["session resume"]);
+    expect(takeNavigation()).toEqual(["/collect"]);
+  });
+
+  it("discards it only when confirmed, and says so", async () => {
+    const screen = render(<Home />);
+    await screen.press("Discard draft");
+    const [alert] = takeAlerts();
+    alert?.buttons?.find((button) => button.text === "Discard draft")?.onPress?.();
+    await vi.waitFor(() => expect(takeAnnouncements()).toContain("Draft discarded."));
+    expect(data.calls).toEqual(["session discard"]);
+  });
+});
+
+describe("a re-download that does not help", () => {
+  it("says why on the card, so the observer knows whether to reconnect or ask", () => {
+    data.downloads = {
+      "site-1": { state: "failed", packageId: "pkg-v1", part: 1, message: "", unavailable: false },
+    };
+    const screen = card(draft("package_missing"));
+    expect(
+      screen.says(
+        "Map v1 did not finish downloading. Your point and answers are kept. Try again with a connection.",
+      ),
+    ).toBe(true);
+    expect(screen.controls()).toContain("Download map v1 again · 12.0 MB");
+  });
+
+  it("says so on a kept draft too", () => {
+    data.parked = [draft("zone_missing", { draftId: "draft-2", parked: true })];
+    data.downloads = {
+      "site-1": {
+        state: "verify_failed",
+        packageId: "pkg-v1",
+        part: 3,
+        message: "",
+        unavailable: false,
+      },
+    };
+    const screen = render(<ParkedDrafts />);
+    expect(
+      screen.says(
+        "Map v1 could not be checked. Your point and answers are kept. Tell your coordinator.",
+      ),
+    ).toBe(true);
   });
 });
 

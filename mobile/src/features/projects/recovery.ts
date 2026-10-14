@@ -1,3 +1,4 @@
+import type { HostedDownload } from "../../packages/hosted/context";
 import type { Recovered } from "../../packages/zone-read-models";
 import { unfinishedSentence } from "./readiness";
 
@@ -99,4 +100,23 @@ export function startBlock(
   if (!active || active.status !== "ready" || active.parked || openHere) return null;
   const where = siteName ? ` at ${siteName}` : "";
   return `Resume or discard the unfinished observation${where} (map v${active.pinned.version}).`;
+}
+
+/**
+ * Why a re-download of this observation's own map did not help, or null: the hosted download keeps its
+ * failure, so the card can say whether to reconnect or to ask the coordinator.
+ */
+export function redownloadProblem(
+  model: Recovered,
+  download: HostedDownload | undefined,
+): string | null {
+  if (!download || download.packageId !== model.pinned.packageId) return null;
+  const mapTitle = `Map v${model.pinned.version}`;
+  if (download.state === "verify_failed")
+    return `${mapTitle} could not be checked. Your point and answers are kept. Tell your coordinator.`;
+  if (download.state === "failed")
+    return download.unavailable
+      ? `${mapTitle} cannot be downloaded with your current access. Your point and answers are kept. Ask your coordinator.`
+      : `${mapTitle} did not finish downloading. Your point and answers are kept. Try again with a connection.`;
+  return null;
 }
