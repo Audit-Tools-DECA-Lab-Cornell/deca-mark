@@ -167,6 +167,7 @@ export function InkTabs({ items, label, current, className }: InkTabsProps) {
 								<li key={item.href} className="shrink-0 snap-start">
 									<Link
 										href={item.href}
+										prefetch={false}
 										aria-current={isCurrent ? "page" : undefined}
 										className={cx(
 											"relative flex min-h-touch items-center gap-2 whitespace-nowrap rounded-pill px-5 type-body font-semibold",

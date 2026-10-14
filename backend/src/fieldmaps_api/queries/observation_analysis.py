@@ -89,28 +89,35 @@ FROM groups),'[]'::jsonb),'total_matching',(SELECT count(*) FROM matched),
 """
 )
 EXPORT: Final = text(
-    "WITH probe AS MATERIALIZED (SELECT o.id FROM fieldmaps.observations o WHERE "  # noqa: S608 - constant fragments; bound values.
+    "WITH probe AS MATERIALIZED (SELECT o.* "  # noqa: S608 - constant fragments; bound values.
+    "FROM fieldmaps.observations o WHERE "
     + FILTER
     + """ ORDER BY o.observed_at DESC,o.id LIMIT :row_probe),
-form_refs AS MATERIALIZED (SELECT DISTINCT f.id,f.code FROM fieldmaps.form_versions f
-JOIN fieldmaps.observations o ON o.form_version_id=f.id JOIN probe ON probe.id=o.id),
-zone_refs AS MATERIALIZED (SELECT DISTINCT z.package_id,z.zone_id FROM fieldmaps.package_zones z
-JOIN fieldmaps.observations o ON o.package_id=z.package_id AND o.zone_id=z.zone_id
-JOIN probe ON probe.id=o.id),
+form_refs AS MATERIALIZED (SELECT f.id,f.code FROM fieldmaps.form_versions f
+JOIN (SELECT DISTINCT form_version_id FROM probe) r ON r.form_version_id=f.id),
+zone_refs AS MATERIALIZED (SELECT z.package_id,z.zone_id FROM fieldmaps.package_zones z
+JOIN (SELECT DISTINCT package_id,zone_id FROM probe) r
+ ON r.package_id=z.package_id AND r.zone_id=z.zone_id),
+zone_data AS MATERIALIZED (SELECT z.package_id,z.zone_id,z.label,z.display_anchor
+FROM fieldmaps.package_zones z JOIN zone_refs r
+ ON r.package_id=z.package_id AND r.zone_id=z.zone_id),
 raw_size AS MATERIALIZED (SELECT count(*) AS count,
 coalesce(sum(octet_length(o.answers::text)),0)
  + coalesce((SELECT sum(octet_length(f.definition::text)) FROM fieldmaps.form_versions f
  JOIN form_refs r ON r.id=f.id),0)
  + coalesce((SELECT sum(octet_length(z.canonical_geometry::text)) FROM fieldmaps.package_zones z
  JOIN zone_refs r ON r.package_id=z.package_id AND r.zone_id=z.zone_id),0) AS bytes
-FROM fieldmaps.observations o JOIN probe ON probe.id=o.id),
+FROM probe o),
 gate AS MATERIALIZED (SELECT *, count <= :row_limit AND bytes <= :byte_limit AS allowed
 FROM raw_size), matched AS MATERIALIZED ("""
     + "SELECT o.id,o.observed_at,"
     + ROW_DATA
     + " AS data "
-    + JOINS
-    + " JOIN probe ON probe.id=o.id CROSS JOIN gate WHERE gate.allowed), forms AS ("
+    # Reuse authorized rows and zones rather than rechecking access for every reference.
+    + JOINS.replace("FROM fieldmaps.observations o", "FROM probe o").replace(
+        "fieldmaps.package_zones z", "zone_data z"
+    )
+    + " CROSS JOIN gate WHERE gate.allowed), forms AS ("
     + """
 SELECT coalesce(jsonb_object_agg(code,definition),'{}'::jsonb) AS data FROM (
 SELECT f.code,f.definition FROM fieldmaps.form_versions f

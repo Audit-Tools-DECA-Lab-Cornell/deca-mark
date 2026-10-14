@@ -16,6 +16,7 @@ export function PlaceRows({ rows, label }: { rows: PlaceRow[]; label?: string })
 				<li key={row.href}>
 					<Link
 						href={row.href}
+						prefetch={false}
 						className={cx(
 							"flex min-h-touch items-center gap-4 px-island-pad py-3 text-ink hover:bg-ground",
 							"[--ct-size-focus-gap:calc(var(--ct-size-focus-ring)*-2)]",

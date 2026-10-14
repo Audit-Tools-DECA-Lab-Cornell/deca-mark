@@ -70,7 +70,7 @@ export function DataTable({ records, hrefOf, selectedId, onSelect }: DataTablePr
 						{records.map((record, index) => (
 							<Tr key={record.id} {...rowProps(index)} data-record-id={record.id}>
 								<Td mono nowrap>
-									<Link href={hrefOf(record)} tabIndex={-1} className={LINK}>
+									<Link prefetch={false} href={hrefOf(record)} tabIndex={-1} className={LINK}>
 										{record.label}
 									</Link>
 								</Td>
@@ -107,7 +107,7 @@ export function DataTable({ records, hrefOf, selectedId, onSelect }: DataTablePr
 						data-record-id={record.id}
 						className={cx("flex flex-col gap-1 px-island-pad py-4", record.id === selectedId && "bg-well")}>
 						<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-							<Link href={hrefOf(record)} className={cx("type-mono-data", LINK)}>
+							<Link prefetch={false} href={hrefOf(record)} className={cx("type-mono-data", LINK)}>
 								{record.label}
 							</Link>
 							<span className="type-small text-ink-2">{record.roundName}</span>

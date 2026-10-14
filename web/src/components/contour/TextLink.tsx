@@ -36,13 +36,22 @@ const TOUCH_TARGET =
  * running text or a table cell, is not held to the 44 px target that standalone controls meet. A link
  * with a glyph meets it on touch screens.
  */
-export function TextLink({ href, arrow, icon, tone = "accent", className, children, ...rest }: TextLinkProps) {
+export function TextLink({
+	href,
+	arrow,
+	icon,
+	tone = "accent",
+	className,
+	children,
+	prefetch = false,
+	...rest
+}: TextLinkProps) {
 	const direction = arrow ?? (tone === "accent" ? "right" : false);
 	const hasGlyph = Boolean(icon || direction);
 
 	if (!hasGlyph)
 		return (
-			<Link {...rest} href={href} className={cx(TONE[tone], className)}>
+			<Link {...rest} prefetch={prefetch} href={href} className={cx(TONE[tone], className)}>
 				{children}
 			</Link>
 		);
@@ -52,6 +61,7 @@ export function TextLink({ href, arrow, icon, tone = "accent", className, childr
 	return (
 		<Link
 			{...rest}
+			prefetch={prefetch}
 			href={href}
 			className={cx("inline-flex items-baseline gap-1.5", TOUCH_TARGET, TONE[tone], className)}>
 			{direction === "left" && <Icon name="arrow-left" size={16} className="shrink-0 self-center" />}

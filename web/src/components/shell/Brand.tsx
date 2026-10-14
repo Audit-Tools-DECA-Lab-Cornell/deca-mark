@@ -58,7 +58,7 @@ export function Brand({ href, markOnly = false, wordmarkFromSm = false, classNam
 
 	if (!href) return <span className={classes}>{content}</span>;
 	return (
-		<Link href={href} className={classes}>
+		<Link prefetch={false} href={href} className={classes}>
 			{content}
 		</Link>
 	);

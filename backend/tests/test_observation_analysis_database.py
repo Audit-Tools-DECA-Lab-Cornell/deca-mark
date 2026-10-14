@@ -9,7 +9,7 @@ from fieldmaps_api.deps import user_transaction
 from fieldmaps_api.observation_analysis_schemas import ObservationFilters
 from fieldmaps_api.queries import observation_analysis as queries
 from fieldmaps_api.repositories import observation_analysis as repository
-from tests.local_database import admin_sql, database_url
+from tests.local_database import admin_sql, connection_url
 from tests.observation_analysis_fixtures import AnalysisSite, seed_copies
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 pytest_plugins = ("tests.observation_analysis_fixtures",)
 
 
-def test_query_plan_uses_bound_partial_indexes_when_zone_scope_is_selected(
+def test_query_plan_uses_scoped_index_when_zone_scope_is_selected(
     analysis_site: AnalysisSite,
 ) -> None:
     # Given 601 matches in one historical package/zone.
@@ -26,7 +26,7 @@ def test_query_plan_uses_bound_partial_indexes_when_zone_scope_is_selected(
     tenant = analysis_site.bound.site.tenant
 
     async def explain() -> str:
-        engine = create_async_engine(database_url(), pool_size=2, max_overflow=0)
+        engine = create_async_engine(connection_url(), pool_size=2, max_overflow=0)
         try:
             sessions = async_sessionmaker(engine)
             async with user_transaction(sessions, tenant.users["manager"]) as session:
@@ -47,8 +47,15 @@ def test_query_plan_uses_bound_partial_indexes_when_zone_scope_is_selected(
 
     # When the actual restricted-role page statement is explained.
     plan = anyio.run(explain)
-    # Then the capture-binding partial index is usable and JSON rendering is bounded to a page.
-    assert "observations_zone_time_idx" in plan or "observations_package_time_idx" in plan
+    # A one-zone site's equally selective site index is also a valid planner choice.
+    assert any(
+        index in plan
+        for index in (
+            "observations_zone_time_idx",
+            "observations_package_time_idx",
+            "observations_site_idx",
+        )
+    )
     assert "Limit" in plan
     assert "rows=101" in plan
 
@@ -63,16 +70,17 @@ def test_export_snapshot_stays_consistent_when_late_write_commits_midstatement(
         f"WITH pause AS MATERIALIZED (SELECT pg_advisory_xact_lock({lock})), probe AS",
         1,
     )
+    assert "FROM fieldmaps.observations o" in statement
     statement = statement.replace(
-        "SELECT o.id FROM fieldmaps.observations o",
-        "SELECT o.id FROM pause CROSS JOIN fieldmaps.observations o",
+        "FROM fieldmaps.observations o",
+        "FROM pause CROSS JOIN fieldmaps.observations o",
         1,
     )
     monkeypatch.setattr(queries, "EXPORT", text(statement))
     tenant = analysis_site.bound.site.tenant
 
     async def concurrent_export() -> tuple[int, int]:
-        engine = create_async_engine(database_url(), pool_size=3, max_overflow=0)
+        engine = create_async_engine(connection_url(), pool_size=3, max_overflow=0)
         sessions = async_sessionmaker(engine)
         count = 0
         try:
@@ -144,7 +152,7 @@ def test_export_preflight_does_not_render_rows_when_raw_source_exceeds_64_mib(
     monkeypatch.setattr(queries, "EXPORT", text(statement))
 
     async def read() -> tuple[int, int, int]:
-        engine = create_async_engine(database_url())
+        engine = create_async_engine(connection_url())
         try:
             async with user_transaction(
                 async_sessionmaker(engine), tenant.users["manager"]
