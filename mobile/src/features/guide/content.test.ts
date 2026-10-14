@@ -16,9 +16,20 @@ describe("field guide", () => {
 
   it("finds sections containing every word, ignoring case", () => {
     expect(searchGuide("Reliability").map((section) => section.id)).toEqual(["rounds"]);
-    expect(searchGuide("cross zone").map((section) => section.id)).toEqual(["zones"]);
+    expect(searchGuide("cross zone").map((section) => section.id)).toEqual([
+      "zones",
+      "zone-edges",
+      "outside-zones",
+    ]);
     expect(searchGuide("PIN map").map((section) => section.id)).toEqual(["placing"]);
     expect(searchGuide("nonexistent words")).toEqual([]);
+  });
+
+  it("explains map versions, zone edges and points outside every zone (MOB-32)", () => {
+    const text = (id: string) => GUIDE.find((section) => section.id === id)?.body.join(" ") ?? "";
+    expect(text("map-versions")).toContain("A session keeps the map it started with");
+    expect(text("zone-edges")).toContain("On the edge of");
+    expect(text("outside-zones")).toContain("Outside every zone");
   });
 
   it("explains the queue words the screens use", () => {

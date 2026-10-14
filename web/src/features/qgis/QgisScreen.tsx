@@ -196,7 +196,8 @@ export function QgisScreen({
 												)}
 											</p>
 										</div>
-										<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+										{/* A wrapped row keeps 16 px between lines, so each control's 44 px touch target stays its own. */}
+										<div className="flex flex-wrap items-center gap-x-4 gap-y-4">
 											{entry.package && (
 												<Button
 													variant="outline"

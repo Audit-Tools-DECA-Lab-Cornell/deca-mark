@@ -40,16 +40,20 @@ function onlineStyles(t: Theme) {
   });
 }
 
+/** Whether the device can reach the network, or null until it has said (or cannot say). */
+export function useOnline(): boolean | null {
+  const connection = useConnection();
+  return connection === null || connection.isConnected === null
+    ? null
+    : connection.isConnected && connection.isInternetReachable !== false;
+}
+
 /** Whether the device can reach the network: a quiet "Online", or "Offline" in the waiting tone. */
 export function OnlineIndicator({ online, style, testID }: OnlineIndicatorProps) {
   const t = useTheme();
   const s = useStyles(onlineStyles);
-  const connection = useConnection();
-  const known =
-    online ??
-    (connection === null || connection.isConnected === null
-      ? null
-      : connection.isConnected && connection.isInternetReachable !== false);
+  const device = useOnline();
+  const known = online ?? device;
   // Until the device has answered, say nothing rather than guess.
   if (known === null) return null;
 

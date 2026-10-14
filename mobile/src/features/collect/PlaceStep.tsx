@@ -9,18 +9,20 @@ import {
 import type { SiteZone } from "../../maps/sample-site";
 import {
   Button,
-  Icon,
   IconButton,
   Mono,
   Note,
+  RadioRows,
+  Segmented,
+  StateBadge,
   Text,
   TextLink,
   type Theme,
   useStyles,
-  useTheme,
 } from "../../ui";
 import type { AimStore } from "./aim-store";
 import { useAimZone } from "./CollectMap";
+import type { PlacementState } from "./placement";
 
 type Direction = "north" | "south" | "east" | "west";
 
@@ -28,6 +30,10 @@ type Props = {
   readonly aim: AimStore;
   readonly zones: readonly SiteZone[];
   readonly zone: SiteZone;
+  /** A map from DECA Mark: a point its zone does not cover cannot be placed (MUI-3). */
+  readonly bound: boolean;
+  /** The session's map version, from its pinned package: 3, or the practice map's own label. */
+  readonly version: number | string;
   readonly roundType: RoundType;
   /** True when moving a point that is already placed: the answers stay. */
   readonly adjusting: boolean;
@@ -82,6 +88,8 @@ export function PlaceStep({
   aim,
   zones,
   zone,
+  bound,
+  version,
   roundType,
   adjusting,
   lastSaved,
@@ -92,10 +100,9 @@ export function PlaceStep({
   onSwitchZone,
 }: Props) {
   const s = useStyles(placeStyles);
-  const t = useTheme();
-  const { centre, zoom, inside, moving } = useAimZone(aim, zones, zone);
-  const inZone = inside?.id === zone.id;
+  const { centre, zoom, moving, placement, hint } = useAimZone(aim, zones, zone, bound, version);
   const coarse = metresPerPixel(zoom, centre[1]) > PRECISE_METRES_PER_PIXEL;
+  const [only] = placement.candidates;
 
   return (
     <View style={s.root}>
@@ -119,34 +126,30 @@ export function PlaceStep({
           style={s.where}
           accessible
           accessibilityLiveRegion="polite"
-          accessibilityLabel={
-            inZone
-              ? `The cross is in ${zone.label}.`
-              : inside
-                ? `The cross is outside ${zone.label}, in ${inside.label}.`
-                : `The cross is outside ${zone.label}.`
-          }
+          accessibilityLabel={`${placement.readout.replace("×", "cross")}.`}
         >
-          <Icon
-            name={inZone ? "check" : "triangle-alert"}
-            size={18}
-            color={inZone ? t.c.saved : t.c.waiting}
+          <StateBadge
+            label={placement.readout}
+            icon={placement.glyph.icon}
+            tone={placement.glyph.tone}
+            size="sm"
           />
-          <Text variant="smallStrong" tone={inZone ? "saved" : "waiting"}>
-            {inZone
-              ? `In ${zone.label}`
-              : inside
-                ? `Outside ${zone.label} · in ${inside.label}`
-                : `Outside ${zone.label}`}
-          </Text>
         </View>
-        {!inZone && inside ? (
+        {placement.kind === "other" && only ? (
           <Button
             variant="outline"
             icon="map"
-            label={`Switch to ${inside.label}`}
-            onPress={() => onSwitchZone(inside)}
+            label={`Switch to ${only.label}`}
+            onPress={() => onSwitchZone(only)}
           />
+        ) : null}
+        {placement.kind === "edge" || placement.kind === "between" ? (
+          <ZoneChoice placement={placement} onChoose={onSwitchZone} />
+        ) : null}
+        {hint ? (
+          <Text variant="small" tone="ink2">
+            {hint}
+          </Text>
         ) : null}
 
         <View
@@ -202,6 +205,8 @@ export function PlaceStep({
           size="collector"
           fullWidth
           onPress={onPlace}
+          disabled={!placement.canPlace}
+          disabledReason={placement.reason ?? undefined}
           accessibilityHint={`Places the observation at ${formatCoordinate(centre)}.`}
           testID="collect-place"
         />
@@ -210,5 +215,41 @@ export function PlaceStep({
         ) : null}
       </View>
     </View>
+  );
+}
+
+/**
+ * The zones covering a cross on an edge: a two- or three-way choice with the session's zone kept, or
+ * rows when more zones meet or none is chosen yet. Choosing one switches the session zone, as
+ * "Switch to" does; the observer's choice is explicit, never the package's order (MUI-3).
+ */
+function ZoneChoice({
+  placement,
+  onChoose,
+}: {
+  readonly placement: PlacementState;
+  readonly onChoose: (zone: SiteZone) => void;
+}) {
+  const options = placement.candidates.map((zone) => ({ value: zone.id, label: zone.label }));
+  const choose = (id: string) => {
+    const next = placement.candidates.find((zone) => zone.id === id);
+    if (next && next.id !== placement.chosen?.id) onChoose(next);
+  };
+  if (placement.chosen && options.length <= 3)
+    return (
+      <Segmented
+        label="Zone choice"
+        options={options}
+        value={placement.chosen.id}
+        onValueChange={choose}
+      />
+    );
+  return (
+    <RadioRows
+      label="Zone choice"
+      options={options}
+      value={placement.chosen?.id ?? null}
+      onValueChange={choose}
+    />
   );
 }

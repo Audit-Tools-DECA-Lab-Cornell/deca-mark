@@ -42,7 +42,7 @@ export { type ModeStep, ModeStrip, type ModeStripProps } from "./ModeStrip";
 export { Mono, type MonoProps, type MonoVariant } from "./Mono";
 export { NOTE_ICON, Note, type NoteProps, type NoteTone } from "./Note";
 export { NumberStepper, type NumberStepperProps } from "./NumberStepper";
-export { OnlineIndicator, type OnlineIndicatorProps } from "./OnlineIndicator";
+export { OnlineIndicator, type OnlineIndicatorProps, useOnline } from "./OnlineIndicator";
 export { PasswordInput, type PasswordInputProps } from "./PasswordInput";
 export { ProgressBar, type ProgressBarProps } from "./ProgressBar";
 export { ProposalNote, type ProposalNoteProps } from "./ProposalNote";

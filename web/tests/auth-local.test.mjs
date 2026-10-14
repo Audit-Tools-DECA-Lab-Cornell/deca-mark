@@ -131,6 +131,7 @@ test(
 			password: nextPassword,
 			next: "https://evil.example"
 		});
-		assert.match(signedIn.response.headers.get("x-action-redirect") ?? "", /^\/o(\?|$)/);
+		// Next.js appends the redirect type to the header ("/o;push"); an external `next` falls back to /o.
+		assert.match(signedIn.response.headers.get("x-action-redirect") ?? "", /^\/o([?;]|$)/);
 	}
 );

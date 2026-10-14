@@ -10,16 +10,82 @@ import type { SiteZone } from "./sample-site";
  * that size is far below a finger's width, and the functions stay pure and testable without a map.
  */
 
-import {
-  type PolygonRings,
-  pointInPolygon,
-  pointInZone,
-  zoneParts,
-  zoneRings,
-} from "./zone-boundaries";
+import { type PolygonRings, ZoneGeometryError, zoneCovers, zoneParts } from "./zone-boundaries";
 
 export type { PolygonRings, Ring } from "./zone-boundaries";
 export { pointInPolygon, pointInZone, zoneAt, zoneParts, zoneRings } from "./zone-boundaries";
+
+/* ── Covering zones and the near-edge hint (MOB-31) ──────────────────────────────────────────── */
+
+/** The zone's parts, or none when it has no usable full boundary: a box never stands in for one. */
+function drawnParts(zone: SiteZone): readonly PolygonRings[] {
+  try {
+    return zoneParts(zone);
+  } catch (error) {
+    if (error instanceof ZoneGeometryError) return [];
+    throw error;
+  }
+}
+
+/**
+ * Every zone whose full boundary covers the point, by the server's closed coverage (`zoneCovers`):
+ * outer edges, vertices and hole edges count, a hole's inside does not. The order is the package's
+ * and means nothing: on a shared edge the observer chooses (contract "Point attribution").
+ */
+export function coveringZones(point: Coordinate, zones: readonly SiteZone[]): SiteZone[] {
+  return zones.filter((zone) => drawnParts(zone).length > 0 && zoneCovers(point, zone));
+}
+
+/** Metres from the point to the nearest edge of any of a zone's rings, holes included. */
+function edgeDistanceMetres(point: Coordinate, zone: SiteZone): number {
+  const scaleX = 111320 * Math.cos((point[1] * Math.PI) / 180);
+  const scaleY = 110540;
+  let nearest = Number.POSITIVE_INFINITY;
+  for (const rings of drawnParts(zone))
+    for (const ring of rings)
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const a = ring[j];
+        const b = ring[i];
+        if (!a || !b) continue;
+        const ax = (a[0] - point[0]) * scaleX;
+        const ay = (a[1] - point[1]) * scaleY;
+        const dx = (b[0] - a[0]) * scaleX;
+        const dy = (b[1] - a[1]) * scaleY;
+        const length = dx * dx + dy * dy;
+        const t = length === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / length));
+        nearest = Math.min(nearest, Math.hypot(ax + t * dx, ay + t * dy));
+      }
+  return nearest;
+}
+
+/**
+ * A zone whose edge is within `thresholdPoints` screen points of the point at the map's scale, for the
+ * UI-only hint "Close to the edge of Slide. Zoom in to check." A zone that does not cover the point comes
+ * first (the point may belong to it), then the nearest. It never changes candidates or validity.
+ */
+export function nearEdge(
+  point: Coordinate,
+  zones: readonly SiteZone[],
+  metresPerPoint: number,
+  thresholdPoints = 8,
+): SiteZone | null {
+  const limit = metresPerPoint * thresholdPoints;
+  const covering = new Set(coveringZones(point, zones));
+  let best: {
+    readonly zone: SiteZone;
+    readonly distance: number;
+    readonly covers: boolean;
+  } | null = null;
+  for (const zone of zones) {
+    const distance = edgeDistanceMetres(point, zone);
+    if (distance > limit) continue;
+    const covers = covering.has(zone);
+    const better =
+      !best || (best.covers && !covers) || (best.covers === covers && distance < best.distance);
+    if (better) best = { zone, distance, covers };
+  }
+  return best?.zone ?? null;
+}
 
 /** West, south, east, north of a set of positions, or `null` when there are none. */
 function extent(points: readonly Coordinate[]): LngLatBounds | null {
@@ -48,68 +114,6 @@ export function zoneBounds(zone: SiteZone): LngLatBounds {
   );
 }
 
-/**
- * The point a whole-zone record (an inventory) is stored at: the area centroid of the zone's first
- * part when it lies inside the zone, otherwise the zone's own centre, otherwise a point found inside
- * one of its parts, so the stored point is always one the observer would recognise as "in the zone".
- */
-export function zoneAnchor(zone: SiteZone): Coordinate {
-  const outer = zoneRings(zone)[0] ?? [];
-  let area = 0;
-  let cx = 0;
-  let cy = 0;
-  for (let i = 0, j = outer.length - 1; i < outer.length; j = i++) {
-    const a = outer[j];
-    const b = outer[i];
-    if (!a || !b) continue;
-    const cross = a[0] * b[1] - b[0] * a[1];
-    area += cross;
-    cx += (a[0] + b[0]) * cross;
-    cy += (a[1] + b[1]) * cross;
-  }
-  if (Math.abs(area) > Number.EPSILON) {
-    const centroid: Coordinate = [cx / (3 * area), cy / (3 * area)];
-    if (pointInZone(centroid, zone)) return centroid;
-  }
-  if (pointInZone(zone.centre, zone)) return zone.centre;
-  for (const rings of zoneParts(zone)) {
-    const inside = interiorPoint(rings);
-    if (inside) return inside;
-  }
-  return zone.centre;
-}
-
-/**
- * A point inside a concave polygon (an L, a U) whose centroid falls outside it: the middle of the
- * widest stretch of the shape along a few horizontal lines across its own extent.
- */
-function interiorPoint(rings: PolygonRings): Coordinate | null {
-  const bounds = extent(rings[0] ?? []);
-  if (!bounds) return null;
-  const [west, south, east, north] = bounds;
-  let best: { readonly point: Coordinate; readonly width: number } | null = null;
-  for (const fraction of [0.5, 0.25, 0.75, 0.125, 0.375, 0.625, 0.875]) {
-    const y = south + (north - south) * fraction;
-    const crossings: number[] = [];
-    for (const ring of rings)
-      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-        const a = ring[i];
-        const b = ring[j];
-        if (!a || !b || a[1] > y === b[1] > y) continue;
-        crossings.push(a[0] + ((y - a[1]) * (b[0] - a[0])) / (b[1] - a[1]));
-      }
-    crossings.sort((left, right) => left - right);
-    for (let k = 0; k + 1 < crossings.length; k += 2) {
-      const from = crossings[k] ?? west;
-      const to = crossings[k + 1] ?? east;
-      const point: Coordinate = [(from + to) / 2, y];
-      if (to - from > (best?.width ?? 0) && pointInPolygon(point, rings))
-        best = { point, width: to - from };
-    }
-  }
-  return best?.point ?? null;
-}
-
 /** Metres between two nearby points. */
 export function distanceMetres(a: Coordinate, b: Coordinate): number {
   const latitude = ((a[1] + b[1]) / 2) * (Math.PI / 180);
@@ -119,10 +123,15 @@ export function distanceMetres(a: Coordinate, b: Coordinate): number {
 }
 
 /**
- * A polygon covering the site with the zone cut out of it. Filled with the plan's background at
- * low opacity, it dims everything except the zone being collected, so the eye goes straight to it.
+ * A shape covering the site with the zone cut out of it. Filled with the plan's background at low
+ * opacity, it dims everything except the zone being collected, so the eye goes straight to it. The
+ * zone's own holes are dimmed too (each a part of its own), so a hole never looks inside the zone.
  */
-export function zoneSpotlight(zone: SiteZone, site: LngLatBounds, margin = 0.01): Feature<Polygon> {
+export function zoneSpotlight(
+  zone: SiteZone,
+  site: LngLatBounds,
+  margin = 0.01,
+): Feature<MultiPolygon> {
   const [west, south, east, north] = site;
   const outer: Coordinate[] = [
     [west - margin, south - margin],
@@ -131,16 +140,20 @@ export function zoneSpotlight(zone: SiteZone, site: LngLatBounds, margin = 0.01)
     [west - margin, north + margin],
     [west - margin, south - margin],
   ];
-  const holes = zoneParts(zone).map((rings) => {
-    const hole = [...(rings[0] ?? [])];
-    const first = hole[0];
-    if (first) hole.push(first);
-    return hole;
-  });
+  const closed = (ring: readonly Coordinate[]): Coordinate[] => {
+    const copy = [...ring];
+    const first = copy[0];
+    const last = copy[copy.length - 1];
+    if (first && last && (first[0] !== last[0] || first[1] !== last[1])) copy.push(first);
+    return copy;
+  };
+  const parts = zoneParts(zone);
+  const cutOuts = parts.map((rings) => closed(rings[0] ?? []));
+  const holes = parts.flatMap((rings) => rings.slice(1).map((hole) => [closed(hole)]));
   return {
     type: "Feature",
     properties: { kind: "spotlight", zone: zone.id },
-    geometry: { type: "Polygon", coordinates: [outer, ...holes] },
+    geometry: { type: "MultiPolygon", coordinates: [[outer, ...cutOuts], ...holes] },
   };
 }
 

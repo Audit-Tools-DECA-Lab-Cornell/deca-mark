@@ -26,9 +26,10 @@ export type ButtonLook = {
 	fullWidth?: boolean;
 };
 
-/* sm draws at 36 px but keeps a 44 px target: the ::before box extends 4 px above and below. */
+/* sm draws at 36 px but keeps a 44 px target: a 44 px ::before box centred on the button. It is sized
+   rather than inset, because insets start inside the edge and a 2 px edge would cut it to 40 px. */
 const SIZE: Record<ButtonSize, string> = {
-	sm: "relative min-h-control-sm px-4 py-1.5 text-sm before:absolute before:inset-x-0 before:-inset-y-1",
+	sm: "relative min-h-control-sm px-4 py-1.5 text-sm before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2",
 	md: "min-h-control px-5 py-2 text-base",
 	lg: "min-h-14 px-6 py-3 text-lg"
 };

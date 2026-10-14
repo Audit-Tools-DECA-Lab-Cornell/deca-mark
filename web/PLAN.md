@@ -108,7 +108,7 @@ Do:
 Done when: an unauthenticated visit to `/o` redirects to sign-in, and a signed-in visit passes.
 
 ### WEB-04: Authentication pages
-Status: doing · Phase 1 · Size M · Depends: DB-02, WEB-03 · Blocks: WEB-06, WEB-15
+Status: done (2026-10-14; local stack only, no hosted auth) · Phase 1 · Size M · Depends: DB-02, WEB-03 · Blocks: WEB-06, WEB-15
 Verified 2026-10-04 against local Supabase and Mailpit: browser sign-up, resend, six-digit verification, live account and account-menu sign-out. The automated real Server Action flow additionally verifies unconfirmed-account errors, invalid codes, resend cooldown, recovery code plus password update, same-password rejection followed by successful retry without a new code, rejection of mismatched recovery user/session/email, rejection of the old password, acceptance of the new password, and safe fallback for an external `next`. Emails stay in httpOnly cookies. `DECAMARK_AUTH_LOCAL_TEST=1 pnpm --dir web test:auth:local` passed. No hosted auth verification or deployment is claimed.
 Remaining (2026-10-04): the `authenticate` and `signOut` Server Actions are done and tested; their first pages were plain. The Contour screens from WEB-21 replace those pages at the same URLs and now post to the same actions, with the same field names and messages. This task is done when the Contour screens pass the flows above. Password rule: 8 to 128 characters everywhere (D25).
 
@@ -123,6 +123,7 @@ Do: wire these pages to Supabase Auth. WEB-21 builds them in Contour on fixtures
 After sign-in, go to `next`, the last project, or `/onboarding`.
 
 Done when: every flow works against the local stack, with codes read from Mailpit.
+Verified 2026-10-14 on the Contour screens, on the local stack (local Supabase Auth and Mailpit, the API on :8001, a production build; `sh scripts/e2e-local.sh --prod --zones --skip-seed --project=desktop-1440 --project=phone-390`, 256 of 256 passed): `e2e/auth-flows.spec.ts` (2 of 2) signs up, refuses a wrong six-digit code, accepts the one read from Mailpit, shows the address on `/account` and signs out from the account menu, then resets the password with the recovery code from Mailpit, refuses the old password and accepts the new one; `sign-in.spec.ts` (12 of 12) signs in to the person's project, keeps the destination of a signed-out visit, and sends a signed-in home-page visit to the workspace. `DECAMARK_AUTH_LOCAL_TEST=1 pnpm --dir web test:auth:local` 1 of 1 (the Server Action flow above; its final redirect check now accepts Next 16's `;push` suffix), `test:auth` 34, `test:api-errors` 38, `test:account` 12, `test:unit` 354, `pnpm --dir web check`. No hosted auth was run.
 
 ### WEB-05: Server-side API client
 Status: done · Phase 1 · Size M · Depends: BE-06, CON-03, CON-04, WEB-03 · Blocks: WEB-06, WEB-12, WEB-27
@@ -138,7 +139,7 @@ Do:
 Done when: one server component renders `/v1/me` data, and the typecheck passes against the generated types.
 
 ### WEB-06: Onboarding, organization and project routes, account page
-Status: todo · Phase 1 · Size L · Depends: BE-06, BE-07, BE-08, WEB-04, WEB-05 · Blocks: WEB-07, WEB-08, WEB-09, WEB-10, WEB-11, WEB-14, WEB-15
+Status: done (2026-10-14; as built under D30; account deletion's 204 and 202 answers are unit-tested, not run in a browser) · Phase 1 · Size L · Depends: BE-06, BE-07, BE-08, WEB-04, WEB-05 · Blocks: WEB-07, WEB-08, WEB-09, WEB-10, WEB-11, WEB-14, WEB-15
 WEB-27 (2026-10-09, D30): delivered, except the set-up. `/o` opens the person's last project, their only project or their first organization. The organization and project routes and switchers come from `/v1/me`. Owners and admins create projects from the organization's Projects page. `/invite` and `/join` preview and redeem real invitations. The organization and the project have `loading.tsx`, `error.tsx` and not-found pages. `/account` was already live. Retired: `/onboarding` and creating an organization on the web (the bootstrap script does that).
 Do:
 1. `/onboarding`:
@@ -162,9 +163,10 @@ Do:
 7. Add `error.tsx`, `not-found.tsx`, and a `loading.tsx` for each section.
 
 Done when: J1 steps 1–2 work end to end against the local stack, and the old URLs redirect.
+Verified 2026-10-14, as built under D30 (organizations from the bootstrap script, projects on the web), on the local stack (local Supabase Auth and Mailpit, the API on :8001, a production build; `sh scripts/e2e-local.sh --prod --zones --skip-seed --project=desktop-1440 --project=phone-390`, 256 of 256 passed): J1 on a fresh synthetic account, its organization set up by `scripts/bootstrap-study.mjs` (WEB-43: organization, project, published forms, Fall Creek with map v1) and opened on the web; `org.spec.ts` (8 of 8) has an owner create a project in their own organization and land in it as its manager, and shows Members and Settings only to owners and admins; `invite-viewer.spec.ts` and `join-observer.spec.ts` redeem an invitation link and a join code; `removed-routes.spec.ts` (14 of 14) redirects the old URLs and retires `/onboarding`. Account deletion: a pending (202) deletion now says it is finishing and tries again after 5, 10 and 15 seconds (`src/features/account/deletion.ts`; `tests/unit/account-deletion.test.mjs`, 3 tests), then says the deletion is recorded and will be completed. Every try names the account the dialog was opened for, and the Server Action sends nothing when another account is signed in on the browser (PR 26 review): `e2e/account-deletion.spec.ts` (2 of 2, desktop and phone) signs in a second account from another tab, and the first tab's request is refused before it reaches the API; the same spec fails when the check is removed. **Not run in a browser:** `DELETE /v1/me` answering 204 or 202, because the local API has no Auth Admin key and answers 503 (BE-08's credential, a user step).
 
 ### WEB-07: Team page (members, invitations, join codes)
-Status: todo · Phase 1 · Size M · Depends: BE-07, WEB-06 · Blocks: WEB-15
+Status: doing (2026-10-14: the web side is verified on the local stack; an observer redeeming a code on mobile waits for MOB-06) · Phase 1 · Size M · Depends: BE-07, WEB-06 · Blocks: WEB-15
 WEB-27 (2026-10-09, D30): delivered on live data for a project (Team) and for an organization (Members): the list, role change, remove, an invitation by link or by an 8-character code (shown once, with "DECA Mark does not send email"), pending invitations and revoke. Not built: the QR code (dropped), devices (DB-10) and resending an invitation ("not available yet"). Nobody becomes an owner by a role change; ownership moves only by Transfer ownership in the organization's Settings.
 Do:
 1. List members with their role, and let a manager change a role or remove someone.
@@ -177,6 +179,7 @@ Do:
 3. Observer devices come from DB-10 `devices`, once it exists.
 
 Done when: a manager creates a code on the web and an observer redeems it on mobile (MOB-06).
+Progress 2026-10-14, web side, on the local stack (production build, desktop-1440 and phone-390, in the 256-test run): `team.spec.ts` (a manager invites someone, sees the link and the code once, and revokes the invitation), `invite-viewer.spec.ts` (a viewer joins from the link and sees no Team or Settings), `join-observer.spec.ts` (an observer joins by code on the web and lands on the collect page) and `org.spec.ts` (Members and Settings only for owners and admins), each 2 of 2 or more. **Waiting:** redemption on mobile (MOB-06, todo).
 
 ### WEB-08: Sites and packages on real data
 Status: todo · Phase 3 · Size M · Depends: BE-13, WEB-01, WEB-06 · Blocks: none
@@ -249,7 +252,7 @@ Do:
 Done when: the exported CSV opens with the codebook columns, and the panel shows the real settings for a project with a grant.
 
 ### WEB-13: Tablet layout and touch targets
-Status: todo · Phase 3 · Size M · Depends: WEB-10 · Blocks: none
+Status: doing (2026-10-14: started under the user's exception; it closes only after WEB-10) · Phase 3 · Size M · Depends: WEB-10 · Blocks: none
 WEB-27 (2026-10-09, D30): not part of this task. WEB-27's screens are built to fit 390 px, and the Playwright honesty scan in `web/e2e` screenshots every route at 1440, 1024, 768 and 390 in Day and Dusk. The audit of 44 px targets at 768×1024, 1024×768 and 1280×800 is still open.
 Do:
 1. Observations: two panes (map and table) from `md`, with detail as a sheet. Three panes at `xl`.
@@ -257,9 +260,14 @@ Do:
 3. Check at 768×1024, 1024×768 and 1280×800 using the `responsiveness-check` skill.
 
 Done when: there is no horizontal scroll and no clipped pane at those three sizes. Record screenshots in the task notes.
+Exception (2026-10-14, user): started before WEB-10 is done ("start only, close later"). It stays doing until WEB-10 is done.
+Progress 2026-10-14, local stack, production build, Chromium with touch emulation (`pointer: coarse`) at 768×1024, 1024×768 and 1280×800, on 16 pages as an owner (the project's overview, Data, Sites, a site, its packages and zones, Forms, versions, Team, QGIS, Reports and Settings; the organization's projects, members and settings; Account). Each control's target was measured by hit-testing outward from its centre, so a `::before` extension counts as it does for a finger; one browser context per size, measuring before any full-page screenshot (each resets Chromium's touch emulation). Screenshots of all 48 pages were taken but not committed (`web/e2e/screenshots/` is ignored).
+- **No horizontal scroll** on any page at any size. Nothing is clipped beyond its own frame: the site plan clips its drawing to the map, and the Data and Form versions tables scroll sideways inside their own island at 768.
+- **Fixed:** small outline and danger buttons reached only 40 px, because a `::before` inset starts inside the 2 px edge; the sm `Button`, the sm `IconButton` and the package-upload label now centre a 44 px box (69 findings to 0). A `TextLink` with a glyph ("All observations", "Package history", "Open the draft") is a 44 px target on touch screens (`pointer-coarse:`), without moving its words. QGIS's wrapped download row keeps 16 px between lines so the link below does not take the buttons' targets; QGIS now has no target under 44 px (`qgis-reports.spec.ts`, 14 of 14 with setup, after the change).
+- **Open:** links without a glyph used as row titles or standalone actions are 20 to 24 px (site names on Sites and the organization's Projects, "Show vN" in package history, "Edit zones", "Draft · v2", "Organization members"); Data plan markers are 27 px (37 px selected), deliberately short of 44 so close markers stay separable, with each row in the table as the 44 px way to the same observation. Do step 1 names files that WEB-27 replaced (`RailNav.tsx`, `chrome.tsx`, `ObservationsWorkspace.tsx`, `PackageUpload.tsx`): the Data screen stacks the table and plan until `xl`. Whether two panes from `md` still apply is the lead's call.
 
 ### WEB-14: Legal pages for public sign-up
-Status: todo · Phase 1 · Size S · Depends: WEB-06 · Blocks: OPS-11
+Status: done (2026-10-14; two facts stay "to be confirmed": the email provider and the Training retention) · Phase 1 · Size S · Depends: WEB-06 · Blocks: OPS-11
 WEB-27 (2026-10-09, D30): not changed. The legal layout only takes the new header mark (D29).
 Read first: `src/app/(legal)/privacy/page.tsx` (`:78-80` and `:281` say administrators create accounts); `src/app/(legal)/policy.ts`.
 Do:
@@ -270,10 +278,12 @@ Do:
 5. Keep the "to be confirmed" markers wherever a value is still open.
 
 Done when: nothing on the page contradicts public sign-up, and the deletion path works without the app.
+Verified 2026-10-14: `/privacy` describes public sign-up with a six-digit email code, what an account holds (the Profile row, memberships, the Training project and its retention), the website's cookies and self-serve deletion at `/account` ("The app cannot delete accounts yet"); `/privacy/delete-data` adds "Delete your account yourself" for anyone with the web, and instructions with a contact for anyone without it. `policy.ts` keeps `trainingRetention` ("30 days after they arrive", Q2) and `emailProvider` (null) as "to be confirmed" facts, and the effective date is October 14, 2026. On the local stack (local Supabase Auth and Mailpit, the API on :8001, a production build; `sh scripts/e2e-local.sh --prod --zones --skip-seed --project=desktop-1440 --project=phone-390`, 256 of 256 passed): the honesty scan reads `/privacy` and `/privacy/delete-data` honestly signed out (Day and Dusk, axe clean) and screenshots both widths. The deletion itself is WEB-06's flow, not browser-run locally for the reason given there.
 
 ### WEB-15: End-to-end tests with Playwright
 Status: todo · Phase 4 · Size M · Depends: DB-02, WEB-04, WEB-06, WEB-07 · Blocks: QA-04
 WEB-27 (2026-10-09, D30): partly delivered. `web/e2e` and `scripts/e2e-local.sh` run Playwright against local Supabase, the local API and the seed in `database/seed-web-workspace.mjs`. Specs: sign-in, sites, packages, forms, data, overview, QGIS and reports, settings, team, organization pages, an invitation redeemed by a viewer, an observer joining by code, the removed routes, and a scan of every route for sample words, jargon, more than one primary button and axe findings in Day and Dusk. Not covered: sign-up with Mailpit codes, password reset and account deletion. There is no onboarding to test.
+WEB-04 (2026-10-14): `e2e/auth-flows.spec.ts` now covers sign-up with Mailpit codes (a wrong code, then the right one) and password reset (the old password refused, the new one accepted), and `org.spec.ts` covers an owner creating a project in their own organization. Account deletion is unit-tested only: the local API has no Auth Admin key, so `DELETE /v1/me` answers 503 there. This task stays todo until WEB-07 is done (Depends).
 Do: add `web/e2e/`, running against the local stack and reading codes from the Mailpit API. Cover:
 - sign-up, verify, onboarding, then the org and project exist;
 - sign in and reset password;
@@ -335,7 +345,7 @@ Added 2026-10-01 with MOB-22 (decision D18). The observations map and the packag
 Verified 2026-10-01: `pnpm --dir web check` passes; in the browser the switch flips the site fill between the Day and Night colours and the choice survives a reload. The ground repaint around the site on a palette change was not seen in a browser (the pane was hidden).
 
 ### WEB-20: Contour foundation (web)
-Status: todo · Phase 1 · Size L · Depends: none · Blocks: WEB-21, WEB-22
+Status: done (2026-10-14; the comparison against the Contour system pages is pending (user)) · Phase 1 · Size L · Depends: none · Blocks: WEB-21, WEB-22
 WEB-27 (2026-10-09, D30): the temporary parts are gone: the fixture scaffold (`src/fixtures`, `lib/preview.ts`), the Nocturne alias block in `globals.css`, `components/nocturne` and `src/data`. The ESLint rule now bans `@/fixtures`, `@/data` and `@/lib/preview` in place of the Nocturne-era modules. The tokens and `/dev/contour` are unchanged.
 Added 2026-10-03 (D19, D22). It builds no product screen. The screens built on it (WEB-21 to WEB-26) run on fixtures; the wiring tasks WEB-04 to WEB-13 later connect real data to them without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`, `web/AGENTS.md`, `contracts/contour.json`, `contracts/map-palettes.json`; designs: Contour system pp. 1–12.
@@ -352,6 +362,7 @@ Do:
 Done when: the gallery renders every primitive in Day and Dusk; `pnpm tokens:check` passes, contrast included; the existing routes still build.
 
 Verify: `pnpm --dir web check`, `pnpm --dir web build`, `pnpm tokens:check`, `pnpm forms:parity`, and the Playwright screenshot comparison of `/dev/contour` against the Contour system pages.
+Verified 2026-10-14: the tokens, fonts (`next/font` Geologica and Spline Sans Mono), the pre-paint theme script (`src/lib/theme-script.ts`, `fm-theme`), the dependencies, the primitives, the maps, the `noindex` gallery and the Playwright harness are in place. Every component `src/components/contour/index.ts` exports appears in the gallery's source except Radix sub-parts (`MenuCheckboxItem`, `PopoverAnchor`, `PopoverClose`); `Skeleton` draws inside the loading `ScreenState`. `e2e/specimen/contour-gallery.specimen.ts` (`pnpm --dir web test:specimen`, 1 passed) opens every one of the 17 sections in Day and Dusk at 1440, 1024, 768 and 390 with no page error and no sideways scroll, and screenshots each to `web/e2e/screenshots/gallery-<width>/<theme>/dev-contour.png`. `pnpm tokens:check` passes, contrast included; `pnpm forms:parity` passes; `pnpm --dir web check` passes and the production build serves the 256-test local-stack run. **Pending (user):** comparing those screenshots with the Contour system pages.
 
 ### WEB-21: Identity screens on Contour (web)
 Status: todo · Phase 1 · Size L · Depends: WEB-20 · Blocks: none
@@ -487,7 +498,7 @@ Verify: `pnpm --dir web check`, `format:check`, `build`, `test:unit`, `test:auth
 Verified 2026-10-09 (Node 22.22.0, pnpm 10.17.1): `test:unit` 229 of 229, `test:auth` 34 of 34, `test:api-errors` 31 of 31, `test:account` 12 of 12, `pnpm forms:parity` and `pnpm tokens:check`. The full local-stack Playwright run is not recorded here.
 
 ### WEB-28: Build a real manager zone editor
-Status: done (2026-10-13; the manual matrix is pending (user), and signing out or an account change mid-edit is not run in a browser) · Phase 3 · Size L · Depends: BE-22, WEB-34, WEB-38, WEB-42 · Blocks: QA-07
+Status: done (2026-10-13; the manual matrix is pending (user)) · Phase 3 · Size L · Depends: BE-22, WEB-34, WEB-38, WEB-42 · Blocks: QA-07
 Owner: Claude web owner.
 Planned 2026-10-11: the detailed UI, state architecture, drawing-surface decision and verification are in [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md). This task is now the acceptance gate for editing and QGIS uploads; WEB-30 to WEB-38 and WEB-42 do the work.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 1, 3, 5 and 10.
@@ -502,7 +513,7 @@ Verified 2026-10-13 on the local stack against the real API, production build, d
 5. `zones-network.spec.ts`: an edit made offline says so, stays in the tab and saves as the next revision on reconnecting; meanwhile a `g` chord, the command palette and a breadcrumb link each ask first, and after the save the link leaves without asking.
 8. `zones-honesty.spec.ts`: the Zones page (current, an earlier version, a site with no package), the editor and the review as a manager, and the Zones page and a draft as a viewer, read honestly in Day and Dusk: no banned words, one primary action, no sideways scroll, axe clean.
 - **Checks:** `pnpm --dir web check`, `test:unit` 351 of 351.
-- **Not run in a browser:** signing out or another account signing in mid-edit (WEB-35; unit-tested).
+- **Updated 2026-10-14, account changes mid-edit:** `zones-account.spec.ts` (2 tests, desktop-1440 and phone-390, 4 of 4 on the local stack (local Supabase Auth and Mailpit, the API on :8001, a production build; `sh scripts/e2e-local.sh --prod --zones --skip-seed --project=desktop-1440 --project=phone-390`, 256 of 256 passed)): signing out in another tab pauses saving with "Not saved · you were signed out. Sign in again in another tab, then come back to save.", and signing back in saves the edit as the next revision; another account signing in shows "You are signed in as someone else.", sends no draft write, and the server keeps the last revision. The tab switch is a `visibilitychange` the spec dispatches, because Playwright keeps every page visible.
 - **Pending (user), UI plan section 10 manual matrix:** keyboard-only full edit, publish and review; VoiceOver with Safari and NVDA; iPad Safari on the LAN (drag, pinch, draw, 44 px handles, leave guard; WEB-30 gates 4 and 8); Chrome and Firefox at 1440 and 1024, Safari at 1440, iPad portrait and landscape; reduced motion; the WEB-30 timings on the final build.
 
 ### WEB-29: Display and filter historical zone versions
@@ -530,9 +541,9 @@ Verify: Measurements and screenshots in the decision record; `git status` shows 
 Verified: Option A holds on the dev-only `/dev/zone-editor` specimen with no new dependency (results table in the [UI plan](ZONE-BOUNDARIES-UI.md#web-30-spike-gates)). Gates 1–3, 5–7 and 9 pass in desktop-1440 and phone-390 Chromium and unit tests: lossless round trips on all 15 sets, holes unfilled, keyboard editing of every fixture, axe clean in both palettes and themes, handle ink at least 3:1 on every palette surface, no outside requests, 39.7 KB gzipped of route-only code and no editor module in other routes. Desktop Chromium production timings (not the gate): 53–66 ms for the 20,000-position site, 60 fps for a 2,000-point drag. The harness is the specimen WEB-33 keeps (plan amended: the iPad gates run on it); iPad steps are in the UI plan and need a production build, because `next dev` on the network address never hydrates in Next.js 16.
 
 ### WEB-31: Keep zone geometry lossless in the web plan model
-Status: done (2026-10-12; unit and static checks only, the honesty-scan screenshots wait for BE-22 archives) · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-32, WEB-40
+Status: done (2026-10-12; the honesty-scan screenshots followed on 2026-10-14) · Phase 3 · Size M · Depends: CON-05 · Blocks: WEB-32, WEB-40
 Owner: Claude web owner.
-Verified: Zones are one feature with every part and hole (holes drawn against their outer edge under a nonzero fill, so overlapping parts stay filled; amended after review 2026-10-13), keyed by `zone_id`, carrying the exact longitude/latitude; the archive reader takes only the contract's `format: 1` manifest and refuses (never boxes or repairs) a zone that disagrees with it or is not a closed, readable MultiPolygon; loops replace spreads; the background is memoised. `tests/unit/zone-plan.test.mjs` and `site-archive.test.mjs`: every valid `structure_cases` shape round-trips to identical JSON, every invalid one is refused, holes and parts project ring for ring, 200,000 positions fit without a stack overflow. `pnpm --dir web check` passes; `test:unit` 246 of 247 (the failure is the pre-existing collector-rule assertion, unrelated). Until BE-22 ships the contract archive, packages from the current backend show their no-plan note.
+Verified: Zones are one feature with every part and hole (holes drawn against their outer edge under a nonzero fill, so overlapping parts stay filled; amended after review 2026-10-13), keyed by `zone_id`, carrying the exact longitude/latitude; the archive reader takes only the contract's `format: 1` manifest and refuses (never boxes or repairs) a zone that disagrees with it or is not a closed, readable MultiPolygon; loops replace spreads; the background is memoised. `tests/unit/zone-plan.test.mjs` and `site-archive.test.mjs`: every valid `structure_cases` shape round-trips to identical JSON, every invalid one is refused, holes and parts project ring for ring, 200,000 positions fit without a stack overflow. `pnpm --dir web check` passes; `test:unit` 246 of 247 (the failure is the pre-existing collector-rule assertion, unrelated). Until BE-22 ships the contract archive, packages from the current backend show their no-plan note. Updated 2026-10-14: with BE-22's archives on the local stack, the honesty scan draws the plans of Sites, a site, Data and Overview from the archive, holes and parts included, and screenshots them in Day and Dusk at 1440 and 390 (`honesty.spec.ts`, 82 of 82, in the 256-test run of `sh scripts/e2e-local.sh --prod --zones`).
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-2 and section 2; `src/lib/{plan.ts,sites/archive.ts}`; `src/components/map/SitePlan.tsx`; `tests/unit/site-archive.test.mjs`.
 Do: Keep every zone as one feature with parts, rings and holes drawn so holes stay unfilled (amended 2026-10-13: a nonzero fill over rings wound outer one way and holes the other, because an even-odd fill over the whole zone empties the patch where two parts overlap); carry `zone_id`, code and the raw longitude/latitude; read zones strictly (no silent repair, no bounding-box stand-in); replace `Math.min(...spread)` with loops; memoise the static background.
 Done when: Every fixture geometry renders with its holes and parts; a parse-then-serialise round trip is number-identical; all existing map screens and unit tests pass.
@@ -566,7 +577,7 @@ Verify: `pnpm --dir web test:unit` (exactness tests), specimen Playwright run; s
 Verified: Draw shape and Draw rectangle by pointer, touch and the keyboard cross (P, R, V; Space, Enter, Backspace, T, Escape), exact-vertex snapping with a marker and Alt to place freely, "Follow the edge" between two snapped points of one zone or the site boundary (again for the other way round), and Remove hole and Remove part. `tests/unit/zone-drawing.test.mjs`: a traced neighbour shares the very same position arrays (so the same pairs), an unfinished shape never enters the zones, refusals say why, and drawing undoes as one step. `e2e/specimen/zone-drawing.specimen.ts` at desktop-1440 and phone-390: the concave fixture's notch drawn by mouse with a traced edge shares its three points exactly; rectangles by mouse and touch drag align to longitude and latitude; a shape tapped out by touch; holes and parts removed and undone; axe clean while drawing in both palettes. Full specimen suite 60 passed, 6 skipped by design; `pnpm --dir web check` passes; `test:unit` 305 of 306 (the pre-existing collector-rule failure). Review fixes (2026-10-13): a second finger during a point or rectangle drag pinches instead (the point goes back, nothing is drawn), drawing works over plain HTTP on a LAN address, overlapping parts stay filled and hit, outlines keep zoom-dependent precision, and the save queue recovers after a too-large refusal or a failed conflict read; specimen suite 64 passed, 8 skipped by design, `test:unit` 310 of 311.
 
 ### WEB-35: Persist zone drafts with conditional autosave
-Status: done (2026-10-13; offline runs in a browser in WEB-28's `zones-network.spec.ts`; signed-out and account-change paths are unit-tested only) · Phase 3 · Size L · Depends: BE-22, WEB-33, DB-18 · Blocks: WEB-37, WEB-38
+Status: done (2026-10-13; offline runs in a browser in WEB-28's `zones-network.spec.ts`, and since 2026-10-14 the signed-out and account-change paths in `zones-account.spec.ts`) · Phase 3 · Size L · Depends: BE-22, WEB-33, DB-18 · Blocks: WEB-37, WEB-38
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) WUI-3, WUI-4, WUI-11, WUI-12, 5.8, 5.9, 6.3 and 6.4; [contract](../docs/plan/zone-boundaries/contract.md) manager endpoints and errors; `src/lib/api/{browser,errors}.ts`; `src/features/shell/useLeaveGuard.ts`.
 Do: Add zod schemas, `src/lib/api/zones-browser.ts` with If-Match, ETag and caller abort, the new error kinds with issues and conflict details, the autosave queue wiring, save status, the conflict dialog, validation with the Problems list and canvas markers, the shell navigation guard, the account fence, the mount-time draft GET, and the manager-gated editor route with removal of only the `zones/:path*` redirect (and its REMOVED_ROUTES entry).
@@ -699,10 +710,20 @@ Verify: `pnpm --dir web test:unit` (summary, export, overview, reports), `pnpm w
 Verified: Data and QGIS download DECA Mark's export ZIP browser-direct (`downloadObservationExport`): every match, the scope repeated one filter per line with the days' UTC bounds, the search named as not applied, refused above 10,000 with "One export holds up to 10,000 observations. Narrow the dates or choose one site." (also for an `export_scope_too_large` refusal); the browser-built CSV, GeoJSON and codebook are removed. QGIS adds each site's current zone boundaries as GeoJSON (`zone_id`, `map_version`). Reports apply days on the server, take zones and rounds from the summary and say when observers, days and play types come from the newest 500; coverage, field return and the site page ("on v2 · N on earlier versions") read the summary. Unit: `export-files`, `reports`, `summary`, `site-view`, `qgis`. Local stack at desktop-1440 and phone-390: `data.spec` (the ZIP's `observations.csv` has exactly the 8 matches and a codebook), `data-history.spec` (one version: 260 rows, the v1 name written `'=Synthetic lawn v1`), `qgis-reports.spec` (GeoJSON ZIP with inventories as null geometry; the zone boundaries download), `overview`, `sites`, `packages`, `packages-identity` and the honesty scan of every route.
 
 ### WEB-42: Upload QGIS packages with zone identity mapping
-Status: done (2026-10-13) · Phase 3 · Size M · Depends: BE-22, WEB-36, DB-18 · Blocks: WEB-28
+Status: done (2026-10-13) · Phase 3 · Size M · Depends: BE-22, WEB-36, DB-18 · Blocks: WEB-28, WEB-43
 Owner: Claude web owner.
 Read first: [UI plan](ZONE-BOUNDARIES-UI.md) 5.11; [contract](../docs/plan/zone-boundaries/contract.md) "Existing import/publication route" and "Package format 2 and capabilities"; `src/features/packages/UploadStep.tsx`; `backend/src/fieldmaps_api/zone_import_schemas.py`.
 Do: Add the identity mapping step to every upload (a first upload maps every feature to a new zone) (preselect only features carrying a matching `zone_id`; code or label matches stay unselected suggestions), the removed-zone list, the change note, a per-attempt `request_id`, `expected_current_package_id`, and the conflict and identity error copy.
 Done when: On the local stack, a first upload creates v1; a later upload with one mapped, one new and one removed zone creates v2; a stale expected current gets the conflict copy.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit` (mapping model tests), and the packages e2e specs with first and later uploads.
 Verified: Every upload maps each zone of the file (`src/features/packages/{identity.ts,ZoneMapping.tsx}`): only a carried `zone_id` is preselected, a matching code or name is a suggestion, new zones get a client identity and a valid free code, left-out zones are listed; the inventory form, the change note, `request_id` and `expected_current_package_id` are sent; an attempt whose answer is unknown is kept whole until answered (resend replays); conflicts and zone issues read in words. Unit: `zone-identity`, `package-checks`, `package-history`. Local stack at desktop-1440 and phone-390: `packages-identity.spec.ts` (one kept, one new, one removed across successive versions with zone A's identity and its 8 records kept; an upload against a map changed meanwhile is refused with the conflict copy and makes no version) and `packages.spec.ts`.
+
+### WEB-43: Send the bootstrap script's first map on the single upload path
+Status: done (2026-10-14; local stack only) · Phase 3 · Size S · Depends: BE-22, WEB-42 · Blocks: none
+Owner: Claude web owner.
+Added 2026-10-14 (WEB-06): under D30, J1 starts with `scripts/bootstrap-study.mjs`, and its package request still used the envelope from before BE-22. On a fresh local stack the API refused it with 428, then with 422 "Invalid structure", because the Fall Creek zones name themselves `label` and the identity map needs `name`.
+Read first: [contract](../docs/plan/zone-boundaries/contract.md) "Existing import/publication route"; `scripts/bootstrap-study.mjs`; WEB-42's `src/features/packages/identity.ts`.
+Do: send the first map as every web upload does: `site_id`, a `request_id` per run, `expected_current_package_id`, both form versions, a change note and a zone identity map with each zone's `name`; check zone codes before sending; print the API's issue list when it refuses; on a rerun, say which map version the site already has.
+Done when: on the local stack, a fresh run publishes map v1 and the set-up opens on the web.
+Verify: a run against the local stack with a synthetic account.
+Verified 2026-10-14 on the local stack with a new synthetic account and organization: the first run creates the organization, the project, both forms (published), Fall Creek and map v1 ("Published map v1"); the set-up opens on the web, where the site page shows map v1 as current, its forms and its one zone, "Zone A · Whole playground", on the plan. Two later runs keep everything ("Fall Creek Elementary playground already has map v1"). Not run against a hosted API.

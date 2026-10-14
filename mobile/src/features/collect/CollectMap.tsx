@@ -21,11 +21,10 @@ import {
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import type { Coordinate } from "../../domain/observation";
-import { clusterPoints, type MapPoint, nudge } from "../../maps/clustering";
+import { clusterPoints, type MapPoint, metresPerPixel, nudge } from "../../maps/clustering";
 import {
+  coveringZones,
   scaleBar,
-  zoneAnchor,
-  zoneAt,
   zoneBounds,
   zoneFeature,
   zoneSpotlight,
@@ -67,6 +66,7 @@ import {
 } from "../../ui";
 import { type AimStore, useAim } from "./aim-store";
 import { AimReticle, markColours, PLACED_BOX, PlacedMark } from "./pin";
+import { nearEdgeHint, type PlacementState, placementState, zoneTap } from "./placement";
 
 /** A prior observation as the map shows it. */
 export type MapRecord = MapPoint & {
@@ -111,6 +111,8 @@ type Props = {
   readonly aim: AimStore;
   readonly onAimSettled: (centre: Coordinate, zoom: number) => void;
   readonly onZonePress?: ((zone: SiteZone) => void) | undefined;
+  /** A tap on an edge between zones while choosing one: the words to show instead of choosing. */
+  readonly onZoneNote?: ((note: string) => void) | undefined;
   /** The overlay label: the zone, then the round and the plan. */
   readonly title: string;
   readonly detail: string;
@@ -330,6 +332,7 @@ export function CollectMap({
   aim,
   onAimSettled,
   onZonePress,
+  onZoneNote,
   title,
   detail,
   expanded,
@@ -513,11 +516,12 @@ export function CollectMap({
             return;
           }
           if (mode === "zones" && onZonePress) {
-            const hit = zoneAt([tapped[0], tapped[1]], sitePackage.zones, zone);
-            if (hit) {
+            // One covering zone is chosen; on an edge the list decides, never the package's order.
+            const tap = zoneTap([tapped[0], tapped[1]], sitePackage.zones);
+            if (tap && "zone" in tap) {
               haptics.selection();
-              onZonePress(hit);
-            }
+              onZonePress(tap.zone);
+            } else if (tap) onZoneNote?.(tap.note);
             return;
           }
           setSelected(null);
@@ -612,6 +616,14 @@ export function CollectMap({
             paint={{ "line-color": palette.zone.edge, "line-width": 2.5 }}
           />
         </GeoJSONSource>
+        {aiming ? (
+          <CandidateEdges
+            aim={aim}
+            zones={sitePackage.zones}
+            zone={zone}
+            edge={palette.zone.edge}
+          />
+        ) : null}
 
         {/* Prior observations, drawn on the GPU: a ring and a dot; this session's at full strength. */}
         <GeoJSONSource
@@ -685,7 +697,7 @@ export function CollectMap({
           const done = doneZones.has(entry.id);
           const name = entry.label.split(" · ")[0] ?? entry.label;
           return (
-            <Marker key={`zone-${entry.id}`} id={`zone-${entry.id}`} lngLat={zoneAnchor(entry)}>
+            <Marker key={`zone-${entry.id}`} id={`zone-${entry.id}`} lngLat={entry.displayAnchor}>
               <View
                 pointerEvents="none"
                 style={[
@@ -892,12 +904,61 @@ export function CollectMap({
   );
 }
 
-/** The readout under the cross while aiming: kept apart so only it re-renders as the map moves. */
+/**
+ * The readout under the cross while aiming: kept apart so only it re-renders as the map moves. The
+ * placement state comes from the zones covering the cross (MUI-3); the hint only suggests zooming in.
+ */
 export function useAimZone(
   aim: AimStore,
   zones: readonly SiteZone[],
   zone: SiteZone,
-): { centre: Coordinate; zoom: number; inside: SiteZone | null; moving: boolean } {
+  bound: boolean,
+  version: number | string,
+): {
+  centre: Coordinate;
+  zoom: number;
+  moving: boolean;
+  placement: PlacementState;
+  hint: string | null;
+} {
   const { centre, zoom, moving } = useAim(aim);
-  return { centre, zoom, moving, inside: zoneAt(centre, zones, zone) };
+  const placement = placementState(centre, zone, zones, bound, version);
+  const hint = nearEdgeHint(centre, placement, zones, metresPerPixel(zoom, centre[1]));
+  return { centre, zoom, moving, placement, hint };
+}
+
+/**
+ * While aiming, the other zones that cover the cross are outlined in heavier dashes, so an edge
+ * choice can be seen on the plan (MUI 4.4). Palette means only: no UI state colour on the map. Kept
+ * apart, like the readout, so only it re-renders as the map moves.
+ */
+function CandidateEdges({
+  aim,
+  zones,
+  zone,
+  edge,
+}: {
+  readonly aim: AimStore;
+  readonly zones: readonly SiteZone[];
+  readonly zone: SiteZone;
+  readonly edge: string;
+}) {
+  const { centre } = useAim(aim);
+  const others = coveringZones(centre, zones).filter((candidate) => candidate.id !== zone.id);
+  const key = others.map((candidate) => candidate.id).join(",");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the shapes change only with the set of zones.
+  const shapes: FeatureCollection = useMemo(
+    () => ({ type: "FeatureCollection", features: others.map(zoneFeature) }),
+    [key],
+  );
+  if (others.length === 0) return null;
+  return (
+    <GeoJSONSource id="collect-candidates" data={shapes}>
+      <Layer
+        id="collect-candidates-edge"
+        type="line"
+        paint={{ "line-color": edge, "line-width": 3.5, "line-dasharray": [2, 1.5] }}
+      />
+    </GeoJSONSource>
+  );
 }
