@@ -2,7 +2,7 @@ import { z } from "zod";
 import { databaseWrite } from "./database-write";
 import type { LocalDatabase } from "./observation-store";
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 const objectCommands = { view: "VIEW", table: "TABLE" } as const;
 
 const resetSchema = `
@@ -23,6 +23,11 @@ const resetSchema = `
     updated_at TEXT NOT NULL, payload TEXT NOT NULL, package_key TEXT NOT NULL DEFAULT ''
   );
   CREATE INDEX drafts_package_reference ON observation_drafts(package_key);
+  CREATE TABLE parked_observation_drafts (
+    owner_scope TEXT NOT NULL, id TEXT NOT NULL, updated_at TEXT NOT NULL,
+    payload TEXT NOT NULL, package_key TEXT NOT NULL DEFAULT '', PRIMARY KEY(owner_scope,id)
+  );
+  CREATE INDEX parked_drafts_package_reference ON parked_observation_drafts(package_key);
   CREATE TABLE package_contents (
     content_key TEXT PRIMARY KEY NOT NULL, issuer TEXT NOT NULL, project_id TEXT NOT NULL,
     site_id TEXT NOT NULL, package_id TEXT NOT NULL, digest TEXT NOT NULL, payload TEXT NOT NULL,

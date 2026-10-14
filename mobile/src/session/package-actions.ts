@@ -8,6 +8,7 @@ import { openSitePackage } from "../packages/open";
 import type { SitePackage } from "../packages/site-package";
 import { clearDraft, hasDraft, type ObservationDraft, readDraft } from "../storage/draft-store";
 import type { LocalDatabase } from "../storage/observation-store";
+import { SessionBindingError, sessionBinding } from "./bound-context";
 import type { OpenOutcome } from "./context";
 import {
   type ObservationIdentity,
@@ -25,6 +26,7 @@ type Input = {
   readonly recovered: ObservationDraft | null;
   readonly sites: Readonly<Record<string, readonly HostedSite[]>>;
   readonly installed: readonly InstalledVersion[];
+  readonly canAccess?: (project: string) => boolean;
   readonly zone: SiteZone | null;
   readonly roundType: RoundType;
   readonly freshPeriod: boolean;
@@ -66,28 +68,34 @@ export function packageActions(input: Input) {
     const available = Object.entries(sites)
       .flatMap(([projectId, list]) => list.map((site) => ({ projectId, site })))
       .find(({ site }) => site.package?.package_id === id);
+    const known = installed.find((entry) => entry.identity.packageId === id)?.identity;
+    const location = available
+      ? { projectId: available.projectId, siteId: available.site.site_id }
+      : known;
     const newest =
-      !open && available
+      !open && location
         ? installed
             .filter(
               (entry) =>
                 entry.status === "verified" &&
-                entry.identity.projectId === available.projectId &&
-                entry.identity.siteId === available.site.site_id,
+                entry.identity.projectId === location.projectId &&
+                entry.identity.siteId === location.siteId,
             )
             .sort((a, b) => b.identity.packageVersion - a.identity.packageVersion)[0]
         : null;
     const result = await openSitePackage(!open && newest ? newest.identity.packageId : id);
     if (!current()) return { ok: false, reason: "The account changed while opening the map." };
     if (!result) return { ok: false, reason: "That exact package could not be opened." };
-    if (result.projectId !== undefined && !open)
-      return {
-        ok: false,
-        reason:
-          "This map requires boundary-aware collection, which is not enabled in this build yet. Its verified download is retained.",
-      };
+    if (result.projectId && input.canAccess?.(result.projectId) === false)
+      return { ok: false, reason: "This project is no longer accessible. Local work is retained." };
     const selected = result.zones.find((entry) => entry.id === zone?.id) ?? result.zones[0] ?? null;
     if (!selected) return { ok: false, reason: "The map has no usable zones." };
+    try {
+      sessionBinding(result, selected);
+    } catch (error) {
+      if (error instanceof SessionBindingError) return { ok: false, reason: error.message };
+      throw error;
+    }
     const nextRound = offersRound(result, roundType) ? roundType : "standard";
     const context: RoundContext = {
       packageId: result.id,
@@ -102,8 +110,9 @@ export function packageActions(input: Input) {
     opened(result, selected, context);
     return { ok: true, sitePackage: result };
   }
-  async function resumeRecovered(): Promise<SitePackage | undefined> {
-    const draft = recovered;
+  async function resumeRecovered(
+    draft: ObservationDraft | null = recovered,
+  ): Promise<SitePackage | undefined> {
     if (!draft || !current()) return undefined;
     const wrongAccount = recoveryProblem(draft.owner, key);
     if (wrongAccount !== null) {
@@ -120,6 +129,12 @@ export function packageActions(input: Input) {
       return undefined;
     }
     const problem = validateRecoveredPackage(draft, result);
+    if (result.projectId && input.canAccess?.(result.projectId) === false) {
+      setStatus(
+        "This project is no longer accessible. The exact unfinished observation stays on this device.",
+      );
+      return undefined;
+    }
     const selected = result.zones.find((entry) => entry.id === draft.context.zoneId);
     if (problem || !selected) {
       setStatus(

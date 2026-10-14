@@ -610,14 +610,14 @@ Done when: no hex literal remains outside `src/ui/tokens.ts`; all tests pass.
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (airplane mode shows the offline states, haptics only when the switch is on, the gallery in both themes).
 
 ### MOB-28: Retain exact offline package versions safely
-Status: doing · Phase 3 · Size L · Depends: CON-05 · Blocks: MOB-33
+Status: done (2026-10-13: actual current /v1 package installation and SQLite/filesystem restart pass; current mobile checks and retention tests pass; [evidence](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md)) · Phase 3 · Size L · Depends: CON-05 · Blocks: MOB-33
 Owner: Mobile data agent.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Replace the SQLite migration ladder with one current schema: on any `user_version` mismatch, drop every table and recreate. Keep no v1 rows or v1 uploader path, no `upload_protocol` or `canonicalization_version` columns, no `server_capabilities` table and no legacy-database fixtures or upgrade tests. Add catalog/reference retention and atomic verified installation, fence async account work and remove bound-draft zone fallback.
 Done when: Incompatible schemas reset transactionally; current-schema restart/download/removal cannot lose referenced maps or unfinished observations.
 Verify: pnpm mobile:check, mobile:test and real SQLite/filesystem restart/failure drivers.
 Evidence: [local implementation and final review](../docs/reviews/zone-boundaries-2026-10-11/mob28.md): 506 mobile tests, typecheck/lint and independent local review pass.
-Acceptance gate: Local foundation follows the single-contract rewrite. Actual current-package API installation/restart must rerun after DB-19 and BE-22; the earlier format-2 result is historical evidence only.
+Acceptance: Current-contract installation/restart was rerun after DB-19 and BE-22 against a disposable live loopback API. Physical-device collection/upload remains MOB-29 and QA-07.
 
 ### MOB-29: Collect and upload pinned zone observations
 Status: todo · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
@@ -652,7 +652,7 @@ Done when: Each status in UI plan MUI-7 renders with its actions in component te
 Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator check of a resume after force quit and of a missing-map recovery.
 
 ### MOB-33: Provide bound session and package read models
-Status: todo · Phase 3 · Size L · Depends: MOB-28, BE-22 · Blocks: MOB-29, MOB-30, MOB-31, MOB-32
+Status: doing (2026-10-13: data implementation and local acceptance complete; Claude UI-owner interface acknowledgment remains pending; [handoff](MOB-33-HANDOFF.md)) · Phase 3 · Size L · Depends: MOB-28, BE-22 · Blocks: MOB-29, MOB-30, MOB-31, MOB-32
 Owner: Mobile data agent; the Claude mobile UI owner acknowledges the interface.
 Read first: [component specification](ZONE-BOUNDARIES.md) MOB-29; [UI plan](ZONE-BOUNDARIES-UI.md) MUI-1, MUI-4, MUI-7, MUI-11 and section 6.
 Do: Add site discovery on the single site API (MUI-11); package readiness with no box fallback; the frozen bound session context with zone UUIDs; exact-version form loading; parked drafts; persist a zone change on an open observation in the same handler; and write `src/packages/zone-read-models.ts` (SiteVersions, Pinned, Recovered, hooks and an in-memory fake), extending `SiteZone` with `zoneId` and `displayAnchor` and removing the box fallback. A local schema change resets local data instead of migrating it (pre-launch rule).

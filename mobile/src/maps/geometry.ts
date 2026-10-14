@@ -10,66 +10,16 @@ import type { SiteZone } from "./sample-site";
  * that size is far below a finger's width, and the functions stay pure and testable without a map.
  */
 
-/** A linear ring: closed or not, its first position is not repeated in the maths. */
-export type Ring = readonly Coordinate[];
-/** An outer ring followed by any holes, as GeoJSON orders them. */
-export type PolygonRings = readonly Ring[];
+import {
+  type PolygonRings,
+  pointInPolygon,
+  pointInZone,
+  zoneParts,
+  zoneRings,
+} from "./zone-boundaries";
 
-/** The polygon a zone covers: its drawn shape when the package carries one, otherwise its box. */
-export function zoneRings(zone: SiteZone): PolygonRings {
-  if (zone.polygon && zone.polygon.length > 0 && (zone.polygon[0]?.length ?? 0) >= 3)
-    return zone.polygon;
-  return [
-    [
-      [zone.west, zone.south],
-      [zone.east, zone.south],
-      [zone.east, zone.north],
-      [zone.west, zone.north],
-    ],
-  ];
-}
-
-/** Every part of a zone: its shape (or box), then any further parts of a MultiPolygon drawing. */
-export function zoneParts(zone: SiteZone): readonly PolygonRings[] {
-  const first = zoneRings(zone);
-  if (!zone.polygon || first !== zone.polygon) return [first];
-  return [first, ...(zone.moreParts ?? []).filter((part) => (part[0]?.length ?? 0) >= 3)];
-}
-
-/** Ray casting on one ring. A point exactly on an edge may fall either way, as for any ray cast. */
-function inRing(point: Coordinate, ring: Ring): boolean {
-  const [x, y] = point;
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const a = ring[i];
-    const b = ring[j];
-    if (!a || !b) continue;
-    const [xi, yi] = a;
-    const [xj, yj] = b;
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-
-export function pointInPolygon(point: Coordinate, rings: PolygonRings): boolean {
-  const [outer, ...holes] = rings;
-  if (!outer || !inRing(point, outer)) return false;
-  return !holes.some((hole) => inRing(point, hole));
-}
-
-export function pointInZone(point: Coordinate, zone: SiteZone): boolean {
-  return zoneParts(zone).some((rings) => pointInPolygon(point, rings));
-}
-
-/** The zone a point falls in, the session's own zone first when zones overlap. */
-export function zoneAt(
-  point: Coordinate,
-  zones: readonly SiteZone[],
-  preferred?: SiteZone | null,
-): SiteZone | null {
-  if (preferred && pointInZone(point, preferred)) return preferred;
-  return zones.find((zone) => pointInZone(point, zone)) ?? null;
-}
+export type { PolygonRings, Ring } from "./zone-boundaries";
+export { pointInPolygon, pointInZone, zoneAt, zoneParts, zoneRings } from "./zone-boundaries";
 
 /** West, south, east, north of a set of positions, or `null` when there are none. */
 function extent(points: readonly Coordinate[]): LngLatBounds | null {

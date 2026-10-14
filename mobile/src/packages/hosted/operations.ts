@@ -4,7 +4,10 @@ import { setAvailableCurrent } from "../../storage/available-current";
 import type { LocalDatabase } from "../../storage/observation-store";
 import { listCatalog, readSelected, removePackage } from "../../storage/package-catalog";
 import { packageReferences } from "../../storage/package-references";
+import { zoneReferences } from "../../storage/zone-references";
+import type { VersionReferences } from "../zone-model-types";
 import { activePackage, forgetVerifiedPackage, rememberVerifiedPackage } from "./access";
+import { historicalSite } from "./historical-site";
 import {
   type ImmutablePackageFiles,
   installVerifiedPackage,
@@ -19,6 +22,8 @@ export type InstalledVersion = {
   readonly identity: PackageIdentity;
   readonly status: "verified" | "needs_redownload";
   readonly installedAt: string | null;
+  readonly bytes: number;
+  readonly counts: VersionReferences;
   readonly references: {
     readonly sessions: number;
     readonly drafts: number;
@@ -39,17 +44,22 @@ export type PackageRuntime = {
 };
 export class PackageOperations {
   readonly running = new Map<string, AbortController>();
+  readonly downloads = new Map<string, Promise<boolean>>();
+  readonly cancelled = new Map<string, number>();
+  private disposed = false;
   constructor(readonly runtime: PackageRuntime) {}
   dispose(): void {
+    this.disposed = true;
     for (const controller of this.running.values()) controller.abort();
     this.running.clear();
   }
   cancel(key: string): void {
+    this.cancelled.set(key, (this.cancelled.get(key) ?? 0) + 1);
     this.running.get(key)?.abort();
     this.running.delete(key);
   }
   start(key: string): AbortController {
-    this.cancel(key);
+    this.running.get(key)?.abort();
     const controller = new AbortController();
     this.running.set(key, controller);
     return controller;
@@ -57,6 +67,7 @@ export class PackageOperations {
   alive(controller: AbortController, project: string): boolean {
     return (
       this.runtime.current() &&
+      !this.disposed &&
       !controller.signal.aborted &&
       this.runtime.authorizedProject(project)
     );
@@ -79,7 +90,13 @@ export class PackageOperations {
       versions.push({
         identity: entry.identity,
         status: stored ? "verified" : "needs_redownload",
-        installedAt: stored?.savedAt ?? null,
+        installedAt:
+          stored?.savedAt ??
+          (typeof entry.metadata["savedAt"] === "string" ? entry.metadata["savedAt"] : null),
+        bytes:
+          stored?.archiveBytes ??
+          (typeof entry.metadata["archiveBytes"] === "number" ? entry.metadata["archiveBytes"] : 0),
+        counts: await zoneReferences(r.database, r.owner, entry.identity),
         references: await packageReferences(r.database, r.owner, entry.identity),
       });
     }
@@ -113,7 +130,37 @@ export class PackageOperations {
       if (this.running.get(key) === controller) this.running.delete(key);
     }
   }
-  async download(
+  download(
+    project: string,
+    site: HostedSite,
+    report: (part: PreparePart) => void,
+    packageId = site.package?.package_id,
+  ): Promise<boolean> {
+    const previous = this.downloads.get(site.site_id);
+    const epoch = this.cancelled.get(site.site_id) ?? 0;
+    const run = async () => {
+      if (previous) {
+        try {
+          await previous;
+        } catch (error) {
+          if (!(error instanceof Error)) throw error;
+        }
+      }
+      if (
+        this.disposed ||
+        !this.runtime.current() ||
+        epoch !== (this.cancelled.get(site.site_id) ?? 0)
+      )
+        return false;
+      return this.performDownload(project, site, report, packageId);
+    };
+    const pending = run().finally(() => {
+      if (this.downloads.get(site.site_id) === pending) this.downloads.delete(site.site_id);
+    });
+    this.downloads.set(site.site_id, pending);
+    return pending;
+  }
+  private async performDownload(
     project: string,
     site: HostedSite,
     report: (part: PreparePart) => void,
@@ -124,29 +171,7 @@ export class PackageOperations {
     const key = site.site_id;
     const controller = this.start(key);
     try {
-      let requested = site;
-      if (packageId !== site.package?.package_id) {
-        const detail = await r.api.packageDetail(project, packageId, controller.signal);
-        if (detail.state !== "ready" || detail.site_id !== site.site_id)
-          throw new TypeError("The requested historical package is not ready for this site.");
-        requested = {
-          ...site,
-          package: {
-            package_id: detail.package_id,
-            site_id: detail.site_id,
-            package_version: detail.package_version,
-            forms: detail.forms,
-            state: detail.state,
-            archive_bytes: detail.archive_bytes,
-            archive_sha256: detail.archive_sha256,
-            prepared_at: detail.prepared_at,
-            zone_count: detail.zone_count,
-            change_note: detail.change_note,
-            published_by: detail.published_by,
-            source: detail.source,
-          },
-        };
-      }
+      const requested = await historicalSite(r.api, project, site, packageId, controller.signal);
       const stored = await preparePackage(
         project,
         requested,

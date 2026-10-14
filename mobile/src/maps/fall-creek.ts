@@ -37,6 +37,17 @@ export const fallCreekBounds: LngLatBounds = site.bounds;
 
 /** No observation zones are defined for this site yet, so the one zone is the whole playground. */
 export const fallCreekZone: SiteZone = {
+  zoneId: "practice:fall-creek:A",
+  displayAnchor: site.centre,
+  polygon: [
+    [
+      [site.zone.west, site.zone.south],
+      [site.zone.east, site.zone.south],
+      [site.zone.east, site.zone.north],
+      [site.zone.west, site.zone.north],
+      [site.zone.west, site.zone.south],
+    ],
+  ],
   id: "A",
   label: "Zone A · Whole playground",
   centre: site.centre,

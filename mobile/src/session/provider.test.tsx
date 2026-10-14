@@ -50,8 +50,46 @@ const pkg: SitePackage = {
   bases: { day: style, night: style, aerial: style },
   layers: [],
   zones: [
-    { id: "A", label: "Original", centre: [0.5, 0.5], west: 0, south: 0, east: 1, north: 1 },
-    { id: "B", label: "Other", centre: [0.8, 0.8], west: 0, south: 0, east: 1, north: 1 },
+    {
+      zoneId: "practice:A",
+      displayAnchor: [0.5, 0.5],
+      polygon: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ],
+      id: "A",
+      label: "Original",
+      centre: [0.5, 0.5],
+      west: 0,
+      south: 0,
+      east: 1,
+      north: 1,
+    },
+    {
+      zoneId: "practice:B",
+      displayAnchor: [0.8, 0.8],
+      polygon: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ],
+      id: "B",
+      label: "Other",
+      centre: [0.8, 0.8],
+      west: 0,
+      south: 0,
+      east: 1,
+      north: 1,
+    },
   ],
 };
 const snapshots: FieldSessionValue[] = [];
@@ -176,4 +214,34 @@ it("ignores retained A callbacks after A to B to A rather than mutating the new 
   expect(latest().status).toEqual(before.status);
   if (!mocks.database) throw new Error("Database missing");
   expect(await readDraft(mocks.database, owner)).toBeNull();
+});
+
+it("persists a zone switch before another render or answer and restores it after remount", async () => {
+  await open();
+  await act(async () => latest().place([0.5, 0.5]));
+  const next = pkg.zones[1];
+  if (!next || !mocks.database) throw new Error("Fixture missing");
+  await act(async () => latest().chooseZone(next));
+  expect((await readDraft(mocks.database, owner))?.context.zoneId).toBe("B");
+  await act(async () => {
+    root?.unmount();
+    root = create(<Tree />);
+  });
+  expect(latest().recovered?.context.zoneId).toBe("B");
+});
+
+it("keeps the exact package throughout a collect visit and releases it on leaving", async () => {
+  await open();
+  latest().beginVisit();
+  mocks.open.mockClear();
+  await act(async () => {
+    expect(await latest().openPackage(pkg.id)).toMatchObject({ ok: true, sitePackage: pkg });
+    expect(await latest().openPackage("newer-map")).toMatchObject({ ok: false });
+  });
+  expect(mocks.open).not.toHaveBeenCalled();
+  latest().endVisit();
+  await act(async () => {
+    expect(await latest().openPackage("newer-map")).toMatchObject({ ok: true });
+  });
+  expect(mocks.open).toHaveBeenCalledOnce();
 });

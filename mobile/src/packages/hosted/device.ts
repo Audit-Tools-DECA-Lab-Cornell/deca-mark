@@ -1,6 +1,6 @@
 import { CryptoDigestAlgorithm, digest, randomUUID } from "expo-crypto";
 import { Directory, File, Paths } from "expo-file-system";
-import type { z } from "zod";
+import { z } from "zod";
 import type { ApiClient } from "../../data/api/client";
 import { hex } from "./archive";
 import type { ImmutablePackageFiles } from "./installation";
@@ -68,14 +68,22 @@ export function readSiteList(
   userId: string,
   projectId: string,
 ): HostedSite[] | null {
-  // Old issuer-less lists are retained on disk for recovery; they cannot establish authorization.
-  return readJson(sitesFile(issuer, userId, projectId), sitesSchema);
+  return readJson(sitesFile(issuer, userId, projectId), siteCacheSchema)?.sites ?? null;
+}
+const siteCacheSchema = z.strictObject({ sites: sitesSchema, checkedAt: z.iso.datetime() });
+export function readSiteCheckedAt(
+  issuer: string,
+  userId: string,
+  projectId: string,
+): string | null {
+  return readJson(sitesFile(issuer, userId, projectId), siteCacheSchema)?.checkedAt ?? null;
 }
 export function writeSiteList(
   issuer: string,
   userId: string,
   projectId: string,
   sites: readonly HostedSite[],
+  checkedAt = new Date().toISOString(),
 ): void {
   const target = sitesFile(issuer, userId, projectId);
   const staged = new File(
@@ -83,7 +91,7 @@ export function writeSiteList(
     `sites-${projectId}-${randomUUID()}.tmp`,
   );
   try {
-    staged.write(JSON.stringify(sites));
+    staged.write(JSON.stringify({ sites, checkedAt }));
     staged.moveSync(target, { overwrite: true });
   } finally {
     if (staged.exists) staged.delete();

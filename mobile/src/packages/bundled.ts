@@ -110,17 +110,7 @@ const practice: SitePackage = {
   version: "v1",
   siteId: "sample-garden",
   sizeOnDevice: "Bundled with the app",
-  zones: [
-    siteZones[0] ?? {
-      id: "A",
-      label: "Whole garden",
-      centre: sampleCenter,
-      west: -76.4865,
-      south: 42.447,
-      east: -76.4835,
-      north: 42.449,
-    },
-  ],
+  zones: siteZones.filter((zone) => zone.id === "A"),
   inventoryFormVersion: "janet-inventory-v1",
   inheritedContext: "The practice form stores no round context; only its three fields are saved.",
   centre: sampleCenter,

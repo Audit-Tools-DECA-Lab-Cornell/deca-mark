@@ -14,7 +14,7 @@ import type { MapPalette } from "./palette";
 export const sampleCenter: Coordinate = [-76.485, 42.448];
 export const sampleBounds: LngLatBounds = [-76.487, 42.4466, -76.483, 42.4494];
 
-function ring(west: number, south: number, east: number, north: number) {
+function ring(west: number, south: number, east: number, north: number): Coordinate[][] {
   return [
     [
       [west, south],
@@ -96,9 +96,9 @@ export const siteTrees: FeatureCollection = {
 };
 
 export type SiteZone = {
-  readonly zoneId?: string;
+  readonly zoneId: string;
   readonly geometrySha256?: string;
-  readonly displayAnchor?: Coordinate;
+  readonly displayAnchor: Coordinate;
   readonly id: string;
   readonly label: string;
   readonly centre: Coordinate;
@@ -109,16 +109,18 @@ export type SiteZone = {
   /** The zoom that frames the zone; the map opens and recentres here. Defaults to 17.4. */
   readonly zoom?: number;
   /**
-   * The zone's drawn shape (outer ring, then holes) when the package carries one. Without it the zone
-   * is its box. Used for the focus outline, the in-zone check and where a whole-zone record is stored.
+   * The zone's full drawn shape (outer ring, then holes). Used for the focus outline, the in-zone check and where a whole-zone record is stored.
    */
-  readonly polygon?: readonly (readonly Coordinate[])[];
+  readonly polygon: readonly (readonly Coordinate[])[];
   /** Any further parts of a zone drawn as a MultiPolygon, each an outer ring then its holes. */
   readonly moreParts?: readonly (readonly (readonly Coordinate[])[])[];
 };
 
 export const siteZones: readonly SiteZone[] = [
   {
+    zoneId: "practice:A",
+    displayAnchor: [-76.4857, 42.44835],
+    polygon: ring(-76.4864, 42.4478, -76.485, 42.4489),
     id: "A",
     label: "Zone A · West lawn",
     centre: [-76.4857, 42.44835],
@@ -128,6 +130,9 @@ export const siteZones: readonly SiteZone[] = [
     north: 42.4489,
   },
   {
+    zoneId: "practice:B",
+    displayAnchor: [-76.4843, 42.44845],
+    polygon: ring(-76.485, 42.448, -76.4836, 42.4489),
     id: "B",
     label: "Zone B · North playground",
     centre: [-76.4843, 42.44845],
@@ -137,6 +142,9 @@ export const siteZones: readonly SiteZone[] = [
     north: 42.4489,
   },
   {
+    zoneId: "practice:C",
+    displayAnchor: [-76.4843, 42.44745],
+    polygon: ring(-76.485, 42.447, -76.4836, 42.4479),
     id: "C",
     label: "Zone C · South court",
     centre: [-76.4843, 42.44745],

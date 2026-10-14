@@ -14,7 +14,7 @@ A missing/corrupt package is `needs_redownload`; answers and identity remain. Ex
 
 Discovery uses the single `/v1/projects/{project}/sites` contract. A 404, 405, authentication error or transient failure reports failure; there is no old-server fallback. Only the zone-aware format-1 manifest is supported; incompatible experimental archives are rejected. New bound collection remains explicitly gated until MOB-33/MOB-29 wire the session, geometry validation and uploader. Bundled practice is local preview data. Every current record is held locally until that integration; the flat practice uploader and SQL protocol discriminator columns are removed.
 
-The committed backend still serves the previous dual contract. BE-22 and DB-19 must land before the actual API installation driver can validate this rewritten contract. Earlier format-2 driver results prove the earlier pipeline only and are not current single-contract acceptance.
+BE-22 and DB-19 now supply the current schema and sole `/v1` contract. The live disposable package rehearsal installs a server-published format-1 archive and reopens its exact forms through real SQLite/filesystem storage. [Current acceptance](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md) replaces the earlier package-format evidence.
 
 ## Interfaces for the next task
 
@@ -38,3 +38,7 @@ sh database/mobile-package-rehearsal.sh -q -s
 ```
 
 After BE-22/DB-19, the guarded rehearsal uses an ephemeral PostgreSQL/PostGIS container and signed loopback API. It publishes an actual zone-aware format-1 ZIP against a readable research form, installs it through the mobile package pipeline and reopens the real SQLite/filesystem catalog. It does not target hosted Supabase or establish physical-device acceptance.
+
+## MOB-33 integration
+
+The [UI handoff](MOB-33-HANDOFF.md) exposes available/installed versions, exact pinned sessions and recovery models. The current collector schema is version 6; it includes account-scoped parked drafts whose map references count in removal checks. A collect visit holds a runtime lease and never adopts a newer package; an unfinished observation freezes its UUID bindings and keeps its exact forms through restart. The UI owner must acknowledge the interface before building MOB-30 through MOB-32. Bound upload transport and device acceptance remain MOB-29.

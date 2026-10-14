@@ -56,6 +56,7 @@ vi.mock("expo-sqlite", () => ({ useSQLiteContext: () => mocks.database }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => "synthetic-attempt" }));
 vi.mock("./device", () => ({
   readSiteList: mocks.readSiteList,
+  readSiteCheckedAt: () => null,
   writeSiteList: vi.fn(),
   devicePackageFiles: {
     read: () => null,

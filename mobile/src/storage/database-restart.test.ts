@@ -22,6 +22,7 @@ import {
   owner,
   session,
 } from "./package-store.fixture";
+import { listParkedDrafts, parkDraft } from "./parked-drafts";
 import { readSession, saveSession } from "./session-store";
 
 describe("Current collection schema restart", () => {
@@ -35,6 +36,9 @@ describe("Current collection schema restart", () => {
       await completePackageFileReset(db);
       await installPackage(db, owner, entry);
       await saveSession(db, owner, session);
+      const parked = { ...boundDraft, id: "60000000-0000-4000-8000-000000000002" };
+      await saveDraft(db, owner, parked);
+      await parkDraft(db, owner, parked.id);
       await saveDraft(db, owner, boundDraft);
       await saveObservation(db, boundRecord, owner);
       const available = { packageId: identity.packageId, packageVersion: 8 };
@@ -52,6 +56,7 @@ describe("Current collection schema restart", () => {
         { ...boundRecord, storageStatus: "needs-attention", syncError: "Keep failure" },
       ]);
       expect(await readDraft(db, owner)).toEqual(boundDraft);
+      expect(await listParkedDrafts(db, owner)).toEqual([parked]);
       expect(await readSession(db, owner)).toEqual(session);
       expect(await readSelected(db, owner, identity.projectId, identity.siteId)).toEqual(entry);
       expect(await readAvailableCurrent(db, owner, identity.projectId, identity.siteId)).toEqual(
@@ -59,7 +64,7 @@ describe("Current collection schema restart", () => {
       );
       expect(await removePackage(db, owner, identity)).toMatchObject({
         removed: false,
-        reasons: { sessions: 1, drafts: 1, records: 1 },
+        reasons: { sessions: 1, drafts: 2, records: 1 },
       });
       expect(await packageFileResetPending(db)).toBe(false);
     } finally {

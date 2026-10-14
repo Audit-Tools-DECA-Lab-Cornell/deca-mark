@@ -143,6 +143,7 @@ export async function installVerifiedPackage(
         contentPath: destination,
         metadata: {
           contentSha256,
+          archiveBytes: content.archiveBytes,
           savedAt: content.savedAt,
           siteCode: content.siteCode,
           siteName: content.siteName,

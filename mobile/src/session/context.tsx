@@ -11,6 +11,7 @@ import {
 } from "../forms/session";
 import type { SiteZone } from "../maps/sample-site";
 import type { SitePackage } from "../packages/site-package";
+import type { Pinned } from "../packages/zone-model-types";
 import type { ObservationDraft } from "../storage/draft-store";
 import type { ObservationIdentity } from "./ownership";
 export type SaveOutcome =
@@ -35,6 +36,13 @@ export type SessionSave = {
 export type ChangeBlock = string | null;
 
 export type FieldSessionValue = {
+  readonly pinned: Pinned | null;
+  readonly parked: readonly ObservationDraft[];
+  parkRecovered: () => Promise<void>;
+  restoreParked: (id: string) => Promise<void>;
+  discardParked: (id: string) => Promise<void>;
+  beginVisit: () => void;
+  endVisit: () => void;
   readonly sitePackage: SitePackage | null;
   readonly form: FormDefinition | null;
   readonly zone: SiteZone | null;
@@ -75,6 +83,13 @@ export type FieldSessionValue = {
 };
 
 const missing: FieldSessionValue = {
+  pinned: null,
+  parked: [],
+  parkRecovered: async () => {},
+  restoreParked: async () => {},
+  discardParked: async () => {},
+  beginVisit: () => {},
+  endVisit: () => {},
   sitePackage: null,
   form: null,
   zone: null,

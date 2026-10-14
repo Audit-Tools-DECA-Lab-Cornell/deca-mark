@@ -33,7 +33,26 @@ const pkg: SitePackage = {
   bases: { day: style, night: style, aerial: style },
   layers: [],
   zones: [
-    { id: "A", label: "Old label", centre: [0.5, 0.5], west: 0, south: 0, east: 1, north: 1 },
+    {
+      zoneId: "practice:A",
+      displayAnchor: [0.5, 0.5],
+      polygon: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ],
+      id: "A",
+      label: "Old label",
+      centre: [0.5, 0.5],
+      west: 0,
+      south: 0,
+      east: 1,
+      north: 1,
+    },
   ],
 };
 let sqlite: DatabaseSync;
@@ -98,6 +117,17 @@ const missingVersions: readonly (SitePackage | undefined)[] = [
     ...pkg,
     zones: [
       {
+        zoneId: "practice:B",
+        displayAnchor: [0.5, 0.5],
+        polygon: [
+          [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+            [0, 0],
+          ],
+        ],
         id: "B",
         label: "Replacement",
         centre: [0.5, 0.5],
@@ -131,12 +161,12 @@ it.each(
   expect(await readDraft(database, owner)).toEqual(draft);
 });
 
-it("holds new managed collection without opening a legacy substitute or writing a draft", async () => {
+it("refuses managed collection without verified identity or full geometry", async () => {
   mocks.open.mockResolvedValue({ ...pkg, projectId: "10000000-0000-4000-8000-000000000001" });
   const flow = actions();
   expect(await flow.openPackage(pkg.id)).toMatchObject({
     ok: false,
-    reason: expect.stringContaining("not enabled"),
+    reason: expect.stringContaining("no verified"),
   });
   expect(mocks.open).toHaveBeenCalledExactlyOnceWith(pkg.id);
   expect(flow.input.opened).not.toHaveBeenCalled();

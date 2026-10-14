@@ -7,7 +7,7 @@ import { createApiClient } from "../../data/api/client";
 import { readSelected } from "../../storage/package-catalog";
 import { adapter } from "../../storage/package-store.fixture";
 import { scopeKey, syncScopeSchema } from "../../sync/contracts";
-import { hasStoredPackage, setPackageAccessOwner } from "./access";
+import { hasStoredPackage, readStoredPackage, setPackageAccessOwner } from "./access";
 import { harness, hash } from "./lifecycle.test-helper";
 import { PackageOperations } from "./operations";
 
@@ -21,6 +21,7 @@ it.skipIf(!input)(
           scope: syncScopeSchema,
           token: z.string().min(1),
           packageId: z.uuid(),
+          formVersionId: z.uuid(),
           siteId: z.uuid(),
         }),
       })
@@ -58,11 +59,23 @@ it.skipIf(!input)(
         { identity: { packageId: fixture.packageId }, status: "verified" },
       ]);
       expect(hasStoredPackage(fixture.packageId)).toBe(true);
+      const installed = readStoredPackage(fixture.packageId);
+      expect(installed?.manifest.forms.play).toEqual({
+        form_version_id: fixture.formVersionId,
+        form_version: "janet-test-v1",
+      });
+      expect(installed?.forms.play["version"]).toBe("janet-test-v1");
       database.close();
       database = new DatabaseSync(join(h.root, "catalog.db"));
       setPackageAccessOwner(null);
       setPackageAccessOwner(owner);
-      const restored = new PackageOperations({ ...h.runtime, database: adapter(database) });
+      const restored = new PackageOperations({
+        ...h.runtime,
+        database: adapter(database),
+        source: () => {
+          throw new Error("Restart must restore verified files without downloading");
+        },
+      });
       expect(await restored.catalog()).toMatchObject([
         { identity: { packageId: fixture.packageId }, status: "verified" },
       ]);
@@ -71,6 +84,7 @@ it.skipIf(!input)(
           .packageId,
       ).toBe(fixture.packageId);
       expect(hasStoredPackage(fixture.packageId)).toBe(true);
+      expect(readStoredPackage(fixture.packageId)).toEqual(installed);
     } finally {
       database.close();
       setPackageAccessOwner(null);

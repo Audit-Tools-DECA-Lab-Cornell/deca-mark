@@ -23,7 +23,12 @@ export async function packageReferences(
     key,
   );
   const drafts = await count(
-    "SELECT COUNT(*) total FROM observation_drafts WHERE owner_scope = ? AND package_key = ?",
+    `SELECT COUNT(*) total FROM (
+      SELECT id FROM observation_drafts WHERE owner_scope = ? AND package_key = ?
+      UNION ALL SELECT id FROM parked_observation_drafts WHERE owner_scope = ? AND package_key = ?
+    )`,
+    owner,
+    key,
     owner,
     key,
   );

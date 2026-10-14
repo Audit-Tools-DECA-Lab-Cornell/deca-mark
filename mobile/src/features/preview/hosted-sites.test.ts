@@ -32,7 +32,11 @@ describe("A hosted site on the Project and Site screens", () => {
   });
 
   it("reports which part a download is on, not megabytes it has not measured", () => {
-    const shown = hostedDownload(site, false, { state: "downloading", part: 2 });
+    const shown = hostedDownload(site, false, {
+      state: "downloading",
+      part: 2,
+      packageId: site.package?.package_id ?? "fixture",
+    });
     expect(shown.assets.map((asset) => asset.state)).toEqual([
       "verified",
       "verified",
@@ -43,7 +47,13 @@ describe("A hosted site on the Project and Site screens", () => {
   });
 
   it("keeps why a download failed", () => {
-    const shown = hostedDownload(site, false, { state: "failed", message: "No signal." });
+    const shown = hostedDownload(site, false, {
+      state: "failed",
+      message: "No signal.",
+      unavailable: false,
+      part: 0,
+      packageId: site.package?.package_id ?? "fixture",
+    });
     expect(shown).toMatchObject({ state: "notDownloaded", problem: "No signal." });
   });
 

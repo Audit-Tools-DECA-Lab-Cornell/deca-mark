@@ -13,11 +13,12 @@ import {
   type SessionStep,
   startSession,
 } from "../forms/session";
-import { zoneAnchor } from "../maps/geometry";
 import type { SiteZone } from "../maps/sample-site";
+import { zoneCovers } from "../maps/zone-boundaries";
 import type { SitePackage } from "../packages/site-package";
 import { clearDraft, type ObservationDraft } from "../storage/draft-store";
 import { commitObservation, type LocalDatabase } from "../storage/observation-store";
+import { sessionBinding } from "./bound-context";
 import type { SaveOutcome, SessionSave } from "./context";
 import { type ObservationIdentity, ownershipProblem } from "./ownership";
 
@@ -77,18 +78,20 @@ export function useObservationActions(input: ActionInput) {
     current,
   } = input;
   const begin = (coordinate: Coordinate, source: Placement["source"]) => {
-    if (!current() || !sitePackage || packageOwner !== key) return;
+    if (!current() || !sitePackage || !zone || packageOwner !== key) return;
     if (recovered || unreadableDraft) {
       setStatus("Resume or discard the unfinished observation first.");
       return;
     }
     const fresh = identity.current === null;
+    const binding = sessionBinding(sitePackage, zone);
     identity.current ??= {
       id: randomUUID(),
       startedAt: new Date().toISOString(),
       owner: key,
       packageId: sitePackage.id,
       packageName: sitePackage.name,
+      ...(binding ? { binding } : {}),
     };
     holdIdentity(identity.current);
     setPlaced(coordinate);
@@ -113,7 +116,7 @@ export function useObservationActions(input: ActionInput) {
   const startZoneRecord = () => {
     if (!zone) return;
     if (identity.current !== null && placed !== null) return;
-    begin(zone.displayAnchor ?? zoneAnchor(zone), "zone");
+    begin(zone.displayAnchor, "zone");
   };
 
   const nudgeTo = (coordinate: Coordinate) => {
@@ -158,6 +161,13 @@ export function useObservationActions(input: ActionInput) {
       return { ok: false, problems: [], message: "Place a point before saving." };
     const mismatch = ownershipProblem(owner, key, sitePackage.id);
     if (mismatch !== null) return { ok: false, problems: [], message: mismatch };
+    if (owner.binding && placementRef.current === "hand" && (!zone || !zoneCovers(placed, zone)))
+      return {
+        ok: false,
+        problems: [],
+        message:
+          "This point is outside the chosen zone on the pinned map. The unfinished observation is kept; move the point or choose a covering zone.",
+      };
     const found = reviewProblems(form, stateRef.current.answers);
     if (found.length > 0) return { ok: false, problems: found };
     const placement: Placement = { source: placementRef.current, gpsAccuracyMetres: null };

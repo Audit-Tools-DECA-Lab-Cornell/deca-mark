@@ -8,10 +8,12 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
+from fieldmaps_api.zone_response_schemas import Draft, Publication
+from pydantic import JsonValue, TypeAdapter
 from tests.conftest import signer
 from tests.local_database import admin_sql, disposable_database_selected
+from tests.package_fixtures import submission
 from tests.signing import ISSUER
-from tests.test_site_packages import submission
 from tests.test_zone_api_live import LiveApi, live_api
 from tests.zone_api_fixtures import document
 
@@ -28,15 +30,18 @@ def test_current_mobile_package_survives_restart(live_api: LiveApi) -> None:
     with live_api.client() as client:
         schema = client.get("/openapi.json")
         assert schema.status_code == 200, schema.text
-        assert not any(path.startswith("/v2/") for path in schema.json()["paths"]), (
+        paths = TypeAdapter(dict[str, JsonValue]).validate_python(
+            document(schema.content)["paths"]
+        )
+        assert not any(path.startswith("/v2/") for path in paths), (
             "BE-22 and DB-19 must supply the single-contract backend before MOB-28 API acceptance"
         )
     tenant = live_api.tenant
     project = f"/v1/projects/{tenant.project}"
-    definition = json.loads(
+    definition = document(
         (
             Path(__file__).resolve().parents[2] / "contracts/forms/janet-test-v1.json"
-        ).read_text()
+        ).read_bytes()
     )
     definition["status"] = "published"
     form = uuid4()
@@ -49,23 +54,23 @@ def test_current_mobile_package_survives_restart(live_api: LiveApi) -> None:
     )
     with live_api.client() as manager:
         package = manager.post(
-            f"{project}/packages", json=submission(form_version="janet-test-v1")
+            f"{project}/packages",
+            json=submission(site_id=str(tenant.site), form_version="janet-test-v1"),
         )
         assert package.status_code == 201, package.text
-        base = document(package.content)["package_id"]
+        base = str(Publication.model_validate_json(package.content).package.package_id)
         url = f"{project}/sites/{tenant.site}/zone-drafts"
         draft = manager.post(
             url, json={"request_id": str(uuid4()), "base_package_id": base}
         )
         assert draft.status_code == 201, draft.text
         published = manager.post(
-            f"{url}/{document(draft.content)['draft_id']}/publish",
+            f"{url}/{Draft.model_validate_json(draft.content).draft_id}/publish",
             headers={"If-Match": draft.headers["etag"]},
             json={"request_id": str(uuid4()), "expected_current_package_id": base},
         )
         assert published.status_code == 201, published.text
-        bound_package = document(published.content)["package"]
-        assert isinstance(bound_package, dict)
+        bound_package = Publication.model_validate_json(published.content).package
     fixture = {
         "bound": {
             "scope": {
@@ -75,7 +80,8 @@ def test_current_mobile_package_survives_restart(live_api: LiveApi) -> None:
                 "projectId": str(tenant.project),
             },
             "token": live_api.signer.issue(tenant.users["observer"]),
-            "packageId": bound_package["package_id"],
+            "packageId": str(bound_package.package_id),
+            "formVersionId": str(form),
             "siteId": str(tenant.site),
         },
     }

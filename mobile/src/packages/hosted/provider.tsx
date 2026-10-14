@@ -1,7 +1,6 @@
 import { randomUUID } from "expo-crypto";
 import { useSQLiteContext } from "expo-sqlite";
 import { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState } from "react-native";
 import { useAccount } from "../../auth/provider";
 import { type ApiClient, createApiClient } from "../../data/api/client";
 import { ApiError } from "../../data/api/errors";
@@ -10,17 +9,12 @@ import type { PackageIdentity } from "../../domain/package-binding";
 import { connection } from "../../platform/config";
 import { setPackageAccessOwner } from "./access";
 import { HostedContext, type HostedDownload } from "./context";
-import {
-  apiPackageSource,
-  devicePackageFiles,
-  deviceSha256,
-  readSiteList,
-  writeSiteList,
-} from "./device";
+import { apiPackageSource, devicePackageFiles, deviceSha256 } from "./device";
+import { downloadFailure } from "./download-failure";
 import { reconcileStaging } from "./installation";
 import { type InstalledVersion, PackageOperations } from "./operations";
 import { PrepareError } from "./prepare";
-import type { HostedSite } from "./schemas";
+import { useSiteDiscovery } from "./use-site-discovery";
 
 export { type HostedDownload, isStored, useHostedSites } from "./context";
 
@@ -33,7 +27,8 @@ function message(error: unknown): string {
 export function HostedSitesProvider({ children }: PropsWithChildren) {
   const database = useSQLiteContext();
   const { client, session, account, key, scope } = useAccount();
-  const { projects } = useMe();
+  const me = useMe();
+  const { projects } = me;
   const userId = account?.id ?? null;
   const issuer = scope?.issuer ?? null;
   const owner = issuer && userId ? key : null;
@@ -47,11 +42,11 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
   const allowed = useRef(projectIds);
   allowed.current = projectIds;
   const [viewOwner, setViewOwner] = useState(owner);
-  const [sites, setSites] = useState<Record<string, readonly HostedSite[]>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [downloads, setDownloads] = useState<Record<string, HostedDownload>>({});
   const [installed, setInstalled] = useState<readonly InstalledVersion[]>([]);
   const [revision, setRevision] = useState(0);
+  const downloadAttempts = useRef(new Map<string, number>());
+  const downloadSequence = useRef(0);
   const api = useMemo<ApiClient | null>(
     () =>
       client && session && userId
@@ -80,6 +75,15 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
         })
       : null;
   }, [api, database, issuer, owner]);
+  const discovery = useSiteDiscovery({
+    owner,
+    issuer,
+    userId,
+    projects: projectIds,
+    operations,
+    online: api !== null,
+  });
+  const { sites, errors, refresh, setErrors } = discovery;
   const reload = useCallback(async () => {
     if (!operations) return;
     const versions = await operations.catalog();
@@ -90,75 +94,51 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
   }, [operations]);
   useEffect(() => {
     setViewOwner(owner);
-    setErrors({});
     setDownloads({});
     setInstalled([]);
-    setSites(
-      issuer && userId
-        ? Object.fromEntries(
-            projectIds.flatMap((project) => {
-              const cached = readSiteList(issuer, userId, project);
-              return cached ? [[project, cached]] : [];
-            }),
-          )
-        : {},
-    );
     reconcileStaging(devicePackageFiles);
     void reload().catch((error: unknown) => {
       if (operations?.runtime.current()) setErrors({ storage: message(error) });
     });
     return () => operations?.dispose();
-  }, [issuer, operations, owner, projectIds, reload, userId]);
-  const refresh = useCallback(
-    async (project: string) => {
-      if (!operations || !issuer || !userId) return;
-      try {
-        const list = await operations.refresh(project, sites[project] ?? []);
-        if (!list || !operations.runtime.current()) return;
-        writeSiteList(issuer, userId, project, list);
-        setSites((current) => ({ ...current, [project]: list }));
-        setErrors(({ [project]: _cleared, ...rest }) => rest);
-      } catch (error) {
-        if (operations.runtime.current())
-          setErrors((current) => ({ ...current, [project]: message(error) }));
-      }
-    },
-    [issuer, operations, sites, userId],
-  );
-  // Refresh uses a ref so a list response does not recreate the foreground subscription and loop.
-  const refreshRef = useRef(refresh);
-  refreshRef.current = refresh;
-  useEffect(() => {
-    if (!api) return;
-    const all = () => {
-      for (const project of projectIds) void refreshRef.current(project);
-    };
-    all();
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") all();
-    });
-    return () => subscription.remove();
-  }, [api, projectIds]);
+  }, [operations, owner, reload, setErrors]);
   const download = useCallback(
     async (project: string, siteId: string, packageId?: string) => {
       const site = sites[project]?.find((entry) => entry.site_id === siteId);
-      if (!operations || !site) return;
+      const requested = packageId ?? site?.package?.package_id;
+      if (!operations || !site || !requested) return;
+      const attempt = ++downloadSequence.current;
+      downloadAttempts.current.set(siteId, attempt);
+      const latest = () =>
+        operations.runtime.current() && downloadAttempts.current.get(siteId) === attempt;
+      let lastPart: 0 | 1 | 2 | 3 = 0;
       try {
         const saved = await operations.download(
           project,
           site,
-          (part) =>
-            setDownloads((current) => ({ ...current, [siteId]: { state: "downloading", part } })),
+          (part) => {
+            if (!latest()) return;
+            lastPart = part;
+            setDownloads((current) => ({
+              ...current,
+              [siteId]: { state: "downloading", part, packageId: requested },
+            }));
+          },
           packageId,
         );
-        if (!saved || !operations.runtime.current()) return;
-        setDownloads(({ [siteId]: _done, ...rest }) => rest);
-        await reload();
+        if (!operations.runtime.current()) return;
+        if (latest()) setDownloads(({ [siteId]: _done, ...rest }) => rest);
+        if (saved) await reload();
       } catch (error) {
-        if (operations.runtime.current() && !operations.running.get(siteId)?.signal.aborted)
+        if (!(error instanceof Error)) throw error;
+        if (latest() && !operations.running.get(siteId)?.signal.aborted)
           setDownloads((current) => ({
             ...current,
-            [siteId]: { state: "failed", message: message(error) },
+            [siteId]: {
+              ...downloadFailure(error),
+              part: lastPart,
+              packageId: requested,
+            },
           }));
       }
     },
@@ -167,6 +147,7 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
   const cancel = useCallback(
     (site: string) => {
       operations?.cancel(site);
+      downloadAttempts.current.delete(site);
       setDownloads(({ [site]: _cancelled, ...rest }) => rest);
     },
     [operations],
@@ -205,7 +186,7 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
               setErrors((current) => ({ ...current, [site]: message(error) }));
           });
     },
-    [installed, operations, removeVersion],
+    [installed, operations, removeVersion, setErrors],
   );
   const visible = viewOwner === owner;
   return (
@@ -216,6 +197,18 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
         downloads: visible ? downloads : {},
         installed: visible ? installed : [],
         revision,
+        checked: discovery.checked,
+        problems: {
+          ...discovery.problems,
+          ...(me.profile
+            ? Object.fromEntries(
+                installed
+                  .filter((entry) => !projectIds.includes(entry.identity.projectId))
+                  .map((entry) => [entry.identity.projectId, "no_access" as const]),
+              )
+            : {}),
+        },
+        allowedProjects: me.profile ? projectIds : null,
         signedIn: api !== null,
         refresh,
         download,

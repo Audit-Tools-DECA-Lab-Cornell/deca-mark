@@ -6,6 +6,17 @@ let owner: string | null = null;
 let active: PackageIdentity | null = null;
 const packages = new Map<string, StoredPackage>();
 const identities = new Map<string, PackageIdentity>();
+let leaseRevision = 0;
+const leaseListeners = new Set<() => void>();
+export function subscribePackageLease(listener: () => void): () => void {
+  leaseListeners.add(listener);
+  return () => {
+    leaseListeners.delete(listener);
+  };
+}
+export function packageLeaseRevision(): number {
+  return leaseRevision;
+}
 export function setPackageAccessOwner(next: string | null): void {
   if (owner !== next) {
     active = null;
@@ -43,7 +54,15 @@ export function verifiedIdentity(packageId: string): PackageIdentity | undefined
 
 /** A foreground collector holds a lease even before it has its first durable draft. */
 export function setActivePackage(account: string, identity: PackageIdentity | null): void {
-  if (owner === account) active = identity;
+  if (
+    owner !== account ||
+    (active === null && identity === null) ||
+    (active && identity && identityKey(active) === identityKey(identity))
+  )
+    return;
+  active = identity;
+  leaseRevision += 1;
+  for (const listener of leaseListeners) listener();
 }
 export function activePackage(account: string, identity: PackageIdentity): boolean {
   return owner === account && active !== null && identityKey(active) === identityKey(identity);

@@ -71,6 +71,8 @@ export function hostedDownload(
     receivedMb: 0,
     totalMb: site.package ? megabytes(site.package.archive_bytes) : 0,
     assets: assets(() => "waiting"),
-    ...(progress?.state === "failed" ? { problem: progress.message } : {}),
+    ...(progress?.state === "failed" || progress?.state === "verify_failed"
+      ? { problem: progress.message }
+      : {}),
   };
 }

@@ -1,21 +1,21 @@
 import { useSQLiteContext } from "expo-sqlite";
-import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
+import { type PropsWithChildren, useEffect, useRef } from "react";
 import { useAccount } from "../auth/provider";
 import { useMe } from "../data/api/me-provider";
-import type { Coordinate, Placement, RoundContext } from "../domain/observation";
-import type { RoundType } from "../domain/rounds";
+import type { Coordinate, RoundContext } from "../domain/observation";
 import { useProfile } from "../features/auth/profile-store";
-import { type SessionState, startSession } from "../forms/session";
-import type { SiteZone } from "../maps/sample-site";
+import type { SessionState } from "../forms/session";
 import { setActivePackage } from "../packages/hosted/access";
 import { useHostedSites } from "../packages/hosted/provider";
-import type { SitePackage } from "../packages/site-package";
-import type { ObservationDraft } from "../storage/draft-store";
 import { useSync } from "../sync/provider";
+import { contextForZone } from "./bound-context";
 import { persistDraft, useDraftRecovery } from "./draft-persistence";
-import type { ObservationIdentity } from "./ownership";
 import { packageActions } from "./package-actions";
+import { useParkedActions } from "./parked-actions";
 import { formForRound } from "./round-forms";
+import { sessionControls } from "./session-controls";
+import { sessionView } from "./session-view";
+import { useSessionMemory } from "./use-session-memory";
 
 /**
  * One observation period: the package, the zone and round it is stamped with, and the
@@ -25,7 +25,7 @@ import { formForRound } from "./round-forms";
  * upload queue never sees a half-answered form.
  */
 
-import { type ChangeBlock, FieldSessionContext, type SessionSave } from "./context";
+import { type ChangeBlock, FieldSessionContext } from "./context";
 import { useObservationActions } from "./observation-actions";
 
 export { shortLabel } from "../domain/labels";
@@ -41,50 +41,61 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
   const { key, ready } = useAccount();
   const { wake } = useSync();
   const hosted = useHostedSites();
+  const accessNow = useRef(hosted);
+  accessNow.current = hosted;
+  const canAccess = (project: string) =>
+    accessNow.current.problems?.[project] !== "no_access" &&
+    (accessNow.current.allowedProjects == null ||
+      accessNow.current.allowedProjects.includes(project));
   const accountNow = useRef({ key, generation: 0 });
   if (accountNow.current.key !== key)
     accountNow.current = { key, generation: accountNow.current.generation + 1 };
   const generation = accountNow.current.generation;
+  const visit = useRef<string | null>(null);
   const current = () =>
     accountNow.current.key === key && accountNow.current.generation === generation;
-  useEffect(() => () => setActivePackage(key, null), [key]);
-  const [packageOwner, setPackageOwner] = useState(key);
+  useEffect(() => {
+    visit.current = null;
+    return () => setActivePackage(key, null);
+  }, [key]);
   // A hosted form may ask no observer question; its records then carry the account's initials.
   const profile = useProfile();
   const me = useMe();
   const initials = profile.initials || me.profile?.observer_initials || "";
 
-  const [sitePackage, setSitePackage] = useState<SitePackage | null>(null);
-  const [zone, setZone] = useState<SiteZone | null>(null);
-  const [roundType, setRoundType] = useState<RoundType>("standard");
-  const [freshPeriod, setFreshPeriod] = useState(false);
-  const [placed, setPlaced] = useState<Coordinate | null>(null);
-  const [placementSource, setPlacementState] = useState<Placement["source"]>("hand");
-  // Read by callbacks in the same handler that changes it (beginning an inventory writes its first
-  // draft at once), so the value lives in a ref as well as in state.
-  const placementRef = useRef<Placement["source"]>("hand");
-  const setPlacementSource = useCallback((source: Placement["source"]) => {
-    placementRef.current = source;
-    setPlacementState(source);
-  }, []);
-  const [saves, setSaves] = useState<readonly SessionSave[]>([]);
-  const [armed, setArmed] = useState(false);
-  const [state, setState] = useState<SessionState>(startSession());
-  const [status, setStatus] = useState("Offline-first collector ready.");
-  const [unreadableDraft, setUnreadableDraft] = useState(false);
-  const [recovered, setRecovered] = useState<ObservationDraft | null>(null);
-
-  const [inProgress, setInProgress] = useState<ObservationIdentity | null>(null);
-
-  const stateRef = useRef(state);
-  const identity = useRef<ObservationIdentity | null>(null);
-  const openedPackage = useRef<string | null>(null);
+  const memory = useSessionMemory(key);
+  const {
+    packageOwner,
+    setPackageOwner,
+    sitePackage,
+    setSitePackage,
+    zone,
+    zoneRef,
+    setZone,
+    roundType,
+    setRoundType,
+    freshPeriod,
+    setFreshPeriod,
+    placed,
+    setPlaced,
+    placementSource,
+    placementRef,
+    setPlacementSource,
+    setSaves,
+    setArmed,
+    stateRef,
+    apply,
+    setStatus,
+    unreadableDraft,
+    setUnreadableDraft,
+    recovered,
+    setRecovered,
+    inProgress,
+    identity,
+    holdIdentity,
+    openedPackage,
+  } = memory;
   const form = sitePackage ? formForRound(sitePackage, roundType) : null;
-
-  const holdIdentity = useCallback((next: ObservationIdentity | null) => {
-    identity.current = next;
-    setInProgress(next);
-  }, []);
 
   const context: RoundContext | null =
     sitePackage && zone
@@ -105,7 +116,7 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
       key,
       ready,
       site: sitePackage,
-      context,
+      context: context && zoneRef.current ? contextForZone(context, zoneRef.current) : context,
       owner: identity.current,
       formVersion: form?.version,
       placement: placementRef.current,
@@ -117,41 +128,17 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
       },
     });
   useDraftRecovery({ database, key, ready, setRecovered, setUnreadableDraft, setStatus });
-
-  // Signing out or signing in as someone else must not carry an open observation across the
-  // boundary: the in-memory session is closed, and its draft stays under the account that
-  // started it, ready to be recovered when that account signs back in.
-  const lastKey = useRef(key);
-  useEffect(() => {
-    if (lastKey.current === key) return;
-    lastKey.current = key;
-    // What this session saved belongs to the account that saved it: the next observer starts with
-    // no zone marked as inventoried, even when nothing was open at the switch.
-    setSaves([]);
-    openedPackage.current = null;
-    setSitePackage(null);
-    setZone(null);
-    setRoundType("standard");
-    setFreshPeriod(false);
-    setPackageOwner(key);
-    const previous = identity.current;
-    holdIdentity(null);
-    setPlaced(null);
-    setPlacementSource("hand");
-    setArmed(false);
-    stateRef.current = startSession();
-    setState(stateRef.current);
-    setStatus(
-      previous
-        ? `Your account changed. The unfinished observation in ${previous.packageName} was closed; its draft is kept for the account that started it.`
-        : "Your account changed. This account starts with its own local work.",
-    );
-  }, [holdIdentity, key, setPlacementSource]);
-
-  const apply = useCallback((next: SessionState) => {
-    stateRef.current = next;
-    setState(next);
-  }, []);
+  const parking = useParkedActions({
+    database,
+    key,
+    ready,
+    current,
+    recovered,
+    open: inProgress !== null,
+    setRecovered,
+    status: setStatus,
+    canAccess,
+  });
 
   const { openPackage, resumeRecovered, discardRecovered } = packageActions({
     database,
@@ -161,6 +148,7 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
     recovered,
     sites: hosted.sites,
     installed: hosted.installed,
+    canAccess,
     zone,
     roundType,
     freshPeriod,
@@ -171,7 +159,6 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
       if (openedPackage.current !== opened.id) setSaves([]);
       openedPackage.current = opened.id;
       setPackageOwner(key);
-      setActivePackage(key, opened.packageIdentity ?? null);
       setSitePackage(opened);
       setZone(savedZone);
       setRoundType(savedContext.roundType);
@@ -224,45 +211,20 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
   const roundBlock: ChangeBlock = open ? OPEN_OBSERVATION_BLOCK : null;
   const zoneBlock: ChangeBlock = open && placementSource === "zone" ? OPEN_INVENTORY_BLOCK : null;
 
-  const chooseZone = (next: SiteZone) => {
-    if (!current() || (identity.current !== null && placementSource === "zone")) return;
-    setZone(next);
-  };
-  const chooseRoundType = (next: RoundType) => {
-    if (!current() || identity.current !== null) return;
-    setRoundType(next);
-    setArmed(false);
-  };
-
   return (
     <FieldSessionContext
       value={{
-        sitePackage: packageOwner === key ? sitePackage : null,
-        form: packageOwner === key ? form : null,
-        zone: packageOwner === key ? zone : null,
-        roundType: packageOwner === key ? roundType : "standard",
-        freshPeriod: packageOwner === key ? freshPeriod : false,
-        placed: packageOwner === key ? placed : null,
-        placementSource: packageOwner === key ? placementSource : "hand",
-        armed: packageOwner === key && armed,
-        state: packageOwner === key ? state : startSession(),
-        status: packageOwner === key ? status : "Loading this account's local work.",
-        recovered: recovered?.owner === key ? recovered : null,
-        unreadableDraft: packageOwner === key && unreadableDraft,
-        context: packageOwner === key ? context : null,
-        inProgress: inProgress?.owner === key ? inProgress : null,
-        saves: packageOwner === key ? saves : [],
+        ...sessionView(memory, key, context, form),
+        ...sessionControls({ memory, key, current, visit, persist, openPackage }),
+        parked: parking.drafts,
+        parkRecovered: parking.parkRecovered,
+        restoreParked: async (id) => {
+          const draft = await parking.restoreParked(id);
+          if (draft && current()) await resumeRecovered(draft);
+        },
+        discardParked: parking.discardParked,
         roundBlock,
         zoneBlock,
-        openPackage,
-        chooseZone,
-        chooseRoundType,
-        toggleFreshPeriod: () => {
-          if (current()) setFreshPeriod((value) => !value);
-        },
-        setArmed: (next) => {
-          if (current()) setArmed(next);
-        },
         place,
         startZoneRecord,
         nudgeTo,
@@ -271,9 +233,6 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
         discard,
         resumeRecovered,
         discardRecovered,
-        announce: (message) => {
-          if (current()) setStatus(message);
-        },
       }}
     >
       {children}

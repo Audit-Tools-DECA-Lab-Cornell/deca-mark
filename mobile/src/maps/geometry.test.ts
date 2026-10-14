@@ -20,6 +20,8 @@ const [zoneA, zoneB, zoneC] = siteZones as [SiteZone, SiteZone, SiteZone];
 
 /** An L-shaped zone: its box centre lies outside the shape. */
 const lShape: SiteZone = {
+  zoneId: "practice:L",
+  displayAnchor: [-76.4859, 42.4487],
   id: "L",
   label: "Zone L",
   centre: [-76.4855, 42.4485],
@@ -48,7 +50,13 @@ describe("zones", () => {
   });
 
   it("prefers the session's zone where zones overlap", () => {
-    const overlap: SiteZone = { ...zoneC, id: "X", label: "Zone X", north: zoneB.north };
+    const overlap: SiteZone = {
+      ...zoneC,
+      id: "X",
+      label: "Zone X",
+      north: zoneB.north,
+      polygon: zoneB.polygon,
+    };
     const point = zoneB.centre;
     expect(zoneAt(point, [zoneB, overlap])?.id).toBe("B");
     expect(zoneAt(point, [zoneB, overlap], overlap)?.id).toBe("X");
@@ -72,6 +80,8 @@ describe("zones", () => {
     // lies in the gap, and lines across the whole zone's extent all pass north of the L.
     const at = (u: number, v: number): Coordinate => [-76.486 + u * 1e-4, 42.448 + v * 1e-4];
     const split: SiteZone = {
+      zoneId: "practice:S",
+      displayAnchor: at(0.5, 0.5),
       id: "S",
       label: "Zone S",
       centre: at(5, 50),
