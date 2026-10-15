@@ -13,7 +13,7 @@ const connection = publicConfigSchema.parse(
 const base = {
   name: "DECA Mark",
   slug: "fieldmaps-mobile",
-  version: "0.2.0",
+  version: "0.2.1",
   // DECA Mark links first; fieldmaps:// links from before the rename still open the app.
   scheme: ["DECAMark", "decamark", "fieldmaps"],
   orientation: "default",
