@@ -81,10 +81,9 @@ export default function PrivacyPage() {
 						<tr>
 							<td>Account details</td>
 							<td>
-								Anyone can create an account on the website with an email address and a password of 8 to
-								128 characters, then sign in with it on the website or in the app. The app cannot create
-								accounts yet. We email a six-digit code to confirm the address, and another if you reset
-								your password. The app and the website send your password only to our sign-in provider
+								Anyone can create an account, on the website or in the app, with an email address and a
+								password of 8 to 128 characters, then sign in with it on either. We email a six-digit code
+								to confirm the address, and another if you reset your password. The app and the website send your password only to our sign-in provider
 								and never store it; if you use a password manager, your device may offer to save it
 								there. An account uploads to a research project only after it joins that project with an
 								invitation or a join code from the project’s team.
@@ -189,6 +188,11 @@ export default function PrivacyPage() {
 				<li>
 					The app has no way to delete a saved record. Records stay on the device until you uninstall the app
 					or, on Android, clear its storage in Settings.
+				</li>
+				<li>
+					When you sign out with records or an unfinished observation still on the device, the app keeps your
+					email address and how many there are, so its first screen can say they are waiting for you. It
+					removes that note when you sign in again.
 				</li>
 				<li>
 					Records are kept in the app’s private storage, labelled with your account ID and project. Other apps

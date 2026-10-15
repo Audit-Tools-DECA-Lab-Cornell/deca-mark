@@ -17,6 +17,7 @@ import {
   useStyles,
 } from "../../ui";
 import { PendingInvitationNote } from "../onboarding/pending-invitation-note";
+import { resendSignUpCode } from "./auth-calls";
 import { useGate } from "./gate";
 import { openPrivacy } from "./links";
 import { type AuthNotice, takeAuthNotice } from "./notice";
@@ -48,10 +49,11 @@ function signInStyles(t: Theme) {
 }
 
 /**
- * Sign in (Mobile 24). The one auth call that reaches the server today: Supabase's
- * `signInWithPassword`, through the client the AuthProvider already holds. Each way it can fail has its
- * own words, and every one of them leaves the records waiting here in place. An account the server
- * reported deleted is not let back in on this device: signing in to it says so.
+ * Sign in (Mobile 24): Supabase's `signInWithPassword`, through the client the AuthProvider already
+ * holds. Each way it can fail has its own words, and every one of them leaves the records waiting here
+ * in place. An address that was never verified gets "Send a new code", which opens the code screen
+ * (MOB-05). An account the server reported deleted is not let back in on this device: signing in to it
+ * says so.
  */
 export function SignInScreen() {
   const s = useStyles(signInStyles);
@@ -70,6 +72,7 @@ export function SignInScreen() {
   const [failure, setFailure] = useState<SignInFailure | null>(null);
   const [notice, setNotice] = useState<AuthNotice | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sending, setSending] = useState(false);
   const emailRef = useRef<NativeTextInput>(null);
   const passwordRef = useRef<NativeTextInput>(null);
 
@@ -152,6 +155,24 @@ export function SignInScreen() {
     }
   }
 
+  /** An unverified address: a new code, then the code screen. Asking too soon still goes on. */
+  async function sendNewCode() {
+    if (sending) return;
+    setSending(true);
+    const outcome = await resendSignUpCode(client?.auth, email);
+    setSending(false);
+    if (!outcome.ok && outcome.failure !== "rateLimited") {
+      const next = outcome.failure === "network" ? "network" : "server";
+      setFailure(next);
+      const words = SIGN_IN_MESSAGES[next];
+      announce(`${words.title} ${words.body}`);
+      return;
+    }
+    setFailure(null);
+    setPassword("");
+    router.push({ pathname: "/verify", params: { email: email.trim(), sent: "1" } });
+  }
+
   const message = failure ? SIGN_IN_MESSAGES[failure] : null;
   const editEmail = (value: string) => {
     emailTouched.current = true;
@@ -229,7 +250,24 @@ export function SignInScreen() {
       <PendingInvitationNote />
       {message ? (
         // Announced when it appears (see submit), so a repeat of the same failure is heard again.
-        <Note tone="attention" title={message.title}>
+        <Note
+          tone="attention"
+          title={message.title}
+          action={
+            failure === "unconfirmed" ? (
+              <Button
+                variant="ink"
+                label="Send a new code"
+                busyLabel="Sending code…"
+                busy={sending}
+                icon="mail"
+                onPress={() => void sendNewCode()}
+                accessibilityHint="Sends a new six-digit code to this email, then opens the code screen."
+                testID="auth-sign-in-resend"
+              />
+            ) : undefined
+          }
+        >
           {message.body}
         </Note>
       ) : null}

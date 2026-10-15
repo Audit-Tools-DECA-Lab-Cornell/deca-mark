@@ -11,6 +11,7 @@ import {
 import { AppState } from "react-native";
 import { ScreenMessage } from "../components/screen-message";
 import { connection } from "../sync/config";
+import { removeAccountSummary } from "./account-summaries";
 import { type CachedAccount, forgetAccount, rememberAccount } from "./cached-account";
 import { createAuthClient } from "./client";
 import { deletedAccountStore } from "./deleted-account";
@@ -151,6 +152,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
             deleted.current = null;
             deletedAccountStore(connection.supabaseUrl).clear();
           }
+          // An account that signs in again sees its own records: welcome stops naming them (MOB-05).
+          if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session)
+            removeAccountSummary(session.user.id);
           if (event === "SIGNED_OUT" && !deleted.current)
             deletedAccountStore(connection.supabaseUrl).clear();
           if (deleted.current && (!session || !allowedSession(session, deleted.current))) return;

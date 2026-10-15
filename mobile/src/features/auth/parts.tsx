@@ -153,8 +153,8 @@ export function Footnote({ children }: { children: string }) {
 }
 
 /**
- * Says that a screen runs on preview data and what that means here, for the screens whose server call
- * is not wired yet (MOB-05). It keeps the screen honest without changing its design.
+ * Says that a screen shows preview data (development and review builds) and what that means there. It
+ * keeps the screen honest without changing its design.
  */
 export function PreviewLine({ children }: { children: string }) {
   const s = useStyles(authStyles);

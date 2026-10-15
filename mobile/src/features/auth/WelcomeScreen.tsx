@@ -4,8 +4,8 @@ import { Button, Logo, Note, Screen, Text, TextLink, type Theme, useStyles } fro
 import { PendingInvitationNote } from "../onboarding/pending-invitation-note";
 import { AuthPlan } from "./AuthPlan";
 import { openPrivacy } from "./links";
-import { DELETED_ACCOUNT_TITLE, deletedAccountBody, waitingTitle } from "./rules";
-import { useDeletedAccount, useWaitingRecords } from "./use-waiting-records";
+import { DELETED_ACCOUNT_TITLE, deletedAccountBody, waitingForTitle, waitingTitle } from "./rules";
+import { useDeletedAccount, useSignedOutAccounts, useWaitingRecords } from "./use-waiting-records";
 
 function welcomeStyles(t: Theme) {
   return StyleSheet.create({
@@ -21,7 +21,7 @@ function welcomeStyles(t: Theme) {
 /**
  * Welcome (Mobile 23): the DECA Mark lockup, the Riverside plan, the promise, and the way in. When
  * records are waiting on this device for a signed-out account, a note names them and their owner before
- * anything else can be chosen. When the server reported the account on this device deleted, the gate
+ * anything else can be chosen: one note for each account that signed out with work left here (MOB-05). When the server reported the account on this device deleted, the gate
  * opens here instead of the app, and the note says its records stay on this device and cannot upload;
  * another account can still sign in.
  */
@@ -30,6 +30,7 @@ export function WelcomeScreen() {
   const router = useRouter();
   const waiting = useWaitingRecords();
   const deleted = useDeletedAccount();
+  const signedOut = useSignedOutAccounts();
 
   return (
     <Screen scroll testID="auth-welcome">
@@ -60,6 +61,22 @@ export function WelcomeScreen() {
           {`They belong to ${waiting.owner}. Sign in to that account to resume uploads.`}
         </Note>
       ) : null}
+      {signedOut.map((summary) => (
+        <Note
+          key={summary.userId}
+          tone="waiting"
+          icon="smartphone"
+          title={waitingForTitle(
+            summary.unsent,
+            summary.drafts,
+            summary.email ?? "an account that signed out",
+          )}
+          style={s.note}
+          testID={`auth-welcome-waiting-${summary.userId}`}
+        >
+          They upload when that account signs in again. Another account cannot upload them.
+        </Note>
+      ))}
       <PendingInvitationNote style={s.note} />
       <View style={s.spacer} />
       <View style={s.actions}>

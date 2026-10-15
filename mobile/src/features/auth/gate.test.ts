@@ -28,8 +28,20 @@ describe("decideGate", () => {
       signedIn: false,
       needsOnboarding: false,
       accountDeleted: false,
+      authOpen: true,
       route: "auth",
       overridden: false,
+    });
+  });
+
+  // MOB-03 Done when: records queued by an account that signed out (deliberately) do not open the app.
+  // The gate reads the account only; welcome names those records and they wait for their own account.
+  it("sends a device with another account's queued records, but no session or cached account, to sign-in", () => {
+    const queuedForA = { ...signedOutDevice, localProfile: "complete" as const };
+    expect(decideGate(queuedForA)).toMatchObject({
+      signedIn: false,
+      route: "auth",
+      authOpen: true,
     });
   });
 
@@ -37,6 +49,17 @@ describe("decideGate", () => {
     expect(
       decideGate({ ...signedOutDevice, cachedAccount: true, localProfile: "complete" }),
     ).toMatchObject({ signedIn: true, route: "app" });
+  });
+
+  it("opens the app for a cached account without a session, with sign-in open over it", () => {
+    expect(
+      decideGate({ ...signedOutDevice, cachedAccount: true, serverInitials: true }),
+    ).toMatchObject({ signedIn: true, route: "app", authOpen: true });
+  });
+
+  it("closes sign-in while a session is live", () => {
+    expect(decideGate({ ...signedIn, serverInitials: true }).authOpen).toBe(false);
+    expect(decideGate(signedIn).authOpen).toBe(false);
   });
 
   it("sends a session with no profile on the server or this device to onboarding", () => {
@@ -93,21 +116,23 @@ describe("decideGate", () => {
       signedIn: false,
       needsOnboarding: false,
       accountDeleted: true,
+      authOpen: true,
       route: "auth",
       overridden: false,
     });
   });
 
   it.each([
-    ["signed-out", "auth", false],
-    ["deleted", "auth", true],
-    ["onboarding", "onboarding", false],
-    ["signed-in", "app", false],
-  ] as const)("lets the %s override win when overrides are allowed", (override, route, deleted) => {
+    ["signed-out", "auth", false, true],
+    ["deleted", "auth", true, true],
+    ["onboarding", "onboarding", false, false],
+    ["signed-in", "app", false, false],
+  ] as const)("lets the %s override win when overrides are allowed", (override, route, deleted, authOpen) => {
     const real = { ...signedIn, localProfile: "complete" as const };
     expect(decideGate({ ...real, override, overrideAllowed: true })).toMatchObject({
       route,
       accountDeleted: deleted,
+      authOpen,
       overridden: true,
     });
   });

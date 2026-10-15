@@ -1,4 +1,4 @@
-import { createElement, type ReactNode } from "react";
+import { createElement, type ReactNode, useEffect } from "react";
 
 /**
  * Component tests without a device: stand-ins for React Native's host components and the native
@@ -82,7 +82,11 @@ export const reactNative = {
     isScreenReaderEnabled: async () => false,
     addEventListener: () => ({ remove: () => {} }),
   },
-  Keyboard: { dismiss: () => {}, addListener: () => ({ remove: () => {} }) },
+  Keyboard: {
+    dismiss: () => {},
+    isVisible: () => false,
+    addListener: () => ({ remove: () => {} }),
+  },
   AppState: { currentState: "active", addEventListener: () => ({ remove: () => {} }) },
 };
 
@@ -155,12 +159,24 @@ const routerValue = {
   back: () => {
     navigation.push("back");
   },
+  dismissTo: (href: string) => {
+    navigation.push(href);
+  },
   canGoBack: () => false,
 };
+const searchParams: { current: Record<string, string> } = { current: {} };
+/** The route params the next render reads (`useLocalSearchParams`). */
+export function setSearchParams(params: Record<string, string>): void {
+  searchParams.current = params;
+}
 export const router = {
   router: routerValue,
   useRouter: () => routerValue,
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => searchParams.current,
+  /** Runs once the screen has mounted, as a first focus does. */
+  useFocusEffect: (effect: () => undefined | (() => void)) => {
+    useEffect(effect, [effect]);
+  },
   Link: host("Link"),
 };
 

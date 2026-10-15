@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "../src/auth/provider";
 import { MeProvider } from "../src/data/api/me-provider";
 import { type Gate, useGate } from "../src/features/auth/gate";
+import { useGateHeld } from "../src/features/auth/gate-hold";
 import { ProfileQueue } from "../src/features/auth/profile-sync";
 import { DataSourceProvider, PREVIEW_ALLOWED } from "../src/features/preview/data-source";
 import { useOrientationPreference } from "../src/layout/orientation";
@@ -144,7 +145,8 @@ const HOLD_DETAIL = "Reading your observer profile…";
 /**
  * The routes each part of the app may open (useGate). Signed out, or an account the server deleted:
  * sign-in only. Signed in without an observer profile on the server or this device: onboarding only.
- * Otherwise the app. When the gate changes, Stack.Protected drops the routes that closed and lands on the
+ * Otherwise the app, and sign-in too while the account's session is lost (MOB-03), so "Sign in to
+ * resume uploads" can open it. When the gate changes, Stack.Protected drops the routes that closed and lands on the
  * first one that opened, so a finished onboarding or a sign-out moves on without a screen navigating by
  * itself. The review routes stay open in development and review builds whatever the gate says.
  *
@@ -158,12 +160,15 @@ const HOLD_DETAIL = "Reading your observer profile…";
  */
 function GatedStack() {
   const gate = useGate();
+  // An auth step that signs in before it is finished (a recovery code, then the new password) holds
+  // the routes where they are until it lets go (gate-hold).
+  const held = useGateHeld();
   const decided = useRef<Gate | null>(null);
-  if (gate.route !== "hold") decided.current = gate;
+  if (gate.route !== "hold" && !held) decided.current = gate;
   const shown = decided.current;
   if (!shown) return <Splash title={HOLD_TITLE} detail={HOLD_DETAIL} />;
-  const { signedIn, needsOnboarding } = shown;
-  const holding = gate.route === "hold";
+  const { signedIn, needsOnboarding, authOpen } = shown;
+  const holding = gate.route === "hold" && !held;
   return (
     <View style={styles.root}>
       {/* Covered by the splash while holding: screen readers skip it as touch does. */}
@@ -172,7 +177,7 @@ function GatedStack() {
         accessibilityElementsHidden={holding}
         importantForAccessibility={holding ? "no-hide-descendants" : "auto"}
       >
-        <GuardedRoutes signedIn={signedIn} needsOnboarding={needsOnboarding} />
+        <GuardedRoutes signedIn={signedIn} needsOnboarding={needsOnboarding} authOpen={authOpen} />
       </View>
       {holding ? (
         <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
@@ -186,9 +191,11 @@ function GatedStack() {
 function GuardedRoutes({
   signedIn,
   needsOnboarding,
+  authOpen,
 }: {
   signedIn: boolean;
   needsOnboarding: boolean;
+  authOpen: boolean;
 }) {
   const { c } = useTheme();
   return (
@@ -208,7 +215,8 @@ function GuardedRoutes({
       <Stack.Protected guard={signedIn && needsOnboarding}>
         <Stack.Screen name="(onboarding)" />
       </Stack.Protected>
-      <Stack.Protected guard={!signedIn}>
+      {/* Declared after the app, so an account kept on this device lands in the app; sign-in opens over it. */}
+      <Stack.Protected guard={authOpen}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
       <Stack.Protected guard={PREVIEW_ALLOWED}>
