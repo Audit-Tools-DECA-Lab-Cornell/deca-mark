@@ -7,7 +7,13 @@ web/mobile Contour tokens.
 ## Deploy
 
 Set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`,
-`EMAIL_ENABLED=true`, and `EMAIL_APP_URL` on the API host, then deploy API and web.
+and `EMAIL_APP_URL` on the API host, then deploy the API. Delivery automatically
+starts when both the API key and sender address are configured. Set
+`EMAIL_ENABLED=false` to explicitly disable delivery; `EMAIL_ENABLED=true` requires
+valid provider configuration at startup. Invalid boolean settings fail startup
+instead of silently disabling delivery. `EMAIL_SANDBOX=true` disables invitation
+queuing and background delivery. Startup logs report enabled and sandbox states
+without exposing credentials or invitation content.
 The private outbox migration is already applied. Local Auth keeps using Mailpit.
 
 Install `supabase/templates/*.html` and enable the matching security notifications
@@ -28,6 +34,8 @@ cancel project email through `POST`/`GET /v1/projects/{project}/emails` and
 `DELETE /v1/projects/{project}/emails/{delivery}`. Schedule requests contain a
 request UUID, recipient member UUID, kind, heading, message and optional time.
 The queue checks access, retries transient failures and clears completed content.
+Invitations created while delivery was disabled are not emailed retroactively;
+create a new invitation after enabling delivery.
 
 `pnpm tokens` regenerates all shared styles/templates; `pnpm tokens:check` detects
 drift. To validate Brevo without sending mail, run from `backend/`:

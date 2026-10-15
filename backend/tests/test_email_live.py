@@ -59,9 +59,15 @@ def email_client(
         await anyio.sleep_forever()
 
     monkeypatch.setattr("fieldmaps_api.main.email_worker", quiet_worker)
+    monkeypatch.delenv("EMAIL_ENABLED", raising=False)
+    monkeypatch.setenv("EMAIL_SANDBOX", "false")
+    monkeypatch.setenv("BREVO_API_KEY", "fake-api-key")
+    monkeypatch.setenv("BREVO_SENDER_EMAIL", "noreply@example.test")
     config = Settings(database_url=database_url(), database_password_file=password_file())
     with TestClient(
-        create_app(config, JwksVerifier(ISSUER, "authenticated", signer), mail_settings())
+        create_app(
+            config, JwksVerifier(ISSUER, "authenticated", signer), EmailSettings.from_environment()
+        )
     ) as client:
         sign_in(client, signer, tenant.users["owner"])
         yield client
@@ -144,6 +150,20 @@ def test_revoked_invitation_is_never_sent(email_client: TestClient, tenant: Tena
     assert process() == []
 
 
+def test_invitation_without_email_keeps_manual_sharing(
+    email_client: TestClient, tenant: Tenant
+) -> None:
+    response = email_client.post(
+        f"/v1/projects/{tenant.project}/invitations", json={"role": "observer"}
+    )
+    assert response.status_code == 201, response.text
+    invitation = InvitationCreated.model_validate_json(response.content)
+    assert invitation.email_delivery == "not_requested"
+    assert invitation.token
+    assert invitation.code
+    assert process() == []
+
+
 def test_notification_idempotency_permissions_and_delivery(
     email_client: TestClient, signer: Signer, tenant: Tenant
 ) -> None:
@@ -162,17 +182,25 @@ def test_notification_idempotency_permissions_and_delivery(
     assert email_client.get(path).json()[0]["status"] == "sent"
 
 
+@pytest.mark.parametrize("role", ["observer", "viewer", "manager"])
 def test_project_manager_can_send_invitations_and_project_email(
-    email_client: TestClient, signer: Signer, tenant: Tenant
+    email_client: TestClient, signer: Signer, tenant: Tenant, role: str
 ) -> None:
     # Manager is only an organization member, not an organization owner or admin.
     sign_in(email_client, signer, tenant.users["manager"])
     invited = email_client.post(
         f"/v1/projects/{tenant.project}/invitations",
-        json={"role": "observer", "email": "manager-invited@example.test"},
+        json={"role": role, "email": "manager-invited@example.test"},
     )
     assert invited.status_code == 201, invited.text
-    assert InvitationCreated.model_validate_json(invited.content).email_delivery == "queued"
+    invitation = InvitationCreated.model_validate_json(invited.content)
+    assert invitation.email_delivery == "queued"
+    calls = process()
+    assert len(calls) == 1
+    assert b"manager-invited@example.test" in calls[0].content
+    assert f"as a {role}".encode() in calls[0].content
+    assert invitation.token.encode() in calls[0].content
+    assert invitation.code.encode() in calls[0].content
     scheduled = email_client.post(
         f"/v1/projects/{tenant.project}/emails", json=request_body(tenant)
     )

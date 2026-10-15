@@ -27,11 +27,16 @@ class EmailSettings(BaseModel):
 
     @classmethod
     def from_environment(cls) -> Self:
-        return cls(
-            api_key=SecretStr(os.environ.get("BREVO_API_KEY", "")),
-            sender_email=os.environ.get("BREVO_SENDER_EMAIL", ""),
-            sender_name=os.environ.get("BREVO_SENDER_NAME", "DECA Mark GIS"),
-            app_url=HttpUrl(os.environ.get("EMAIL_APP_URL", "https://decamark.vercel.app")),
-            enabled=os.environ.get("EMAIL_ENABLED", "false").lower() == "true",
-            sandbox=os.environ.get("EMAIL_SANDBOX", "false").lower() == "true",
+        api_key = os.environ.get("BREVO_API_KEY", "")
+        sender_email = os.environ.get("BREVO_SENDER_EMAIL", "")
+        return cls.model_validate(
+            {
+                "api_key": SecretStr(api_key),
+                "sender_email": sender_email,
+                "sender_name": os.environ.get("BREVO_SENDER_NAME", "DECA Mark GIS"),
+                "app_url": os.environ.get("EMAIL_APP_URL", "https://decamark.vercel.app"),
+                # Configuring the provider is sufficient; retain an explicit operator opt-out.
+                "enabled": os.environ.get("EMAIL_ENABLED", bool(api_key and sender_email)),
+                "sandbox": os.environ.get("EMAIL_SANDBOX", "false"),
+            }
         )

@@ -17,6 +17,9 @@ async def assert_configured(engine: AsyncEngine, settings: EmailSettings) -> Non
     if settings.enabled and not settings.sandbox:
         async with engine.connect() as probe:
             await probe.execute(text("SELECT id FROM fieldmaps_private.email_outbox LIMIT 0"))
+    LOGGER.info(
+        "email_delivery_configured enabled=%s sandbox=%s", settings.enabled, settings.sandbox
+    )
 
 
 async def deliver_one(sessions: async_sessionmaker[AsyncSession], provider: Brevo) -> bool:

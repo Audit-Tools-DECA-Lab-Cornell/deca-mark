@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 import anyio
 import httpx2
 import pytest
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from fieldmaps_api.email.brevo import Brevo, ProviderError
 from fieldmaps_api.email.config import EmailSettings
@@ -21,6 +21,50 @@ def settings() -> EmailSettings:
     return EmailSettings(
         api_key=SecretStr("test-private-key"), sender_email="noreply@example.test", enabled=True
     )
+
+
+@pytest.mark.parametrize(
+    ("api_key", "sender", "enabled"),
+    [
+        ("", "", False),
+        ("fake-key", "", False),
+        ("", "sender@example.test", False),
+        ("fake-key", "sender@example.test", True),
+    ],
+)
+def test_provider_configuration_activates_delivery(
+    monkeypatch: pytest.MonkeyPatch, api_key: str, sender: str, *, enabled: bool
+) -> None:
+    monkeypatch.delenv("EMAIL_ENABLED", raising=False)
+    monkeypatch.setenv("BREVO_API_KEY", api_key)
+    monkeypatch.setenv("BREVO_SENDER_EMAIL", sender)
+    assert EmailSettings.from_environment().enabled is enabled
+
+
+def test_explicit_email_disable_overrides_configured_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("BREVO_API_KEY", "fake-key")
+    monkeypatch.setenv("BREVO_SENDER_EMAIL", "sender@example.test")
+    monkeypatch.setenv("EMAIL_ENABLED", "false")
+    assert not EmailSettings.from_environment().enabled
+
+
+def test_explicit_email_enable_requires_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("BREVO_API_KEY", "")
+    monkeypatch.setenv("BREVO_SENDER_EMAIL", "")
+    monkeypatch.setenv("EMAIL_ENABLED", "true")
+    with pytest.raises(ValidationError, match="Email delivery requires"):
+        EmailSettings.from_environment()
+
+
+@pytest.mark.parametrize("variable", ["EMAIL_ENABLED", "EMAIL_SANDBOX"])
+def test_invalid_email_switch_fails_instead_of_silently_disabling_delivery(
+    monkeypatch: pytest.MonkeyPatch, variable: str
+) -> None:
+    monkeypatch.setenv(variable, "typo")
+    with pytest.raises(ValidationError, match=variable.removeprefix("EMAIL_").lower()):
+        EmailSettings.from_environment()
 
 
 def test_contour_generated_templates_match_contract() -> None:
