@@ -20,7 +20,10 @@ vi.mock(
 vi.mock("expo-status-bar", async () => (await import("../../ui/native.fixture")).statusBar);
 vi.mock("expo-router", async () => (await import("../../ui/native.fixture")).router);
 
-const account = vi.hoisted(() => ({ recovery: null as { email: string } | null }));
+const account = vi.hoisted(() => ({
+  recovery: null as { email: string } | null,
+  restored: true,
+}));
 vi.mock("../../auth/provider", () => ({ useAccount: () => account }));
 
 describe("Sign in to resume uploads (MOB-08, MOB-03)", () => {
@@ -31,6 +34,13 @@ describe("Sign in to resume uploads (MOB-08, MOB-03)", () => {
   it("says nothing while the session is live or nobody is kept on this device", () => {
     account.recovery = null;
     expect(render(<ResumeUploadsNote />).texts()).toEqual([]);
+  });
+
+  it("says nothing while the stored session is still being read back", () => {
+    account.recovery = { email: "observer@fieldmaps.test" };
+    account.restored = false;
+    expect(render(<ResumeUploadsNote />).texts()).toEqual([]);
+    account.restored = true;
   });
 
   it("names the account whose records wait, and opens sign-in with its email", async () => {

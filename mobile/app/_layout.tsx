@@ -146,9 +146,9 @@ const HOLD_DETAIL = "Reading your observer profile…";
  * The routes each part of the app may open (useGate). Signed out, or an account the server deleted:
  * sign-in only. Signed in without an observer profile on the server or this device: onboarding only.
  * Otherwise the app, and sign-in too while the account's session is lost (MOB-03), so "Sign in to
- * resume uploads" can open it. When the gate changes, Stack.Protected drops the routes that closed and lands on the
- * first one that opened, so a finished onboarding or a sign-out moves on without a screen navigating by
- * itself. The review routes stay open in development and review builds whatever the gate says.
+ * resume uploads" can open it. When the gate changes, Stack.Protected drops the routes that closed and
+ * lands on the first one that opened, so a finished onboarding or a sign-out moves on without a screen
+ * navigating by itself. The review routes stay open in development and review builds whatever the gate says.
  *
  * While the gate holds (an account's `/v1/me` is not known yet), the splash stays up instead of a guess:
  * before the first route opens, in place of the stack, so a cold-start link still lands where it points;

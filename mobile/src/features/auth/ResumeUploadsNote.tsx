@@ -13,8 +13,9 @@ export function openResumeSignIn(email: string): void {
  * sign-in open in that state (MOB-03), so the button opens it over the app.
  */
 export function ResumeUploadsNote() {
-  const { recovery } = useAccount();
-  if (!recovery) return null;
+  const { recovery, restored } = useAccount();
+  // Until the stored session has been read back, a missing session means nothing yet.
+  if (!recovery || !restored) return null;
   const owner = recovery.email || "this account";
   return (
     <Note
