@@ -8,16 +8,18 @@ import { type LocalWork, nothingWaits } from "./leaving";
  * Signs this account out of this device on purpose (MOB-07): `signOut({scope: "local"})`, which clears
  * the session here even offline. When work is left, the account's summary is written first (email and
  * counts, step 5), so welcome can say what waits for it (MOB-05). Nothing on the device is removed: the
- * records wait here for this account. Resolves false, writing nothing, when the sign-out did not finish.
+ * records wait here for this account. `null` work (the queue could not be read) writes no summary.
+ * Resolves false, writing nothing, when the sign-out did not finish.
  */
-export function useSignOutHere(): (work: LocalWork) => Promise<boolean> {
+export function useSignOutHere(): (work: LocalWork | null) => Promise<boolean> {
   const { account, signOut } = useAccount();
   return useCallback(
-    async (work: LocalWork) => {
+    async (work: LocalWork | null) => {
       if (!account) return true;
       const issuer = connection?.supabaseUrl;
       const summarised =
         issuer !== undefined &&
+        work !== null &&
         !nothingWaits(work) &&
         writeAccountSummary({
           userId: account.id,

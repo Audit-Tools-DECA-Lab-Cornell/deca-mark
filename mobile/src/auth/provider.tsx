@@ -17,6 +17,7 @@ import { createAuthClient } from "./client";
 import { deletedAccountStore } from "./deleted-account";
 import {
   allowedSession,
+  deletionStillApplies,
   isAccountDeleted,
   persistDeletedSignOut,
   persistDeliberateSignOut,
@@ -51,7 +52,11 @@ const initial: AuthState = {
 };
 type AuthContextValue = AuthState & {
   readonly recovery: ReturnType<typeof signInRecovery>;
-  readonly markAccountDeleted: () => void;
+  /**
+   * Treats the account on this device as deleted (403 account_deleted, or a deletion it confirmed). Pass
+   * the account it is for: nothing happens once another account, or none, is on this device.
+   */
+  readonly markAccountDeleted: (expectedUserId?: string) => void;
   readonly signOut: () => Promise<{ readonly error: Error | null }>;
 };
 const AuthContext = createContext<AuthContextValue>({
@@ -96,31 +101,39 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (deliberate.current === attempt) deliberate.current = null;
     }
   }, [state.client, state.account]);
-  const markAccountDeleted = useCallback(() => {
-    const account = state.account;
-    const client = state.client;
-    if (!account || !client) return;
-    void persistDeletedSignOut(
-      account,
-      () => {
-        deleted.current = account.id;
-        client.auth.stopAutoRefresh();
-        setState((previous) => ({
-          ...previous,
-          session: null,
-          deletedUserId: account.id,
-          error: "This account has been deleted. Local records remain available.",
-        }));
-      },
-      (retained) => {
-        deletedAccountStore(connection.supabaseUrl).write(retained);
-        forgetAccount();
-      },
-      () => client.auth.signOut({ scope: "local" }),
-    ).then((error) => {
-      if (error && deleted.current === account.id) setState((previous) => ({ ...previous, error }));
-    });
-  }, [state.account, state.client]);
+  const markAccountDeleted = useCallback(
+    (expectedUserId?: string) => {
+      const account = state.account;
+      const client = state.client;
+      if (!account || !client) return;
+      // A caller can hold this callback across a sign-out or an account change (a deletion still retrying
+      // after its screen closed): it never touches the account on this device now.
+      if (!deletionStillApplies(expectedUserId ?? account.id, account.id, currentAccount.current))
+        return;
+      void persistDeletedSignOut(
+        account,
+        () => {
+          deleted.current = account.id;
+          client.auth.stopAutoRefresh();
+          setState((previous) => ({
+            ...previous,
+            session: null,
+            deletedUserId: account.id,
+            error: "This account has been deleted. Local records remain available.",
+          }));
+        },
+        (retained) => {
+          deletedAccountStore(connection.supabaseUrl).write(retained);
+          forgetAccount();
+        },
+        () => client.auth.signOut({ scope: "local" }),
+      ).then((error) => {
+        if (error && deleted.current === account.id)
+          setState((previous) => ({ ...previous, error }));
+      });
+    },
+    [state.account, state.client],
+  );
   useEffect(() => {
     let active = true;
     let release = () => {};

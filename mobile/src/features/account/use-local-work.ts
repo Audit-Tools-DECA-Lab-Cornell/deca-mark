@@ -5,7 +5,8 @@ import type { LocalWork } from "./leaving";
 /**
  * This account's work on this device (MOB-07): the queue's records in their states, and its unfinished
  * observations (the open or recovered one, and the ones kept for later). `loading` while the queue is
- * still being read, so nothing is said about it yet.
+ * still being read, so nothing is said about it yet; `error` when it could not be read, so the counts
+ * mean nothing (never "nothing is waiting"), with `retry` to read it again.
  */
 export function useLocalWork(): LocalWork & {
   /** Saved here and not sent yet. */
@@ -13,6 +14,8 @@ export function useLocalWork(): LocalWork & {
   /** Acknowledged by DECA Mark, kept here for reference. */
   readonly uploaded: number;
   readonly loading: boolean;
+  readonly error: string | null;
+  readonly retry: () => void;
 } {
   const queue = useQueue();
   const session = useFieldSession();
@@ -25,5 +28,7 @@ export function useLocalWork(): LocalWork & {
     attention: queue.counts.attention,
     drafts: open + session.parked.length,
     loading: queue.loading,
+    error: queue.loading ? null : queue.error,
+    retry: queue.retry,
   };
 }

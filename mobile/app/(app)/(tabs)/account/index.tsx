@@ -88,6 +88,17 @@ export default function AccountScreen() {
         >
           {work.loading ? (
             <ListRow title="Reading records from this device…" />
+          ) : work.error ? (
+            <Note
+              tone="attention"
+              title="The records on this device could not be counted."
+              action={
+                <Button variant="ink" label="Try again" icon="rotate-cw" onPress={work.retry} />
+              }
+              testID="account-device-unread"
+            >
+              They are still on this device; nothing was removed.
+            </Note>
           ) : (
             <>
               <ListRow

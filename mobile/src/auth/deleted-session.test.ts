@@ -1,6 +1,7 @@
 import { expect, it, vi } from "vitest";
 import {
   allowedSession,
+  deletionStillApplies,
   isAccountDeleted,
   persistDeletedSignOut,
   persistDeliberateSignOut,
@@ -136,4 +137,15 @@ it("successful deliberate sign-out never restores the cached identity", async ()
     async () => ({ error: null }),
   );
   expect(restored).not.toHaveBeenCalled();
+});
+
+it("marks an account deleted only while it is still the account on this device", () => {
+  const a = account.id;
+  const b = "50000000-0000-4000-8000-000000000002";
+  expect(deletionStillApplies(a, a, a)).toBe(true);
+  // The phone moved to another account, or signed out, while the deletion finished.
+  expect(deletionStillApplies(a, a, b)).toBe(false);
+  expect(deletionStillApplies(a, a, null)).toBe(false);
+  // A callback captured for one account is never used for another.
+  expect(deletionStillApplies(a, b, b)).toBe(false);
 });

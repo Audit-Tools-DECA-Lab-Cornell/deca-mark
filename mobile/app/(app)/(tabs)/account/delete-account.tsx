@@ -126,6 +126,8 @@ export default function DeleteAccountScreen() {
   const code = (profile.saved ? profile.initials : me.profile?.observer_initials) || null;
   const consequences = deletionConsequences(work, projects, code);
   const ready = typed.trim() === CONFIRM_WORD;
+  // The consequences and the unsent-work question rest on the counts: never on a read still running or failed.
+  const counted = !work.loading && work.error === null;
   const said = outcome ? refusal(outcome) : null;
 
   async function run() {
@@ -156,7 +158,8 @@ export default function DeleteAccountScreen() {
             ? "Account deleted. Its records stay on this device and cannot upload."
             : "Account deletion recorded. DECA Mark completes it. Its records stay on this device and cannot upload.",
       );
-      if (!otherSignedIn) markAccountDeleted();
+      // Account-specific: once this phone has signed out or moved to another account, nothing happens.
+      if (!otherSignedIn) markAccountDeleted(confirmedFor);
       if (mounted.current) {
         setBusy(false);
         setFinishing(null);
@@ -174,7 +177,7 @@ export default function DeleteAccountScreen() {
   }
 
   function confirm() {
-    if (!ready || busy) return;
+    if (!ready || busy || !counted) return;
     if (work.unsent === 0 && work.drafts === 0) {
       void run();
       return;
@@ -205,11 +208,13 @@ export default function DeleteAccountScreen() {
           busy={busy}
           busyLabel="Deleting account…"
           fullWidth
-          disabled={!ready || !api}
+          disabled={!ready || !api || !counted}
           disabledReason={
             !api
               ? "Sign in to this account again to delete it."
-              : `The button turns on when ${CONFIRM_WORD} is typed.`
+              : !counted
+                ? "The button turns on once the records on this device are counted."
+                : `The button turns on when ${CONFIRM_WORD} is typed.`
           }
           onPress={confirm}
           testID="account-delete-confirm"
@@ -222,6 +227,18 @@ export default function DeleteAccountScreen() {
           title="Delete your account?"
           lead={`${account?.email ?? "This account"}. This cannot be undone.`}
         />
+        {!work.loading && work.error ? (
+          <Note
+            tone="attention"
+            title="The records on this device could not be counted."
+            action={
+              <Button variant="ink" label="Try again" icon="rotate-cw" onPress={work.retry} />
+            }
+            testID="account-delete-unread"
+          >
+            Nothing is deleted until they are: deleting would leave them here, unable to upload.
+          </Note>
+        ) : null}
         <Island title="What deleting does" testID="account-delete-consequences">
           <View style={s.lines} accessibilityRole="list">
             {consequences.map((line) => (

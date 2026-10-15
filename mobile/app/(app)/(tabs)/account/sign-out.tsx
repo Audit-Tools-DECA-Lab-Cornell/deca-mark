@@ -43,13 +43,15 @@ export default function SignOutScreen() {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const email = account?.email ?? "this account";
-  const warning = work.loading ? null : signOutWarning(work, email);
+  const unread = !work.loading && work.error !== null;
+  const warning = work.loading || unread ? null : signOutWarning(work, email);
 
   async function signOut() {
     if (busy || work.loading) return;
     setBusy(true);
     setFailed(false);
-    const done = await signOutHere(work);
+    // Without a count, no note is written for welcome: it would claim a number nobody read.
+    const done = await signOutHere(unread ? null : work);
     if (done) {
       haptics.success();
       announce(
@@ -70,7 +72,7 @@ export default function SignOutScreen() {
       testID="account-sign-out-screen"
       footer={
         <Button
-          label={warning ? "Sign out and keep local records" : "Sign out of this device"}
+          label={warning || unread ? "Sign out and keep local records" : "Sign out of this device"}
           icon="log-out"
           fullWidth
           busy={busy}
@@ -87,13 +89,24 @@ export default function SignOutScreen() {
         <PageIntro
           title="Sign out?"
           lead={
-            warning
+            warning || unread
               ? undefined
               : `Nothing is waiting on this device for ${email}. Signing out works without a connection.`
           }
         />
         {work.loading ? (
           <ScreenState kind="loading" body="Reading records from this device…" />
+        ) : unread ? (
+          <Note
+            tone="attention"
+            title="We could not count what waits on this device."
+            action={
+              <Button variant="ink" label="Try again" icon="rotate-cw" onPress={work.retry} />
+            }
+            testID="account-sign-out-unread"
+          >
+            {`Anything recorded here stays on this device for ${email}. Another account cannot upload it.`}
+          </Note>
         ) : warning ? (
           <Note
             tone="waiting"

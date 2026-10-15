@@ -72,7 +72,9 @@ export default function EditProfileScreen() {
       (nameError ? nameRef : initialsRef).current?.focus();
       return;
     }
-    if (!profile.set(name, initials)) return;
+    // This screen is inside the app, so onboarding is finished; a first local profile must say so, or
+    // the gate would reopen onboarding for an account whose profile came from the server.
+    if (!profile.set(name, initials, { onboarded: true })) return;
     setSaving(true);
     let outcome: SendOutcome;
     try {

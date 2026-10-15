@@ -31,7 +31,17 @@ const state = vi.hoisted(() => ({
   calls: [] as string[],
   answer: "deleted" as "deleted" | "pending" | "unavailable",
   signOutError: null as Error | null,
-  work: { unsent: 0, held: 0, attention: 0, drafts: 0, onDevice: 0, uploaded: 0, loading: false },
+  work: {
+    unsent: 0,
+    held: 0,
+    attention: 0,
+    drafts: 0,
+    onDevice: 0,
+    uploaded: 0,
+    loading: false,
+    error: null as string | null,
+    retry: () => {},
+  },
   summaries: [] as unknown[],
 }));
 vi.mock("../../auth/provider", () => ({
@@ -40,8 +50,8 @@ vi.mock("../../auth/provider", () => ({
     session: state.sessionUser ? { user: { id: state.sessionUser } } : null,
     client: { auth: { getSession: async () => ({ data: { session: null } }) } },
     recovery: null,
-    markAccountDeleted: () => {
-      state.calls.push("markAccountDeleted");
+    markAccountDeleted: (expectedUserId?: string) => {
+      state.calls.push(`markAccountDeleted ${expectedUserId}`);
     },
     signOut: async () => {
       state.calls.push("signOut");
@@ -114,6 +124,10 @@ beforeEach(() => {
     onDevice: 0,
     uploaded: 0,
     loading: false,
+    error: null,
+    retry: () => {
+      state.calls.push("retry");
+    },
   };
   state.summaries = [];
   takeAlerts();
@@ -131,6 +145,37 @@ describe("Account (MOB-07)", () => {
     expect(screen.controls()).not.toContain("Upload now");
     expect(screen.controls()).toContain("Sign out");
     expect(screen.controls()).toContain("Review account deletion");
+  });
+});
+
+describe("when the records on this device could not be read (review)", () => {
+  const unread = "The queue could not be read.";
+
+  it("Account says so instead of showing zero counts, and can read again", async () => {
+    state.work = { ...state.work, error: unread };
+    const screen = render(<AccountScreen />);
+    expect(screen.says("The records on this device could not be counted.")).toBe(true);
+    expect(screen.says("On device")).toBe(false);
+    await screen.press("Try again");
+    expect(state.calls).toEqual(["retry"]);
+  });
+
+  it("Sign out never says nothing is waiting, and writes no note for welcome", async () => {
+    state.work = { ...state.work, error: unread };
+    const screen = render(<SignOutScreen />);
+    expect(screen.says("Nothing is waiting")).toBe(false);
+    expect(screen.says("We could not count what waits on this device.")).toBe(true);
+    await screen.press("Sign out and keep local records");
+    expect(state.calls).toEqual(["signOut"]);
+    expect(state.summaries).toEqual([]);
+  });
+
+  it("Delete account stays off until the records are counted", async () => {
+    state.work = { ...state.work, error: unread };
+    const screen = render(<DeleteAccountScreen />);
+    await screen.type("account-delete-typed", "DELETE");
+    expect(isDisabled(screen.control("Delete account"))).toBe(true);
+    expect(screen.says("The records on this device could not be counted.")).toBe(true);
   });
 });
 
@@ -189,7 +234,7 @@ describe("Delete account (MOB-07)", () => {
   it("deletes the account that confirmed, then treats it as deleted on this device", async () => {
     const screen = render(<DeleteAccountScreen />);
     await typeAndDelete(screen);
-    expect(state.calls).toEqual(["DELETE /v1/me", "markAccountDeleted"]);
+    expect(state.calls).toEqual(["DELETE /v1/me", `markAccountDeleted ${A}`]);
     expect(takeAnnouncements()).toContain(
       "Account deleted. Its records stay on this device and cannot upload.",
     );
