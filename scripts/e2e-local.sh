@@ -14,7 +14,8 @@
 #   --stop        Only stop the web app this script started (Docker, Supabase and the API keep running).
 #
 # Idempotent. Each piece is started only when it is not already answering, and is left running:
-#   Docker (dockerd) → local Supabase (pnpm db:start) → API on 127.0.0.1:8001 (backend/config.auth-local.json)
+#   Docker (dockerd) → local Supabase (pnpm db:start) → API on 127.0.0.1:8001 (backend/config.auth-local.json,
+#   email delivery off)
 #   → seed (database/seed-web-workspace.mjs; no reset) → web app on 127.0.0.1:3000 → pnpm --dir web test:e2e
 #
 # The web app runs on :3000 because map packages go from the browser to the API directly, and :3000 is the only
@@ -207,7 +208,10 @@ else
   command -v uv >/dev/null 2>&1 || fail "uv is required to run the API."
   say "starting the API on $api_url (log: $state/api.log)"
   cd backend
-  start_detached "$state/api.log" env DECAMARK_CONFIG=config.auth-local.json \
+  # Email delivery stays off on the local stack: the API turns it on whenever a provider is configured in its
+  # environment (backend/src/fieldmaps_api/email/config.py), and a test run must never send real email.
+  start_detached "$state/api.log" env -u BREVO_API_KEY -u BREVO_SENDER_EMAIL EMAIL_ENABLED=false \
+    DECAMARK_CONFIG=config.auth-local.json \
     uv run --frozen uvicorn fieldmaps_api.main:create_app_from_config --factory --app-dir src \
     --host 127.0.0.1 --port 8001
   echo "$last_pid" >"$state/api.pid"
