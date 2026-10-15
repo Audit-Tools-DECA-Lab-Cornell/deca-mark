@@ -1,5 +1,5 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis projectname="" saveDateTime="2026-10-11T22:04:12" saveUser="praty" saveUserFull="pratyush sudhakar" version="4.2.2-Belém do Pará">
+<qgis projectname="" saveDateTime="2026-10-12T00:36:44" saveUser="praty" saveUserFull="pratyush sudhakar" version="4.2.2-Belém do Pará">
   <homePath path=""/>
   <title></title>
   <transaction mode="Disabled"/>
@@ -8,8 +8,8 @@
     <spatialrefsys nativeFormat="Wkt">
       <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
       <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-      <srsid>0</srsid>
-      <srid>0</srid>
+      <srsid>3452</srsid>
+      <srid>4326</srid>
       <authid>EPSG:4326</authid>
       <description>WGS 84</description>
       <projectionacronym>longlat</projectionacronym>
@@ -35,53 +35,102 @@
     <customproperties>
       <Option/>
     </customproperties>
-    <layer-tree-layer checked="Qt::Unchecked" expanded="1" id="Synthetic_legacy_records__no_inferred_version_c52198ba_1836_426f_b8dd_4ef5dcc64e0b" legend_exp="" legend_split_behavior="0" name="Synthetic legacy records; no inferred version" patch_size="-1,-1" providerKey="ogr" source="./legacy-records.geojson">
+    <layer-tree-layer checked="Qt::Unchecked" expanded="1" id="Synthetic_legacy_records__no_inferred_version_9fd9d688_f85a_4102_85c3_9570e11f4a9d" legend_exp="" legend_split_behavior="0" name="Synthetic legacy records; no inferred version" patch_size="-1,-1" providerKey="ogr" source="./legacy-records.geojson">
       <customproperties>
         <Option/>
       </customproperties>
     </layer-tree-layer>
-    <layer-tree-layer checked="Qt::Unchecked" expanded="1" id="Synthetic_whole_zone_inventories__legacy_geometry_unknown_01ae0185_f4b0_4791_9792_fb276366aa1d" legend_exp="" legend_split_behavior="0" name="Synthetic whole-zone inventories; legacy geometry unknown" patch_size="-1,-1" providerKey="ogr" source="./inventory-records.geojson">
+    <layer-tree-layer checked="Qt::Unchecked" expanded="1" id="Synthetic_whole_zone_inventories__legacy_geometry_unknown_35f7d2b3_99b2_4596_a50e_b6dcfe12cb22" legend_exp="" legend_split_behavior="0" name="Synthetic whole-zone inventories; legacy geometry unknown" patch_size="-1,-1" providerKey="ogr" source="./inventory-records.geojson">
       <customproperties>
         <Option/>
       </customproperties>
     </layer-tree-layer>
-    <layer-tree-layer checked="Qt::Checked" expanded="1" id="Synthetic_point_events__inventory_excluded_cbd5f080_1b3a_4af6_a0c9_992ca55a925b" legend_exp="" legend_split_behavior="0" name="Synthetic point events; inventory excluded" patch_size="-1,-1" providerKey="ogr" source="./point-events.geojson">
+    <layer-tree-layer checked="Qt::Checked" expanded="1" id="Synthetic_point_events__inventory_excluded_d8b78a16_be23_4391_813a_2b674139be2a" legend_exp="" legend_split_behavior="0" name="Synthetic point events; inventory excluded" patch_size="-1,-1" providerKey="ogr" source="./point-events.geojson">
       <customproperties>
         <Option/>
       </customproperties>
     </layer-tree-layer>
-    <layer-tree-layer checked="Qt::Checked" expanded="1" id="Synthetic_recorded_zones__v7_and_v8_1db0c46b_7e3c_444e_a915_a41c8bfd6ea6" legend_exp="" legend_split_behavior="0" name="Synthetic recorded zones: v7 and v8" patch_size="-1,-1" providerKey="ogr" source="./historical-zones.geojson">
+    <layer-tree-layer checked="Qt::Checked" expanded="1" id="Synthetic_recorded_zones__v7_and_v8_583a9500_936d_4eb0_8669_13884ffb62c6" legend_exp="" legend_split_behavior="0" name="Synthetic recorded zones: v7 and v8" patch_size="-1,-1" providerKey="ogr" source="./historical-zones.geojson">
       <customproperties>
         <Option/>
       </customproperties>
     </layer-tree-layer>
     <custom-order enabled="0">
-      <item>Synthetic_recorded_zones__v7_and_v8_1db0c46b_7e3c_444e_a915_a41c8bfd6ea6</item>
-      <item>Synthetic_point_events__inventory_excluded_cbd5f080_1b3a_4af6_a0c9_992ca55a925b</item>
-      <item>Synthetic_whole_zone_inventories__legacy_geometry_unknown_01ae0185_f4b0_4791_9792_fb276366aa1d</item>
-      <item>Synthetic_legacy_records__no_inferred_version_c52198ba_1836_426f_b8dd_4ef5dcc64e0b</item>
+      <item>Synthetic_recorded_zones__v7_and_v8_583a9500_936d_4eb0_8669_13884ffb62c6</item>
+      <item>Synthetic_point_events__inventory_excluded_d8b78a16_be23_4391_813a_2b674139be2a</item>
+      <item>Synthetic_whole_zone_inventories__legacy_geometry_unknown_35f7d2b3_99b2_4596_a50e_b6dcfe12cb22</item>
+      <item>Synthetic_legacy_records__no_inferred_version_9fd9d688_f85a_4102_85c3_9570e11f4a9d</item>
     </custom-order>
   </layer-tree-group>
   <snapping-settings enabled="0" intersection-snapping="0" maxScale="0" minScale="0" mode="2" scaleDependencyMode="0" self-snapping="0" tolerance="12" type="1" unit="1">
     <individual-layer-settings>
-      <layer-setting enabled="1" id="Synthetic_legacy_records__no_inferred_version_c52198ba_1836_426f_b8dd_4ef5dcc64e0b" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
-      <layer-setting enabled="1" id="Synthetic_point_events__inventory_excluded_cbd5f080_1b3a_4af6_a0c9_992ca55a925b" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
-      <layer-setting enabled="1" id="Synthetic_recorded_zones__v7_and_v8_1db0c46b_7e3c_444e_a915_a41c8bfd6ea6" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
-      <layer-setting enabled="1" id="Synthetic_whole_zone_inventories__legacy_geometry_unknown_01ae0185_f4b0_4791_9792_fb276366aa1d" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
+      <layer-setting enabled="1" id="Synthetic_legacy_records__no_inferred_version_9fd9d688_f85a_4102_85c3_9570e11f4a9d" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
+      <layer-setting enabled="1" id="Synthetic_point_events__inventory_excluded_d8b78a16_be23_4391_813a_2b674139be2a" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
+      <layer-setting enabled="1" id="Synthetic_recorded_zones__v7_and_v8_583a9500_936d_4eb0_8669_13884ffb62c6" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
+      <layer-setting enabled="1" id="Synthetic_whole_zone_inventories__legacy_geometry_unknown_35f7d2b3_99b2_4596_a50e_b6dcfe12cb22" maxScale="0" minScale="0" tolerance="12" type="1" units="1"/>
     </individual-layer-settings>
   </snapping-settings>
   <relations/>
   <polymorphicRelations/>
+  <mapcanvas annotationsVisible="1" name="theMapCanvas">
+    <units>degrees</units>
+    <extent>
+      <xmin>-76.48665683034140272</xmin>
+      <ymin>42.4474996136342142</ymin>
+      <xmax>-76.48337830926648451</xmax>
+      <ymax>42.44930280022540359</ymax>
+    </extent>
+    <rotation>0</rotation>
+    <destinationsrs>
+      <spatialrefsys nativeFormat="Wkt">
+        <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
+        <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+        <srsid>3452</srsid>
+        <srid>4326</srid>
+        <authid>EPSG:4326</authid>
+        <description>WGS 84</description>
+        <projectionacronym>longlat</projectionacronym>
+        <ellipsoidacronym>EPSG:7030</ellipsoidacronym>
+        <geographicflag>true</geographicflag>
+      </spatialrefsys>
+    </destinationsrs>
+    <rendermaptile>0</rendermaptile>
+    <expressionContextScope/>
+  </mapcanvas>
+  <projectModels/>
+  <legend updateDrawingOrder="true">
+    <legendlayer checked="Qt::Unchecked" drawingOrder="-1" name="Synthetic legacy records; no inferred version" open="true" showFeatureCount="0">
+      <filegroup hidden="false" open="true">
+        <legendlayerfile isInOverview="0" layerid="Synthetic_legacy_records__no_inferred_version_9fd9d688_f85a_4102_85c3_9570e11f4a9d" visible="0"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer checked="Qt::Unchecked" drawingOrder="-1" name="Synthetic whole-zone inventories; legacy geometry unknown" open="true" showFeatureCount="0">
+      <filegroup hidden="false" open="true">
+        <legendlayerfile isInOverview="0" layerid="Synthetic_whole_zone_inventories__legacy_geometry_unknown_35f7d2b3_99b2_4596_a50e_b6dcfe12cb22" visible="0"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer checked="Qt::Checked" drawingOrder="-1" name="Synthetic point events; inventory excluded" open="true" showFeatureCount="0">
+      <filegroup hidden="false" open="true">
+        <legendlayerfile isInOverview="0" layerid="Synthetic_point_events__inventory_excluded_d8b78a16_be23_4391_813a_2b674139be2a" visible="1"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer checked="Qt::Checked" drawingOrder="-1" name="Synthetic recorded zones: v7 and v8" open="true" showFeatureCount="0">
+      <filegroup hidden="false" open="true">
+        <legendlayerfile isInOverview="0" layerid="Synthetic_recorded_zones__v7_and_v8_583a9500_936d_4eb0_8669_13884ffb62c6" visible="1"/>
+      </filegroup>
+    </legendlayer>
+  </legend>
+  <mapViewDocks/>
   <main-annotation-layer autoRefreshMode="Disabled" autoRefreshTime="0" hasScaleBasedVisibilityFlag="0" layerType="Annotation" legendPlaceholderImage="" maxScale="0" minScale="1e+08" refreshOnNotifyEnabled="0" refreshOnNotifyMessage="" styleCategories="AllStyleCategories" type="annotation">
-    <id>Annotations_bba8d859_42f0_4b82_b5e1_c7e58ddbe67f</id>
+    <id>Annotations_51771094_a5f5_4cff_a494_875e0872b2b9</id>
     <datasource></datasource>
     <layername>Annotations</layername>
     <srs>
       <spatialrefsys nativeFormat="Wkt">
         <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
         <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-        <srsid>0</srsid>
-        <srid>0</srid>
+        <srsid>3452</srsid>
+        <srid>4326</srid>
         <authid>EPSG:4326</authid>
         <description>WGS 84</description>
         <projectionacronym>longlat</projectionacronym>
@@ -143,15 +192,15 @@
         <xmax>-76.48499999999999943</xmax>
         <ymax>42.4480000000000004</ymax>
       </wgs84extent>
-      <id>Synthetic_legacy_records__no_inferred_version_c52198ba_1836_426f_b8dd_4ef5dcc64e0b</id>
+      <id>Synthetic_legacy_records__no_inferred_version_9fd9d688_f85a_4102_85c3_9570e11f4a9d</id>
       <datasource>./legacy-records.geojson</datasource>
       <layername>Synthetic legacy records; no inferred version</layername>
       <srs>
         <spatialrefsys nativeFormat="Wkt">
           <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>0</srsid>
-          <srid>0</srid>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
           <authid>EPSG:4326</authid>
           <description>WGS 84</description>
           <projectionacronym>longlat</projectionacronym>
@@ -174,8 +223,8 @@
           <spatialrefsys nativeFormat="Wkt">
             <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
             <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-            <srsid>0</srsid>
-            <srid>0</srid>
+            <srsid>3452</srsid>
+            <srid>4326</srid>
             <authid>EPSG:4326</authid>
             <description>WGS 84</description>
             <projectionacronym>longlat</projectionacronym>
@@ -223,7 +272,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleLine" enabled="1" id="{7fc72f7c-28ac-4e86-96dd-a9ba62c318f2}" locked="0" pass="0">
+            <layer class="SimpleLine" enabled="1" id="{b479e6a9-66fd-4ac6-a5e6-6bb77496f628}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="align_dash_pattern" type="QString" value="0"/>
                 <Option name="capstyle" type="QString" value="square"/>
@@ -235,7 +284,7 @@
                 <Option name="dash_pattern_offset_unit" type="QString" value="MM"/>
                 <Option name="draw_inside_polygon" type="QString" value="0"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
-                <Option name="line_color" type="QString" value="83,252,224,255,hsv:0.47222220897674561,0.67058825492858887,0.98823529481887817,1"/>
+                <Option name="line_color" type="QString" value="246,58,252,255,hsv:0.82777780294418335,0.76862746477127075,0.98823529481887817,1"/>
                 <Option name="line_style" type="QString" value="solid"/>
                 <Option name="line_width" type="QString" value="0.6"/>
                 <Option name="line_width_unit" type="QString" value="MM"/>
@@ -272,15 +321,15 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleFill" enabled="1" id="{71c17689-f2b4-4305-a23c-fa1d22db7c3b}" locked="0" pass="0">
+            <layer class="SimpleFill" enabled="1" id="{101e58c3-3b59-4074-a0d2-39cb9529f461}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="color" type="QString" value="83,252,224,255,hsv:0.47222220897674561,0.67058825492858887,0.98823529481887817,1"/>
+                <Option name="color" type="QString" value="246,58,252,255,hsv:0.82777780294418335,0.76862746477127075,0.98823529481887817,1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="59,180,160,255,hsv:0.47222220897674561,0.67058825492858887,0.70588237047195435,1"/>
+                <Option name="outline_color" type="QString" value="175,42,180,255,hsv:0.82777780294418335,0.76862746477127075,0.70588237047195435,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_unit" type="QString" value="MM"/>
@@ -305,18 +354,18 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleMarker" enabled="1" id="{b8e97b57-e6f4-40f1-8251-1fb7ea1d3aea}" locked="0" pass="0">
+            <layer class="SimpleMarker" enabled="1" id="{c294aa7e-2fe6-4f29-b672-d5499bf43c6e}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="angle" type="QString" value="0"/>
                 <Option name="cap_style" type="QString" value="square"/>
-                <Option name="color" type="QString" value="83,252,224,255,hsv:0.47222220897674561,0.67058825492858887,0.98823529481887817,1"/>
+                <Option name="color" type="QString" value="246,58,252,255,hsv:0.82777780294418335,0.76862746477127075,0.98823529481887817,1"/>
                 <Option name="horizontal_anchor_point" type="QString" value="1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="name" type="QString" value="diamond"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="59,180,160,255,hsv:0.47222220897674561,0.67058825492858887,0.70588237047195435,1"/>
+                <Option name="outline_color" type="QString" value="175,42,180,255,hsv:0.82777780294418335,0.76862746477127075,0.70588237047195435,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
@@ -348,11 +397,11 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleMarker" enabled="1" id="{3588c0ea-920d-4889-b1a0-765852e0d5fc}" locked="0" pass="0">
+            <layer class="SimpleMarker" enabled="1" id="{8cd78048-c088-47a7-9f9c-a1eddeff1e2d}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="angle" type="QString" value="0"/>
                 <Option name="cap_style" type="QString" value="square"/>
-                <Option name="color" type="QString" value="2,45,239,255,hsv:0.63611114025115967,0.99215686321258545,0.93725490570068359,1"/>
+                <Option name="color" type="QString" value="135,233,204,255,hsv:0.44999998807907104,0.41960784792900085,0.91372549533843994,1"/>
                 <Option name="horizontal_anchor_point" type="QString" value="1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="name" type="QString" value="circle"/>
@@ -394,7 +443,13 @@
         <selectionColor invalid="1"/>
       </selection>
       <customproperties>
-        <Option/>
+        <Option type="Map">
+          <Option name="dualview/previewExpressions" type="List">
+            <Option type="QString" value="COALESCE( &quot;label&quot;, '&lt;NULL>' )"/>
+            <Option type="QString" value="COALESCE( &quot;label&quot;, '&lt;NULL>' )"/>
+            <Option type="invalid"/>
+          </Option>
+        </Option>
       </customproperties>
       <blendMode>0</blendMode>
       <featureBlendMode>0</featureBlendMode>
@@ -815,9 +870,49 @@
         <constraint desc="" exp="" field="answers"/>
       </constraintExpressions>
       <expressionfields/>
-      <attributeactions/>
+      <attributeactions>
+        <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
+      </attributeactions>
       <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
-        <columns/>
+        <columns>
+          <column hidden="0" name="id" type="field" width="-1"/>
+          <column hidden="0" name="observation_id" type="field" width="-1"/>
+          <column hidden="0" name="project_id" type="field" width="-1"/>
+          <column hidden="0" name="user_id" type="field" width="-1"/>
+          <column hidden="0" name="site_id" type="field" width="-1"/>
+          <column hidden="0" name="site_code" type="field" width="-1"/>
+          <column hidden="0" name="site_name" type="field" width="-1"/>
+          <column hidden="0" name="observer" type="field" width="-1"/>
+          <column hidden="0" name="observed_at" type="field" width="-1"/>
+          <column hidden="0" name="received_at" type="field" width="-1"/>
+          <column hidden="0" name="revision" type="field" width="-1"/>
+          <column hidden="0" name="form_version" type="field" width="-1"/>
+          <column hidden="0" name="round_type" type="field" width="-1"/>
+          <column hidden="0" name="first_round" type="field" width="-1"/>
+          <column hidden="0" name="placement" type="field" width="-1"/>
+          <column hidden="0" name="package_id" type="field" width="-1"/>
+          <column hidden="0" name="zone_id" type="field" width="-1"/>
+          <column hidden="0" name="zone_code" type="field" width="-1"/>
+          <column hidden="0" name="assignment_basis" type="field" width="-1"/>
+          <column hidden="0" name="spatial_support" type="field" width="-1"/>
+          <column hidden="0" name="geometry" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor_basis" type="field" width="-1"/>
+          <column hidden="0" name="label" type="field" width="-1"/>
+          <column hidden="0" name="zone" type="field" width="-1"/>
+          <column hidden="0" name="zone_label_at_capture" type="field" width="-1"/>
+          <column hidden="0" name="map_version" type="field" width="-1"/>
+          <column hidden="0" name="longitude" type="field" width="-1"/>
+          <column hidden="0" name="latitude" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor_longitude" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor_latitude" type="field" width="-1"/>
+          <column hidden="0" name="Rel_Round" type="field" width="-1"/>
+          <column hidden="0" name="First_Round" type="field" width="-1"/>
+          <column hidden="0" name="people" type="field" width="-1"/>
+          <column hidden="0" name="notes" type="field" width="-1"/>
+          <column hidden="0" name="answers" type="field" width="-1"/>
+          <column hidden="1" type="actions" width="-1"/>
+        </columns>
       </attributetableconfig>
       <conditionalstyles>
         <rowstyles/>
@@ -836,7 +931,7 @@
       <reuseLastValuePolicy/>
       <dataDefinedFieldProperties/>
       <widgets/>
-      <previewExpression></previewExpression>
+      <previewExpression>COALESCE( "label", '&lt;NULL>' )</previewExpression>
       <mapTip enabled="1"></mapTip>
     </maplayer>
     <maplayer autoRefreshMode="Disabled" autoRefreshTime="0" geometry="Point" hasScaleBasedVisibilityFlag="0" labelsEnabled="1" layerType="Vector" legendPlaceholderImage="" maxScale="0" minScale="100000000" readOnly="1" refreshOnNotifyEnabled="0" refreshOnNotifyMessage="" simplifyAlgorithm="0" simplifyDrawingHints="1" simplifyDrawingTol="1" simplifyLocal="1" simplifyMaxScale="1" styleCategories="AllStyleCategories" symbologyReferenceScale="-1" type="vector" wkbType="Point">
@@ -852,15 +947,15 @@
         <xmax>-76.48499999999999943</xmax>
         <ymax>42.44819999999999993</ymax>
       </wgs84extent>
-      <id>Synthetic_point_events__inventory_excluded_cbd5f080_1b3a_4af6_a0c9_992ca55a925b</id>
+      <id>Synthetic_point_events__inventory_excluded_d8b78a16_be23_4391_813a_2b674139be2a</id>
       <datasource>./point-events.geojson</datasource>
       <layername>Synthetic point events; inventory excluded</layername>
       <srs>
         <spatialrefsys nativeFormat="Wkt">
           <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>0</srsid>
-          <srid>0</srid>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
           <authid>EPSG:4326</authid>
           <description>WGS 84</description>
           <projectionacronym>longlat</projectionacronym>
@@ -883,8 +978,8 @@
           <spatialrefsys nativeFormat="Wkt">
             <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
             <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-            <srsid>0</srsid>
-            <srid>0</srid>
+            <srsid>3452</srsid>
+            <srid>4326</srid>
             <authid>EPSG:4326</authid>
             <description>WGS 84</description>
             <projectionacronym>longlat</projectionacronym>
@@ -932,7 +1027,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleLine" enabled="1" id="{73cd47cb-26ca-4d83-b3e7-1d05f978337c}" locked="0" pass="0">
+            <layer class="SimpleLine" enabled="1" id="{0ab2bc8f-df8e-4dd8-b460-0af106f25e7d}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="align_dash_pattern" type="QString" value="0"/>
                 <Option name="capstyle" type="QString" value="square"/>
@@ -944,7 +1039,7 @@
                 <Option name="dash_pattern_offset_unit" type="QString" value="MM"/>
                 <Option name="draw_inside_polygon" type="QString" value="0"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
-                <Option name="line_color" type="QString" value="52,212,172,255,hsv:0.4583333432674408,0.75294119119644165,0.83137255907058716,1"/>
+                <Option name="line_color" type="QString" value="243,251,7,255,hsv:0.17222222685813904,0.97254902124404907,0.9843137264251709,1"/>
                 <Option name="line_style" type="QString" value="solid"/>
                 <Option name="line_width" type="QString" value="0.6"/>
                 <Option name="line_width_unit" type="QString" value="MM"/>
@@ -981,15 +1076,15 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleFill" enabled="1" id="{aa2157e6-3030-4e50-90c7-7e9919ab8ae3}" locked="0" pass="0">
+            <layer class="SimpleFill" enabled="1" id="{5e1b4af8-da95-47fe-9771-96d7fc6d8d12}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="color" type="QString" value="52,212,172,255,hsv:0.4583333432674408,0.75294119119644165,0.83137255907058716,1"/>
+                <Option name="color" type="QString" value="243,251,7,255,hsv:0.17222222685813904,0.97254902124404907,0.9843137264251709,1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="37,151,123,255,hsv:0.4583333432674408,0.75294119119644165,0.59383535385131836,1"/>
+                <Option name="outline_color" type="QString" value="173,179,5,255,hsv:0.17222222685813904,0.97254902124404907,0.70307469367980957,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_unit" type="QString" value="MM"/>
@@ -1014,18 +1109,18 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleMarker" enabled="1" id="{2286f625-1c32-4c69-a0c4-c7fd12b5ea53}" locked="0" pass="0">
+            <layer class="SimpleMarker" enabled="1" id="{39dbafca-3b05-40f8-a7d3-b707286ee75b}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="angle" type="QString" value="0"/>
                 <Option name="cap_style" type="QString" value="square"/>
-                <Option name="color" type="QString" value="52,212,172,255,hsv:0.4583333432674408,0.75294119119644165,0.83137255907058716,1"/>
+                <Option name="color" type="QString" value="243,251,7,255,hsv:0.17222222685813904,0.97254902124404907,0.9843137264251709,1"/>
                 <Option name="horizontal_anchor_point" type="QString" value="1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="name" type="QString" value="diamond"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="37,151,123,255,hsv:0.4583333432674408,0.75294119119644165,0.59383535385131836,1"/>
+                <Option name="outline_color" type="QString" value="173,179,5,255,hsv:0.17222222685813904,0.97254902124404907,0.70307469367980957,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
@@ -1057,7 +1152,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleMarker" enabled="1" id="{a6321637-a489-4b77-a53c-133770e097aa}" locked="0" pass="0">
+            <layer class="SimpleMarker" enabled="1" id="{9b81700a-5af3-4e36-85ad-f18728ab0533}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="angle" type="QString" value="0"/>
                 <Option name="cap_style" type="QString" value="square"/>
@@ -1173,7 +1268,7 @@
               <Option name="drawToAllParts" type="bool" value="false"/>
               <Option name="enabled" type="QString" value="0"/>
               <Option name="labelAnchorPoint" type="QString" value="point_on_exterior"/>
-              <Option name="lineSymbol" type="QString" value="&lt;symbol alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot; frame_rate=&quot;10&quot; is_animated=&quot;0&quot; name=&quot;symbol&quot; type=&quot;line&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer class=&quot;SimpleLine&quot; enabled=&quot;1&quot; id=&quot;{cf2667c2-f79a-4169-8ff3-aac94d772050}&quot; locked=&quot;0&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;align_dash_pattern&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;capstyle&quot; type=&quot;QString&quot; value=&quot;square&quot;/>&lt;Option name=&quot;customdash&quot; type=&quot;QString&quot; value=&quot;5;2&quot;/>&lt;Option name=&quot;customdash_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;customdash_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;dash_pattern_offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;dash_pattern_offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;dash_pattern_offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;draw_inside_polygon&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;joinstyle&quot; type=&quot;QString&quot; value=&quot;bevel&quot;/>&lt;Option name=&quot;line_color&quot; type=&quot;QString&quot; value=&quot;60,60,60,255,rgb:0.2352941,0.2352941,0.2352941,1&quot;/>&lt;Option name=&quot;line_style&quot; type=&quot;QString&quot; value=&quot;solid&quot;/>&lt;Option name=&quot;line_width&quot; type=&quot;QString&quot; value=&quot;0.3&quot;/>&lt;Option name=&quot;line_width_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;ring_filter&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_end_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;trim_distance_start&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_start_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_start_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;tweak_dash_pattern_on_corners&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;use_custom_dash&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;width_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>"/>
+              <Option name="lineSymbol" type="QString" value="&lt;symbol alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot; frame_rate=&quot;10&quot; is_animated=&quot;0&quot; name=&quot;symbol&quot; type=&quot;line&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer class=&quot;SimpleLine&quot; enabled=&quot;1&quot; id=&quot;{45ef791e-7805-4885-88e6-b397bf78b59f}&quot; locked=&quot;0&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;align_dash_pattern&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;capstyle&quot; type=&quot;QString&quot; value=&quot;square&quot;/>&lt;Option name=&quot;customdash&quot; type=&quot;QString&quot; value=&quot;5;2&quot;/>&lt;Option name=&quot;customdash_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;customdash_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;dash_pattern_offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;dash_pattern_offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;dash_pattern_offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;draw_inside_polygon&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;joinstyle&quot; type=&quot;QString&quot; value=&quot;bevel&quot;/>&lt;Option name=&quot;line_color&quot; type=&quot;QString&quot; value=&quot;60,60,60,255,rgb:0.2352941,0.2352941,0.2352941,1&quot;/>&lt;Option name=&quot;line_style&quot; type=&quot;QString&quot; value=&quot;solid&quot;/>&lt;Option name=&quot;line_width&quot; type=&quot;QString&quot; value=&quot;0.3&quot;/>&lt;Option name=&quot;line_width_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;ring_filter&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_end_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;trim_distance_start&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_start_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_start_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;tweak_dash_pattern_on_corners&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;use_custom_dash&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;width_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>"/>
               <Option name="minLength" type="double" value="0"/>
               <Option name="minLengthMapUnitScale" type="QString" value="3x:0,0,0,0,0,0"/>
               <Option name="minLengthUnit" type="QString" value="MM"/>
@@ -1188,7 +1283,11 @@
         </settings>
       </labeling>
       <customproperties>
-        <Option/>
+        <Option type="Map">
+          <Option name="dualview/previewExpressions" type="List">
+            <Option type="QString" value="COALESCE( &quot;label&quot;, '&lt;NULL>' )"/>
+          </Option>
+        </Option>
       </customproperties>
       <blendMode>0</blendMode>
       <featureBlendMode>0</featureBlendMode>
@@ -1609,9 +1708,49 @@
         <constraint desc="" exp="" field="answers"/>
       </constraintExpressions>
       <expressionfields/>
-      <attributeactions/>
+      <attributeactions>
+        <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
+      </attributeactions>
       <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
-        <columns/>
+        <columns>
+          <column hidden="0" name="id" type="field" width="-1"/>
+          <column hidden="0" name="observation_id" type="field" width="-1"/>
+          <column hidden="0" name="project_id" type="field" width="-1"/>
+          <column hidden="0" name="user_id" type="field" width="-1"/>
+          <column hidden="0" name="site_id" type="field" width="-1"/>
+          <column hidden="0" name="site_code" type="field" width="-1"/>
+          <column hidden="0" name="site_name" type="field" width="-1"/>
+          <column hidden="0" name="observer" type="field" width="-1"/>
+          <column hidden="0" name="observed_at" type="field" width="-1"/>
+          <column hidden="0" name="received_at" type="field" width="-1"/>
+          <column hidden="0" name="revision" type="field" width="-1"/>
+          <column hidden="0" name="form_version" type="field" width="-1"/>
+          <column hidden="0" name="round_type" type="field" width="-1"/>
+          <column hidden="0" name="first_round" type="field" width="-1"/>
+          <column hidden="0" name="placement" type="field" width="-1"/>
+          <column hidden="0" name="package_id" type="field" width="-1"/>
+          <column hidden="0" name="zone_id" type="field" width="-1"/>
+          <column hidden="0" name="zone_code" type="field" width="-1"/>
+          <column hidden="0" name="assignment_basis" type="field" width="-1"/>
+          <column hidden="0" name="spatial_support" type="field" width="-1"/>
+          <column hidden="0" name="geometry" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor_basis" type="field" width="-1"/>
+          <column hidden="0" name="label" type="field" width="-1"/>
+          <column hidden="0" name="zone" type="field" width="-1"/>
+          <column hidden="0" name="zone_label_at_capture" type="field" width="-1"/>
+          <column hidden="0" name="map_version" type="field" width="-1"/>
+          <column hidden="0" name="longitude" type="field" width="-1"/>
+          <column hidden="0" name="latitude" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor_longitude" type="field" width="-1"/>
+          <column hidden="0" name="display_anchor_latitude" type="field" width="-1"/>
+          <column hidden="0" name="Rel_Round" type="field" width="-1"/>
+          <column hidden="0" name="First_Round" type="field" width="-1"/>
+          <column hidden="0" name="people" type="field" width="-1"/>
+          <column hidden="0" name="notes" type="field" width="-1"/>
+          <column hidden="0" name="answers" type="field" width="-1"/>
+          <column hidden="1" type="actions" width="-1"/>
+        </columns>
       </attributetableconfig>
       <conditionalstyles>
         <rowstyles/>
@@ -1630,7 +1769,7 @@
       <reuseLastValuePolicy/>
       <dataDefinedFieldProperties/>
       <widgets/>
-      <previewExpression></previewExpression>
+      <previewExpression>COALESCE( "label", '&lt;NULL>' )</previewExpression>
       <mapTip enabled="1"></mapTip>
     </maplayer>
     <maplayer autoRefreshMode="Disabled" autoRefreshTime="0" geometry="Polygon" hasScaleBasedVisibilityFlag="0" labelsEnabled="1" layerType="Vector" legendPlaceholderImage="" maxScale="0" minScale="100000000" readOnly="1" refreshOnNotifyEnabled="0" refreshOnNotifyMessage="" simplifyAlgorithm="0" simplifyDrawingHints="1" simplifyDrawingTol="1" simplifyLocal="1" simplifyMaxScale="1" styleCategories="AllStyleCategories" symbologyReferenceScale="-1" type="vector" wkbType="MultiPolygon">
@@ -1646,15 +1785,15 @@
         <xmax>-76.48439999999999372</xmax>
         <ymax>42.44890000000000185</ymax>
       </wgs84extent>
-      <id>Synthetic_recorded_zones__v7_and_v8_1db0c46b_7e3c_444e_a915_a41c8bfd6ea6</id>
+      <id>Synthetic_recorded_zones__v7_and_v8_583a9500_936d_4eb0_8669_13884ffb62c6</id>
       <datasource>./historical-zones.geojson</datasource>
       <layername>Synthetic recorded zones: v7 and v8</layername>
       <srs>
         <spatialrefsys nativeFormat="Wkt">
           <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>0</srsid>
-          <srid>0</srid>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
           <authid>EPSG:4326</authid>
           <description>WGS 84</description>
           <projectionacronym>longlat</projectionacronym>
@@ -1677,8 +1816,8 @@
           <spatialrefsys nativeFormat="Wkt">
             <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
             <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-            <srsid>0</srsid>
-            <srid>0</srid>
+            <srsid>3452</srsid>
+            <srid>4326</srid>
             <authid>EPSG:4326</authid>
             <description>WGS 84</description>
             <projectionacronym>longlat</projectionacronym>
@@ -1726,7 +1865,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleLine" enabled="1" id="{c9682783-9087-4e78-92aa-316864dde2cf}" locked="0" pass="0">
+            <layer class="SimpleLine" enabled="1" id="{d894a553-f774-4f54-8fdc-326428508186}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="align_dash_pattern" type="QString" value="0"/>
                 <Option name="capstyle" type="QString" value="square"/>
@@ -1738,7 +1877,7 @@
                 <Option name="dash_pattern_offset_unit" type="QString" value="MM"/>
                 <Option name="draw_inside_polygon" type="QString" value="0"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
-                <Option name="line_color" type="QString" value="251,137,230,255,hsv:0.86388885974884033,0.45490196347236633,0.9843137264251709,1"/>
+                <Option name="line_color" type="QString" value="188,129,215,255,hsv:0.78055554628372192,0.40000000596046448,0.84313726425170898,1"/>
                 <Option name="line_style" type="QString" value="solid"/>
                 <Option name="line_width" type="QString" value="0.6"/>
                 <Option name="line_width_unit" type="QString" value="MM"/>
@@ -1775,15 +1914,15 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleFill" enabled="1" id="{79aef45c-c18a-43d1-a6b2-b3f17d1ed2d5}" locked="0" pass="0">
+            <layer class="SimpleFill" enabled="1" id="{e4a7b796-8d37-4862-9952-66cf88aac085}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="color" type="QString" value="251,137,230,255,hsv:0.86388885974884033,0.45490196347236633,0.9843137264251709,1"/>
+                <Option name="color" type="QString" value="188,129,215,255,hsv:0.78055554628372192,0.40000000596046448,0.84313726425170898,1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="179,98,164,255,hsv:0.86388885974884033,0.45490196347236633,0.70307469367980957,1"/>
+                <Option name="outline_color" type="QString" value="134,92,154,255,hsv:0.78055554628372192,0.40000000596046448,0.60222780704498291,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_unit" type="QString" value="MM"/>
@@ -1808,18 +1947,18 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleMarker" enabled="1" id="{a4bd150c-aefc-481f-a274-23724e8a240b}" locked="0" pass="0">
+            <layer class="SimpleMarker" enabled="1" id="{48665d01-f4b0-4f32-ad03-a72c66a219dd}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="angle" type="QString" value="0"/>
                 <Option name="cap_style" type="QString" value="square"/>
-                <Option name="color" type="QString" value="251,137,230,255,hsv:0.86388885974884033,0.45490196347236633,0.9843137264251709,1"/>
+                <Option name="color" type="QString" value="188,129,215,255,hsv:0.78055554628372192,0.40000000596046448,0.84313726425170898,1"/>
                 <Option name="horizontal_anchor_point" type="QString" value="1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="name" type="QString" value="diamond"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="179,98,164,255,hsv:0.86388885974884033,0.45490196347236633,0.70307469367980957,1"/>
+                <Option name="outline_color" type="QString" value="134,92,154,255,hsv:0.78055554628372192,0.40000000596046448,0.60222780704498291,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
@@ -1843,8 +1982,8 @@
       </elevation>
       <renderer-v2 attr="map_version" enableorderby="0" forceraster="0" referencescale="-1" symbollevels="0" type="categorizedSymbol">
         <categories>
-          <category label="Synthetic v7" render="true" symbol="0" type="long" uuid="{1decff1c-8ddf-40e0-81fa-c8fb005c8321}" value="7"/>
-          <category label="Synthetic v8" render="true" symbol="1" type="long" uuid="{1e2e173a-91a3-443c-be61-9c973dfb3351}" value="8"/>
+          <category label="Synthetic v7" render="true" symbol="0" type="long" uuid="{0172b852-81bc-4aaa-a3f2-ccf9981dcc8a}" value="7"/>
+          <category label="Synthetic v8" render="true" symbol="1" type="long" uuid="{caa053f7-2273-431e-84c6-0e6fa307e27d}" value="8"/>
         </categories>
         <symbols>
           <symbol alpha="1" clip_to_extent="1" force_rhr="0" frame_rate="10" is_animated="0" name="0" type="fill">
@@ -1855,7 +1994,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleFill" enabled="1" id="{50f7bf48-1c63-4248-837d-1ca8c7269c54}" locked="0" pass="0">
+            <layer class="SimpleFill" enabled="1" id="{caa73fa9-7149-4b6a-8462-17ab2e944da7}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="color" type="QString" value="255,255,255,0,rgb:1,1,1,0"/>
@@ -1886,7 +2025,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleFill" enabled="1" id="{3525b9ad-eba2-4b7d-b4c6-1dbd6d851e67}" locked="0" pass="0">
+            <layer class="SimpleFill" enabled="1" id="{a09067f2-73a0-4a79-9862-5bcda4b4d29b}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="color" type="QString" value="255,255,255,0,rgb:1,1,1,0"/>
@@ -1994,7 +2133,7 @@
               <Option name="drawToAllParts" type="bool" value="false"/>
               <Option name="enabled" type="QString" value="0"/>
               <Option name="labelAnchorPoint" type="QString" value="point_on_exterior"/>
-              <Option name="lineSymbol" type="QString" value="&lt;symbol alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot; frame_rate=&quot;10&quot; is_animated=&quot;0&quot; name=&quot;symbol&quot; type=&quot;line&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer class=&quot;SimpleLine&quot; enabled=&quot;1&quot; id=&quot;{1f314fdd-7fb4-4cc3-8273-a4176c74242b}&quot; locked=&quot;0&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;align_dash_pattern&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;capstyle&quot; type=&quot;QString&quot; value=&quot;square&quot;/>&lt;Option name=&quot;customdash&quot; type=&quot;QString&quot; value=&quot;5;2&quot;/>&lt;Option name=&quot;customdash_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;customdash_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;dash_pattern_offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;dash_pattern_offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;dash_pattern_offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;draw_inside_polygon&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;joinstyle&quot; type=&quot;QString&quot; value=&quot;bevel&quot;/>&lt;Option name=&quot;line_color&quot; type=&quot;QString&quot; value=&quot;60,60,60,255,rgb:0.2352941,0.2352941,0.2352941,1&quot;/>&lt;Option name=&quot;line_style&quot; type=&quot;QString&quot; value=&quot;solid&quot;/>&lt;Option name=&quot;line_width&quot; type=&quot;QString&quot; value=&quot;0.3&quot;/>&lt;Option name=&quot;line_width_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;ring_filter&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_end_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;trim_distance_start&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_start_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_start_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;tweak_dash_pattern_on_corners&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;use_custom_dash&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;width_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>"/>
+              <Option name="lineSymbol" type="QString" value="&lt;symbol alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot; frame_rate=&quot;10&quot; is_animated=&quot;0&quot; name=&quot;symbol&quot; type=&quot;line&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer class=&quot;SimpleLine&quot; enabled=&quot;1&quot; id=&quot;{1f0eeab2-cb77-4761-a77a-748daf5867cf}&quot; locked=&quot;0&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;align_dash_pattern&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;capstyle&quot; type=&quot;QString&quot; value=&quot;square&quot;/>&lt;Option name=&quot;customdash&quot; type=&quot;QString&quot; value=&quot;5;2&quot;/>&lt;Option name=&quot;customdash_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;customdash_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;dash_pattern_offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;dash_pattern_offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;dash_pattern_offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;draw_inside_polygon&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;joinstyle&quot; type=&quot;QString&quot; value=&quot;bevel&quot;/>&lt;Option name=&quot;line_color&quot; type=&quot;QString&quot; value=&quot;60,60,60,255,rgb:0.2352941,0.2352941,0.2352941,1&quot;/>&lt;Option name=&quot;line_style&quot; type=&quot;QString&quot; value=&quot;solid&quot;/>&lt;Option name=&quot;line_width&quot; type=&quot;QString&quot; value=&quot;0.3&quot;/>&lt;Option name=&quot;line_width_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;ring_filter&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_end_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;trim_distance_start&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_start_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_start_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;tweak_dash_pattern_on_corners&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;use_custom_dash&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;width_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>"/>
               <Option name="minLength" type="double" value="0"/>
               <Option name="minLengthMapUnitScale" type="QString" value="3x:0,0,0,0,0,0"/>
               <Option name="minLengthUnit" type="QString" value="MM"/>
@@ -2137,15 +2276,15 @@
         <xmax>-76.48439999999999372</xmax>
         <ymax>42.44890000000000185</ymax>
       </wgs84extent>
-      <id>Synthetic_whole_zone_inventories__legacy_geometry_unknown_01ae0185_f4b0_4791_9792_fb276366aa1d</id>
+      <id>Synthetic_whole_zone_inventories__legacy_geometry_unknown_35f7d2b3_99b2_4596_a50e_b6dcfe12cb22</id>
       <datasource>./inventory-records.geojson</datasource>
       <layername>Synthetic whole-zone inventories; legacy geometry unknown</layername>
       <srs>
         <spatialrefsys nativeFormat="Wkt">
           <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>0</srsid>
-          <srid>0</srid>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
           <authid>EPSG:4326</authid>
           <description>WGS 84</description>
           <projectionacronym>longlat</projectionacronym>
@@ -2168,8 +2307,8 @@
           <spatialrefsys nativeFormat="Wkt">
             <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
             <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-            <srsid>0</srsid>
-            <srid>0</srid>
+            <srsid>3452</srsid>
+            <srid>4326</srid>
             <authid>EPSG:4326</authid>
             <description>WGS 84</description>
             <projectionacronym>longlat</projectionacronym>
@@ -2217,7 +2356,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleLine" enabled="1" id="{003c24b7-9348-459b-8b07-bdaf3de00308}" locked="0" pass="0">
+            <layer class="SimpleLine" enabled="1" id="{2ae566f2-8b98-4425-89bf-65af0e01e52e}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="align_dash_pattern" type="QString" value="0"/>
                 <Option name="capstyle" type="QString" value="square"/>
@@ -2229,7 +2368,7 @@
                 <Option name="dash_pattern_offset_unit" type="QString" value="MM"/>
                 <Option name="draw_inside_polygon" type="QString" value="0"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
-                <Option name="line_color" type="QString" value="161,130,110,255,hsv:0.06666667014360428,0.31764706969261169,0.63137257099151611,1"/>
+                <Option name="line_color" type="QString" value="102,154,39,255,hsv:0.24166665971279144,0.7450980544090271,0.60392159223556519,1"/>
                 <Option name="line_style" type="QString" value="solid"/>
                 <Option name="line_width" type="QString" value="0.6"/>
                 <Option name="line_width_unit" type="QString" value="MM"/>
@@ -2266,15 +2405,15 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleFill" enabled="1" id="{fd01f7e3-e4fc-4d2f-8d24-71e7307a8472}" locked="0" pass="0">
+            <layer class="SimpleFill" enabled="1" id="{c604ceac-a988-4f4b-9b6f-61ab54aee6e5}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="color" type="QString" value="161,130,110,255,hsv:0.06666667014360428,0.31764706969261169,0.63137257099151611,1"/>
+                <Option name="color" type="QString" value="102,154,39,255,hsv:0.24166665971279144,0.7450980544090271,0.60392159223556519,1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="115,93,78,255,hsv:0.06666667014360428,0.31764706969261169,0.45098039507865906,1"/>
+                <Option name="outline_color" type="QString" value="73,110,28,255,hsv:0.24166665971279144,0.7450980544090271,0.43137255311012268,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_unit" type="QString" value="MM"/>
@@ -2299,18 +2438,18 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleMarker" enabled="1" id="{e8f1c481-eb03-4956-ba68-b5a213a6de0b}" locked="0" pass="0">
+            <layer class="SimpleMarker" enabled="1" id="{ce8db9ca-23ae-4868-bac6-2f91a2564df6}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="angle" type="QString" value="0"/>
                 <Option name="cap_style" type="QString" value="square"/>
-                <Option name="color" type="QString" value="161,130,110,255,hsv:0.06666667014360428,0.31764706969261169,0.63137257099151611,1"/>
+                <Option name="color" type="QString" value="102,154,39,255,hsv:0.24166665971279144,0.7450980544090271,0.60392159223556519,1"/>
                 <Option name="horizontal_anchor_point" type="QString" value="1"/>
                 <Option name="joinstyle" type="QString" value="bevel"/>
                 <Option name="name" type="QString" value="diamond"/>
                 <Option name="offset" type="QString" value="0,0"/>
                 <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="115,93,78,255,hsv:0.06666667014360428,0.31764706969261169,0.45098039507865906,1"/>
+                <Option name="outline_color" type="QString" value="73,110,28,255,hsv:0.24166665971279144,0.7450980544090271,0.43137255311012268,1"/>
                 <Option name="outline_style" type="QString" value="solid"/>
                 <Option name="outline_width" type="QString" value="0.2"/>
                 <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
@@ -2342,7 +2481,7 @@
                 <Option name="type" type="QString" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer class="SimpleFill" enabled="1" id="{4f2b6709-64ac-4234-bf6a-c626b4a10fa4}" locked="0" pass="0">
+            <layer class="SimpleFill" enabled="1" id="{5d647294-7db7-4c44-a58e-16d030a7cb46}" locked="0" pass="0">
               <Option type="Map">
                 <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
                 <Option name="color" type="QString" value="142,99,179,100,rgb:0.5568628,0.3882353,0.7019608,0.3921569"/>
@@ -2450,7 +2589,7 @@
               <Option name="drawToAllParts" type="bool" value="false"/>
               <Option name="enabled" type="QString" value="0"/>
               <Option name="labelAnchorPoint" type="QString" value="point_on_exterior"/>
-              <Option name="lineSymbol" type="QString" value="&lt;symbol alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot; frame_rate=&quot;10&quot; is_animated=&quot;0&quot; name=&quot;symbol&quot; type=&quot;line&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer class=&quot;SimpleLine&quot; enabled=&quot;1&quot; id=&quot;{6ac72a2a-9b58-4ef0-bb17-163f63e6e1f3}&quot; locked=&quot;0&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;align_dash_pattern&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;capstyle&quot; type=&quot;QString&quot; value=&quot;square&quot;/>&lt;Option name=&quot;customdash&quot; type=&quot;QString&quot; value=&quot;5;2&quot;/>&lt;Option name=&quot;customdash_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;customdash_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;dash_pattern_offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;dash_pattern_offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;dash_pattern_offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;draw_inside_polygon&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;joinstyle&quot; type=&quot;QString&quot; value=&quot;bevel&quot;/>&lt;Option name=&quot;line_color&quot; type=&quot;QString&quot; value=&quot;60,60,60,255,rgb:0.2352941,0.2352941,0.2352941,1&quot;/>&lt;Option name=&quot;line_style&quot; type=&quot;QString&quot; value=&quot;solid&quot;/>&lt;Option name=&quot;line_width&quot; type=&quot;QString&quot; value=&quot;0.3&quot;/>&lt;Option name=&quot;line_width_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;ring_filter&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_end_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;trim_distance_start&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_start_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_start_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;tweak_dash_pattern_on_corners&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;use_custom_dash&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;width_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>"/>
+              <Option name="lineSymbol" type="QString" value="&lt;symbol alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot; frame_rate=&quot;10&quot; is_animated=&quot;0&quot; name=&quot;symbol&quot; type=&quot;line&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer class=&quot;SimpleLine&quot; enabled=&quot;1&quot; id=&quot;{e4593726-b595-4b57-a626-926a3fa1322d}&quot; locked=&quot;0&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;align_dash_pattern&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;capstyle&quot; type=&quot;QString&quot; value=&quot;square&quot;/>&lt;Option name=&quot;customdash&quot; type=&quot;QString&quot; value=&quot;5;2&quot;/>&lt;Option name=&quot;customdash_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;customdash_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;dash_pattern_offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;dash_pattern_offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;dash_pattern_offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;draw_inside_polygon&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;joinstyle&quot; type=&quot;QString&quot; value=&quot;bevel&quot;/>&lt;Option name=&quot;line_color&quot; type=&quot;QString&quot; value=&quot;60,60,60,255,rgb:0.2352941,0.2352941,0.2352941,1&quot;/>&lt;Option name=&quot;line_style&quot; type=&quot;QString&quot; value=&quot;solid&quot;/>&lt;Option name=&quot;line_width&quot; type=&quot;QString&quot; value=&quot;0.3&quot;/>&lt;Option name=&quot;line_width_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;ring_filter&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_end_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;trim_distance_start&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_start_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_start_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;tweak_dash_pattern_on_corners&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;use_custom_dash&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;width_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>"/>
               <Option name="minLength" type="double" value="0"/>
               <Option name="minLengthMapUnitScale" type="QString" value="3x:0,0,0,0,0,0"/>
               <Option name="minLengthUnit" type="QString" value="MM"/>
@@ -2934,10 +3073,10 @@
     </maplayer>
   </projectlayers>
   <layerorder>
-    <layer id="Synthetic_recorded_zones__v7_and_v8_1db0c46b_7e3c_444e_a915_a41c8bfd6ea6"/>
-    <layer id="Synthetic_point_events__inventory_excluded_cbd5f080_1b3a_4af6_a0c9_992ca55a925b"/>
-    <layer id="Synthetic_whole_zone_inventories__legacy_geometry_unknown_01ae0185_f4b0_4791_9792_fb276366aa1d"/>
-    <layer id="Synthetic_legacy_records__no_inferred_version_c52198ba_1836_426f_b8dd_4ef5dcc64e0b"/>
+    <layer id="Synthetic_recorded_zones__v7_and_v8_583a9500_936d_4eb0_8669_13884ffb62c6"/>
+    <layer id="Synthetic_point_events__inventory_excluded_d8b78a16_be23_4391_813a_2b674139be2a"/>
+    <layer id="Synthetic_whole_zone_inventories__legacy_geometry_unknown_35f7d2b3_99b2_4596_a50e_b6dcfe12cb22"/>
+    <layer id="Synthetic_legacy_records__no_inferred_version_9fd9d688_f85a_4102_85c3_9570e11f4a9d"/>
   </layerorder>
   <labelEngineSettings/>
   <properties name="properties">
@@ -2952,6 +3091,9 @@
       <properties name="SelectionColorBluePart" type="int">0</properties>
       <properties name="SelectionColorGreenPart" type="int">255</properties>
       <properties name="SelectionColorRedPart" type="int">255</properties>
+    </properties>
+    <properties name="Legend">
+      <properties name="filterByMap" type="bool">false</properties>
     </properties>
     <properties name="Measurement">
       <properties name="AreaUnits" type="QString">m2</properties>
@@ -3001,10 +3143,10 @@
     <abstract></abstract>
     <links/>
     <dates>
-      <date type="Created" value="2026-10-11T22:04:12"/>
+      <date type="Created" value="2026-10-11T16:55:49"/>
     </dates>
     <author>pratyush sudhakar</author>
-    <creation>2026-10-11T22:04:12</creation>
+    <creation>2026-10-11T16:55:49</creation>
   </projectMetadata>
   <Annotations/>
   <Layouts/>
@@ -3015,12 +3157,12 @@
   <Sensors/>
   <ProjectViewSettings UseProjectScales="0" rotation="0">
     <Scales/>
-    <DefaultViewExtent xmax="-76.48419999999998709" xmin="-76.48660000000000991" ymax="42.44901000000000835" ymin="42.44769000000000148">
+    <DefaultViewExtent xmax="-76.48272570449371699" xmin="-76.48730943511417024" ymax="42.44930280022540359" ymin="42.4474996136342142">
       <spatialrefsys nativeFormat="Wkt">
         <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
         <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-        <srsid>0</srsid>
-        <srid>0</srid>
+        <srsid>3452</srsid>
+        <srid>4326</srid>
         <authid>EPSG:4326</authid>
         <description>WGS 84</description>
         <projectionacronym>longlat</projectionacronym>
@@ -3029,7 +3171,7 @@
       </spatialrefsys>
     </DefaultViewExtent>
   </ProjectViewSettings>
-  <ProjectStyleSettings DefaultSymbolOpacity="1" RandomizeDefaultSymbolColor="1" colorModel="Rgb" iccProfileId="attachment:///" projectStyleId="attachment:///pRGAty_styles.db">
+  <ProjectStyleSettings DefaultSymbolOpacity="1" RandomizeDefaultSymbolColor="1" colorModel="Rgb" iccProfileId="attachment:///QGIS4-QMzKoH" projectStyleId="attachment:///hewjYs_styles.db">
     <databases/>
   </ProjectStyleSettings>
   <ProjectTimeSettings cumulativeTemporalRange="0" frameRate="1" timeStep="1" timeStepUnit="h" totalMovieFrames="100"/>
@@ -3070,8 +3212,8 @@
       <spatialrefsys nativeFormat="Wkt">
         <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
         <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-        <srsid>0</srsid>
-        <srid>0</srid>
+        <srsid>3452</srsid>
+        <srid>4326</srid>
         <authid>EPSG:4326</authid>
         <description>WGS 84</description>
         <projectionacronym>longlat</projectionacronym>
@@ -3080,7 +3222,7 @@
       </spatialrefsys>
     </CoordinateCustomCrs>
   </ProjectDisplaySettings>
-  <ProjectGpsSettings autoAddTrackVertices="0" autoCommitFeatures="0" destinationFollowsActiveLayer="1" destinationLayer="">
+  <ProjectGpsSettings autoAddTrackVertices="0" autoCommitFeatures="0" destinationFollowsActiveLayer="1" destinationLayer="Synthetic_point_events__inventory_excluded_d8b78a16_be23_4391_813a_2b674139be2a" destinationLayerName="Synthetic point events; inventory excluded" destinationLayerProvider="ogr" destinationLayerSource="/Users/praty/Desktop/StudentJob.nosync/field-ops/qgis/zone-boundaries/acceptance/point-events.geojson">
     <timeStampFields/>
   </ProjectGpsSettings>
 </qgis>

@@ -1,1 +1,37 @@
-{"project_id":"1ca2c4df-ef0f-4952-bea7-1b8a49224ac9","total_matching":5,"generated_at":"2026-10-11T20:55:01.677917+00:00","project_timezone":"America/New_York","timezone_interpretation":"Filter timestamps are aware UTC instants; observed_from inclusive, observed_before exclusive","filters":{"site_id":"692d40e4-8707-4a6c-833a-7941cda75e84","package_id":null,"zone_id":[],"assignment_basis":null,"legacy_zone_code":null,"round_type":null,"observer":null,"observed_from":null,"observed_before":null},"versions":[7,8],"assignment_basis":["legacy_unversioned","recorded_package"],"limits":{"rows":10000,"uncompressed_bytes":33554432,"zip_bytes":33554432,"seconds":10,"source_snapshot_bytes":67108864},"csv_missing_answer":"empty cell","csv_null_answer":"n/a","csv_multi_select":"semicolon-separated option codes","display_anchor":"Snapshot anchors and legacy_compatibility anchors are display aids; inventories have null event geometry"}
+{
+    "project_id": "1ca2c4df-ef0f-4952-bea7-1b8a49224ac9",
+    "total_matching": 5,
+    "generated_at": "2026-10-11T20:55:01.219261+00:00",
+    "project_timezone": "America/New_York",
+    "timezone_interpretation": "Filter timestamps are aware UTC instants; observed_from inclusive, observed_before exclusive",
+    "filters": {
+        "site_id": "692d40e4-8707-4a6c-833a-7941cda75e84",
+        "package_id": null,
+        "zone_id": [],
+        "assignment_basis": null,
+        "legacy_zone_code": null,
+        "round_type": null,
+        "observer": null,
+        "observed_from": null,
+        "observed_before": null
+    },
+    "versions": [
+        7,
+        8
+    ],
+    "assignment_basis": [
+        "legacy_unversioned",
+        "recorded_package"
+    ],
+    "limits": {
+        "rows": 10000,
+        "uncompressed_bytes": 33554432,
+        "zip_bytes": 33554432,
+        "seconds": 10,
+        "source_snapshot_bytes": 67108864
+    },
+    "csv_missing_answer": "empty cell",
+    "csv_null_answer": "n/a",
+    "csv_multi_select": "semicolon-separated option codes",
+    "display_anchor": "Snapshot anchors and legacy_compatibility anchors are display aids; inventories have null event geometry"
+}
