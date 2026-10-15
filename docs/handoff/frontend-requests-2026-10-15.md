@@ -5,7 +5,8 @@ From branch `claude/frontend-pending`. Each request names its owner and the evid
 ## Mobile data agent
 
 1. **Remove one account's data from the device** (MOB-07 step 4 and its Done-when). A tested patch for `src/storage/account-removal.ts` is in [mobile/MOB-07-HANDOFF.md](../../mobile/MOB-07-HANDOFF.md), with two smaller requests: the time of the last acknowledged upload (MOB-07 step 1), and a note when MOB-29 makes `wake()` upload.
-2. **MOB-33 follow-up done on the UI side.** The form-missing card now reads `Recovered.formVersion` ("Form janet-test-v1 for this observation is not on this device."). [MOB-33-HANDOFF.md](../../mobile/MOB-33-HANDOFF.md) still says the UI owner should do it; please mark it done there.
+2. **The development build cannot sign in against local Auth.** `mobile/config/development.json` sets `supabaseUrl` to `http://127.0.0.1:54323` (changed from 54321 in a86a1ee). 54323 is Supabase Studio: `GET /auth/v1/health` answers 404 there and 200 on 54321. Every simulator check of sign-in, sign-up and recovery ([device checklist](../qa/device-checklist-2026-10.md) section 1) waits for `"supabaseUrl": "http://127.0.0.1:54321"`, unless 54323 was meant for something I could not find.
+3. **MOB-33 follow-up done on the UI side.** The form-missing card now reads `Recovered.formVersion` ("Form janet-test-v1 for this observation is not on this device."). [MOB-33-HANDOFF.md](../../mobile/MOB-33-HANDOFF.md) still says the UI owner should do it; please mark it done there.
 
 ## CI owner (OPS-06)
 
