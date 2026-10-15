@@ -40,9 +40,18 @@ function deleteStyles(t: Theme) {
   });
 }
 
-/** What the screen says after a try that did not delete the account; null while there is nothing. */
+/**
+ * What the screen says after a try: why nothing was deleted, or that a deletion was recorded while another
+ * account signed in here. Null when the device moves on to welcome by itself.
+ */
 function refusal(outcome: DeletionOutcome): { title: string; body: string } | null {
   switch (outcome.kind) {
+    case "recorded":
+      if (outcome.stopped !== "otherAccount") return null;
+      return {
+        title: "Deletion is recorded.",
+        body: "A different account is signed in on this phone now, so DECA Mark stopped trying. Removing the deleted account's sign-in is recorded, and the person who runs DECA Mark will complete it. The account signed in now was not touched.",
+      };
     case "unavailable":
       return {
         title: "Deleting accounts is not available yet. Nothing was deleted.",
@@ -137,16 +146,20 @@ export default function DeleteAccountScreen() {
     });
     if (result.kind === "deleted" || result.kind === "recorded") {
       haptics.success();
-      announce(
-        result.kind === "deleted"
-          ? "Account deleted. Its records stay on this device and cannot upload."
-          : "Account deletion recorded. DECA Mark completes it. Its records stay on this device and cannot upload.",
-      );
       // Only the account that confirmed is treated as deleted here; another sign-in is left alone.
       const otherSignedIn = result.kind === "recorded" && result.stopped === "otherAccount";
-      if (account?.id === confirmedFor && !otherSignedIn) markAccountDeleted();
+      const words = refusal(result);
+      announce(
+        words
+          ? `${words.title} ${words.body}`
+          : result.kind === "deleted"
+            ? "Account deleted. Its records stay on this device and cannot upload."
+            : "Account deletion recorded. DECA Mark completes it. Its records stay on this device and cannot upload.",
+      );
+      if (!otherSignedIn) markAccountDeleted();
       if (mounted.current) {
         setBusy(false);
+        setFinishing(null);
         setOutcome(result);
       }
       return;
