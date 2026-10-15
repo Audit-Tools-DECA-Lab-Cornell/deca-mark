@@ -234,12 +234,14 @@ Do:
 Done when: 10,000 synthetic observations on the local stack scroll and filter smoothly, and the filters survive a page reload.
 
 ### WEB-11: Overview on real data
-Status: todo · Phase 3 · Size M · Depends: BE-14, WEB-06 · Blocks: none
+Status: done (2026-10-15; as built; the play-type bars are not on the overview) · Phase 3 · Size M · Depends: BE-14, WEB-06 · Blocks: none
 WEB-27 (2026-10-09, D30): delivered without a summary endpoint. The overview works out the field return, the coverage of zones by Standard, Reliability and Inventory rounds, what needs attention and the recent activity in the web app, from the site list and the newest 500 observations. At the cap it says "Based on the newest 500 observations." No completion target is claimed.
 Cut option: show counts only, without charts.
 Do: fill WEB-23's overview (counts, `TypeBars` and the coverage matrix) from `GET …/summary`, keeping its layout; `DESIGN.md` rules out KPI tiles. Delete client-side aggregation over fixtures (`src/lib/analysis.ts`) that nothing uses anymore.
 
 Done when: the overview matches SQL counts on the local stack.
+
+Verified 2026-10-15: the part of BE-14 this task needs is in the API (`GET …/observations/summary`, BE-20's subset; BE-14 itself still lacks the viewport filter), and the overview reads it (`summarizeObservations` for today and the last 7 days, `coverageFromGroups` for coverage by zone and round; WEB-41); `src/lib/analysis.ts` is gone. `e2e/overview-sql.spec.ts` reads the project's counts straight from the local database (`docker exec … psql`, total and by zone and round type) and holds the overview's total and each zone's coverage row to them: 2 of 2 at desktop-1440 and phone-390 on the local stack, beside `overview.spec.ts` 4 of 4. Not built: `TypeBars` on the overview, because the summary carries no answers (play types); DESIGN.md rules out KPI tiles, and the lead may drop that part of the Do line.
 
 ### WEB-12: GIS page and exports
 Status: todo · Phase 3 · Size S · Depends: BE-14, BE-15, GIS-01, GIS-04, WEB-05 · Blocks: none
@@ -283,7 +285,7 @@ Verified 2026-10-14: `/privacy` describes public sign-up with a six-digit email 
 Updated 2026-10-15 (MOB-05, MOB-07): the app now creates accounts and deletes them, so `/privacy` and `/privacy/delete-data` say so (app deletion path, records not uploaded stay on the device and can no longer upload, sign-out works offline, and the note the app keeps at sign-out); the effective date is October 15, 2026. The two "to be confirmed" facts are unchanged.
 
 ### WEB-15: End-to-end tests with Playwright
-Status: todo · Phase 4 · Size M · Depends: DB-02, WEB-04, WEB-06, WEB-07 · Blocks: QA-04
+Status: doing (2026-10-15: unblocked by WEB-07; the suite passes locally; running it in CI is a request to the CI owner) · Phase 4 · Size M · Depends: DB-02, WEB-04, WEB-06, WEB-07 · Blocks: QA-04
 WEB-27 (2026-10-09, D30): partly delivered. `web/e2e` and `scripts/e2e-local.sh` run Playwright against local Supabase, the local API and the seed in `database/seed-web-workspace.mjs`. Specs: sign-in, sites, packages, forms, data, overview, QGIS and reports, settings, team, organization pages, an invitation redeemed by a viewer, an observer joining by code, the removed routes, and a scan of every route for sample words, jargon, more than one primary button and axe findings in Day and Dusk. Not covered: sign-up with Mailpit codes, password reset and account deletion. There is no onboarding to test.
 WEB-04 (2026-10-14): `e2e/auth-flows.spec.ts` now covers sign-up with Mailpit codes (a wrong code, then the right one) and password reset (the old password refused, the new one accepted), and `org.spec.ts` covers an owner creating a project in their own organization. Account deletion is unit-tested only: the local API has no Auth Admin key, so `DELETE /v1/me` answers 503 there. This task stays todo until WEB-07 is done (Depends).
 Do: add `web/e2e/`, running against the local stack and reading codes from the Mailpit API. Cover:
@@ -294,6 +296,8 @@ Do: add `web/e2e/`, running against the local stack and reading codes from the M
 - account deletion.
 
 Done when: the suite passes locally and in CI (OPS-06).
+
+Progress 2026-10-15: every dependency is done (WEB-07 closed today). On the local stack, with the API's email delivery off (`scripts/e2e-local.sh` now forces it; since 529e81b the API sent `team.spec.ts`'s invitations whenever the calling shell had provider settings), the suite for this task passes at desktop-1440 and phone-390, 38 of 38 with setup: `auth-flows.spec.ts` (sign-up and verify with Mailpit codes, password reset), `sign-in.spec.ts`, `org.spec.ts` (an owner creates a project; organizations come from the bootstrap script under D30, so "onboarding, then the org and project exist" is the bootstrap plus this spec), `invite-viewer.spec.ts` (a second user redeems a link), `team.spec.ts` (a manager creates a join code), `join-observer.spec.ts` and `account-deletion.spec.ts` (the account check; DELETE /v1/me answering 204 or 202 needs BE-08's key). **Open:** CI runs no Playwright job; a proposed job is in [the 2026-10-15 requests](../docs/handoff/frontend-requests-2026-10-15.md) for the CI owner (OPS-06).
 
 ### WEB-16: Web error reporting
 Status: todo · Phase 4 · Size S · Depends: OPS-07, WEB-03 · Blocks: QA-06
