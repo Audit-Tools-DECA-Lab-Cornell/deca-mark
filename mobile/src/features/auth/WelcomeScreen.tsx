@@ -74,7 +74,7 @@ export function WelcomeScreen() {
           style={s.note}
           testID={`auth-welcome-waiting-${summary.userId}`}
         >
-          They upload when that account signs in again. Another account cannot upload them.
+          They wait here for that account. Only that account can upload them.
         </Note>
       ))}
       <PendingInvitationNote style={s.note} />

@@ -1,195 +1,188 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { useAccount } from "../../../../src/auth/provider";
-import {
-  AttentionNote,
-  FadeRule,
-  GhostAction,
-  LinkAction,
-  OptionButton,
-  PrimaryAction,
-  Prose,
-  SectionLabel,
-} from "../../../../src/components/chrome";
-import { PageScreen } from "../../../../src/components/screen";
+import { useMe } from "../../../../src/data/api/me-provider";
+import { useLocalWork } from "../../../../src/features/account/use-local-work";
+import { useProfile } from "../../../../src/features/auth/profile-store";
+import { ResumeUploadsNote } from "../../../../src/features/auth/ResumeUploadsNote";
+import { ProfileQueuedLine } from "../../../../src/features/onboarding/components";
+import { AccountMark, PageIntro } from "../../../../src/features/projects/parts";
 import { useOrientationChoice } from "../../../../src/layout/orientation";
 import { ORIENTATION_CHOICES, orientationLabels } from "../../../../src/layout/orientation-policy";
-import { useLayout } from "../../../../src/layout/use-layout";
-import { useSync } from "../../../../src/sync/provider";
-import { colors, fonts, radius, space, textStyles } from "../../../../src/theme";
+import {
+  Button,
+  FactsList,
+  Island,
+  ListRow,
+  Note,
+  RadioRows,
+  Screen,
+  ScreenHeader,
+  StateBadge,
+  Text,
+  type Theme,
+  useStyles,
+} from "../../../../src/ui";
 
-const field = {
-  backgroundColor: colors.neutral900,
-  borderRadius: radius.md + 2,
-  paddingHorizontal: 13,
-  minHeight: 48,
-  color: colors.text,
-  fontFamily: fonts.regular,
-  fontSize: 15,
-} as const;
+function accountStyles(t: Theme) {
+  return StyleSheet.create({
+    body: { gap: t.space.s6 },
+    actions: { gap: t.space.s3 },
+    line: { paddingHorizontal: t.space.s1 },
+  });
+}
 
+/**
+ * Account (MOB-07): who is signed in and their observer code, what this account has on this device,
+ * the screen orientation, the field guide, and the two ways to leave: sign out (records wait here for
+ * this account) and delete the account. Nothing here claims an upload: this build does not upload yet
+ * (MOB-29 connects the uploader), and the screen says so.
+ */
 export default function AccountScreen() {
-  const { client, signOut, session, account, ready, configured, error: setupError } = useAccount();
-  const { error: syncError, retry } = useSync();
-  const cachedEmail = account?.email ?? "";
-  const signedIn = session !== null;
-  const [email, setEmail] = useState(cachedEmail);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const layout = useLayout();
+  const s = useStyles(accountStyles);
+  const { account, session } = useAccount();
+  const me = useMe();
+  const profile = useProfile();
+  const work = useLocalWork();
   const [orientation, chooseOrientation] = useOrientationChoice();
   const [orientationProblem, setOrientationProblem] = useState<string | null>(null);
-  useEffect(() => {
-    if (!signedIn) setEmail(cachedEmail);
-  }, [cachedEmail, signedIn]);
 
-  async function submit() {
-    if (!client || busy) return;
-    setBusy(true);
-    setError("");
-    try {
-      const result = session
-        ? await signOut()
-        : await client.auth.signInWithPassword({ email: email.trim(), password });
-      if (result.error)
-        setError(
-          session
-            ? "Could not sign out. Try again."
-            : "Could not sign in. Check your email, password, and connection.",
-        );
-      else setPassword("");
-    } catch {
-      setError("The connection failed. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const email = account?.email ?? session?.user.email ?? "this account";
+  const name = (profile.saved ? profile.name : me.profile?.display_name) || "Not set";
+  const initials = (profile.saved ? profile.initials : me.profile?.observer_initials) || null;
 
   return (
-    <PageScreen>
-      <LinkAction
-        label="← Studies"
-        muted
-        onPress={() => router.navigate("/")}
-        style={{ alignSelf: "flex-start" }}
-      />
-      <Text style={[textStyles.title, { color: colors.text, marginTop: space.snug }]}>
-        Account and synchronisation
-      </Text>
-      <View style={{ marginTop: space.tight }}>
-        <Prose tone="body">
-          {!configured
-            ? "Practice mode: records stay on this device. Your project connection needs to be configured before signing in."
-            : !ready
-              ? "Restoring your account…"
-              : session
-                ? `Signed in as ${session.user.email ?? "project member"}. Saved observations upload automatically while the app is open and connected.`
-                : account
-                  ? `Offline workspace for ${account.email ?? "your account"}. You can keep collecting. Sign in again if uploads cannot resume when connected.`
-                  : "Sign in before collecting project records. Practice records stay separate and are never uploaded automatically."}
-        </Prose>
-      </View>
+    <Screen scroll dock testID="account-home">
+      <ScreenHeader showOnline avatar={<AccountMark />} />
+      <View style={s.body}>
+        <PageIntro title="Account" lead={email} />
+        <ResumeUploadsNote />
 
-      {client && ready && !session && (
-        <View style={{ marginTop: space.loose, gap: space.snug }}>
-          <SectionLabel>Sign in</SectionLabel>
-          <TextInput
-            accessibilityLabel="Email"
-            placeholder="Email"
-            placeholderTextColor={colors.neutral600}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            editable={!busy}
-            style={field}
-          />
-          <TextInput
-            accessibilityLabel="Password"
-            placeholder="Password"
-            placeholderTextColor={colors.neutral600}
-            autoCapitalize="none"
-            autoComplete="current-password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            editable={!busy}
-            style={field}
-          />
-        </View>
-      )}
-
-      <View style={{ gap: space.snug, marginTop: space.base }}>
-        {[setupError, syncError, error]
-          .filter((message): message is string => typeof message === "string" && message !== "")
-          .map((message) => (
-            <AttentionNote key={message} role="alert" title={message} />
-          ))}
-      </View>
-
-      {client && ready && (
-        <PrimaryAction
-          label={busy ? "Please wait…" : session ? "Sign out on this device" : "Sign in"}
-          disabled={busy || (!session && (!email.trim() || !password))}
-          onPress={() => {
-            void submit();
-          }}
-          style={{ marginTop: space.base }}
-        />
-      )}
-      {session && (
-        <GhostAction
-          label="Retry records that need attention"
-          onPress={() => {
-            void retry().catch(() => setError("Could not retry. Reopen the app and try again."));
-          }}
-          style={{ marginTop: space.snug }}
-        />
-      )}
-
-      <FadeRule />
-      <SectionLabel>Screen orientation</SectionLabel>
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: space.tight,
-          marginTop: space.snug + 1,
-        }}
-      >
-        {ORIENTATION_CHOICES.map((choice) => (
-          <View key={choice} style={{ minWidth: layout.tablet ? 190 : 150 }}>
-            <OptionButton
-              label={orientationLabels[choice]}
-              selected={choice === orientation}
-              onPress={() => setOrientationProblem(chooseOrientation(choice))}
+        <Island
+          title="Profile"
+          footer={
+            <Button
+              variant="outline"
+              label="Edit profile"
+              onPress={() => router.push("/account/profile")}
+              testID="account-edit-profile"
             />
-          </View>
-        ))}
-      </View>
-      <View style={{ marginTop: space.snug }}>
-        <Prose tone="faint">
-          {orientation === "device"
-            ? "Every screen turns with the device."
-            : `Every screen stays in ${orientation}, from choosing a round to saving, until you change it here.`}{" "}
-          The field map works either way: side by side in landscape, map above the form in portrait.
-        </Prose>
-      </View>
-      {orientationProblem !== null && (
-        <View style={{ marginTop: space.snug }}>
-          <AttentionNote role="alert" title={orientationProblem} />
-        </View>
-      )}
+          }
+        >
+          <FactsList
+            items={[
+              { label: "Name", value: name },
+              { label: "Observer code", value: initials ?? "Not set", mono: initials !== null },
+              { label: "Email", value: email },
+            ]}
+          />
+          <ProfileQueuedLine />
+        </Island>
 
-      <FadeRule />
-      <Prose tone="faint">
-        Signing out keeps pending records on this device for the same account. Reopen the app after
-        reconnecting to resume uploads; a session that expires mid-upload resumes once you sign in
-        again. Closed-app background synchronisation is not enabled.
-      </Prose>
-    </PageScreen>
+        <Island
+          title="On this device"
+          description="Records stay here until DECA Mark acknowledges them."
+          padded={false}
+          testID="account-device"
+        >
+          {work.loading ? (
+            <ListRow title="Reading records from this device…" />
+          ) : (
+            <>
+              <ListRow
+                title={<StateBadge kind="queue" state="onDevice" />}
+                trailing={<Text variant="monoData">{`${work.onDevice}`}</Text>}
+                accessibilityLabel={`On device: ${work.onDevice}`}
+              />
+              <ListRow
+                divider
+                title={<StateBadge kind="queue" state="attention" />}
+                trailing={<Text variant="monoData">{`${work.attention}`}</Text>}
+                accessibilityLabel={`Needs attention: ${work.attention}`}
+              />
+              <ListRow
+                divider
+                title={<StateBadge kind="queue" state="held" />}
+                trailing={<Text variant="monoData">{`${work.held}`}</Text>}
+                accessibilityLabel={`Held: ${work.held}`}
+              />
+              <ListRow
+                divider
+                title={<StateBadge kind="queue" state="uploaded" />}
+                trailing={<Text variant="monoData">{`${work.uploaded}`}</Text>}
+                accessibilityLabel={`Uploaded: ${work.uploaded}`}
+              />
+              <ListRow
+                divider
+                title="Unfinished observations"
+                trailing={<Text variant="monoData">{`${work.drafts}`}</Text>}
+              />
+            </>
+          )}
+        </Island>
+        <Note tone="neutral" title="This version does not upload yet." testID="account-no-upload">
+          Records stay on this device until an update of DECA Mark connects uploading. Nothing is
+          lost by waiting.
+        </Note>
+
+        <Island title="Screen orientation">
+          <RadioRows
+            label="Screen orientation"
+            options={ORIENTATION_CHOICES.map((choice) => ({
+              value: choice,
+              label: orientationLabels[choice],
+            }))}
+            value={orientation}
+            onValueChange={(choice) => setOrientationProblem(chooseOrientation(choice))}
+            testID="account-orientation"
+          />
+          {orientationProblem ? (
+            <Note tone="attention" title={orientationProblem} />
+          ) : (
+            <Text variant="small" tone="ink2">
+              {orientation === "device"
+                ? "Every screen turns with the device."
+                : `Every screen stays in ${orientation} until you change it here.`}
+            </Text>
+          )}
+        </Island>
+
+        <Island padded={false}>
+          <ListRow
+            title="Field guide"
+            subtitle="How collecting works, readable with no signal."
+            icon="book-open"
+            onPress={() => router.push("/account/field-guide")}
+          />
+        </Island>
+
+        <View style={s.actions}>
+          <Button
+            variant="outline"
+            label="Sign out"
+            icon="log-out"
+            fullWidth
+            onPress={() => router.push("/account/sign-out")}
+            accessibilityHint="Shows what stays on this device before signing out."
+            testID="account-sign-out"
+          />
+          <Button
+            variant="danger"
+            label="Review account deletion"
+            icon="trash-2"
+            fullWidth
+            onPress={() => router.push("/account/delete-account")}
+            accessibilityHint="Lists what deleting the account does. Nothing is deleted yet."
+            testID="account-delete"
+          />
+          <View style={s.line}>
+            <Text variant="small" tone="ink2">
+              You can also delete your account on the web, signed in at decamark.vercel.app/account.
+            </Text>
+          </View>
+        </View>
+      </View>
+    </Screen>
   );
 }

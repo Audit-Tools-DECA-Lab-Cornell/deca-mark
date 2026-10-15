@@ -39,7 +39,7 @@ describe("Sign in to resume uploads (MOB-08, MOB-03)", () => {
     expect(screen.says("Sign in to resume uploads")).toBe(true);
     expect(
       screen.says(
-        "Your records stay on this device for observer@fieldmaps.test. They upload once you sign in again.",
+        "Your records stay on this device for observer@fieldmaps.test. Uploading needs this account signed in.",
       ),
     ).toBe(true);
     await screen.press("Sign in");

@@ -32,7 +32,7 @@ export function ResumeUploadsNote() {
       }
       testID="resume-uploads"
     >
-      {`Your records stay on this device for ${owner}. They upload once you sign in again.`}
+      {`Your records stay on this device for ${owner}. Uploading needs this account signed in.`}
     </Note>
   );
 }

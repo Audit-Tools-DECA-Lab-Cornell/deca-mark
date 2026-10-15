@@ -71,7 +71,38 @@ export function createApiClient(apiUrl: string, getToken: () => Promise<string |
     }
   }
 
+  /**
+   * `DELETE /v1/me`. 204: the account is gone. 202: profile and memberships are removed but removing the
+   * sign-in did not finish; the request is safe to repeat (BE-08). 503 `storage_unavailable`: deletion
+   * is not configured on this server, and nothing was changed.
+   */
+  async function deleteMe(signal: AbortSignal): Promise<AccountDeletion> {
+    const token = await getToken();
+    if (!token) throw new ApiError("unauthenticated", "sign-in");
+    try {
+      const response = await http.delete("v1/me", {
+        signal,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.status === 204) return "deleted";
+      if (response.status === 202) return "pending";
+      const error = await readApiError(response);
+      if (response.status === 503 && error.code === "storage_unavailable") return "unavailable";
+      throw error;
+    } catch (error) {
+      if (
+        error instanceof NetworkError ||
+        error instanceof TimeoutError ||
+        error instanceof TypeError ||
+        error instanceof SyntaxError
+      )
+        throw new ApiError("unknown", "retry");
+      throw error;
+    }
+  }
+
   return {
+    deleteMe,
     me(signal: AbortSignal): Promise<Identity> {
       return request("get", "v1/me", identitySchema, signal);
     },
@@ -133,3 +164,6 @@ export function createApiClient(apiUrl: string, getToken: () => Promise<string |
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
+
+/** What `DELETE /v1/me` answered (see `deleteMe`). */
+export type AccountDeletion = "deleted" | "pending" | "unavailable";

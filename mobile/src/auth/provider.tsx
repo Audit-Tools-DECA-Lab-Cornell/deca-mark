@@ -83,12 +83,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
         () => attempt.completed,
         () => client.auth.signOut({ scope: "local" }),
       );
-      if (!result.error && currentAccount.current === attempt.userId) {
+      // Offline, Supabase still removes this device's session (SIGNED_OUT) and then reports that it
+      // could not reach the server. For a sign-out on this device, that is done (MOB-07).
+      const done = !result.error || attempt.completed;
+      if (done && currentAccount.current === attempt.userId) {
         currentAccount.current = null;
         retainedIdentity.current = { account: null, error: null };
         setState((previous) => ({ ...previous, account: null, session: null, error: null }));
       }
-      return result;
+      return done ? { error: null } : result;
     } finally {
       if (deliberate.current === attempt) deliberate.current = null;
     }
