@@ -1,6 +1,9 @@
 import type { HostedDownload } from "../../packages/hosted/context";
 import type { Recovered } from "../../packages/zone-read-models";
+import { sizeLabel } from "./package-size";
 import { unfinishedSentence } from "./readiness";
+
+export { sizeLabel } from "./package-size";
 
 /**
  * What an unfinished or parked observation says and offers (UI plan MUI-7), from the data layer's
@@ -19,13 +22,6 @@ export type RecoveryCard = {
   /** "Keep for later", or "Keep for your coordinator" when only a coordinator can recover it. */
   readonly parkLabel: string;
 };
-
-/** "640 KB", "12.4 MB": a download's size, from its bytes. */
-export function sizeLabel(bytes: number): string {
-  return bytes < 1024 * 1024
-    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
-    : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 /** `online` is the device's network state, or null while it is not known. */
 export function recoveryCard(model: Recovered, online: boolean | null): RecoveryCard {

@@ -22,7 +22,7 @@ export type HostedSiteDownload = {
 };
 
 function megabytes(bytes: number): number {
-  return Math.max(0.1, Math.round((bytes / (1024 * 1024)) * 10) / 10);
+  return bytes / (1024 * 1024);
 }
 
 export function hostedPreviewSite(projectId: string, site: HostedSite): PreviewSite {

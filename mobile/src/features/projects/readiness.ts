@@ -2,6 +2,7 @@ import { type RoundType, roundLabel } from "../../domain/rounds";
 import type { PackageFacts } from "../../packages/open";
 import type { AssetState, SiteDownload } from "../preview/data-source";
 import { PACKAGE_ASSETS, type PreviewProject, type PreviewSite } from "../preview/fixtures";
+import { sizeLabel } from "./package-size";
 
 /**
  * What the Projects, Project and Site screens say about readiness (Mobile 10 to 14), as pure functions
@@ -62,13 +63,14 @@ export function zonesPhrase(zones: readonly string[]): string {
   return `${zones.length} zones`;
 }
 
-/** The row's second line: "3 zones · map v3 · 84 MB", "Whole playground · 126 MB". */
+/** A site's zones, version and measured download size, or its bundled/unprepared state. */
 export function siteSubtitle(site: SiteWithDownload): string {
   const zones = zonesPhrase(site.zones);
   if (site.bundled) return `${zones} · map ${site.packageVersion}`;
-  if (site.download.state === "ready")
-    return `${zones} · map ${site.packageVersion} · ${site.sizeMb} MB`;
-  return `${zones} · ${site.sizeMb} MB`;
+  if (site.packageId === "") return `${zones} · No map package yet`;
+  const size = sizeLabel(site.sizeMb * 1024 * 1024);
+  if (site.download.state === "ready") return `${zones} · map ${site.packageVersion} · ${size}`;
+  return `${zones} · ${size}`;
 }
 
 /** "3 zones: North meadow, Woodland edge, Sand area." under a ready site's title (Mobile 13). */
@@ -84,12 +86,12 @@ export function percentOf(download: Pick<SiteDownload, "receivedMb" | "totalMb">
   return Math.min(100, Math.round((download.receivedMb / download.totalMb) * 100));
 }
 
-/** The line at the foot of Project: "1 of 2 · 84 MB" (sites on this device, and their size). */
+/** The ready-site count and total archive size, rounded only after summing. */
 export function downloadsSummary(sites: readonly SiteWithDownload[]): string {
   const ready = sites.filter((site) => site.download.state === "ready");
   const megabytes = ready.reduce((total, site) => total + (site.bundled ? 0 : site.sizeMb), 0);
   const count = `${ready.length} of ${sites.length}`;
-  return megabytes > 0 ? `${count} · ${megabytes} MB` : count;
+  return megabytes > 0 ? `${count} · ${sizeLabel(megabytes * 1024 * 1024)}` : count;
 }
 
 /** What the device can check about a site's package: geometry, zones, a readable form, the guide. */

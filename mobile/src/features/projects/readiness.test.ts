@@ -53,8 +53,8 @@ describe("project readiness (Mobile 10)", () => {
 
 describe("site rows (Mobile 11)", () => {
   it("reads as designed", () => {
-    expect(siteSubtitle(riverside)).toBe("3 zones · map v3 · 84 MB");
-    expect(siteSubtitle(fallCreek)).toBe("Whole playground · 126 MB");
+    expect(siteSubtitle(riverside)).toBe("3 zones · map v3 · 84.0 MB");
+    expect(siteSubtitle(fallCreek)).toBe("Whole playground · 126.0 MB");
     expect(siteSubtitle(practice)).toBe("2 zones · map bundled");
     expect(siteReadiness(riverside).label).toBe("Ready offline");
     expect(siteReadiness(fallCreek).label).toBe("Not downloaded");
@@ -63,7 +63,7 @@ describe("site rows (Mobile 11)", () => {
   });
 
   it("totals what is on this device", () => {
-    expect(downloadsSummary([riverside, fallCreek])).toBe("1 of 2 · 84 MB");
+    expect(downloadsSummary([riverside, fallCreek])).toBe("1 of 2 · 84.0 MB");
     expect(downloadsSummary([practice])).toBe("1 of 1");
     expect(downloadsSummary([])).toBe("0 of 0");
   });

@@ -86,6 +86,9 @@ both, and its content spans the full window width — a deliberate departure fro
   manifest, layers and forms (`src/packages/hosted/`); nothing is kept unless every part checks. The
   map draws it from its own layers in the map palette; hosted packages carry no imagery, so Aerial is
   not offered. Its records freeze the exact project/site/package/zone/form bindings; the locally verified MOB-29 foreground flow persists that body and validates exact receipts, with local automated/disposable API/QGIS acceptance and physical-device acceptance pending. Training keeps the practice sites bundled with the app.
+  All builds default to real device/account data. Development and review builds show sample data
+  only after explicitly selecting Preview in the developer tools. Hosted package sizes come from
+  the API's measured archive bytes, displayed in KB or MB; totals are summed before rounding.
 - **Show my location (D28).** Off until the observer turns it on (the map's location button or the
   Layers menu); permission is asked then, foreground only. A dot and an accuracy circle in the map
   palette; the button centres on the observer or, while placing, brings their position under the

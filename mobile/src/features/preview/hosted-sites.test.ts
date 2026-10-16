@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { boundFixture } from "../../packages/hosted/bound-fixture";
 import { siteSchema } from "../../packages/hosted/schemas";
+import { downloadsSummary, siteSubtitle } from "../projects/readiness";
 import { hostedDownload, hostedPreviewSite } from "./hosted-sites";
 
 const base = boundFixture().site;
@@ -60,5 +61,29 @@ describe("A hosted site on the Project and Site screens", () => {
   it("has no size and no package when none has been prepared", () => {
     const bare = { ...site, package: null };
     expect(hostedPreviewSite("p", bare)).toMatchObject({ packageId: "", sizeMb: 0 });
+  });
+
+  it("shows a small archive's measured size on site rows and in the download total", () => {
+    const small = {
+      ...site,
+      package: site.package ? { ...site.package, archive_bytes: 4096 } : null,
+    };
+    const shown = hostedPreviewSite("p", small);
+    const waiting = { ...shown, download: hostedDownload(small, false, undefined) };
+    const ready = { ...shown, download: hostedDownload(small, true, undefined) };
+    expect(shown.sizeMb * 1024 * 1024).toBe(4096);
+    expect(waiting.download.totalMb * 1024 * 1024).toBe(4096);
+    expect(siteSubtitle(waiting)).toBe("Zone A · 4 KB");
+    expect(siteSubtitle(ready)).toBe("Zone A · map v3 · 4 KB");
+    expect(downloadsSummary([ready, ready])).toBe("2 of 2 · 8 KB");
+  });
+
+  it("says when no map is prepared instead of showing a zero-byte download", () => {
+    const bare = { ...site, package: null };
+    const shown = {
+      ...hostedPreviewSite("p", bare),
+      download: hostedDownload(bare, false, undefined),
+    };
+    expect(siteSubtitle(shown)).toBe("Zone A · No map package yet");
   });
 });
