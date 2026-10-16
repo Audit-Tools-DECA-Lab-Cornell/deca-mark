@@ -1,0 +1,778 @@
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/sync/bound-upload.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/bound-upload.test.ts [ src/sync/bound-upload.test.ts ]
+Error: Cannot find module './bound-upload' imported from /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile/src/sync/bound-upload.test.ts
+ ❯ src/sync/bound-upload.test.ts:5:1
+      3| import { boundRecord, binding, owner } from "../storage/package-store.…
+      4| import { syncScopeSchema } from "./contracts";
+      5| import { createBoundUpload } from "./bound-upload";
+       | ^
+      6| import { serializeBoundObservation } from "./wire-body";
+      7|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:57:19
+   Duration  293ms (transform 99ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/sync/bound-upload.test.ts (18 tests | 8 failed) 11ms
+     × serializes unknown retained forms with nested answers and original point context 5ms
+     × omits point-only fields for whole-zone inventory 1ms
+     × PUTs the retained body to its own project and accepts the complete receipt 1ms
+     × classifies HTTP 401 and keeps structured error codes 1ms
+     × classifies HTTP 429 and keeps structured error codes 0ms
+     × classifies HTTP 503 and keeps structured error codes 0ms
+     × classifies HTTP 422 and keeps structured error codes 0ms
+     × classifies HTTP 409 and keeps structured error codes 0ms
+ ❯ src/storage/bound-upload-store.test.ts (10 tests | 9 failed) 29ms
+     × stores the body atomically and replays it across a SQLite restart and new publication 13ms
+     × activates pre-MOB29 held records once from their own preserved binding 2ms
+     × does not acknowledge a forged project_id at the store boundary 3ms
+     × does not acknowledge a forged user_id at the store boundary 1ms
+     × does not acknowledge a forged package_id at the store boundary 2ms
+     × does not acknowledge a forged zone_id at the store boundary 1ms
+     × does not acknowledge a forged accepted_revision at the store boundary 1ms
+     × does not acknowledge a forged received_at at the store boundary 1ms
+     × keeps structured rejection, original payload and package reference on retry 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > serializes unknown retained forms with nested answers and original point context
+AssertionError: expected {} to deeply equal { …(11) }
+
+- Expected
++ Received
+
+- {
+-   "answers": {
+-     "number": 0,
+-     "text": "Synthetic café",
+-   },
+-   "coordinates": [
+-     -76.485,
+-     42.448,
+-   ],
+-   "first_round": false,
+-   "form_version": "synthetic-form-v1",
+-   "observed_at": "2026-10-11T10:00:00.000Z",
+-   "observer": "QA",
+-   "package_id": "30000000-0000-4000-8000-000000000001",
+-   "placement": "hand",
+-   "round_type": "standard",
+-   "site_id": "20000000-0000-4000-8000-000000000001",
+-   "zone_id": "50000000-0000-4000-8000-000000000001",
+- }
++ {}
+
+ ❯ src/sync/bound-upload.test.ts:23:18
+     21|   it("serializes unknown retained forms with nested answers and origin…
+     22|     const body = JSON.parse(serializeBoundObservation(boundRecord));
+     23|     expect(body).toEqual({ site_id: binding.siteId, package_id: bindin…
+       |                  ^
+     24|       zone_id: binding.zoneId, form_version: boundRecord.formVersion,
+     25|       observer: "QA", observed_at: boundRecord.createdAt, answers: bou…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > omits point-only fields for whole-zone inventory
+AssertionError: expected undefined to be 'inventory' // Object.is equality
+
+- Expected:
+"inventory"
+
++ Received:
+undefined
+
+ ❯ src/sync/bound-upload.test.ts:33:29
+     31|       placement: { source: "zone", gpsAccuracyMetres: null } });
+     32|     const body = JSON.parse(serializeBoundObservation(record));
+     33|     expect(body.round_type).toBe("inventory");
+       |                             ^
+     34|     expect(body).not.toHaveProperty("coordinates");
+     35|     expect(body).not.toHaveProperty("first_round");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > PUTs the retained body to its own project and accepts the complete receipt
+AssertionError: expected { kind: 'retry', …(1) } to deeply equal { kind: 'accepted', receipt: { …(7) } }
+
+- Expected
++ Received
+
+  {
+-   "kind": "accepted",
+-   "receipt": {
+-     "accepted_revision": 1,
+-     "observation_id": "60000000-0000-4000-8000-000000000001",
+-     "package_id": "30000000-0000-4000-8000-000000000001",
+-     "project_id": "10000000-0000-4000-8000-000000000001",
+-     "received_at": "2026-10-15T10:00:00.000Z",
+-     "user_id": "40000000-0000-4000-8000-000000000001",
+-     "zone_id": "50000000-0000-4000-8000-000000000001",
+-   },
++   "kind": "retry",
++   "message": "Not implemented",
+  }
+
+ ❯ src/sync/bound-upload.test.ts:42:20
+     40|     const body = serializeBoundObservation(boundRecord);
+     41|     const result = await createBoundUpload(scope.apiUrl, scope)(boundR…
+     42|     expect(result).toEqual({ kind: "accepted", receipt });
+       |                    ^
+     43|     const request = fetcher.mock.calls[0]?.[0];
+     44|     expect(request).toBeInstanceOf(Request);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > classifies HTTP 401 and keeps structured error codes
+AssertionError: expected { kind: 'retry', …(1) } to match object { kind: 'sign-in', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "token_invalid",
+-   "kind": "sign-in",
++   "kind": "retry",
+  }
+
+ ❯ src/sync/bound-upload.test.ts:58:20
+     56|     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ e…
+     57|     const result = await createBoundUpload(scope.apiUrl, scope)(boundR…
+     58|     expect(result).toMatchObject({ kind: status === 401 ? "sign-in" : …
+       |                    ^
+     59|   });
+     60|   it.each(["html", "network"])("retains an unreadable %s response as r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > classifies HTTP 429 and keeps structured error codes
+AssertionError: expected { kind: 'retry', …(1) } to match object { kind: 'retry', code: 'rate_limited' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "rate_limited",
+    "kind": "retry",
+  }
+
+ ❯ src/sync/bound-upload.test.ts:58:20
+     56|     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ e…
+     57|     const result = await createBoundUpload(scope.apiUrl, scope)(boundR…
+     58|     expect(result).toMatchObject({ kind: status === 401 ? "sign-in" : …
+       |                    ^
+     59|   });
+     60|   it.each(["html", "network"])("retains an unreadable %s response as r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > classifies HTTP 503 and keeps structured error codes
+AssertionError: expected { kind: 'retry', …(1) } to match object { kind: 'retry', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "storage_unavailable",
+    "kind": "retry",
+  }
+
+ ❯ src/sync/bound-upload.test.ts:58:20
+     56|     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ e…
+     57|     const result = await createBoundUpload(scope.apiUrl, scope)(boundR…
+     58|     expect(result).toMatchObject({ kind: status === 401 ? "sign-in" : …
+       |                    ^
+     59|   });
+     60|   it.each(["html", "network"])("retains an unreadable %s response as r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > classifies HTTP 422 and keeps structured error codes
+AssertionError: expected { kind: 'retry', …(1) } to match object { kind: 'rejected', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "validation_failed",
+-   "kind": "rejected",
++   "kind": "retry",
+  }
+
+ ❯ src/sync/bound-upload.test.ts:58:20
+     56|     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ e…
+     57|     const result = await createBoundUpload(scope.apiUrl, scope)(boundR…
+     58|     expect(result).toMatchObject({ kind: status === 401 ? "sign-in" : …
+       |                    ^
+     59|   });
+     60|   it.each(["html", "network"])("retains an unreadable %s response as r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > classifies HTTP 409 and keeps structured error codes
+AssertionError: expected { kind: 'retry', …(1) } to match object { kind: 'rejected', code: 'conflict' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "conflict",
+-   "kind": "rejected",
++   "kind": "retry",
+  }
+
+ ❯ src/sync/bound-upload.test.ts:58:20
+     56|     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ e…
+     57|     const result = await createBoundUpload(scope.apiUrl, scope)(boundR…
+     58|     expect(result).toMatchObject({ kind: status === 401 ? "sign-in" : …
+       |                    ^
+     59|   });
+     60|   it.each(["html", "network"])("retains an unreadable %s response as r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > stores the body atomically and replays it across a SQLite restart and new publication
+AssertionError: expected 'local-only' to be 'pending' // Object.is equality
+
+Expected: "pending"
+Received: "local-only"
+
+ ❯ src/storage/bound-upload-store.test.ts:21:117
+     19|    try {
+     20|      let db = adapter(sqlite); await initializeDatabase(db); await ins…
+     21|      const stored = sqlite.prepare("SELECT payload,sync_state FROM obs…
+       |                                                                                                                     ^
+     22|      const first = await pendingObservations(db, owner, Date.now()); e…
+     23|      await installPackage(db, owner, { ...entry, identity: { ...identi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > activates pre-MOB29 held records once from their own preserved binding
+TypeError: activateHeldObservations is not a function
+ ❯ src/storage/bound-upload-store.test.ts:32:11
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > does not acknowledge a forged project_id at the store boundary
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > does not acknowledge a forged user_id at the store boundary
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > does not acknowledge a forged package_id at the store boundary
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > does not acknowledge a forged zone_id at the store boundary
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > does not acknowledge a forged accepted_revision at the store boundary
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > does not acknowledge a forged received_at at the store boundary
+AssertionError: expected { sync_state: 'local-only', …(1) } to deeply equal { sync_state: 'pending', …(1) }
+
+- Expected
++ Received
+
+  {
+    "server_receipt": "",
+-   "sync_state": "pending",
++   "sync_state": "local-only",
+  }
+
+ ❯ src/storage/bound-upload-store.test.ts:39:89
+     37|    try { await installPackage(db, owner, entry); await saveObservation…
+     38|      await acknowledge(db, owner, { ...receipt, [field]: field === "ac…
+     39|      expect(sqlite.prepare("SELECT sync_state,server_receipt FROM obse…
+       |                                                                                         ^
+     40|    } finally { sqlite.close(); }
+     41|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > keeps structured rejection, original payload and package reference on retry
+AssertionError: expected { …(13) } to match object { …(3) }
+(31 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "storageStatus": "needs-attention",
+-   "syncError": "Check values",
+-   "syncRejectionCode": "validation_failed",
++   "storageStatus": "local-only",
++   "syncError": "",
+  }
+
+ ❯ src/storage/bound-upload-store.test.ts:53:51
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  17 failed | 11 passed (28)
+   Start at  13:57:50
+   Duration  375ms (transform 186ms, setup 0ms, import 466ms, tests 40ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/sync/coordinator.test.ts (6 tests | 2 failed) 31ms
+     × retries byte-identical bodies with their original UUID after a lost response and restart 14ms
+     × serializes concurrent drain requests and drains more than one page 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/coordinator.test.ts > Pinned bound coordinator > retries byte-identical bodies with their original UUID after a lost response and restart
+AssertionError: expected [ undefined, undefined ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
+-   "{\"site_id\":\"20000000-0000-4000-8000-000000000001\",\"package_id\":\"30000000-0000-4000-8000-000000000001\",\"zone_id\":\"50000000-0000-4000-8000-000000000001\",\"form_version\":\"synthetic-form-v1\",\"observer\":\"QA\",\"observed_at\":\"2026-10-11T10:00:00.000Z\",\"answers\":{\"number\":0,\"text\":\"Synthetic café\"},\"round_type\":\"standard\",\"placement\":\"hand\",\"first_round\":false,\"coordinates\":[-76.485,42.448]}",
+-   "{\"site_id\":\"20000000-0000-4000-8000-000000000001\",\"package_id\":\"30000000-0000-4000-8000-000000000001\",\"zone_id\":\"50000000-0000-4000-8000-000000000001\",\"form_version\":\"synthetic-form-v1\",\"observer\":\"QA\",\"observed_at\":\"2026-10-11T10:00:00.000Z\",\"answers\":{\"number\":0,\"text\":\"Synthetic café\"},\"round_type\":\"standard\",\"placement\":\"hand\",\"first_round\":false,\"coordinates\":[-76.485,42.448]}",
++   undefined,
++   undefined,
+  ]
+
+ ❯ src/sync/coordinator.test.ts:19:19
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/sync/coordinator.test.ts > Pinned bound coordinator > serializes concurrent drain requests and drains more than one page
+AssertionError: expected 25 to be 27 // Object.is equality
+
+- Expected
++ Received
+
+- 27
++ 25
+
+ ❯ src/sync/coordinator.test.ts:39:113
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  13:59:30
+   Duration  364ms (transform 121ms, setup 0ms, import 225ms, tests 31ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > holds offline, uploads on reconnect, wakes after save and resumes foreground without duplicate drains
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > holds offline, uploads on reconnect, wakes after save and resumes foreground without duplicate drains
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+ ❯ src/sync/provider.test.tsx (2 tests | 2 failed) 23ms
+     × holds offline, uploads on reconnect, wakes after save and resumes foreground without duplicate drains 19ms
+     × pauses after 401 until the session changes and explicit retry preserves the body 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/provider.test.tsx > Actual foreground SyncProvider > holds offline, uploads on reconnect, wakes after save and resumes foreground without duplicate drains
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/sync/provider.test.tsx:36:190
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/sync/provider.test.tsx:47:18
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  14:00:35
+   Duration  372ms (transform 123ms, setup 0ms, import 235ms, tests 23ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/storage/bound-upload-store.test.ts (11 tests | 1 failed) 42ms
+     × does not activate another account or issuer's held rows 6ms
+ ❯ src/sync/bound-upload.test.ts (21 tests | 3 failed) 27ms
+     × refuses a retained body with changed package_id before sending 3ms
+     × refuses a retained body with changed zone_id before sending 1ms
+     × refuses a retained body with changed answers before sending 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > refuses a retained body with changed package_id before sending
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > refuses a retained body with changed zone_id before sending
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > refuses a retained body with changed answers before sending
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Request {
+        Symbol(abortController): AbortController {},
+      },
+      Object {},
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/sync/bound-upload.test.ts:69:25
+     67|     const body = JSON.parse(serializeBoundObservation(boundRecord)); b…
+     68|     expect((await createBoundUpload(scope.apiUrl, scope)(boundRecord, …
+     69|     expect(fetcher).not.toHaveBeenCalled();
+       |                         ^
+     70|   });
+     71|   it("does not send an issuer's record through another issuer", async …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > does not activate another account or issuer's held rows
+AssertionError: expected 'pending' to be 'local-only' // Object.is equality
+
+Expected: "local-only"
+Received: "pending"
+
+ ❯ src/storage/bound-upload-store.test.ts:39:89
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 28 passed (32)
+   Start at  18:08:36
+   Duration  424ms (transform 237ms, setup 0ms, import 511ms, tests 68ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/sync/coordinator.test.ts (7 tests | 2 failed) 59ms
+     × preserves state for a mismatched receipt returned by an alternate upload adapter 7ms
+     × never acquires another account's token for a mismatched storage owner 2ms
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+The current testing environment is not configured to support act(...)
+
+ ❯ src/sync/provider.test.tsx (2 tests | 1 failed) 44ms
+     × pauses after 401 until the session changes and explicit retry preserves the body 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/coordinator.test.ts > Pinned bound coordinator > preserves state for a mismatched receipt returned by an alternate upload adapter
+AssertionError: expected { attempts: +0 } to deeply equal { attempts: 1 }
+
+- Expected
++ Received
+
+  {
+-   "attempts": 1,
++   "attempts": 0,
+  }
+
+ ❯ src/sync/coordinator.test.ts:97:73
+     95|         server_receipt: "",
+     96|       });
+     97|       expect(sqlite.prepare("SELECT attempts FROM observations").get()…
+       |                                                                         ^
+     98|     } finally {
+     99|       sqlite.close();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/sync/coordinator.test.ts > Pinned bound coordinator > never acquires another account's token for a mismatched storage owner
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/sync/coordinator.test.ts:106:64
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/sync/provider.test.tsx > Actual foreground SyncProvider > pauses after 401 until the session changes and explicit retry preserves the body
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ src/sync/provider.test.tsx:204:21
+    202|       await act(async () => sync.retry());
+    203|       await flush();
+    204|       expect(calls).toBe(2);
+       |                     ^
+    205|       expect(sqlite.prepare("SELECT sync_state FROM observations").get…
+    206|         "synced",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 6 passed (9)
+   Start at  18:11:11
+   Duration  973ms (transform 536ms, setup 0ms, import 1.37s, tests 103ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/storage/bound-upload-store.test.ts (11 tests | 1 failed) 48ms
+     × keeps structured rejection, original payload and package reference on retry 8ms
+ ❯ src/sync/bound-upload.test.ts (22 tests | 1 failed) 29ms
+     × preserves binding issue codes and explains the retained historical map 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > preserves binding issue codes and explains the retained historical map
+AssertionError: expected { kind: 'rejected', …(3) } to match object { kind: 'rejected', …(2) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "code": "validation_failed",
+-   "issueCodes": [
+-     "point_outside_zone",
+-   ],
+    "kind": "rejected",
+  }
+
+ ❯ src/sync/bound-upload.test.ts:142:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > keeps structured rejection, original payload and package reference on retry
+AssertionError: expected { …(14) } to match object { …(4) }
+(31 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "storageStatus": "needs-attention",
+    "syncError": "Check values",
+-   "syncIssueCodes": [
+-     "point_outside_zone",
+-   ],
+    "syncRejectionCode": "validation_failed",
+  }
+
+ ❯ src/storage/bound-upload-store.test.ts:182:54
+    180|         ["point_outside_zone"],
+    181|       );
+    182|       expect((await listObservations(db, owner))[0]).toMatchObject({
+       |                                                      ^
+    183|         storageStatus: "needs-attention",
+    184|         syncError: "Check values",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 31 passed (33)
+   Start at  18:12:20
+   Duration  630ms (transform 481ms, setup 0ms, import 849ms, tests 77ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on background and resumes the same body
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on background and resumes the same body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on background and resumes the same body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on offline and resumes the same body
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on offline and resumes the same body
+The current testing environment is not configured to support act(...)
+
+stderr | src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on offline and resumes the same body
+The current testing environment is not configured to support act(...)
+
+ ❯ src/sync/provider.test.tsx (4 tests | 2 failed) 52ms
+     × cancels an in-flight request on background and resumes the same body 9ms
+     × cancels an in-flight request on offline and resumes the same body 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on background and resumes the same body
+ FAIL  src/sync/provider.test.tsx > Actual foreground SyncProvider > cancels an in-flight request on offline and resumes the same body
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/sync/provider.test.tsx:185:36
+    183|       expect(bodies).toHaveLength(1);
+    184|       await act(async () => { if (pause === "background") mocks.foregr…
+    185|       expect(firstSignal?.aborted).toBe(true);
+       |                                    ^
+    186|       release(answer()); await flush();
+    187|       expect(sqlite.prepare("SELECT sync_state FROM observations").get…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  18:14:30
+   Duration  504ms (transform 156ms, setup 0ms, import 320ms, tests 52ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/storage/bound-upload-store.test.ts (12 tests | 1 failed) 44ms
+     × fences explicit retry after the account changes 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/bound-upload-store.test.ts > Durable exact upload body > fences explicit retry after the account changes
+AssertionError: expected { sync_state: 'pending' } to deeply equal { sync_state: 'needs-attention' }
+
+- Expected
++ Received
+
+  {
+-   "sync_state": "needs-attention",
++   "sync_state": "pending",
+  }
+
+ ❯ src/storage/bound-upload-store.test.ts:169:75
+    167|     try { await installPackage(db, owner, entry); await saveObservatio…
+    168|       await retryAttention(db, owner, () => false);
+    169|       expect(sqlite.prepare("SELECT sync_state FROM observations").get…
+       |                                                                           ^
+    170|     } finally { sqlite.close(); }
+    171|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  18:15:02
+   Duration  617ms (transform 217ms, setup 0ms, import 410ms, tests 44ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+ ❯ src/sync/bound-upload.test.ts (23 tests | 1 failed) 30ms
+     × keeps throttled responses retryable even when an intermediary supplies a permanent code 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sync/bound-upload.test.ts > Pinned bound upload > keeps throttled responses retryable even when an intermediary supplies a permanent code
+AssertionError: expected 'rejected' to be 'retry' // Object.is equality
+
+Expected: "retry"
+Received: "rejected"
+
+ ❯ src/sync/bound-upload.test.ts:141:157
+    139|   it("keeps throttled responses retryable even when an intermediary su…
+    140|     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ e…
+    141|     expect((await createBoundUpload(scope.apiUrl, scope)(boundRecord, …
+       |                                                                                                                                                             ^
+    142|   });
+    143|   it("preserves binding issue codes and explains the retained historic…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 passed (23)
+   Start at  18:15:57
+   Duration  478ms (transform 154ms, setup 0ms, import 311ms, tests 30ms, environment 0ms)
+

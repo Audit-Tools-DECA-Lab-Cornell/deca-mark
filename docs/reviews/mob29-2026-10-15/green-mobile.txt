@@ -1,0 +1,54 @@
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+
+ Test Files  3 passed (3)
+      Tests  34 passed (34)
+   Start at  13:59:45
+   Duration  376ms (transform 330ms, setup 0ms, import 705ms, tests 76ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  18:07:30
+   Duration  650ms (transform 382ms, setup 0ms, import 772ms, tests 99ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+
+ Test Files  4 passed | 1 skipped (5)
+      Tests  41 passed | 1 skipped (42)
+   Start at  18:11:26
+   Duration  712ms (transform 960ms, setup 0ms, import 1.94s, tests 197ms, environment 1ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+
+ Test Files  2 passed (2)
+      Tests  33 passed (33)
+   Start at  18:12:42
+   Duration  487ms (transform 242ms, setup 0ms, import 536ms, tests 67ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  18:14:42
+   Duration  635ms (transform 212ms, setup 0ms, import 424ms, tests 82ms, environment 0ms)
+
+
+ RUN  v4.1.11 /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  18:15:33
+   Duration  635ms (transform 270ms, setup 0ms, import 450ms, tests 37ms, environment 0ms)
+

@@ -9,6 +9,7 @@ import { identityKey } from "../domain/package-binding";
 import { isUploadableRecord } from "../forms/registry";
 import { databaseTransaction, databaseWrite } from "./database-write";
 import { requireAuthorizedPackage } from "./package-catalog-read";
+import { encodeUploadPayload, readSyncFailure } from "./upload-payload";
 
 export interface LocalDatabase {
   execAsync(sql: string): Promise<void>;
@@ -36,7 +37,7 @@ async function insertObservation(db: LocalDatabase, record: Observation, scope: 
     "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state, package_key) VALUES (?, ?, ?, ?, ?, ?)",
     record.id,
     record.createdAt,
-    JSON.stringify(record),
+    encodeUploadPayload(record),
     scope,
     initialSyncState(record, scope),
     binding ? identityKey(binding) : "",
@@ -94,7 +95,7 @@ export function listObservations(db: LocalDatabase, scope = "local"): Promise<Ob
     return rows.map((row) => ({
       ...observationSchema.parse(JSON.parse(row.payload)),
       storageStatus: row.sync_state,
-      syncError: row.sync_error,
+      ...readSyncFailure(row.sync_error),
     }));
   });
 }

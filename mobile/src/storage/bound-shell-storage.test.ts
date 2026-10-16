@@ -55,7 +55,7 @@ describe("Package-bound shell form persistence", () => {
     });
     expect(isShellObservation(record)).toBe(true);
     expect(isBoundObservation(record)).toBe(true);
-    expect(isUploadableRecord(record)).toBe(false);
+    expect(isUploadableRecord(record)).toBe(true);
     expect(observationSummary(record)).toBe("  Bound café  ");
     expect(observationSchema.parse(record)).toEqual(record);
     const { db, sqlite } = await memoryDatabase();
@@ -63,16 +63,16 @@ describe("Package-bound shell form persistence", () => {
       await installPackage(db, owner, entry);
       await saveObservation(db, record, owner);
       await initializeDatabase(db);
-      expect(await listObservations(db, owner)).toEqual([record]);
+      expect(await listObservations(db, owner)).toEqual([{ ...record, storageStatus: "pending" }]);
       expect(sqlite.prepare("SELECT sync_state FROM observations").get()).toEqual({
-        sync_state: "local-only",
+        sync_state: "pending",
       });
       expect((await removePackage(db, owner, identity)).reasons.records).toBe(1);
       sqlite.exec("UPDATE observations SET sync_state = 'needs-attention';");
       await retryAttention(db, owner);
-      expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
+      expect(await pendingObservations(db, owner, Date.now())).toHaveLength(1);
       expect(sqlite.prepare("SELECT sync_state FROM observations").get()).toEqual({
-        sync_state: "needs-attention",
+        sync_state: "pending",
       });
     } finally {
       sqlite.close();

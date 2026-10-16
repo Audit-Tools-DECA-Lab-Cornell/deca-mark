@@ -25,6 +25,8 @@ const identity = {
   createdAt: z.iso.datetime(),
   storageStatus: storageStatusSchema,
   syncError: z.string().default(""),
+  syncRejectionCode: z.string().optional(),
+  syncIssueCodes: z.array(z.string()).readonly().optional(),
 };
 
 /** Bundled practice records are local preview data. */

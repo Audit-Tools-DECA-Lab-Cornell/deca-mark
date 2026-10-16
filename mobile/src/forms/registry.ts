@@ -1,4 +1,4 @@
-import type { Observation } from "../domain/observation";
+import { isBoundObservation, type Observation } from "../domain/observation";
 import type { FormDefinition } from "./definition";
 import { janetInventoryV1 } from "./fixtures/janet-inventory-v1";
 import { janetTestV1 } from "./fixtures/janet-test-v1";
@@ -26,9 +26,9 @@ export function isUploadable(version: string): boolean {
   return formFor(version)?.status === "published";
 }
 
-/** Bound upload eligibility is enabled by MOB-29 after the single API is implemented. */
-export function isUploadableRecord(_record: Observation): boolean {
-  return false;
+/** Retained hosted bindings remain uploadable even after a form is retired or replaced. */
+export function isUploadableRecord(record: Observation): boolean {
+  return isBoundObservation(record);
 }
 
 /**
