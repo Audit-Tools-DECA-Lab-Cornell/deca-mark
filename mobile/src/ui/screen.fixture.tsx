@@ -21,6 +21,8 @@ export type Screen = {
   controls: () => string[];
   /** Presses a control and lets its effects run. */
   press: (label: string) => Promise<void>;
+  /** Types into the text field with this test ID, as its `onChangeText` receives it. */
+  type: (testID: string, text: string) => Promise<void>;
 };
 
 function textOf(node: ReactTestInstance | string): string {
@@ -34,6 +36,8 @@ type HostProps = {
   readonly accessibilityState?: { readonly disabled?: boolean } | undefined;
   readonly disabled?: boolean | undefined;
   readonly onPress?: (() => void) | undefined;
+  readonly onChangeText?: ((text: string) => void) | undefined;
+  readonly testID?: string | undefined;
 };
 
 const propsOf = (node: ReactTestInstance) => node.props as HostProps;
@@ -77,6 +81,14 @@ export function render(element: ReactElement): Screen {
       const target = screen.control(label);
       await act(async () => {
         propsOf(target).onPress?.();
+      });
+    },
+    type: async (testID, text) => {
+      const field = root.find(
+        (node) => isHost(node, "TextInput") && propsOf(node).testID === testID,
+      );
+      await act(async () => {
+        propsOf(field).onChangeText?.(text);
       });
     },
   };

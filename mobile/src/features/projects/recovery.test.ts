@@ -75,14 +75,29 @@ describe("recoveryCard", () => {
     ]);
   });
 
-  it("says when the form is missing, without guessing its name", () => {
+  it("names the draft's own form when it is missing", () => {
     const card = recoveryCard(
       draft("form_missing", { redownload: { possible: false, bytes: null } }),
       true,
     );
     expect(card.lines[0]).toBe(
-      "The form for this observation is not in map v1 on this device. Your point and answers are kept.",
+      "Form janet-test-v1 for this observation is not on this device. Your point and answers are kept.",
     );
+    expect(card.lines[1]).toBe("Keep it for your coordinator.");
+  });
+
+  it("names the retained form, never one from a newer map", () => {
+    const card = recoveryCard(
+      draft("form_missing", {
+        formVersion: "demo-v1",
+        redownload: { possible: true, bytes: 12 * 1024 * 1024 },
+      }),
+      true,
+    );
+    expect(card.lines).toEqual([
+      "Form demo-v1 for this observation is not on this device. Your point and answers are kept.",
+      "Download map v1 again.",
+    ]);
   });
 
   it("never offers to keep for later what is already kept", () => {

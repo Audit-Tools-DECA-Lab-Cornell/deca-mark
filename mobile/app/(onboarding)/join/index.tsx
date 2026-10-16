@@ -1,9 +1,8 @@
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
-import { Alert, type TextInput as NativeTextInput, StyleSheet, View } from "react-native";
+import { type TextInput as NativeTextInput, StyleSheet, View } from "react-native";
 import { useProfile } from "../../../src/features/auth/profile-store";
 import {
-  OrDivider,
   ProfileQueuedLine,
   StepFoot,
   StepIntro,
@@ -106,14 +105,6 @@ export default function JoinStep() {
     }
   }
 
-  function explainScan() {
-    Alert.alert(
-      "The camera is not connected in this build",
-      "DECA Mark opens the camera only after you tap Scan, and this build cannot scan yet. Type the eight-character code from the invitation instead. An invitation link from your coordinator opens this step by itself.",
-      [{ text: "Type the code", onPress: () => codeRef.current?.focus() }],
-    );
-  }
-
   function skip() {
     if (!finish()) router.replace("/profile");
   }
@@ -182,24 +173,10 @@ export default function JoinStep() {
           ) : null}
           {keyboard ? null : previewButton}
         </View>
-        <View style={s.scan}>
-          <OrDivider />
-          <View style={s.scanAction}>
-            <Button
-              variant="outline"
-              label="Scan a QR invitation"
-              icon="qr-code"
-              fullWidth
-              onPress={explainScan}
-              accessibilityHint="Explains that scanning is not connected in this build."
-              testID="onboarding-scan"
-            />
-            <Text variant="small" tone="ink2" align="center">
-              Opens the camera only after you tap. An invitation link from your coordinator opens
-              this step by itself.
-            </Text>
-          </View>
-        </View>
+        {/* No Scan QR here: the web shows the code and an invitation link, not a QR code (WEB-07). */}
+        <Text variant="small" tone="ink2">
+          An invitation link from your coordinator opens this step with the code filled in.
+        </Text>
       </View>
     </Screen>
   );
@@ -211,7 +188,5 @@ function makeStyles(t: Theme) {
     header: { marginBottom: t.space.s6 },
     body: { gap: t.space.s6 },
     join: { gap: t.space.s5 },
-    scan: { gap: t.space.s5 },
-    scanAction: { gap: t.space.s3 },
   });
 }

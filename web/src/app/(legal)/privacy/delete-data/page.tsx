@@ -43,16 +43,22 @@ export default function DeleteDataPage() {
 			</ol>
 			<p>
 				If you are the only owner of an organization, or the only manager of a project, that has other members,
-				the page names it: hand it over first. The app cannot delete accounts yet.
+				the page names it: hand it over first.
+			</p>
+			<p>
+				You can do the same in the app: open <strong>Account</strong>, choose{" "}
+				<strong>Review account deletion</strong>, type DELETE and choose <strong>Delete account</strong>.
+				Records the app had not uploaded stay on the device and can no longer upload; to remove them, uninstall
+				the app as described below.
 			</p>
 
 			<h2 id="on-device">Remove data from your device</h2>
 			<ol>
 				<li>
-					Open <strong>Account and synchronisation</strong> and choose{" "}
-					<strong>Sign out on this device</strong>. This removes your sign-in from the device. If you have
-					been offline for a while, you may need a connection before the button appears. Signing out does not
-					delete your records: everything you recorded, uploaded or not, stays on the device.
+					Open <strong>Account</strong> and choose <strong>Sign out</strong>. The next screen says what stays
+					on the device; confirm there. This removes your sign-in from the device, with or without a
+					connection. Signing out does not delete your records: everything you recorded, uploaded or not,
+					stays on the device.
 				</li>
 				<li>
 					Uninstall the app.

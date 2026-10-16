@@ -13,6 +13,8 @@ import { useProfile } from "./profile-store";
  * The rule:
  * - A live session or an account cached on this device counts as signed in, so an observer whose token
  *   expired in the field keeps collecting offline. Only a deliberate sign-out clears the cache.
+ * - Sign-in stays open whenever there is no live session (MOB-03), so that observer can sign in again
+ *   from "Sign in to resume uploads" without leaving the app's records behind.
  * - An account the server reported deleted (403 account_deleted, remembered across restarts) is not
  *   signed in: welcome opens and names its records, which stay on this device and cannot upload. Nothing
  *   new is collected for it.
@@ -57,16 +59,46 @@ export type GateDecision = {
   needsOnboarding: boolean;
   /** Welcome names the deleted account's records, and nothing new is collected for it. */
   accountDeleted: boolean;
+  /**
+   * The auth screens can be opened: there is no live session. An account kept on this device after its
+   * session was lost still lands in the app (it is declared first), and "Sign in to resume uploads"
+   * opens sign-in over it.
+   */
+  authOpen: boolean;
   route: GateRoute;
   /** The dev override decided, not the account. */
   overridden: boolean;
 };
 
 const FORCED: Record<Exclude<GateOverride, "real">, Omit<GateDecision, "overridden">> = {
-  "signed-out": { signedIn: false, needsOnboarding: false, accountDeleted: false, route: "auth" },
-  deleted: { signedIn: false, needsOnboarding: false, accountDeleted: true, route: "auth" },
-  onboarding: { signedIn: true, needsOnboarding: true, accountDeleted: false, route: "onboarding" },
-  "signed-in": { signedIn: true, needsOnboarding: false, accountDeleted: false, route: "app" },
+  "signed-out": {
+    signedIn: false,
+    needsOnboarding: false,
+    accountDeleted: false,
+    authOpen: true,
+    route: "auth",
+  },
+  deleted: {
+    signedIn: false,
+    needsOnboarding: false,
+    accountDeleted: true,
+    authOpen: true,
+    route: "auth",
+  },
+  onboarding: {
+    signedIn: true,
+    needsOnboarding: true,
+    accountDeleted: false,
+    authOpen: false,
+    route: "onboarding",
+  },
+  "signed-in": {
+    signedIn: true,
+    needsOnboarding: false,
+    accountDeleted: false,
+    authOpen: false,
+    route: "app",
+  },
 };
 
 /** The gate as a pure function of what the device knows. */
@@ -88,7 +120,8 @@ export function decideGate(input: GateInput): GateDecision {
       : needsOnboarding
         ? "onboarding"
         : "app";
-  return { signedIn, needsOnboarding, accountDeleted, route, overridden: false };
+  const authOpen = !signedIn || !input.session;
+  return { signedIn, needsOnboarding, accountDeleted, authOpen, route, overridden: false };
 }
 
 const OVERRIDE_KEY = "fm.dev.gate";

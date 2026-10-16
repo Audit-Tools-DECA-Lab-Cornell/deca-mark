@@ -10,6 +10,23 @@ local_psql() {
   docker exec -i supabase_db_field-maps psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"
 }
 
+# The Docker daemon restarts this stack's containers by itself when it starts (restart: unless-stopped), so right
+# after Docker comes up the database container can be running but not ready. In that state `supabase start` does
+# not wait: it answers StatusDbNotReadyError ("container is not ready: starting") and exits 1. Wait for the
+# container's own health check instead, while it is running and still starting (at most two minutes).
+wait_for_database() {
+  i=0
+  while [ "$(docker inspect --format '{{.State.Running}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' \
+    supabase_db_field-maps 2>/dev/null)" = 'true starting' ]; do
+    i=$((i + 1))
+    if [ "$i" -gt 120 ]; then
+      printf '%s\n' 'The local database container is still starting after two minutes; see docker logs supabase_db_field-maps.' >&2
+      return 1
+    fi
+    sleep 1
+  done
+}
+
 configure_api() {
   mkdir -p database/.local
   chmod 700 database/.local
@@ -23,7 +40,13 @@ configure_api() {
 
 case "${1:-help}" in
   start)
-    supabase_cli start >/dev/null
+    wait_for_database
+    # The CLI prints its status (with the local keys) on success and its error on failure, both on stdout:
+    # keep the first quiet, and show the second.
+    if ! started=$(supabase_cli start); then
+      printf '%s\n' "$started" >&2
+      exit 1
+    fi
     configure_api
     printf '%s\n' 'Local Supabase ready. Studio: http://127.0.0.1:54323; Mailpit: http://127.0.0.1:54324'
     ;;

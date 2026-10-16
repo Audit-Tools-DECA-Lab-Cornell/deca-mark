@@ -1,29 +1,26 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Keyboard, type TextInput as NativeTextInput, StyleSheet, View } from "react-native";
+import { useAccount } from "../../auth/provider";
 import {
   announce,
   Button,
   Checkbox,
   Field,
   FieldFooter,
+  Note,
   Text,
   TextInput,
   TextLink,
   type Theme,
+  useHaptics,
   useStyles,
 } from "../../ui";
 import { PendingInvitationNote } from "../onboarding/pending-invitation-note";
+import { createAccount } from "./auth-calls";
 import { openPrivacy } from "./links";
-import {
-  AuthScreen,
-  EMAIL_INPUT,
-  FieldStack,
-  firstParam,
-  PasswordFields,
-  PreviewLine,
-} from "./parts";
-import { AUTH_WIRED, DOES_NOT_MATCH, isEmail, passwordProblem } from "./rules";
+import { AuthScreen, EMAIL_INPUT, FieldStack, firstParam, PasswordFields } from "./parts";
+import { AUTH_MESSAGES, type AuthFailure, DOES_NOT_MATCH, isEmail, passwordProblem } from "./rules";
 
 type Errors = {
   email?: string | undefined;
@@ -50,23 +47,29 @@ function createStyles(t: Theme) {
 
 /**
  * Create your account (Mobile 25). The checks run as you type; the button stays live and, when pressed,
- * names every field that still needs something and moves to the first. Account creation is not wired
- * yet (MOB-05): the button goes on to the code screen without sending anything, and the screen says so.
+ * names every field that still needs something and moves to the first. Then Supabase's `signUp` sends
+ * the six-digit code (MOB-05) and the code screen opens. Supabase answers the same way for an address
+ * that already has an account, so nothing here says whether one exists.
  */
 export function CreateAccountScreen() {
   const s = useStyles(createStyles);
   const router = useRouter();
+  const haptics = useHaptics();
+  const { client } = useAccount();
   const params = useLocalSearchParams<{ email?: string | string[] }>();
   const [email, setEmail] = useState(() => firstParam(params.email) ?? "");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [privacy, setPrivacy] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const [failure, setFailure] = useState<AuthFailure | null>(null);
+  const [busy, setBusy] = useState(false);
   const emailRef = useRef<NativeTextInput>(null);
   const passwordRef = useRef<NativeTextInput>(null);
   const confirmRef = useRef<NativeTextInput>(null);
 
-  function submit() {
+  async function submit() {
+    if (busy) return;
     const found: Errors = {
       email: isEmail(email) ? undefined : "Enter an email address, such as name@example.org.",
       password: passwordProblem(password),
@@ -87,8 +90,24 @@ export function CreateAccountScreen() {
       announce(found.privacy);
       return;
     }
-    router.push({ pathname: "/verify", params: { email: email.trim() } });
+    setFailure(null);
+    setBusy(true);
+    const outcome = await createAccount(client?.auth, email, password);
+    setBusy(false);
+    if (outcome.ok) {
+      setPassword("");
+      setConfirm("");
+      router.push({ pathname: "/verify", params: { email: email.trim(), sent: "1" } });
+      return;
+    }
+    haptics.warning();
+    Keyboard.dismiss();
+    setFailure(outcome.failure);
+    const words = AUTH_MESSAGES[outcome.failure];
+    announce(`${words.title} ${words.body}`);
   }
+
+  const message = failure ? AUTH_MESSAGES[failure] : null;
 
   return (
     <AuthScreen
@@ -98,9 +117,11 @@ export function CreateAccountScreen() {
       action={
         <Button
           label="Send verification code"
+          busyLabel="Sending code…"
+          busy={busy}
           icon="mail"
           fullWidth
-          onPress={submit}
+          onPress={() => void submit()}
           testID="auth-create-submit"
         />
       }
@@ -116,15 +137,28 @@ export function CreateAccountScreen() {
           />
         </View>
       }
-      bottom={
-        AUTH_WIRED.signUp ? undefined : (
-          <PreviewLine>
-            Nothing is sent from this screen yet. It goes on to the code screen.
-          </PreviewLine>
-        )
-      }
     >
       <PendingInvitationNote />
+      {message ? (
+        // Announced when it appears (see submit), so a repeat of the same failure is heard again.
+        <Note
+          tone="attention"
+          title={message.title}
+          action={
+            failure === "exists" ? (
+              <Button
+                variant="ink"
+                label="Sign in"
+                onPress={() =>
+                  router.dismissTo({ pathname: "/sign-in", params: { email: email.trim() } })
+                }
+              />
+            ) : undefined
+          }
+        >
+          {message.body}
+        </Note>
+      ) : null}
       <FieldStack>
         <Field label="Email address" error={errors.email}>
           <TextInput
@@ -159,7 +193,7 @@ export function CreateAccountScreen() {
           confirmError={errors.confirm}
           passwordRef={passwordRef}
           confirmRef={confirmRef}
-          onSubmit={submit}
+          onSubmit={() => void submit()}
           testID="auth-create"
         />
       </FieldStack>

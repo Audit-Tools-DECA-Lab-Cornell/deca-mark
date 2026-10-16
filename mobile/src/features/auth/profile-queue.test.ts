@@ -36,6 +36,17 @@ describe("the profile queue on this device", () => {
     });
   });
 
+  it("keeps onboarding finished for an edit made in the app, so the gate never reopens it", () => {
+    // An account whose profile came from the server has nothing saved here until its first edit.
+    const fromAccount = withEdit({}, owner, "Pratyush Sudhakar", "PS", true);
+    expect(fromAccount?.[owner]).toMatchObject({ onboarded: true, pending: true });
+    // An onboarding edit never finishes onboarding by itself, and never undoes a finished one.
+    expect(withEdit({}, owner, "Pratyush Sudhakar", "PS")?.[owner]?.onboarded).toBe(false);
+    const finished =
+      withFinished(withEdit({}, owner, "Pratyush Sudhakar", "PS") ?? {}, owner) ?? {};
+    expect(withEdit(finished, owner, "Pratyush Sudhakar", "PRS")?.[owner]?.onboarded).toBe(true);
+  });
+
   it("refuses an empty name or invalid initials, saving nothing", () => {
     expect(withEdit({}, owner, "  ", "PS")).toBeNull();
     expect(withEdit({}, owner, "Pratyush", "p.s")).toBeNull();

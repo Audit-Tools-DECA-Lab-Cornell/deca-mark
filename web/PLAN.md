@@ -166,7 +166,7 @@ Done when: J1 steps 1–2 work end to end against the local stack, and the old U
 Verified 2026-10-14, as built under D30 (organizations from the bootstrap script, projects on the web), on the local stack (local Supabase Auth and Mailpit, the API on :8001, a production build; `sh scripts/e2e-local.sh --prod --zones --skip-seed --project=desktop-1440 --project=phone-390`, 256 of 256 passed): J1 on a fresh synthetic account, its organization set up by `scripts/bootstrap-study.mjs` (WEB-43: organization, project, published forms, Fall Creek with map v1) and opened on the web; `org.spec.ts` (8 of 8) has an owner create a project in their own organization and land in it as its manager, and shows Members and Settings only to owners and admins; `invite-viewer.spec.ts` and `join-observer.spec.ts` redeem an invitation link and a join code; `removed-routes.spec.ts` (14 of 14) redirects the old URLs and retires `/onboarding`. Account deletion: a pending (202) deletion now says it is finishing and tries again after 5, 10 and 15 seconds (`src/features/account/deletion.ts`; `tests/unit/account-deletion.test.mjs`, 3 tests), then says the deletion is recorded and will be completed. Every try names the account the dialog was opened for, and the Server Action sends nothing when another account is signed in on the browser (PR 26 review): `e2e/account-deletion.spec.ts` (2 of 2, desktop and phone) signs in a second account from another tab, and the first tab's request is refused before it reaches the API; the same spec fails when the check is removed. **Not run in a browser:** `DELETE /v1/me` answering 204 or 202, because the local API has no Auth Admin key and answers 503 (BE-08's credential, a user step).
 
 ### WEB-07: Team page (members, invitations, join codes)
-Status: doing (2026-10-14: the web side is verified on the local stack; an observer redeeming a code on mobile waits for MOB-06) · Phase 1 · Size M · Depends: BE-07, WEB-06 · Blocks: WEB-15
+Status: done (2026-10-15; the mobile side ran on the phone's API path, not yet on a device) · Phase 1 · Size M · Depends: BE-07, WEB-06 · Blocks: WEB-15
 WEB-27 (2026-10-09, D30): delivered on live data for a project (Team) and for an organization (Members): the list, role change, remove, an invitation by link or by an 8-character code (shown once, with "DECA Mark does not send email"), pending invitations and revoke. Not built: the QR code (dropped), devices (DB-10) and resending an invitation ("not available yet"). Nobody becomes an owner by a role change; ownership moves only by Transfer ownership in the organization's Settings.
 Do:
 1. List members with their role, and let a manager change a role or remove someone.
@@ -179,7 +179,8 @@ Do:
 3. Observer devices come from DB-10 `devices`, once it exists.
 
 Done when: a manager creates a code on the web and an observer redeems it on mobile (MOB-06).
-Progress 2026-10-14, web side, on the local stack (production build, desktop-1440 and phone-390, in the 256-test run): `team.spec.ts` (a manager invites someone, sees the link and the code once, and revokes the invitation), `invite-viewer.spec.ts` (a viewer joins from the link and sees no Team or Settings), `join-observer.spec.ts` (an observer joins by code on the web and lands on the collect page) and `org.spec.ts` (Members and Settings only for owners and admins), each 2 of 2 or more. **Waiting:** redemption on mobile (MOB-06, todo).
+Progress 2026-10-14, web side, on the local stack (production build, desktop-1440 and phone-390, in the 256-test run): `team.spec.ts` (a manager invites someone, sees the link and the code once, and revokes the invitation), `invite-viewer.spec.ts` (a viewer joins from the link and sees no Team or Settings), `join-observer.spec.ts` (an observer joins by code on the web and lands on the collect page) and `org.spec.ts` (Members and Settings only for owners and admins), each 2 of 2 or more.
+Verified 2026-10-15, mobile side (MOB-06): on the local stack, a single-use observer code made by the seed's manager through `POST /v1/projects/{project}/invitations` (the Team page's call) was previewed and redeemed by a newly signed-up observer through the collector's own API client and join logic, and `/v1/me` then listed the project as active beside Training (`mobile/src/features/onboarding/join.acceptance.test.ts`). The redemption through the phone's screens is in the [device checklist](../docs/qa/device-checklist-2026-10.md), pending (user).
 
 ### WEB-08: Sites and packages on real data
 Status: todo · Phase 3 · Size M · Depends: BE-13, WEB-01, WEB-06 · Blocks: none
@@ -233,12 +234,14 @@ Do:
 Done when: 10,000 synthetic observations on the local stack scroll and filter smoothly, and the filters survive a page reload.
 
 ### WEB-11: Overview on real data
-Status: todo · Phase 3 · Size M · Depends: BE-14, WEB-06 · Blocks: none
+Status: done (2026-10-15; as built; the play-type bars are not on the overview) · Phase 3 · Size M · Depends: BE-14, WEB-06 · Blocks: none
 WEB-27 (2026-10-09, D30): delivered without a summary endpoint. The overview works out the field return, the coverage of zones by Standard, Reliability and Inventory rounds, what needs attention and the recent activity in the web app, from the site list and the newest 500 observations. At the cap it says "Based on the newest 500 observations." No completion target is claimed.
 Cut option: show counts only, without charts.
 Do: fill WEB-23's overview (counts, `TypeBars` and the coverage matrix) from `GET …/summary`, keeping its layout; `DESIGN.md` rules out KPI tiles. Delete client-side aggregation over fixtures (`src/lib/analysis.ts`) that nothing uses anymore.
 
 Done when: the overview matches SQL counts on the local stack.
+
+Verified 2026-10-15: the part of BE-14 this task needs is in the API (`GET …/observations/summary`, BE-20's subset; BE-14 itself still lacks the viewport filter), and the overview reads it (`summarizeObservations` for today and the last 7 days, `coverageFromGroups` for coverage by zone and round; WEB-41); `src/lib/analysis.ts` is gone. `e2e/overview-sql.spec.ts` reads the project's counts straight from the local database (`docker exec … psql`, total and by zone and round type) and holds the overview's total and each zone's coverage row to them: 2 of 2 at desktop-1440 and phone-390 on the local stack, beside `overview.spec.ts` 4 of 4. Not built: `TypeBars` on the overview, because the summary carries no answers (play types); DESIGN.md rules out KPI tiles, and the lead may drop that part of the Do line.
 
 ### WEB-12: GIS page and exports
 Status: todo · Phase 3 · Size S · Depends: BE-14, BE-15, GIS-01, GIS-04, WEB-05 · Blocks: none
@@ -279,9 +282,10 @@ Do:
 
 Done when: nothing on the page contradicts public sign-up, and the deletion path works without the app.
 Verified 2026-10-14: `/privacy` describes public sign-up with a six-digit email code, what an account holds (the Profile row, memberships, the Training project and its retention), the website's cookies and self-serve deletion at `/account` ("The app cannot delete accounts yet"); `/privacy/delete-data` adds "Delete your account yourself" for anyone with the web, and instructions with a contact for anyone without it. `policy.ts` keeps `trainingRetention` ("30 days after they arrive", Q2) and `emailProvider` (null) as "to be confirmed" facts, and the effective date is October 14, 2026. On the local stack (local Supabase Auth and Mailpit, the API on :8001, a production build; `sh scripts/e2e-local.sh --prod --zones --skip-seed --project=desktop-1440 --project=phone-390`, 256 of 256 passed): the honesty scan reads `/privacy` and `/privacy/delete-data` honestly signed out (Day and Dusk, axe clean) and screenshots both widths. The deletion itself is WEB-06's flow, not browser-run locally for the reason given there.
+Updated 2026-10-15 (MOB-05, MOB-07): the app now creates accounts and deletes them, so `/privacy` and `/privacy/delete-data` say so (app deletion path, records not uploaded stay on the device and can no longer upload, sign-out works offline, and the note the app keeps at sign-out); the effective date is October 15, 2026. The two "to be confirmed" facts are unchanged.
 
 ### WEB-15: End-to-end tests with Playwright
-Status: todo · Phase 4 · Size M · Depends: DB-02, WEB-04, WEB-06, WEB-07 · Blocks: QA-04
+Status: doing (2026-10-15: unblocked by WEB-07; the suite passes locally; running it in CI is a request to the CI owner) · Phase 4 · Size M · Depends: DB-02, WEB-04, WEB-06, WEB-07 · Blocks: QA-04
 WEB-27 (2026-10-09, D30): partly delivered. `web/e2e` and `scripts/e2e-local.sh` run Playwright against local Supabase, the local API and the seed in `database/seed-web-workspace.mjs`. Specs: sign-in, sites, packages, forms, data, overview, QGIS and reports, settings, team, organization pages, an invitation redeemed by a viewer, an observer joining by code, the removed routes, and a scan of every route for sample words, jargon, more than one primary button and axe findings in Day and Dusk. Not covered: sign-up with Mailpit codes, password reset and account deletion. There is no onboarding to test.
 WEB-04 (2026-10-14): `e2e/auth-flows.spec.ts` now covers sign-up with Mailpit codes (a wrong code, then the right one) and password reset (the old password refused, the new one accepted), and `org.spec.ts` covers an owner creating a project in their own organization. Account deletion is unit-tested only: the local API has no Auth Admin key, so `DELETE /v1/me` answers 503 there. This task stays todo until WEB-07 is done (Depends).
 Do: add `web/e2e/`, running against the local stack and reading codes from the Mailpit API. Cover:
@@ -292,6 +296,8 @@ Do: add `web/e2e/`, running against the local stack and reading codes from the M
 - account deletion.
 
 Done when: the suite passes locally and in CI (OPS-06).
+
+Progress 2026-10-15: every dependency is done (WEB-07 closed today). On the local stack, with the API's email delivery off (`scripts/e2e-local.sh` now forces it; since 529e81b the API sent `team.spec.ts`'s invitations whenever the calling shell had provider settings), the suite for this task passes at desktop-1440 and phone-390, 38 of 38 with setup: `auth-flows.spec.ts` (sign-up and verify with Mailpit codes, password reset), `sign-in.spec.ts`, `org.spec.ts` (an owner creates a project; organizations come from the bootstrap script under D30, so "onboarding, then the org and project exist" is the bootstrap plus this spec), `invite-viewer.spec.ts` (a second user redeems a link), `team.spec.ts` (a manager creates a join code), `join-observer.spec.ts` and `account-deletion.spec.ts` (the account check; DELETE /v1/me answering 204 or 202 needs BE-08's key). **Open:** CI runs no Playwright job; a proposed job is in [the 2026-10-15 requests](../docs/handoff/frontend-requests-2026-10-15.md) for the CI owner (OPS-06).
 
 ### WEB-16: Web error reporting
 Status: todo · Phase 4 · Size S · Depends: OPS-07, WEB-03 · Blocks: QA-06

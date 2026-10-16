@@ -86,13 +86,16 @@ function subscribe(listener: () => void): () => void {
 /**
  * Saves a name and initials for an owner. A change is pending until the server confirms it; saving the
  * same values again keeps whatever the server already confirmed. The `local` profile has no account to
- * reach, so it is never pending. Null when either is not valid.
+ * reach, so it is never pending. `onboarded` saves it as finished at once: an edit made in the app (the
+ * Account tab) by an account whose profile came from the server, so the gate never reopens onboarding.
+ * Null when either is not valid.
  */
 export function withEdit(
   saved: SavedProfiles,
   owner: string,
   name: string,
   initials: string,
+  onboarded = false,
 ): SavedProfiles | null {
   const cleaned = cleanName(name).slice(0, NAME_MAX);
   if (cleaned === "" || !isValidInitials(initials)) return null;
@@ -103,7 +106,7 @@ export function withEdit(
     [owner]: {
       name: cleaned,
       initials,
-      onboarded: existing?.onboarded ?? false,
+      onboarded: onboarded || (existing?.onboarded ?? false),
       pending: owner !== LOCAL_OWNER && (unchanged ? existing.pending : true),
     },
   };
@@ -170,8 +173,11 @@ export type ProfileValue = {
   complete: boolean;
   /** The saved name and initials have not reached the account yet. */
   pending: boolean;
-  /** Saves the name and initials on this device. Returns false, saving nothing, when either is not valid. */
-  set: (name: string, initials: string) => boolean;
+  /**
+   * Saves the name and initials on this device. Returns false, saving nothing, when either is not valid.
+   * `{onboarded: true}` for an edit made inside the app, which keeps onboarding finished.
+   */
+  set: (name: string, initials: string, options?: { onboarded?: boolean }) => boolean;
   /** Marks onboarding finished. Returns false when no valid profile is saved yet. */
   finish: () => boolean;
   /** Forgets this account's profile on this device. Observations keep the code they were saved with. */
@@ -186,8 +192,8 @@ export function useProfile(): ProfileValue {
   const profile = saved[owner];
 
   const set = useCallback(
-    (name: string, initials: string) => {
-      const next = withEdit(readSaved(), owner, name, initials);
+    (name: string, initials: string, options?: { onboarded?: boolean }) => {
+      const next = withEdit(readSaved(), owner, name, initials, options?.onboarded === true);
       if (!next) return false;
       commit(next);
       return true;

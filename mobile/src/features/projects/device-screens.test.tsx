@@ -77,6 +77,8 @@ vi.mock("../onboarding/pending-invitation-store", () => ({
   usePendingInvitation: () => ({ code: null }),
   takeFreshInvitation: () => null,
 }));
+// The session note reads the auth provider; the Projects screen's own logic is under test here.
+vi.mock("../auth/ResumeUploadsNote", () => ({ ResumeUploadsNote: () => null }));
 vi.mock("../onboarding/pending-invitation-note", () => ({
   PendingInvitationProjectsNote: () => null,
 }));

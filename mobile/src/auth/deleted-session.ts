@@ -15,6 +15,19 @@ export function isAccountDeleted(
   return deletedUserId !== null && account?.id === deletedUserId;
 }
 
+/**
+ * Whether marking an account deleted still applies: the account it was meant for is the one the callback
+ * captured and is still the one on this device. A deletion that finishes after the phone signed out or
+ * moved to another account must not sign that account out or give it the deleted account's marker.
+ */
+export function deletionStillApplies(
+  expectedUserId: string,
+  capturedUserId: string,
+  currentUserId: string | null,
+): boolean {
+  return expectedUserId === capturedUserId && currentUserId === expectedUserId;
+}
+
 export function allowedSession<T extends { readonly user: { readonly id: string } }>(
   session: T | null,
   deletedUserId: string | null,

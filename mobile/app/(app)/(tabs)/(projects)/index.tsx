@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { useMe } from "../../../../src/data/api/me-provider";
+import { ResumeUploadsNote } from "../../../../src/features/auth/ResumeUploadsNote";
 import { PendingInvitationProjectsNote } from "../../../../src/features/onboarding/pending-invitation-note";
 import {
   takeFreshInvitation,
@@ -91,6 +92,7 @@ export default function ProjectsHome() {
           />
           <PreviewData />
         </View>
+        <ResumeUploadsNote />
         <PendingInvitationProjectsNote />
         {unfinished ? <UnfinishedCard unfinished={unfinished} /> : null}
         <ParkedDrafts />
