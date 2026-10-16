@@ -1,5 +1,7 @@
 # GIS-09 database and API/export acceptance
 
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 Date: 2026-10-11. Scope: additive source migration and disposable local acceptance.
 No hosted migration, persistent database change, credential provisioning or commit/push
 was performed by this work.

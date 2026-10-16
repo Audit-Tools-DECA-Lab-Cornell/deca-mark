@@ -1,6 +1,6 @@
 # Live DECA Mark observations in QGIS
 
-The Supabase login `fieldmaps_qgis_training` is restricted to the fictional training project's `gis.sample_observations` view. It cannot read private application or Auth tables, edit observations, create objects in `public`, grant memberships, or bypass row policies. On the earlier development project, its pooler login was tested with TLS certificate and hostname verification and returned both uploaded WGS84 points. The connection below now points at the DECA Mark GIS project, provisioned September 22, 2026; its QGIS login connects with verified TLS and is read-only. It has no observations yet.
+The Supabase login `fieldmaps_qgis_training` is restricted to the fictional training project's `gis.sample_observations` view. It cannot read private application or Auth tables, edit observations, create objects in `public`, grant memberships, or bypass row policies. On the earlier development project, its pooler login was tested with TLS certificate and hostname verification and returned both uploaded WGS84 points. The public connection below was configured for the DECA Mark GIS project on September 22, 2026. Historical TLS/read-only verification and the record count below describe that dated setup; the current hosted project/schema and record count were not rechecked by this documentation reconciliation.
 
 This is a development reader for the practice project. Real research projects need their own scoped reader assignments and credential lifecycle.
 
@@ -10,13 +10,7 @@ The website can read a QGIS project with uploaded GeoPackage, shapefile or GeoJS
 
 ## Recorded zone boundaries and inventories
 
-Use the [recorded-boundary analysis guide](zone-boundaries/README.md) for versioned zone
-snapshots, point events and whole-zone inventories. It consumes the API's complete
-authorized export and preserves old package/zone bindings in separate QGIS layers.
-Inventory compatibility anchors never enter its point-event layer. Legacy boundaries
-remain explicitly unknown. Companion SQL views retain request-scoped API permissions;
-the training GIS login below receives no additional grants. Local synthetic acceptance
-does not establish hosted migration, device or live-reader readiness.
+Use the [recorded-boundary analysis guide](zone-boundaries/README.md) for the current `/v1` complete-export/manual QGIS workflow and its explicit historical-adapter limitation. Current SQL projections retain exact package/zone context and whole-zone Inventory; `prepare.py`/`render.py` still require removed metadata and need alignment before current-contract replay. GIS-09’s earlier synthetic QGIS rendering does not establish hosted migration, current-contract Desktop acceptance or the per-project live-reader pilot. See [the current roadmap](../docs/plan/current-state.md) and [GIS task ownership](PLAN.md).
 
 ## Connection
 

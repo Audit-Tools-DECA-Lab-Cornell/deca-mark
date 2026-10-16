@@ -1,5 +1,7 @@
 # DECA Mark database tests
 
+Planning checkpoint: [current roadmap, 2026-10-15](../docs/plan/current-state.md). DB-19/BE-22 and DB-18 provide current local fixtures; hosted schema reconciliation and integrated QA-07 remain open.
+
 `supabase/migrations/` is the canonical PostgreSQL 17/PostGIS schema. Local development and integration tests run the actual Supabase stack, including Auth, Storage and Mailpit. The schema and task specifications are in [supabase/PLAN.md](../supabase/PLAN.md).
 
 ## Run locally
@@ -113,7 +115,7 @@ The full projection and QGIS/export workflow are documented in
 [qgis/ZONE-BOUNDARIES.md](../qgis/ZONE-BOUNDARIES.md). General scoped GIS login provisioning
 remains GIS-01/GIS-02.
 
-After DB-19 and BE-22 pass, rerun the signed HTTP/SQL/export agreement fixture:
+DB-19 and BE-22 are locally accepted. To repeat the current signed HTTP/SQL/export agreement fixture after changes:
 
 ```sh
 sh database/gis09-api-rehearsal.sh -q
@@ -121,7 +123,7 @@ sh database/gis09-api-rehearsal.sh -q
 
 The API fixture must use the sole `/v1` surface and map versions 1 and 2, upload a delayed
 map-v1 event after map-v2 publication, and compare restricted GIS reads with complete API
-exports. Its earlier success is historical evidence; BE-22 aligns the fixture before reuse.
+exports. `database/tests/test_gis09_api.py` now selects `test_v1_v2_gis_readback_matches_signed_exports` from the current acceptance adapter. This does not align the separate historical QGIS Desktop preparation/render scripts; see [the QGIS guide](../qgis/zone-boundaries/README.md).
 Current SQL acceptance verifies that Training snapshots cannot expose another creator's
 activity. These checks do not apply hosted migrations or provision a QGIS database reader.
 
@@ -142,7 +144,7 @@ own container on exit. It does not reset existing databases or read their passwo
 The API harness publishes only an ephemeral loopback port, checks paired local database
 overrides, and exercises application SQL as the restricted `fieldmaps_api` role. Auth
 tables/signing keys are synthetic; these rehearsals do not exercise the hosted Auth service.
-BE-22 must align its runtime fixtures before the new baseline is considered API-accepted.
+BE-22 records its current-baseline local API acceptance in [backend/PLAN.md](../backend/PLAN.md#be-22-serve-one-zone-api-path); no new runtime verification is claimed by this documentation update.
 
 Verified locally on 2026-10-03: all 131 backend tests, the application SQL suite, Auth-hook suite and hosted verification script run against local Supabase pass. The project-list checks now initialize the profile and assert both the study and automatic Training membership, so prior identity test runs cannot invalidate the expected project list. Ruff and BasedPyright pass. Docker Desktop started normally when launched outside the restricted shell; no reinstall, database reset or hosted operation was required.
 
@@ -160,4 +162,4 @@ Hosted schema replacement remains a separate operation. `hosted/verify.sql` requ
 
 ### Mobile package acceptance
 
-`sh database/mobile-package-rehearsal.sh -q -s` uses Node 24, pnpm and a disposable local PostGIS/API fixture. Its earlier success preceded the current contract. The mobile reader accepts only the zone-aware `format: 1` archive on `/v1`; real API acceptance requires DB-19 and BE-22 and must be rerun after those land. No hosted configuration is used. Schema mismatch resets incompatible data under the [pre-launch reset policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11).
+`sh database/mobile-package-rehearsal.sh -q -s` uses Node 24, pnpm and a disposable local PostGIS/API fixture. The current-contract rehearsal passed on 2026-10-13: it installs the zone-aware `format: 1` archive from `/v1` and reopens the exact SQLite/filesystem catalog and form bindings ([evidence](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md)). This verifies package installation/restart, not MOB-29’s bound uploads or physical-device acceptance. No hosted configuration is used. Schema mismatch resets incompatible data under the [pre-launch reset policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11).

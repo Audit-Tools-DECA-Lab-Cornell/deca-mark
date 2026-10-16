@@ -1,5 +1,7 @@
 # WP1 progress (sites and map packages)
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 ## done
 - read brief, spec, data-layer notes, e2e specs (sites, packages), scan rules, old sample files
 - lib/packages.ts rewritten (no token / project id / resolveProjectId; client checks incl. blocking "Every zone has an id", distinct ids, one site outline, CRS, size limits)

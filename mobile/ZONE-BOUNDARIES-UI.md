@@ -2,9 +2,9 @@
 
 [Mobile data plan](ZONE-BOUNDARIES.md) · [Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Web UI plan](../web/ZONE-BOUNDARIES-UI.md) · Tasks MOB-30, MOB-31 and MOB-32 (UI), MOB-28, MOB-33 and MOB-29 (data) in [PLAN.md](PLAN.md)
 
-Status: a plan; the mobile UI is not built. Source inspection baseline: `33faa58` on 2026-10-11; contract aligned by CON-06.
+Implementation checkpoint, 2026-10-15: MOB-30 to MOB-32 are implemented and component-tested against MOB-33’s real read models. Simulator screenshots, phone/tablet VoiceOver and restart/recovery walkthroughs remain pending. MOB-29’s immutable bound upload, receipt/rejection and foreground reconnect path is implemented and locally verified through automated and disposable API/QGIS acceptance and the physical iPad/Android collector scenario remains pending ([evidence](../docs/reviews/mob29-2026-10-15/README.md)). Task status is owned only by [PLAN.md](PLAN.md); see the [current roadmap](../docs/plan/current-state.md).
 
-BE-18 through BE-20 established earlier backend behavior. DB-19 and BE-22 replace that baseline with the current contract and regenerate API declarations before dependent mobile integration. MOB-28's local package lifecycle is committed in `a86a1ee`; its real API gate remains pending. [PACKAGE-LIFECYCLE.md](PACKAGE-LIFECYCLE.md) defines the implemented storage/recovery interfaces; MOB-33 supplies collection read models and MOB-29 supplies bound uploads.
+DB-19 and BE-22 supply the current baseline and sole `/v1` API. MOB-28’s real package installation/restart gate passed against a disposable live API on 2026-10-13 ([evidence](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md)). [PACKAGE-LIFECYCLE.md](PACKAGE-LIFECYCLE.md) defines the implemented storage/recovery interfaces; [MOB-33-HANDOFF.md](MOB-33-HANDOFF.md) defines the acknowledged UI interface. The original inspection table below is historical, not a current defect list.
 
 **Pre-launch rule (2026-10-11):** there are no real users:
 
@@ -35,7 +35,7 @@ Never:
 - Ask for anything after each observation. Fast repeat stays as it is: Saved → "Place the next observation" → aim, with no transition.
 - Make an observation depend on a network call.
 
-## 2. What the code does today (verified)
+## 2. Historical inspection baseline (2026-10-11)
 
 | Area | Today | Evidence |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ Never:
 | Server side (BE-22 target) | The sole `/v1` site list returns the explicit current package pointer and exact package/zone metadata. A zone-aware `format: 1` manifest pins UUID site/package identities, integer map version, exact play/inventory forms and server anchors/digests. Publication returns a ready downloadable archive. Historical packages and exact retired bound forms remain readable to authorized project members. | [Canonical contract](../docs/plan/zone-boundaries/contract.md), [backend specification](../backend/ZONE-BOUNDARIES.md) |
 | Primitives | `Note` (tone, glyph, title, action, live region), `StateBadge` (contract or custom), `RadioRows`, `Segmented`, `StatusLine` with `announce()`, `Island`, `Button`. No sheet primitive; the declared `explain/[question]` sheet has no route file. | `src/ui/index.ts`, `app/(app)/_layout.tsx:28-36` |
 
-The table records the earlier inspection. MOB-28 now installs immutable versions, checks removal references and preserves exact recovery context; it also fences account changes and holds records until the bound serializer is implemented. Review [PACKAGE-LIFECYCLE.md](PACKAGE-LIFECYCLE.md) before wiring screens. Edge coverage remains MOB-29. The UI uses the stored integer package version and UUIDs, never parses identity or numbers from display labels.
+The table records the earlier inspection. MOB-28 now installs immutable versions, checks removal references and preserves exact recovery context; it also fences account changes; MOB-29 now persists immutable bound bodies and activates their foreground queue while bundled practice remains held locally. Review [PACKAGE-LIFECYCLE.md](PACKAGE-LIFECYCLE.md) before wiring screens. Edge coverage is now shared through exact `zoneCovers`, including sloping-edge regressions; see [the resolved handoff](MOB-31-HANDOFF.md). MOB-29 retains verification of the implemented transport and integrated acceptance. The UI uses the stored integer package version and UUIDs, never parses identity or numbers from display labels.
 
 ## 3. Decisions
 
@@ -114,7 +114,7 @@ Lead default: a zone is required for new bound points. A zone-free point option 
 - Saved card: a "Map and form" fact, "Map v1 · form janet-test-v1".
 - Observations list and detail: "map v1" from the record's frozen context.
 
-Labels use `package_version` as an integer formatted `v{n}` (CR-M6). Installed labels come from each stored package's own manifest, never from the site list (today the labels come from the site list: `hosted-sites.ts:28-41`).
+Labels use `package_version` as an integer formatted `v{n}` (CR-M6). Installed labels come from each stored package's own manifest, never from the site list (the current MOB-30 screens consume stored-version read models).
 
 ### MUI-6 Removal is per installed version and reference-checked
 
@@ -193,7 +193,7 @@ Keep layouts and primitives. One primary action per screen (DESIGN rule 01). Tar
 
 - Readiness comes from the verified catalog (MOB-28), not file existence (`hosted-sites.ts:50-56` today).
 - Add the update count to the row subtitle (MUI-10).
-- Fix the stale empty-state copy that says package delivery is not built (`[project].tsx:41-42,105`).
+- Keep current readiness/empty-state copy driven by MOB-33’s read models; the original package-delivery-absent copy is obsolete.
 - Replace the pseudo-percent download badge with "Downloading · part 2 of 4" (`readiness.ts:47,76-79`).
 
 ### 4.2 Site screen (`app/(app)/(tabs)/(projects)/[project]/[site].tsx`)
@@ -208,7 +208,7 @@ PackageIsland, top to bottom:
 6. "Older maps on this device" list (MUI-6), shown only when more than one version is installed.
 7. Footer: "Checked for updates Today · 09:12" with "Check for updates" (TextLink). It calls the fenced refresh.
 
-The removal confirm keeps "Remove Riverside map v1 from this device?" and adds what stays: "Saved observations stay on this device and still upload."
+The removal confirm keeps "Remove Riverside map v1 from this device?" and adds what stays: "Saved observations stay on this device." Bound foreground uploading is implemented in source under MOB-29; local automated/disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
 
 ### 4.3 Brief (`…/[site]/brief.tsx`)
 
@@ -221,7 +221,7 @@ The removal confirm keeps "Remove Riverside map v1 from this device?" and adds w
 
 - Header detail adds "map v1" (MUI-5).
 - PlaceStep: replace the ad-hoc readout (`PlaceStep.tsx:118-150`) with a `StateBadge` (custom glyph, word and tone, or a new contract kind; see CR-M8). Then the candidate choice and the disabled reason. The live region stays polite while aiming. `useAimZone` (`CollectMap.tsx:895-903`) returns `{candidates, status, nearEdge}` and keeps its 100 ms throttle.
-- Map: highlight candidate zones with palette means only (heavier `zone.edge` dashes, using the existing focus layer pattern). No UI state colour on the map (rule 03). Fix the spotlight so zone holes are dimmed (`geometry.ts:184-189`); today a hole looks inside the focused zone.
+- Map: highlight candidate zones with palette means only (heavier `zone.edge` dashes, using the existing focus layer pattern). No UI state colour on the map (rule 03). Fix the spotlight so zone holes are dimmed (`geometry.ts:184-189`); the MOB-31 spotlight fix now dims holes.
 - ReviewStep: the save gate Note (MUI-4).
 - SavedStep: the version fact. "Place the next observation" is unchanged.
 - ZoneStep: tap candidates (MUI-9).
@@ -291,22 +291,22 @@ nearEdge(point, zones, metresPerPoint, thresholdPoints = 8): SiteZone | null;
 
 Shared hotspot files: `src/session/provider.tsx`, `src/packages/hosted/provider.tsx`, `src/data/api/client.ts` and `src/storage/*`. The data agent writes them. The UI agent changes them only by a written request answered by the data agent, one file at a time, with no overlapping edits. Shared adapters `src/features/preview/*` and `src/maps/sample-site.ts` change only through MOB-33 or with the data agent's agreement. UI-owned files: `src/features/collect/*`, `src/features/projects/*`, the route screens under `app/(app)/(tabs)/(projects)/**` and `app/(app)/collect.tsx`, `src/maps/geometry.ts` (predicate and spotlight only), `src/ui/*` additions, and the field guide content.
 
-## 7. Contract and data-plan change requests
+## 7. Contract decisions and remaining change requests
 
-Send these to the lead before building a divergent client. Each lists the reason, the consumers affected and acceptance cases.
+Reconciled 2026-10-15. Implemented decisions below are not requests to rebuild the client. CR-M4 and shared cross-layer case additions remain acceptance work; no new policy approval is implied by this documentation update.
 
 | ID | Request | Why | Affects | Acceptance |
 | --- | --- | --- | --- | --- |
 | CR-M1 | Closed. In the single-path contract: package detail and archive are readable by any project member, with forms, version and digest (BE-22) | Recovery of a pinned older version | Mobile | — |
-| CR-M2 | Name the endpoint for an observer to fetch a bound package's exact play and inventory definitions by `form_version_id`, retired versions included | `prepare.ts::publishedForm` rejects retired versions; exact-version recovery needs them (data plan) | Mobile prepare/recovery | Retired bound form returns 200 to an authorized observer; unbound retired form stays refused for new maps |
+| CR-M2 | Implemented by MOB-28/MOB-33: recover exact bound forms from the verified package and authorize historical retired definitions; see [data handoff](MOB-33-HANDOFF.md) | No substitution by current forms | Mobile prepare/recovery | Current package installation/restart accepted locally; physical recovery remains pending |
 | CR-M3 | Closed. In the single-path contract: the site list's `package` is the current package and `zones` carry `zone_id`, `zone_code`, `label`, `display_anchor` and `geometry_sha256` | Labels before download | Mobile, web | — |
-| CR-M4 | Add an upload action matrix (HTTP, code, retry / rejected / sign-in, needs-attention) covering `idempotency_conflict`, `conflict`, `payload_too_large`, `not_found`, `account_deleted`, `membership_required` and each 422 issue code; and decide what an observer may do with a rejected immutable bound record (keep only, discard, or re-create under a new UUID) | Today an unknown code retries forever (`src/data/api/errors.ts:73`); records cannot change under their UUID (contract fingerprint) | Mobile errors, coordinator, Observations UI | Each code lands in the documented state in a unit test; the UI shows the documented action set |
+| CR-M4 | MOB-29 implements sign-in pause, transient retries, permanent needs-attention state and structured top-level/issue codes. Explicit retry resends the same immutable body; it does not edit or relabel the record. Broader correction/re-creation UX remains a separate decision | Unknown/malformed errors retain work for retry; bound UUID/body is immutable | Mobile errors, coordinator, Observations UI | Automated and disposable API rejection acceptance passes; native observer-copy acceptance remains pending |
 | CR-M5 | Add diagonal shared-edge, three-zone shared-vertex and non-axis-aligned near-edge cases to `coverage_cases`, state the client predicate (exact, no epsilon), and confirm a UI-only near-edge hint is allowed | All 16 current cases use axis-aligned edges with exactly representable coordinates | Mobile `coveringZones`; web editor hints | New cases pass in the mobile adapter, the web adapter and SQL |
 | CR-M6 | Closed. In the single-path contract: `package_version` (shown `v{n}`, from 1) is the only version label | One label | Mobile, web | — |
-| CR-M7 | Record the session and adoption policy (MUI-1, MUI-2) in the master plan's update table: new sessions use the newest verified installed version; older versions only through an unfinished observation | The contract permits superseded uploads but does not say who may start new sessions on them | Mobile Brief; manager reports | Lead-approved row; Brief behaviour matches it |
-| CR-M8 | Add a shared `placement` state kind to `contracts/contour.json` (inside, onEdge, otherZone, outside), or approve custom StateBadges for these four | DESIGN says states are a fixed vocabulary; mobile allows custom badges and the web does not (`mobile/src/ui/StateBadge.tsx:32-39` versus `web/src/lib/contour.ts:29-33`) | Both apps, if the web ever shows membership | `pnpm tokens:check` passes; both galleries show the states in Day and Dusk |
+| CR-M7 | Implemented policy: each collect visit uses the newest verified installed version; unfinished work resumes its exact older version. See [data handoff](MOB-33-HANDOFF.md) | New publication never replaces current work | Mobile Brief/recovery | Simulator/device replay remains pending |
+| CR-M8 | MOB-31 uses custom `StateBadge` glyph/word/tone under the documented default in MUI-3 | A vocabulary extension is not a remaining data blocker | Mobile placement | Native Day/Dusk/VoiceOver acceptance remains pending |
 | CR-M10 | In progress. MOB-28 supplies one local schema and mismatch reset; CON-06, DB-19 and BE-22 establish the current server contract. MOB-29 implements the sole `/v1` uploader; practice observations remain held locally | Pre-launch rule | Mobile, backend, contracts | One upload path; fresh-install and real API acceptance pass |
-| CR-M9 | State that a bound inventory record stores the manifest `display_anchor` locally, for display only, and that it is excluded from the upload body | The current contract omits coordinates from Inventory uploads | Mobile domain, serializer, maps | A bound inventory is never a marker; the sole `/v1` body has no coordinates |
+| CR-M9 | Data contract and MOB-33 retain the exact display anchor locally; Inventory has no event coordinate | Display aid is not a point event | Mobile domain, serializer, maps | MOB-29’s source serializer omits Inventory coordinates and first-round; disposable API acceptance passes, while physical-device acceptance remains pending |
 
 ## 8. Tasks
 
@@ -349,11 +349,8 @@ Physical device (release gate, owned by MOB-29 and QA-07). Run on a real iPad an
 
 Done evidence: the commands above with output, simulator screenshots per state, and a device run log. A green unit suite does not stand in for missing device evidence: mark it pending. Native builds from this checkout have hit a code-signing failure before (see `mobile/README.md`), so the device run may need the user's own terminal.
 
-## 10. Open questions for the lead
+## 10. Decisions to retain and remaining integration question
 
-1. MUI-2: confirm delayed adoption with no older-version choice for new sessions.
-2. MUI-3: does a preselected session zone on a shared edge count as an explicit choice?
-3. MUI-3: allow the UI-only near-edge hint?
-4. MUI-4: confirm a zone is required for every new bound point (no zone-free capture).
-5. CR-M4: what may an observer do with a rejected bound record?
-6. CR-M8: add a `placement` state kind to Contour, or allow custom badges?
+The implemented defaults are newest verified map for a new visit, exact older map for unfinished work, the session zone preselected on a shared edge, an informational near-edge hint, a required covering zone for bound points, and custom placement badges. These are recorded above and in [MOB-33-HANDOFF.md](MOB-33-HANDOFF.md); they do not block MOB-29.
+
+CR-M4’s machine retry/rejection handling is implemented and locally verified under MOB-29. Retry resends the same immutable UUID/body; records do not offer answer correction under that UUID. Any broader correction/re-creation UX remains a separate decision. Simulator/VoiceOver and physical-device replay remain pending. Current disposable API exports have native QGIS readback acceptance; general scoped live-reader provisioning remains separate.

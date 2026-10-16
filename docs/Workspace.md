@@ -2,6 +2,8 @@
 
 DECA Mark uses one Git repository and separate component toolchains. Central management means common entry-point commands, documentation, and coordinated changes; it does not require a shared React version or a combined JavaScript/Python dependency graph.
 
+Current roadmap: [position and next work](plan/current-state.md). Operations below are local tooling instructions, not evidence of hosted readiness. The [October 14 hosted diagnosis](reviews/ci-and-hosted-data-2026-10-14.md) records the last schema mismatch investigation; do not infer current deployment health from a local test.
+
 ## Dependency boundaries
 
 | Component                | Dependency owner                                        | Runtime                               |
@@ -60,7 +62,7 @@ Local API development uses `pnpm db:start` and, from `backend/`, `uv run --froze
 
 `pnpm db:stop` stops local Supabase while preserving volumes. `pnpm db:reset` explicitly deletes local database contents and reapplies the canonical migrations and fictional seeds. Routine checks do not reset data. Hosted migration application is separate.
 
-GitHub Actions runs the same web/mobile checks, backend checks/API tests, SQL assertions and plan checker. The local database jobs never link to hosted Supabase. The contracts drift job is added by CON-03 when its generator exists.
+GitHub Actions runs the same web/mobile checks, backend checks/API tests, SQL assertions and plan checker. The local database jobs never link to hosted Supabase. CON-03 supplies the generator and the contracts drift job; CI outcomes must be checked for the exact revision rather than inferred from their presence.
 
 ## Web move and deployment
 

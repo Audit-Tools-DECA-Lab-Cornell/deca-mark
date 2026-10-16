@@ -1,5 +1,7 @@
 # GIS-09 local acceptance
 
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 Implementation baseline: `33faa58` plus the uncommitted GIS-09 changes in this session.
 All acceptance data is synthetic. No secret, hosted database, reader grant or deployment
 is involved. The owning task status remains in [qgis/PLAN.md](../../../qgis/PLAN.md).

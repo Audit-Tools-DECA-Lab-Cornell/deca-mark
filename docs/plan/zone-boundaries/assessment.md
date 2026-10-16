@@ -1,5 +1,9 @@
 # Architecture assessment: historical source baseline
 
+> Historical pre-feature source assessment (October 10). Findings below explain the design; current implementation and remaining gates are in [current position](../current-state.md) and the component owners.
+
+Current mobile checkpoint, 2026-10-15: the baseline uploader gap below is resolved in source by MOB-29’s persisted immutable bound wire bodies, full receipt identity validation, structured rejection handling and foreground reconnect/resume/retry. Local automated and disposable API/QGIS acceptance passes ([evidence](../../reviews/mob29-2026-10-15/README.md)); physical iPad/Android collector acceptance remains pending. The historical findings below do not reopen the old flat serializer.
+
 [Master plan](README.md). Baseline: local source on 2026-10-10, before zone implementation. This is historical evidence, not the current implementation or task status. CON-06 aligns the recommendations below with the current single-path contract; owning specifications and tasks govern implementation. References can drift. This is a suitability assessment, not a security certification or runtime test.
 
 ## Actual data flow

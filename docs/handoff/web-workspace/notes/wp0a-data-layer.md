@@ -1,5 +1,7 @@
 # wp0a-data-layer report
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 ## Summary
 WP0A data layer is built and every required check passes.
 

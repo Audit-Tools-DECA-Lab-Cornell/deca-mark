@@ -1,5 +1,7 @@
 # DECA Mark web: live manager workspace — build spec (shared by every build agent)
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../plan/current-state.md) and [web task owners](../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 Repo: /home/user/Field-Maps. Web app: `web/` (Next.js 16 App Router, React 19, Tailwind v4, Contour design system in `web/src/components/contour`, Supabase SSR auth). `W` below = `web/src`.
 Approved plan summary: docs/handoff/web-workspace/plan.md. Read it first, then this file.
 

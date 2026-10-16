@@ -9,19 +9,11 @@ This file is part of the [DECA Mark production plan](README.md) and defines the 
 
 Backend tasks in [backend/PLAN.md](../../backend/PLAN.md) implement these shapes. Web tasks in [web/PLAN.md](../../web/PLAN.md) and mobile tasks in [mobile/PLAN.md](../../mobile/PLAN.md) consume them. If a shape must change, change it here first, then update every task that consumes it. The `cross-repo-contract-change` skill describes the procedure.
 
-## Context: why contracts are needed now
+## Current contract authority (reconciled 2026-10-15)
 
-Today the mobile form format and the server form format disagree:
+CON-01 to CON-06 establish the canonical shared form, generated OpenAPI/client types and authored parity cases. The earlier mobile/server form mismatch and handwritten API-shape duplication motivated that work; they are not current blockers. Canonical forms live in `contracts/forms/` and both runtimes execute shared cases.
 
-| | Mobile (`mobile/src/forms/definition.ts`) | Server (`backend/src/fieldmaps_api/domain/forms.py`) |
-|---|---|---|
-| Question key | `id` | `code` |
-| Kind names | `kind: one \| many \| text \| number` | `type: choice \| multi-choice \| integer \| …` |
-| Range names | `min` / `max` | `minimum` / `maximum` |
-| Conditions | `dependsOn` conditions | none |
-| Hidden required fields | optional | rejected when missing (`domain/forms.py`) |
-
-API types are also written by hand twice: `web/src/lib/packages.ts:17-37` and `mobile/src/sync/contracts.ts`. And the `janet-test-v1` form cannot upload.
+For zone-bound observations, site/package identity, paginated reads, publication and exports, the [zone contract](zone-boundaries/contract.md) is authoritative. BE-22 implements its sole `/v1` path; MOB-29 remains the collector serializer/receipt integration gate. PowerSync batch semantics later in this file are a gated future interface, not the current upload implementation.
 
 ## The `contracts/` folder (repository root)
 
@@ -54,28 +46,11 @@ Rules both sides must implement identically:
    - The server's models use `extra="ignore"` and the same defaults, so the server accepts every definition the device accepts.
 8. **Retired versions stay valid.** Records collected on a version that is later retired still upload and still render (DB-09, BE-12).
 
-## Observation envelope (sync upload and storage)
+## Current bound observation envelope
 
-```json
-{
-  "id": "uuid (client-generated)",
-  "project_id": "uuid",
-  "site_id": "uuid",
-  "form_version_id": "uuid",
-  "zone_code": "A | null",
-  "package_version": 3,
-  "round": 2,
-  "context": { "fresh_period": true, "inherited_from": "uuid | null" },
-  "gps_accuracy_m": null,
-  "longitude": -76.485, "latitude": 42.448,
-  "observed_at": "2026-10-02T14:03:11.412-04:00",
-  "observer_code": "JS",
-  "answers": { "<question id>": "value" },
-  "device_id": "uuid", "app_version": "1.0.0 (42)"
-}
-```
+The sole current `PUT /v1/projects/{p}/observations/{uuid}` carries exact site, package and zone UUIDs, the exact form version, observation/observer context and nested `answers`. Standard/Reliability carry hand-placed coordinates and a strict boolean `first_round`. Inventory omits coordinates and `first_round` entirely, including null/false; its event geometry is null. See [observation upload and receipts](zone-boundaries/contract.md) and generated [OpenAPI](../../contracts/openapi.json) for field definitions.
 
-The current `PUT /v1/projects/{p}/observations/{uuid}` body (`site_id`, `form_version` code, `coordinates`, `observer`, flat answers) is accepted until MOB-10 ships, and is removed after the pilot. Since D26 it also takes an optional round context: `zone` (zone code), `round_type` (`standard` · `reliability` · `inventory`, which replaces the numeric `round` above), `first_round` and `placement` (`hand` · `zone`). Its idempotency hash covers only the fields sent, so a retried upload from before D26 still matches.
+The package pins form and zone meaning. Retries send identical immutable payloads and acknowledge only matching receipt identities; MOB-29 supplies the collector integration. The former numeric-round, flat-answer and compatibility-until-pilot envelopes are removed by CON-06/BE-22. Planned PowerSync batching below must be reconciled with this current envelope before implementation; it cannot revive an older upload path.
 
 ## Error envelope
 
@@ -83,7 +58,7 @@ The current `PUT /v1/projects/{p}/observations/{uuid}` body (`site_id`, `form_ve
 { "error": { "code": "membership_required", "message": "Human sentence.", "details": {} } }
 ```
 
-**Codes.** Extend this table before using a new code. Codes raised inside the database travel as the SQLSTATE shown, and BE-02 translates them.
+**Codes.** This original core subset is extended by the [zone contract](zone-boundaries/contract.md) and generated OpenAPI; it is not an exhaustive current list. Extend the canonical contract before introducing a code. Codes raised inside the database travel as the SQLSTATE shown, and BE-02 translates them.
 
 | Code | HTTP | SQLSTATE |
 |---|---|---|
@@ -127,7 +102,7 @@ This is the full target surface. **Exists** means it is already served by `backe
 | tenancy | `POST/GET /v1/projects/{p}/invitations` · `DELETE /v1/projects/{p}/invitations/{id}` | manager | BE-07 |
 | tenancy | `POST/GET /v1/orgs/{org}/invitations` · `DELETE /v1/orgs/{org}/invitations/{id}` (roles `member`, `admin`; `admin` needs an owner) | org owner/admin | BE-07 |
 | tenancy | `POST /v1/invitations/preview` (`{token}` or `{code}`, consumes nothing) · `POST /v1/invitations/redeem` | verified user | BE-07 |
-| sites | `GET/POST /v1/projects/{p}/sites` · `GET/PATCH /v1/projects/{p}/sites/{code}` (current package, its zones, extent, centre, observation count) | member / manager | exists (BE-13 step 1) |
+| sites | `GET/POST /v1/projects/{p}/sites` · `GET/PATCH /v1/projects/{p}/sites/{site_id}` (current package, its zones, extent, centre, observation count) | member / manager | exists (BE-13 step 1) |
 | sites | `POST /v1/projects/{p}/packages` · `GET …/packages` · `GET …/packages/{id}` | manager / member | exists (moved to Storage by BE-13) |
 | sites | `GET …/packages/{id}/archive` | member | exists (kept for web download) |
 | sites | `GET …/packages/{id}/download`: short-lived signed Storage URL plus sha256 | member | BE-13 |
@@ -135,33 +110,19 @@ This is the full target surface. **Exists** means it is already served by `backe
 | instrument | `POST /v1/projects/{p}/forms` (form + first draft) · `POST …/forms/{form}/versions` (next draft, copied unless a definition is sent) | manager | exists (BE-11) |
 | instrument | `PUT/DELETE …/form-versions/{code}` (drafts only) · `POST …/form-versions/{code}/publish` · `POST …/form-versions/{code}/retire` | manager | exists (BE-11) |
 | collection | `POST /v1/sync/upload`: a PowerSync CRUD batch, with one result per operation (see below) | observer / manager | BE-12 |
-| collection | `PUT /v1/projects/{p}/observations/{uuid}` · `GET …/observations/{uuid}` | observer / member | exists (legacy after MOB-10) |
-| analysis | `GET /v1/projects/{p}/observations` (cursor on `(observed_at,id)`; filters: site, zone, round, form version, observer, date range, bbox). A first version exists: `site`, `round_type`, `since`, `limit` ≤ 500, no cursor | viewer and up | BE-14 |
-| analysis | `GET /v1/projects/{p}/summary` | viewer and up | BE-14 |
-| analysis | `GET /v1/projects/{p}/exports?format=csv\|geojson&…filters` (streamed, audited) | viewer and up | BE-14 |
+| collection | `PUT /v1/projects/{p}/observations/{uuid}` · `GET …/observations/{uuid}` | observer / member | current bound path (BE-22); collector integration MOB-29 |
+| analysis | `GET /v1/projects/{p}/observations` (cursor; site/package/zone/round/observer/observed-time filters; page limit 500) | authorized members, with role/RLS restrictions | BE-20/22 implemented; broader BE-14 scope remains |
+| analysis | `GET /v1/projects/{p}/observations/summary` | authorized members under RLS | BE-20/22 implemented; richer dimensions BE-14 |
+| analysis | `GET /v1/projects/{p}/observations/export?format=csv\|geojson&…filters` (bounded ZIP) | authorized members under RLS | BE-20/22 implemented |
 | gis | `GET /v1/projects/{p}/gis-access` (pilot: list grants and connection info, no secrets) | manager | BE-15 |
 
 ### Current web observation reads
 
-`GET /v1/projects/{p}/observations` returns a bare array with at most 500 rows, ordered by
-`observed_at DESC, observation_id ASC`. `site` and `round_type` filter before the limit;
-`since` is an inclusive **received_at** cutoff, not an observation-date filter. All reads
-use the caller's project access and RLS. A response containing 500 rows is potentially
-limited; no cursor or exact matching total is returned. Browser filters and derived
-reports/exports cover that returned subset only. Site `observation_count` instead counts
-all accessible, non-deleted records at that site.
+The observation list returns `ObservationPage`, not a bare array: rows, matching total, next cursor and counted-at metadata. Filters are applied before paging; cursors bind the normalized project/filter scope. Dates are half-open observation-time bounds, not the old received-at cutoff. See the [zone read contract](zone-boundaries/contract.md#reads) and generated [OpenAPI](../../contracts/openapi.json) for exact field names.
 
-`GET /v1/projects/{p}/observations/{uuid}` preserves its existing fields and additionally
-returns `site_code`, `site_name`, `form_version`, `received_at`, `zone`, `round_type`,
-`first_round` and `placement`. These fields have the same meanings as the list response.
-`form_version` identifies the definition stored with the observation, including retired
-versions; fetch it through `GET /v1/projects/{p}/form-versions/{code}` to label answers.
-Never infer a record's definition from the current package or latest form. Legacy records
-without round context read as `round_type: "standard"` with null zone/first_round/placement.
-Details remain accessible outside the newest 500 rows; missing, deleted and inaccessible
-records return 404. Existing mobile upload bodies and receipts are unchanged.
+Detail and list retain the exact site, package version, zone snapshot, form and round. Inventory has null event geometry and separate whole-zone support; there is no legacy-row fallback in the current baseline. Missing/inaccessible records return 404. Summary and ZIP export apply the same authorized filters across the complete matching scope, subject to documented export bounds. Bbox, form-version filters and richer observer/day/form summary dimensions remain BE-14 scope; current observer/date filters already exist.
 
-### `POST /v1/sync/upload` semantics
+### Planned `POST /v1/sync/upload` semantics (not implemented)
 
 These follow PowerSync's guidance: <https://docs.powersync.com/handling-writes/writing-client-changes.md>.
 
@@ -171,7 +132,7 @@ These follow PowerSync's guidance: <https://docs.powersync.com/handling-writes/w
 
 **Response.** 200 with `{ "results": [ { "id", "status": "accepted|rejected", "code"?, "pruned"?: ["<question id>"], "user_id" } ] }`, exactly one result per operation.
 - Every accepted operation is committed **synchronously** before the response.
-- A replay is accepted when it matches the stored row's canonical content (excluding `device_id` and `app_version`), or when the stored row came from the legacy `PUT`. It is never matched by raw body hash (BE-12 step 3).
+- A replay is accepted when it matches the stored row's canonical content (excluding `device_id` and `app_version`), under the current supported envelope. Do not add a legacy-format bridge: the pre-launch policy supersedes the original legacy-`PUT` exception. It is never matched by raw body hash (BE-12 step 3).
 - Validation, permission, conflict and unexpected per-operation failures are `rejected`. The payload is written to `fieldmaps.upload_rejections` (DB-10) through a savepoint, and syncs back to the user. A later accepted upload of the same id marks that rejection resolved.
 
 **Other statuses.**

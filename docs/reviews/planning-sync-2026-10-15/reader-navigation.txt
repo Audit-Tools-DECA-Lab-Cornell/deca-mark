@@ -1,0 +1,234 @@
+Documentation reader scenario, final file content 2026-10-15.
+D1/D3: exact navigation index -> current-state -> owner tasks; D2: resolved handoff -> acknowledged interface.
+OPEN docs/plan/README.md
+## Current navigation (reconciled 2026-10-15)
+
+Read [current position and next work](current-state.md) for the implemented zone/web scope, remaining acceptance and the ordered return to the pilot roadmap. Component plans are the only task-status authority. Dated review results remain evidence of their exact revision and surface, not current hosted health.
+
+The September foundation results are retained in their owning DB/BE/OPS tasks. The active order is MOB-29 → QA-07, including authorized hosted reconciliation where required → remaining manager web acceptance → mobile/sync/operations/pilot gates. Do not restart the archived web work-package plan.
+
+OPEN docs/plan/current-state.md
+## Next sequence
+
+1. **Finish MOB-29 on the existing outbox.** Its implementation prerequisites are recorded in [mobile/PLAN.md](../../mobile/PLAN.md). Wire the sole bound envelope and receipt checks; preserve rejected records. Do not add PowerSync to finish polygons. Exercise the exact map-v1 draft while map-v2 publishes, restart, reconnect and replay.
+2. **Close QA-07's complete zone story.** Run the [release matrix](zone-boundaries/verification.md) across real local web, physical collector, API and QGIS; include pending mobile simulator/VoiceOver and manager iPad checks. For hosted acceptance, first obtain authorization for the exact target and reconcile the [recorded hosted mismatch](../reviews/ci-and-hosted-data-2026-10-14.md). A documentation update authorizes no reset or deployment.
+3. **Close the remaining manager web flow.** Use [web/PLAN.md](../../web/PLAN.md), not the old WP implementation queue: WEB-08/09 remaining acceptance, WEB-10's scale/map work, WEB-11 summary verification, WEB-12 live GIS access, WEB-13 touch/layout and WEB-15 test gaps. DB-12, BE-13 and DB-14 own Storage-backed package delivery, which is independent of the PowerSync spike and required for WEB-08's original production acceptance. BE-14, BE-15 and GIS-01 to GIS-04 own the analysis/GIS prerequisites. Local account-deletion success/pending paths also need the authorized Auth Admin runtime before browser acceptance.
+4. **Resume the full pilot plan in dependency order.** Resolve mobile identity/join/account acceptance; finish independent server/Storage prerequisites in their owning lanes, and run SYNC-01 after its staging gates. Proceed with the PowerSync-specific lane only if that spike passes; then QA-02/03/04, release/operations and QA-05/06. [Production index](README.md), [sync plan](sync-powersync.md), [operations](operations.md) and [verification](verification.md) remain the master plan. Re-estimate dates after these gates; September's week numbers are original planning targets.
+
+The Web Flow is the implemented D30 workspace slice. The Manager Web Flow is the remaining end-to-end manager acceptance across that workspace, GIS and hosted services. The complete app plan includes both manager and collector journeys plus operations and pilot acceptance. Starting another web rebuild would repeat completed work.
+
+OPEN mobile/PLAN.md
+### MOB-29: Collect and upload pinned zone observations
+Status: todo (2026-10-14: MOB-33 acknowledged and MOB-30 to MOB-32 code complete; ready to start upload/receipt integration, no longer waiting on those UI tasks) · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
+Owner: Mobile data agent with Claude UI owner.
+Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 4.5, 6, 7 and 9.
+Do: Freeze session forms/package/zone, apply geometry parity (reusing MOB-31's `coveringZones`) and the sole `/v1` upload/receipt validation; store structured rejection codes for the needs-attention copy in UI plan 4.5; run the physical-device scenario.
+Done when: Physical-device draft survives newer publication and restart, uploads with original attribution; inventory is whole-zone.
+Verify: Mobile checks/tests and physical-device acceptance matrix; missing evidence remains pending.
+Data decision (2026-10-14): retain the historical Depends/Blocks links to completed UI prerequisites; they do not block starting this task. Exact closed coverage is shared through `zoneCovers` and now has the sloping-edge regression checks. The sole bound uploader, receipt/rejection integration and physical-device/server/QGIS scenario remain outstanding; this review does not claim them complete.
+
+OPEN docs/plan/verification.md
+### QA-07: Verify the complete zone-boundary feature
+Status: todo · Phase 4 · Size L · Depends: BE-20, MOB-29, WEB-28, WEB-29, GIS-09 · Blocks: none
+Current evidence boundary (2026-10-15): the owner plans record local implementation through BE-22, WEB-28/29 and MOB-28/30–33. MOB-29 remains the upload/receipt prerequisite. Pending mobile simulator/VoiceOver, physical iPad/editor and integrated device/API/GIS evidence are not closed by these statuses. Check the [current sequence](current-state.md). The [hosted mismatch diagnosis](../reviews/ci-and-hosted-data-2026-10-14.md) is historical and requires exact-target approval before reset/deployment. Verify the current-contract QGIS acceptance tools before using older GIS-09 recipes.
+
+Owner: Integration lead and reviewers.
+Read first: [Master plan](zone-boundaries/README.md) and [component specification](zone-boundaries/verification.md).
+Do: Run geometry/security/migration/concurrency/offline/readback matrix with two managers, old queue, physical device and more than 500 rows.
+Done when: Actual evidence supports historical binding and data survival; unresolved browser/device/security/migration checks block completion.
+Verify: Component checks plus live local HTTP/browser/device/GIS story; spec review then quality review.
+
+OPEN web/PLAN.md
+### WEB-28: Build a real manager zone editor
+Status: done (2026-10-13; the manual matrix is pending (user)) · Phase 3 · Size L · Depends: BE-22, WEB-34, WEB-38, WEB-42 · Blocks: QA-07
+Owner: Claude web owner.
+Planned 2026-10-11: the detailed UI, state architecture, drawing-surface decision and verification are in [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md). This task is now the acceptance gate for editing and QGIS uploads; WEB-30 to WEB-38 and WEB-42 do the work.
+Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 1, 3, 5 and 10.
+Do: Run the editing evidence in UI plan section 10 against the local stack with the real API: create, edit, validate, publish, two-manager conflict, lost-response replay, direct-URL refusal, network loss, leave guard, keyboard, touch emulation and the manual iPad Safari check.
+Done when: Real API browser flow and two-manager conflict pass; no fake saves or complex-geometry loss; manual evidence is recorded or marked pending.
+Verify: `pnpm web:check`, `pnpm --dir web build`, `pnpm --dir web test:unit`, `sh scripts/e2e-local.sh` with the zones-* specs, and the manual matrix in UI plan section 10.
+Verified 2026-10-13 on the local stack against the real API, production build, desktop-1440 and phone-390 (`sh scripts/e2e-local.sh --prod --zones`): the zones-* specs, 36 of 36; after review, the publish, draft, conflict and data-history specs again (26 of 26) and the editor spec with the traced strip (both projects). By UI plan section 10 item:
+1. `zones-editor.spec.ts`: a draft is started from the Zones page. A rectangle is drawn by mouse (touch drag on the phone), with sides exactly on longitude and latitude. A shape is drawn by keyboard at the cross. On the phone a point is dragged by touch, and only that point moves. A point moved by keyboard into the lawn is DECA Mark's "overlap" for that revision, and one Undo puts it back to the imported numbers. On the desktop a strip is traced along the lawn's edge ("Follow the edge", 1 point copied): it holds the lawn's three corners exactly, and DECA Mark finds no overlap. A reload keeps every zone, and v2 is published with all of them. The imported zones keep every number they came with.
+2. `zones-conflict.spec.ts`: two managers in two browsers on one revision: the second gets the dialog with its edits intact, saves them as a file, decides later, then replaces the saved draft. Two publications from one base: the first is v2, the second says "v2 was published while you were reviewing" with its draft kept. Two tabs of one manager publish one revision with their own request IDs: the second says "This draft was already published as v2." with "Open v2". Editor → review → Back to the editor → edit saves without a conflict.
+3. `zones-publish.spec.ts`: a lost answer is sent again with the same request and publishes once; a replay after a newer publication says "A later version is current now."; a note saved elsewhere during review asks which to keep, and the file kept from it has the note.
+4. `zones-access.spec.ts` and `zones-draft.spec.ts`: a viewer opening a draft or its review directly is told only managers can, and nothing of the draft is shown; an observer never reaches the zones; a viewer sees every version.
+5. `zones-network.spec.ts`: an edit made offline says so, stays in the tab and saves as the next revision on reconnecting; meanwhile a `g` chord, the command palette and a breadcrumb link each ask first, and after the save the link leaves without asking.
+8. `zones-honesty.spec.ts`: the Zones page (current, an earlier version, a site with no package), the editor and the review as a manager, and the Zones page and a draft as a viewer, read honestly in Day and Dusk: no banned words, one primary action, no sideways scroll, axe clean.
+- **Checks:** `pnpm --dir web check`, `test:unit` 351 of 351.
+- **Updated 2026-10-14, account changes mid-edit:** `zones-account.spec.ts` (2 tests, desktop-1440 and phone-390, 4 of 4 on the local stack (local Supabase Auth and Mailpit, the API on :8001, a production build; `sh scripts/e2e-local.sh --prod --zones --skip-seed --project=desktop-1440 --project=phone-390`, 256 of 256 passed)): signing out in another tab pauses saving with "Not saved · you were signed out. Sign in again in another tab, then come back to save.", and signing back in saves the edit as the next revision; another account signing in shows "You are signed in as someone else.", sends no draft write, and the server keeps the last revision. The tab switch is a `visibilitychange` the spec dispatches, because Playwright keeps every page visible.
+- **Pending (user), UI plan section 10 manual matrix:** keyboard-only full edit, publish and review; VoiceOver with Safari and NVDA; iPad Safari on the LAN (drag, pinch, draw, 44 px handles, leave guard; WEB-30 gates 4 and 8); Chrome and Firefox at 1440 and 1024, Safari at 1440, iPad portrait and landscape; reduced motion; the WEB-30 timings on the final build.
+
+OPEN web/PLAN.md
+### WEB-29: Display and filter historical zone versions
+Status: done (2026-10-13; the refusal above 10,000 is unit-tested only) · Phase 3 · Size L · Depends: BE-22, WEB-40, WEB-41 · Blocks: QA-07
+Owner: Claude web owner.
+Planned 2026-10-11: see [ZONE-BOUNDARIES-UI.md](ZONE-BOUNDARIES-UI.md) section 7. This task is now the acceptance gate for review; WEB-36 and WEB-39 to WEB-41 do the work.
+Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 7 and 10.
+Do: Run the review evidence in UI plan section 10 with more than 500 synthetic observations across two map versions: totals, paging, zone filters by identity and by version, map version picker, inventory, record detail and complete exports.
+Done when: Map/table/export agree beyond 500 without reclassification against current boundaries.
+Verify: Web checks/unit tests and real browser history/filter/export scenarios (`data-history.spec.ts`, `export-v2.spec.ts`).
+Verified 2026-10-13 on the local stack (`sh scripts/e2e-local.sh --prod --zones`, desktop-1440 and phone-390), on the zone review project's 520 observations across v1 and v2, the zone renamed between them:
+- **Data (`data-history.spec.ts`, UI plan section 10 item 6):** "Showing 1–500 of 520", the next page loads the rest once each, and nothing says "Based on the newest 500". A zone filter matches by identity on every version, named as today's map names it. Choosing one map version narrows to what was recorded on it. Inventories are whole-zone records. Back undoes a filter. Search says it covers the loaded observations only.
+- **The plan:** the current version is drawn and v1's points are dimmed rather than placed on it. v1 draws its own boundaries. Choosing an inventory switches to the version it was recorded on. A v1 record is drawn on v1 and says v2 is current.
+- **Exports (item 7, in the same spec):** the ZIP's `observations.csv` has the 260 rows of v1, which equals `metadata.json`'s `total_matching`. `codebook.csv`, `forms.json` and `historical-zones.geojson` come with it. The v1 name starting with "=" is written as `'=Synthetic lawn v1`. QGIS (`qgis-reports.spec.ts`) exports every record and downloads a version's boundaries. `export-v2.spec.ts` was not written: its cases are these.
+- **Not run in a browser:** more than 10,000 matching observations, refused with "One export holds up to 10,000 observations…" (`tests/unit/export-files.test.mjs`); seeding that many on the local stack is not part of the fixture.
+
+OPEN mobile/MOB-31-HANDOFF.md
+# MOB-30 to MOB-32 handoff: resolved data follow-ups
+
+Reconciled 2026-10-15. The four requests raised by the mobile UI owner on 2026-10-14 are **resolved**. They do not block starting MOB-29. Current task status belongs in [PLAN.md](PLAN.md); the acknowledged interface is [MOB-33-HANDOFF.md](MOB-33-HANDOFF.md), and the next sequence is in the [current roadmap](../docs/plan/current-state.md).
+
+## Resolution evidence
+
+| Original request | Resolution and current source |
+| --- | --- |
+| Exact `zoneCovers` on sloping/shared edges | `d529134` replaces floating-point equality/ray division with filtered orientation, exact BigInt fallback and winding coverage in `src/maps/zone-boundaries.ts`. `src/maps/zone-boundaries.test.ts` retains the oracle regressions, including underflow. |
+| Retained form identity in `Recovered` | `Recovered.formVersion` in `src/packages/zone-model-types.ts` comes from the retained draft even if its map/form is missing. `a76d445` retains the form identity; see the follow-up evidence in [MOB-33-HANDOFF.md](MOB-33-HANDOFF.md#local-follow-up-verification-2026-10-14). |
+| Readiness from any verified installed version | `isStored` in `src/packages/hosted/context.tsx` uses account-authorized verified catalog content; publishing v2 does not make downloaded v1 disappear. |
+| Record UI-owner acknowledgment | The acknowledgment is recorded in MOB-33 in [PLAN.md](PLAN.md#mob-33-provide-bound-session-and-package-read-models), dated 2026-10-14. |
+
+The original geometry request demonstrated three exact-oracle failures: the Fall Creek shared diagonal, Kettner’s near-diagonal grid and a one-double step above `y = x`. These were the pre-fix failures. The recorded follow-up passes all 16 authored coverage cases and 5,295 independent exact-side comparisons; the complete recorded mobile suite passed 656 tests with one local-API acceptance test skipped. These are 2026-10-14 local results, not a fresh test run or native/server parity acceptance.
+
+## Remaining acceptance
+
+MOB-30 to MOB-32 have component-tested screens, but simulator screenshots, phone/tablet VoiceOver and force-quit recovery checks are pending. `src/features/projects/recovery.ts` still uses generic form-missing copy rather than the retained `formVersion`; the field is available for that UI follow-up, with no data-interface blocker.
+
+MOB-29 owns the sole bound uploader, exact receipt/rejection integration and the physical-device scenario: retain a v1 draft across v2 publication and process restart, upload its original bindings, then verify server/QGIS attribution. [QA-07](../docs/plan/verification.md) remains the integrated feature gate. No hosted rollout or physical-device acceptance is established by these resolutions.
+
+OPEN mobile/MOB-33-HANDOFF.md
+# MOB-33 data interface for the mobile UI owner
+
+Reconciled 2026-10-15: the original data requests are [resolved](MOB-31-HANDOFF.md); [the current roadmap](../docs/plan/current-state.md) keeps transport and integrated acceptance separate from this implemented interface.
+
+Read the owning [task status](PLAN.md), [UI requirements](ZONE-BOUNDARIES-UI.md) and
+[acceptance evidence](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md).
+The interface is implemented against the sole `/v1` contract. **The Claude UI
+owner acknowledged it on 2026-10-14**, recorded in MOB-33's existing status.
+MOB-30 to MOB-32 have completed their code/component-test work. MOB-29 can
+start its remaining upload/receipt integration; those UI tasks no longer
+hold it up. Their simulator and physical-device checks remain pending.
+
+## Public imports
+
+```ts
+import {
+  useSiteVersions, useRecoveredDraft, createZoneReadModelFake,
+  type SiteVersions, type Pinned, type Recovered,
+} from "../packages/zone-read-models";
+```
+
+Paths above are relative to `src/`. `useFieldSession()` from
+`session/context.tsx` exposes `pinned`, the durable active `recovered` draft,
+`parked`, and the existing collection actions. Bundled practice is local;
+its synthetic zone identities never enter the server upload path.
+
+## Site versions
+
+`useSiteVersions(siteId)` returns the agreed `SiteVersions` fields plus:
+
+- `downloadPackage(packageId)`, `cancelDownload(packageId)`, `refresh()` and
+  `remove(packageId)`. The action is named `downloadPackage` because `download`
+  is already the progress field. Removal returns `{removed:true}` or
+  `{removed:false,references}` and checks current SQL references at execution.
+- `referencesProblem` reports failure to read live counts. Counts include
+  `unfinished` (active **and parked**), `unsent`, `attention`, `openSession`,
+  and `retained` (synced records still need local detail). Do not enable removal
+  by adding only unsent counts; there is no uploaded-record eviction policy.
+- `installedAt` can be null for unreadable metadata. `nextSessionPackageId`
+  is the newest verified installed version, independently of `available`.
+  A newer download never changes the active visit or unfinished observation.
+
+`isStored(site)` also counts any verified package for the site in the current
+account's catalog-authorized cache. A published v2, or an empty current
+publication pointer, does not make verified installed v1 disappear. Missing,
+unverified and another account's packages do not count.
+
+`refreshProblem` distinguishes offline, signed out, no access and server
+failures. Cached maps and lists stay on failure. A known removed membership
+or site-list 404 yields no access. Last successful check is cached per
+issuer/account/project. Download progress names the exact package and part;
+verification failures are distinct from transport failures.
+
+## Recovery and visits
+
+`useRecoveredDraft()` returns `active`, `parked`, `unreadable`, `problem`,
+`resume()`, `park()`, `restoreParked(id)`, `discard()`, `discardParked(id)` and
+`redownload(id)`. Models use UUIDs and integer package versions, never parsed
+display labels. `Recovered.formVersion` is required and comes from the retained
+draft, even when its package or form is missing; it never comes from a newer
+package. Only exact verified forms interpret answers. The UI owner should
+use `model.formVersion` in `features/projects/recovery.ts`'s `form_missing`
+line. The three typed recovery fixtures now include that field, with the
+user's explicit approval for those test-only edits.
+
+Park only an unresumable active draft. Parking retains its bytes and map
+reference while freeing the active slot. `restoreParked` verifies the exact
+package/zone/form, refuses to overwrite an active draft, then resumes it.
+Known access loss disables recovery; unknown/offline permission checks retain
+cached membership and data. A digest-verified package missing its exact zone
+or form needs coordinator recovery, so re-download is not offered.
+
+Exact recovery downloads wait behind any running download of the same site,
+including the same current version. Cancel or account/runtime disposal also
+cancels queued recovery. A failed newer download leaves the older selection
+usable.
+
+The collect route brackets its lifetime with `beginVisit()`/`endVisit()`.
+During the visit the package is frozen, including before a draft is created.
+`chooseZone()` selects a zone from that package and writes the changed UUID,
+code and label in the same handler, before another answer or render. Inventory
+uses the package's display anchor locally; bound point saves enforce closed
+coverage and keep invalid points unfinished. MOB-31 can reuse `zoneCovers`
+from `maps/zone-boundaries.ts`. Coverage uses a Shewchuk error-bound filter,
+exact BigInt fallback and winding number. Outer edges and hole edges cover;
+hole interiors do not. No epsilon or metre buffer changes attribution.
+
+## Data decisions (2026-10-14)
+
+- Exact orientation includes the original finite doubles, with a conservative
+  fallback when the filter's bound is subnormal. Rounded product equality and
+  division-based crossing were disproved by the handoff's three regressions;
+  an additional collinear underflow case disproved an unguarded filter.
+- Required `formVersion` exposes the already-stored draft identity. No local
+  schema reset or server contract change is needed; an optional identity would
+  let form-missing presentation silently lose the information again.
+- Site readiness reads the existing account-scoped verified cache. It needs no
+  new catalog or second selection policy; version choice remains
+  `nextSessionPackageId`, and active visits retain their pinned package.
+- MOB-29's historical dependency links remain in the plan because the UI work
+  was a prerequisite and is now done. MOB-29's status explicitly records that
+  it can start; pending UI/device evidence is not claimed as completed.
+
+## Local follow-up verification (2026-10-14)
+
+The three requested oracle regressions fail before the coverage fix. After it,
+all 16 authored coverage cases and 5,295 independent exact-side comparisons
+pass, including the additional underflow regression. Coverage, geometry,
+placement and their Place/Review component suites pass 80 tests. The complete
+mobile suite passes 656 tests, with one local-API acceptance test skipped.
+Biome reports the existing 12 informational findings; the plan check passes
+158 tasks. Expo exports iOS (4,137 modules) and Android (4,223 modules).
+
+After the user-approved fixture updates, the full `mobile:check` passes:
+TypeScript is clean and Biome remains at the 12-info baseline. The user chose
+to keep all fixes committed locally; the source branch is not restored or pushed.
+No native/device/server attribution acceptance is claimed by these tests.
+
+## UI test adapter
+
+`createZoneReadModelFake({owner,sites,active,parked})` exposes getters and a
+subscription, `setOwner`, `setSite`, `setRecovered`, `park`, `restoreParked`
+and reference-checked `remove`. Inject its getters at the UI hook boundary
+or pass snapshots into presentational components. It performs no network,
+filesystem or SQL work. A parked draft resumes only when its supplied model
+is ready; the owner switch clears all visible snapshots.
+
+No server contract changed. Local schema version 6 deliberately resets
+incompatible experimental databases and package caches. Current-schema
+records and drafts are preserved. MOB-29 still owns upload/receipt integration;
+MOB-30 to MOB-32 own observer presentation and simulator checks. QA-07 remains
+the integrated physical-device/server/QGIS gate.
+
+PASS reader: current files retain MOB-29/QA-07, resolve prior data blockers, and sequence remaining manager work/independent Storage before gated PowerSync and pilot.
+Preview request returned queued; rendering not claimed. File reads are the real document/data-shaped surface exercised.
+Cleanup: no runtime resources created; intentional saved evidence and deliverable preview retained.

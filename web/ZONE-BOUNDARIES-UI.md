@@ -2,13 +2,13 @@
 
 [Web handoff](ZONE-BOUNDARIES.md) · [Master plan](../docs/plan/zone-boundaries/README.md) · [Contract](../docs/plan/zone-boundaries/contract.md) · [Mobile UI plan](../mobile/ZONE-BOUNDARIES-UI.md) · Tasks WEB-28 to WEB-42 in [PLAN.md](PLAN.md)
 
-Status: a plan; the web side is not built. Source inspection baseline: `33faa58` on 2026-10-11; contract aligned by CON-06.
+Design baseline: `33faa58` on 2026-10-11; contract aligned by CON-06. The web implementation and local browser evidence are recorded in [PLAN.md](PLAN.md), WEB-28 to WEB-43. Manual editor/iPad checks remain there and in QA-07; see [current position](../docs/plan/current-state.md). This document preserves design rationale and requirements, not a second status board.
 
 BE-18 through BE-20 established draft, bound-upload and historical-read behavior under the previous implementation. Their evidence does not establish compliance with the rewritten contract. DB-19 supplies the current schema; BE-22 implements the sole `/v1` surface and regenerates OpenAPI and client declarations before dependent frontend integration.
 
 **Pre-launch rule (2026-10-11):** there are no real users. Every archive uses the zone-aware manifest `format: 1`, every site starts at map version 1, and every observation references an immutable package and zone. Experimental incompatible data is reset rather than converted. Current-schema historical observations retain their recorded attribution.
 
-Re-check fields against BE-22's generated types before wiring them. Every screen uses real API responses and server authorization; `zone_editing_available` is a display hint, not permission. Line references below describe the inspection baseline and can drift; re-read the cited function before editing it.
+The current implementation consumes BE-22's generated types. Re-check them before further edits. Every screen uses real API responses and server authorization; `zone_editing_available` is a display hint, not permission. Line references below describe the inspection baseline and can drift; re-read the cited function before editing it.
 
 [web/ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md) holds the required behaviour. This file holds the interface design, state architecture, tasks and verification that satisfy it. The contract wins on wire semantics. Where it is insufficient, section 9 proposes changes for the lead. Do not build a divergent client.
 
@@ -27,7 +27,7 @@ Never:
 - Draw today's boundary under historical points and call it historical.
 - Count or export a loaded page as "all matching".
 
-## 2. What the code does today (verified)
+## 2. Historical source assessment (2026-10-11, before implementation)
 
 | Area | Today | Evidence |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ Never:
 | Summaries | Overview coverage, Reports and every export are computed in the browser from the capped list and current zones. | `src/features/overview/CoverageSection.tsx:56-81`, `src/lib/observations/summary.ts:166-200` |
 | Browsers in tests | Playwright uses the pinned Chromium only (`never playwright install`). Projects: desktop-1440 and phone-390 (touch) with axe; tablet-1024 and tablet-768 for honesty and screenshots only. No WebKit. | `web/playwright.config.ts` |
 
-Prompt facts confirmed: MapFrame and SitePlan are SVG; zone editing is NotAvailable in `SiteScreen.tsx`; package import and history exist; reads are request-scoped and authenticated, with large package writes going browser-direct; `view.ts` filters only the loaded 500 and labels from current zones. Two docs are stale: `contracts/map-palettes.json:2` and `contracts/README.md:11` still say the web uses Leaflet.
+Historical prompt facts (superseded by WEB-28 to WEB-43): MapFrame and SitePlan are SVG; zone editing is NotAvailable in `SiteScreen.tsx`; package import and history exist; reads are request-scoped and authenticated, with large package writes going browser-direct; `view.ts` filters only the loaded 500 and labels from current zones. Two docs are stale: `contracts/map-palettes.json:2` and `contracts/README.md:11` still say the web uses Leaflet.
 
 ## 3. Decisions
 

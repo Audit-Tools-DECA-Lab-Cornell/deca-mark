@@ -1,4 +1,6 @@
 # WP9 progress (E2E harness)
+
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
 ## Done
 - (attempt 2) Found prior attempt's files: scripts/e2e-local.sh, web/playwright.config.ts, web/e2e/** (14 specs + support/*), web/.gitignore entries. No earlier progress log.
 ## Next

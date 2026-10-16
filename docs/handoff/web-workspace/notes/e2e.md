@@ -1,5 +1,7 @@
 # Web E2E on the local stack (WP9)
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 Everything is local: Docker → local Supabase (:54321) → DECA Mark API (:8001, `backend/config.auth-local.json`)
 → seed `database/seed-web-workspace.mjs` → web app on **http://127.0.0.1:3000** → Playwright (Chromium at
 `/opt/pw-browsers/chromium`, Playwright 1.56.1; never `playwright install`).

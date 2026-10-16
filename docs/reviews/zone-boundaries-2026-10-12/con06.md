@@ -1,5 +1,7 @@
 # CON-06 single-path contract acceptance
 
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 Date: 2026-10-12. Scope: authored shared artifacts, specification handoffs and case-integrity adapters. Task status lives in `docs/plan/contracts.md`.
 
 ## Delivery

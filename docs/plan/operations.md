@@ -6,14 +6,13 @@ Most tasks here change hosted services, and **every one of those needs the user'
 
 Environments are described in [architecture.md](architecture.md#environments). Running costs are in [decisions.md](decisions.md#running-cost).
 
-## Context
+## Context (reconciled 2026-10-15)
 
-- **API.** It runs only on the developer's machine against hosted Supabase (`docs/Supabase-Setup.md:15`). The Render config exists (`backend/config.render.json`) but nothing is deployed.
-- **Auth settings.** Public sign-up is ON (the user changed it on 2026-09-22, and `docs/Supabase-Setup.md:10,81` still says otherwise).
-  - There is no custom SMTP. The built-in provider sends only to project team members, at most 2 per hour, so confirmation emails will not reach real users.
-  - On a new Free project, email templates cannot be edited without custom SMTP. That blocks the `{{ .Token }}` codes.
-- **CI and monitoring.** There is no CI, no Sentry, and no backup drill.
-- **Mobile builds.** Bundle IDs end in `.dev` (`mobile/app.json:13,20`). EAS Update is installed, but `runtimeVersion` and `updates.url` are not set.
+Render and Vercel services exist; the October 14 [diagnosis](../reviews/ci-and-hosted-data-2026-10-14.md) recorded a hosted schema mismatch, not an absent API deployment. Service existence or `/health` success does not complete OPS-04/09 acceptance. No hosted state was refreshed during this documentation pass.
+
+GitHub Actions and contract generation are implemented (OPS-06, CON-03); exact-revision CI green remains separate. Brevo SMTP/Auth templates and the transactional invitation outbox are documented in [Brevo-Email.md](../Brevo-Email.md). This supersedes the original Resend setup choice below. Real-inbox delivery, current Auth dashboard settings, monitoring, restore and internal distribution acceptance must stay open until evidenced. Mobile build profiles exist; a build is not store submission or physical-device acceptance.
+
+See [current position](current-state.md) before choosing the next operational gate. Original week/size estimates have not been re-baselined.
 
 ## Tasks
 
@@ -37,62 +36,48 @@ Done when:
 
 Verify: check the dashboard values. A sign-up on staging returns "confirmation required".
 
-### OPS-02: Custom SMTP via Resend
-Status: todo · Phase 0 · Size S · Depends: none · Blocks: OPS-03, OPS-09
-Needs user: Q6 in [decisions.md](decisions.md#open-questions) (the sending domain).
-Needs user: a Resend account, the DNS records for the sending domain, and SMTP settings in Supabase.
-Do:
-1. Write the setup steps into `docs/Supabase-Setup.md` under "Email delivery":
-   - Resend domain verification (SPF, DKIM);
-   - Supabase Auth → SMTP (host `smtp.resend.com`, port 465, the user, and an API key entered only in the dashboard);
-   - raise the Auth email rate limit to 30 per hour or more.
-2. The user applies them.
+### OPS-02: Custom SMTP delivery acceptance (Brevo)
+Status: doing (2026-10-15 reconciliation: Brevo setup documented; real-inbox SMTP acceptance remains) · Phase 0 · Size S · Depends: none · Blocks: OPS-03, OPS-09
+Needs user: verify the sender/domain and Supabase SMTP dashboard configuration, then authorize a real-inbox acceptance check.
+Read first: [Brevo email setup](../Brevo-Email.md). Brevo supersedes the original Resend recipe; transactional invitation delivery uses the API outbox separately from Auth SMTP.
+Do: finish the documented sender/domain setup and verify a sign-up email reaches a non-team inbox. Do not infer delivery from a provider sandbox response, a queued outbox row or local Mailpit.
 
-Done when: a sign-up email reaches an address that is not a team member.
-
-Verify: a test sign-up to a personal inbox receives the email within 1 minute.
+Done when: the actual sign-up code reaches a non-team recipient and the date/provider is recorded without secrets.
+Verify: an authorized sign-up to the designated inbox receives its six-digit code within 1 minute.
 
 ### OPS-03: Email templates with 6-digit codes
-Status: todo · Phase 0 · Size S · Depends: OPS-02 · Blocks: OPS-09
+Status: doing (2026-10-15: tracked templates and local code flows exist; hosted template acceptance remains) · Phase 0 · Size S · Depends: OPS-02 · Blocks: OPS-09
 Needs user: paste the templates into the Supabase dashboard (staging, and later production).
 Read first: <https://supabase.com/docs/guides/auth/auth-email-templates>.
 Do:
-1. Create `supabase/templates/confirm-signup.html`, `recovery.html` and `email-change.html`.
+1. Verify the existing generated `supabase/templates/` templates against the Contour contract; do not recreate a second template set. The local code flows are recorded under WEB-04.
    - Each shows `{{ .Token }}` prominently: "Your DECA Mark code is 123456".
    - They carry **codes only**, with no link (decision D3). A `{{ .TokenHash }}` link would need a confirm route the web does not have, and would put a one-time token in a URL.
    - Use plain HTML in Contour's Day colours (`DESIGN.md`), with inline styles and no tracking pixels.
-2. Reference them from `supabase/config.toml` (`[auth.email.template.*]`), so the local stack (DB-02) uses the same files.
+2. Reconcile the explicitly authorized hosted template settings with those files, then record real-inbox evidence. Local Mailpit does not establish hosted template installation.
 
 Done when: local Mailpit and staging both show the 6-digit code.
 
 Verify: `supabase start`; sign up locally; the Mailpit message shows the code.
 
 ### OPS-04: Render staging service for the API
-Status: todo · Phase 0 · Size M · Depends: BE-01, BE-02 · Blocks: OPS-09, SYNC-01
-Needs user: a Render account and service, the Secret File `database-password`, and later `supabase-secret-key` (BE-08).
-Read first: `backend/README.md` ("Deploy it"); `backend/config.render.json`; `backend/Dockerfile`.
-Do:
-1. Add `render.yaml` (a Blueprint) at the repo root:
-   - web service built from `backend/Dockerfile`;
-   - `DECAMARK_CONFIG=config.render.json`;
-   - health check path `/ready`;
-   - region Virginia (near `aws-0-us-east-1`);
-   - plan Starter.
-2. Remove the localhost origins from `config.render.json`, and add the staging Vercel origin and preview pattern.
-3. Document the URL in `docs/Supabase-Setup.md` and `backend/README.md`, and put it in `mobile/config/staging.json` (MOB-01).
+Status: doing (2026-10-15: Render deployment recorded; matching-schema readiness/auth acceptance remains) · Phase 0 · Size M · Depends: BE-01, BE-02 · Blocks: OPS-09, SYNC-01
+Needs user: approve the exact hosted schema/runtime reconciliation and matching API deployment when ready. Administrative account-deletion configuration is separate BE-08 acceptance.
+Read first: [backend deployment instructions](../../backend/README.md), [dated hosted diagnosis](../reviews/ci-and-hosted-data-2026-10-14.md).
+Do: verify the existing Render deployment runs the matching contract against the intended database. Resolve the recorded helper/schema mismatch through the approved target procedure; preserve required browser origins and confirm `/ready` and authenticated API behavior. A new Blueprint is not required just to recreate an existing service.
 
 Done when: the staging API answers `/ready` 200 over HTTPS, and rejects a request with no token with 401 and the error envelope.
 
 Verify: `curl -s https://<staging-api>/ready` and `curl -s -o /dev/null -w '%{http_code}' https://<staging-api>/v1/projects` (expect 401).
 
 ### OPS-05: Vercel environment for web auth
-Status: todo · Phase 1 · Size S · Depends: WEB-03 · Blocks: none
+Status: doing (2026-10-15: Vercel deployment exists; intended hosted sign-in/workspace acceptance remains) · Phase 1 · Size S · Depends: WEB-03 · Blocks: none
 Needs user: the Vercel project settings (Root Directory `web`) and the environment variables.
 Do:
 1. Document these in `web/README.md`:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `DECAMARK_API_URL` (server-only; replaces `NEXT_PUBLIC_DECAMARK_API_URL` once WEB-05 lands)
+   - `DECAMARK_API_URL` (server reads) and `NEXT_PUBLIC_DECAMARK_API_URL` (browser-direct archive/import/draft operations)
    - `SENTRY_DSN` (server) and `NEXT_PUBLIC_SENTRY_DSN` (browser). A DSN is public; the `NEXT_PUBLIC_` one is fixed at build time
 2. The user sets them for Preview (staging) and Production.
 
@@ -102,7 +87,7 @@ Verify: sign in on a preview URL.
 
 ### OPS-06: GitHub Actions CI
 Status: done (2026-09-26) · Phase 0 · Size M · Depends: DB-02 · Blocks: DB-03, OPS-09
-Evidence: [all five jobs passed on PR 10](https://github.com/Audit-Tools-DECA-Lab-Cornell/Field-Maps/actions/runs/36273492260). Contract generation joins CI when CON-03 is implemented.
+Evidence: [all five jobs passed on PR 10](https://github.com/Audit-Tools-DECA-Lab-Cornell/Field-Maps/actions/runs/36273492260). CON-03 subsequently added contract generation and drift checking; this run remains historical evidence, not latest-revision CI status.
 Read first: the root `package.json` scripts; `Makefile`; `docs/Workspace.md` ("Development and checks").
 Do:
 1. Create `.github/workflows/ci.yml` with these jobs:

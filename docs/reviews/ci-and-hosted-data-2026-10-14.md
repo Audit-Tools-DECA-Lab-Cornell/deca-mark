@@ -1,5 +1,7 @@
 # CI and hosted data diagnosis — October 14, 2026
 
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 ## Findings
 
 At master `4eaf103af0e8a0c200935546e5d9bebbddac549f`, both web and mobile

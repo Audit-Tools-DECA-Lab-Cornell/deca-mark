@@ -1,4 +1,6 @@
 # WP7 progress
+
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
 ## done
 - everything in the WP7 brief is built; tsc clean for my files, eslint and prettier clean, unit tests added (tests/unit/invitation.test.mjs, 17 pass)
 - investigation of the `/account` landing: old `(app)/o/page.tsx` was `redirect("/account")` through e2d2052; rewritten in 1c7076d (homeFor). Nothing in current code sends a fresh sign-in to /account.

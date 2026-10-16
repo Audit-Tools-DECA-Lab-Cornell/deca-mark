@@ -1,5 +1,7 @@
 # Putting DECA Mark in front of Janet (October 8, 2026)
 
+> Historical October 8 rollout recipe. Do not execute the incremental migration-repair/db-push sequence below against the current baseline. The current schema needs an explicitly approved target/reconciliation plan, as recorded in [the October 14 diagnosis](reviews/ci-and-hosted-data-2026-10-14.md). Use [current position](plan/current-state.md) and [operations](plan/operations.md) for sequencing. Account counts, deployment absence and sender assumptions below are dated evidence.
+
 The steps that turn `master` into something Janet signs in to herself: the hosted database, the API on Render, the web app on Vercel, her account and study, and a collector build on her device. Each step names who does it and how to check it. Hosted changes are never part of an automated task (`AGENTS.md`); every step here is run by a person.
 
 Project: **DECA Mark GIS**, `lezmqhuucfwqknspgcdy` (us-east-1). Checked read-only on October 8: the ledger holds `0001`–`0005`; `auth.users` has one account; no project membership lacks its Auth user; `pg_cron` is available.

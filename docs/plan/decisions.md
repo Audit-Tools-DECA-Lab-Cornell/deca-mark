@@ -2,6 +2,8 @@
 
 This file is part of the [DECA Mark production plan](README.md) and defines no tasks. It records why the plan is shaped the way it is. The earlier proposals in `docs/Production-Architecture-Recommendation.md` (ADR-001 to ADR-005) still stand, except where a decision below changes them.
 
+Decision entries preserve the scope when decided. D30's original newest-500 and unavailable-editor notes were superseded by WEB-28 to WEB-43; Brevo setup supersedes the original Resend operations recipe. See [current position](current-state.md) before treating dated implementation consequences as present limitations. D2 remains a gated target and D27 the current outbox path.
+
 ## Decision log
 
 | # | Date | Decision | Why | Consequence |

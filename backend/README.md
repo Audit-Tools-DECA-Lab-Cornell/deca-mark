@@ -5,9 +5,9 @@ uses Brevo SMTP through Supabase. See [email setup and delivery](../docs/Brevo-E
 for shared Contour templates, required host variables, hosted setup, and verification.
 
 The [live web workspace handoff](WEB-FLOW-HANDOFF.md) documents current endpoint roles,
-observation-detail metadata, bounded reporting, local browser fixtures and release checks.
+recorded observation metadata, cursor/summary/complete-export semantics and local browser fixtures. The [current roadmap](../docs/plan/current-state.md) separates source/local acceptance from hosted/client release gates.
 
-FastAPI, SQLAlchemy, and PostgreSQL/PostGIS implement the first authenticated, append-only upload slice. The mobile app saves to SQLite first; its foreground queue uploads when connected. QGIS can consume the same committed database records through a scoped GIS view. QGIS itself is not the synchronization server.
+FastAPI, SQLAlchemy, and PostgreSQL/PostGIS implement the first authenticated, append-only upload slice. The mobile app saves to SQLite first. MOB-29 implements immutable bound foreground uploads, exact observation/account/project/package/zone receipt checks, structured rejection retention and reconnect/resume/retry. Disposable loopback API/SQLite acceptance passes actual install, save, restart, newer publication, replay, conflicting-body 409 and point/Inventory export; native QGIS demo/live-export readback also passes. The physical iPad/Android collector scenario remains pending. See [current acceptance evidence](../docs/reviews/mob29-2026-10-15/README.md). QGIS can consume the same committed database records through a scoped GIS view. QGIS itself is not the synchronization server.
 
 ## Run locally
 

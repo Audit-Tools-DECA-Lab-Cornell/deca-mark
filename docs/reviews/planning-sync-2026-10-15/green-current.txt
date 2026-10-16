@@ -1,0 +1,1 @@
+PASS current: documentation assertions hold

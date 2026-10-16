@@ -4,13 +4,15 @@ This file is part of the [DECA Mark production plan](README.md) and defines the 
 
 "Pilot-ready" is defined in [product.md](product.md#pilot-ready-means). Each item there is proved by one task below.
 
-## Baseline checks: every change, every task
+## Baseline checks: changes to application behavior
 
 - `pnpm check`, which covers web and mobile types and lint, plus Ruff and BasedPyright for Python.
 - `pnpm test`, which runs mobile Vitest plus the API and SQL suites. After DB-02 these run against the local Supabase stack.
 - `node docs/plan/check-plan.mjs` whenever a plan file changes.
 - `supabase db advisors` after every migration (DB-*).
 - `pnpm contracts:generate && git diff --exit-code` after any API or schema change (CON-03).
+
+For documentation-only changes, run the plan graph, relative-link/content checks and `git diff --check`; cite application results with their original date rather than rerunning services to validate prose.
 
 Never report a device, hosted or production check as passed unless it was actually run. The standing rule is in `AGENTS.md`.
 
@@ -57,17 +59,17 @@ Verify: run the script and attach its output to the task notes.
 Status: todo · Phase 2 · Size M · Depends: BE-12, MOB-10, MOB-11 · Blocks: QA-05
 Do: automate what is possible in Vitest and pytest, and run the rest on the simulator or emulator with results written down:
 1. Save offline, force-quit, relaunch, reconnect: exactly one row in PostGIS.
-2. The response is lost and retried: no duplicate. This is covered by BE-12's content-based replay tests, including a legacy-`PUT` row re-sent as an envelope.
+2. The response is lost and retried: no duplicate. Current bound PUT replay has BE-22 evidence; BE-12 must preserve that canonical identity when batching. No legacy flat-envelope bridge is required.
 3. The server returns 200 with a `rejected` result (for example `validation_failed`).
    - An `upload_rejections` row is created.
    - After the checkpoint, the device still shows "needs attention" with the payload intact.
    - "Send again" succeeds once the cause is fixed, and the rejection is resolved.
    - Separately, an HTML 200, a 413 and a real 422 all leave the queue intact.
 4. The token expires while offline: collection continues; after signing in again the upload resumes.
-5. Upgrading from a v3 `fieldmaps-shell.db` that holds pending and needs-attention records **for two accounts**, one of them only in the WAL.
-   - Each record uploads once, under its own account, when that account signs in.
-   - Needs-attention records that the server rejects again end as preserved rejections, not losses.
-   - The old file is deleted only after the second account's queue drains (MOB-11).
+5. Transition from the supported current-schema outbox to the selected transport with pending/needs-attention records and unfinished/parked drafts for two accounts, including committed WAL content.
+   - Each immutable record uploads once under its own issuer/account, preserving exact map/zone/form attribution and receipts.
+   - Rejected records keep payloads and reasons; retained packages remain available until their references are released.
+   - Retire the old supported store only after each owner is reconciled (MOB-11). Experimental pre-baseline v3/shell-v1 compatibility is not required.
 6. Account switch:
    - data stays separate;
    - signing out with pending work warns first;
@@ -109,6 +111,8 @@ Done when: each item is checked, with its date.
 
 ### QA-07: Verify the complete zone-boundary feature
 Status: todo · Phase 4 · Size L · Depends: BE-20, MOB-29, WEB-28, WEB-29, GIS-09 · Blocks: none
+Current evidence boundary (2026-10-15): the owner plans record local implementation through BE-22, WEB-28/29 and MOB-28/30–33. MOB-29 remains the upload/receipt prerequisite. Pending mobile simulator/VoiceOver, physical iPad/editor and integrated device/API/GIS evidence are not closed by these statuses. Check the [current sequence](current-state.md). The [hosted mismatch diagnosis](../reviews/ci-and-hosted-data-2026-10-14.md) is historical and requires exact-target approval before reset/deployment. Verify the current-contract QGIS acceptance tools before using older GIS-09 recipes.
+
 Owner: Integration lead and reviewers.
 Read first: [Master plan](zone-boundaries/README.md) and [component specification](zone-boundaries/verification.md).
 Do: Run geometry/security/migration/concurrency/offline/readback matrix with two managers, old queue, physical device and more than 500 rows.

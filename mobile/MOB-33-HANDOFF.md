@@ -1,12 +1,12 @@
 # MOB-33 data interface for the mobile UI owner
 
+Reconciled 2026-10-15: the original data requests are [resolved](MOB-31-HANDOFF.md); [the current roadmap](../docs/plan/current-state.md) keeps transport and integrated acceptance separate from this implemented interface.
+
 Read the owning [task status](PLAN.md), [UI requirements](ZONE-BOUNDARIES-UI.md) and
 [acceptance evidence](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md).
 The interface is implemented against the sole `/v1` contract. **The Claude UI
 owner acknowledged it on 2026-10-14**, recorded in MOB-33's existing status.
-MOB-30 to MOB-32 have completed their code/component-test work. MOB-29 can
-start its remaining upload/receipt integration; those UI tasks no longer
-hold it up. Their simulator and physical-device checks remain pending.
+MOB-30 to MOB-32 have completed their code/component-test work. MOB-29 now has locally verified immutable bound upload/receipt/rejection and foreground reconnect handling, including automated, disposable API/SQLite and native QGIS acceptance ([evidence](../docs/reviews/mob29-2026-10-15/README.md)). Those UI tasks no longer hold it up. Their simulator and physical-device checks remain pending.
 
 ## Public imports
 
@@ -125,6 +125,6 @@ is ready; the owner switch clears all visible snapshots.
 
 No server contract changed. Local schema version 6 deliberately resets
 incompatible experimental databases and package caches. Current-schema
-records and drafts are preserved. MOB-29 still owns upload/receipt integration;
+records and drafts are preserved. MOB-29’s upload/receipt integration is implemented with local automated/disposable API/QGIS acceptance;
 MOB-30 to MOB-32 own observer presentation and simulator checks. QA-07 remains
 the integrated physical-device/server/QGIS gate.

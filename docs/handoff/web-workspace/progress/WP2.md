@@ -1,5 +1,7 @@
 # WP2 forms progress
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 ## done
 - All screens and pages live: Forms list (+ New form dialog, 3 templates), Form versions (Start new draft, Discard, Retire),
   draft editor (local RawDefinition state, Save draft with 422 placement, leave guard, add/remove question, collector view with

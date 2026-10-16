@@ -1,5 +1,6 @@
 # Mobile collector plan (`mobile/`)
 
+Reconciled 2026-10-15: the [current roadmap](../docs/plan/current-state.md) distinguishes local implementation from simulator, physical-device and hosted acceptance. MOB-29’s bound foreground upload path is implemented with local automated/disposable API/QGIS acceptance; MOB-30 to MOB-33 do not prove the complete mobile pilot flow.
 This file is part of the [DECA Mark production plan](../docs/plan/README.md) and defines the `MOB-*` tasks. Related plan files:
 - The sync design is in [sync-powersync.md](../docs/plan/sync-powersync.md). Its tasks here are MOB-09 to MOB-12.
 - The API shapes are in [contracts.md](../docs/plan/contracts.md).
@@ -129,7 +130,7 @@ Done when: the tests pass, and a real session larger than 2 KB persists across r
 Evidence (2026-10-04): AES-256-GCM adapter, exact staging migration and independent issuer-checked account identity implemented; 212 mobile tests, TypeScript and Biome pass. A fresh development build (`com.fieldmaps.collector.local`) on the iPad Pro 11-inch (M5), iOS 26.3 simulator persisted a real 24,404-byte local Supabase Auth session. After process termination and relaunch, plaintext SHA-256 comparison and retained account identity both matched. The temporary QA entry was removed and the Router entry restored. This verifies native session persistence; it does not claim hosted sign-in, full product flows or standalone Release acceptance.
 
 ### MOB-03: Route groups and auth gates
-Status: todo · Phase 1 · Size M · Depends: MOB-01, MOB-04 · Blocks: MOB-05, MOB-06, MOB-16
+Status: doing (2026-10-15 source reconciliation: route groups and real/cached identity gate exist; full native gate journey acceptance remains) · Phase 1 · Size M · Depends: MOB-01, MOB-04 · Blocks: MOB-05, MOB-06, MOB-16
 Read first: `app/_layout.tsx`, every file in `app/`, `src/auth/provider.tsx`, `src/session/provider.tsx`.
 Do:
 1. Create the groups `(auth)`, `(onboarding)` and `(app)`. Move the existing screens under `(app)`, unchanged in behaviour.
@@ -168,12 +169,12 @@ Done when: an offline start shows the last known projects; the tests cover cache
 Evidence (2026-10-04): generated Identity type and runtime parser, account-scoped file cache/provider, active project persistence, deleted-account local sign-out with retained identity. Cache hit/miss/stale selection and typed API errors covered by Vitest; mobile type/lint pass. No native run claimed.
 
 ### MOB-05: Authentication screens
-Status: todo · Phase 1 · Size L · Depends: DB-02, MOB-02, MOB-03 · Blocks: MOB-06, MOB-21
+Status: doing (2026-10-15 source reconciliation: Contour auth screens and real sign-in exist; sign-up, verification and recovery calls remain preview-only) · Phase 1 · Size L · Depends: DB-02, MOB-02, MOB-03 · Blocks: MOB-06, MOB-21
 Read first: [product.md](../docs/plan/product.md) J2; `app/account.tsx` (current form styles); `DESIGN.md`; the Mobile collector designs, pp. 23–28. MOB-24 builds these screens in Contour on preview data; wire them and keep their layout, with a single primary action at the bottom (thumb zone).
 Do:
 1. `(auth)/welcome`: app name, "Create account", "Sign in".
    - For each signed-out account with queued or held records, show "N records waiting on this device for {email}". They upload when that account signs in again.
-   - Before MOB-09 the counts come from the legacy store, grouped by the `owner_scope` userId (plus `'local'`).
+   - Before MOB-09, derive counts from current account/issuer-scoped storage and local practice; after the transition, derive the same counts from the new store. Do not introduce an old `owner_scope` migration adapter.
    - After MOB-09 they come from a per-account summary that MOB-07 writes at sign-out. Never open another user's database without that user's session.
 2. `(auth)/sign-in`:
    - email and password, with autofill hints;
@@ -204,7 +205,7 @@ Real email on staging needs OPS-01 to OPS-03. It is checked in QA-04, not here.
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile test`, plus a manual simulator run recorded in the task notes.
 
 ### MOB-06: Onboarding: profile and join
-Status: todo · Phase 1 · Size M · Depends: BE-06, BE-07, DB-07, MOB-03, MOB-04, MOB-05 · Blocks: MOB-21
+Status: doing (2026-10-15 source reconciliation: profile persistence, pending invitations and real preview/redeem paths exist; full native onboarding/offline acceptance remains) · Phase 1 · Size M · Depends: BE-06, BE-07, DB-07, MOB-03, MOB-04, MOB-05 · Blocks: MOB-21
 Do:
 1. `(onboarding)/profile`:
    - display name and initials (uppercase, at most 10 characters), saved with `PATCH /v1/me`;
@@ -229,7 +230,7 @@ Do:
    - the active project switcher;
    - sync status (pending count, held records, open drafts, last successful sync).
 2. **Sign out:**
-   - If unsent records, held records or an open draft exist, show a confirm dialog that names each count. Explain that they wait on this device for this account. Before MOB-09 the count comes from the legacy store; after it, from `getUploadQueueStats()` plus the local-only tables.
+   - If unsent records, held records or an open draft exist, show a confirm dialog that names each count. Explain that they wait on this device for this account. Before MOB-09 derive counts from current scoped stores; after transition use the new queue statistics and local-only tables, preserving the same account boundary.
    - Use `signOut({scope: 'local'})`, and clear the local session **even when offline**.
    - After MOB-09, sign-out closes the user's database (`disconnect()` then `close()`). It never calls `disconnectAndClear()`, which by default also empties local-only tables.
 3. **Delete account:**
@@ -239,8 +240,8 @@ Do:
    - On 202, retry `DELETE /v1/me` up to 3 times over about 30 seconds **while the session is still valid**, then treat it as done. The server keeps the durable record (BE-08). Treat 204 as done at once.
    - Then sign out and remove **this user's** data only (the shared "remove this account's data" routine below).
 4. **"Remove account from this device"** (without deleting the account) runs the same routine after sign-out, behind a confirm dialog that names any unsent records it destroys. The routine:
-   - deletes this user's rows and drafts from the shared legacy file if it still exists, before and after MOB-09 (every scope whose `userId` matches), never the file itself, which other accounts share;
-   - upserts the MOB-11 ledger to `removed`, if the ledger exists;
+   - removes only this issuer/account’s current rows, active/parked drafts and grants; a shared database or immutable content file must not be removed while another account references it;
+   - records completed current-store cleanup in the transition state if MOB-11’s transition is active; no obsolete experimental-file ledger is required;
    - after MOB-09, closes and deletes `decamark-{userId}.db`, its per-account summary and `last-account.json`;
    - drops this user's package references (MOB-14). A package directory is deleted only when no account references it.
 5. At sign-out, write the per-account summary (`documentDirectory/accounts/{userId}.json`: email and counts) that MOB-05 shows.
@@ -248,7 +249,7 @@ Do:
 
 Done when:
 - the flows work on the simulator against the local stack;
-- a test with two accounts' records in the legacy file shows that deleting one account leaves the other's records intact.
+- a test with two issuer/account scopes in the current store shows that removing one account leaves the other’s records and package references intact.
 
 ### MOB-08: Never hide records on session loss
 Status: done · Phase 1 · Size S · Depends: MOB-02, MOB-04 · Blocks: none
@@ -267,36 +268,13 @@ iOS UI check (2026-10-04): the normal iOS entry bundled, but the simulator UI ch
 Status: todo · Phase 2 · Size L · Depends: MOB-01, MOB-02, OPS-08, SYNC-01, SYNC-02 · Blocks: MOB-10, MOB-11, MOB-12, MOB-13, MOB-14
 Read first: [sync-powersync.md](../docs/plan/sync-powersync.md) (client design); `src/storage/*`; `app/_layout.tsx`.
 Do:
-1. Install `@powersync/react-native` 2.3.x and `@op-engineering/op-sqlite` (≥17.1, <19) with `pnpm expo install`.
-2. **Create the frozen legacy module first** (`src/data/legacy/`), before anything is deleted. It holds its own copies, not imports, of:
-   - the v3 DDL and row schema;
-   - the `shell-v1` and `janet-test-v1` payload schemas;
-   - the draft schema;
-   - the `owner_scope` parser;
-   - a fixture builder.
+1. Select compatible PowerSync and native SQLite dependencies against the supported Expo/RN build. Record the required native rebuild and verify the actual installed versions before changing the storage writer.
+2. Define the supported **current-schema** transition boundary with MOB-11 before deleting any store. Capture real SQLite/WAL/filesystem fixtures containing account/issuer-scoped bound observations, accepted receipts, active/parked drafts, exact package/form references, grants and selections. Do not create a frozen v3 module, duplicate old practice serializers or an experimental-schema compatibility ladder.
+3. Port each current SQLite consumer together with its behavior, including preferences/session identity where relevant. The active writer must remain usable until the current-schema transition is implemented and verified; removing an import is not evidence that its retained data is no longer needed.
+4. Define synced tables against SYNC-02’s current UUID-bound schema and local-only tables for drafts, held practice, package catalogs/grants/references and transition state. Reuse MOB-28/MOB-33 retention, exact-form recovery and package-readiness semantics rather than creating a second package index or selection policy.
+5. Scope each database and connector to its exact issuer/account identity. Refuse credentials/uploads for a different current account; disconnect and close before switching. Replace the provider/writer only when MOB-10/MOB-11/MOB-12 integration preserves valid current records and references, with restart-safe acknowledgment and no duplicate uploads.
 
-   MOB-10, MOB-13 and this task later delete the originals. MOB-11 uses only this module.
-3. Remove `expo-sqlite` and its plugin; MOB-11 reads the old file with op-sqlite.
-   - **Port or stub every expo-sqlite consumer in this same task** (`grep -rn "expo-sqlite" app src`), so the app still builds. Today that includes `src/session/provider.tsx`, `src/storage/use-observations.ts` and the storage modules.
-   - Records and drafts read from the PowerSync tables, with MOB-10 and MOB-12 finishing the behaviour.
-4. Add a config plugin that sets `expo.updates.useThirdPartySQLitePod: true`.
-5. Create `src/data/powersync/schema.ts` with:
-   - synced tables that mirror the SYNC-02 streams;
-   - the local-only tables `drafts`, `package_files`, `migration_state`;
-   - `held_observations`: records that must stay on the device, with owner, reason and payload. Examples are a form version not yet published, and practice records saved while signed out.
-6. Create `src/data/powersync/db.ts`: one database per user (`decamark-{userId}.db`), opened after the account is known.
-   - The connector is **bound to that database's owner**.
-   - `fetchCredentials` returns `null`, and `uploadData` throws without calling the API, whenever the current session's user is not the owner.
-   - On account change, `await disconnect()` and `close()` before the next account's session is used. A pending batch must never go out with another person's token.
-7. Add the provider to `_layout.tsx`, replacing `SQLiteProvider` and `SyncProvider`. Read data with `useQuery` and state with `useStatus`.
-8. Connector `fetchCredentials` returns `{endpoint: config.powersyncUrl, token: session.access_token}`, when the owner check above passes.
-9. Delete `src/storage/*` once nothing imports it. Keep `src/data/legacy/*` for as long as an old file can exist on a device.
-10. **Prebuild and a native rebuild are required.** Record the commands in `mobile/README.md`.
-
-Done when:
-- the app builds and typechecks with `expo-sqlite` removed;
-- signed in on staging, the simulator shows the user's memberships and projects coming from PowerSync;
-- a test shows that signing out A with pending work, then signing in B, uploads nothing of A's with B's token.
+Done when: the native app builds and typechecks with the selected database adapter; a staging simulator reads the authorized streams; current-schema fixtures survive the writer transition with exact package/draft/receipt references; account-switch tests prove no record uploads with another account’s token. Delete superseded storage modules only after these consumers and acceptance gates pass. Pre-launch incompatible-schema reset remains MOB-28’s explicit policy, not an instruction to migrate obsolete experiments.
 
 ### MOB-10: Upload connector and record states
 Status: todo · Phase 2 · Size M · Depends: BE-12, MOB-09 · Blocks: MOB-11, MOB-21, QA-03
@@ -324,53 +302,16 @@ Done when the tests, with a fake database and fake HTTP, cover:
 - a rejected record that stays visible **after a simulated checkpoint revert**, and can be sent again;
 - a re-sent record appears once, not twice, while it is queued.
 
-### MOB-11: One-time migration from the old database
+### MOB-11: Transition current-schema local work to PowerSync
 Status: todo · Phase 2 · Size L · Depends: MOB-09, MOB-10, MOB-12 · Blocks: QA-03
-Read first:
-- `src/data/legacy/*` (created by MOB-09 from `src/storage/observation-store.ts`, `src/sync/contracts.ts` and `src/storage/draft-store.ts`)
-- [sync-powersync.md](../docs/plan/sync-powersync.md)
-
+Reconciled scope (2026-10-15): the pre-launch reset policy and MOB-28 supersede the original v1–v3 experimental-database migration ladder. Do not rebuild that ladder, a flat `shell-v1` uploader or protocol-discriminator columns. No transition is implemented by this task yet; PowerSync itself remains MOB-09/10/12 and SYNC-01/02.
+Read first: [pre-launch policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11), [current package lifecycle](PACKAGE-LIFECYCLE.md) and [sync design](../docs/plan/sync-powersync.md).
 Do:
-1. **Use only the frozen legacy module** that MOB-09 created in `src/data/legacy/`. MOB-09, MOB-10 and MOB-13 delete the originals.
-2. **The old file is shared by every account that used the device.** Each row's `owner_scope` is either `'local'` (saved while signed out) or the JSON array `[apiUrl, issuer, userId, projectId]`.
-   - Match rows on `issuer` + `userId` only. `apiUrl` and `projectId` changed between builds, so one user can own several scopes.
-   - Take the envelope's `project_id` from the scope's `projectId`: the legacy practice project `…-0002` keeps existing (D13). Map site `sample-garden` to `10000000-0000-4000-8000-000000000003`.
-3. **Find the file through the file system, never by opening it.** Opening creates an empty database.
-   - The path is `new File(Paths.document, 'SQLite', 'fieldmaps-shell.db')`: expo-sqlite's default directory, `<Documents>/SQLite` on iOS and `<files>/SQLite` on Android.
-   - Open it in place with op-sqlite's absolute location constants (`IOS_DOCUMENT_PATH` / `ANDROID_FILES_PATH` + `/SQLite`). op-sqlite resolves relative names against a different directory.
-   - Never copy the `.db` without its `-wal` and `-shm`. The last commits before a force-quit may live only in the WAL.
-4. **When an account signs in** and its `decamark-{userId}.db` is open, the old file exists, and this user's `migration_state` is not `copied`: in one `writeTransaction` on this user's database, copy only this user's rows, across all of their scopes.
-   - `pending` and `needs-attention` rows go into `observations`, as PUTs. Keep each UUID, skip ids already present, map `shell-v1` to its server form version, and convert numbers to JSON numbers.
-   - `synced` rows are **never queued**.
-     - Their `server_receipt` shows that the server accepted them, and the server copy returns through `my_observations`.
-     - The stored `apiUrl` cannot tell where a row went: since MOB-01 every key carries the frozen `http://127.0.0.1:8000`.
-     - Copy each one into `held_observations` with reason `legacy_synced`, read-only and never uploaded. The Observations list hides it once the same id is in `observations`.
-   - `local-only` rows of this account (for example `janet-test-v1` records held because the form was a draft) go into `held_observations` with reason `unpublished_form` and their legacy form code. MOB-13 defines how they are queued, exported or discarded.
-   - Drafts are rewritten to the new draft shape and owner key. An unparseable one goes to a quarantine table; it is never deleted.
-   - Write `migration_state = copied` in the same transaction.
-5. **`'local'`-scope rows** (signed out, so no owner) are practice records. They are copied into `held_observations` only after an explicit prompt: "Keep N practice records from before you signed in?" Nothing is copied silently to whichever account signs in first.
-6. **A device-level ledger inside the old file:**
-   - `CREATE TABLE IF NOT EXISTS migration_ledger (owner TEXT PRIMARY KEY, state TEXT NOT NULL CHECK (state IN ('copied','uploaded','removed','declined')), updated_at TEXT NOT NULL)`, where `owner` is a userId or `'local'`.
-   - `'local'` becomes `copied` when an account claims those rows, and `declined` when the prompt is declined. The prompt is then never shown again.
-   - Upsert `(userId, 'copied')` after step 4 commits.
-   - Upsert `(userId, 'uploaded')` once this user's queue is empty after a completed sync.
-   - MOB-07's delete path upserts `(userId, 'removed')`.
-7. **Delete the old `.db`, `-wal` and `-shm` together only when:**
-   - every owner of a `pending`, `needs-attention` or `local-only` row, or of a draft, has ledger state `uploaded` or `removed`; and
-   - the `'local'` owner's state is `copied` or `declined`.
+1. Before switching writers, specify how the **current-schema** account/issuer-scoped records, drafts, parked drafts, exact package/form bindings, receipts and references move together into the PowerSync store.
+2. Retain current-schema unfinished/unsent/needs-attention work; migration must be atomic, restart-safe and must not enqueue accepted records again or reassign records to another account/project.
+3. Exercise real SQLite/WAL restart and account isolation, exact missing-map recovery, reference retention and lost-receipt replay before replacing the current writer. A schema reset must not be silently repurposed as an auth repair or ordinary start command.
 
-   Until then the file stays for the next account to sign in. Rows from another issuer can never be migrated by this build: they keep the file; log them once.
-8. Every step must be safe to repeat after a force-quit.
-
-Done when tests run with a real v3 fixture database, built by the frozen legacy module, that cover:
-- two accounts with pending records;
-- a `synced` row with a receipt, which produces no upload and no rejection;
-- a WAL-resident pending row;
-- a `janet-test-v1` record belonging to a signed-in account;
-- `'local'` rows;
-- a force-quit at each step.
-
-A simulator upgrade run is recorded in QA-03.
+Done when: the selected transition is verified against real current-schema SQLite/filesystem fixtures and a simulator upgrade is recorded in QA-03. Any future incompatible-schema reset remains an explicit pre-launch policy action, not a promise to recover obsolete experiments.
 
 ### MOB-12: Drafts on PowerSync local-only tables
 Status: todo · Phase 2 · Size M · Depends: MOB-09 · Blocks: MOB-11, MOB-13
@@ -378,63 +319,37 @@ Do:
 1. Port `src/storage/draft-store.ts` and the ownership rules (`src/session/ownership.ts`) to the local-only `drafts` table.
 2. Key drafts by `(user, project, id)`, so more than one project can have an open draft.
 3. Keep every existing draft test, adapted.
-4. A draft that fails to parse, or whose owner does not match, moves to a quarantine table. It is never deleted: the old `readDraft` deletes such drafts, which would destroy every migrated draft on first read.
+4. A draft that fails to parse, or whose owner does not match, moves to a quarantine table. It is never deleted: the current recovery behavior preserves unreadable drafts; the new store must retain that boundary.
 
 Done when: the draft tests pass, and a force-quit mid-observation offers Resume or Discard.
 
 ### MOB-13: Forms from the server, and a generic observation record
-Status: doing (2026-10-08: on the existing upload queue per D27, a hosted site's published forms download with its package and records upload with their project; the PowerSync parts remain) · Phase 2 · Size L · Depends: CON-02, DB-09, MOB-09, MOB-12 · Blocks: MOB-15
-Read first: `src/forms/registry.ts`, `src/domain/observation.ts`, `src/domain/build-observation.ts`, `src/session/provider.tsx:340-360`; the envelope in [contracts.md](../docs/plan/contracts.md#observation-envelope-sync-upload-and-storage).
-Do:
-1. The registry becomes an async repository over synced `form_versions`, published and retired.
-   - New observations may start only on a published version.
-   - Drafts and records render with their own version, even after it is retired.
-   - Every definition passes `parseFormDefinition` before use. One that fails is shown as "form unavailable"; it never crashes the app.
-2. Replace the version-literal union in `observation.ts` with the generic envelope:
-   - answers keyed by question `id`;
-   - numbers as numbers;
-   - `observer_code` taken from the profile;
-   - the round context (`round`, `context`) and placement (`gps_accuracy_m`) fill the envelope fields that carry them. Test that none are dropped.
-3. Move the summary question and carried-forward answers into definition properties, since `janet-test-v1` currently hard-codes them in TS.
-4. Delete `src/forms/fixtures/*`. The tests load `contracts/forms/*.json` instead. MOB-11's frozen legacy module keeps its own copies.
-5. **Held records (`unpublished_form`) have three actions**, on the record and in bulk:
-   - **Upload.** Offered only for a published form version that the **user picks**, among the versions they can collect for, and only if every held answer's question id exists in that version. There is no automatic match: the legacy code `janet-test-v1` names no server version (Training uses `training-v1`, and Janet's own version gets its own id). Accepting converts the records into `observations` inserts against the chosen project, site and version.
-   - **Export.** Share a JSON or CSV file through the system share sheet.
-   - **Discard**, behind a confirm dialog.
+Status: doing (2026-10-15 reconciliation: exact package-bound forms and records exist locally; PowerSync integration remains and bound foreground upload is implemented under MOB-29 with local automated/disposable API/QGIS acceptance) · Phase 2 · Size L · Depends: CON-02, DB-09, MOB-09, MOB-12 · Blocks: MOB-15
+Read first: `src/forms/registry.ts`, `src/domain/observation.ts`, `src/domain/build-observation.ts`, `src/session/provider.tsx:340-360`; the envelope in [contracts.md](../docs/plan/contracts.md#current-bound-observation-envelope).
+Remaining work:
+1. Integrate exact package-bound play/Inventory form definitions with PowerSync’s authorized form streams. Current MOB-33 recovery uses the retained package and accepts its exact retired binding; no current published-form lookup may replace an unfinished observation’s form.
+2. Preserve generic question-ID answers, JSON numbers, observer identity, round/first-round context, spatial support and immutable site/package/zone/form bindings in the target observation model. Inventory’s display anchor stays separate from event geometry.
+3. Consolidate any remaining fixture wrappers only when the current canonical definitions and explicit local practice remain available to their tests and product paths. No frozen experimental payload module is required.
+4. Keep local practice held with export/discard choices. Never relabel an existing held record with a user-selected published version or silently convert practice into research data. Any supported new research observation must be created through the normal exact-bound collection path.
 
-Done when: the brief, field and review screens work against a synced published form. The shared cases pass, and no TypeScript branches on a form version string.
+Done when: brief, collect, review and recovery render exact bound forms from the selected synced/retained sources; shared cases pass; PowerSync preserves existing current-schema answers and bindings without substituting a form. MOB-29 independently owns the present foreground bound-upload integration.
 
 ### MOB-14: Hosted site packages
-Status: doing (2026-10-08: sites list, archive download checked against its digest, offline storage and removal work on the existing upload path per D27; Storage-backed delivery and the cellular policy remain) · Phase 2 · Size L · Depends: BE-13, MOB-09 · Blocks: MOB-15
+Status: doing (2026-10-15 reconciliation: current package discovery, verified installs, references and recovery accepted locally under MOB-28/MOB-33; Storage-backed delivery, cellular policy and PowerSync integration remain) · Phase 2 · Size L · Depends: BE-13, MOB-09 · Blocks: MOB-15
 Read first: `src/packages/site-package.ts`, `src/packages/bundled.ts`, `src/maps/field-map.tsx`; the manifest format in `backend/src/fieldmaps_api/domain/packages.py` (moved there by BE-03).
-Do:
-1. Project and Site screens:
-   - sites from sync, with `current_package_id`;
-   - status "On device", "Download (12 MB)", or "Update available (v4 → v5)".
-2. Download:
-   - `GET …/packages/{id}/download` returns a signed URL;
-   - download to `documentDirectory/packages/{id}/archive.zip.partial` with expo-file-system;
-   - verify the sha256 (expo-crypto);
-   - unzip with `fflate`;
-   - verify each layer's sha256 against the manifest;
-   - atomically rename, and record it in `package_files`.
-3. **Cellular policy.** When NetInfo reports `isConnectionExpensive`, ask first and show the size. Wi-Fi downloads start without asking.
-4. `HostedPackageProvider` implements `PackageProvider` and maps the manifest to `SitePackage`. Bases are built from `ground` as `sample-site.ts` does today; zones come from polygons with their centroids; the style is a client preset.
-5. **Retention.**
-   - Package directories are device-level (`documentDirectory/packages/{id}`), shared by every account on the device.
-   - A device-level `packages/index.json` records which user ids reference which package id.
-   - Retention and account deletion (MOB-07) remove a directory only when no account references it, and no draft or pending record of any account uses it.
-   - On open, check that a `package_files` entry still exists on disk.
-6. Delete `src/packages/bundled.ts`. The Training site comes from the server (BE-13 step 6).
+Remaining work:
+1. Integrate server discovery/Storage delivery with the existing MOB-28/MOB-33 catalog and read models. Keep available current metadata separate from verified installed selection and a pinned visit; a stream refresh must not replace current work.
+2. Adapt signed Storage downloads when BE-13 supplies them, preserving staged archive/manifest/layer/form verification, full zone geometry, authoritative display anchors, immutable digest-addressed content and atomic catalog selection.
+3. Implement the cellular policy with displayed size and explicit confirmation on an expensive connection. Failed/cancelled downloads retain the last verified version and exact missing-map recovery.
+4. Keep current account grants and SQL references for drafts, parked drafts, active leases and retained observations. Do not add a competing `packages/index.json`, infer authorization from file existence or delete shared bytes while another reference exists.
+5. Replace bundled research-source fallbacks with real authorized packages while retaining deliberate local Training/practice behavior. Package lifecycle and account switching must remain correct before and after the PowerSync writer transition.
 
-Done when:
-- a staging package downloads, verifies and opens in the field map;
-- tests cover a sha256 mismatch, a partial download that resumes cleanly, and retention across two accounts.
+Done when: a staging Storage-backed package downloads/verifies/opens through the existing lifecycle; mismatch/cancellation/account-switch and reference-removal scenarios pass; exact historical packages reopen without new geometry or form substitution. MOB-28/MOB-33’s current local acceptance is already recorded; simulator/physical-device and Storage acceptance remain distinct.
 
 ### MOB-15: Remove the remaining fixtures and developer copy
 Status: todo · Phase 2 · Size M · Depends: MOB-13, MOB-14 · Blocks: MOB-16, QA-05
 Do:
-1. Walk the mobile rows of the [fixture inventory](../docs/plan/architecture.md#fixture-inventory). Delete `src/maps/sample-site.ts` if it is unused, and the `"sample-garden"` literal.
+1. Walk the mobile rows of the [fixture inventory](../docs/plan/architecture.md#fixture-and-practice-data-inventory-current-boundaries). Delete `src/maps/sample-site.ts` if it is unused, and the `"sample-garden"` literal.
 2. Replace developer copy aimed at builders with copy for field users:
    - `app/index.tsx:134-152`
    - `brief.tsx:144`
@@ -529,7 +444,7 @@ Done when: the field map opens in Day on a simulator or device, the QGIS surface
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test` (142 tests passed on 2026-10-01), plus a recorded device or simulator check.
 
 ### MOB-23: Contour foundation (mobile)
-Status: todo · Phase 1 · Size L · Depends: none · Blocks: MOB-24, MOB-25
+Status: doing (2026-10-15 source reconciliation: Contour tokens, theme, primitives, preferences and gallery exist; complete native foundation acceptance remains) · Phase 1 · Size L · Depends: none · Blocks: MOB-24, MOB-25
 Added 2026-10-03 (D19, D22). It builds no product screen. The screens built on it (MOB-24 to MOB-27) run in `preview` mode on the designed fixtures, or in `device` mode on the real local packages, records and queue; the wiring tasks (MOB-03 to MOB-17) later connect them to the API and PowerSync without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`, `contracts/contour.json`, `contracts/map-palettes.json`; designs: Contour system pp. 1–7 and 11; `app/_layout.tsx`, `src/theme.ts`, `src/maps/palette.ts`.
 Do:
@@ -545,7 +460,7 @@ Done when: typecheck, lint and test pass; `expo export` bundles for iOS and Andr
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (rebuild the dev client, fonts load, both themes, the largest text size wraps). Record only the device checks actually made.
 
 ### MOB-24: Identity screens and gates
-Status: todo · Phase 1 · Size L · Depends: MOB-23 · Blocks: none
+Status: doing (2026-10-15 source reconciliation: identity screens and protected gates exist; native Day/Dusk/VoiceOver acceptance remains) · Phase 1 · Size L · Depends: MOB-23 · Blocks: none
 Added 2026-10-03. These screens run on preview data, except sign-in, which keeps the real `signInWithPassword`. MOB-03 (gates on the real session and profile), MOB-05 (auth calls) and MOB-06 (profile and join) later wire them without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Mobile collector pp. 23–31; `app/account.tsx`, `src/auth/*`.
 Do:
@@ -560,7 +475,7 @@ Done when: each screen matches its design page on a phone in Day and Dusk; codes
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (VoiceOver from sign-in to join).
 
 ### MOB-25: Shell, projects, sites and the session brief
-Status: todo · Phase 1 · Size L · Depends: MOB-23 · Blocks: MOB-26, MOB-27
+Status: doing (2026-10-15 source reconciliation: tabs, projects, sites and pinned brief exist; full simulator/native shell acceptance remains) · Phase 1 · Size L · Depends: MOB-23 · Blocks: MOB-26, MOB-27
 Added 2026-10-03. These screens run on preview data, or in device mode on the real bundled packages. MOB-04 (projects from `/v1/me`), MOB-14 (hosted packages) and MOB-16 (navigation data) later wire them without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Contour system p. 11, Mobile collector pp. 10–14 and 22; `src/packages/*`, `src/session/provider.tsx`.
 Do:
@@ -593,7 +508,7 @@ Done when: the orientation and logic tests pass; `session.save` is unchanged; th
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `pnpm forms:parity`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (arming blocks panning, place at centre, no transition between observations, landscape with each hand, VoiceOver through place, answer, review and save).
 
 ### MOB-27: Observations, account, preferences, field guide and leaving
-Status: todo · Phase 1 · Size L · Depends: MOB-25 · Blocks: none
+Status: doing (2026-10-15 source reconciliation: account/preferences/field guide partly implemented; observations still redirect to legacy records and deletion/cleanup acceptance remains) · Phase 1 · Size L · Depends: MOB-25 · Blocks: none
 Added 2026-10-03. These screens run on preview data, or in device mode on the real records and sync. MOB-07 (account, sign out, delete account), MOB-10 (record states) and MOB-17 (every state) later wire them without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Mobile collector pp. 15–21; `src/storage/use-observations.ts`, `src/sync/*`.
 Do:
@@ -620,13 +535,13 @@ Evidence: [local implementation and final review](../docs/reviews/zone-boundarie
 Acceptance: Current-contract installation/restart was rerun after DB-19 and BE-22 against a disposable live loopback API. Physical-device collection/upload remains MOB-29 and QA-07.
 
 ### MOB-29: Collect and upload pinned zone observations
-Status: todo (2026-10-14: MOB-33 acknowledged and MOB-30 to MOB-32 code complete; ready to start upload/receipt integration, no longer waiting on those UI tasks) · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
+Status: doing (2026-10-15: immutable bound upload, full receipt checks, structured rejections and foreground reconnect/resume/retry implemented with local automated/disposable API/QGIS acceptance, physical iPad/Android collector acceptance pending) · Phase 3 · Size L · Depends: MOB-33, BE-22, MOB-30, MOB-31, MOB-32 · Blocks: QA-07
 Owner: Mobile data agent with Claude UI owner.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md), [component specification](ZONE-BOUNDARIES.md) and [UI plan](ZONE-BOUNDARIES-UI.md) sections 4.5, 6, 7 and 9.
 Do: Freeze session forms/package/zone, apply geometry parity (reusing MOB-31's `coveringZones`) and the sole `/v1` upload/receipt validation; store structured rejection codes for the needs-attention copy in UI plan 4.5; run the physical-device scenario.
 Done when: Physical-device draft survives newer publication and restart, uploads with original attribution; inventory is whole-zone.
 Verify: Mobile checks/tests and physical-device acceptance matrix; missing evidence remains pending.
-Data decision (2026-10-14): retain the historical Depends/Blocks links to completed UI prerequisites; they do not block starting this task. Exact closed coverage is shared through `zoneCovers` and now has the sloping-edge regression checks. The sole bound uploader, receipt/rejection integration and physical-device/server/QGIS scenario remain outstanding; this review does not claim them complete.
+Data decision (2026-10-14): retain the historical Depends/Blocks links to completed UI prerequisites; they do not block starting this task. Exact closed coverage is shared through `zoneCovers` and now has the sloping-edge regression checks. The sole bound uploader, receipt/rejection integration and foreground drain are now implemented in source. Exact bodies are persisted on save; old held current-schema bound records activate from their own saved bindings. Receipt checks fence transport and acknowledgment, and account changes abort/fence token access and late writes. [Current acceptance evidence](../docs/reviews/mob29-2026-10-15/README.md) records passing mobile checks/full suite, disposable real package install/save/restart/v2 publication, byte-identical replay, conflicting-body 409, point/Inventory export and native QGIS demo/live-export readback. These local results do not establish physical collector or hosted acceptance. Physical iPad/Android collector acceptance remains pending, so this task stays doing.
 
 ### MOB-30: Show map versions, updates and safe removal
 Status: done (2026-10-14; component tests on device data; simulator screenshots pending (user)) · Phase 3 · Size L · Depends: MOB-33 · Blocks: MOB-29
@@ -645,7 +560,7 @@ Do: Add `coveringZones` and `nearEdge` with a Vitest adapter over every coverage
 Done when: Every coverage case passes as an unordered set; each placement state renders in component tests.
 Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator walkthrough of the five states on phone and tablet with VoiceOver.
 Exception (2026-10-14, user): the pure geometry (`coveringZones`, `nearEdge` and the coverage adapter) started before MOB-33 was done. MOB-33 was done before the screens started and before this task closed.
-Verified 2026-10-14: `coveringZones` and `nearEdge` (`src/maps/geometry.ts`) build on the data agent's `zoneCovers` (`src/maps/zone-boundaries.ts`), as the user asked, so collect and the save gate share one predicate; a zone without a drawn boundary covers nothing. `coverage.test.ts` 25: all 16 `coverage_cases` as unordered sets with the accepted rule, plus vertices, open and closed rings, hole edges and the 8-point near-edge threshold at zoom 18, 20.5 and 22. `placement.test.ts` 15. Component tests: `PlaceStep.test.tsx` 6 renders inside, edge (Segmented with the session zone chosen; choosing switches zone), other ("Switch to Slide"), between (RadioRows, nothing chosen) and outside every zone on map v3 from the real geometry, with "Place point here" off and its reason on a bound map and on for the practice map; `ReviewStep.test.tsx` 2 shows "Not saved yet." with Adjust point and Save off. The spotlight dims holes (`geometry.test.ts` 11); the collect header, review summary and Saved card show the map version. Checks: `pnpm mobile:check` (TypeScript clean; Biome 12 infos, the baseline) and `pnpm mobile:test` (640 passed, 1 skipped, 80 files) under Node 24.21.0; `EXPO_NO_DOTENV=1 pnpm exec expo export --platform all` bundled iOS (4140 modules) and Android (4223 modules), exit 0. **Pending:** the simulator walkthrough on phone and tablet with VoiceOver (user); the data agent's parity review, which now covers its own `zoneCovers`: three exactness checks fail on sloping edges, with a proposed fix in [MOB-31-HANDOFF.md](MOB-31-HANDOFF.md).
+Verified 2026-10-14: `coveringZones` and `nearEdge` (`src/maps/geometry.ts`) build on the data agent's `zoneCovers` (`src/maps/zone-boundaries.ts`), as the user asked, so collect and the save gate share one predicate; a zone without a drawn boundary covers nothing. `coverage.test.ts` 25: all 16 `coverage_cases` as unordered sets with the accepted rule, plus vertices, open and closed rings, hole edges and the 8-point near-edge threshold at zoom 18, 20.5 and 22. `placement.test.ts` 15. Component tests: `PlaceStep.test.tsx` 6 renders inside, edge (Segmented with the session zone chosen; choosing switches zone), other ("Switch to Slide"), between (RadioRows, nothing chosen) and outside every zone on map v3 from the real geometry, with "Place point here" off and its reason on a bound map and on for the practice map; `ReviewStep.test.tsx` 2 shows "Not saved yet." with Adjust point and Save off. The spotlight dims holes (`geometry.test.ts` 11); the collect header, review summary and Saved card show the map version. Checks: `pnpm mobile:check` (TypeScript clean; Biome 12 infos, the baseline) and `pnpm mobile:test` (640 passed, 1 skipped, 80 files) under Node 24.21.0; `EXPO_NO_DOTENV=1 pnpm exec expo export --platform all` bundled iOS (4140 modules) and Android (4223 modules), exit 0. **Pending:** the simulator walkthrough on phone and tablet with VoiceOver (user), plus integrated physical-device/server attribution under MOB-29/QA-07. The three sloping-edge exactness failures were repaired by `d529134`; the recorded 5,295 exact-side comparisons and underflow regression pass. See [the resolved handoff](MOB-31-HANDOFF.md) and [local follow-up verification](MOB-33-HANDOFF.md#local-follow-up-verification-2026-10-14).
 
 ### MOB-32: Resume exact drafts and explain recovery
 Status: done (2026-10-14; the simulator resume and missing-map checks are pending (user)) · Phase 3 · Size M · Depends: MOB-33 · Blocks: MOB-29

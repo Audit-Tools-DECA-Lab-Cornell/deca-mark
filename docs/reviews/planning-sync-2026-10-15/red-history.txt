@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/praty/Desktop/StudentJob.nosync/field-ops/docs/reviews/planning-sync-2026-10-15/validate.py", line 46, in <module>
+    {'current': check_current, 'history': check_history, 'links': check_links}[MODE]()
+  File "/Users/praty/Desktop/StudentJob.nosync/field-ops/docs/reviews/planning-sync-2026-10-15/validate.py", line 25, in check_history
+    assert 'historical' in text[:1800].lower(), f'history: {path.relative_to(ROOT)} lacks historical notice'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: history: docs/reviews/zone-boundaries-2026-10-11/backend-handoff.md lacks historical notice
