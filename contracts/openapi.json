@@ -225,6 +225,12 @@
         "title": "BoundUploadReceipt",
         "type": "object"
       },
+      "BoundingBox": {
+        "examples": [
+          "-77,42,-76,43"
+        ],
+        "type": "string"
+      },
       "CanonicalZone": {
         "properties": {
           "display_anchor": {
@@ -1912,6 +1918,11 @@
         "type": "object"
       },
       "JsonValue": {},
+      "Latitude": {
+        "maximum": 90.0,
+        "minimum": -90.0,
+        "type": "number"
+      },
       "LineStringGeometry": {
         "properties": {
           "coordinates": {
@@ -1941,6 +1952,11 @@
         "maxLength": 100,
         "minLength": 1,
         "type": "string"
+      },
+      "Longitude": {
+        "maximum": 180.0,
+        "minimum": -180.0,
+        "type": "number"
       },
       "MessageRequest": {
         "additionalProperties": false,
@@ -9458,6 +9474,24 @@
             }
           },
           {
+            "description": "WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded.",
+            "in": "query",
+            "name": "bbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BoundingBox"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded.",
+              "title": "Bbox"
+            }
+          },
+          {
             "in": "query",
             "name": "cursor",
             "required": false,
@@ -9778,6 +9812,24 @@
             }
           },
           {
+            "description": "WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded.",
+            "in": "query",
+            "name": "bbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BoundingBox"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded.",
+              "title": "Bbox"
+            }
+          },
+          {
             "in": "query",
             "name": "format",
             "required": false,
@@ -10080,6 +10132,24 @@
                 }
               ],
               "title": "Observed Before"
+            }
+          },
+          {
+            "description": "WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded.",
+            "in": "query",
+            "name": "bbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BoundingBox"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded.",
+              "title": "Bbox"
             }
           }
         ],

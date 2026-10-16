@@ -883,6 +883,8 @@ export interface components {
              */
             zone_id: string;
         };
+        /** @example -77,42,-76,43 */
+        BoundingBox: string;
         /** CanonicalZone */
         CanonicalZone: {
             display_anchor: components["schemas"]["Position"];
@@ -1582,6 +1584,7 @@ export interface components {
             role: "member" | "admin" | "manager" | "observer" | "viewer";
         };
         JsonValue: unknown;
+        Latitude: number;
         /** LineStringGeometry */
         LineStringGeometry: {
             /** Coordinates */
@@ -1593,6 +1596,7 @@ export interface components {
             type: "LineString";
         };
         Locale: string;
+        Longitude: number;
         /** MessageRequest */
         MessageRequest: {
             /** Heading */
@@ -6797,6 +6801,8 @@ export interface operations {
                 observer?: components["schemas"]["Observer"] | null;
                 observed_from?: string | null;
                 observed_before?: string | null;
+                /** @description WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded. */
+                bbox?: components["schemas"]["BoundingBox"] | null;
                 cursor?: string | null;
                 limit?: number;
             };
@@ -6955,6 +6961,8 @@ export interface operations {
                 observer?: components["schemas"]["Observer"] | null;
                 observed_from?: string | null;
                 observed_before?: string | null;
+                /** @description WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded. */
+                bbox?: components["schemas"]["BoundingBox"] | null;
                 format?: "csv" | "geojson";
             };
             header?: never;
@@ -7112,6 +7120,8 @@ export interface operations {
                 observer?: components["schemas"]["Observer"] | null;
                 observed_from?: string | null;
                 observed_before?: string | null;
+                /** @description WGS84 west,south,east,north; inclusive point bounds, west < east and south < north. Inventory has no point geometry and is excluded. */
+                bbox?: components["schemas"]["BoundingBox"] | null;
             };
             header?: never;
             path: {

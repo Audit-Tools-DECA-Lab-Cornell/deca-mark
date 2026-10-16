@@ -360,22 +360,17 @@ Done when:
 - the zones table holds real polygons.
 
 ### BE-14: Analysis: observation list, summary, exports
-Status: doing (a first list 2026-10-07; cursor, summary and exports remain) · Phase 3 · Size L · Depends: BE-10, DB-10 · Blocks: WEB-10, WEB-11, WEB-12
-Zone-feature integration (2026-10-10 proposal): BE-20 owns the version-safe paginated v2 list/summary/export subset. Preserve the shipped v1 array response and reuse BE-20's filter definitions instead of implementing competing semantics. Remaining broader analysis, viewport and other unimplemented filters stay here; see [ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md).
-Done so far: `GET /v1/projects/{p}/observations` filtered by `site`, `round_type` and `since` (received), newest first, `limit` at most 500, each row with its site, form version, zone and round context. No cursor yet.
+Status: done (2026-10-15; source and disposable local acceptance) · Phase 3 · Size L · Depends: BE-10, DB-10 · Blocks: WEB-10, WEB-11, WEB-12
+Scope reconciliation (2026-10-15): BE-20 delivered cursor pagination, summary and complete exports; BE-22 moved them onto the sole `/v1` surface. The viewport (`bbox`) filter and its tests are BE-14's remaining work and WEB-10's only remaining backend prerequisite. WEB-11 already consumes the summary.
+Done so far: `GET /v1/projects/{p}/observations` returns the cursor envelope ordered by `(observed_at DESC, id ASC)`, with `limit` at most 500. List, `/observations/summary` and `/observations/export?format=csv|geojson` share `site_id`, `package_id`, repeated `zone_id`, `round_type`, `observer`, `observed_from` and `observed_before` filters. Historical metadata, CSV codebook column order, complete export scope and authorization are covered by BE-20's tests; see [ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md).
 Do:
-1. `GET /v1/projects/{p}/observations`:
-   - cursor on `(observed_at, id)`, with `limit` at most 500;
-   - filters: `site`, `zone`, `round`, `form_version`, `observer`, `from`, `to`, `bbox` (a `ST_Intersects` on `geom`, using the GiST index);
-   - returns the envelope plus `received_at` and `revision`.
-2. `GET …/summary` returns counts by site, zone, round, form version and day, plus the latest `received_at`, computed in SQL. Coverage "by zone and round" is J1 step 6.
-3. `GET …/exports?format=csv|geojson&…filters` streams the result:
-   - CSV columns come from the form version's `exportColumn`s (the codebook order);
-   - GeoJSON is a FeatureCollection;
-   - each export is audited (DB-13, once it exists; until then, logged).
-4. Everything requires viewer or higher. Add the rows to QA-01.
+1. Add optional `bbox=west,south,east,north` in WGS84 degrees to the shared filters. Reject nonfinite, out-of-range, reversed and empty bounds.
+2. Use `ST_Intersects` on observation `geom` and `ST_MakeEnvelope(...,4326)`, with inclusive boundaries. Preserve RLS; the restricted-role planner currently uses a project index before the spatial predicate rather than the geometry GiST index. Inventory has no event geometry and remains outside viewport point queries.
+3. Apply the same bbox to pages, totals, summary and complete exports, and bind cursors/export metadata to that scope. Preserve authorization and all existing filter semantics.
+4. Test valid/invalid bounds, point boundaries, Inventory exclusion, paging, scope changes, export agreement and viewer/tenant isolation through real local HTTP.
 
-Done when: the tests cover paging stability, the bbox filter, and CSV column order.
+Done when: existing paging/export tests and bbox acceptance pass; generated OpenAPI and both client declarations include the optional bbox query. Hosted/browser/device acceptance remains separate.
+Verified (2026-10-15): `bbox` scopes pages, totals, summaries and complete exports consistently, including inclusive point boundaries, Inventory exclusion, normalized cursor identity and safe rejection of invalid bounds. A signed loopback HTTP viewer scenario verifies selective filtering, tied pagination, CSV/export metadata agreement and tenant isolation. `pnpm backend:check`, `pnpm backend:test ZONE_API_REHEARSAL=1` (676 tests), `pnpm db:test ZONE_REHEARSAL=1`, both client typechecks and `pnpm plan:check` pass. A second OpenAPI/client declaration generation is byte-identical. No hosted deployment or browser/device acceptance is claimed.
 
 ### BE-15: GIS access information
 Status: todo · Phase 3 · Size S · Depends: GIS-02 · Blocks: WEB-12

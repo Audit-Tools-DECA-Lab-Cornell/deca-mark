@@ -15,6 +15,8 @@ from pydantic import (
     model_validator,
 )
 
+from fieldmaps_api.observation_bbox import BoundingBox
+
 type SpatialSupport = Literal["point", "zone"]
 type RoundType = Literal["standard", "reliability", "inventory"]
 type Observer = Annotated[
@@ -34,6 +36,15 @@ class ObservationFilters(Frozen):
     observer: Observer | None = None
     observed_from: AwareDatetime | None = None
     observed_before: AwareDatetime | None = None
+    bbox: Annotated[
+        BoundingBox | None,
+        Field(
+            description=(
+                "WGS84 west,south,east,north; inclusive point bounds, "
+                "west < east and south < north. Inventory has no point geometry and is excluded."
+            )
+        ),
+    ] = None
 
     @field_validator("observed_from", "observed_before")
     @classmethod
@@ -51,6 +62,11 @@ class ObservationFilters(Frozen):
 
     @model_validator(mode="after")
     def combinations(self) -> Self:
+        if self.bbox is not None:
+            west, south, east, north = self.bbox
+            if west >= east or south >= north:
+                message = "The bbox must have west < east and south < north"
+                raise ValueError(message)
         if self.zone_id and self.site_id is None:
             message = "Zone filters require a site"
             raise ValueError(message)
