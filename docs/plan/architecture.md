@@ -2,34 +2,15 @@
 
 This file is part of the [DECA Mark production plan](README.md) and defines no tasks. It describes the shape that every task builds toward. When a task and this file disagree, stop and ask; do not quietly pick one.
 
-## Current state (verified 2026-09-22)
+## Current implementation boundary (reconciled 2026-10-15)
 
-**Mobile collector**
-- Built on Expo SDK 57, RN 0.86 and expo-sqlite, with a custom append-only upload queue.
-- The only auth call is `signInWithPassword` (`mobile/app/account.tsx:43`).
-- The project ID is hard-coded (`mobile/connection.config.json:6`), and so is the API URL, `127.0.0.1`.
-- Packages, sites and forms are bundled fixtures (`mobile/src/packages/bundled.ts`, `mobile/src/forms/registry.ts:10`).
+Web uses Supabase SSR identity and real FastAPI data, SVG zone editing and immutable package history. FastAPI serves one `/v1` contract, including bound observations, conditional draft publication, paging, summaries and ZIP exports. The canonical schema is the fresh baseline plus subsequent migrations, not the retired incremental ledger. Hosted reconciliation is separately gated by the dated [diagnosis](../reviews/ci-and-hosted-data-2026-10-14.md).
 
-**Web**
-- Built on Next.js 16.2 and React 19, with no auth.
-- Every workspace screen reads `web/src/data/*` fixtures.
-- The package upload posts a fixture project ID (`web/src/data/project.ts:19`), so it gets a 422.
+Mobile uses SQLite, MapLibre, the current outbox and verified package storage. It has retained sessions, boundary-aware screens and MOB-29’s immutable bound foreground uploads with exact receipts, structured rejections and reconnect/resume/retry. Disposable loopback API/SQLite acceptance passes actual install/save/restart, newer publication, replay, conflicting-body 409 and point/Inventory export, and native QGIS demo/live-export readback passes; physical iPad/Android collector acceptance remains pending ([evidence](../reviews/mob29-2026-10-15/README.md)). PowerSync/op-sqlite and Storage-backed package delivery below are target architecture, not the installed transport. GIS-09 implements recorded-zone SQL/export semantics; native QGIS demo/live-export readback is locally verified, while general typed views and scoped live grants remain separate.
 
-**API**
-- FastAPI with 8 routes (`backend/src/fieldmaps_api/main.py`).
-- Verifies Supabase ES256 JWTs through JWKS.
-- Runs as the restricted role `fieldmaps_api`, under RLS keyed on the transaction-local GUC `fieldmaps.user_id`.
-- Package preparation is real (`domain/packages.py`, `domain/qgis_project.py`).
+Use [current position](current-state.md) and owner plans for evidence and next tasks. The target diagram does not establish deployment or device acceptance.
 
-**Database**
-- Supabase Postgres 17 with PostGIS in `extensions`, project `lezmqhuucfwqknspgcdy`.
-- The private schemas `fieldmaps`, `fieldmaps_meta` and `gis` are revoked from `anon` and `authenticated`.
-- Hosted migrations stop before `0004_site_packages`; DB-01 fixes this.
-
-**QGIS**
-- A fixed-filter view, `gis.sample_observations`, read by one training login (`qgis/README.md`).
-
-## Target system
+## Target system (PowerSync/Storage lane remains gated)
 
 ```mermaid
 flowchart LR
@@ -63,7 +44,7 @@ flowchart LR
    - DB-04 adds the **global** default-privilege revoke for functions (a per-schema revoke is a no-op; verified), plus a coverage test.
 3. **There are three read paths, each with its own boundary:**
    - **Web** reads go through FastAPI, where RLS on `fieldmaps_api` applies.
-   - **Mobile** reads go through PowerSync. PowerSync replicates with `BYPASSRLS`, so the **stream definitions are the security boundary**. They live in the repository (SYNC-02) and are tested by QA-02.
+   - **Mobile target** reads go through PowerSync after SYNC-01/02; the current collector reads the API and verified installed packages on the D27 outbox path. PowerSync replicates with `BYPASSRLS`, so the **stream definitions are the security boundary**. SYNC-02 will define them in the repository and QA-02 will verify isolation; neither is completed.
    - **QGIS** reads `gis` views as a member of `fieldmaps_gis_reader`. The boundary is three things together:
      - RLS policies `TO fieldmaps_gis_reader`, keyed on active, non-training grants;
      - column-limited SELECT;
@@ -115,28 +96,25 @@ Each environment gets its own PowerSync instance and replication slot. Never poi
 | `tenancy` | organizations, projects, members, invitations | BE-07 |
 | `sites` | sites, zones, packages, Storage | BE-13 |
 | `instrument` | forms, versions, publish, retire | BE-10, BE-11 |
-| `collection` | sync upload, rejections, the legacy PUT | BE-12 |
+| `collection` | current bound PUT/receipts; future sync batches and rejections | BE-22, BE-12 |
 | `analysis` | observation queries, summary, exports | BE-14 |
 | `gis` | reader grants (pilot); OGC API Features later | BE-15, GIS-06 |
 
-## Fixture inventory
+## Fixture and practice-data inventory (current boundaries)
 
-This is every piece of dummy data that must be gone before the pilot, and the task that removes each one. When a row's task is done, its screen reads real data.
+Fixtures remain only in test tooling and clearly separate mobile practice data. They must not pass for real observations or a live manager workspace. The following owners retain the actual pilot cleanup scope:
 
-| Where | Fixture today | Replaced by | Task |
-|---|---|---|---|
-| `mobile/connection.config.json` | Localhost API, fixed `projectId` | `config/<APP_ENV>.json`; the project comes from `/v1/me` | MOB-01, MOB-04 |
-| `mobile/src/packages/bundled.ts`, `mobile/src/maps/sample-site.ts` | 4 studies (2 fake), a hand-drawn site | Synced `site_packages` and downloaded archives; the Training package goes through the real pipeline | MOB-14, BE-13 |
-| `mobile/src/forms/fixtures/*`, `mobile/src/forms/registry.ts:10` | Bundled `shell-v1` and `janet-test-v1` | Synced published `form_versions`; the fixtures become `contracts/forms/*.json` test data | MOB-13, CON-02 |
-| `mobile/src/domain/observation.ts:30`, `build-observation.ts:45-79` | `"sample-garden"` literal, branching on version strings, a Janet-specific summary key | The generic envelope; summary and carry-forward become definition properties | MOB-13 |
-| `mobile/src/storage/sync-store.ts:29`, `mobile/src/sync/contracts.ts:25` | A queue and payload for `shell-v1` only | The PowerSync queue and the envelope | MOB-10 |
-| Developer copy across `mobile/app/*` and `mobile/src/*/provider.tsx` | Explanations of stubs | Copy for field users | MOB-15 |
-| `web/src/fixtures/*`, `web/src/data/*`, `web/src/lib/preview.ts` and the client-side exports and aggregation over them | Removed on 2026-10-09 (D30). Every web screen reads and writes the API, and a lint rule bans the old imports | `/v1/me`, the projects, sites, packages, forms and observations APIs | WEB-27 |
-| Canonical baseline `gis.sample_observations` | A view with fixed IDs | Generated per-form views | GIS-01, GIS-03 |
+| Surface | Current boundary | Owner |
+| --- | --- | --- |
+| Web | D30 removed workspace fixtures, preview bypass and sample-only actions. Local E2E synthetic seeds remain intentional test infrastructure. | WEB-27 |
+| Mobile account/projects | Public build profiles and caller-scoped project/profile cache exist; native identity/join and stale UI cleanup remain. | MOB-01/04, MOB-03/05/06/27 |
+| Mobile maps/forms | Joined sites download exact verified archives/forms; bundled practice remains separate. Removing production practice fixtures and establishing server Training delivery remain pilot work. | MOB-13/14/15 |
+| Mobile observations | Exact bindings, retention and immutable foreground upload/receipt/rejection are implemented; disposable HTTP/SQLite acceptance is recorded under MOB-29, native QGIS readback also passes, while physical iPad/Android collector acceptance remains pending. Bundled practice stays local-only. Later PowerSync transition preserves the supported schema without experimental legacy bridges. | MOB-29, MOB-09/10/11 |
+| GIS | Recorded-zone views exist; generic per-form live reader surfaces and scoped provisioning remain distinct. | GIS-09, GIS-01/02/03 |
 
 ## What is deliberately not in the architecture yet
 
-- Background job workers. Celery and GDAL arrive only with GIS-07.
+- General GIS processing workers remain future GIS-07 scope. The API already has a bounded transactional-email delivery worker; that does not implement the GIS queue.
 - Multi-region hosting.
 - Billing.
 - Closed-app background sync.

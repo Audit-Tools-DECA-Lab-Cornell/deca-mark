@@ -2,7 +2,7 @@
 
 [Master plan](../docs/plan/zone-boundaries/README.md) · [Canonical contract](../docs/plan/zone-boundaries/contract.md) · [Database task status](PLAN.md)
 
-CON-06 defines the current contract. DB-19 replaces the experimental schema with one baseline and fresh seeds; BE-22 then implements the API against it. Earlier DB-15/DB-16 and GIS-09 evidence does not establish compliance with this baseline. Hosted reset or deployment remains a separately approved operation.
+CON-06 defines the current contract. DB-19’s fresh baseline and BE-22’s sole `/v1` API now have local acceptance. See [DB-19 evidence](../docs/reviews/zone-boundaries-2026-10-12/db19.md), [API task acceptance](../backend/PLAN.md#be-22-serve-one-zone-api-path) and the [current roadmap](../docs/plan/current-state.md). Earlier DB-15/DB-16 migration filenames and GIS-09 screenshots describe superseded dated evidence. Hosted schema replacement/deployment and integrated QA-07 remain separate operations.
 
 Map versions v1 and v2 are successive per-site packages, both served through the only API prefix, `/v1`. Every archive uses the single zone-aware `format: 1`.
 
@@ -81,6 +81,6 @@ DB-19 installs the fresh baseline and seeds on an explicitly selected local test
 
 Test the baseline from scratch: composite tenant FKs, current-role authorization after lock waits, inherited managers, Training isolation, first-upload races, CAS, replay, partial-failure rollback, immutable snapshots, form retirement, geometry boundaries and point/Inventory semantics. SQL/API exports and GIS projections must agree on identities and counts.
 
-Run `pnpm db:reset` and `pnpm db:test` only on the authorized local stack. BE-22 then supplies restricted-role live HTTP acceptance and stable contract generation. [PLAN.md](PLAN.md) owns completion status; the [failure matrix](../docs/plan/zone-boundaries/verification.md) owns required release evidence.
+For a fresh isolated rehearsal use `pnpm db:reset --disposable` and `pnpm db:test ZONE_REHEARSAL=1`; a persistent local reset still requires explicit authorization. BE-22’s restricted-role live HTTP acceptance and stable contract generation are recorded in its owning plan; rerun the workflow after implementation changes. [PLAN.md](PLAN.md) owns completion status; the [failure matrix](../docs/plan/zone-boundaries/verification.md) owns required release evidence.
 
 Backups/restores of the current schema must keep archives, snapshots, bindings, receipts and current pointers consistent. Hosted reset, application and release evidence remain distinct from a passing local suite.

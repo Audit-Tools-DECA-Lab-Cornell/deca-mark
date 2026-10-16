@@ -1,5 +1,7 @@
 # MOB-28 / MOB-33 local acceptance — 2026-10-13
 
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 Base commit: `23afd833b4f26325ac76f05ac5d7a7c711889e6d`. This report describes
 the mobile data changes relative to that baseline. Owning statuses are in
 `mobile/PLAN.md`. The [UI handoff](../../../mobile/MOB-33-HANDOFF.md) documents

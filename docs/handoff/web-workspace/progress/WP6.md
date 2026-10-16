@@ -1,4 +1,6 @@
 # WP6 progress (organization pages)
+
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
 ## done
 - read brief, spec, data-layer notes, ux checklist, shell notes, org.spec.ts, scan.ts, backend org rules (members, transfer, invitations)
 ## next

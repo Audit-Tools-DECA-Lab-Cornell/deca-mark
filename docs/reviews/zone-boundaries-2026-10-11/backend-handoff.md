@@ -1,5 +1,7 @@
 # Backend/database review and frontend handoff — 2026-10-11
 
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 ## Verdict and scope
 
 **Backend/database local implementation: accepted. Web implementation: ready to start.

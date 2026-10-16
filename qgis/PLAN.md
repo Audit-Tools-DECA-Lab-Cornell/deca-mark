@@ -1,16 +1,18 @@
 # QGIS plan: site packages in, typed layers out (`qgis/`)
 
+Reconciled 2026-10-15: [current roadmap](../docs/plan/current-state.md). Current SQL/API projections exist under DB-19/BE-22, but general typed views and per-project live Desktop reader provisioning (GIS-01 to GIS-04) remain open. GIS-09’s export/provider evidence is historical; its `prepare.py`/`render.py` adapters require current-contract alignment before the QA-07 QGIS replay.
+
 This file is part of the [DECA Mark production plan](../docs/plan/README.md) and defines the `GIS-*` tasks. It covers both directions between QGIS and DECA Mark. Several steps change code elsewhere, and those tasks are defined in other files:
 
 | Direction | What | Tasks |
 |---|---|---|
-| QGIS → DECA Mark | A manager exports site layers from a QGIS project and uploads them as a site package | BE-13 (Storage, zones, current pointer), WEB-08 (upload on the site page), MOB-14 (device download) |
+| QGIS → DECA Mark | Import project/layers, explicitly map zone identities and publish an immutable package | BE-22/WEB-29/WEB-42 (current zone contract); BE-13/WEB-08/MOB-14 retain broader Storage and delivery work |
 | DECA Mark → QGIS | Analysts read accepted observations as typed layers | **GIS-01 to GIS-04** (here), BE-15, WEB-12 |
 | Later | Self-serve access with keys, richer formats, a publishing plugin | GIS-06 to GIS-08 (post-pilot) |
 
 Decision D10 in [decisions.md](../docs/plan/decisions.md) sets the pilot's access model: per-project read-only database logins, with OGC API Features plus keys after the pilot.
 
-## Context (verified 2026-09-22)
+## Historical context (verified 2026-09-22)
 
 **Inbound: QGIS packages today**
 - The API accepts GeoJSON layers `ground` and `zones` (required) and `paths` and `trees` (optional), plus an optional `.qgz` or `.qgs`. Five checks run: source project, layer sources, coordinate reference, imagery licence, and archive (`backend/src/fieldmaps_api/domain/packages.py`, `domain/qgis_project.py`).
@@ -208,10 +210,10 @@ Do: build a QGIS Python plugin that exports the required layers from the open pr
 Done when: a manager publishes a package from QGIS without the web upload.
 
 ### GIS-09: Expose historical zones and inventory semantics
-Status: done · Phase 3 · Size M · Depends: DB-16, BE-19 · Blocks: QA-07
+Status: done (2026-10-11; historical projection/export and local QGIS acceptance, before CON-06/DB-19/BE-22) · Phase 3 · Size M · Depends: DB-16, BE-19 · Blocks: QA-07
 Owner: GIS owner; database agent writes migrations.
 Read first: [Master plan](../docs/plan/zone-boundaries/README.md) and [component specification](ZONE-BOUNDARIES.md).
 Do: Specify scoped point/zone/inventory projections and exports; preserve existing reader permissions and sample view.
 Done when: Exact package-zone joins and counts agree; no inventory anchor counted as point event; record QGIS evidence.
 Verify: Local SQL/export readback and QGIS synthetic historical rendering; no implicit credentials.
-Evidence: [Projection/export guide](zone-boundaries/README.md) and [local acceptance](../docs/reviews/zone-boundaries-2026-10-11/gis09.md). Exact signed SQL/API exports agree with installed QGIS readback and rendering; Desktop canvas and point/legacy table screenshots recorded. Hosted/live reader acceptance remains QA-07.
+Evidence: [Projection/export guide](zone-boundaries/README.md) and [local acceptance](../docs/reviews/zone-boundaries-2026-10-11/gis09.md). Exact signed SQL/API exports agreed with installed QGIS readback and rendering on that dated contract; Desktop canvas and point/legacy table screenshots were recorded. The current baseline has the four bound projection views and a signed API/SQL agreement fixture, but `prepare.py`/`render.py` still expect removed `assignment_basis` metadata. Align those adapters and repeat current-contract Desktop interaction under QA-07; general live-reader provisioning remains GIS-01/GIS-02, not completed by GIS-09.

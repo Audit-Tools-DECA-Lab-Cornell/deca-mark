@@ -1,5 +1,7 @@
 # DECA Mark web manager screens: UX checklist (Contour)
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 Sources: DESIGN.md (wins on any conflict), PRODUCT.md (glossary, honesty), ui-ux-pro-max (admin/dashboard rules), the code in `web/src/components/contour`. Read DESIGN §5 to §7, §10 and §11 before building. The reader is a researcher who manages a study (Janet). Every word must be true for live API data.
 
 ## 1. Primitives: `import { … } from "@/components/contour"` (one index for all of them, server components included)

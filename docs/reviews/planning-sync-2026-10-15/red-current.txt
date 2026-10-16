@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/praty/Desktop/StudentJob.nosync/field-ops/docs/reviews/planning-sync-2026-10-15/validate.py", line 46, in <module>
+    {'current': check_current, 'history': check_history, 'links': check_links}[MODE]()
+  File "/Users/praty/Desktop/StudentJob.nosync/field-ops/docs/reviews/planning-sync-2026-10-15/validate.py", line 12, in check_current
+    assert 'This is a proposed implementation plan, not shipped functionality.' not in index, 'current: production index still describes implemented zone feature as proposed-only'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: current: production index still describes implemented zone feature as proposed-only

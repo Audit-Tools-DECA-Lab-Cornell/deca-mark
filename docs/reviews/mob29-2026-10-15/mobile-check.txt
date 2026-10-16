@@ -1,0 +1,375 @@
+
+> decamark@0.1.0 mobile:check /Users/praty/Desktop/StudentJob.nosync/field-ops
+> pnpm --dir mobile typecheck && pnpm --dir mobile lint
+
+
+> decamark-mobile@0.1.0 typecheck /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+> tsc --noEmit
+
+
+> decamark-mobile@0.1.0 lint /Users/praty/Desktop/StudentJob.nosync/field-ops/mobile
+> biome check .
+
+app.config.ts:5:33 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    3 │ import { publicConfigSchema } from "./src/platform/config-schema.ts";
+    4 │ 
+  > 5 │ const environment = process.env["APP_ENV"] ?? "development";
+      │                                 ^^^^^^^^^
+    6 │ if (!["development", "staging", "production"].includes(environment))
+    7 │   throw new RangeError("Unknown APP_ENV");
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     3  3 │   import { publicConfigSchema } from "./src/platform/config-schema.ts";
+     4  4 │   
+     5    │ - const·environment·=·process.env["APP_ENV"]·??·"development";
+        5 │ + const·environment·=·process.env.APP_ENV·??·"development";
+     6  6 │   if (!["development", "staging", "production"].includes(environment))
+     7  7 │     throw new RangeError("Unknown APP_ENV");
+  
+
+src/features/collect/CollectMap.tsx:635:46 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    633 │             if (aiming || mode === "zones") return;
+    634 │             const feature = event.nativeEvent.features[0];
+  > 635 │             const id = feature?.properties?.["id"];
+        │                                              ^^^^
+    636 │             if (typeof id === "string") {
+    637 │               event.stopPropagation();
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    635 │ ············const·id·=·feature?.properties?.["id"];
+        │                                             --  -- 
+
+src/packages/hosted/bound-install-api.acceptance.test.ts:14:27 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    12 │ import { PackageOperations } from "./operations";
+    13 │ 
+  > 14 │ const input = process.env["MOB28_SINGLE_PATH_FIXTURE"];
+       │                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    15 │ it.skipIf(!input)(
+    16 │   "installs an actual server-published zone-aware format1 archive and restores its exact forms after SQLite restart",
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    12 12 │   import { PackageOperations } from "./operations";
+    13 13 │   
+    14    │ - const·input·=·process.env["MOB28_SINGLE_PATH_FIXTURE"];
+       14 │ + const·input·=·process.env.MOB28_SINGLE_PATH_FIXTURE;
+    15 15 │   it.skipIf(!input)(
+    16 16 │     "installs an actual server-published zone-aware format1 archive and restores its exact forms after SQLite restart",
+  
+
+src/packages/hosted/bound-install-api.acceptance.test.ts:67:36 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    65 │         form_version: "janet-test-v1",
+    66 │       });
+  > 67 │       expect(installed?.forms.play["version"]).toBe("janet-test-v1");
+       │                                    ^^^^^^^^^
+    68 │       database.close();
+    69 │       database = new DatabaseSync(join(h.root, "catalog.db"));
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    65 65 │           form_version: "janet-test-v1",
+    66 66 │         });
+    67    │ - ······expect(installed?.forms.play["version"]).toBe("janet-test-v1");
+       67 │ + ······expect(installed?.forms.play.version).toBe("janet-test-v1");
+    68 68 │         database.close();
+    69 69 │         database = new DatabaseSync(join(h.root, "catalog.db"));
+  
+
+src/packages/hosted/bound-prepare.test.ts:113:37 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    111 │       inventory.form_version,
+    112 │     ]);
+  > 113 │     expect(stored.forms.inventory?.["version"]).toBe(inventory.form_version);
+        │                                     ^^^^^^^^^
+    114 │   });
+    115 │   it("refuses a missing bound inventory definition instead of searching for another", async () => {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    113 │ ····expect(stored.forms.inventory?.["version"]).toBe(inventory.form_version);
+        │                                    --       --                               
+
+src/packages/hosted/build.ts:107:69 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    106 │ function siteZone(zone: StoredPackage["manifest"]["zones"][number], layer: LayerData): SiteZone {
+  > 107 │   const feature = layer.features.find((entry) => entry.properties?.["zone_id"] === zone.zone_id);
+        │                                                                     ^^^^^^^^^
+    108 │   const { geometry } = boundFeatureSchema.parse(feature);
+    109 │   const [polygon, ...moreParts] = geometry.coordinates;
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    107 │ ··const·feature·=·layer.features.find((entry)·=>·entry.properties?.["zone_id"]·===·zone.zone_id);
+        │                                                                    --       --                   
+
+src/packages/hosted/operations.ts:95:34 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    93 │         installedAt:
+    94 │           stored?.savedAt ??
+  > 95 │           (typeof entry.metadata["savedAt"] === "string" ? entry.metadata["savedAt"] : null),
+       │                                  ^^^^^^^^^
+    96 │         bytes:
+    97 │           stored?.archiveBytes ??
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     93  93 │           installedAt:
+     94  94 │             stored?.savedAt ??
+     95     │ - ··········(typeof·entry.metadata["savedAt"]·===·"string"·?·entry.metadata["savedAt"]·:·null),
+         95 │ + ··········(typeof·entry.metadata.savedAt·===·"string"·?·entry.metadata["savedAt"]·:·null),
+     96  96 │           bytes:
+     97  97 │             stored?.archiveBytes ??
+  
+
+src/packages/hosted/operations.ts:95:75 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    93 │         installedAt:
+    94 │           stored?.savedAt ??
+  > 95 │           (typeof entry.metadata["savedAt"] === "string" ? entry.metadata["savedAt"] : null),
+       │                                                                           ^^^^^^^^^
+    96 │         bytes:
+    97 │           stored?.archiveBytes ??
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     93  93 │           installedAt:
+     94  94 │             stored?.savedAt ??
+     95     │ - ··········(typeof·entry.metadata["savedAt"]·===·"string"·?·entry.metadata["savedAt"]·:·null),
+         95 │ + ··········(typeof·entry.metadata["savedAt"]·===·"string"·?·entry.metadata.savedAt·:·null),
+     96  96 │           bytes:
+     97  97 │             stored?.archiveBytes ??
+  
+
+src/packages/hosted/operations.ts:98:34 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+     96 │         bytes:
+     97 │           stored?.archiveBytes ??
+   > 98 │           (typeof entry.metadata["archiveBytes"] === "number" ? entry.metadata["archiveBytes"] : 0),
+        │                                  ^^^^^^^^^^^^^^
+     99 │         counts: await zoneReferences(r.database, r.owner, entry.identity),
+    100 │         references: await packageReferences(r.database, r.owner, entry.identity),
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     96  96 │           bytes:
+     97  97 │             stored?.archiveBytes ??
+     98     │ - ··········(typeof·entry.metadata["archiveBytes"]·===·"number"·?·entry.metadata["archiveBytes"]·:·0),
+         98 │ + ··········(typeof·entry.metadata.archiveBytes·===·"number"·?·entry.metadata["archiveBytes"]·:·0),
+     99  99 │           counts: await zoneReferences(r.database, r.owner, entry.identity),
+    100 100 │           references: await packageReferences(r.database, r.owner, entry.identity),
+  
+
+src/packages/hosted/operations.ts:98:80 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+     96 │         bytes:
+     97 │           stored?.archiveBytes ??
+   > 98 │           (typeof entry.metadata["archiveBytes"] === "number" ? entry.metadata["archiveBytes"] : 0),
+        │                                                                                ^^^^^^^^^^^^^^
+     99 │         counts: await zoneReferences(r.database, r.owner, entry.identity),
+    100 │         references: await packageReferences(r.database, r.owner, entry.identity),
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     96  96 │           bytes:
+     97  97 │             stored?.archiveBytes ??
+     98     │ - ··········(typeof·entry.metadata["archiveBytes"]·===·"number"·?·entry.metadata["archiveBytes"]·:·0),
+         98 │ + ··········(typeof·entry.metadata["archiveBytes"]·===·"number"·?·entry.metadata.archiveBytes·:·0),
+     99  99 │           counts: await zoneReferences(r.database, r.owner, entry.identity),
+    100 100 │           references: await packageReferences(r.database, r.owner, entry.identity),
+  
+
+src/packages/hosted/package-camera.ts:14:80 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    12 │   readonly bounds: [number, number, number, number];
+    13 │ } {
+  > 14 │   const site = layers.ground.features.filter((feature) => feature.properties?.["kind"] === "site");
+       │                                                                                ^^^^^^
+    15 │   if (site.length !== 1) throw new Error("The package must have one site polygon.");
+    16 │   const geometry = siteGeometrySchema.parse(site[0]?.geometry);
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    14 │ ··const·site·=·layers.ground.features.filter((feature)·=>·feature.properties?.["kind"]·===·"site");
+       │                                                                               --    --             
+
+src/packages/hosted/verify-bound.ts:25:37 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    23 │     codes.add(zone.zone_code);
+    24 │     const matches = layers.zones.features.filter(
+  > 25 │       (entry) => entry.properties?.["zone_id"] === zone.zone_id,
+       │                                     ^^^^^^^^^
+    26 │     );
+    27 │     const parsed = boundFeatureSchema.safeParse(matches.length === 1 ? matches[0] : null);
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    25 │ ······(entry)·=>·entry.properties?.["zone_id"]·===·zone.zone_id,
+       │                                    --       --                  
+
+src/storage/bound-upload-store.test.ts:55:23 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    53 │       await saveObservation(db, boundRecord, owner);
+    54 │       const stored = sqlite.prepare("SELECT payload,sync_state FROM observations").get();
+  > 55 │       expect(stored?.["sync_state"]).toBe("pending");
+       │                       ^^^^^^^^^^^^
+    56 │       const first = await pendingObservations(db, owner, Date.now());
+    57 │       expect(first[0]?.body).toBe(serializeBoundObservation(boundRecord));
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    55 │ ······expect(stored?.["sync_state"]).toBe("pending");
+       │                      --          --                  
+
+src/storage/bound-upload-store.test.ts:109:76 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    107 │           .userId,
+    108 │       });
+  > 109 │       expect(sqlite.prepare("SELECT sync_state FROM observations").get()?.["sync_state"]).toBe(
+        │                                                                            ^^^^^^^^^^^^
+    110 │         "local-only",
+    111 │       );
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    109 │ ······expect(sqlite.prepare("SELECT·sync_state·FROM·observations").get()?.["sync_state"]).toBe(
+        │                                                                           --          --       
+
+src/storage/bound-upload-store.test.ts:159:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    157 │         sqlite
+    158 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 159 │           .get()?.["count"],
+        │                    ^^^^^^^
+    160 │       ).toBe(0);
+    161 │     } finally {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    159 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/bound-upload-api.acceptance.test.ts:22:27 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    20 │ import { serializeBoundObservation } from "./wire-body";
+    21 │ 
+  > 22 │ const input = process.env["MOB29_BOUND_API_FIXTURE"];
+       │                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    23 │ it.skipIf(!input)(
+    24 │   "uploads exact saved v1 point and whole-zone Inventory after SQLite restart and v2 publication through the actual API",
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     20  20 │   import { serializeBoundObservation } from "./wire-body";
+     21  21 │   
+     22     │ - const·input·=·process.env["MOB29_BOUND_API_FIXTURE"];
+         22 │ + const·input·=·process.env.MOB29_BOUND_API_FIXTURE;
+     23  23 │   it.skipIf(!input)(
+     24  24 │     "uploads exact saved v1 point and whole-zone Inventory after SQLite restart and v2 publication through the actual API",
+  
+
+src/sync/coordinator.test.ts:70:76 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    68 │         serializeBoundObservation(boundRecord),
+    69 │       ]);
+  > 70 │       expect(sqlite.prepare("SELECT sync_state FROM observations").get()?.["sync_state"]).toBe(
+       │                                                                            ^^^^^^^^^^^^
+    71 │         "synced",
+    72 │       );
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    70 │ ······expect(sqlite.prepare("SELECT·sync_state·FROM·observations").get()?.["sync_state"]).toBe(
+       │                                                                           --          --       
+
+src/sync/coordinator.test.ts:205:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    203 │         sqlite
+    204 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 205 │           .get()?.["count"],
+        │                    ^^^^^^^
+    206 │       ).toBe(27);
+    207 │     } finally {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    205 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/provider.test.tsx:166:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    164 │         sqlite
+    165 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 166 │           .get()?.["count"],
+        │                    ^^^^^^^
+    167 │       ).toBe(3);
+    168 │     } finally {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    166 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/provider.test.tsx:260:76 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    258 │       await flush();
+    259 │       expect(calls).toBe(2);
+  > 260 │       expect(sqlite.prepare("SELECT sync_state FROM observations").get()?.["sync_state"]).toBe(
+        │                                                                            ^^^^^^^^^^^^
+    261 │         "synced",
+    262 │       );
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    260 │ ······expect(sqlite.prepare("SELECT·sync_state·FROM·observations").get()?.["sync_state"]).toBe(
+        │                                                                           --          --       
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 3.
+Checked 345 files in 292ms. No fixes applied.
+Found 23 infos.

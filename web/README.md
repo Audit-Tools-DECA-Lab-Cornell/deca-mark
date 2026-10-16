@@ -10,7 +10,7 @@ All of it (D30). Every page under `/o/<org>/p/<project>` reads and writes the DE
 
 When a feature has no backend, the page says so once, with `components/shell/NotAvailable.tsx`: "X is not available yet.", then why, and what to do instead. Today that covers saved named views, the rounds plan, editing zones on the web where a site has no usable boundary or published form (edit them in QGIS), reviewing or excluding records, device readiness, live QGIS database access, deleting projects, organizations, sites or map packages, and resending invitations. A read that fails shows `LoadFailure` and never an empty list. The Honesty section of [`AGENTS.md`](AGENTS.md) holds the rules.
 
-Two limits show on the screens. The API lists at most the newest 500 observations of a project and has no paging, so every count, chart and export built from a list that long says "Based on the newest 500 observations." And dates use the project's timezone, not the browser's.
+Data pages through all matching observations, 500 at a time, with server filters and recorded map/zone labels. Zone/round coverage uses the server summary, and exports download the complete authorized scope within the documented server limits. Observer/day/play-type breakdowns and loaded-row search still disclose their loaded subset. Dates use the project's timezone. See [current position and remaining acceptance](../docs/plan/current-state.md).
 
 Organizations are created by the bootstrap script (`scripts/bootstrap-study.mjs`), not on the web. Owners and admins create projects on the organization's Projects page.
 
@@ -28,6 +28,7 @@ Organizations are created by the bootstrap script (`scripts/bootstrap-study.mjs`
 | `/o/[org]/p/[project]` | Overview: what the field returned, coverage by zone and round, and what needs attention |
 | `…/data`, `…/data/[observation]` | Every matching observation, 500 at a time, as a table and a plan of one map version, with filters and export; one record on the map version it was recorded with |
 | `…/sites`, `…/sites/[site]`, `…/sites/[site]/packages` | Sites, the plan of each, and its map packages: history, checks, upload from QGIS layers |
+| `…/sites/[site]/zones`, `…/sites/[site]/zones/edit` | Zone identities, version history, server draft editing and publication review |
 | `…/forms`, `…/forms/versions`, `…/forms/versions/[version]` | Forms, their versions, the draft editor and publishing |
 | `…/team`, `…/settings` | Project members and invitations; name, description, timezone and archive (managers only) |
 | `…/qgis` | Maps for QGIS in; records out as CSV, GeoJSON and a codebook |
@@ -135,14 +136,14 @@ Run `pnpm test:auth` for redirect, response-validation and private-cache regress
 - Geologica and Spline Sans Mono, self-hosted through `next/font`, so chrome never waits on a network
 - Lucide icons (`lucide-react`)
 - SVG site plans (`SitePlan`, `MapFrame`) drawn from a map package's GeoJSON and the palettes in `contracts/map-palettes.json`; `fflate` reads the package archive in the browser
-- Client-side CSV, GeoJSON and codebook generation from the loaded observations
+- Server-filtered observation pages, summary and ZIP exports including the codebook and historical zone geometry
 - Progressive Web App manifest and a same-origin offline shell cache
 
 ## What this application deliberately does not do
 
 - **Collect observations.** The collector does that, on a device, offline. A browser form beside it would be a second way to enter the same record and a second thing to keep in step.
-- **Draw zones.** Zones come from the QGIS project a map package is prepared from; the upload carries the exported `zones` layer to the server, which derives the boxes. A second authority beside QGIS would drift from it, so the site page says editing zones on the web is not available yet.
+- **Author the initial ground or ingest imagery.** QGIS supplies the site ground/reference layers. Managers can then edit named Polygon/MultiPolygon zones in server-backed drafts and publish immutable versions through the web editor. See [zone workflow](ZONE-BOUNDARIES.md).
 - **Review, exclude or delete records and projects.** Every uploaded observation is in the exports. Deleting projects, organizations, sites and map packages, and resending invitations, are not available yet; each says so where it would be.
-- **Send email.** DECA Mark does not email invitations. The link and the code are shown once for the person who invites to send.
+- **Promise email delivery without the service.** Addressed invitations can queue transactional email through the backend's Brevo outbox when configured. Link/code sharing remains available; queued is not delivered. See [email setup and evidence](../docs/Brevo-Email.md).
 - **Deliver a package to a device.** The web app stores, versions and offers map packages for download. The collector downloads each site's current package itself (D27).
-- **Claim a sync path of its own.** QGIS reads the live database; exports are for analysis, backup and interoperability, and say so.
+- **Claim a sync path of its own.** Scoped live QGIS access remains a separate provisioning/acceptance task; exports are for analysis, backup and interoperability, and say so.

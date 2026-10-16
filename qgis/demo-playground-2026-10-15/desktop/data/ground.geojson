@@ -1,0 +1,234 @@
+{
+  "type": "FeatureCollection",
+  "name": "SYNTHETIC ground",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-site",
+        "kind": "site",
+        "label": "SYNTHETIC playground",
+        "name": "SYNTHETIC playground",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.5012,
+              42.4451
+            ],
+            [
+              -76.4992,
+              42.4451
+            ],
+            [
+              -76.4992,
+              42.4465
+            ],
+            [
+              -76.5012,
+              42.4465
+            ],
+            [
+              -76.5012,
+              42.4451
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-lawn",
+        "kind": "grass",
+        "label": "North lawn - draw Zone C here",
+        "name": "North lawn - draw Zone C here",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.5011,
+              42.44604
+            ],
+            [
+              -76.4993,
+              42.44604
+            ],
+            [
+              -76.4993,
+              42.4464
+            ],
+            [
+              -76.5011,
+              42.4464
+            ],
+            [
+              -76.5011,
+              42.44604
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-court",
+        "kind": "blacktop",
+        "label": "Court",
+        "name": "Court",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.50105,
+              42.4453
+            ],
+            [
+              -76.5003,
+              42.4453
+            ],
+            [
+              -76.5003,
+              42.44593
+            ],
+            [
+              -76.50105,
+              42.44593
+            ],
+            [
+              -76.50105,
+              42.4453
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-play",
+        "kind": "mulch",
+        "label": "Play area",
+        "name": "Play area",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.50012,
+              42.4453
+            ],
+            [
+              -76.4994,
+              42.4453
+            ],
+            [
+              -76.4994,
+              42.44593
+            ],
+            [
+              -76.50012,
+              42.44593
+            ],
+            [
+              -76.50012,
+              42.4453
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-equipment",
+        "kind": "equipment",
+        "label": "Climber",
+        "name": "Climber",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.49995,
+              42.44546
+            ],
+            [
+              -76.4996,
+              42.44546
+            ],
+            [
+              -76.4996,
+              42.44569
+            ],
+            [
+              -76.49995,
+              42.44569
+            ],
+            [
+              -76.49995,
+              42.44546
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-shelter",
+        "kind": "structure",
+        "label": "Shelter",
+        "name": "Shelter",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.50093,
+              42.44613
+            ],
+            [
+              -76.50063,
+              42.44613
+            ],
+            [
+              -76.50063,
+              42.44632
+            ],
+            [
+              -76.50093,
+              42.44632
+            ],
+            [
+              -76.50093,
+              42.44613
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

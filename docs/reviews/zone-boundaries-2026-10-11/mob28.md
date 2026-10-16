@@ -1,5 +1,7 @@
 # MOB-28 local foundation review
 
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 Baseline: `33faa58` plus the uncommitted mobile/storage/package changes. Acceptance data is synthetic. No persistent or hosted database was reset, no device/release acceptance is claimed, and no commit/push occurred.
 
 ## Delivery state

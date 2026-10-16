@@ -1,20 +1,22 @@
 # API plan (`backend/`)
 
+Reconciled 2026-10-15: [current roadmap](../docs/plan/current-state.md). BE-22 is the authoritative current zone API implementation. BE-17’s bounded-array handoff and BE-18 to BE-20’s `/v2`/feature-flag evidence are historical; their active contract has been superseded. Broader BE-13 Storage, BE-14 viewport/domain analysis and BE-15 live GIS access work remain separate.
+
 This file is part of the [DECA Mark production plan](../docs/plan/README.md) and defines the `BE-*` tasks.
-- The [web flow completion proposal](WEB-FLOW-PLAN.md) scopes the backend work supporting Claude's live-web implementation; task status remains in this file and the other owning plans.
+- The [historical web flow proposal](WEB-FLOW-PLAN.md) records the 2026-10-08 scope; [the current web handoff](WEB-FLOW-HANDOFF.md) points to BE-22’s replacement contract. Task status remains in the owning plans.
 - **Endpoint shapes and the error envelope** are owned by [contracts.md](../docs/plan/contracts.md). Implement them as written there; if one must change, change contracts.md first.
 - **Database objects** these tasks rely on are `DB-*` tasks in [supabase/PLAN.md](../supabase/PLAN.md).
 - **Layering and module boundaries** are in [architecture.md](../docs/plan/architecture.md#layering-inside-each-component).
 
-## Context (updated 2026-09-30)
+## Context (reconciled 2026-10-15)
 
 **Code layout**
-- `main.py` assembles the app and includes routers for tenancy, collection and sites.
+- `main.py` assembles the app and includes routers for identity/tenancy, sites, forms, bound collection, zone drafts and observation analysis.
 - Routers manage authenticated transactions through `deps.py`; services own use cases and raise domain errors; repositories execute SQL from matching `queries/` modules.
 - `errors.py` provides the error envelope, OpenAPI models and exception handler.
 - Pure domain modules live under `domain/`: `forms.py`, `packages.py`, `geojson.py` and `qgis_project.py`.
 
-**Routes:** health/readiness, identity, organizations, projects, memberships, invitations, observations and packages. Stable operation IDs and response schemas are exported without database access.
+**Routes:** health/readiness, identity, organizations, projects, memberships, invitations, forms, UUID-addressed sites/packages, zone drafts/publication, bound observation upload, historical list/detail, summary and export on the sole `/v1` surface. Stable operation IDs and response schemas are exported without database access.
 
 **Authentication** (`auth.py`)
 - Verifies ES256/RS256 against JWKS (`PyJWKClient`, cached 300 s).
@@ -27,12 +29,12 @@ This file is part of the [DECA Mark production plan](../docs/plan/README.md) and
 - Correctness no longer depends on the memberships SELECT policy hiding other members' rows. DB-05 widens that policy for managers.
 
 **Operations**
-- Readiness checks the database and signing keys; startup rejects privileged database roles.
+- Readiness checks the database, required current site/package helper functions and cached signing keys; startup rejects privileged database roles.
 - Request IDs, sanitized JSON logging, optional Sentry, request-size limits and per-process user rate limits are implemented.
 - SQLSTATE determines database error responses; unknown failures are sanitized 500s.
 - Separate runtime/test container stages keep test tooling out of the non-root runtime image.
 
-**Forms.** `domain/forms.py` validates the canonical mobile contract with conditions and dynamic choices. `legacy_forms.py` preserves immutable stored field definitions. Shared-case parity and local legacy upload/readback tests pass.
+**Forms.** `domain/forms.py` validates the canonical contract with conditions and dynamic choices. `legacy_forms.py` remains imported for definition parsing/export metadata; it does not preserve an old flat observation-upload contract. BE-22 owns current exact-bound upload/fingerprint acceptance; dated earlier upload/readback results remain historical evidence.
 
 **Tests.** The suite covers real local Supabase plus pure domain and HTTP boundary behavior. BE-03 preserves the existing upload/package scenarios and adds error-envelope coverage.
 
@@ -286,78 +288,30 @@ Done when: the lifecycle is covered by tests, and publishing Janet's definition 
 
 ### BE-12: The sync upload endpoint for PowerSync
 Status: todo · Phase 2 · Size L · Depends: BE-10, DB-10 · Blocks: MOB-10, QA-03
-Read first: the `POST /v1/sync/upload` semantics in [contracts.md](../docs/plan/contracts.md#post-v1syncupload-semantics); `services/collection.py` and `repositories/collection.py` (the idempotent upload to reuse); [sync-powersync.md](../docs/plan/sync-powersync.md).
+Reconciled scope (2026-10-15): `/v1/sync/upload` and PowerSync remain unimplemented. The earlier legacy `PUT`/body-hash conversion proposal is superseded by CON-06/BE-22 and the pre-launch policy; do not restore a flat serializer or a second observation contract.
+Read first: [the sync plan](../docs/plan/sync-powersync.md), [canonical bound upload contract](../docs/plan/zone-boundaries/contract.md), current `services/collection.py`, and DB-10’s rejection schema.
 Do:
-1. **Accept the body as `{operations: [raw objects]}`**, and validate each operation separately.
-   - One malformed operation becomes one rejected result.
-   - The request itself never fails with 422, because a request-level error gives the client no per-operation answer.
-2. **Each operation runs in its own user transaction, committed synchronously.**
-   - The observation write runs inside a SAVEPOINT (`session.begin_nested()`).
-   - On a validation failure, `IntegrityError`, `DataError` or an RLS violation:
-     1. roll back to the savepoint;
-     2. insert the `upload_rejections` row in the outer transaction;
-     3. commit.
-   - After a database error the transaction is aborted (25P02), so the rejection cannot be written without the savepoint. Never raise to reject.
-3. **Idempotency by content, not by body hash.** When the insert affects no row, load the existing row.
-   - It is an **accepted replay** when `created_by` is the caller, `project_id` matches, and either:
-     - the canonical content matches: `site_id`, `form_version_id`, `observed_at`, the point, `observer_code` and the pruned answers, compared after BE-10 normalization. `device_id` and `app_version` are excluded, because they vary between attempts; or
-     - the stored row came from the legacy `PUT` (`device_id IS NULL`), **and** its content matches once both sides are normalized through BE-10's `shell-v1` adapter. That adapter maps the stored code-keyed answers (`people`, `notes`) to question ids, and the envelope's numbers to JSON numbers. A record that MOB-11 re-sends after a lost response matches this way, even though it can never match the old body hash.
-   - Otherwise, including a legacy row whose content differs, it is rejected with `conflict`, and the stored row is not modified.
-   - Do not compare `upload_hash`. It hashes the raw request body (`services/collection.py`), so an envelope can never match a row written through the legacy `PUT`.
-   - An accepted upload or replay sets `resolved_at` on **every** unresolved rejection for (caller, observation id).
-4. **Rejected results.** Map each of these to a `rejected` result with its code:
-   - validation (BE-10);
-   - no membership or wrong role;
-   - an unknown site or form version;
-   - the same id with different content, or created by another user (`conflict`, step 3);
-   - an unsupported operation or table (`unsupported_operation`);
-   - any other unexpected, non-transient per-operation exception (`internal`, also sent to Sentry). An operation that always fails would otherwise hold back every later record from that user, because PowerSync uploads in order.
-   - **Transient faults are never rejections.** On a BE-02 transient SQLSTATE, stop and answer 503; operations committed earlier in the batch stay committed. The client retries, and the replays are accepted.
-   - A rejection names `project_id` and `organization_id` only when the caller is a member of that project. Otherwise both are NULL, so nobody can plant rows in another tenant's view (DB-10).
-5. **Retired form versions are accepted** (DB-09 step 7). Only an unknown version is rejected.
-6. **Each per-operation result** carries `{id, status, code?, pruned?, user_id}`. The client checks that `user_id` is the account the database belongs to (sync-powersync.md).
-7. **Return 401 for an invalid token and 503 for storage failures only.**
-8. Keep `PUT /v1/projects/{p}/observations/{uuid}` working until MOB-10 ships.
-9. Add rows to QA-01 (cross-org operations are rejected), and add a batch-replay test.
+1. Accept a batch of raw operations and validate each independently, reporting accepted/replayed/rejected results per operation. Preserve the exact current site/package/zone/form bindings and `observation-jcs-1` normalization/fingerprint semantics through the one trusted insert boundary.
+2. Use one caller transaction per operation and a savepoint for the observation write, so validation/constraint rejection can persist its structured rejection after rolling back the failed insert. Already-committed operations survive a later transient 503.
+3. Reauthorize replay with the current caller and exact body; never reassign another account’s data or transform an old experimental practice payload into a current bound record. Clear prior rejection entries on an accepted replay only within authorized scope.
+4. Keep malformed/unsupported/permanent operation failures local to that result; return 401 for invalid authentication and 503 for transient infrastructure faults, without misclassifying an outage as a permanent record rejection.
+5. Add real restricted-role tests for mixed batches, lost responses, duplicate UUID/body conflicts, retired bound forms, cross-tenant rejection visibility, concurrency and transient recovery. Coordinate current-store transition with MOB-11 and per-record result/account verification with MOB-10.
 
-Done when the tests cover:
-- a mixed batch: accepted, replayed, rejected by validation, rejected by a constraint violation placed **before** a valid operation (both get results, and the rejection row exists), and unsupported;
-- an observation created through the legacy `PUT`, then replayed through `/v1/sync/upload` as the faithfully mapped envelope, is accepted, and no rejection is written;
-- the same legacy id sent with changed answers or placement is rejected as `conflict`, and the stored row is unchanged;
-- the same envelope sent twice with a different `app_version` is accepted both times;
-- a user from org B naming org A's project gets a rejection with a NULL project, and A's manager sees nothing;
-- a deadlock mid-batch returns 503, and the earlier operations stay committed;
-- a malformed operation in the batch still gets a 200;
-- rejections are readable by their owner and their project's managers only.
+Done when: mixed batches and replay are accepted/rejected independently, a rejected operation cannot prevent a later valid one, current bound attribution/fingerprints remain unchanged, and QA-01/QA-03 cover the new sync surface. Existing foreground bound-upload work remains MOB-29 and must not wait for an unimplemented PowerSync service.
 
 ### BE-13: Sites, zones and packages in Storage
 Status: doing (step 1 in place 2026-10-07; Storage remains) · Phase 2 · Size L · Depends: DB-12 · Blocks: DB-14, GIS-07, MOB-14, OPS-15, WEB-08
-Zone-feature integration (2026-10-10 proposal): BE-18 owns managed-site geometry publication, historical zone reads and serialized version allocation under [ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md). Those rules supersede the mutable-zone/current-pointer and retry-max-version steps below for managed sites. Storage migration must retain/rehome every referenced historical archive; do not return 410 for a package needed by a draft or observation merely because it predates Storage.
-Done so far: `GET/POST /v1/projects/{p}/sites` and `GET/PATCH …/sites/{code}`. A site reports its newest ready package, that package's zones, extent and centre (from the manifest, still bounding boxes) and its observation count, which replaces the planned `…/zones` route until step 2 stores real polygons. A package can only be prepared with a published form version (422 on `form_version` otherwise).
+Zone-feature integration (reconciled 2026-10-15): BE-22 supersedes BE-18’s earlier route shape and owns current managed-site publication and serialized version allocation under [ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md). Those rules supersede the mutable-zone/current-pointer and retry-max-version steps below for managed sites. Storage migration must retain/rehome every referenced historical archive; do not return 410 for a package needed by a draft or observation merely because it predates Storage.
+Done so far: site discovery/create/edit and immutable package archives operate through BE-22’s UUID-addressed `/v1` contract. Current package zones include full geometry/anchors/digests; bounding boxes are not a readiness fallback. Current and historical packages bind exact forms. The remaining work here is Storage delivery, retention-safe archive relocation, imagery policy and its acceptance; the earlier mutable zone/current-pointer algorithm is superseded by BE-22’s finalizer.
 Needs user: a Storage S3 access key (Project Settings → Storage), provided as a runtime Secret File. It is never committed.
-Read first: `domain/packages.py` (`469-478` bounding-box zones; `31` the empty allow-list); `services/sites.py` and `repositories/sites.py` (`prepare_package`, `read_package_archive`); DB-12.
-Do:
-1. `GET/POST /v1/projects/{p}/sites`, where POST creates a site and requires a manager, and `GET …/sites/{s}/zones`.
-2. On a successful prepare:
-   - write the archive to `site-packages/{org}/{project}/{site}/{version}.zip` in Storage (a sha256-named key is fine);
-   - store `storage_path` and `archive_bytes`, and **stop writing `archive`**:
-     - remove it from `INSERT_PACKAGE` (`queries/sites.py`);
-     - read `archive_bytes` from its column instead of `octet_length(archive)` in `PACKAGES` and `PACKAGE_DETAIL`;
-     - make `PACKAGE_ARCHIVE` read `storage_path`;
-   - insert the `zones` polygons from the `zones` layer (real geometry, not bounding boxes);
-   - set `sites.boundary` from the ground feature;
-   - set `sites.current_package_id` when the state is `ready`.
-3. `GET …/packages/{id}/download` returns `{url, sha256, bytes, expires_at}`, a signed URL valid for 10 minutes.
-   - `GET …/archive` streams from Storage for the web.
-   - A package with `storage_path IS NULL` (from before BE-13) answers 410 `archive_unavailable` on both. DB-14 then retires the column.
-4. Make the imagery allow-list configurable through config (`imagery_hosts: []`).
-5. Fix the version race: on a unique violation, retry `max+1` once, then return 409.
-6. Upload the Training site package (sample geometry from `mobile/src/maps/sample-site.ts`, exported as GeoJSON layers) through the normal pipeline to staging (**Needs user**). Record it in DB-07's notes.
+Read first: `domain/packages.py`, `services/sites.py`, `repositories/sites.py`, BE-22 and DB-12. Re-read current functions rather than relying on historical line numbers.
+Remaining work:
+1. Move archive delivery to Storage with immutable issuer/project/site/package/digest identity. Preserve the existing UUID-addressed discovery, complete geometry, explicit pointer and trusted publication/version allocation; no `max+1` retry or direct pointer update replaces those mechanisms.
+2. Copy and verify original bytes/digests for every referenced historical archive before retiring inline storage (DB-14). Do not answer 410 for a package required by a draft/observation because it predates Storage.
+3. Implement signed download URLs and the web archive transfer against a Storage stub and real authorized acceptance. Exact package identity and digest remain the download contract; incomplete Storage writes cannot activate a package.
+4. Finish configurable imagery policy and separately approved Training/staging package-delivery acceptance. Uploading a new package never rewrites historical references.
 
-Done when:
-- the tests use a Storage stub;
-- a package can be prepared, downloaded through a signed URL, and its sha256 matches;
-- the zones table holds real polygons.
+Done when: Storage-backed current/historical package downloads preserve exact bytes/digests and authorization, failed writes preserve the old current pointer, and local tests plus the approved staging acceptance pass. The underlying zone schema/geometry/publication work is already BE-22/DB-19, not remaining BE-13 work.
 
 ### BE-14: Analysis: observation list, summary, exports
 Status: done (2026-10-15; source and disposable local acceptance) · Phase 3 · Size L · Depends: BE-10, DB-10 · Blocks: WEB-10, WEB-11, WEB-12
@@ -371,6 +325,7 @@ Do:
 
 Done when: existing paging/export tests and bbox acceptance pass; generated OpenAPI and both client declarations include the optional bbox query. Hosted/browser/device acceptance remains separate.
 Verified (2026-10-15): `bbox` scopes pages, totals, summaries and complete exports consistently, including inclusive point boundaries, Inventory exclusion, normalized cursor identity and safe rejection of invalid bounds. A signed loopback HTTP viewer scenario verifies selective filtering, tied pagination, CSV/export metadata agreement and tenant isolation. `pnpm backend:check`, `pnpm backend:test ZONE_API_REHEARSAL=1` (676 tests), `pnpm db:test ZONE_REHEARSAL=1`, both client typechecks and `pnpm plan:check` pass. A second OpenAPI/client declaration generation is byte-identical. No hosted deployment or browser/device acceptance is claimed.
+Completion scope: this closes viewport support on the existing BE-20/BE-22 analysis contract. Export audit integration remains pending DB-13; request logs are not a research audit trail. Any broader clustering or domain-specific analysis needs separately specified product requirements. Browser and hosted acceptance remain separate gates. Exports continue to fail explicitly at resource limits rather than returning silently truncated results.
 
 ### BE-15: GIS access information
 Status: todo · Phase 3 · Size S · Depends: GIS-02 · Blocks: WEB-12

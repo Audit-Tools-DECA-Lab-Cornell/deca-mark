@@ -1,0 +1,78 @@
+{
+  "type": "FeatureCollection",
+  "name": "SYNTHETIC trees",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-tree-1",
+        "kind": "tree",
+        "label": "Tree (synthetic)",
+        "name": "Tree (synthetic)",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -76.50045,
+          42.44632
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-tree-2",
+        "kind": "tree",
+        "label": "Tree (synthetic)",
+        "name": "Tree (synthetic)",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -76.5001,
+          42.44632
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-tree-3",
+        "kind": "tree",
+        "label": "Tree (synthetic)",
+        "name": "Tree (synthetic)",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -76.49975,
+          42.44632
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-tree-4",
+        "kind": "tree",
+        "label": "Tree (synthetic)",
+        "name": "Tree (synthetic)",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -76.4994,
+          42.44632
+        ]
+      }
+    }
+  ]
+}

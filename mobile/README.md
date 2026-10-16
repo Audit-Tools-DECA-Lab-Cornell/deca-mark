@@ -1,5 +1,7 @@
 # DECA Mark mobile collector
 
+Current checkpoint, 2026-10-15: offline package retention, bound sessions/recovery and zone-aware screens are implemented locally. **MOB-29’s bound foreground uploader is implemented and locally verified through automated and disposable API/QGIS acceptance.** Exact immutable upload bodies, full receipt identity checks, structured rejections and reconnect/resume/retry are wired through the existing outbox. See [current acceptance evidence](../docs/reviews/mob29-2026-10-15/README.md) for mobile checks, actual disposable HTTP/SQLite replay/export and native QGIS readback. Simulator/VoiceOver and the physical iPad/Android collector scenario remain pending. Newly merged MOB-03/05/06 provide real gate/Auth/profile/join behavior with local Supabase Auth/Mailpit/API acceptance; the simulator walkthrough remains pending. MOB-07 adds Contour account/profile/sign-out/deletion screens, while account cleanup and upload-action/copy integration remain open. Use [the current roadmap](../docs/plan/current-state.md) and [mobile task status](PLAN.md) for the next sequence; older results below retain their original dates and scope.
+
 A native iOS/Android collector for observational play research: a researcher on a playground
 marks a child on a site map and answers a conditional questionnaire, usually offline, often
 one-handed, often in sun. This app is independent of the Next.js prototype in `../web/`. The
@@ -62,9 +64,9 @@ both, and its content spans the full window width — a deliberate departure fro
   validation of duplicate export columns, dangling references and dependency cycles. Workbook
   rule text is carried as provenance and never executed.
 - **Shared JSON contracts** in [`../contracts/`](../contracts/README.md). The fixture modules import the canonical definitions; `pnpm contracts:forms` generates their input JSON Schema. Python and mobile tests share cases for visibility, hidden-answer pruning, types, duplicate selections, options, numeric ranges, text limits and Unicode whitespace. Numeric answers remain numbers in session state, drafts, exports and stored observations. BE-10's local database upload/readback acceptance passed on 2026-10-03.
-- **Generated API types and typed errors.** `pnpm api:types` reads the backend OpenAPI contract. The uploader validates receipts at runtime and maps coded failures through `src/data/api/errors.ts`. Unknown or malformed errors remain retryable with the local record preserved.
+- **Generated API types and typed errors.** `pnpm api:types` reads the backend OpenAPI contract. The shared client maps coded failures through `src/data/api/errors.ts`; MOB-29’s bound receipt/rejection integration is implemented with local automated/disposable API/QGIS acceptance. Unknown or malformed errors remain retryable with the local record preserved.
 - **Two form versions side by side.** The original practice form is now the `shell-v1`
-  definition, unchanged in record shape and upload payload. `janet-test-v1` implements the
+  definition for local practice; bundled practice records do not upload. `janet-test-v1` implements the
   candidate subset in [the Janet scope](../docs/Janet-Test-Form-Scope.md) — timestamp and
   initials, play event summary, child age range, both play type slots with their subtypes, CARS
   intensity, and the wildlife branch — excluding all 16 hidden workbook rows.
@@ -83,24 +85,19 @@ both, and its content spans the full window width — a deliberate departure fro
   fetches its package archive, checks it against the digest the server recorded, and keeps its
   manifest, layers and forms (`src/packages/hosted/`); nothing is kept unless every part checks. The
   map draws it from its own layers in the map palette; hosted packages carry no imagery, so Aerial is
-  not offered. Its records carry their project and site code and upload there with their zone, round
-  type, first-round answer and placement. Training keeps the practice sites bundled with the app.
+  not offered. Its records freeze the exact project/site/package/zone/form bindings; the locally verified MOB-29 foreground flow persists that body and validates exact receipts, with local automated/disposable API/QGIS acceptance and physical-device acceptance pending. Training keeps the practice sites bundled with the app.
 - **Show my location (D28).** Off until the observer turns it on (the map's location button or the
   Layers menu); permission is asked then, foreground only. A dot and an accuracy circle in the map
   palette; the button centres on the observer or, while placing, brings their position under the
   cross. The fix is never stored, uploaded or kept, and placement stays by hand.
 - **Real sync, relabelled.** Records show the existing queue states — held, on device only,
-  synced, needs attention — with no send button. There is no contested state, because the API has
-  no revisions and no download sync.
-- Supabase email/password sign-in, secure session storage, and automatic foreground uploads on
-  save, reconnect, startup, and resume. Only a matching server receipt marks a record uploaded.
+  synced, needs attention — with no send button. Records are immutable and there is no
+  bidirectional edit sync or contested-record workflow; API receipt revisions do not imply one.
+- Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
 
 ### What is deliberately not done
 
-- `janet-test-v1` is a **draft** version. `backend/src/fieldmaps_api/schemas.py` accepts only
-  `shell-v1`, so records collected against the instrument are held on the device and are never
-  queued against a contract the server would reject. Publishing needs a matching API schema, an
-  immutable `form_versions` row and a GIS view; that is a follow-up, not this change.
+- The canonical `janet-test-v1` definition remains a **draft research instrument**. The API now validates exact package-bound published forms rather than accepting only `shell-v1`; publishing/reviewing the instrument and accepting the native bound workflow are separate requirements. Real package-form installation is locally accepted; MOB-29’s bound transport is implemented with local automated/disposable API/QGIS acceptance.
 - The wildlife branch has **no supplied export columns**, and the interaction type list is not in
   the workbook. Nothing is invented: the columns are empty, the option list is marked as pending
   and the gaps are shown in the app. The same applies to presenting gender (no export column),
@@ -242,56 +239,18 @@ prebuild and a rebuild first, so the checks above establish types, logic and bun
 rendering, gestures, orientation behaviour, MapLibre markers, native auth, or synchronization
 timing. The native acceptance scenario below has not been executed against this version.
 
-Native acceptance scenario for this version:
-
-0. (Collect, October 7) Open Riverside with a Standard round. Drag the map: the pin lifts, the ×
-   stays on the exact spot and the pin drops with a tap when the map settles. Tap the map: the
-   tapped spot comes under the ×; nothing is placed. Move the × out of the zone and confirm
-   "Outside Zone B · in Zone C" and "Switch to Zone C". Press "Place point here" and confirm the
-   stored coordinate equals the one shown. Choose an Inventory round and confirm Zone → Answer →
-   Review → Saved, a check in the zone's map label, and "Inventory Zone C next". Check phone
-   portrait, phone landscape and a tablet with each preferred hand.
-1. Open the Riverside package, tap the map before arming — confirm nothing is placed and the
-   status line does not change. Tap the layer, base, zoom and recentre controls and confirm the
-   same.
-2. Arm "Place a point" and tap once: confirm one point lands, the mode disarms, and the first
-   question opens. Nudge the point and confirm it moves without a new record.
-3. Answer a single-choice question and confirm it advances on its own; press Back and confirm it
-   returns to the previous **visible** question.
-4. Answer the wildlife branch Yes, fill a follow-up, then change it to No: confirm the count of
-   dropped answers is reported and the answers are gone.
-5. Open Review with a required answer empty: confirm the save is blocked and the missing count is
-   named on its row.
-6. Force-quit mid-observation and relaunch: confirm the Resume/Discard prompt appears above the
-   assignments list with the answers intact.
-7. Save a practice (`shell-v1`) record while signed in and connected: confirm it drains with no
-   send button. Confirm an instrument record stays on the device and says why.
-8. On a tablet held upright with Follow the device chosen, choose a round, open the field map,
-   place a point, answer, review and save: confirm the screen stays portrait throughout, every
-   screen fills the width, and the map's style and Layers controls are not covered by the form
-   toggle. Choose Landscape on the Account screen and repeat the workflow holding the tablet
-   upright: confirm every screen stays landscape, and that the choice survives a force quit. Rotate
-   mid-answer with Follow the device and confirm the typed answer, the placed point and the map view
-   are unchanged. Check phone landscape and portrait on every screen, and confirm 844×390 has no
-   horizontal scroll.
-9. (October 8) Signed in as a member of a project with a site: open the site, Download, and confirm
-   the four parts verify and "Set up this session" turns on; remove it and download again. Save a
-   Standard record and a zone inventory and confirm both show Uploaded. Turn on Show my location:
-   one permission prompt, the dot and its circle, the button centres on you (or moves the cross while
-   placing); outside the site the label says how far away you are. Deny permission and confirm the
-   label and the button point to Settings.
+Current native acceptance is the [zone UI verification matrix](ZONE-BOUNDARIES-UI.md#9-verification): phone/tablet layouts and VoiceOver, shared-edge choices, exact v1 recovery after v2 publication, removal refusal, account switching and whole-zone Inventory. MOB-29 has local automated/disposable API and native QGIS acceptance for bound upload/receipt handling; no completed physical-device run is claimed here. Earlier tap-to-arm and practice-upload recipes are superseded by the crosshair flow and local-only bundled practice.
 
 ## Boundaries
 
 The authenticated upload API and account-scoped queue are implemented. Hosted native sign-in and
 two test uploads were exercised before this redesign; the user tested offline save/reconnect, and
 both records were independently verified in hosted PostGIS and QGIS Desktop. See
-[current acceptance evidence](../docs/Supabase-Setup.md). Those records are `shell-v1`; their
-stored shape and upload payload are unchanged here, and they keep listing and uploading.
+[historical acceptance evidence](../docs/Supabase-Setup.md). Those were pre-zone `shell-v1` records; that result does not establish the current UUID-bound upload path. MOB-28 removed the old serializer and MOB-29 remains open.
 
 There is no PowerSync integration, QGIS project importer, edit/download sync, contested-record
 resolution, closed-app background upload, or production variable library. The design's "contested"
-state is not implemented and is not shown, because the API has no revisions to contest.
+state is not implemented or shown: immutable records and receipt revisions do not provide a bidirectional edit-conflict workflow.
 
 Unfinished observations now persist in their own `observation_drafts` table, separate from the
 upload queue, and are offered back after a force quit. Uninstalling the app still removes all
@@ -301,8 +260,7 @@ The sample map is hand-authored training geometry and is not a real QGIS export 
 aerial base is a fixture style, not imagery. The Fall Creek Elementary package is the exception:
 its bases and layers are the QGIS drawings and drone orthomosaic, generated into
 `src/maps/sites/fall-creek/` by `qgis/fall-creek/build.sh` (regenerate, don't edit). It has one
-whole-playground zone and collects the practice form under site id `sample-garden`, so its bundled
-records upload as practice records. A project's own sites arrive as hosted packages
+whole-playground zone and collects locally as bundled practice; those records do not enter the bound upload queue. A project's own sites arrive as hosted packages
 (`src/packages/hosted/`, D27); `src/packages/open.ts` opens either kind, so the field flow is the
 same for both. Nothing on the field screen touches the network.
 
@@ -350,9 +308,7 @@ was removed afterward; this does not establish the rest of the product acceptanc
 | `assets/` | App icon, Android adaptive and themed layers, Play Store icon; sources in `assets/icon-source/` |
 | `plugins/` | Local config plugins: the Android 16 large-screen orientation opt-out |
 
-The SQLite schema is at version 3: version 1 created the observation table, version 2 added the
-account-scoped queue columns, and version 3 adds `observation_drafts`. Migrations run forward
-only and refuse to open a newer database.
+The collector uses local schema version 6, including exact package references and parked drafts. MOB-28’s pre-launch policy resets incompatible schema data/cache; ordinary same-schema restarts preserve current work. See [the package lifecycle](PACKAGE-LIFECYCLE.md) for retention and recovery boundaries.
 
 Native `ios/` and `android/` directories are generated and ignored. Use `app.config.ts` and config plugins for repeatable native configuration. The mobile package has its own dependency lockfile, TypeScript checks, and Biome checks; Next.js tooling is scoped to the separate `web/` directory.
 
@@ -409,18 +365,4 @@ identity mismatches, typed API errors, cached/missing/stale project selections, 
 credentials, and failed marker writes/sign-out attempts. Staging public
 Expo config and an iOS Metro export both pass. No simulator, device, hosted write or release build was tested.
 
-Records move from pending to uploaded only after a matching observation/account/project receipt. Connection/server failures retry with persisted backoff. Rejections preserve the record and show “needs attention”; the Account screen provides an explicit retry. Uploads run while the app is foregrounded; closing the app pauses work until it opens again. Uninstalling removes pending local records.
-
-Connected acceptance scenario:
-
-1. Sign in online to an assigned test account, then disconnect and save a point.
-2. Close/reopen the app offline and verify the point remains pending under that account.
-3. Reconnect with the app open; verify its status becomes uploaded and the UUID appears once in PostGIS.
-4. Interrupt a response and retry; verify no duplicate, then sign out/in and verify account separation.
-5. Open the [configured QGIS project](../qgis/README.md) using its scoped read-only database account and refresh its layer; verify the same location and answers. This connection was verified with both test observations on September 18, 2026.
-
-The next slice is publishing `janet-test-v1`: a matching API schema accepting both versions during
-transition, an immutable `form_versions` row, and a typed GIS view for its answers. The open
-protocol decisions listed in [the Janet scope](../docs/Janet-Test-Form-Scope.md) — the missing
-export columns, the loose-parts collision, the natural materials list, and which answers carry
-forward — must be settled first; the collector surfaces every one of them on the site brief.
+Current upload acceptance remains [MOB-29](PLAN.md#mob-29-collect-and-upload-pinned-zone-observations). The implemented path checks observation/account/project/package/zone receipts before acknowledging, preserves structured permanent rejections and retries the stored UUID/body after a lost response; these behaviors have local automated and disposable API/QGIS acceptance ([evidence](../docs/reviews/mob29-2026-10-15/README.md)). Foreground scheduling does not promise closed-app synchronization. Run the [physical-device matrix](ZONE-BOUNDARIES-UI.md#9-verification), then confirm exact recorded attribution on the server and in QGIS under [QA-07](../docs/plan/verification.md).

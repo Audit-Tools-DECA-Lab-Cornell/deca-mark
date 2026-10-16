@@ -1,0 +1,23 @@
+{
+  "application": "QGIS 4.2.2",
+  "observations_valid": true,
+  "observation_count": 2,
+  "zones_valid": true,
+  "zone_count": 1,
+  "records": [
+    {
+      "round_type": "inventory",
+      "null_geometry": true,
+      "map_version": 1,
+      "package_id": "39a03ca3-c092-4c74-a97e-fe08ba54458c",
+      "zone_id": "dffaf6fa-d438-40cf-83b2-4c2f908d5692"
+    },
+    {
+      "round_type": "standard",
+      "null_geometry": false,
+      "map_version": 1,
+      "package_id": "39a03ca3-c092-4c74-a97e-fe08ba54458c",
+      "zone_id": "dffaf6fa-d438-40cf-83b2-4c2f908d5692"
+    }
+  ]
+}

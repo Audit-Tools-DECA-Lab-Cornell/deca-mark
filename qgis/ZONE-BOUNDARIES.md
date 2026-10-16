@@ -2,7 +2,7 @@
 
 [Master plan](../docs/plan/zone-boundaries/README.md) · [Canonical contract](../docs/plan/zone-boundaries/contract.md) · [Database specification](../supabase/ZONE-BOUNDARIES.md) · [GIS task status](PLAN.md)
 
-This handoff follows CON-06's current contract. DB-19 must install the fresh baseline before BE-22 provides the canonical API/export behavior. Earlier GIS-09 implementation and evidence must be rechecked against that baseline; they do not prove current-contract or hosted compliance.
+This specification follows CON-06’s current contract. DB-19 and BE-22 now supply the current baseline and API/export behavior with local acceptance. GIS-09’s 2026-10-11 Desktop/provider evidence predates that rewrite; it does not prove current-contract Desktop or hosted compliance. See the [current roadmap](../docs/plan/current-state.md) and [current export versus historical tooling guide](zone-boundaries/README.md).
 
 Map versions v1 and v2 identify successive per-site packages. Both use the only API prefix, `/v1`, and the single zone-aware archive format.
 
@@ -28,7 +28,7 @@ Keep multipart geometry as one MultiPolygon. Count observation IDs, not polygon 
 
 ## Canonical exports and imports
 
-Read `GET /v1/projects/{project_id}/observations/export?format=geojson` and CSV with the same authorized filters. Each ZIP contains observations, codebook, metadata, forms and historical zones from one snapshot. Preserve `package_id`, `package_version`, `zone_id`, `zone_code`, recorded `zone_label` and `spatial_support`.
+Read `GET /v1/projects/{project_id}/observations/export?format=geojson` and CSV with the same authorized filters. Each ZIP contains observations, codebook, metadata, forms and historical zones from one snapshot. Preserve export `package_id`, `map_version`, `zone_id`, `zone_code`, recorded `zone_label_at_capture` and `spatial_support`; API/SQL metadata uses `package_version` for that same recorded map version.
 
 Event GeoJSON has null geometry for Inventory, with an exact package+zone reference to the historical zone file. Add a separate clearly labelled inventory polygon layer by that join. Map/table/export filters and record counts must agree. Separate downloads during concurrent writes are not themselves one shared snapshot.
 
@@ -42,4 +42,4 @@ Compare authorized SQL projections with complete API CSV/GeoJSON exports on pack
 
 Repeat scoped visibility and Training isolation checks after DB-19/BE-22. A loaded export or SQL readback does not prove a live Desktop connection. Record actual QGIS provider/rendering, Desktop interaction and live-reader evidence separately in [QA-07](../docs/plan/verification.md).
 
-The [existing projection/export guide](zone-boundaries/README.md) and [earlier local report](../docs/reviews/zone-boundaries-2026-10-11/gis09.md) require alignment with the current contract before reuse. Task status remains in [PLAN.md](PLAN.md); hosted/live acceptance is not implied by this specification.
+The [projection/export guide](zone-boundaries/README.md) separates current manual import from the historical `prepare.py`/`render.py` adapters, which still require removed fields and need alignment before reuse. The [earlier local report](../docs/reviews/zone-boundaries-2026-10-11/gis09.md) remains historical evidence. Task status remains in [PLAN.md](PLAN.md); hosted/live acceptance is not implied by this specification.

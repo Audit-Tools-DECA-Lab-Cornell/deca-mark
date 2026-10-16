@@ -4,7 +4,7 @@ The [single-path contract](../../docs/plan/zone-boundaries/contract.md) is autho
 
 | Artifact | Inputs and expected results | Acceptance owner |
 | --- | --- | --- |
-| `geometry.cases.json` | Named GeoJSON, structural validity, topology, point coverage, containment, normalization and inclusive limits | Backend geometry tests, database topology tests and MOB-29 geometry adapters |
+| `geometry.cases.json` | Named GeoJSON, structural validity, topology, point coverage, containment, normalization and inclusive limits | Backend geometry tests, database topology tests and mobile `zoneCovers`/`coveringZones` coverage adapters |
 | `publication.cases.json` | Initial state and ordered operations; explicit first-upload identity mapping; concurrency, replay and validation change classifications | DB-19 and BE-22 real SQL/API acceptance |
 | `upload.cases.json` | One nested-answer envelope, canonical fingerprint vectors, receipt and historical-attribution scenarios | CON-06 artifact integrity; BE-22 production upload; MOB-29 serializer and receipt acceptance |
 
@@ -23,4 +23,4 @@ cd backend
 .venv/bin/python -m pytest tests/test_zone_case_integrity.py tests/test_zone_geometry_contract.py tests/test_zone_upload_contract.py tests/test_zone_upload_fingerprint.py -q
 ```
 
-CON-06 updates the shared contract and artifact adapters. DB-19 supplies the current database baseline; BE-22 supplies production models, routes, fingerprints and regenerated OpenAPI/client declarations. Until those tasks pass, test-only contract models and independent RFC 8785 checks establish fixture consistency only. Explicitly skipped production obligations remain pending and must be replaced by real implementation checks in BE-22. Stateful publication, uploads, filesystem retention, browser, device and QGIS scenarios require their own runtime evidence.
+CON-06 defines the shared contract and artifacts; DB-19 and BE-22 now supply the current SQL/API implementation with recorded local acceptance in their owning [database](../../supabase/PLAN.md) and [backend](../../backend/PLAN.md) plans. The 2026-10-12 CON-06 report’s skipped production obligations describe its earlier fixture-only phase, not current implementation status. Mobile exact coverage is implemented and component-tested; the bound serializer, receipt/rejection behavior and physical-device acceptance remain MOB-29. Browser, hosted and current-contract QGIS acceptance remain [QA-07](../../docs/plan/verification.md); artifact integrity alone never proves them.

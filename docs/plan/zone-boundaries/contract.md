@@ -4,6 +4,8 @@
 
 This contract follows the owner's [pre-launch compatibility policy](../README.md#pre-launch-compatibility-policy-2026-10-11). There are no real users, server and device data are reset when the schema changes, and nothing here exists to keep old data, old clients, old formats or an older API version working. The 2026-10-11 rewrite replaces CON-05's dual-path design. BE-22 and DB-19 now implement the single API path and current schema locally; the earlier BE-18 through BE-20 implementation served dual paths. Hosted and client-device acceptance remains part of QA-07. The [cleanup](#what-the-rewrite-removed) records the removed behavior. Any change to this contract needs a coordinated update of backend, database, both clients and the shared cases.
 
+Implementation navigation and remaining acceptance: [current position](../current-state.md). Task statuses remain in their owning plans; this file defines contract behavior.
+
 ## What the rewrite removed
 
 Every item below is deleted. None is retained or emulated:

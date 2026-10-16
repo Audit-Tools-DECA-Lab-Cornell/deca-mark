@@ -67,17 +67,17 @@ describe("Durable package references", () => {
     }
   });
 
-  it("holds bound records without acknowledging or retrying until the current uploader is ready", async () => {
+  it("queues retained bound records and acknowledges only a complete exact receipt", async () => {
     const { db, sqlite } = await memoryDatabase();
     try {
       await installPackage(db, owner, entry);
       await saveObservation(db, boundRecord, owner);
       expect(sqlite.prepare("SELECT sync_state FROM observations").get()).toEqual({
-        sync_state: "local-only",
+        sync_state: "pending",
       });
       sqlite.exec("UPDATE observations SET sync_state = 'needs-attention';");
       await retryAttention(db, owner);
-      expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
+      expect(await pendingObservations(db, owner, Date.now())).toHaveLength(1);
       await acknowledge(db, owner, {
         observation_id: boundRecord.id,
         project_id: identity.projectId,
@@ -86,7 +86,7 @@ describe("Durable package references", () => {
         received_at: boundRecord.createdAt,
       });
       expect(sqlite.prepare("SELECT sync_state, server_receipt FROM observations").get()).toEqual({
-        sync_state: "needs-attention",
+        sync_state: "pending",
         server_receipt: "",
       });
       expect((await removePackage(db, owner, identity)).reasons.records).toBe(1);

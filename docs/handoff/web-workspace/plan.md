@@ -1,5 +1,7 @@
 # Plan: make the web workspace real, restore the purple icon, real identity, remove the sample and set-up
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../plan/current-state.md) and [web task owners](../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 ## Context
 
 Janet (DECA Lab owner, Play Study manager) starts using DECA Mark today. On the web today:

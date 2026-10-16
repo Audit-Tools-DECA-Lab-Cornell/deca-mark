@@ -1,0 +1,183 @@
+src/storage/bound-upload-store.test.ts:55:23 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    53 │       await saveObservation(db, boundRecord, owner);
+    54 │       const stored = sqlite.prepare("SELECT payload,sync_state FROM observations").get();
+  > 55 │       expect(stored?.["sync_state"]).toBe("pending");
+       │                       ^^^^^^^^^^^^
+    56 │       const first = await pendingObservations(db, owner, Date.now());
+    57 │       expect(first[0]?.body).toBe(serializeBoundObservation(boundRecord));
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    55 │ ······expect(stored?.["sync_state"]).toBe("pending");
+       │                      --          --                  
+
+src/storage/bound-upload-store.test.ts:109:76 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    107 │           .userId,
+    108 │       });
+  > 109 │       expect(sqlite.prepare("SELECT sync_state FROM observations").get()?.["sync_state"]).toBe(
+        │                                                                            ^^^^^^^^^^^^
+    110 │         "local-only",
+    111 │       );
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    109 │ ······expect(sqlite.prepare("SELECT·sync_state·FROM·observations").get()?.["sync_state"]).toBe(
+        │                                                                           --          --       
+
+src/storage/bound-upload-store.test.ts:159:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    157 │         sqlite
+    158 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 159 │           .get()?.["count"],
+        │                    ^^^^^^^
+    160 │       ).toBe(0);
+    161 │     } finally {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    159 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/bound-upload-api.acceptance.test.ts:22:27 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    20 │ import { serializeBoundObservation } from "./wire-body";
+    21 │ 
+  > 22 │ const input = process.env["MOB29_BOUND_API_FIXTURE"];
+       │                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+    23 │ it.skipIf(!input)(
+    24 │   "uploads exact saved v1 point and whole-zone Inventory after SQLite restart and v2 publication through the actual API",
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     20  20 │   import { serializeBoundObservation } from "./wire-body";
+     21  21 │   
+     22     │ - const·input·=·process.env["MOB29_BOUND_API_FIXTURE"];
+         22 │ + const·input·=·process.env.MOB29_BOUND_API_FIXTURE;
+     23  23 │   it.skipIf(!input)(
+     24  24 │     "uploads exact saved v1 point and whole-zone Inventory after SQLite restart and v2 publication through the actual API",
+  
+
+src/sync/bound-upload-api.acceptance.test.ts:183:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    181 │         sqlite
+    182 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 183 │           .get()?.["count"],
+        │                    ^^^^^^^
+    184 │       ).toBe(1);
+    185 │       await retryAttention(db, owner);
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    183 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/bound-upload-api.acceptance.test.ts:190:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    188 │         sqlite
+    189 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 190 │           .get()?.["count"],
+        │                    ^^^^^^^
+    191 │       ).toBe(2);
+    192 │       expect(sqlite.prepare("SELECT id,payload FROM observations ORDER BY id").all()).toEqual(
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    190 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/bound-upload-api.acceptance.test.ts:205:26 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    203 │       const storedReceipt = sqlite
+    204 │         .prepare("SELECT server_receipt FROM observations WHERE id = ?")
+  > 205 │         .get(point.id)?.["server_receipt"];
+        │                          ^^^^^^^^^^^^^^^^
+    206 │       expect(JSON.stringify(replay.receipt)).toBe(storedReceipt);
+    207 │       const changedPoint = {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    205 │ ········.get(point.id)?.["server_receipt"];
+        │                         --              -- 
+
+src/sync/coordinator.test.ts:70:76 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    68 │         serializeBoundObservation(boundRecord),
+    69 │       ]);
+  > 70 │       expect(sqlite.prepare("SELECT sync_state FROM observations").get()?.["sync_state"]).toBe(
+       │                                                                            ^^^^^^^^^^^^
+    71 │         "synced",
+    72 │       );
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    70 │ ······expect(sqlite.prepare("SELECT·sync_state·FROM·observations").get()?.["sync_state"]).toBe(
+       │                                                                           --          --       
+
+src/sync/coordinator.test.ts:205:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    203 │         sqlite
+    204 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 205 │           .get()?.["count"],
+        │                    ^^^^^^^
+    206 │       ).toBe(27);
+    207 │     } finally {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    205 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/provider.test.tsx:144:20 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    142 │         sqlite
+    143 │           .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+  > 144 │           .get()?.["count"],
+        │                    ^^^^^^^
+    145 │       ).toBe(3);
+    146 │     } finally {
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    144 │ ··········.get()?.["count"],
+        │                   --     -- 
+
+src/sync/provider.test.tsx:238:76 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    236 │       await flush();
+    237 │       expect(calls).toBe(2);
+  > 238 │       expect(sqlite.prepare("SELECT sync_state FROM observations").get()?.["sync_state"]).toBe(
+        │                                                                            ^^^^^^^^^^^^
+    239 │         "synced",
+    240 │       );
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    238 │ ······expect(sqlite.prepare("SELECT·sync_state·FROM·observations").get()?.["sync_state"]).toBe(
+        │                                                                           --          --       
+
+Checked 23 files in 71ms. No fixes applied.
+Found 11 infos.

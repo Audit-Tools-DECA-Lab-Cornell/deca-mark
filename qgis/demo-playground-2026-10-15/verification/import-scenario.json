@@ -1,0 +1,45 @@
+{
+  "artifact": "janet-synthetic-playground.qgz",
+  "issues": [],
+  "layers": [
+    {
+      "name": "zones",
+      "features": 2
+    },
+    {
+      "name": "paths",
+      "features": 1
+    },
+    {
+      "name": "trees",
+      "features": 4
+    },
+    {
+      "name": "ground",
+      "features": 6
+    }
+  ],
+  "checks": [
+    {
+      "step": "source-project",
+      "state": "passed",
+      "detail": "janet-synthetic-playground.qgs \u00b7 4 vector and 0 raster layers \u00b7 EPSG:4326"
+    },
+    {
+      "step": "layer-sources",
+      "state": "passed",
+      "detail": "Every vector layer in the project was supplied: ground, paths, trees, zones"
+    },
+    {
+      "step": "coordinate-reference",
+      "state": "passed",
+      "detail": "4 layers in WGS 84 longitude/latitude, as the database and the collector both read; project drawn in EPSG:4326"
+    },
+    {
+      "step": "imagery-licence",
+      "state": "passed",
+      "detail": "The project references no raster layer"
+    }
+  ],
+  "scope": "Actual importer and source preparation; no database publication or hosted/device claim"
+}

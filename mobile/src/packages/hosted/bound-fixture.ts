@@ -78,6 +78,7 @@ export function boundFixture(manifest: unknown = boundManifest, layers = boundLa
         "layers/zones.json": layers.zones,
       }).map(([name, value]) => [name, strToU8(JSON.stringify(value))]),
     ),
+    { mtime: new Date("2026-10-11T10:00:00Z") },
   );
   const sha256 = async (value: Uint8Array) => createHash("sha256").update(value).digest("hex");
   const site = {

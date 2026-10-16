@@ -2,7 +2,7 @@
 
 [Master plan](../docs/plan/zone-boundaries/README.md) · [Canonical contract](../docs/plan/zone-boundaries/contract.md) · [Backend task status](PLAN.md)
 
-This is the CON-06 implementation handoff for the current contract. Complete DB-19's fresh database baseline before BE-22 replaces the API behavior. Earlier BE-18 to BE-20 implementation and local evidence do not establish compliance with this rewrite. This document records requirements, not deployed behavior.
+This is the current CON-06 behavior specification. DB-19’s baseline and BE-22’s sole `/v1` implementation have local acceptance, recorded in their owning [plans](PLAN.md#be-22-serve-one-zone-api-path). BE-18 to BE-20’s dated `/v2` and feature-flag descriptions are historical and superseded by BE-22. This specification does not establish hosted deployment or client acceptance; follow the [current roadmap](../docs/plan/current-state.md).
 
 The only API prefix is `/v1`. The only package archive has `format: 1` and contains zone identities, full geometry and bound forms. Map versions `v1` and `v2` mean successive per-site packages; both use the same API.
 
@@ -10,7 +10,7 @@ The only API prefix is `/v1`. The only package archive has `format: 1` and conta
 
 Read the backend [README](README.md), the full canonical contract, and the focused schemas, routers, services, repositories and queries for sites, collection, zones and observation analysis. Preserve thin routers, services owning domain decisions, repositories owning SQL and request-local authenticated transactions. The API role remains restricted by database authorization.
 
-BE-22 consumes DB-19's baseline. The contract coordinator regenerates OpenAPI-derived client types after the API implementation, twice to prove a stable second run. Clients runtime-parse downloaded and cached data. No client enables a path merely because a specification or generated fixture exists.
+BE-22 consumes DB-19’s baseline; OpenAPI-derived client types were regenerated with a stable second run as recorded in [PLAN.md](PLAN.md#be-22-serve-one-zone-api-path). Regenerate together after future contract changes. Clients runtime-parse downloaded and cached data. No client enables a path merely because a specification or generated fixture exists.
 
 ## Package creation and discovery
 

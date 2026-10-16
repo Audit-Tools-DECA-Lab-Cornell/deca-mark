@@ -1,5 +1,9 @@
 # Zone boundaries: principal engineering review
 
+> Source links to retired migrations below are rendered as historical path citations because DB-19 consolidated them into the current baseline.
+
+> Historical evidence for the date/revision below. It is not a current task board or hosted-health check. See [current position and next work](../../plan/current-state.md) and the owning plans for later implementation and remaining acceptance.
+
 **Recommendation: continue with adjustments. Reopen DB-16 and BE-18 for focused corrections; keep publication disabled. Preserve the architecture.**
 
 Review date: 2026-10-11. Comparison baseline: `1c8a5eb`. Reviewed HEAD: `6a9028e880f586ee7b9d7a8fc1d4573ebf446f1b`, plus the modified and untracked working tree. This is an assessment, not release approval. No implementation, canonical plan, migration, hosted service, or Git history was changed. This report and synthetic audit evidence are the only new deliverables.
@@ -31,12 +35,12 @@ The six zone migrations are:
 
 | Migration | Responsibility |
 |---|---|
-| [20261010120000_zone_foundation.sql](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261010120000_zone_foundation.sql:1) | Identities, snapshots, drafts, publication audit, site state, bindings, RLS, immutability |
-| [20261011120000_zone_geometry.sql](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011120000_zone_geometry.sql:1) | Geometry validation, normalization, coordinate serialization/digests |
-| [20261011121000_zone_drafts.sql](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011121000_zone_drafts.sql:1) | Draft lifecycle, site serialization, validation |
-| [20261011122000_zone_publication.sql](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011122000_zone_publication.sql:1) | Atomic publication, managed imports, replay, legacy-write guards |
-| [20261011123000_zone_observation_binding.sql](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011123000_zone_observation_binding.sql:1) | Server-side v2 binding, point coverage, inventory anchors |
-| [20261011124000_zone_api_validation.sql](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011124000_zone_api_validation.sql:1) | API-facing validation and capability helpers |
+| `20261010120000_zone_foundation.sql` (historical path: `supabase/migrations/20261010120000_zone_foundation.sql:1`) | Identities, snapshots, drafts, publication audit, site state, bindings, RLS, immutability |
+| `20261011120000_zone_geometry.sql` (historical path: `supabase/migrations/20261011120000_zone_geometry.sql:1`) | Geometry validation, normalization, coordinate serialization/digests |
+| `20261011121000_zone_drafts.sql` (historical path: `supabase/migrations/20261011121000_zone_drafts.sql:1`) | Draft lifecycle, site serialization, validation |
+| `20261011122000_zone_publication.sql` (historical path: `supabase/migrations/20261011122000_zone_publication.sql:1`) | Atomic publication, managed imports, replay, legacy-write guards |
+| `20261011123000_zone_observation_binding.sql` (historical path: `supabase/migrations/20261011123000_zone_observation_binding.sql:1`) | Server-side v2 binding, point coverage, inventory anchors |
+| `20261011124000_zone_api_validation.sql` (historical path: `supabase/migrations/20261011124000_zone_api_validation.sql:1`) | API-facing validation and capability helpers |
 
 The original plan is a useful design baseline, not evidence that any of these files are deployed. Hosted migration state and deployed publication settings were not inspected.
 
@@ -117,9 +121,9 @@ No task needs wholesale elimination. WEB-28/29 now serving as acceptance gates i
 
 **Evidence: execution-confirmed with signed HTTP requests and a committed database result.** A synthetic manager begins publication. After archive preparation, another transaction holds the site row. The finalizer checks manager permission, then waits on that row. A separate authorized admin request changes the manager to viewer and returns 204. After the site lock is released, publication returns 201 and a publication row exists.
 
-The critical order is in [lock_zone_site](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011121000_zone_drafts.sql:68): `assert_active_user` and `has_project_role` precede `SELECT … FOR UPDATE`. [finalize_zone_package](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011122000_zone_publication.sql:52) uses that helper, then mutates as SECURITY DEFINER. Successful [backend finalization](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/services/zone_publication.py:58) reads the resulting package, which a viewer is allowed to read; that read does not restore manager authorization.
+The critical order is in `lock_zone_site` (historical path: `supabase/migrations/20261011121000_zone_drafts.sql:68`): `assert_active_user` and `has_project_role` precede `SELECT … FOR UPDATE`. `finalize_zone_package` (historical path: `supabase/migrations/20261011122000_zone_publication.sql:52`) uses that helper, then mutates as SECURITY DEFINER. Successful [backend finalization](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/services/zone_publication.py:58) reads the resulting package, which a viewer is allowed to read; that read does not restore manager authorization.
 
-**Root cause:** membership mutations and zone finalization do not share an authorization serialization boundary. The existing membership function takes an organization advisory lock, while publication only takes the site lock. See [change_project_member](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20260926210846_tenancy_functions.sql:237).
+**Root cause:** membership mutations and zone finalization do not share an authorization serialization boundary. The existing membership function takes an organization advisory lock, while publication only takes the site lock. See `change_project_member` (historical path: `supabase/migrations/20260926210846_tenancy_functions.sql:237`).
 
 **Impact:** removing mutation authority does not reliably stop an in-flight map publication. This violates the intended commit-boundary/defined-ordering requirement. No cross-tenant leak or historical observation corruption was demonstrated. Publication defaults off, which limits current rollout exposure; it does not repair the underlying function.
 
@@ -131,7 +135,7 @@ The critical order is in [lock_zone_site](/Users/praty/Desktop/StudentJob.nosync
 
 **Evidence: execution-confirmed retirement block plus source-confirmed absence of a replacement path.** The probe adopts a site, retires its play form through the public API (200), creates another draft (201), then validates it as not ready and receives `form_not_in_package` on publication (422).
 
-[Draft cloning](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011121000_zone_drafts.sql:117) inherits the exact bindings. [Validation](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011121000_zone_drafts.sql:209) requires those versions to be published. [Managed finalization](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011122000_zone_publication.sql:88) inherits inventory from the base and rejects a different play form. The existing [retirement operation](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/services/forms.py:177) has no current-package replacement requirement. Published/retired form immutability is intentional and should remain.
+`Draft cloning` (historical path: `supabase/migrations/20261011121000_zone_drafts.sql:117`) inherits the exact bindings. `Validation` (historical path: `supabase/migrations/20261011121000_zone_drafts.sql:209`) requires those versions to be published. `Managed finalization` (historical path: `supabase/migrations/20261011122000_zone_publication.sql:88`) inherits inventory from the base and rejects a different play form. The existing [retirement operation](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/services/forms.py:177) has no current-package replacement requirement. Published/retired form immutability is intentional and should remain.
 
 **Root cause:** the [contract's adoption/form paragraph](/Users/praty/Desktop/StudentJob.nosync/field-ops/docs/plan/zone-boundaries/contract.md:155) explicitly excludes changing forms, while the product already supports form publication and retirement. The implementation follows this part of the plan; the plan is incomplete.
 
@@ -145,7 +149,7 @@ The critical order is in [lock_zone_site](/Users/praty/Desktop/StudentJob.nosync
 
 **Evidence: execution-confirmed.** A zones feature with numeric `properties.id: 123` matched the string mapping `source_feature_id: "123"` and published format 2 with HTTP 201.
 
-[zone_import_input](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011122000_zone_publication.sql:22) validates the mapping ID's type but compares the feature ID with `#>>`, which converts JSON scalar values to text. [PackageRequest.layers](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/zone_import_schemas.py:24) preserves arbitrary JSON, so it does not reject this before SQL. The frozen contract requires exact string feature IDs.
+`zone_import_input` (historical path: `supabase/migrations/20261011122000_zone_publication.sql:22`) validates the mapping ID's type but compares the feature ID with `#>>`, which converts JSON scalar values to text. [PackageRequest.layers](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/zone_import_schemas.py:24) preserves arbitrary JSON, so it does not reject this before SQL. The frozen contract requires exact string feature IDs.
 
 **Impact:** the identity boundary accepts inputs outside its contract. It can conceal malformed imported identities and create inconsistent mapping behavior between clients. The demonstrated case did not corrupt an existing stable UUID or bypass tenant isolation; that is why this is P2 rather than P1.
 
@@ -157,7 +161,7 @@ The critical order is in [lock_zone_site](/Users/praty/Desktop/StudentJob.nosync
 
 **Evidence: execution-confirmed work duplication; larger-scale outage risk is source-supported, not load-tested.** Two unchanged discovery requests for one managed site caused two complete archive extraction subprocesses. The synthetic archive was only about 1.9 KB; observed request durations were approximately 230–245 ms in that probe.
 
-[zone_discovery.list_sites](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/services/zone_discovery.py:49) fetches and extracts each archive serially while holding the request's database transaction. This includes already managed packages, although [zone_authoring_available](/Users/praty/Desktop/StudentJob.nosync/field-ops/supabase/migrations/20261011124000_zone_api_validation.sql:36) already reads their stored site boundary. The [read route](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/routers/zones.py:44) also uses the same [two-slot, 45-second limiter](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/services/zones.py:45) as publication.
+`zone_discovery.list_sites` (historical path: `backend/src/fieldmaps_api/services/zone_discovery.py:49`) fetches and extracts each archive serially while holding the request's database transaction. This includes already managed packages, although `zone_authoring_available` (historical path: `supabase/migrations/20261011124000_zone_api_validation.sql:36`) already reads their stored site boundary. The [read route](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/routers/zones.py:44) also uses the same [two-slot, 45-second limiter](/Users/praty/Desktop/StudentJob.nosync/field-ops/backend/src/fieldmaps_api/services/zones.py:45) as publication.
 
 **Impact:** routine discovery cost grows with site count and package processing cost. Read traffic can consume publication capacity; one archive timeout can fail the whole list. It is unnecessary work in the intended manager entry path.
 

@@ -1,5 +1,7 @@
 # Sitemap: every page, what it does, and what works today
 
+> Historical route/design inventory, reconciled by links on October 15. Web/mobile marks below describe their stated inspection dates and are not current task status. For implemented zone/editor routes and remaining acceptance, use [web README](../../web/README.md), [mobile README](../../mobile/README.md) and [current position](../plan/current-state.md).
+
 Part of the [design track](README.md), stages 0 and 1. Draft of 2026-10-01, written from the code, the READMEs and the plan files. The stage 0 screenshots are still to come. On 2026-10-03 the target paths in §3 and §4 were renamed to the Contour designs and D21; the status marks were not changed. On 2026-10-09 the web parts (§1, §2, §3 and the web decisions) were rewritten to match `web/src/app` after WEB-27 (D30): every web page is live. The mobile parts are unchanged.
 
 **Status legend**

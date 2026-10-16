@@ -1,6 +1,6 @@
 # Mobile sync with PowerSync
 
-This file is part of the [DECA Mark production plan](README.md) and defines the `SYNC-*` tasks. It is the design for decision D2 (PowerSync now). The implementation is spread across components, and this file lists those tasks in order.
+This file is part of the [DECA Mark production plan](README.md) and defines the `SYNC-*` tasks. It is the gated target design for D2. D27 moved hosted sites/forms onto the existing SQLite outbox first; PowerSync has not replaced that transport. Finish MOB-29 and QA-07 without introducing a new engine. SYNC-01 remains the gate before the later PowerSync lane. The implementation is spread across components, and this file lists those tasks in order.
 
 | Order | Task | Where | What |
 |---|---|---|---|
@@ -47,92 +47,33 @@ Research basis: PowerSync docs verified on 2026-09-22 (links inline). Treat anyt
 
 ## Streams (edition 3)
 
-This is the planned content of `powersync/sync-config.yaml` (SYNC-02 creates it). Sync Rules are deprecated in 2027, so use Sync Streams only.
+SYNC-02 must author and verify `powersync/sync-config.yaml` after SYNC-01 and the current-schema DB-11/DB-12/DB-14 prerequisites. No executable stream YAML is approved here. The September prototype referenced the removed `fieldmaps.zones` table, a nonexistent `sites.current_package_id`, numeric rounds and obsolete observation fields; it has been removed rather than left as a runnable template.
 
-```yaml
-config: { edition: 3 }
-streams:
-  me:
-    auto_subscribe: true
-    queries:
-      - SELECT *, user_id AS id FROM "fieldmaps"."profiles" WHERE user_id = auth.user_id()
-      - SELECT *, user_id || '.' || project_id AS id FROM "fieldmaps"."project_memberships" WHERE user_id = auth.user_id()
-      - SELECT *, user_id || '.' || organization_id AS id FROM "fieldmaps"."organization_members" WHERE user_id = auth.user_id()
-  workspace:
-    auto_subscribe: true
-    with:
-      my_projects: SELECT project_id FROM "fieldmaps"."project_memberships" WHERE user_id = auth.user_id()
-    queries:
-      - SELECT * FROM "fieldmaps"."projects" WHERE id IN my_projects
-      - SELECT * FROM "fieldmaps"."sites" WHERE project_id IN my_projects
-      # package_id tells the zones of each package version apart (unique per site, package, code)
-      - SELECT id, organization_id, project_id, site_id, package_id, code, name, ST_AsGeoJSON(geom) AS geometry FROM "fieldmaps"."zones" WHERE project_id IN my_projects
-      # retired versions stay on devices: drafts and records collected on them must keep rendering
-      - SELECT * FROM "fieldmaps"."form_versions" WHERE project_id IN my_projects AND state IN ('published', 'retired')
-      # sites.* carries current_package_id (DB-12); site_packages rows stay immutable
-      - SELECT id, organization_id, project_id, site_id, form_version_id, version, state, manifest, archive_bytes, archive_sha256, prepared_at FROM "fieldmaps"."site_packages" WHERE project_id IN my_projects AND state = 'ready'
-      - SELECT * FROM "fieldmaps"."assignments" WHERE project_id IN my_projects
-  my_observations:
-    auto_subscribe: true
-    query: |
-      SELECT id, organization_id, project_id, site_id, form_version_id, zone_code, package_version,
-             round, context, gps_accuracy_m,
-             observer_code, observed_at, received_at, revision, answers,
-             ST_X(geom) AS longitude, ST_Y(geom) AS latitude
-      FROM "fieldmaps"."observations"
-      WHERE created_by = auth.user_id() AND deleted_at IS NULL
-        AND project_id IN (SELECT project_id FROM "fieldmaps"."project_memberships" WHERE user_id = auth.user_id())
-  my_rejections:
-    auto_subscribe: true
-    query: SELECT * FROM "fieldmaps"."upload_rejections" WHERE user_id = auth.user_id() AND resolved_at IS NULL
-```
+Use the current canonical baseline and exact form/package bindings:
 
-**Rules for editing the streams:**
-- Every query returns an `id` column. Alias the primary key when it is not called `id`, as `profiles` and the membership tables do.
-- Every query filters on `auth.user_id()`, directly or through `my_projects`.
-- `subscription.parameter()` and `connection.parameter()` are set by the client. They may only narrow data that is already scoped by `auth.user_id()`.
-- Adding a stream or a column means updating QA-02's expected-row fixtures in the same change.
-- Per-user caps are 1,000 buckets and 1,000 parameter results. Avoid `OR` combined with subqueries.
-- **Unverified.** `ST_X`, `ST_Y` and `ST_AsGeoJSON` on `extensions.geometry` (not `public.geometry`) is spike criterion 2.
-- **Training privacy.**
-  - An observer only ever syncs their **own** observations, so trainees never see each other's records.
-  - `my_projects` includes Training, but only `projects`, `sites`, `zones`, `form_versions`, `site_packages` and `assignments` rows are synced through it. None of those are per-person.
-  - Other observers' records are a post-pilot, on-demand stream, and only if Janet asks for it ([decisions.md](decisions.md#open-questions), Q3).
+| Replicated concept | Current source or required prerequisite | Boundary |
+| --- | --- | --- |
+| Identity and memberships | `profiles`, `organization_members`, `project_memberships`, including inherited project access | Scope by authenticated issuer/account and authorized project; Training personal rows remain creator-only. |
+| Sites and current pointer | `sites`, `site_zone_state` | Never infer current from a maximum version or put the pointer on `sites`. |
+| Immutable packages and zones | `site_packages`, `zone_identities`, `package_zones` | Retain exact referenced historical packages/snapshots and form bindings; exclude archive bytes/private delivery paths. |
+| Forms and own observations | `form_versions`, `observations` | Replicate canonical answers, `package_id`, `zone_id`, `round_type`, `first_round` and `placement_source`; derive recorded version/label from exact snapshots, not removed observation columns. Inventory has null event geometry. |
+| Rejections, assignments and devices | Remaining DB-10/BE-12 work | Do not query absent tables or claim durable rejection replication until these prerequisites exist. |
 
-## Client design (implemented by MOB-09 to MOB-12)
+Every query must return a stable `id`, filter by authenticated access before any client parameter, and use an explicit column allowlist. Client parameters may only narrow authorized scope. A stream/column change also changes QA-02's expected row sets. The spike must verify provider SQL/geometry support and SDK compatibility; the September vendor research is not proof against the current runtime.
 
-- **Packages:**
-  - `@powersync/react-native` 2.3.x with the built-in op-sqlite factory, and `@op-engineering/op-sqlite` (peer range ≥17.1 <19).
-  - **Remove `expo-sqlite`.** op-sqlite conflicts with it. MOB-11 reads the old file with op-sqlite.
-  - Set `expo.updates.useThirdPartySQLitePod: true` through a config plugin, because `expo-updates` is installed.
-- **Database file.** One per user: `decamark-{userId}.db`.
-  - Signing out keeps the file, so pending work waits for that user.
-  - "Remove account from this device" and account deletion delete it.
-- **Local-only tables:**
-  - `drafts`: ports `observation_drafts` and the ownership rules in `mobile/src/session/ownership.ts`. Unparseable drafts are quarantined, never deleted.
-  - `package_files`: download state, path and sha256. The package directories themselves are device-level and reference-counted across accounts (MOB-14).
-  - `migration_state`: per user. The device-level ledger lives in the old file (MOB-11).
-  - `held_observations`: records that must stay on the device, for example ones collected on a form version that is not yet published.
-- **Connector.**
-  - It is bound to the database's owner. `fetchCredentials()` returns `{ endpoint, token: session.access_token }` only when the session's user is that owner; otherwise it returns `null`.
-  - `uploadData()` sends `getCrudBatch(n)` to `POST /v1/sync/upload`. `n` is sized to stay under 4 MB and halved on 413.
-  - It calls `.complete()` **only** after a 200 whose JSON parses, has one result per operation id, and carries the owner's `user_id`. It throws on every other response, including 4xx and an HTML 200 from a captive portal.
-- **Record state shown to users:**
+PowerSync replication bypasses API RLS, so stream isolation is its own release gate. Test organization inheritance, removal/revocation, creator-private Training data, cross-account scope and historical package retention. Never replicate the private email outbox, audit tables, credentials, or server-only publication requests. These requirements replace the old illustrative YAML; they do not claim deployed replication.
 
-| State | Meaning |
-|---|---|
-| on device | in the crud queue, not yet sent |
-| uploading | the queue is uploading |
-| uploaded | the row came back through `my_observations` with a `received_at` |
-| needs attention | an unresolved row exists in `my_rejections` for the id; the record is rendered from its `operation`, and "Send again" re-queues it |
-| held | a row in `held_observations`, kept on the device until it is queued, exported or discarded (MOB-13) |
+## Client design (planned for MOB-09 to MOB-12)
 
-The Observations list shows **one entry per observation id**, with this precedence: in the local queue, then an unresolved rejection, then held, then uploaded.
+PowerSync is not installed as the collector transport. The current SQLite/catalog/session interfaces remain authoritative until the gated replacement is accepted. MOB-09 owns SDK installation/native rebuild and owner-bound credentials; recheck package versions at the spike instead of treating September peer ranges as current proof.
 
-- **Sign-out.**
-  - Warn when the upload queue, `held_observations` or `drafts` are not empty.
-  - Sign-out calls `disconnect()` and `close()`, never `disconnectAndClear()`, which by default also empties the local-only tables.
-- **Before PowerSync.** The pre-PowerSync `fieldmaps-shell.db` is shared by every account on the device. MOB-11 moves each account into its own file when that account signs in. It deletes the old file only after every account with unsent work or drafts has uploaded, or been removed.
+The replacement must preserve current-schema observations, immutable payloads/receipts, unfinished and parked drafts, account grants and all retained package references. Use issuer/account scoping, reject stale cross-account completions and never complete a CRUD batch without exact owner/result identity checks. MOB-11 owns this supported-schema transition; the pre-launch policy does not require a frozen v3/shell-v1 compatibility module or an experimental upgrade ladder.
+
+Local-only data includes unfinished/parked work, package file/reference state and held/rejected payloads. Do not delete it implicitly on token expiry, disconnect or a failed replacement. Explicit discard, device removal and account deletion must respect the owning lifecycle and pending-work confirmation rules. `PACKAGE-LIFECYCLE.md` and MOB-28/MOB-33 semantics remain binding.
+
+The future connector sends the reconciled canonical bound envelope through BE-12's batch interface. It may acknowledge a batch only after parsed per-operation results match the immutable observation IDs and the database's issuer/account. Malformed/HTML responses, transport errors and receipt mismatches preserve the queue. Rejections remain visible with their original payloads after any sync checkpoint. Visible states map one entry per observation ID without hiding pending work behind a replicated accepted row.
+
+Current project/form/package discovery is already supplied by the D27 API path. A new engine must replace that transport deliberately after acceptance, not create a competing session, package catalog or second writer while polygons are being finished.
 
 ## Tasks
 
@@ -175,7 +116,7 @@ Status: todo · Phase 2 · Size M · Depends: DB-09, DB-10, DB-11, DB-12, OPS-08
 Read first: the Streams section above; [supabase/PLAN.md](../../supabase/PLAN.md) (DB-10, DB-12 column names).
 Do:
 1. Create `powersync/README.md`, covering what this is, how to deploy it (dashboard or CLI) and the edit rules above.
-2. Create `powersync/sync-config.yaml` with the streams above, adjusted to the final column names.
+2. Author `powersync/sync-config.yaml` from the current-schema requirements above and verified DB-11 grants; execute every query against the intended schema before deployment.
 3. Add the `powersync/` row to the routing table in the root `AGENTS.md`.
 4. Deploy to the staging instance (**Needs user** to approve), then confirm it in the PowerSync diagnostics app with a staging user.
 

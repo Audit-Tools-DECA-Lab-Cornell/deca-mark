@@ -4,7 +4,7 @@ This file is part of the [DECA Mark production plan](../docs/plan/README.md) and
 - **API shapes:** [contracts.md](../docs/plan/contracts.md).
 - **The API side:** [backend/PLAN.md](../backend/PLAN.md).
 - **User journeys:** J1, J3 and J4 in [product.md](../docs/plan/product.md#journeys-the-pilot-must-support).
-- **Fixture list:** [architecture.md](../docs/plan/architecture.md#fixture-inventory) records the fixtures that D30 removed from the web.
+- **Fixture list:** [architecture.md](../docs/plan/architecture.md#fixture-and-practice-data-inventory-current-boundaries) records the fixtures that D30 removed from the web.
 - **Local rules:** `web/AGENTS.md` still applies. In particular:
   - every workspace page is live (D30): no fixtures, no Preview data marker, and a feature with no backend says "X is not available yet." (the Honesty section of `web/AGENTS.md`);
   - Contour tokens change only in `contracts/contour.json`; `pnpm tokens` regenerates `src/styles/contour.css`, and the collector reads the same file (D19).
@@ -26,6 +26,8 @@ Current changes verified 2026-10-04: WEB-01 package uploads use a real selected 
 - **Offline caching.** WEB-02 now generates `public/sw.js` from a source template with a token for each build. It caches only the public landing shell, icons and static build assets, validates responses, and keeps the shell network-first. The manifest opens `/o`.
 - **Tablet and touch.** The three-pane Observations view needs a width of at least 1280 px. Several tap targets are 32–40 px (`RailNav.tsx:31`, `chrome.tsx:171,423`, `PackageUpload.tsx:145`).
 
+Current navigation: [whole-product position](../docs/plan/current-state.md). Delivery notes and dated evidence below distinguish implemented scope from remaining manual/hosted acceptance.
+
 ## Target route tree
 
 This is the tree in `web/src/app` today (WEB-27). The route group `(auth)/(signed-in)` is now `(auth)/(join)`, because `/invite` and `/join` also serve signed-out visitors.
@@ -42,22 +44,23 @@ src/app/
   (app)/o/[org]/(org)/…                      projects (org root), members, settings
   (app)/o/[org]/p/[project]/…                overview (project root), data, data/[observation],
                                              sites, sites/[site], sites/[site]/packages (?package=, ?step=upload),
+                                             sites/[site]/zones, sites/[site]/zones/edit,
                                              forms, forms/versions, forms/versions/[version],
                                              forms/versions/[version]/publish, team, qgis, reports, settings
   dev/contour/                               every primitive in Day and Dusk (dev and preview builds only)
 src/proxy.ts                                 session refresh + auth redirects
 src/lib/supabase/{server,client}.ts
 src/lib/api/{client,workspace,mutations}.ts  server-only: cached reads, one function per write
-src/lib/api/browser.ts                       browser to API: package upload and archive download only
+src/lib/api/browser.ts                       browser to API: package upload, archive download and authenticated draft operations
 src/lib/workspace/…                          roles, the /o resolver, results (pure, unit-tested)
 src/components/contour/…                     primitives, same names as mobile/src/ui/
 src/components/shell/…                       header, switchers, tabs, ⌘K, LoadFailure, NotAvailable
 src/features/<area>/…
 ```
 
-Removed in WEB-27: `(onboarding)`, `(org)/library`, `sites/[site]/zones/**`, `reports/views`, `reports/[report]` and `settings/rounds`. `/o/deca` is an ordinary address now, not a sample.
+Removed in WEB-27: `(onboarding)`, `(org)/library`, the old fixture zone routes (current server-backed Zones/editor routes were added by WEB-28/37), `reports/views`, `reports/[report]` and `settings/rounds`. `/o/deca` is an ordinary address now, not a sample.
 
-A project has eight tabs: Overview, Data, Sites, Forms, Team, QGIS, Reports, Settings. An organization has three: Projects, Members, Settings. The header holds the organization and project switchers, "Search or jump to" (⌘K) and the account menu (with Day · Dusk). Team and Settings are for project managers. Members and the organization's Settings are for owners and admins, who also act as managers of every project in the organization. Nobody else sees those tabs, and those pages check the role themselves and show a no-access note. An observer who opens a project is sent to `/o/<org>/collect`. `/o` opens the project the person was last in (cookie `fm-place`), the only project, or the first organization. The old paths (`/overview`, `/observations`, `/places`, `/basemaps`, `/instrument`, `/qgis`, `/onboarding`) redirect with a 307 to `/o`. `library`, `sites/<site>/zones/**`, `reports/views` and `settings/rounds` redirect to the page that replaced them. Every route under `(auth)` and `(app)`, and `/dev/contour`, is `noindex`.
+A project has eight tabs: Overview, Data, Sites, Forms, Team, QGIS, Reports, Settings. An organization has three: Projects, Members, Settings. The header holds the organization and project switchers, "Search or jump to" (⌘K) and the account menu (with Day · Dusk). Team and Settings are for project managers. Members and the organization's Settings are for owners and admins, who also act as managers of every project in the organization. Nobody else sees those tabs, and those pages check the role themselves and show a no-access note. An observer who opens a project is sent to `/o/<org>/collect`. `/o` opens the project the person was last in (cookie `fm-place`), the only project, or the first organization. The old paths (`/overview`, `/observations`, `/places`, `/basemaps`, `/instrument`, `/qgis`, `/onboarding`) redirect with a 307 to `/o`. `library`, `reports/views` and `settings/rounds` redirect to the page that replaced them. Every route under `(auth)` and `(app)`, and `/dev/contour`, is `noindex`.
 
 **Contour screens, then live data.** WEB-20 to WEB-26 built every page above in Contour on fixtures (D19–D22), and the wiring tasks WEB-04 to WEB-13 were to connect real data to them. WEB-27 (D30) wired all of it at once and removed the fixtures. There is one workspace now: every page under `/o/<org>/p/<project>` reads and writes the API for the signed-in person. The sample workspace at `/o/deca`, the Preview data marker, the set-up flow and the preview sign-in bypass (D20, D23, D24) are gone. A feature with no backend shows one "X is not available yet." note. Where a task below names something WEB-27 retired (`src/data/*`, `src/fixtures/*`, `LeafletCanvas`, `ZonePlan`, `(onboarding)`), read the WEB-27 note at the top of that task. The design pages named under `Read first` come from the four Contour design sets, which are not committed ([docs/ux/README.md](../docs/ux/README.md)); root `DESIGN.md` is the committed reference.
 
@@ -65,19 +68,12 @@ A project has eight tabs: Overview, Data, Sites, Forms, Team, QGIS, Reports, Set
 
 ### WEB-01: Quick fix so the package upload reaches a real project
 Status: doing (code in place 2026-10-01; the staging upload is not verified) · Phase 0 · Size S · Depends: DB-01 · Blocks: WEB-08
-WEB-27 (2026-10-09, D30): retired. The project comes from the route and the token from the signed-in person. The `NEXT_PUBLIC_FIELDMAPS_PROJECT_ID` variable, the site-code stopgap and the pasted token are gone.
-Progress 2026-10-01: `NEXT_PUBLIC_FIELDMAPS_PROJECT_ID` with a UUID check, a site-code input, a multi-file drop zone with an instant layer map and browser checks. `qgis/fall-creek/upload-sample/` passes the browser checks and the API's `prepare()` run directly; no upload against staging has been made.
-Superseded later by WEB-08, which takes the project and site from the route.
-Read first: `src/components/basemaps/PackageUpload.tsx`, `src/lib/packages.ts`, `src/data/project.ts`.
-Do:
-1. Add `NEXT_PUBLIC_FIELDMAPS_PROJECT_ID`, a UUID. When it is set, the upload uses it instead of `PROJECT.id`.
-2. Replace the fixture site dropdown with a text input for the site code. Default it to `sample-garden`, and show a note that site lists arrive with WEB-08.
-3. Keep the pasted-token stopgap and its notice until WEB-06.
-4. Document the variable in `web/README.md`.
+The original project-ID variable, pasted token and fixture/site-code stopgap were superseded by WEB-27 and WEB-42/43. Do not rebuild those controls or recreate the retired configuration. The current browser uses the authenticated route context and explicit zone identities.
 
-Done when: against staging, where DB-01 is applied, a manager token uploads a package and the screen shows the server's checks.
+Remaining acceptance: after the intended hosted schema/runtime is reconciled, verify a manager can upload the real site's package and see the server checks and current version. This staging check is still unverified; WEB-08 retains it as a prerequisite. DB-01 remains the hosted data acceptance gate.
 
-Verify: `pnpm --dir web check`, plus a manual upload against staging recorded in the task notes.
+Done when: an authorized staging upload succeeds through the supported current path, recorded with the exact runtime revision.
+Verify: current package/import browser specs locally, then the authorized staging upload. No hosted result is claimed by source delivery.
 
 ### WEB-02: Service worker, manifest and indexing safety
 Status: done · Phase 0 · Size S · Depends: none · Blocks: WEB-10
@@ -183,76 +179,51 @@ Progress 2026-10-14, web side, on the local stack (production build, desktop-144
 Verified 2026-10-15, mobile side (MOB-06): on the local stack, a single-use observer code made by the seed's manager through `POST /v1/projects/{project}/invitations` (the Team page's call) was previewed and redeemed by a newly signed-up observer through the collector's own API client and join logic, and `/v1/me` then listed the project as active beside Training (`mobile/src/features/onboarding/join.acceptance.test.ts`). The redemption through the phone's screens is in the [device checklist](../docs/qa/device-checklist-2026-10.md), pending (user).
 
 ### WEB-08: Sites and packages on real data
-Status: todo · Phase 3 · Size M · Depends: BE-13, WEB-01, WEB-06 · Blocks: none
-WEB-27 (2026-10-09, D30): delivered. Sites lists and creates sites (code, name, description). A site draws its plan from the current package. Map packages show the history, the server's checks, an upload from QGIS layers and a download. The browser sends the package straight to the API. The pasted token, the project ID variable and the fixture packages are gone. "Activate" is dropped: the newest ready package is current. Deleting a site or a package is "not available yet".
-Do:
-1. `sites`:
-   - list from the API;
-   - a manager can create a site (code, name, timezone);
-   - `sites/[site]` shows the zones (real polygons) on the map, the package versions with their checks, and the current version.
-2. Move `PackageUpload` here and delete the pasted token. The site code comes from the route, the project UUID from the route, and the token from the session.
-3. Offer a package download through the `archive` route.
-4. Stop these screens reading fixtures. The Preview data marker stays until no screen reads fixtures (D20).
-   - Delete `src/data/basemaps.ts`.
-   - Replace `src/data/site-geometry.ts` in `ZonePlan` and `project.ts` with zones and ground from the sites API.
-   - Delete any part of `src/data/project.ts` that nothing uses.
+Status: doing (2026-10-15 reconciliation: implementation delivered in part; remaining acceptance below) · Phase 3 · Size M · Depends: BE-13, WEB-01, WEB-06 · Blocks: none
+Current scope (reconciled 2026-10-15): WEB-27 delivered live site CRUD, plans and package history/download; WEB-36/42/43 delivered the single site API and identity-aware imports. `sites.spec.ts`, `packages.spec.ts` and the zone import suites supply local browser evidence recorded in those tasks. No fixture or pasted-token cleanup remains.
 
-Done when: J1 step 3 works, and no fixture remains on these routes.
+Remaining: complete WEB-01's staging upload acceptance and BE-13's Storage-backed delivery before closing the original production package flow. Inspect the current `src/features/sites/` and `src/features/packages/` implementations, not the deleted basemap components. No Activate action is planned; publication/import selects the newest ready immutable version.
+
+Done when: a manager creates a site, uploads and downloads its package on the intended staging runtime, and the current plan/history agree. Local source delivery does not prove hosted delivery.
+Verify: owning site/package browser specs on the local stack, then the explicitly authorized staging acceptance.
 
 ### WEB-09: Instrument on real data
-Status: todo · Phase 3 · Size M · Depends: BE-11, WEB-06, WEB-10 · Blocks: none
-WEB-27 (2026-10-09, D30): delivered. Forms lists forms and starts a new one from a template (Behaviour mapping, Zone inventory, Blank). Form versions starts a draft, discards it or retires a version. The draft editor saves to the server and shows the server's validation message. Publish shows the protocol notes and says how observers receive the form. Not built: importing a draft by pasting or uploading JSON (templates replace it).
-Cut option: if the schedule slips, keep this screen read-only and seed Janet's version with a migration.
-Do:
-1. Forms, then versions, each with its state. Show a version's questions and display rules, read from the definition.
-2. Manager actions:
-   - import a draft (paste or upload JSON) and show every validation problem;
-   - publish, then retire.
-3. Stop this screen reading fixtures; the Preview data marker stays until no screen does (D20). This task owns deleting `src/data/instrument.ts`: after WEB-10 has moved `FilterRail` and the markers off it, remove every remaining import and the file.
+Status: doing (2026-10-15 reconciliation: implementation delivered in part; remaining acceptance below) · Phase 3 · Size M · Depends: BE-11, WEB-06, WEB-10 · Blocks: none
+Current scope (reconciled 2026-10-15): WEB-27 delivered real forms, version drafts, server save/validation, publish and retire. The current editor and local `forms.spec.ts` evidence replace the fixture-based Instrument/Studio work. Templates are implemented; arbitrary JSON draft import is not.
 
-Done when: Janet's definition from `contracts/forms/` imports and publishes locally.
+Remaining: verify the canonical Janet definition can be prepared and published through the supported workflow; either implement the original JSON import requirement or obtain an explicit scope decision to replace it with templates. Keep protocol-content approval separate from technical publishing. No fixture cleanup is left.
+
+Done when: Janet's approved canonical definition is published locally without changing its meaning, and the import/template scope decision is recorded.
+Verify: `pnpm forms:parity`, form browser specs, and inspect the saved immutable definition and map form binding.
 
 ### WEB-10: Observations on real data
-Status: todo · Phase 3 · Size L · Depends: BE-14, WEB-02, WEB-06 · Blocks: WEB-09, WEB-13
-WEB-27 (2026-10-09, D30): delivered on the newest 500 observations. The API has no cursor, so there is no paging, viewport query or clustering. Site and round filters ask the server. Zone, observer, day and search filters work on the loaded rows and live in the URL. The page has a table, a site plan with markers when one site is chosen, a record page worded from the form version the record used, and Export. `LeafletCanvas`, `FilterRail` and the fixture observations are gone. Dates use the project's timezone.
-Read first: `src/components/observations/*`, `src/lib/filters.ts`.
-Do:
-1. Keep the filters in the URL, now project-scoped. Load one page at a time with a cursor.
-2. Map:
-   - query by viewport bbox;
-   - cluster markers (replacing the one-DOM-marker-per-record approach, `LeafletCanvas.tsx:149-163`);
-   - show zones from the site's current package.
-3. The table is virtualized, or paged at 100 rows. The detail pane reads from the API.
-4. Fix the mislabel: `Rel_Round` is not the collection round (`ObservationDetail.tsx:59`).
-5. Replace every remaining fixture read on this screen:
-   - `FilterRail`'s zone, round and observer options come from the zones API and the summary (BE-14);
-   - its play types and quality flags come from the form definition, not `src/data/instrument.ts`;
-   - marker shapes (`markers.ts`, `shapeForPlayType`) come from the definition;
-   - dates use the project's or site's timezone from the API, not `SITE_TIME_ZONE` (`src/lib/format.ts`, `ObservationDetail`).
-6. Delete `src/data/observations.ts`, and stop `LeafletCanvas` importing `src/data/site-geometry.ts`. Only then is this screen off fixtures.
+Status: doing (2026-10-15 reconciliation: implementation delivered in part; remaining acceptance below) · Phase 3 · Size L · Depends: BE-14, WEB-02, WEB-06 · Blocks: WEB-09, WEB-13
+Current scope (reconciled 2026-10-15): WEB-39/40 delivered cursor paging in batches of 500, server site/zone/package/round/observer/date filters, URL history and recorded-version detail. The Data map explicitly draws a chosen version and a labelled loaded subset; search is loaded-row only. The 520-row local fixture is covered by `data-history.spec.ts`. No legacy Leaflet/fixture work remains.
 
-Done when: 10,000 synthetic observations on the local stack scroll and filter smoothly, and the filters survive a page reload.
+Remaining: the original viewport/bbox query, clustering and the 10,000-observation smoothness acceptance are not delivered by that 520-row run. Resolve these against BE-14's remaining scope; preserve exact recorded boundaries and whole-zone Inventory semantics. Do not reintroduce current-boundary relabelling.
+
+Done when: the remaining map/scale scope is implemented and the 10,000-row local browser scenario filters, pages and reloads smoothly with truthful subset labels.
+Verify: `data.spec.ts`, `data-history.spec.ts`, and a recorded scale/viewport scenario after BE-14's applicable work.
 
 ### WEB-11: Overview on real data
-Status: done (2026-10-15; as built; the play-type bars are not on the overview) · Phase 3 · Size M · Depends: BE-14, WEB-06 · Blocks: none
-WEB-27 (2026-10-09, D30): delivered without a summary endpoint. The overview works out the field return, the coverage of zones by Standard, Reliability and Inventory rounds, what needs attention and the recent activity in the web app, from the site list and the newest 500 observations. At the cap it says "Based on the newest 500 observations." No completion target is claimed.
-Cut option: show counts only, without charts.
-Do: fill WEB-23's overview (counts, `TypeBars` and the coverage matrix) from `GET …/summary`, keeping its layout; `DESIGN.md` rules out KPI tiles. Delete client-side aggregation over fixtures (`src/lib/analysis.ts`) that nothing uses anymore.
+Status: doing (2026-10-15: implemented overview counts/zone-round coverage verified against local SQL; original TypeBars scope remains unresolved) · Phase 3 · Size M · Depends: BE-14, WEB-06 · Blocks: none
+Current scope (reconciled 2026-10-15): WEB-41 moved zone/round coverage to the authorized server summary. Counts no longer pretend a loaded page is the whole project. Observer/day/play-type breakdowns still use loaded rows and say so; do not describe every panel as a complete server aggregate.
 
-Done when: the overview matches SQL counts on the local stack.
+Remaining: implement the original `TypeBars` requirement with the required summary dimensions, or record an explicit decision to drop that scope. Existing total/zone-round overview aggregates now have local SQL/browser acceptance below; preserve loaded-subset labels for answer-based breakdowns until a matching server aggregate exists. BE-14’s viewport filter remains separate WEB-10 work. Fixtures and former client-only coverage are historical.
+
+Done when: all intended overview dimensions match the authorized SQL scope, with no unlabelled truncation.
+Verify: summary unit/API checks and `overview.spec.ts`/historical-summary acceptance on a multi-page fixture.
 
 Verified 2026-10-15: the part of BE-14 this task needs is in the API (`GET …/observations/summary`, BE-20's subset; BE-14 itself still lacks the viewport filter), and the overview reads it (`summarizeObservations` for today and the last 7 days, `coverageFromGroups` for coverage by zone and round; WEB-41); `src/lib/analysis.ts` is gone. `e2e/overview-sql.spec.ts` reads the project's counts straight from the local database (`docker exec … psql`, total and by zone and round type) and holds the overview's total and each zone's coverage row to them: 2 of 2 at desktop-1440 and phone-390 on the local stack, beside `overview.spec.ts` 4 of 4. Not built: `TypeBars` on the overview, because the summary carries no answers (play types); DESIGN.md rules out KPI tiles, and the lead may drop that part of the Do line.
 
 ### WEB-12: GIS page and exports
-Status: todo · Phase 3 · Size S · Depends: BE-14, BE-15, GIS-01, GIS-04, WEB-05 · Blocks: none
-WEB-27 (2026-10-09, D30): delivered in the browser. CSV, GeoJSON and the codebook are built by `lib/export` from the loaded observations, follow the site and round filters, and say "Based on the newest 500 observations." at the cap. The QGIS page lists each site's current package with a download. Not built: server-side exports and the connection panel. "Connecting QGIS directly to the database" says it is not available yet and points to exporting a file.
-Do:
-1. Export buttons (CSV, GeoJSON) that apply the current filters and call BE-14's server exports.
-   - Delete the client-side generation over fixtures (`src/lib/exports.ts`).
-   - Once `site-geometry.ts` has no importers left (WEB-08, WEB-10), delete it too.
-2. The QGIS connection panel reads from `/gis-access`: public settings only, the per-project service name, and the typed layer names. Link to the `qgis/README.md` steps.
+Status: doing (2026-10-15 reconciliation: implementation delivered in part; remaining acceptance below) · Phase 3 · Size S · Depends: BE-14, BE-15, GIS-01, GIS-04, WEB-05 · Blocks: none
+Current scope (reconciled 2026-10-15): WEB-41 delivers server ZIP exports for every matching observation within the documented limits, with CSV/GeoJSON, codebook, forms, metadata and historical zones. The QGIS page also offers package downloads. Client-only newest-500 exports are superseded.
 
-Done when: the exported CSV opens with the codebook columns, and the panel shows the real settings for a project with a grant.
+Remaining: BE-15's `/gis-access` and the real per-project connection panel, after GIS-01 to GIS-04 and scoped reader provisioning. GIS-09's historical geometry work does not complete these pilot access tasks.
+
+Done when: existing server exports remain correct and a project with an authorized grant displays the real public connection settings and typed layer names.
+Verify: `qgis-reports.spec.ts`, scoped export acceptance, then the authorized live-reader/QGIS scenario.
 
 ### WEB-13: Tablet layout and touch targets
 Status: doing (2026-10-14: started under the user's exception; it closes only after WEB-10) · Phase 3 · Size M · Depends: WEB-10 · Blocks: none
@@ -285,11 +256,11 @@ Verified 2026-10-14: `/privacy` describes public sign-up with a six-digit email 
 Updated 2026-10-15 (MOB-05, MOB-07): the app now creates accounts and deletes them, so `/privacy` and `/privacy/delete-data` say so (app deletion path, records not uploaded stay on the device and can no longer upload, sign-out works offline, and the note the app keeps at sign-out); the effective date is October 15, 2026. The two "to be confirmed" facts are unchanged.
 
 ### WEB-15: End-to-end tests with Playwright
-Status: doing (2026-10-15: unblocked by WEB-07; the suite passes locally; running it in CI is a request to the CI owner) · Phase 4 · Size M · Depends: DB-02, WEB-04, WEB-06, WEB-07 · Blocks: QA-04
-WEB-27 (2026-10-09, D30): partly delivered. `web/e2e` and `scripts/e2e-local.sh` run Playwright against local Supabase, the local API and the seed in `database/seed-web-workspace.mjs`. Specs: sign-in, sites, packages, forms, data, overview, QGIS and reports, settings, team, organization pages, an invitation redeemed by a viewer, an observer joining by code, the removed routes, and a scan of every route for sample words, jargon, more than one primary button and axe findings in Day and Dusk. Not covered: sign-up with Mailpit codes, password reset and account deletion. There is no onboarding to test.
-WEB-04 (2026-10-14): `e2e/auth-flows.spec.ts` now covers sign-up with Mailpit codes (a wrong code, then the right one) and password reset (the old password refused, the new one accepted), and `org.spec.ts` covers an owner creating a project in their own organization. Account deletion is unit-tested only: the local API has no Auth Admin key, so `DELETE /v1/me` answers 503 there. This task stays todo until WEB-07 is done (Depends).
-Do: add `web/e2e/`, running against the local stack and reading codes from the Mailpit API. Cover:
-- sign-up, verify, onboarding, then the org and project exist;
+Status: doing (2026-10-15: WEB-07 local mobile redemption gate passed; local suites exercised; remaining authorized deletion/browser and CI acceptance) · Phase 4 · Size M · Depends: DB-02, WEB-04, WEB-06, WEB-07 · Blocks: QA-04
+WEB-27 (2026-10-09, D30): partly delivered. `web/e2e` and `scripts/e2e-local.sh` run Playwright against local Supabase, the local API and the seed in `database/seed-web-workspace.mjs`. Specs: sign-in, sites, packages, forms, data, overview, QGIS and reports, settings, team, organization pages, an invitation redeemed by a viewer, an observer joining by code, the removed routes, and a scan of every route for sample words, jargon, more than one primary button and axe findings in Day and Dusk. At the original D30 baseline, sign-up, password reset and account deletion were not covered; WEB-04 and WEB-06 added the later coverage below. There is no onboarding to test.
+WEB-04 (2026-10-14): `e2e/auth-flows.spec.ts` now covers sign-up with Mailpit codes (a wrong code, then the right one) and password reset (the old password refused, the new one accepted), and `org.spec.ts` covers an owner creating a project in their own organization. Account deletion is unit-tested only: the local API has no Auth Admin key, so `DELETE /v1/me` answers 503 there. The successful/pending deletion responses still need browser acceptance with the authorized Auth Admin runtime; the cross-account refusal is browser-covered by `account-deletion.spec.ts`. WEB-07’s local collector-client redemption gate now passes; physical screen walkthrough remains in the device checklist. Successful/pending deletion browser acceptance and complete CI evidence remain open.
+Do: finish the existing `web/e2e/` suite on the local stack with Mailpit codes. The original coverage list is:
+- sign-up and verify, then bootstrap the organization and create a project through the supported D30 flow;
 - sign in and reset password;
 - invitation link redemption by a second user;
 - a manager creates a join code;
@@ -371,7 +342,10 @@ Verify: `pnpm --dir web check`, `pnpm --dir web build`, `pnpm tokens:check`, `pn
 Verified 2026-10-14: the tokens, fonts (`next/font` Geologica and Spline Sans Mono), the pre-paint theme script (`src/lib/theme-script.ts`, `fm-theme`), the dependencies, the primitives, the maps, the `noindex` gallery and the Playwright harness are in place. Every component `src/components/contour/index.ts` exports appears in the gallery's source except Radix sub-parts (`MenuCheckboxItem`, `PopoverAnchor`, `PopoverClose`); `Skeleton` draws inside the loading `ScreenState`. `e2e/specimen/contour-gallery.specimen.ts` (`pnpm --dir web test:specimen`, 1 passed) opens every one of the 17 sections in Day and Dusk at 1440, 1024, 768 and 390 with no page error and no sideways scroll, and screenshots each to `web/e2e/screenshots/gallery-<width>/<theme>/dev-contour.png`. `pnpm tokens:check` passes, contrast included; `pnpm forms:parity` passes; `pnpm --dir web check` passes and the production build serves the 256-test local-stack run. **Pending (user):** comparing those screenshots with the Contour system pages.
 
 ### WEB-21: Identity screens on Contour (web)
-Status: todo · Phase 1 · Size L · Depends: WEB-20 · Blocks: none
+Status: doing (2026-10-15: live implementation delivered by WEB-27; remaining design/manual acceptance) · Phase 1 · Size L · Depends: WEB-20 · Blocks: none
+
+Current boundary: the WEB-27 delivery note below records implemented scope. The original October 3 design brief that follows is historical: fixture, preview, session-only and removed-route instructions are superseded by D30 and the zone tasks. Retain only applicable design/accessibility comparisons as remaining acceptance; do not rebuild retired screens or fixture behavior.
+
 WEB-27 (2026-10-09, D30): delivered. `/invite` and `/join` preview and redeem real invitations. The token stays in the URL fragment and the code never goes in the URL. The group `(auth)/(signed-in)` is now `(auth)/(join)`, because the pages also serve signed-out visitors. Joining again as an existing member is answered 404 by the API, and the join page says the person may already be a member. Retired: the `(onboarding)` frame and `/onboarding/[step]`, the Preview data footer line and the `?preview-state` demo screens.
 Added 2026-10-03. WEB-04 (sign-up, sign-in, codes, passwords) connects them to the Supabase Server Actions at the same URLs, and WEB-06 (onboarding, invitation) connects them to the API, without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Contour system p. 12, Organization, auth and public pp. 6–13; `src/components/onboarding/*` (WEB-18).
@@ -387,7 +361,10 @@ Done when: each screen matches its design page at 1440 and 390 in Day and Dusk; 
 Verify: `pnpm --dir web check`, `pnpm --dir web build`, `pnpm tokens:check`, `pnpm forms:parity`, and the Playwright screenshot comparison of each route against its design page, with axe failing on serious or critical findings.
 
 ### WEB-22: Workspace shell and navigation
-Status: todo · Phase 1 · Size L · Depends: WEB-20 · Blocks: WEB-23, WEB-24, WEB-25, WEB-26, WEB-27
+Status: doing (2026-10-15: live implementation delivered by WEB-27; remaining design/manual acceptance) · Phase 1 · Size L · Depends: WEB-20 · Blocks: WEB-23, WEB-24, WEB-25, WEB-26, WEB-27
+
+Current boundary: the WEB-27 delivery note below records implemented scope. The original October 3 design brief that follows is historical: fixture, preview, session-only and removed-route instructions are superseded by D30 and the zone tasks. Retain only applicable design/accessibility comparisons as remaining acceptance; do not rebuild retired screens or fixture behavior.
+
 WEB-27 (2026-10-09, D30): delivered on live data. The switchers, the account menu (real name, email and initials), the tabs by role, ⌘K and the shortcuts read `/v1/me` through `WorkspaceProvider`. ⌘K covers tabs, organizations, projects and the account, not sites, people or `OBS-` ids. Retired: the Preview data marker and footer, View as and Show state, the session-only store, the Form library tab, and Create project in the switcher (it is on the organization's Projects page). The old paths redirect to `/o`.
 Added 2026-10-03 (D20, D21). WEB-03's proxy now guards it (with the D23 preview bypass), and WEB-06 (switchers and account menu from `/v1/me`) connects it to real organizations and projects without changing its layout.
 Read first: `DESIGN.md`, `PRODUCT.md`, `web/AGENTS.md`; designs: Contour system pp. 5, 6 and 10, Organization, auth and public pp. 1, 18 and 19.
@@ -405,7 +382,10 @@ Done when: the old paths redirect; the skip link, tabs, ⌘K and menus work by k
 Verify: `pnpm --dir web check`, `pnpm --dir web build`, `pnpm tokens:check`, `pnpm forms:parity`, and the Playwright screenshot comparison of each route against its design page, plus a scripted keyboard run.
 
 ### WEB-23: Project screens: field return (overview, data, observation)
-Status: todo · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
+Status: doing (2026-10-15: live implementation delivered by WEB-27; remaining design/manual acceptance) · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
+
+Current boundary: the WEB-27 delivery note below records implemented scope. The original October 3 design brief that follows is historical: fixture, preview, session-only and removed-route instructions are superseded by D30 and the zone tasks. Retain only applicable design/accessibility comparisons as remaining acceptance; do not rebuild retired screens or fixture behavior.
+
 WEB-27 (2026-10-09, D30): delivered on live data (the overview as in WEB-11, the data page and record as in WEB-10). Retired: approve and exclude with undo ("Reviewing or excluding observations is not available yet"; every uploaded observation is in the exports), the session-only Save view ("Copy link to this view" replaces it) and the record's history, which has no audit log behind it.
 Added 2026-10-03. These screens run on fixtures. WEB-10 (data), WEB-11 (overview) and WEB-12 (exports) later connect real data to them without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Project workspace pp. 1–3, Contour system p. 8; `src/lib/filters.ts`, `src/lib/analysis.ts`, `src/lib/exports.ts`.
@@ -422,8 +402,11 @@ Done when: the numbers match the designs; the selection rules hold; the `j/k`, `
 Verify: `pnpm --dir web check`, `pnpm --dir web build`, `pnpm tokens:check`, `pnpm forms:parity`, and the Playwright screenshot comparison of each route × preview state against its design page.
 
 ### WEB-24: Project screens: places (sites, site, zone, zone editor, map packages)
-Status: todo · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
-WEB-27 (2026-10-09, D30): delivered on live data: Sites, Site and Map packages (history, inspect, upload, download). Retired: the Zone page and the zone editor (U2; "Editing zones on the web is not available yet": edit zones in QGIS and upload a new package, and zone rows link to Data filtered by zone), Device readiness (not available yet) and "Activate" (the newest ready package is current).
+Status: doing (2026-10-15: live implementation delivered by WEB-27; remaining design/manual acceptance) · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
+
+Current boundary: the WEB-27 delivery note below records implemented scope. The original October 3 design brief that follows is historical: fixture, preview, session-only and removed-route instructions are superseded by D30 and the zone tasks. Retain only applicable design/accessibility comparisons as remaining acceptance; do not rebuild retired screens or fixture behavior.
+
+WEB-27 (2026-10-09, D30): delivered on live data: Sites, Site and Map packages (history, inspect, upload, download). At the D30 baseline the Zone page/editor were retired; WEB-28 and WEB-37 have since delivered the server-backed Zones/editor routes. Still unavailable: Device readiness (not available yet) and "Activate" (the newest ready package is current).
 Added 2026-10-03. These screens run on fixtures. WEB-08 (sites and packages) and WEB-10 (zone data) later connect real data to them without changing their layout. The package upload stays real: it keeps `lib/packages.ts` and says "Sends this package to the DECA Mark API."
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Project workspace pp. 6–10; `src/components/basemaps/PackageUpload.tsx`, `src/lib/packages.ts`.
 Do:
@@ -437,7 +420,10 @@ Done when: vertex editing works by keyboard; `?step` back navigation works; the 
 Verify: `pnpm --dir web check`, `pnpm --dir web build`, `pnpm tokens:check`, `pnpm forms:parity`, and the Playwright screenshot comparison of each route against its design page.
 
 ### WEB-25: Project screens: forms, team, QGIS, reports, settings
-Status: todo · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
+Status: doing (2026-10-15: live implementation delivered by WEB-27; remaining design/manual acceptance) · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
+
+Current boundary: the WEB-27 delivery note below records implemented scope. The original October 3 design brief that follows is historical: fixture, preview, session-only and removed-route instructions are superseded by D30 and the zone tasks. Retain only applicable design/accessibility comparisons as remaining acceptance; do not rebuild retired screens or fixture behavior.
+
 WEB-27 (2026-10-09, D30): delivered on live data: Forms, Form versions, the draft editor, Publish, Team, QGIS, Reports and Settings. Reports is one page with Print. Retired: saved views (`reports/views`), the separate printable report (`reports/[report]`), Rounds (`settings/rounds`, U6), the join-code island, QGIS reader grants and the type-to-confirm danger zone. "Saved report views", "Planning rounds", "Deleting a project" and "Connecting QGIS directly to the database" say they are not available yet. Archive and Unarchive remain.
 Added 2026-10-03. These screens run on fixtures. WEB-09 (forms), WEB-07 (team) and WEB-12 (QGIS) later connect real data to them without changing their layout. Reports (U7) and rounds (U6) are proposals and always show their flags.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Project workspace pp. 4, 5 and 11–19; `src/components/studio/PhonePreview.tsx`, `src/lib/forms/*`.
@@ -454,7 +440,10 @@ Done when: `pnpm forms:parity` passes with the engine files untouched; the print
 Verify: `pnpm --dir web check`, `pnpm --dir web build`, `pnpm tokens:check`, `pnpm forms:parity`, and the Playwright screenshot comparison of each route against its design page, plus a print-to-PDF of the site summary.
 
 ### WEB-26: Organization, account and public pages, and retiring Nocturne and Leaflet
-Status: todo · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
+Status: doing (2026-10-15: live implementation delivered by WEB-27; remaining design/manual acceptance) · Phase 1 · Size L · Depends: WEB-22 · Blocks: none
+
+Current boundary: the WEB-27 delivery note below records implemented scope. The original October 3 design brief that follows is historical: fixture, preview, session-only and removed-route instructions are superseded by D30 and the zone tasks. Retain only applicable design/accessibility comparisons as remaining acceptance; do not rebuild retired screens or fixture behavior.
+
 WEB-27 (2026-10-09, D30): delivered: the organization's Projects, Members and Settings on live data (Transfer ownership for owners; "Deleting an organization" is not available yet), the observer handoff at `/o/[org]/collect` (the person's own observer projects, with the Android link when `NEXT_PUBLIC_ANDROID_APP_URL` is set), the home page and the not-found page. `/account` was already live. Retired: the Form library (U4; `/o/[org]/library` redirects to the organization), the join QR code, `src/data/*`, `components/nocturne`, the Nocturne CSS aliases, `leaflet` and `react-leaflet`. The route groups are `(marketing)` and `(legal)`, not `(public)`.
 Added 2026-10-03. These screens run on fixtures. WEB-06 (org pages, account), WEB-07 (members) and WEB-14 (privacy wording) later connect them without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`, `web/AGENTS.md`; designs: Organization, auth and public pp. 1–5 and 14–19.
@@ -476,7 +465,7 @@ Read first: D30 in `docs/plan/decisions.md`; the Honesty section of `web/AGENTS.
 Do:
 1. Data layer.
    - `lib/api/client.ts` (server-only): reads the signed-in person's token once per request, and gives every request its own 15-second timeout.
-   - `lib/api/workspace.ts` (server-only): cached reads with plain arguments. They are `getMe`, `getWorkspace` (never throws), `resolveOrg`, `resolveProject`, the organization, its projects, members and invitations, the project, its members and invitations, sites, packages, `getSitePlan`, forms, form versions, `listObservations` (the newest 500, with a `limited` flag) and `getObservation`.
+   - `lib/api/workspace.ts` (server-only): cached reads with plain arguments. They are `getMe`, `getWorkspace` (never throws), `resolveOrg`, `resolveProject`, the organization, its projects, members and invitations, the project, its members and invitations, sites, packages, `getSitePlan`, forms, form versions, `listObservations` (originally newest-500; WEB-39 now reads the paginated envelope) and `getObservation`.
    - `lib/api/mutations.ts` (server-only): one function per write endpoint. `lib/api/browser.ts` (browser): package upload and archive download straight to the API.
    - Pure modules with unit tests: `lib/workspace/*` (roles, the `/o` resolver, invitations, results), `lib/time.ts` (the project's timezone), `lib/labels.ts` (`OBS-3F2A1B`), `lib/observations/{answers,summary}.ts`, `lib/export/*` and `lib/sites/archive.ts` (reads a package archive with `fflate@0.8.2`).
 2. Shell.
@@ -495,9 +484,9 @@ Do:
    - Delete `src/fixtures`, `src/data`, `lib/preview.ts`, the Preview data marker and footer, the session stores, the web `ProposalNote` (mobile keeps its own) and the legacy components (`observations`, `basemaps`, `places`, `instrument`, `metrics`, `maps`, `qgis`, `studio`, `nocturne`), the Nocturne CSS aliases and the leaflet dependencies.
    - Add a lint rule that bans `@/fixtures`, `@/data` and `@/lib/preview`.
    - Write D30, the Honesty section of `web/AGENTS.md`, this file, the sitemap and the launch runbook.
-5. Not available, as one short note each: saved named views (links replace them), the rounds plan, the zone editor (edit zones in QGIS), reviewing or excluding records, device readiness, live QGIS database access, deleting projects, organizations, sites or packages, and resending invitations.
+5. At the October 9 baseline, not available: saved named views (links replace them), the rounds plan, the zone editor (subsequently implemented by WEB-28), reviewing or excluding records, device readiness, live QGIS database access, deleting projects, organizations, sites or packages, and resending invitations.
 
-Done when: no page under `/o` reads a fixture, and no code imports `@/fixtures`, `@/data` or `@/lib/preview`; a failed read shows `LoadFailure` and never an empty list; a viewer who opens Team or Settings sees the no-access note, and the page calls no manager-only endpoint for them; an upload from QGIS layers makes the new version current; every aggregate or export built from 500 observations says "Based on the newest 500 observations."
+Done when: no page under `/o` reads a fixture, and no code imports `@/fixtures`, `@/data` or `@/lib/preview`; a failed read shows `LoadFailure` and never an empty list; a viewer who opens Team or Settings sees the no-access note, and the page calls no manager-only endpoint for them; an upload from QGIS layers makes the new version current; every aggregate built from a limited loaded subset discloses it. The original 500-row export behavior is superseded by WEB-39 to WEB-41's server scope.
 
 Verify: `pnpm --dir web check`, `format:check`, `build`, `test:unit`, `test:auth`, `test:api-errors` and `test:account`; from the root `pnpm tokens:check`, `pnpm forms:parity`, `pnpm plan:check`, `pnpm mobile:check` and `pnpm mobile:test`; a grep showing no `@/fixtures`, `/o/deca` or `onboarding` in `web/src`; and `sh scripts/e2e-local.sh` on the local stack (its header lists the options; the seed is `database/seed-web-workspace.mjs`, and nothing targets hosted services).
 

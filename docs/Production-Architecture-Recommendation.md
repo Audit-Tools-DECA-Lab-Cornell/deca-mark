@@ -1,5 +1,7 @@
 **Production architecture recommendation for DECA Mark**
 
+> Historical September architecture research, not current implementation status or an active replacement proposal. The selected stack now exists; PowerSync remains gated while D27 uses the outbox. Use [current architecture](plan/architecture.md) and [position/next work](plan/current-state.md) for current scope. Vendor/pricing findings below are dated research and were not refreshed in this documentation pass.
+
 Research date: September 17, 2026. Status: proposed architecture, ready for review and a device proof of concept. This report does not claim that synchronization, hosting, or QGIS integration has been implemented or tested.
 
 **Recommendation**

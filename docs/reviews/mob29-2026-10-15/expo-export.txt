@@ -1,0 +1,47 @@
+Starting Metro Bundler
+
+| (node:91626) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:91626) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+iOS Bundled 16029ms node_modules/expo-router/entry.js (4142 modules)
+Android Bundled 31559ms node_modules/expo-router/entry.js (4231 modules)
+
+› Assets (47):
+node_modules/@expo-google-fonts/geologica/400Regular/Geologica_400Regular.ttf (136KB)
+node_modules/@expo-google-fonts/geologica/500Medium/Geologica_500Medium.ttf (136KB)
+node_modules/@expo-google-fonts/geologica/600SemiBold/Geologica_600SemiBold.ttf (136KB)
+node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf (342KB)
+node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf (343KB)
+node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf (344KB)
+node_modules/@expo-google-fonts/material-symbols/400Regular/MaterialSymbols_400Regular.ttf (971KB)
+node_modules/@expo-google-fonts/spline-sans-mono/400Regular/SplineSansMono_400Regular.ttf (50KB)
+node_modules/@expo-google-fonts/spline-sans-mono/500Medium/SplineSansMono_500Medium.ttf (50KB)
+node_modules/@expo-google-fonts/spline-sans-mono/600SemiBold/SplineSansMono_600SemiBold.ttf (50KB)
+node_modules/@maplibre/maplibre-react-native/lib/module/assets/heading.png (3 variations | 450B)
+node_modules/expo-router/assets/arrow_down.png (9.5KB)
+node_modules/expo-router/assets/arrow_right.xml (307B)
+node_modules/expo-router/assets/checkmark.xml (312B)
+node_modules/expo-router/assets/error.png (469B)
+node_modules/expo-router/assets/file.png (138B)
+node_modules/expo-router/assets/forward.png (188B)
+node_modules/expo-router/assets/pkg.png (364B)
+node_modules/expo-router/assets/react-navigation/elements/back-icon-mask.png (653B)
+node_modules/expo-router/assets/react-navigation/elements/back-icon.png (8 variations | 359B)
+node_modules/expo-router/assets/react-navigation/elements/clear-icon.png (4 variations | 425B)
+node_modules/expo-router/assets/react-navigation/elements/close-icon.png (4 variations | 235B)
+node_modules/expo-router/assets/react-navigation/elements/search-icon.png (7 variations | 592B)
+node_modules/expo-router/assets/sitemap.png (465B)
+node_modules/expo-router/assets/unmatched.png (4.8KB)
+src/maps/sites/fall-creek/aerial.jpg (400KB)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-8641b37b807d89dc26d21689cfd198e2.hbc (8.8MB)
+
+› android bundles (1):
+_expo/static/js/android/entry-d40f3637e8ad24579df9dfba399758f6.hbc (9MB)
+
+› Files (1):
+metadata.json (5KB)
+
+Exported: /private/tmp/mob29-expo-export

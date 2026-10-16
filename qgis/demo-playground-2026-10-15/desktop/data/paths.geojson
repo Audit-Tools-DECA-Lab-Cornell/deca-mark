@@ -1,0 +1,34 @@
+{
+  "type": "FeatureCollection",
+  "name": "SYNTHETIC paths",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-path",
+        "kind": "path",
+        "label": "Entry path (synthetic)",
+        "name": "Entry path (synthetic)",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -76.5002,
+            42.4451
+          ],
+          [
+            -76.5002,
+            42.44605
+          ],
+          [
+            -76.49935,
+            42.44605
+          ]
+        ]
+      }
+    }
+  ]
+}

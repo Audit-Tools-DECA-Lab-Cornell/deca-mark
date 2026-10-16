@@ -9,7 +9,7 @@ import {
 } from "./observation-store";
 import { installPackage } from "./package-catalog";
 import { boundRecord, entry, identity, memoryDatabase, owner } from "./package-store.fixture";
-import { acknowledge, deferObservation, pendingObservations, retryAttention } from "./sync-store";
+import { acknowledge, pendingObservations, retryAttention } from "./sync-store";
 
 function adapter(database: DatabaseSync): LocalDatabase {
   return {
@@ -38,13 +38,13 @@ const record = shellObservationSchema.parse({
 });
 
 describe("Account-scoped local work", () => {
-  it("does not upload or mutate a bound record prematurely marked pending", async () => {
+  it("queues bound records while refusing incomplete receipts at the persistence boundary", async () => {
     const { sqlite, db } = await memoryDatabase();
     try {
       await installPackage(db, owner, entry);
       await saveObservation(db, boundRecord, owner);
       sqlite.exec("UPDATE observations SET sync_state = 'pending';");
-      expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
+      expect(await pendingObservations(db, owner, Date.now())).toHaveLength(1);
       await acknowledge(db, owner, {
         observation_id: boundRecord.id,
         project_id: identity.projectId,
@@ -52,7 +52,7 @@ describe("Account-scoped local work", () => {
         accepted_revision: 1,
         received_at: boundRecord.createdAt,
       });
-      await deferObservation(db, owner, boundRecord.id, "Should not apply", 99, true);
+
       expect(
         sqlite
           .prepare("SELECT sync_state,server_receipt,sync_error,attempts FROM observations")
@@ -66,7 +66,7 @@ describe("Account-scoped local work", () => {
       sqlite.exec("UPDATE observations SET sync_state = 'needs-attention';");
       await retryAttention(db, owner);
       expect(sqlite.prepare("SELECT sync_state FROM observations").get()).toEqual({
-        sync_state: "needs-attention",
+        sync_state: "pending",
       });
     } finally {
       sqlite.close();

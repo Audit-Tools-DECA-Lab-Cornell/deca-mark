@@ -1,5 +1,7 @@
 # Janet test form: next implementation slice
 
+> Historical September research/form scope. The canonical form/engine now exist; this is not the next implementation queue. Its dual-acceptance and preserve-old-schema instructions are superseded by the [pre-launch policy](plan/README.md#pre-launch-compatibility-policy-2026-10-11). Retain workbook inclusion/provenance and unresolved protocol questions. Current technical/pilot acceptance lives in [the roadmap](plan/current-state.md), CON-02, WEB-09 and GIS-01.
+
 Prepared September 18, 2026 from `Variables to use for App testing.xlsx`, Sheet1, and the current mobile/API contracts. This is an implementation scope, not an approved research instrument or a deployed form. The workbook remains unchanged.
 
 ## Starting point

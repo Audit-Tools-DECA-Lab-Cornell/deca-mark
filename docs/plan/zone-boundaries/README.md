@@ -2,6 +2,8 @@
 
 Planning baseline: 2026-10-10, rewritten 2026-10-11 to the owner's [pre-launch compatibility policy](../README.md#pre-launch-compatibility-policy-2026-10-11). There are no real users. Data is reset whenever the schema changes, and this feature keeps nothing for old data, old clients, old formats or an older API version. Implementation is authorized in dependency order; source changes and disposable local tests are allowed. Commits, hosted resets, deployments and releases remain separately authorized. Task status does not claim shipped functionality. Finish this feature and its acceptance gates before starting other map features.
 
+Current navigation: [October 15 position and next sequence](../current-state.md). The original waves below explain dependencies; current tasks and dated acceptance belong to their owners. MOB-29’s immutable bound foreground upload path has local automated, disposable API/SQLite and native QGIS acceptance; complete the pending physical iPad/Android collector scenario before closing QA-07. [Current evidence](../../reviews/mob29-2026-10-15/README.md) separates local/runtime results from physical and hosted acceptance.
+
 ## Outcome and scope
 
 - **Managers:** a manager draws and edits named polygon zones for a site, validates them and publishes them as a new immutable map version. A site's first version comes from a QGIS upload (`v1`); every later upload or publication adds one.
@@ -89,8 +91,8 @@ The stack fits: PostgreSQL and PostGIS, FastAPI service and repository boundarie
 
 | Wave | Tasks | Exit condition |
 | --- | --- | --- |
-| A: contract | CON-05 (done), CON-06 (single-path rewrite) | Contract, shared cases and component plans describe one path |
-| B: data and services | DB-15, DB-16, BE-18, BE-19, BE-20 (done, dual path); DB-19 and BE-22 collapse them to one path | One schema baseline, one API path, regenerated types, a reset local stack |
+| A: contract | CON-05, CON-06 | Contract, shared cases and component plans describe one path |
+| B: data and services | DB-15, DB-16, BE-18, BE-19, BE-20; DB-19 and BE-22 establish the current single path | One schema baseline, one API path, regenerated types, a reset local stack |
 | C: clients and GIS | MOB-28, MOB-33, MOB-30 to MOB-32, MOB-29; WEB-30 to WEB-42; GIS-09; DB-18 seed | Real API wired; UI plans' browser and device scenarios exercised |
 | D: integrated acceptance | QA-07 | Cross-layer scenarios and evidence reviewed |
 
@@ -112,9 +114,9 @@ Owners and tasks live in [supabase](../../../supabase/PLAN.md), [backend](../../
 
 ## Delivery
 
-1. CON-06 rewrites the contract, cases and component plans to one path.
-2. DB-19 squashes migrations into one baseline without compatibility columns, and BE-22 serves the single `/v1` path. The coordinator regenerates types, and every local database is reset and reseeded (DB-18).
-3. The clients implement against that path: mobile pinning and upload, the web editor and review, and GIS views.
+1. Use CON-06's aligned contract/cases and the current generated declarations; do not repeat its completed rewrite.
+2. DB-19 and BE-22 supply the implemented local baseline; DB-18 supplies current acceptance fixtures. Local setup resets, hosted schema replacement and deployment are distinct explicit operations. Do not reset a database merely to update documentation.
+3. Preserve the implemented editor, review, retention/read models and GIS semantics. MOB-29’s bound serializer/receipt/rejection and foreground reconnect path have local automated, disposable API/SQLite and native QGIS acceptance; finish the remaining physical iPad/Android collector and browser/native acceptance recorded in their owners.
 4. On a publication defect, publish a corrected package as a new version. Never delete a version or rewrite collected data within the current schema.
 5. QA-07, including a real offline device and QGIS readback, finishes the feature before the next map feature starts. Hosted resets and deployments need explicit approval of the exact target.
 

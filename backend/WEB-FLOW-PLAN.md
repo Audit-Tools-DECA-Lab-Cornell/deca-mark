@@ -1,8 +1,10 @@
 # Backend plan for web flow completion
 
+Historical proposal — 2026-10-08; reconciled 2026-10-15. **The original proposal body below is retained as history, not active implementation instructions.** BE-17 delivered the original scoped backend work; BE-20/BE-22 subsequently replaced the capped array, route shapes and compatibility policy with the sole zone-aware `/v1` contract. Use [the current API handoff](WEB-FLOW-HANDOFF.md), [backend task status](PLAN.md) and [current roadmap](../docs/plan/current-state.md) before starting work. In particular, do not preserve/reintroduce the old 500-row array or add a second API version.
+
 Prepared 2026-10-08 from the supplied Claude plan and local checkout `a226634fdadf210103850bf297855fdf1f659d0d`.
 
-This is a scoped execution proposal under the [production plan](../docs/plan/README.md). Task status remains in [backend/PLAN.md](PLAN.md), [supabase/PLAN.md](../supabase/PLAN.md), and the other owning plans. It does not mark existing roadmap tasks complete or duplicate their task definitions. Recheck the implementation against current master before starting; this review did not fetch the remote or verify the deployed service.
+This was a scoped execution proposal under the [production plan](../docs/plan/README.md). Task status remains in [backend/PLAN.md](PLAN.md), [supabase/PLAN.md](../supabase/PLAN.md), and the other owning plans. It does not mark existing roadmap tasks complete or duplicate their task definitions. Recheck the implementation against current master before starting; this review did not fetch the remote or verify the deployed service.
 
 ## Goal and scope
 

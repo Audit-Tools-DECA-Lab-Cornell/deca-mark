@@ -79,6 +79,8 @@ function latest() {
   return view;
 }
 beforeEach(async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-15T10:00:00Z"));
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   h = await harness();
   mocks.database = h.database;
@@ -107,10 +109,12 @@ afterEach(async () => {
   root = undefined;
   view = undefined;
   h.close();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
 it("publishes a completed newer install even when queued exact recovery fails", async () => {
+  vi.setSystemTime(new Date("2026-10-15T10:00:04Z"));
   const f = nextFixture();
   const entered = deferred<void>();
   const release = deferred<void>();

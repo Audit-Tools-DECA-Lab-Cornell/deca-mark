@@ -12,36 +12,19 @@ Related plan files:
 - **GIS views and reader roles** are planned in [qgis/PLAN.md](../qgis/PLAN.md) (GIS-01 to GIS-03).
 - **Applying migrations to staging** is done per phase by OPS-14 to OPS-17 in [operations.md](../docs/plan/operations.md).
 
-## Context
+## Current baseline (reconciled 2026-10-15)
 
-**Schema today** (Postgres 17, PostGIS 3.3 in `extensions` on hosted):
-- Tables: `organizations`, `projects`, `sites`, `form_versions` (immutable by trigger), `observations`, `project_memberships` (roles `observer`, `manager`, `viewer`), `site_packages`, `package_checks`.
-- The user reports applying `supabase/migrations/20260923120000_site_packages.sql` (DB-01); hosted acceptance was not repeated in this implementation.
-- Ledger versions `0001`–`0012` exist locally; the next free number is `0013`.
+`supabase/migrations/20261012120000_current_baseline.sql` is the single current schema, followed by `20261012142629_transactional_email_outbox.sql`. DB-19 replaced the experimental incremental chain; old migration filenames and ledger numbers in dated task evidence below are historical and must not be recreated.
 
-**Identity.**
-- The API sets `fieldmaps.user_id` per transaction, and `fieldmaps.request_user_id()` reads it.
-- Every policy targets the restricted role `fieldmaps_api` (NOBYPASSRLS; SELECT, and column-limited INSERT).
+The baseline supplies tenancy/profile/invitation functions, isolated Training membership, immutable forms, UUID-bound site packages and zone snapshots, draft CAS/publication/replay, point-versus-Inventory observation constraints and four scoped recorded-context GIS views. BE-06/07 and BE-22 expose the corresponding local API. The restricted `fieldmaps_api` role receives caller-scoped RLS; browser roles do not gain direct table access.
 
-**Role checks name the caller (2026-09-26).**
-- Every membership test in a policy or API query filters on `m.user_id = fieldmaps.request_user_id()`: the package policies (local `0005`, hosted DB-01 file) and `PROJECTS`, `UPLOAD_TARGET`, `PACKAGE_TARGET` (BE-16).
-- The policies from the initial migration still rely on the memberships SELECT policy showing each account only its own rows. They are rewritten in DB-05, **before** anything lets members see other members' rows.
-- A widened memberships policy would otherwise turn "a manager exists on this project" into "you are a manager". This was reproduced: a viewer prepared a site package.
-
-**Local foundation now implemented:** profiles linked to Auth, organization memberships, invitations, private tenancy functions, caller-scoped RLS, the isolated Training project and concurrency tests. Public HTTP identity/tenancy endpoints remain BE-06/07.
-
-**Canonical migration track (2026-09-26).**
-- DB-03 removed the historical `database/migrations/0001-0005` track, its ledger, seeds and Docker bootstrap after CI passed.
-- `supabase/migrations/` (hosted: a squashed initial file with seeds, plus small files).
-- Decision D7 makes `supabase/migrations/` canonical.
-
-**The GIS view.** `gis.sample_observations` is owner-executed with hard-coded IDs, so its WHERE clause is its only tenant boundary (`supabase/migrations/20260918185806_fieldops_initial.sql`). GIS-01 and GIS-03 replace it.
+DB-10 still owns rejection/assignment/device completion; DB-12/14 retain Storage and safe archive-retirement work; DB-11 and SYNC tasks retain PowerSync replication; GIS-01/02 retain typed projections and per-project Desktop reader provisioning. Source/local acceptance does not establish hosted schema reconciliation or pilot readiness. See [the current roadmap](../docs/plan/current-state.md), [DB-19 acceptance](../docs/reviews/zone-boundaries-2026-10-12/db19.md) and [database operations](../database/README.md).
 
 ## Conventions for every migration
 
 - **Creating a file.**
   - Use `supabase migration new <name>`. If the CLI is missing, use a `YYYYMMDDHHMMSS_<name>.sql` name that sorts after the last file.
-  - Tasks below name a migration by purpose. Its ledger version is the next free `NNNN_<name>`.
+  - Tasks below may retain historical purpose/ledger examples; select the actual next unused ledger version from the current migration source, never an old `0001`–`0012` sequence.
 - **Applied files are never edited.** Fix mistakes with a new migration. A file counts as applied once it has run anywhere hosted: DB-01 step 1, or OPS-14 to OPS-17.
 - **Ledger row.** End every file with `INSERT INTO fieldmaps_meta.schema_migrations(version) VALUES (…)`, as the existing hosted files do.
 - **New tables:**
@@ -508,7 +491,7 @@ Done when: the lifecycle tests pass, and the existing upload tests still resolve
 ### DB-10: Collection schema for sync
 Status: doing (round context added 2026-10-07; rejections, assignments and devices remain) · Phase 2 · Size M · Depends: DB-05 · Blocks: BE-12, BE-14, DB-11, GIS-01, OPS-15, SYNC-02
 Done so far (D26): `observations.zone_code`, `round_type` (`standard` / `reliability` / `inventory`, replacing the planned numeric `round`), `first_round` and `placement_source` (`hand` / `zone`), with the INSERT grant and an index on `(organization_id, project_id, round_type, zone_code)`. Sites also gained `description`, `created_by` and `created_at`, with manager INSERT/UPDATE policies (BE-13 step 1).
-Read first: the observation envelope in [contracts.md](../docs/plan/contracts.md#observation-envelope-sync-upload-and-storage).
+Read first: the observation envelope in [contracts.md](../docs/plan/contracts.md#current-bound-observation-envelope).
 Do: add migration `collection`.
 1. **Add to `observations`:**
    - `zone_code text NULL`, `package_version int NULL`
@@ -564,7 +547,7 @@ Applying it to staging is OPS-15's job, and proving replication (including the i
 
 ### DB-12: Sites, zones, and packages in Storage
 Status: todo · Phase 2 · Size M · Depends: DB-01, DB-05 · Blocks: BE-13, DB-11, OPS-15, SYNC-02
-Zone-feature supersession (2026-10-10 proposal): DB-15/DB-16 and [ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md) own stable identities, immutable snapshots and managed-site current state. The old `zones` table/current-pointer steps below are historical design context, not instructions to create a second zone model. Remaining Storage work must integrate with that model when present and preserve all referenced historical archives; it is not a prerequisite for the zone feature. Do not expose a direct manager pointer update that bypasses publication.
+Zone-feature supersession (reconciled 2026-10-15): DB-19’s baseline and [ZONE-BOUNDARIES.md](ZONE-BOUNDARIES.md) provide stable identities, immutable snapshots and managed-site current state. The old `zones` table/current-pointer steps below are historical design context, not instructions to create a second zone model. Remaining Storage work must integrate with that model when present and preserve all referenced historical archives; it is not a prerequisite for the zone feature. Do not expose a direct manager pointer update that bypasses publication.
 Do: add migration `spatial_storage`.
 1. **Add to `sites`:** `boundary geometry(MultiPolygon,4326) NULL`, `timezone text NULL`, `current_package_id uuid NULL`.
    - Add `UNIQUE (organization_id, project_id, site_id, id)` on `site_packages`.
@@ -621,17 +604,13 @@ Done when:
 
 ### DB-14: Retire the package archive column
 Status: todo · Phase 2 · Size S · Depends: BE-13 · Blocks: DB-11, OPS-15
-Do: add migration `drop_package_archive`.
-1. **Needs user (Q7):** on staging, list `SELECT id, site_id, version FROM fieldmaps.site_packages WHERE storage_path IS NULL`. These are the pre-Storage test packages.
-   - Re-prepare any that are still needed through BE-13, which creates the next version. The old rows stay as immutable history without an archive; BE-13 answers 410 (`archive_unavailable`) for them.
-   - The user confirms that their archives may be discarded.
-   - The staging API must already run BE-13's code (OPS-15 checks this). Older code still writes `archive` and would fail once the column is gone.
-2. `ALTER TABLE fieldmaps.site_packages DROP COLUMN archive;`
-   - Postgres drops DB-12's `archive IS NOT NULL OR storage_path IS NOT NULL` check with the column.
-   - Then `ALTER TABLE fieldmaps.site_packages ADD CONSTRAINT site_packages_storage_path_required CHECK (storage_path IS NOT NULL) NOT VALID;`.
-3. In `database/hosted/verify.sql`, make **both** package inserts write `storage_path` and `archive_bytes` instead of `archive`: the manager's insert, and the observer's insert inside `assert_rejected`.
+Reconciled scope (2026-10-15): retire inline archives only after BE-13 supplies verified Storage copies for every referenced ready package. The original plan to re-prepare needed packages and return 410 for historical versions conflicts with the current immutable-package contract and is superseded.
+Do:
+1. Inventory exact historical package references and copy/rehome their original archive bytes with digest verification. A draft/observation must still reopen its exact package; creating a successor cannot replace that obligation.
+2. Deploy the compatible archive reader/writer and verify historical/current downloads before approving removal of the inline column on the named target.
+3. Add the forward migration and current SQL/API verification only after the retention gate passes. Do not remove source archives merely because the newest package downloads successfully.
 
-Done when: the migration applies locally, and `verify.sql` passes locally. OPS-15 applies it to staging, together with DB-11.
+Done when: exact historical archives remain downloadable with unchanged identity/digest and the current SQL/API fixtures pass without the inline column. OPS-15 owns separately approved staging rollout.
 
 ### DB-15: Add stable zones and immutable package snapshots
 Status: done (2026-10-10; schema source and disposable local rehearsal only) · Phase 3 · Size L · Depends: CON-05 · Blocks: DB-16

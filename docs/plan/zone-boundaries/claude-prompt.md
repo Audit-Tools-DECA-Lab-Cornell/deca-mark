@@ -1,14 +1,14 @@
 # Claude implementation handoff: zone-boundary web and mobile UI
 
-Copy the text below into the DECA Mark workspace chat with Claude. Use the existing detailed UI plans; task status belongs only in the owning PLAN files.
+Use this as a continuation handoff, not an instruction to rebuild completed tasks. Read [current position](../current-state.md) and owning task statuses first.
 
 ---
 
-Work in `/Users/praty/Desktop/StudentJob.nosync/field-ops`. Implement zone polygon boundaries one unblocked frontend task at a time. The owner has approved replacing experimental incompatible data across the product. The authoritative contract defines one `/v1` API, one zone-aware archive manifest `format: 1` and one observation fingerprint. Map versions begin at 1 and increment; they are distinct from API or archive versions.
+Work in `/Users/praty/Desktop/StudentJob.nosync/field-ops`. Continue the remaining zone-boundary acceptance one task at a time. The current contract has one `/v1` API, one zone-aware archive manifest `format: 1` and one observation fingerprint. Map versions begin at 1 and increment independently of API/archive versions.
 
-CON-06 aligns specifications and authored cases. DB-19 supplies the current schema baseline; BE-22 implements the current API and regenerates OpenAPI and client declarations. Existing BE-18–20 implementation and evidence describe the previous baseline and do not establish new-contract compliance. Start with unblocked pure geometry/editor tasks WEB-30 and WEB-31; integration tasks wait for their documented BE-22 dependencies. Verify task status and source before relying on any endpoint or field. Do not invent success responses to unblock a screen.
+CON-06, DB-19 and BE-22 establish the current implemented baseline. WEB-28 to WEB-43 and MOB-28/30–33 have local implementation/evidence in their owners; do not restart WEB-30/31, repeat the schema rewrite or reopen MOB-33's acknowledged interface. MOB-29 owns the remaining exact upload/receipt integration and physical-device story before QA-07. Mobile UI and data owners coordinate any changes to shared session/package providers. Pending mobile simulator/VoiceOver and physical iPad/editor checks remain acceptance work.
 
-Claude owns WEB-28 through WEB-42 and mobile UI tasks MOB-30 through MOB-32, including the UI collaboration in MOB-29. The mobile data owner owns MOB-28, MOB-33 and MOB-29's geometry, serializer and receipt work. MOB-28's local lifecycle implementation is committed in `a86a1ee`; its real API gate remains pending DB-19/BE-22. Read `mobile/PACKAGE-LIFECYCLE.md` before integrating storage. MOB-33 supplies `SiteVersions`, `Pinned` and `Recovered` read models; agree those interfaces before wiring dependent screens. Do not implement a competing package catalog or session store.
+The mobile data owner continues the serializer, receipt and rejection-preservation work on the existing outbox. UI owners address only observed acceptance defects. Read `mobile/PACKAGE-LIFECYCLE.md` and `mobile/MOB-33-HANDOFF.md`; reuse the established catalog and `SiteVersions`, `Pinned` and `Recovered` interfaces. The exact sloping-edge predicate and retained-form/readiness follow-ups were fixed on October 14; do not treat the older failing handoff as an active blocker.
 
 Read only the specifications and source paths relevant to the selected task:
 

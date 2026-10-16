@@ -5,44 +5,32 @@ It preserves recorded package/zone identities, labels and geometry. It never rea
 boundaries to fill missing history. A source export must contain all five ZIP assets; a
 paginated response is not a substitute. CSV and GeoJSON downloads must have the same filters.
 
-## SQL projections
+## Current baseline and manual export workflow (2026-10-15)
 
-The database owner implements the following companion views through
-`supabase/migrations/20261011134000_gis_recorded_zone_context.sql`. Each view has
-`security_invoker` and `security_barrier`; its existing `fieldmaps_api` caller's RLS scope
-applies. No new GIS reader login, membership or project assignment is provisioned.
-`gis.sample_observations` and its feature identity/columns/grants remain unchanged.
+DB-19’s `supabase/migrations/20261012120000_current_baseline.sql` supplies four current views with request-scoped `fieldmaps_api` RLS. The old incremental GIS migration and `gis.legacy_records` are superseded. New current-schema observations always have exact recorded package/zone bindings.
 
 | View | One row represents | Geometry and attribution |
 | --- | --- | --- |
-| `gis.recorded_observations` | One visible, undeleted observation | Nonspatial common read-side metadata and answers; explicit point/zone/unknown support and separately identified display anchors |
-| `gis.point_events` | One proven Standard/Reliability point event | Point; inventories excluded, including their compatibility anchors |
-| `gis.zone_snapshots` | One permitted package+zone snapshot | Full MultiPolygon, stable `snapshot_key`, package version, recorded label/code, geometry digest, canonical anchor, area and actual package preparation metadata |
-| `gis.inventory_records` | One whole-zone inventory | Its recorded snapshot's full MultiPolygon, or null for legacy; answers plus separately identified display anchor |
-| `gis.legacy_records` | One unversioned observation | Original stored compatibility geometry retained, alongside explicit event/display semantics and null historical IDs/version/label |
+| `gis.recorded_observations` | One visible, undeleted observation | Common historical metadata, answers, `snapshot_key`, point/zone `spatial_support`; Inventory display anchor is separate from event geometry |
+| `gis.point_events` | One Standard/Reliability point event | Real Point; Inventory excluded |
+| `gis.zone_snapshots` | One permitted package+zone snapshot | Full MultiPolygon, `package_version`, recorded `zone_label_at_capture`, anchor, digest, area and stored publication metadata |
+| `gis.inventory_records` | One whole-zone Inventory | Exact recorded MultiPolygon and observation answers |
 
-Observation projections expose `fid` (`qgis_id`, unchanged per observation),
-`observation_id`, project/site identity, site code/name, form version, observer and times,
-revision, round type/placement, exact `package_id`, `package_version`, `zone_id`,
-`zone_code`, `zone_label_at_capture`, `assignment_basis` and `spatial_support`.
-`display_anchor_basis` distinguishes `snapshot` and `legacy_compatibility` aids.
-`zone_snapshots.snapshot_key` is the text `package_id:zone_id`; it is unique even when a
-stable zone UUID appears in multiple packages. SQL `package_version` and export
-`map_version` describe the same recorded package version.
+SQL reads use `package_version`; the export code deliberately names that field `map_version` and the recorded label `zone_label_at_capture`. Join on `package_id` **and** `zone_id` (`package_id:zone_id`), never today’s package or a matching label. Multipart zones stay one MultiPolygon and point/Inventory counts remain separate. Neither the views nor exports provision a new Desktop reader; GIS-01/GIS-02 still own scoped live-reader infrastructure.
 
-All observation-to-snapshot joins use package **and** zone identity and tenant/site keys.
-The snapshot view exposes `prepared_at`/`prepared_by`, which are real stored package
-metadata; it does not invent a publication author/name. Multipart polygons remain one
-MultiPolygon, never `ST_Dump` rows. Area is in square metres and accompanies the version
-so deliberate cross-version analysis can account for changed sampled area.
+1. Download `/v1/projects/{project_id}/observations/export?format=geojson` using authorized filters; optionally download `format=csv` with the same filters. Each ZIP is one complete snapshot; two separate requests during concurrent writes are not one transaction.
+2. Open the ZIP’s `observations.geojson` and `historical-zones.geojson` in QGIS. Retain `metadata.json`, `forms.json` and `codebook.csv` with them. Filter point events by `spatial_support = point`; Inventory event geometry is null, so view those rows as a table.
+3. For Inventory polygon analysis, join each Inventory observation to its exact historical package+zone MultiPolygon and retain one output row per observation. Do not count anchor points or polygon parts as events. Review counts/IDs against the API/CSV, then save the QGIS project beside the extracted sources.
 
-The API role receives SELECT on these views within its existing request-scoped access.
-The old `fieldmaps_sample_reader`/`fieldmaps_qgis_training` receives no new grants and
-cannot query them. Until scoped GIS-01/GIS-02 login infrastructure is separately approved,
-use the file export path below for QGIS. Do not use the API database login as a Desktop
-connection or infer wider permissions from a security-invoker view.
+The generic export-loading steps above use the current contract. **`prepare.py` and `render.py` still expect the removed `assignment_basis` metadata** (`prepare.py` rejects its absence), so their recipe below is historical and must not be used unchanged with a current export. Align those adapters and repeat QGIS provider/Desktop acceptance under [QA-07](../../docs/plan/verification.md). Current SQL/API agreement can be rehearsed with `sh database/gis09-api-rehearsal.sh -q`; that fixture does not exercise these Desktop adapters.
 
-## Prepare and open an export
+See [the current roadmap](../../docs/plan/current-state.md), [GIS task ownership](../PLAN.md) and [the current GIS specification](../ZONE-BOUNDARIES.md). GIS-09’s recorded 2026-10-11 QGIS rendering remains evidence only for that earlier contract.
+
+## Historical preparation recipe (2026-10-11; adapter alignment required)
+
+The remainder records the old `/v2` export, legacy-record and map-v7/v8 adapter fixture. It is retained to explain existing tooling and dated screenshots; it is not the current API contract or current acceptance evidence.
+
+### Earlier prepare/open recipe
 
 1. Download `format=geojson` and, for count/identity agreement, `format=csv` from the same
    authorized `/v2/projects/{project_id}/observations/export` filters. Save both ZIPs.
@@ -70,7 +58,7 @@ and scope. Separate export requests may have different generation timestamps; th
 converter checks matching scope and identities but does not claim transactional equality
 between two downloads made while data changes.
 
-## Synthetic QGIS acceptance
+### Earlier synthetic QGIS acceptance
 
 The reproducible disposable database/API fixture has five records: a delayed v7 point
 received after v8, a v7 whole-zone inventory, a v8 point, a legacy point and a legacy
@@ -100,7 +88,7 @@ every loaded event/Inventory ID and historical attribute with its SQL source.
 The project stores file sources beside itself and no inline database credentials. Keep
 the prepared directory together when moving the project.
 
-## Regression checks
+## Adapter regression commands
 
 ```sh
 backend/.venv/bin/python -m unittest discover -s qgis/zone-boundaries -p 'test_*.py'

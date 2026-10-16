@@ -1,5 +1,7 @@
 # WP0B shell report
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 ## Summary
 WP0B (the shell) is finished. I kept what the earlier attempt got right (WorkspaceProvider, RememberPlace, the managersOnly sections in navigation.ts, and the PreviewProvider shim with its own defaultRoleFor) and completed every item:
 1. `(app)/layout.tsx` calls getWorkspace() and mounts WorkspaceProvider. PreviewProvider stays inside it as the temporary shim, so screens not yet rewired still compile. PreviewFooter is gone.

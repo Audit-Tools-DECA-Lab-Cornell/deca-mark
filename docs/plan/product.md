@@ -2,6 +2,8 @@
 
 This file is part of the [DECA Mark production plan](README.md) and defines no tasks. It answers two questions: who the system serves, and what "pilot-ready" means. Architecture is in [architecture.md](architecture.md); contracts are in [contracts.md](contracts.md).
 
+Current implementation and remaining acceptance are summarized in [current position](current-state.md). Journeys below define pilot requirements, including uncompleted mobile/operations gates; they are not a claim that every step works today.
+
 ## Stakeholders
 
 | Who | Surface | What they need | Plan areas that serve them |
@@ -29,16 +31,16 @@ Authorization is stored in the database and checked on every request. It is not 
 | Project | GIS reader grant | A per-project read-only database login or key ([qgis/PLAN.md](../../qgis/PLAN.md)). This is not a user role. |
 | Platform | platform admin | A support flag in the database, not a JWT claim; used only by support tooling |
 
-The project roles `manager`, `observer` and `viewer` already exist (`supabase/migrations/20260918185806_fieldops_initial.sql:126`).
+The project roles `manager`, `observer` and `viewer` are defined in the canonical [schema baseline](../../supabase/migrations/20261012120000_current_baseline.sql).
 
 ## Journeys the pilot must support
 
 ### J1: The manager sets up a study (web)
 
 1. Sign up, then enter the 6-digit email code.
-2. Onboarding: create the organization "DECA Lab" and the first project "Riverside Play Study".
+2. Under D30, an operator bootstraps the organization and first study; owners/admins create later projects on the web. There is no web organization-onboarding flow.
 3. Sites: upload the QGIS export (the ground and zones layers plus the `.qgz`). The checks pass, and version 1 becomes the site's current package.
-4. Forms: import Janet's form definition as a draft, see the validation results, then publish.
+4. Forms: prepare Janet's approved canonical definition as a draft, review validation, then publish and bind its exact version to a map. Template-based drafts exist; arbitrary JSON import remains WEB-09 scope.
 5. Team: create an 8-character observer join code, or an invitation link (shown once, to copy).
 6. Overview: watch observations arrive, with coverage by zone and round.
 

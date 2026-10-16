@@ -1,5 +1,7 @@
 # wp8-brand report
 
+> Historical D30 implementation record (October 2026). Instructions, open issues and test counts below describe that work period. Use [current position](../../../plan/current-state.md) and [web task owners](../../../../web/PLAN.md) before starting work; the later zone contract supersedes the original 500-row analysis design.
+
 ## Summary
 WP8 (brand) is finished. The collector's mark is now the purple app icon instead of the black ring mark, and a test stops it drifting from the icon file. DESIGN.md and decision D29 now say the purple app icon is the one brand mark on web and mobile.
 - New `mobile/src/ui/brand-artwork.ts` holds the icon's numbers in its own 1024 x 1024 space, typed as `BrandArtwork`. Everything was checked against `icon.svg` and `generate.py` and matches the values in the task: ground gradient #20223a to #161826 (cx 512, cy 430, r 760); the plan scaled 1.2 about the centre; zones #5d5294, #796cbf and #423a6a with 52 rounded corners; the path stroked #161826 at width 44 with round caps, shown only inside the zones; marker rings 128 #161826, 98 #e9e9ed and 58 #9184d9 at (520, 538).

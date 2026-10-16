@@ -3,7 +3,8 @@
 This is the entry point for taking DECA Mark from prototype to Janet's first field pilot. Every other plan file links back here. **Read this file first, then only the files your task names.**
 
 - Plan agreed: 2026-09-22.
-- Target: the pilot in week 13 (about 3 months) with one developer.
+- Original target: a 13-week pilot schedule with one developer. The week labels below are sequencing targets from September, not a refreshed delivery forecast.
+- Current navigation: [October 15 position and next work](current-state.md).
 - Source research: seven codebase surveys and three vendor-documentation surveys run on 2026-09-22. Their findings are folded into the files below and cited as `file:line`.
 
 ## Pre-launch compatibility policy (2026-10-11)
@@ -14,9 +15,9 @@ Within the current supported schema, normal restarts and failed downloads still 
 
 ## The goal in one paragraph
 
-**The manager's side (web).** A manager signs up, creates an organization and a project, and uploads a QGIS site package. They publish Janet's form and invite observers.
+**The manager's side (web).** A manager signs up; an operator creates the organization with the bootstrap script (D30), and its owner/admin creates projects on the web and uploads QGIS site packages. They publish Janet's form and invite observers.
 
-**The observer's side (app).** An observer signs up, verifies a 6-digit email code, and joins with an invite code. They download the site, collect offline, and sync through PowerSync.
+**The observer's side (app).** An observer signs up, verifies a 6-digit email code, and joins with an invite code. They download the site, collect offline, and upload through the existing outbox (D27). PowerSync remains gated by SYNC-01; it is not the current transport.
 
 **The result.** Records appear in the web review, in CSV/GeoJSON exports and in QGIS. No production screen shows fixture data.
 
@@ -24,7 +25,7 @@ Within the current supported schema, normal restarts and failed downloads still 
 
 | # | Decision | Detail |
 |---|---|---|
-| D1 | Self-serve organizations | Anyone may sign up; organizations are created **on the web only** |
+| D1 / D30 | Organization setup | Anyone may sign up; organizations are bootstrapped by an operator, projects created on the web by owners/admins |
 | D2 | PowerSync for mobile sync | Gated by a 3–4 day spike ([SYNC-01](sync-powersync.md)); fallback is the existing outbox |
 | D3 | Email + password, 6-digit email codes | For verification and password reset; no social login in v1 |
 | D4 | Server "Training" project | Every new account joins it automatically; bundled practice data is removed |
@@ -35,7 +36,7 @@ The full decision log, the running cost and the open questions are in [decisions
 
 ## File map
 
-**Current focused feature:** [Zone polygon boundaries](zone-boundaries/README.md), with linked database, API, mobile-data, web/GIS handoffs, contract, edge-case matrix and a Claude frontend-planning prompt. This is a proposed implementation plan, not shipped functionality. Finish its QA gate before taking on the next map feature. Status remains in the owning task files below.
+**Current focused feature:** [Zone polygon boundaries](zone-boundaries/README.md), with linked database, API, mobile-data, web/GIS handoffs, contract, edge-case matrix and a Claude frontend-planning prompt. The feature has local implementation and component acceptance evidence; MOB-29 and QA-07 retain the integrated upload/device/release gates. See [current position](current-state.md) before choosing work. Finish its QA gate before taking on the next map feature. Status remains in the owning task files below.
 
 | File | Owns | Task IDs defined there |
 |---|---|---|
@@ -109,7 +110,7 @@ Each phase ends with something working that can be demonstrated. The weeks are t
 **Demo:** CI green; staging API on HTTPS; a sign-up email arrives with a code; a package upload works against staging.
 
 - **Data:** DB-01, DB-02, DB-03, DB-04
-- **API:** BE-01, BE-02, BE-03, BE-04, BE-05, BE-16 (done)
+- **API:** BE-01, BE-02, BE-03, BE-04, BE-05, BE-16
 - **Contracts:** CON-01, CON-02, CON-03
 - **Operations:** OPS-01, OPS-02, OPS-03, OPS-04, OPS-06, OPS-07
 - **Mobile:** MOB-01
@@ -199,21 +200,8 @@ Cut in this order:
 - Already defined as tasks: GIS-06, GIS-07, GIS-08.
 - Get an ID only when scheduled: photo attachments, closed-app background upload, a visual form builder, CAPTCHA on mobile, billing and quotas, an "other observers" map layer, MapLibre on the web, multi-region hosting.
 
-## Status (2026-09-26)
+## Current navigation (reconciled 2026-10-15)
 
-- **Works today.**
-  - Offline save, upload and the PostGIS/QGIS read path were verified on 2026-09-18 with two practice records.
-  - Package preparation in the API is real and tested.
-- **BE-16 is `done`.**
-  - Every API role check names the caller.
-  - The package list no longer returns 503.
-  - The SQL suite's stale ledger assertion is fixed.
-  - Verified by 19 SQL assertions, 59 API tests, Ruff and BasedPyright.
-- **DB-01 is `doing`.**
-  - The hosted migration now carries caller-scoped package policies.
-  - Its 13 hosted assertions pass on a disposable PostGIS, including a rerun after a real package exists.
-  - The user reports applying it to staging; package acceptance was not repeated here.
-- **Review of PR 9.** Greptile's six findings and about 45 further defects from a verified review pass are folded into the task texts above (see decisions D13–D17).
-- **DB-02, DB-04, DB-05 and DB-06 are complete locally (2026-09-26).** A fresh Supabase reset, 94 mobile tests, 62 API tests and SQL isolation/function suites pass.
-- **OPS-06 and DB-03 are complete (2026-09-26).** [All five CI jobs passed](https://github.com/Audit-Tools-DECA-Lab-Cornell/Field-Maps/actions/runs/36273492260), then the unused migration track was retired. Local checks pass, including mobile formatting.
-- Remaining task status lives in each owning file.
+Read [current position and next work](current-state.md) for the implemented zone/web scope, remaining acceptance and the ordered return to the pilot roadmap. Component plans are the only task-status authority. Dated review results remain evidence of their exact revision and surface, not current hosted health.
+
+The September foundation results are retained in their owning DB/BE/OPS tasks. The active order is MOB-29 → QA-07, including authorized hosted reconciliation where required → remaining manager web acceptance → mobile/sync/operations/pilot gates. Do not restart the archived web work-package plan.

@@ -1,0 +1,5 @@
+
+> decamark@0.1.0 plan:check /Users/praty/Desktop/StudentJob.nosync/field-ops
+> node docs/plan/check-plan.mjs
+
+Plan check passed: 158 tasks across 13 files (48 todo, 34 doing, 74 done, 0 blocked, 2 dropped).
