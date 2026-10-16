@@ -199,7 +199,7 @@ describe("an unfinished observation after a restart (MUI-7)", () => {
 
   it("form missing and nothing to download: keeps it for the coordinator", () => {
     const screen = card(draft("form_missing", { redownload: { possible: false, bytes: null } }));
-    expect(screen.says("The form for this observation is not in map v1 on this device.")).toBe(
+    expect(screen.says("Form janet-test-v1 for this observation is not on this device.")).toBe(
       true,
     );
     expect(screen.says("Keep it for your coordinator.")).toBe(true);

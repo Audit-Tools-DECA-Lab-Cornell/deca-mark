@@ -74,7 +74,7 @@ export function recoveryCard(model: Recovered, online: boolean | null): Recovery
       const what =
         model.status === "zone_missing"
           ? `This observation's zone (${model.pinned.zone.code}) is not in ${map} on this device.`
-          : `The form for this observation is not in ${map} on this device.`;
+          : `Form ${model.formVersion} for this observation is not on this device.`;
       return {
         ...base,
         lines: [

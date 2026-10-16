@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { pointInPolygon, RIVERSIDE_PLAN, WELCOME_MARKERS, WELCOME_VIEW } from "./plan";
 import {
+  AUTH_MESSAGES,
+  authFailure,
+  CODE_REFUSED,
   confirmCheck,
   deletedAccountBody,
   formatCountdown,
@@ -10,10 +13,12 @@ import {
   MIN_PASSWORD_LENGTH,
   passwordLengthOk,
   passwordProblem,
+  RESEND_SECONDS,
   resetDisabledReason,
   SIGN_IN_MESSAGES,
   signInFailure,
   stayingTitle,
+  waitingForTitle,
   waitingTitle,
 } from "./rules";
 
@@ -110,9 +115,29 @@ describe("words", () => {
   });
 
   it("uses no exclamation marks and never says successfully", () => {
-    for (const { title, body } of Object.values(SIGN_IN_MESSAGES)) {
+    for (const { title, body } of [
+      ...Object.values(SIGN_IN_MESSAGES),
+      ...Object.values(AUTH_MESSAGES),
+    ]) {
       expect(`${title} ${body}`).not.toMatch(/!|successfully/i);
     }
+    expect(CODE_REFUSED).not.toMatch(/!|successfully/i);
+  });
+
+  it("names the account whose records wait, for welcome (MOB-05)", () => {
+    expect(waitingForTitle(5, 0, "a@fieldmaps.test")).toBe(
+      "5 records waiting on this device for a@fieldmaps.test",
+    );
+    expect(waitingForTitle(1, 1, "a@fieldmaps.test")).toBe(
+      "1 record waiting on this device for a@fieldmaps.test",
+    );
+    expect(waitingForTitle(0, 1, "a@fieldmaps.test")).toBe(
+      "An unfinished observation is waiting on this device for a@fieldmaps.test",
+    );
+  });
+
+  it("waits a minute between codes, as the web does", () => {
+    expect(RESEND_SECONDS).toBe(60);
   });
 });
 
@@ -148,6 +173,53 @@ describe("sign-in failures", () => {
       expect(body).toContain("Your records are safe on this device.");
     }
     expect(SIGN_IN_MESSAGES.deleted.body).toContain("stay on this device; they cannot upload.");
+  });
+});
+
+describe("auth failures (MOB-05)", () => {
+  it.each([
+    [{ name: "AuthApiError", status: 400, code: "invalid_credentials" }, "credentials"],
+    [{ status: 400, code: "email_not_confirmed" }, "unconfirmed"],
+    [{ status: 429, code: "over_email_send_rate_limit" }, "rateLimited"],
+    [
+      {
+        status: 429,
+        message: "For security purposes, you can only request this after 52 seconds.",
+      },
+      "rateLimited",
+    ],
+    [{ name: "AuthRetryableFetchError", status: 0, message: "Failed to fetch" }, "network"],
+    [{ name: "AuthApiError", status: 403, code: "otp_expired" }, "code"],
+    [{ status: 403, message: "Token has expired or is invalid" }, "code"],
+    [{ status: 422, code: "same_password" }, "samePassword"],
+    [{ status: 422, code: "weak_password" }, "weakPassword"],
+    [{ status: 400, code: "email_address_invalid" }, "emailInvalid"],
+    [{ status: 422, code: "user_already_exists" }, "exists"],
+    [{ status: 422, code: "signup_disabled" }, "signUpClosed"],
+    [{ name: "AuthSessionMissingError", status: 400 }, "sessionMissing"],
+    [{ status: 500, message: "Database error saving new user" }, "server"],
+    [
+      { name: "AuthRetryableFetchError", status: 500, message: "Error sending confirmation email" },
+      "server",
+    ],
+    [{ name: "AuthRetryableFetchError", status: 503, message: "Service unavailable" }, "server"],
+    [undefined, "server"],
+  ] as const)("reads %o as %s", (error, failure) => {
+    expect(authFailure(error)).toBe(failure);
+  });
+
+  it("narrows failures sign-in does not tell apart to the server case", () => {
+    expect(signInFailure({ status: 403, code: "otp_expired" })).toBe("server");
+    expect(signInFailure({ status: 422, code: "same_password" })).toBe("server");
+  });
+
+  it("gives every failure a title and a next step", () => {
+    for (const { title, body } of Object.values(AUTH_MESSAGES)) {
+      expect(title.endsWith(".")).toBe(true);
+      expect(body.length).toBeGreaterThan(0);
+    }
+    expect(AUTH_MESSAGES.code.body).toContain("send a new code");
+    expect(AUTH_MESSAGES.unconfirmed.body).toContain("Send a new code");
   });
 });
 

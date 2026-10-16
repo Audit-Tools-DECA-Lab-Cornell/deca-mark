@@ -130,7 +130,7 @@ Done when: the tests pass, and a real session larger than 2 KB persists across r
 Evidence (2026-10-04): AES-256-GCM adapter, exact staging migration and independent issuer-checked account identity implemented; 212 mobile tests, TypeScript and Biome pass. A fresh development build (`com.fieldmaps.collector.local`) on the iPad Pro 11-inch (M5), iOS 26.3 simulator persisted a real 24,404-byte local Supabase Auth session. After process termination and relaunch, plaintext SHA-256 comparison and retained account identity both matched. The temporary QA entry was removed and the Router entry restored. This verifies native session persistence; it does not claim hosted sign-in, full product flows or standalone Release acceptance.
 
 ### MOB-03: Route groups and auth gates
-Status: doing (2026-10-15 source reconciliation: route groups and real/cached identity gate exist; full native gate journey acceptance remains) · Phase 1 · Size M · Depends: MOB-01, MOB-04 · Blocks: MOB-05, MOB-06, MOB-16
+Status: done (2026-10-15; landing on welcome and on Projects in a simulator is pending (user)) · Phase 1 · Size M · Depends: MOB-01, MOB-04 · Blocks: MOB-05, MOB-06, MOB-16
 Read first: `app/_layout.tsx`, every file in `app/`, `src/auth/provider.tsx`, `src/session/provider.tsx`.
 Do:
 1. Create the groups `(auth)`, `(onboarding)` and `(app)`. Move the existing screens under `(app)`, unchanged in behaviour.
@@ -139,7 +139,7 @@ Do:
    - `(auth)`: `!session`, so sign-in stays reachable whenever there is no live session;
    - `(onboarding)`: signed in, but the profile has no display name or initials (from MOB-04's cached `/v1/me`).
 3. **Offline rule.**
-   - A cached account whose session was lost **without** a deliberate sign-out stays in `(app)`. That covers a failed refresh (MOB-08) and `403 account_deleted` before its cleanup (MOB-04).
+   - A cached account whose session was lost **without** a deliberate sign-out stays in `(app)` while sign-in remains reachable above it. A known `403 account_deleted` opens welcome with the retained deleted-account notice and records; it cannot collect/upload as that account.
    - A deliberate sign-out (MOB-07) removes `last-account.json`, so the gate routes to `(auth)`. The records wait on the device for that account, and `(auth)/welcome` shows their counts (MOB-05).
 4. Add a `+not-found` route.
 
@@ -150,6 +150,8 @@ Done when:
   - no session, no cached account, but A's queued records present → `(auth)`;
   - no session, cached account → `(app)`;
   - session, no profile → `(onboarding)`.
+
+Verified 2026-10-15: the groups, `Stack.Protected` gates, offline rule and `+not-found` were already on master (MOB-24's screens, `app/_layout.tsx`, `src/features/auth/gate.tsx`). Missing was step 2's `(auth)` guard: it opened only with no session **and** no cached account, so an account whose session was lost could sign in again only through the legacy Nocturne Account form, and the "Sign in to resume uploads" banner appeared only on legacy screens. Now `GateDecision.authOpen` is `!session` (sign-in opens over the app, which is declared first), `ResumeUploadsNote` on Projects (and Account, MOB-07) opens `/sign-in` with the cached email, and the legacy banner does the same. `gate.test.ts` 20 (the three Done-when cases by name, plus sign-in open over a cached account and closed during a live session), `ResumeUploadsNote.test.tsx` 2. Checks: `pnpm mobile:check` (TypeScript clean; Biome 12 infos, the baseline) and `pnpm mobile:test` (704 passed, 2 skipped) under Node 24.18.0. **Pending (user):** a fresh install landing on welcome, and a signed-in account with a profile landing on Projects, in a simulator ([device checklist](../docs/qa/device-checklist-2026-10.md)).
 
 ### MOB-04: API client and the current user (`/v1/me`)
 Status: done · Phase 1 · Size M · Depends: BE-06, CON-03, CON-04, MOB-01 · Blocks: MOB-03, MOB-06, MOB-07, MOB-08
@@ -169,8 +171,8 @@ Done when: an offline start shows the last known projects; the tests cover cache
 Evidence (2026-10-04): generated Identity type and runtime parser, account-scoped file cache/provider, active project persistence, deleted-account local sign-out with retained identity. Cache hit/miss/stale selection and typed API errors covered by Vitest; mobile type/lint pass. No native run claimed.
 
 ### MOB-05: Authentication screens
-Status: doing (2026-10-15 source reconciliation: Contour auth screens and real sign-in exist; sign-up, verification and recovery calls remain preview-only) · Phase 1 · Size L · Depends: DB-02, MOB-02, MOB-03 · Blocks: MOB-06, MOB-21
-Read first: [product.md](../docs/plan/product.md) J2; `app/account.tsx` (current form styles); `DESIGN.md`; the Mobile collector designs, pp. 23–28. MOB-24 builds these screens in Contour on preview data; wire them and keep their layout, with a single primary action at the bottom (thumb zone).
+Status: done (2026-10-15; the auth calls ran against local Supabase Auth and Mailpit; the simulator run is pending (user)) · Phase 1 · Size L · Depends: DB-02, MOB-02, MOB-03 · Blocks: MOB-06, MOB-21
+Read first: [product.md](../docs/plan/product.md) J2; `app/account.tsx` (current form styles); `DESIGN.md`; the Mobile collector designs, pp. 23–28. MOB-24 supplies the Contour layout; MOB-05’s real Auth calls and MOB-06’s real profile/join paths now wire these screens; preserve that layout, with a single primary action at the bottom (thumb zone).
 Do:
 1. `(auth)/welcome`: app name, "Create account", "Sign in".
    - For each signed-out account with queued or held records, show "N records waiting on this device for {email}". They upload when that account signs in again.
@@ -204,8 +206,10 @@ Real email on staging needs OPS-01 to OPS-03. It is checked in QA-04, not here.
 
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile test`, plus a manual simulator run recorded in the task notes.
 
+Verified 2026-10-15: sign-up (`signUp`), the code (`verifyOtp` email at the sixth digit), a new code (`resend`, once a minute as on the web), recovery (`resetPasswordForEmail`, `verifyOtp` recovery, `updateUser`) and sign-in's "Send a new code" for an unverified address are wired in `src/features/auth/auth-calls.ts`; `AUTH_WIRED`, the `000000` demo code and every "Preview ·" line are gone. A recovery code signs the account in before the password is saved, so the reset screen holds the gate (`gate-hold.ts`) until "Password changed" → Continue, and a password refused as the current one is retried without a new code. Welcome names each account that signed out with work left ("5 records waiting on this device for {email}", from `src/auth/account-summaries.ts`, written at sign-out by MOB-07). Errors to words: `authFailure` (13 cases; a 5xx is the server, not the connection). Tests: `rules.test.ts`, `auth-calls.test.ts` 4, `auth-screens.test.tsx` 7, `ResetPasswordScreen.test.tsx` 5, `account-summaries.test.ts` 5. **Local stack:** `auth-calls.acceptance.test.ts` (skipped unless `DECAMARK_AUTH_LOCAL_TEST=1`) passed against local Supabase Auth with the codes read from Mailpit: sign-up, sign-in refused as unverified, a resend, a wrong code refused, the right code signs in, a wrong password refused, recovery code, a wrong recovery code refused, the current password refused, a new password saved, the old one refused and the new one accepted. On the way, local sign-up answered 500 "Error sending confirmation email": the stack started on 2026-10-13 served a truncated `confirmation.html` (257 of 1918 bytes) to Auth; `pnpm db:stop` then `pnpm db:start` fixed it. **Pending (user):** the simulator run of every screen ([device checklist](../docs/qa/device-checklist-2026-10.md)).
+
 ### MOB-06: Onboarding: profile and join
-Status: doing (2026-10-15 source reconciliation: profile persistence, pending invitations and real preview/redeem paths exist; full native onboarding/offline acceptance remains) · Phase 1 · Size M · Depends: BE-06, BE-07, DB-07, MOB-03, MOB-04, MOB-05 · Blocks: MOB-21
+Status: done (2026-10-15; the phone path ran on the local stack; the simulator run is pending (user)) · Phase 1 · Size M · Depends: BE-06, BE-07, DB-07, MOB-03, MOB-04, MOB-05 · Blocks: MOB-21
 Do:
 1. `(onboarding)/profile`:
    - display name and initials (uppercase, at most 10 characters), saved with `PATCH /v1/me`;
@@ -222,8 +226,10 @@ Do:
 
 Done when: a newly signed-up user reaches Projects with Training, and after entering a valid code they also see the joined project.
 
+Verified 2026-10-15: the screens were already wired on master (profile → `PATCH /v1/me` with an offline queue; join → `POST /v1/invitations/preview` → "Join … as …?" → `POST /v1/invitations/redeem` → `/v1/me` refresh → the joined project made active; `decamark://join` through `+native-intent` without redeeming). Removed here: the "Scan a QR invitation" button, which only explained that it did nothing; the web no longer makes QR codes (WEB-07). **Local stack, phone path:** `src/features/onboarding/join.acceptance.test.ts` (skipped unless `DECAMARK_JOIN_LOCAL_TEST=1`) passed against local Supabase Auth, Mailpit and the API on :8001 with the collector's own auth calls, API client, gate and project logic: a new account verified by its Mailpit code has only Training and the gate sends it to onboarding; after `PATCH /v1/me` (initials MO) the gate opens the app and Projects lists Training; a single-use observer code made by the seed's manager (the Team page's endpoint) is typed in lower case with a dash, previews as observer and redeems; `/v1/me` then lists the joined project beside Training and it is the active one; a second redemption is refused. **Pending (user):** the same walk through the screens in a simulator ([device checklist](../docs/qa/device-checklist-2026-10.md)).
+
 ### MOB-07: Account tab: profile, sync status, sign out, delete account
-Status: todo · Phase 1 · Size M · Depends: BE-08, MOB-04 · Blocks: MOB-21, OPS-11
+Status: doing (2026-10-15: Account, Sign out? and Delete account built and tested; removing an account's data from the device waits on the data agent ([handoff](MOB-07-HANDOFF.md)); simulator flows pending (user)) · Phase 1 · Size M · Depends: BE-08, MOB-04 · Blocks: MOB-21, OPS-11
 Do:
 1. **The Account screen shows:**
    - profile editing;
@@ -250,6 +256,13 @@ Do:
 Done when:
 - the flows work on the simulator against the local stack;
 - a test with two issuer/account scopes in the current store shows that removing one account leaves the other’s records and package references intact.
+
+Progress 2026-10-15 (UI owner):
+- **Account** (`app/(app)/(tabs)/account/index.tsx`, Contour, replacing the Nocturne screen and its developer copy): the profile (name, observer code, email) with Edit profile (`account/profile.tsx`: saved here first, then `PATCH /v1/me`, queued offline); what is on this device by queue state (On device, Needs attention, Held, Uploaded) and unfinished observations; the newly merged Account UI still says "This version does not upload yet." and offers no "Upload now", but that UI copy/action wiring is stale after MOB-29’s locally verified foreground uploader and must be reconciled; screen orientation, moved from the old screen; the field guide; "Sign in to resume uploads" when the session is lost (MOB-03).
+- **Sign out?** (`account/sign-out.tsx`): names what waits ("Your unsent work needs a clear owner. 5 observations have not been uploaded. They remain on this device for {email}. Another account cannot upload them."), writes the per-account summary welcome shows (step 5, `src/auth/account-summaries.ts`), then `signOut({scope: "local"})`. Offline, Supabase still removes the session and only reports the server unreachable; the provider now counts that as signed out.
+- **Delete account** (`account/delete-account.tsx`): the consequences listed, DELETE typed, then `DELETE /v1/me` (`deleteMe` in `src/data/api/client.ts`). Every try names the account that confirmed and goes out only while it is the one signed in (as the web does since 8cb55be); a 202 is tried again after 5, 10 and 15 seconds, then counts as recorded; 503 says deletion is not available yet; `sole_owner` points to the web. With records not uploaded, a dialog names them first. Afterwards the device treats the account as deleted (its records stay and cannot upload; welcome says so).
+- Tests: `deletion.test.ts` 11, `account-screens.test.tsx` 9, `account-summaries.test.ts` 5. **Local stack:** `deletion.acceptance.test.ts` (skipped unless `DECAMARK_DELETE_LOCAL_TEST=1`) runs the collector's deletion on its API client for a new account: the local API, which has no Auth Admin key (BE-08), answers 503 and the run says "unavailable"; the profile and Training membership are intact afterwards. 204 and 202 were not answered by a real server here.
+- **Not done here:** the "remove this account's data" routine and the two-account test are data-layer work: a tested patch is in [MOB-07-HANDOFF.md](MOB-07-HANDOFF.md) with the request for the last upload time (step 1's "last successful sync"); "Upload N records first" needs wiring to MOB-29’s now-implemented foreground drain; the uploader itself is no longer missing. Step 1's active project switcher is not built: no screen reads the active project yet, so it would change nothing (a question for the lead). **Pending (user):** the flows in a simulator ([device checklist](../docs/qa/device-checklist-2026-10.md)).
 
 ### MOB-08: Never hide records on session loss
 Status: done · Phase 1 · Size S · Depends: MOB-02, MOB-04 · Blocks: none
@@ -461,11 +474,11 @@ Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mob
 
 ### MOB-24: Identity screens and gates
 Status: doing (2026-10-15 source reconciliation: identity screens and protected gates exist; native Day/Dusk/VoiceOver acceptance remains) · Phase 1 · Size L · Depends: MOB-23 · Blocks: none
-Added 2026-10-03. These screens run on preview data, except sign-in, which keeps the real `signInWithPassword`. MOB-03 (gates on the real session and profile), MOB-05 (auth calls) and MOB-06 (profile and join) later wire them without changing their layout.
+Added 2026-10-03. MOB-03/05/06 now wire real gates, Auth, profile and join behavior, with local Auth/Mailpit/API acceptance recorded above. Native Day/Dusk/VoiceOver acceptance remains under this UI task.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Mobile collector pp. 23–31; `app/account.tsx`, `src/auth/*`.
 Do:
 1. `(auth)`: welcome ("Fieldwork starts here."), sign-in, create-account, verify, forgot-password and reset-password.
-2. `(onboarding)`: profile (1 of 2, "Your observer identity"), join (2 of 2, with Scan QR) and `invitation/[code]` ("Join Play Study?"), which the join deep link opens with the code filled in.
+2. `(onboarding)`: profile (1 of 2, "Your observer identity"), join (2 of 2; nonfunctional Scan QR removed) and `invitation/[code]` ("Join Play Study?"), which the join deep link opens with the code filled in.
 3. `Stack.Protected` gates in `_layout.tsx` over `(auth)`, `(onboarding)` and `(app)`, with MOB-23's dev-only override.
 4. Codes are one wide mono field with a counter: a paste is cleaned, the field submits by itself at the 6th digit, a wrong code reselects it, and the resend countdown is mono. Join codes are uppercased as you type. Password checks update live, "Does not match yet" appears only after blur, and a disabled button always carries its reason.
 5. Every screen: a heading with `accessibilityRole="header"`, errors announced, keyboard avoidance, targets of 48 pt or more, and every error state in the designs, in Contour wording.
@@ -508,7 +521,7 @@ Done when: the orientation and logic tests pass; `session.save` is unchanged; th
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `pnpm forms:parity`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (arming blocks panning, place at centre, no transition between observations, landscape with each hand, VoiceOver through place, answer, review and save).
 
 ### MOB-27: Observations, account, preferences, field guide and leaving
-Status: doing (2026-10-15 source reconciliation: account/preferences/field guide partly implemented; observations still redirect to legacy records and deletion/cleanup acceptance remains) · Phase 1 · Size L · Depends: MOB-25 · Blocks: none
+Status: doing (2026-10-15 integration: Contour account/profile/sign-out/deletion screens and field guide exist; observations still redirect to legacy records, current upload UI wiring/account cleanup and native acceptance remain) · Phase 1 · Size L · Depends: MOB-25 · Blocks: none
 Added 2026-10-03. These screens run on preview data, or in device mode on the real records and sync. MOB-07 (account, sign out, delete account), MOB-10 (record states) and MOB-17 (every state) later wire them without changing their layout.
 Read first: `DESIGN.md`, `PRODUCT.md`; designs: Mobile collector pp. 15–21; `src/storage/use-observations.ts`, `src/sync/*`.
 Do:
@@ -570,6 +583,7 @@ Do: Render every unfinished-observation status with its actions, block "Start co
 Done when: Each status in UI plan MUI-7 renders with its actions in component tests; no path substitutes a zone or a newer map.
 Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator check of a resume after force quit and of a missing-map recovery.
 Verified 2026-10-14: the unfinished card reads MOB-33's `useRecoveredDraft` (`src/features/projects/{recovery.ts,UnfinishedCard.tsx}`). `UnfinishedCard.test.tsx` 9 renders each MUI-7 status with its actions: ready (Resume opens collect through the data layer's exact resume), map missing ("Download map v1 again · 12.0 MB", "Keep for later"), map missing offline ("Connect to download map v1 again.", no download), no access and form missing with nothing to download ("Keep for your coordinator"), zone missing (names NM and map v1); Discard asks first. Parked drafts resume once nothing else is unfinished and say why they wait. Re-download asks for the draft's own map; nothing offers another zone or a newer map. On the Brief, an unfinished observation at the site comes first and "Start collection" is off with "Resume or discard the unfinished observation at Fall Creek (map v1)." (`device-screens.test.tsx`). `recovery.test.ts` 9; the field guide's map-versions, zone-edges and outside-zones sections (`content.test.ts` 5). Checks: `pnpm mobile:check` (TypeScript clean; Biome 12 infos, the baseline) and `pnpm mobile:test` (640 passed, 1 skipped, 80 files) under Node 24.21.0; `EXPO_NO_DOTENV=1 pnpm exec expo export --platform all` bundled iOS (4140 modules) and Android (4223 modules), exit 0. **Pending (user):** the simulator resume after a force quit and a missing-map recovery.
+Updated 2026-10-15: the form-missing card names the draft's own form from MOB-33's `Recovered.formVersion` ("Form janet-test-v1 for this observation is not on this device. Your point and answers are kept."), never one from a newer map (`recovery.ts`; `recovery.test.ts` and `UnfinishedCard.test.tsx`, 27 of 27).
 
 ### MOB-33: Provide bound session and package read models
 Status: done (2026-10-14: data implementation and local acceptance complete; the Claude UI owner acknowledged the interface; [handoff](MOB-33-HANDOFF.md)) · Phase 3 · Size L · Depends: MOB-28, BE-22 · Blocks: MOB-29, MOB-30, MOB-31, MOB-32

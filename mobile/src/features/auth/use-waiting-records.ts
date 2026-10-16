@@ -1,4 +1,8 @@
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { type AccountSummary, readAccountSummaries } from "../../auth/account-summaries";
 import { useAccount } from "../../auth/provider";
+import { connection } from "../../sync/config";
 import { PREVIEW_ACCOUNT, useDataSource, useQueue } from "../preview";
 import { useGate } from "./gate";
 
@@ -51,4 +55,24 @@ export function useDeletedAccount(): DeletedAccount | null {
   const queue = useQueue();
   if (!accountDeleted) return null;
   return { count: queue.loading ? null : queue.unsent };
+}
+
+/**
+ * Accounts that signed out of this device with work still here (MOB-05 step 1), from the summaries
+ * written at sign-out (account-summaries), read each time the screen comes into view. The account
+ * remembered here, if any, is left to `useWaitingRecords`, which counts its live queue.
+ */
+export function useSignedOutAccounts(): AccountSummary[] {
+  const { account } = useAccount();
+  const [summaries, setSummaries] = useState<AccountSummary[]>([]);
+  const current = account?.id;
+  useFocusEffect(
+    useCallback(() => {
+      const issuer = connection?.supabaseUrl;
+      setSummaries(
+        issuer ? readAccountSummaries(issuer).filter((summary) => summary.userId !== current) : [],
+      );
+    }, [current]),
+  );
+  return summaries;
 }

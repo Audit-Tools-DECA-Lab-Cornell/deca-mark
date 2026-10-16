@@ -14,7 +14,8 @@
 #   --stop        Only stop the web app this script started (Docker, Supabase and the API keep running).
 #
 # Idempotent. Each piece is started only when it is not already answering, and is left running:
-#   Docker (dockerd) → local Supabase (pnpm db:start) → API on 127.0.0.1:8001 (backend/config.auth-local.json)
+#   Docker (dockerd) → local Supabase (pnpm db:start) → API on 127.0.0.1:8001 (backend/config.auth-local.json,
+#   email delivery off)
 #   → seed (database/seed-web-workspace.mjs; no reset) → web app on 127.0.0.1:3000 → pnpm --dir web test:e2e
 #
 # The web app runs on :3000 because map packages go from the browser to the API directly, and :3000 is the only
@@ -101,12 +102,17 @@ wait_until() { # label seconds command…
   say "$label ready"
 }
 
-# Detached from this shell so it outlives the script; the pid is the process group to stop later.
+# Detached from this shell so it outlives the script, in a session of its own, so its pid is also the id of the
+# process group to stop later (`next start` runs under pnpm, and stopping only pnpm leaves the server on the port).
+# Linux has setsid(1); macOS does not, so perl's POSIX::setsid does the same there.
 start_detached() { # log command…
   log=$1
   shift
   if command -v setsid >/dev/null 2>&1; then
     setsid nohup "$@" >"$log" 2>&1 </dev/null &
+  elif command -v perl >/dev/null 2>&1; then
+    nohup perl -MPOSIX -e 'POSIX::setsid() != -1 or die "setsid: $!\n"; exec { $ARGV[0] } @ARGV or die "exec: $!\n"' \
+      "$@" >"$log" 2>&1 </dev/null &
   else
     nohup "$@" >"$log" 2>&1 </dev/null &
   fi
@@ -115,26 +121,31 @@ start_detached() { # log command…
 
 alive() { [ -f "$1" ] && kill -0 "$(cat "$1")" 2>/dev/null; }
 
+# The process this script started, or anything left in its process group (pnpm can exit before the server it ran).
+group_alive() { [ -f "$1" ] && { kill -0 "-$(cat "$1")" 2>/dev/null || kill -0 "$(cat "$1")" 2>/dev/null; }; }
+
 stop_group() { # pidfile
   [ -f "$1" ] || return 0
   pid=$(cat "$1")
   rm -f "$1"
-  kill -0 "$pid" 2>/dev/null || return 0
-  kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+  { kill -0 "-$pid" 2>/dev/null || kill -0 "$pid" 2>/dev/null; } || return 0
+  # A negative pid names the process group. No `--` before it: dash's kill reads `--` as a pid ("Illegal number").
+  kill -TERM "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
   i=0
-  while kill -0 "$pid" 2>/dev/null && [ "$i" -lt 20 ]; do
+  while { kill -0 "-$pid" 2>/dev/null || kill -0 "$pid" 2>/dev/null; } && [ "$i" -lt 20 ]; do
     i=$((i + 1))
     sleep 1
   done
-  kill -KILL -- "-$pid" 2>/dev/null || true
+  kill -KILL "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
 }
 
 mkdir -p "$state"
 chmod 700 "$root/database/.local" "$state"
 
 if [ "$only_stop" = 1 ]; then
-  if alive "$state/web.pid"; then
+  if group_alive "$state/web.pid"; then
     stop_group "$state/web.pid"
+    rm -f "$state/web.mode"
     say "stopped the web app this script started"
   else
     rm -f "$state/web.pid" "$state/web.mode"
@@ -197,7 +208,10 @@ else
   command -v uv >/dev/null 2>&1 || fail "uv is required to run the API."
   say "starting the API on $api_url (log: $state/api.log)"
   cd backend
-  start_detached "$state/api.log" env DECAMARK_CONFIG=config.auth-local.json \
+  # Email delivery stays off on the local stack: the API turns it on whenever a provider is configured in its
+  # environment (backend/src/fieldmaps_api/email/config.py), and a test run must never send real email.
+  start_detached "$state/api.log" env -u BREVO_API_KEY -u BREVO_SENDER_EMAIL EMAIL_ENABLED=false \
+    DECAMARK_CONFIG=config.auth-local.json \
     uv run --frozen uvicorn fieldmaps_api.main:create_app_from_config --factory --app-dir src \
     --host 127.0.0.1 --port 8001
   echo "$last_pid" >"$state/api.pid"
@@ -308,7 +322,7 @@ if [ "$stop_after" = 1 ] && [ "$web_mode" != reuse ]; then
   rm -f "$state/web.mode"
   say "stopped the web app"
 fi
-say "left running: Docker, local Supabase (stop: pnpm db:stop) and the API on :8001 (stop: kill -TERM -- -\$(cat database/.local/e2e/api.pid))"
+say "left running: Docker, local Supabase (stop: pnpm db:stop) and the API on :8001 (stop: kill -TERM -\$(cat database/.local/e2e/api.pid))"
 [ "$stop_after" = 1 ] || say "web app still on :$web_port (stop: scripts/e2e-local.sh --stop)"
 say "rerun quickly: scripts/e2e-local.sh --skip-seed [playwright args]"
 say "screenshots: web/e2e/screenshots/   report: pnpm --dir web exec playwright show-report ../database/.local/e2e/playwright-report"

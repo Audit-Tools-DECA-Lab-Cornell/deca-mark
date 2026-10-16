@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { type TextInput as NativeTextInput, StyleSheet, View } from "react-native";
+import { useAccount } from "../../auth/provider";
 import {
   announce,
   Button,
@@ -14,10 +15,16 @@ import {
   useHaptics,
   useStyles,
 } from "../../ui";
-import { PREVIEW_ACCOUNT, useDataSource } from "../preview";
-import { useGate } from "./gate";
-import { AuthScreen, Footnote, firstParam, PreviewLine } from "./parts";
-import { AUTH_WIRED, CODE_LENGTH, formatCountdown, RESEND_SECONDS, WRONG_CODE_DEMO } from "./rules";
+import { resendSignUpCode, verifyEmail } from "./auth-calls";
+import { AuthScreen, Footnote, firstParam } from "./parts";
+import {
+  AUTH_MESSAGES,
+  type AuthFailure,
+  CODE_LENGTH,
+  CODE_REFUSED,
+  formatCountdown,
+  RESEND_SECONDS,
+} from "./rules";
 import { useCooldown } from "./use-cooldown";
 
 function verifyStyles(t: Theme) {
@@ -27,12 +34,6 @@ function verifyStyles(t: Theme) {
     centre: { alignSelf: "center" },
   });
 }
-
-/** What a release build says at the sixth digit while account creation is not wired. */
-const NO_ACCOUNT = {
-  title: "No account was created.",
-  body: "This build does not create accounts yet. Ask your project coordinator for an account, then sign in.",
-} as const;
 
 /** Selects the whole code once the field has settled, so the next digits typed replace it. */
 function reselect(input: NativeTextInput | null) {
@@ -44,86 +45,117 @@ function reselect(input: NativeTextInput | null) {
 
 /**
  * Check your email (Mobile 26). The code checks itself at the sixth digit, typed, pasted or filled from
- * the keyboard's suggestion. While these screens run on preview data any six digits continue, and 000000
- * shows the wrong-code message. A new code can be asked for every 30 seconds; the wait counts down in mono.
+ * the keyboard's suggestion, with Supabase's `verifyOtp` (MOB-05). A right code signs the new account
+ * in, and the gate then opens onboarding by itself; this screen does not navigate. A new code can be
+ * asked for once a minute (`resend`); the wait counts down in mono.
  */
 export function VerifyScreen() {
   const s = useStyles(verifyStyles);
   const router = useRouter();
   const haptics = useHaptics();
-  const { mode } = useDataSource();
-  const gate = useGate();
-  const params = useLocalSearchParams<{ email?: string | string[] }>();
-  const email =
-    firstParam(params.email) || (mode === "preview" ? PREVIEW_ACCOUNT.email : undefined);
+  const { client } = useAccount();
+  const params = useLocalSearchParams<{ email?: string | string[]; sent?: string | string[] }>();
+  const email = firstParam(params.email)?.trim() || undefined;
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
+  const [failure, setFailure] = useState<AuthFailure | null>(null);
+  const [sentAgain, setSentAgain] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [noAccount, setNoAccount] = useState(false);
+  const [resending, setResending] = useState(false);
   const inputRef = useRef<NativeTextInput>(null);
-  // A code was sent on the way here, so the first resend waits too.
-  const cooldown = useCooldown(RESEND_SECONDS, true);
+  // A code was sent on the way here (sign-up or a resend from sign-in), so the first resend waits too.
+  const cooldown = useCooldown(RESEND_SECONDS, firstParam(params.sent) === "1");
   const waiting = cooldown.remaining > 0;
 
-  function check(value: string) {
+  async function check(value: string) {
     if (busy) return;
     if (value.length < CODE_LENGTH) {
       setError("Enter all six digits from the email.");
       inputRef.current?.focus();
       return;
     }
-    if (value === WRONG_CODE_DEMO) {
-      haptics.warning();
-      setError("That code did not match. Check the latest email and try again.");
+    if (!email) return;
+    setError(undefined);
+    setFailure(null);
+    setBusy(true);
+    const outcome = await verifyEmail(client?.auth, email, value);
+    if (outcome.ok) {
+      // Stays busy: the session is here, and the gate moves on to onboarding.
+      haptics.success();
+      announce("Email verified.");
+      return;
+    }
+    setBusy(false);
+    haptics.warning();
+    if (outcome.failure === "code") {
+      setError(CODE_REFUSED);
+      announce(CODE_REFUSED);
       reselect(inputRef.current);
       return;
     }
-    setError(undefined);
-    // MOB-05 checks the code with verifyOtp here: it signs the new account in, and the gate then opens
-    // onboarding by itself. Until then no account exists, so a review build walks on as a new account
-    // would, through the gate's onboarding override, and a release build says nothing was made.
-    if (gate.overrideAllowed) {
-      setBusy(true);
-      haptics.success();
-      announce("Preview · No account was created. Onboarding opens as it would for a new account.");
-      gate.setDevOverride("onboarding");
-      return;
-    }
-    setNoAccount(true);
-    announce(NO_ACCOUNT.title);
+    setFailure(outcome.failure);
+    const words = AUTH_MESSAGES[outcome.failure];
+    announce(`${words.title} ${words.body}`);
   }
 
-  function resend() {
-    if (waiting) return;
+  async function resend() {
+    if (waiting || resending || !email) return;
+    setResending(true);
+    setFailure(null);
+    const outcome = await resendSignUpCode(client?.auth, email);
+    setResending(false);
+    if (!outcome.ok && outcome.failure !== "rateLimited") {
+      setFailure(outcome.failure);
+      const words = AUTH_MESSAGES[outcome.failure];
+      announce(`${words.title} ${words.body}`);
+      return;
+    }
+    // A refusal for asking too soon means a code is already on its way: wait out the minute either way.
     cooldown.start();
     setCode("");
     setError(undefined);
+    setSentAgain(true);
     inputRef.current?.focus();
-    const to = email ?? "your email address";
     announce(
-      AUTH_WIRED.verify
-        ? `A new code is on its way to ${to}. It replaces the old one.`
-        : `Preview · No email was sent. A new code would go to ${to}.`,
+      `If ${email} is waiting for a code, a new one is on its way. It replaces the old one.`,
     );
   }
 
   const countdown = formatCountdown(cooldown.remaining);
+  const message = failure ? AUTH_MESSAGES[failure] : null;
+
+  if (!email)
+    return (
+      <AuthScreen
+        title="Check your email"
+        lead="Start again with your email address, so we know where the code went."
+        testID="auth-verify"
+        action={
+          <Button
+            label="Create account"
+            iconRight="arrow-right"
+            fullWidth
+            onPress={() => router.dismissTo("/create-account")}
+          />
+        }
+      >
+        <Note tone="attention" title="This screen lost the email address.">
+          No code was checked. Enter your email address again to get a new code.
+        </Note>
+      </AuthScreen>
+    );
 
   return (
     <AuthScreen
       title="Check your email"
       lead={
-        email ? (
-          <>
-            We sent a six-digit code to{" "}
-            <Text variant="bodyStrong" tone="ink">
-              {email}
-            </Text>
-            .
-          </>
-        ) : (
-          "We sent a six-digit code to your email address."
-        )
+        <>
+          We sent a six-digit code to{" "}
+          <Text variant="bodyStrong" tone="ink">
+            {email}
+          </Text>
+          .
+        </>
       }
       testID="auth-verify"
       action={
@@ -133,7 +165,7 @@ export function VerifyScreen() {
           busy={busy}
           icon="check"
           fullWidth
-          onPress={() => check(code)}
+          onPress={() => void check(code)}
           testID="auth-verify-submit"
         />
       }
@@ -142,16 +174,18 @@ export function VerifyScreen() {
           <View style={s.resend}>
             <Button
               label="Resend code"
+              busyLabel="Sending code…"
+              busy={resending}
               variant="outline"
               icon="rotate-cw"
               fullWidth
               disabled={waiting}
               accessibilityHint={
                 waiting
-                  ? `A new code can be sent every 30 seconds. ${cooldown.remaining} seconds left.`
+                  ? `A new code can be sent once a minute. ${cooldown.remaining} seconds left.`
                   : undefined
               }
-              onPress={resend}
+              onPress={() => void resend()}
               testID="auth-verify-resend"
             />
             {waiting ? (
@@ -168,25 +202,26 @@ export function VerifyScreen() {
           </View>
           <TextLink
             label="Change email address"
-            onPress={() =>
-              router.dismissTo({ pathname: "/create-account", params: { email: email ?? "" } })
-            }
+            onPress={() => router.dismissTo({ pathname: "/create-account", params: { email } })}
             style={s.centre}
           />
         </View>
       }
       bottom={
-        <>
-          <Footnote>
-            Nothing arriving? Check the spam folder, then resend. A new code replaces the old one.
-          </Footnote>
-          {AUTH_WIRED.verify ? null : (
-            <PreviewLine>No email was sent. 000000 shows the wrong-code message.</PreviewLine>
-          )}
-        </>
+        <Footnote>
+          Nothing arriving? Check the spam folder, then resend. A new code replaces the old one.
+        </Footnote>
       }
     >
-      {noAccount ? <Note title={NO_ACCOUNT.title}>{NO_ACCOUNT.body}</Note> : null}
+      {message ? (
+        <Note tone="attention" title={message.title}>
+          {message.body}
+        </Note>
+      ) : sentAgain ? (
+        <Note tone="neutral" title="A new code is on its way.">
+          It replaces the old one. Enter the code from the latest email.
+        </Note>
+      ) : null}
       <Field label="Verification code" hint="Paste all six digits." error={error}>
         <CodeInput
           ref={inputRef}
@@ -196,7 +231,7 @@ export function VerifyScreen() {
             setCode(value);
             setError(undefined);
           }}
-          onComplete={check}
+          onComplete={(value) => void check(value)}
           autoFocus
           testID="auth-verify-code"
         />

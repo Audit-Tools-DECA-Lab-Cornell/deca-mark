@@ -44,7 +44,7 @@ export const policy = {
 	/** Who delivers the sign-in codes and invitation emails. Not yet confirmed for the hosted service. */
 	emailProvider: null as string | null,
 	/** The date this version of the policy takes effect. */
-	effectiveDate: "October 14, 2026"
+	effectiveDate: "October 15, 2026"
 };
 
 export const missingFacts: readonly string[] = [

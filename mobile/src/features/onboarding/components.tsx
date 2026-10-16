@@ -33,8 +33,6 @@ function makeStyles(t: Theme) {
       borderStyle: "dashed",
       borderColor: t.c.edge,
     },
-    or: { flexDirection: "row", alignItems: "center", gap: t.space.s4 },
-    orRule: { flex: 1, height: t.size.border, backgroundColor: t.c.line },
     scope: { gap: t.space.s2 },
     scopeRow: {
       flexDirection: "row",
@@ -115,20 +113,6 @@ export function RecordedAs({ initials }: { initials: string }) {
         </View>
       </View>
     </InnerPanel>
-  );
-}
-
-/** The "or" between two ways to do the same thing. */
-export function OrDivider() {
-  const s = useStyles(makeStyles);
-  return (
-    <View style={s.or}>
-      <View style={s.orRule} />
-      <Text variant="body" tone="ink2">
-        or
-      </Text>
-      <View style={s.orRule} />
-    </View>
   );
 }
 
