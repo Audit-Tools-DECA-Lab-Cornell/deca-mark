@@ -56,10 +56,12 @@ verification failures are distinct from transport failures.
 `redownload(id)`. Models use UUIDs and integer package versions, never parsed
 display labels. `Recovered.formVersion` is required and comes from the retained
 draft, even when its package or form is missing; it never comes from a newer
-package. Only exact verified forms interpret answers. The UI owner should
-use `model.formVersion` in `features/projects/recovery.ts`'s `form_missing`
-line. The three typed recovery fixtures now include that field, with the
-user's explicit approval for those test-only edits.
+package. Only exact verified forms interpret answers. **Done on the UI side**
+in `dbbc92e`: `features/projects/recovery.ts`'s `form_missing` line uses
+`model.formVersion` ("Form janet-test-v1 for this observation is not on this
+device."). Source and commit rechecked on 2026-10-15. The three typed recovery
+fixtures include that field, with the user's explicit approval for those
+test-only edits. Simulator recovery remains pending (user).
 
 Park only an unresumable active draft. Parking retains its bytes and map
 reference while freeing the active slot. `restoreParked` verifies the exact
