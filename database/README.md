@@ -20,6 +20,10 @@ Local confirmation and recovery templates in `supabase/templates/` display six-d
 
 `pnpm db:reset` explicitly replaces the local database with the canonical migrations and `supabase/seed.sql`. Start and test commands never reset a database. Stop preserves local volumes. None of these commands targets hosted services.
 
+The starter waits up to 120 seconds for an already-running database container whose
+health check is still `starting`, then invokes the CLI. A failed start prints the CLI
+error; successful CLI output remains hidden because it includes local credentials.
+
 `pnpm db:test` runs the SQL suite and `hosted/verify.sql` on the local database. Fixtures and temporary role grants roll back. API tests use generated UUIDs and the restricted runtime login; their committed observations/packages remain until an explicit local reset. No integration test silently skips when the stack is unavailable.
 
 DB-19 replaces the old migration chain with one current baseline. Later feature
@@ -40,6 +44,19 @@ hosted services are used. Synthetic Auth-user fixtures do not exercise the Auth 
 or replace real API acceptance. Ordinary start/test commands still never reset a database.
 
 The separate Auth-hook suite connects through Docker as local `supabase_admin`, then switches to the actual restricted Auth role for behavioral checks. Supabase reserves that role, so the ordinary `postgres` test connection cannot grant itself membership. Application SQL tests and the hosted verification script still run as `postgres`.
+
+### API startup fails with a missing email outbox
+
+Local databases created before 2026-10-12 may lack `fieldmaps_private.email_outbox`.
+If API startup reports `UndefinedTableError` for that table, apply the pending email
+outbox migration from the product root, with the local stack running:
+
+```sh
+pnpm dlx supabase@2.118.0 migration up --local
+```
+
+This applies pending local migrations without a reset and preserves existing records.
+Restart the API after it succeeds. Do not use `pnpm db:reset` to repair this error.
 
 ## Schema and access
 

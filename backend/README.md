@@ -22,6 +22,22 @@ From `backend/`, start the API with `uv run --frozen uvicorn fieldmaps_api.main:
 
 Tests use ephemeral signing keys and fictional accounts on local Supabase, with real RLS through `fieldmaps_api`. `config.local.json` retains the hosted identity provider for existing development installs. To use local Auth as well as local Postgres, start from `backend/` with `DECAMARK_CONFIG=config.auth-local.json uv run --frozen uvicorn fieldmaps_api.main:create_app_from_config --factory --app-dir src --port 8001`. Set the web server's `DECAMARK_API_URL` to `http://127.0.0.1:8001`. HTTP identity URLs are allowed only on literal loopback hosts. There is no test-user bypass in the running API. `/health` is liveness. `/ready` checks the database, the current site/package read helpers and the cached signing-key set; it returns 503 when any is unavailable. Startup refuses database roles that are superusers or can bypass row security.
 
+Both local configurations set `email_delivery_allowed: false`. The API ignores provider
+settings for these configurations, even when `EMAIL_ENABLED=true`, and never starts its
+delivery worker. Invitations remain available for manual sharing. Local Supabase Auth
+mail is captured by Mailpit. Hosted configurations retain provider-controlled delivery.
+
+Observation list, summary and export accept `bbox=west,south,east,north` in WGS84 degrees,
+for example `bbox=-77,42,-76,43`. Bounds are finite, within longitude/latitude limits,
+and require west < east and south < north; crossing the antimeridian requires separate
+requests. Point boundaries are inclusive. Inventory records have no event geometry and
+are excluded from viewport queries; their display anchors are not point observations.
+The viewport shares all other filters and is part of the cursor's scope, so changing it
+requires a new first page. Exports retain the viewport in their metadata.
+The spatial predicate preserves existing RLS. In the restricted-role local plan,
+PostgreSQL uses a project index before evaluating `ST_Intersects`; the geometry GiST
+index is not selected under the current policies.
+
 `make -C database api-build api-test` builds separate runtime and test images and runs the API suite against the existing local database. The test image includes pytest and Docker tooling for SQL fixtures; the runtime image contains neither and runs as UID 10001. Runtime-mounted password files must be readable by that user. The runtime health check uses the configured `PORT` and calls `/health`.
 
 For the separate API connected to hosted PostGIS, use [Supabase setup](../docs/Supabase-Setup.md).

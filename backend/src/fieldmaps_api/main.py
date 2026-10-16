@@ -49,7 +49,11 @@ def create_app(
     email_settings: EmailSettings | None = None,
 ) -> FastAPI:
     configuration = settings or Settings()
-    mail = email_settings or EmailSettings()
+    mail = (
+        (email_settings or EmailSettings())
+        if configuration.email_delivery_allowed
+        else EmailSettings()
+    )
     connection = database_connection(configuration)
     engine = create_async_engine(
         connection.url,
@@ -152,4 +156,10 @@ def create_app(
 
 
 def create_app_from_config() -> FastAPI:
-    return create_app(read_local_settings(), email_settings=EmailSettings.from_environment())
+    configuration = read_local_settings()
+    mail = (
+        EmailSettings.from_environment()
+        if configuration.email_delivery_allowed
+        else EmailSettings()
+    )
+    return create_app(configuration, email_settings=mail)

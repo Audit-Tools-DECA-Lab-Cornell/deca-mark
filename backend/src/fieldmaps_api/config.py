@@ -19,6 +19,7 @@ class Settings(BaseModel):
     database_tls_strict: bool = True
     browser_origins: tuple[HttpUrl, ...] = ()
     browser_origin_pattern: str | None = None
+    email_delivery_allowed: bool = True
 
     @property
     def allowed_origins(self) -> list[str]:

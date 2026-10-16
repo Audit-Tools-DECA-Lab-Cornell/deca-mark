@@ -17,10 +17,11 @@ from fieldmaps_api.queries import observation_analysis as q
 if TYPE_CHECKING:
     from sqlalchemy import Result
 
-type Parameter = UUID | datetime | str | int | list[UUID] | None
+type Parameter = UUID | datetime | str | int | float | list[UUID] | None
 
 
 def parameters(project_id: UUID, filters: ObservationFilters) -> dict[str, Parameter]:
+    west, south, east, north = (None, None, None, None) if filters.bbox is None else filters.bbox
     return {
         "project": project_id,
         "site": filters.site_id,
@@ -30,6 +31,10 @@ def parameters(project_id: UUID, filters: ObservationFilters) -> dict[str, Param
         "observer": filters.observer,
         "from": filters.observed_from,
         "before": filters.observed_before,
+        "west": west,
+        "south": south,
+        "east": east,
+        "north": north,
     }
 
 

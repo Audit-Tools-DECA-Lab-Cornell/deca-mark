@@ -13,6 +13,9 @@ AND (CAST(:round AS text) IS NULL OR o.round_type = :round)
 AND (CAST(:observer AS text) IS NULL OR o.observer_code = :observer)
 AND (CAST(:from AS timestamptz) IS NULL OR o.observed_at >= CAST(:from AS timestamptz))
 AND (CAST(:before AS timestamptz) IS NULL OR o.observed_at < CAST(:before AS timestamptz))
+AND (CAST(:west AS double precision) IS NULL OR extensions.ST_Intersects(o.geom,
+  extensions.ST_MakeEnvelope(CAST(:west AS double precision), CAST(:south AS double precision),
+    CAST(:east AS double precision), CAST(:north AS double precision), 4326)))
 """
 
 JOINS: Final = """
