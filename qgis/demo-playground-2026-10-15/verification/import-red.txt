@@ -1,0 +1,98 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_demo_archives_import_four_complete_synthetic_layers[janet-synthetic-playground.qgz] _
+
+filename = 'janet-synthetic-playground.qgz'
+
+    @pytest.mark.parametrize("filename", ["janet-synthetic-playground.qgz", "janet-desktop-project.zip"])
+    def test_demo_archives_import_four_complete_synthetic_layers(filename: str) -> None:
+        # Given: the complete single-file website upload or portable Desktop folder.
+        # When: the production importer resolves the archive's own vector sources.
+>       result = imported(filename)
+                 ^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_demo_playground_import.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+filename = 'janet-synthetic-playground.qgz'
+
+    def imported(filename: str) -> ProjectImportResult:
+        artifact = DEMO / filename
+>       assert artifact.is_file(), f"Janet's uploadable sample is missing: {artifact.name}"
+E       AssertionError: Janet's uploadable sample is missing: janet-synthetic-playground.qgz
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('/Users/praty/Desktop/StudentJob.nosync/field-ops/qgis/demo-playground-2026-10-15/janet-synthetic-playground.qgz').is_file
+
+backend/tests/test_demo_playground_import.py:19: AssertionError
+_ test_demo_archives_import_four_complete_synthetic_layers[janet-desktop-project.zip] _
+
+filename = 'janet-desktop-project.zip'
+
+    @pytest.mark.parametrize("filename", ["janet-synthetic-playground.qgz", "janet-desktop-project.zip"])
+    def test_demo_archives_import_four_complete_synthetic_layers(filename: str) -> None:
+        # Given: the complete single-file website upload or portable Desktop folder.
+        # When: the production importer resolves the archive's own vector sources.
+>       result = imported(filename)
+                 ^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_demo_playground_import.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+filename = 'janet-desktop-project.zip'
+
+    def imported(filename: str) -> ProjectImportResult:
+        artifact = DEMO / filename
+>       assert artifact.is_file(), f"Janet's uploadable sample is missing: {artifact.name}"
+E       AssertionError: Janet's uploadable sample is missing: janet-desktop-project.zip
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('/Users/praty/Desktop/StudentJob.nosync/field-ops/qgis/demo-playground-2026-10-15/janet-desktop-project.zip').is_file
+
+backend/tests/test_demo_playground_import.py:19: AssertionError
+___ test_starter_zones_fit_the_outline_leave_a_third_zone_and_do_not_overlap ___
+
+    def test_starter_zones_fit_the_outline_leave_a_third_zone_and_do_not_overlap() -> None:
+        # Given: the sample's two rectangular starter zones.
+        # When: importing the delivered QGZ.
+>       result = imported("janet-synthetic-playground.qgz")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+backend/tests/test_demo_playground_import.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+filename = 'janet-synthetic-playground.qgz'
+
+    def imported(filename: str) -> ProjectImportResult:
+        artifact = DEMO / filename
+>       assert artifact.is_file(), f"Janet's uploadable sample is missing: {artifact.name}"
+E       AssertionError: Janet's uploadable sample is missing: janet-synthetic-playground.qgz
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('/Users/praty/Desktop/StudentJob.nosync/field-ops/qgis/demo-playground-2026-10-15/janet-synthetic-playground.qgz').is_file
+
+backend/tests/test_demo_playground_import.py:19: AssertionError
+_______ test_desktop_project_sources_resolve_inside_its_portable_archive _______
+
+    def test_desktop_project_sources_resolve_inside_its_portable_archive() -> None:
+        # Given: the ordinary QGS delivery rather than QGZ-specific attachment assumptions.
+        artifact = DEMO / "janet-desktop-project.zip"
+>       assert artifact.is_file(), "The portable QGIS Desktop folder is missing"
+E       AssertionError: The portable QGIS Desktop folder is missing
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('/Users/praty/Desktop/StudentJob.nosync/field-ops/qgis/demo-playground-2026-10-15/janet-desktop-project.zip').is_file
+
+backend/tests/test_demo_playground_import.py:74: AssertionError
+=============================== warnings summary ===============================
+backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /Users/praty/Desktop/StudentJob.nosync/field-ops/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_demo_playground_import.py::test_demo_archives_import_four_complete_synthetic_layers[janet-synthetic-playground.qgz]
+FAILED backend/tests/test_demo_playground_import.py::test_demo_archives_import_four_complete_synthetic_layers[janet-desktop-project.zip]
+FAILED backend/tests/test_demo_playground_import.py::test_starter_zones_fit_the_outline_leave_a_third_zone_and_do_not_overlap
+FAILED backend/tests/test_demo_playground_import.py::test_desktop_project_sources_resolve_inside_its_portable_archive
+4 failed, 1 warning in 0.08s

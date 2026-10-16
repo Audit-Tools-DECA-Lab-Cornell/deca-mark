@@ -1,0 +1,25 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_desktop_project_declares_native_crs_and_explicit_draw_order _______
+
+    def test_desktop_project_declares_native_crs_and_explicit_draw_order() -> None:
+        # Given: a QGIS Desktop project whose ground must render beneath reference layers.
+        path = DEMO / "desktop" / "janet-synthetic-playground.qgs"
+        # When: reading the native project settings.
+        root = ET.fromstring(path.read_bytes())  # noqa: S314
+        # Then: the native CRS includes WKT and the explicit order matches the visible layer tree.
+>       assert root.findtext("projectCrs/spatialrefsys/wkt")
+E       AssertionError: assert None
+E        +  where None = <built-in method findtext of xml.etree.ElementTree.Element object at 0x10908ba60>('projectCrs/spatialrefsys/wkt')
+E        +    where <built-in method findtext of xml.etree.ElementTree.Element object at 0x10908ba60> = <Element 'qgis' at 0x10908ba60>.findtext
+
+backend/tests/test_demo_playground_import.py:103: AssertionError
+=============================== warnings summary ===============================
+backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /Users/praty/Desktop/StudentJob.nosync/field-ops/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_demo_playground_import.py::test_desktop_project_declares_native_crs_and_explicit_draw_order
+1 failed, 1 warning in 0.10s

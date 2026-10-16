@@ -1,0 +1,15 @@
+# Synthetic demo artifact evidence
+
+Scope: synthetic archive/import/source-preparation acceptance and actual QGIS Desktop reopen/render. Physical collector acceptance remains separate. No hosted state or email delivery is claimed here.
+
+| Scenario | Exact invocation and binary observable | Evidence |
+| --- | --- | --- |
+| Test-first archive delivery | Before creating the sample: `backend/.venv/bin/python -m pytest backend/tests/test_demo_playground_import.py -q`. RED: four artifact-missing assertion failures. After creating it: same invocation. GREEN: five passed, including later native settings regression. | [RED](import-red.txt), [GREEN](import-green.txt) |
+| Test-first native settings | Before adding native project WKT/order: `backend/.venv/bin/python -m pytest backend/tests/test_demo_playground_import.py::test_desktop_project_declares_native_crs_and_explicit_draw_order -q`. RED: missing native WKT. Final GREEN is included above. The primary later normalized the project through actual QGIS Desktop and corrected dangling tree references to native layer identities. | [Native RED](native-red.txt), [GREEN](import-green.txt) |
+| Adjacent importer safety | `backend/.venv/bin/python -m pytest backend/tests/test_project_import.py backend/tests/test_demo_playground_import.py -q`. PASS: 20 tests; no test skipped. Existing cases cover remote/missing/unsafe sources and normal QGIS XML. | [Regression](import-regression.txt) |
+| Real source preparation | Actual `services.project_import.import_project(ProjectImportRequest)` on the delivered QGZ, followed by `domain.zone_archive.prepare_import_base(PackageRequest, "SYNTHETIC-JANET", PackageForms)`. PASS: four nonempty layers, no issues, four passed source checks. Uses fictional UUID/form bindings only; no database publication. | [Parsed report](import-scenario.json) |
+| Native QGIS reopen/render | Opened the final desktop QGS in QGIS 4.2.2, then inspected its project CRS and actual canvas layers through the native Python Console. PASS: `EPSG:4326 [('trees', 4), ('paths', 1), ('zones', 2), ('ground', 6)]`; no source-repair dialog. `iface.mapCanvas().saveAsImage(...)` produced the inspected preview with both labelled zones, north lawn, path and four trees. | [Native canvas preview](../preview.png) |
+
+Static verification: `backend/.venv/bin/ruff check --config backend/pyproject.toml qgis/demo-playground-2026-10-15/build.py`; from `backend/`, `.venv/bin/ruff check tests/test_demo_playground_import.py` and `.venv/bin/basedpyright tests/test_demo_playground_import.py ../qgis/demo-playground-2026-10-15/build.py`. All passed with no errors. New comments are required PEP 723/usage metadata or Given/When/Then scenario annotations.
+
+Cleanup: importer subprocesses exited and their `TemporaryDirectory` resources were removed by the actual service context manager. No test server, container, socket or QA environment variable was created. The task-owned `/private/tmp/janet-demo-red.txt` was removed after its evidence copy was saved here. The primary owns cleanup of its native QGIS normalization file and GUI session. Retained files in this directory are deliberate evidence artifacts.

@@ -1,0 +1,82 @@
+{
+  "type": "FeatureCollection",
+  "name": "SYNTHETIC zones",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-zone-a",
+        "kind": "zone",
+        "label": "A - Court (synthetic)",
+        "name": "A - Court (synthetic)",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.5011,
+              42.4452
+            ],
+            [
+              -76.50022,
+              42.4452
+            ],
+            [
+              -76.50022,
+              42.44598
+            ],
+            [
+              -76.5011,
+              42.44598
+            ],
+            [
+              -76.5011,
+              42.4452
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "demo-zone-b",
+        "kind": "zone",
+        "label": "B - Play (synthetic)",
+        "name": "B - Play (synthetic)",
+        "synthetic": true,
+        "provenance": "Invented Janet demonstration 2026-10-15"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -76.50018,
+              42.4452
+            ],
+            [
+              -76.4993,
+              42.4452
+            ],
+            [
+              -76.4993,
+              42.44598
+            ],
+            [
+              -76.50018,
+              42.44598
+            ],
+            [
+              -76.50018,
+              42.4452
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
