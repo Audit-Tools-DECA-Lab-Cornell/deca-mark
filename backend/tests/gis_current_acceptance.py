@@ -377,6 +377,8 @@ def assert_prepared_layers(  # noqa: PLR0913, PLR0917 - explicit synthetic ident
         check=False,
         capture_output=True,
         text=True,
+        env={},
+        timeout=10,
     )
     assert conversion.returncode == 0, conversion.stdout + conversion.stderr
     checks = document((prepared / "projection-checks.json").read_bytes())

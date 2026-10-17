@@ -34,7 +34,7 @@ This file is part of the [DECA Mark production plan](../docs/plan/README.md) and
 - SQLSTATE determines database error responses; unknown failures are sanitized 500s.
 - Separate runtime/test container stages keep test tooling out of the non-root runtime image.
 
-**Forms.** `domain/forms.py` validates the canonical contract with conditions and dynamic choices. `legacy_forms.py` remains imported for definition parsing/export metadata; it does not preserve an old flat observation-upload contract. BE-22 owns current exact-bound upload/fingerprint acceptance; dated earlier upload/readback results remain historical evidence.
+**Forms.** `domain/forms.py` validates the canonical contract with conditions and dynamic choices. The final audit cleanup removes experimental `fields` parsing and export dispatch after converting fresh synthetic initialization to canonical questions. Existing stored `fields` definitions require the [documented transition assessment](../docs/reviews/final-cleanup-2026-10-17/implementation.md) before rollout. BE-22 owns current exact-bound upload/fingerprint acceptance; dated earlier upload/readback results remain historical evidence.
 
 **Tests.** The suite covers real local Supabase plus pure domain and HTTP boundary behavior. BE-03 preserves the existing upload/package scenarios and adds error-envelope coverage.
 
@@ -261,7 +261,7 @@ Do:
    - require a question only while it is visible;
    - apply type checks for `one`, `many`, `text` and `number`.
 4. Run every shared case file from `contracts/forms/cases/` in pytest, and match every expected result.
-5. Keep `shell-v1` accepted through a documented adapter that reads its stored `fields` format.
+5. Historical BE-10 acceptance retained `shell-v1` through a stored-`fields` adapter. Superseded by the [2026-10-17 cleanup](../docs/reviews/final-cleanup-2026-10-17/implementation.md): fresh shell initialization is canonical; do not restore the experimental adapter.
    - A migration must not rewrite it: published definitions are immutable (DB-09).
    - The two verified hosted records must still read back.
 

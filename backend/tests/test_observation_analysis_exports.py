@@ -13,6 +13,9 @@ from tests.zone_api_fixtures import document
 pytest_plugins = ("tests.observation_analysis_fixtures",)
 
 
+pytestmark = pytest.mark.integration
+
+
 def files(content: bytes) -> dict[str, bytes]:
 
     with ZipFile(BytesIO(content)) as archive:
@@ -101,14 +104,3 @@ def test_boundary_export_when_scope_has_10000_records(
         f"BE20 measurement format=csv rows=10000 seconds={elapsed:.3f} "
         f"zip_bytes={len(response.content)} asset_bytes={sum(map(len, assets.values()))}"
     )
-
-
-@pytest.mark.parametrize("extra", [{"limit": "10"}, {"cursor": "abc"}])
-def test_export_rejects_page_controls_when_scope_requested(
-    api_client: TestClient, analysis_site: AnalysisSite, extra: dict[str, str]
-) -> None:
-    # Given pagination controls inappropriate for a complete export.
-    # When they are included in its query.
-    response = api_client.get(analysis_site.url + "/export", params=extra)
-    # Then it refuses a potentially misleading scope.
-    assert response.status_code == 422

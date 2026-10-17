@@ -1,11 +1,11 @@
 import json
 
 from fieldmaps_api.domain.form_engine import Answers
-from fieldmaps_api.domain.forms import AnswerError, StoredFormDefinition, validate_answers
+from fieldmaps_api.domain.forms import AnswerError, FormDefinition, validate_answers
 from fieldmaps_api.errors import ValidationFailedError
 
 
-def validated_answers(definition: StoredFormDefinition, answers: Answers) -> str:
+def validated_answers(definition: FormDefinition, answers: Answers) -> str:
     try:
         normalized = validate_answers(definition, answers)
     except AnswerError as error:

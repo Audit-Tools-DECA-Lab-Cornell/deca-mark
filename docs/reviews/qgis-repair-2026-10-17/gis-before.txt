@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/workspace/deca-mark/work/final-cleanup/prepare-before.py", line 265, in <module>
+    main()
+    ~~~~^^
+  File "/workspace/deca-mark/work/final-cleanup/prepare-before.py", line 249, in main
+    files, report = project_layers(assets)
+                    ~~~~~~~~~~~~~~^^^^^^^^
+  File "/workspace/deca-mark/work/final-cleanup/prepare-before.py", line 118, in project_layers
+    raise ValueError("Unknown assignment basis")
+ValueError: Unknown assignment basis
+
+exit_code=1

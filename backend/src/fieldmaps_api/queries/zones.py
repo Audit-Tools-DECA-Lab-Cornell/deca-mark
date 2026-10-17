@@ -78,16 +78,4 @@ IMPORT_FORMS: Final = text("""
 SELECT fieldmaps_private.resolve_zone_import_forms(
  :project,:site,:expected,CAST(:body AS jsonb))::text
 """)
-CAPABILITY: Final = text("""
-SELECT fieldmaps_private.zone_authoring_available(:project,:site,CAST(:ground AS jsonb))
-""")
-SITE_BY_ID: Final = text(
-    "SELECT id FROM fieldmaps.sites WHERE project_id=:project AND id=:site"
-)
-GET_FORMS: Final = text("""
-SELECT jsonb_build_object('play',jsonb_build_object('form_version_id',p.id,'form_version',p.code),
- 'inventory',CASE WHEN i.id IS NULL THEN NULL ELSE
-  jsonb_build_object('form_version_id',i.id,'form_version',i.code) END)::text
-FROM fieldmaps.site_packages k JOIN fieldmaps.form_versions p ON p.id=k.form_version_id
-LEFT JOIN fieldmaps.form_versions i ON i.id=k.inventory_form_version_id WHERE k.id=:package
-""")
+SITE_BY_ID: Final = text("SELECT id FROM fieldmaps.sites WHERE project_id=:project AND id=:site")

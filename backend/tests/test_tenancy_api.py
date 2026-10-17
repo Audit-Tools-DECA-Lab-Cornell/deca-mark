@@ -43,9 +43,9 @@ def recipient() -> Iterator[UUID]:
         admin_sql("DELETE FROM auth.users WHERE id=:'user';", f"user={user}")
 
 
-def test_organization_creation_requires_identity(api_client: TestClient) -> None:
-    api_client.headers.pop("Authorization")
-    response = api_client.post("/v1/orgs", json={})
+def test_organization_creation_requires_identity(validation_client: TestClient) -> None:
+    validation_client.headers.pop("Authorization")
+    response = validation_client.post("/v1/orgs", json={})
     assert response.status_code == 401
 
 

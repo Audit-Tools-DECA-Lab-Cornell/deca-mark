@@ -1,0 +1,32 @@
+{
+  "production_python": {
+    "added": 85,
+    "removed": 301,
+    "files": 15,
+    "net": -216
+  },
+  "tests_python": {
+    "added": 524,
+    "removed": 410,
+    "files": 26,
+    "net": 114
+  },
+  "synthetic_initializer": {
+    "added": 1,
+    "removed": 1,
+    "files": 1,
+    "net": 0
+  },
+  "configuration": {
+    "added": 1,
+    "removed": 1,
+    "files": 1,
+    "net": 0
+  },
+  "documentation": {
+    "added": 77,
+    "removed": 29,
+    "files": 10,
+    "net": 48
+  }
+}

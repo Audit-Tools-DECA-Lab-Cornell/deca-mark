@@ -134,13 +134,6 @@ async def finalize(session: AsyncSession, params: Parameters) -> tuple[UUID, boo
         ) from error
 
 
-async def available(session: AsyncSession, project: UUID, site: UUID, ground: str | None) -> bool:
-    result: Result[tuple[bool]] = await session.execute(
-        q.CAPABILITY, {"project": project, "site": site, "ground": ground}
-    )
-    return result.scalar_one()
-
-
 async def package_belongs(session: AsyncSession, project: UUID, site: UUID, package: UUID) -> bool:
     result: Result[tuple[bool]] = await session.execute(
         text("""

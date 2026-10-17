@@ -14,9 +14,9 @@ from pydantic import JsonValue
     ],
 )
 def test_project_input_rejected_before_database(
-    api_client: TestClient, payload: dict[str, JsonValue]
+    validation_client: TestClient, payload: dict[str, JsonValue]
 ) -> None:
-    response = api_client.post(
+    response = validation_client.post(
         "/v1/orgs/10000000-0000-4000-8000-000000000001/projects", json=payload
     )
     assert response.status_code == 422, response.text
@@ -32,9 +32,9 @@ def test_project_input_rejected_before_database(
     ],
 )
 def test_invitation_requires_exactly_one_credential(
-    api_client: TestClient, payload: dict[str, JsonValue]
+    validation_client: TestClient, payload: dict[str, JsonValue]
 ) -> None:
-    response = api_client.post("/v1/invitations/preview", json=payload)
+    response = validation_client.post("/v1/invitations/preview", json=payload)
     assert response.status_code == 422, response.text
 
 
@@ -48,6 +48,6 @@ def test_invitation_requires_exactly_one_credential(
     ],
 )
 def test_patch_rejects_null_required_fields_and_immutable_fields(
-    api_client: TestClient, path: str, payload: dict[str, JsonValue]
+    validation_client: TestClient, path: str, payload: dict[str, JsonValue]
 ) -> None:
-    assert api_client.patch(path, json=payload).status_code == 422
+    assert validation_client.patch(path, json=payload).status_code == 422

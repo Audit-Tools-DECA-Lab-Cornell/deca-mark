@@ -1,0 +1,10 @@
+{
+  "head": "9928f536f12bee59dd245c75ee53779b0f5683a4",
+  "initial_worktree": "clean; no uncommitted work was present",
+  "node": "v24.19.0",
+  "pnpm": "10.17.1",
+  "python": "3.13.5",
+  "database_image": "decamark-cleanup-tests:local",
+  "database_image_id": "sha256:b15dd833ba0be702cff4980114773bc0bb75f44d55addf1419e8ce8bede8b7bb",
+  "base_image": "postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6"
+}

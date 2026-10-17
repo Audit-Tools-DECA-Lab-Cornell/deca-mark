@@ -5,7 +5,7 @@ import pytest
 from fieldmaps_api.domain.observation_export import BYTE_LIMIT, SOURCE_BYTE_LIMIT, bundle
 from fieldmaps_api.errors import DomainError
 from fieldmaps_api.observation_analysis_schemas import ExportSnapshot, ObservationExportQuery
-from tests.test_observation_analysis_domain import snapshot
+from tests.test_observation_analysis_domain import canonical, question, snapshot
 
 
 @pytest.mark.parametrize("extra", [0, 1])
@@ -22,7 +22,7 @@ def test_actual_asset_ceiling_when_boundary_is_measured(
         return {"synthetic.bin": b"x" * (BYTE_LIMIT + extra)}
 
     monkeypatch.setattr("fieldmaps_api.domain.observation_export.assets", boundary_assets)
-    data = snapshot({}, {"fields": []})
+    data = snapshot({}, canonical([question("notes", "notes")]))
     # When the complete bundle is preflighted.
     if extra:
         with pytest.raises(DomainError) as caught:
@@ -53,7 +53,7 @@ def test_actual_final_zip_ceiling_when_boundary_is_measured(
 
     monkeypatch.setattr("fieldmaps_api.domain.observation_export.assets", boundary_assets)
     monkeypatch.setattr("fieldmaps_api.domain.observation_export.ZIP_DEFLATED", ZIP_STORED)
-    data = snapshot({}, {"fields": []})
+    data = snapshot({}, canonical([question("notes", "notes")]))
     # When final ZIP bytes are measured independently of asset bytes.
     if extra:
         with pytest.raises(DomainError) as caught:
@@ -68,7 +68,7 @@ def test_actual_final_zip_ceiling_when_boundary_is_measured(
 @pytest.mark.parametrize("extra", [0, 1])
 def test_source_budget_when_snapshot_reports_exact_or_excess_bytes(extra: int) -> None:
     # Given a SQL snapshot budget at or one byte beyond the frozen 64 MiB ceiling.
-    data = snapshot({}, {"fields": []}).model_copy(
+    data = snapshot({}, canonical([question("notes", "notes")])).model_copy(
         update={"source_bytes": SOURCE_BYTE_LIMIT + extra}
     )
     # When the source preflight executes before serialization.

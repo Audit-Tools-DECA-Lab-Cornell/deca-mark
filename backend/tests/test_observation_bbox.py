@@ -11,6 +11,9 @@ from tests.test_zone_form_succession import published_form, successor_body
 pytest_plugins = ("tests.observation_analysis_fixtures",)
 
 
+pytestmark = pytest.mark.integration
+
+
 def test_bbox_excludes_records_outside_viewport(
     api_client: TestClient, analysis_site: AnalysisSite
 ) -> None:
@@ -22,17 +25,6 @@ def test_bbox_excludes_records_outside_viewport(
     page = ObservationPage.model_validate_json(response.content)
     assert page.total_matching == 0
     assert page.items == []
-
-
-@pytest.mark.parametrize("suffix", ["", "/summary", "/export"])
-def test_bbox_rejects_invalid_coordinates(
-    api_client: TestClient, analysis_site: AnalysisSite, suffix: str
-) -> None:
-    # Given a reversed longitude interval.
-    # When any filtered read is requested.
-    response = api_client.get(analysis_site.url + suffix, params={"bbox": "1,0,0,1"})
-    # Then the query fails at the validation boundary.
-    assert response.status_code == 422, response.text
 
 
 def test_bbox_covers_boundary_and_keeps_inventory_separate(

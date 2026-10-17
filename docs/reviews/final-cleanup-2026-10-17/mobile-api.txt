@@ -1,0 +1,62 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"553df59e967148779a5f50edcb713e1d","method":"POST","status":201,"duration_ms":360,"operation":"createForm"}
+{"event":"http_response","request_id":"1e2846bec4f24ae3917a8a1d63b3f27f","method":"POST","status":200,"duration_ms":15,"operation":"publishFormVersion"}
+{"event":"http_response","request_id":"c00d9b5cd0ea4b54b6f95fe9f58a0fc7","method":"POST","status":201,"duration_ms":19,"operation":"createForm"}
+{"event":"http_response","request_id":"29fa3fbfcccb4618a4bc0fa765658b23","method":"POST","status":200,"duration_ms":10,"operation":"publishFormVersion"}
+{"event":"http_response","request_id":"aac1c64583344d59be5ef23b86d0b88f","method":"POST","status":201,"duration_ms":287,"operation":"createPackage"}
+{"event":"http_response","request_id":"c1526cde49a24d83a1215b3ade5c1aea","method":"GET","status":200,"duration_ms":21,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"3b25100869af4e1182a8bf04a22d2b86","method":"GET","status":200,"duration_ms":21,"operation":"listSites"}
+{"event":"http_response","request_id":"b49e2d121b874356aff2133f1e83fb33","method":"GET","status":200,"duration_ms":9,"operation":"downloadPackageArchive"}
+{"event":"http_response","request_id":"244120012e44401b9abdee2d185a5e40","method":"GET","status":200,"duration_ms":6,"operation":"getFormVersion"}
+{"event":"http_response","request_id":"f3c38153d5b349f898d3722275e7c261","method":"GET","status":200,"duration_ms":8,"operation":"getFormVersion"}
+{"event":"http_response","request_id":"4dcea6036b7447919e8127b4a4fd7283","method":"POST","status":201,"duration_ms":47,"operation":"createZoneDraft","zone_count":1}
+{"event":"http_response","request_id":"b1f1f262913d4de49d4ec7c5c7066af4","method":"POST","status":201,"duration_ms":306,"operation":"publishZoneDraft","archive_bytes":1460}
+{"event":"http_response","request_id":"2c31c27481344ae58a9fcd5953e53472","method":"PUT","status":200,"duration_ms":21,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"4eede995956741bf8076260c56fd2b18","method":"PUT","status":200,"duration_ms":14,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"eac2350051fb4136a45d96d4d41d88e6","method":"PUT","status":200,"duration_ms":10,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"08a97e5588bd4210a9572a712744ece4","method":"PUT","status":200,"duration_ms":7,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"d1df90fa2a154a5f8a7899bc970ec2fd","method":"PUT","status":409,"duration_ms":12,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"35ca4cbcbf6c495e85f5e256594f87d9","method":"GET","status":200,"duration_ms":31,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"248ccdda21a24893aa59596c141c0155","method":"GET","status":200,"duration_ms":17,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"ecb3964d6a1740bfa26ef52589ac013e","method":"GET","status":200,"duration_ms":13,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"d23127249a6c4c688380a1a5ff466926","method":"GET","status":200,"duration_ms":11,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"84e3b63df90e4f89bc272168c9d9ba25","method":"GET","status":403,"duration_ms":10,"operation":"exportHistoricalObservations"}
+{"event":"http_response","request_id":"96d25cac43b948e9aae96b7c7151e2eb","method":"GET","status":200,"duration_ms":552,"operation":"exportHistoricalObservations"}
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/workspace/deca-mark/mobile[39m
+
+ [32m✓[39m src/sync/bound-upload-api.acceptance.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 853[2mms[22m[39m
+   [33m[2m✓[22m[39m uploads exact saved v1 point and whole-zone Inventory after SQLite restart and v2 publication through the actual API [33m 851[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 16:21:03
+[2m   Duration [22m 1.52s[2m (transform 308ms, setup 0ms, import 519ms, tests 853ms, environment 0ms)[22m
+
+
+PASS live HTTP: exact old-map point and Inventory readback/export; generated tokens not saved
+.
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+::test_mobile_bound_outbox_restart_publication_replay_and_inventory
+::test_mobile_bound_outbox_restart_publication_replay_and_inventory
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 3 warnings in 5.34s

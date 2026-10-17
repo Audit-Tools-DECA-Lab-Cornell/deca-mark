@@ -9,12 +9,13 @@ from pydantic import (
     JsonValue,
 )
 
-from fieldmaps_api.domain.forms import StoredFormDefinition
+from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.domain.packages import PreparationCheck
 
 #: A site or form version is named by its code within a project, which is what the collector
 #: carries and what an export column is keyed by.
 Code = Annotated[str, Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][\w.-]*$")]
+
 
 class ProjectAccess(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
@@ -61,6 +62,6 @@ class UploadTarget(BaseModel):
     organization_id: UUID
     site_id: UUID
     form_version_id: UUID
-    definition: StoredFormDefinition
+    definition: FormDefinition
     #: Uploads only ever resolve published or retired versions; a package target reports its state.
     form_state: Literal["draft", "published", "retired"] = "published"

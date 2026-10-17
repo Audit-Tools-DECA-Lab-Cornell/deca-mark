@@ -16,6 +16,9 @@ from tests.tenant_fixtures import sign_in
 pytest_plugins = ("tests.observation_analysis_fixtures",)
 
 
+pytestmark = pytest.mark.integration
+
+
 def test_complete_cursor_pages_when_601_timestamps_tie(
     api_client: TestClient, analysis_site: AnalysisSite
 ) -> None:
@@ -39,34 +42,6 @@ def test_complete_cursor_pages_when_601_timestamps_tie(
     assert identifiers == sorted(identifiers)
     assert first.total_matching == second.total_matching == third.total_matching == 601
     assert third.next_cursor is None
-
-
-@pytest.mark.parametrize(
-    "filters",
-    [
-        {"site_id": "malformed"},
-        {"zone_id": str(uuid4())},
-        {"limit": "501"},
-        {"observer": "             "},
-        {"observer": "1234567890123"},
-        {"observed_from": "2026-11-01T01:00:00"},
-        {"observed_from": "0001-01-01T00:00:00+01:00"},
-        {"observed_before": "9999-12-31T23:59:59-01:00"},
-        {"observed_from": "2026-10-11T00:00:00Z", "observed_before": "2026-10-11T00:00:00Z"},
-    ],
-)
-def test_invalid_filter_when_query_is_not_scoped(
-    api_client: TestClient, analysis_site: AnalysisSite, filters: dict[str, str]
-) -> None:
-    # Given an invalid filter combination or value.
-    # When the historical page is requested.
-    response = api_client.get(analysis_site.url, params=filters)
-    # Then safe structured validation is returned.
-    assert response.status_code == 422, response.text
-    error = ErrorEnvelope.model_validate_json(response.content)
-    assert error.error.details["issues"] == [
-        {"code": "invalid_filter", "zone_ids": [], "path": "", "message": "Invalid query"}
-    ]
 
 
 @pytest.mark.parametrize("suffix", ["", "/summary", "/export"])

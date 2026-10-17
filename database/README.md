@@ -81,6 +81,18 @@ PostgreSQL 17/PostGIS image containing pg_cron. The default remains the pinned S
 image. Alternative-image runs use synthetic Auth tables and do not prove full Supabase
 Auth/Storage service behavior. See [form revision evidence](../docs/reviews/form-revisions-2026-10-16/README.md).
 
+## Canonical synthetic forms and existing targets
+
+The baseline's fresh synthetic shell INSERT now authors canonical `questions`, preserving
+the original two IDs, bounds and export names. This edits initialization source only; do not
+reapply the baseline or change migration history on an existing installation. No forward
+migration mutates frozen forms. Existing published or draft `fields` definitions, their
+packages and observations require a separately approved transition before running the
+canonical-only API. Publishing a canonical successor does not convert old package bindings.
+See the [cleanup evidence and preflight](../docs/reviews/final-cleanup-2026-10-17/implementation.md).
+Training's canonical Janet definition, retention, creator isolation and immutable metadata
+remain unchanged.
+
 ## Schema and access
 
 For browser acceptance data after starting the local Auth-connected API on port 8001, run

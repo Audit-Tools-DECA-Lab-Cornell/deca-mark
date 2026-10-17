@@ -204,7 +204,7 @@ def test_invalid_cursor_when_structure_or_utc_range_is_invalid(value: str) -> No
 
 def test_byte_ceiling_when_actual_assets_exceed_limit(monkeypatch: pytest.MonkeyPatch) -> None:
     # Given a small source snapshot whose actual generated assets exceed a reduced test limit.
-    data = snapshot({"text": "Synthetic"}, {"fields": [{"code": "text", "type": "text"}]})
+    data = snapshot({"text": "Synthetic"}, canonical([question("text", "text")]))
     monkeypatch.setattr("fieldmaps_api.domain.observation_export.BYTE_LIMIT", 100)
     # When bundle preflight measures actual assets.
     with pytest.raises(DomainError) as caught:

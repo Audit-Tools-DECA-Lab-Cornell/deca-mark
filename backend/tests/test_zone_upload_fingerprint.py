@@ -8,15 +8,14 @@ import rfc8785
 from pydantic import JsonValue, TypeAdapter
 
 from fieldmaps_api.domain.zone_upload_fingerprint import canonical_bytes, fingerprint
-from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
-from tests.zone_case_models import AuthoredFingerprintDocument, FingerprintCase, upload_cases
+from tests.zone_case_models import FingerprintCase, FingerprintDocument, upload_cases
 
 CASES: Final = upload_cases().fingerprints
 
 
 @pytest.mark.parametrize("case", CASES, ids=[case.id for case in CASES])
 def test_authored_canonical_bytes_match_independent_jcs(case: FingerprintCase) -> None:
-    document = AuthoredFingerprintDocument.model_validate(case.document)
+    document = FingerprintDocument.model_validate(case.document)
     assert rfc8785.dumps(case.document) == case.canonical.encode()
     assert sha256(case.canonical.encode()).hexdigest() == case.sha256
     payload = TypeAdapter(dict[str, JsonValue]).validate_python(case.document["payload"])
@@ -42,7 +41,13 @@ def test_authored_canonical_bytes_match_independent_jcs(case: FingerprintCase) -
 def test_authored_request_identities_affect_hash(identity: str) -> None:
     changed = deepcopy(CASES[0].document)
     changed[identity] = str(uuid4())
-    assert sha256(rfc8785.dumps(changed)).hexdigest() != CASES[0].sha256
+    document = FingerprintDocument.model_validate(changed)
+    assert (
+        fingerprint(
+            document.project_id, document.observation_id, document.user_id, document.payload
+        )
+        != CASES[0].sha256
+    )
 
 
 @pytest.mark.parametrize("change", ["binding", "answer", "array_order", "unicode"])
@@ -67,15 +72,21 @@ def test_authored_content_changes_affect_hash(
         case _:
             assert_never(change)
     changed["payload"] = body
-    assert rfc8785.dumps(original) != rfc8785.dumps(changed)
+    first = FingerprintDocument.model_validate(original)
+    second = FingerprintDocument.model_validate(changed)
+    assert fingerprint(
+        first.project_id, first.observation_id, first.user_id, first.payload
+    ) != fingerprint(second.project_id, second.observation_id, second.user_id, second.payload)
 
 
 def test_production_fingerprint_matches_authored_golden_bytes_without_translation() -> None:
     for case in CASES:
-        document = AuthoredFingerprintDocument.model_validate(case.document)
-        payload = TypeAdapter[BoundObservationUpload](BoundObservationUpload).validate_python(
-            case.document["payload"]
+        document = FingerprintDocument.model_validate(case.document)
+        arguments = (
+            document.project_id,
+            document.observation_id,
+            document.user_id,
+            document.payload,
         )
-        arguments = (document.project_id, document.observation_id, document.user_id, payload)
         assert canonical_bytes(*arguments) == case.canonical.encode()
         assert fingerprint(*arguments) == case.sha256

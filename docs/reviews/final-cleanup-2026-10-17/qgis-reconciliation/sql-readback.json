@@ -1,0 +1,32 @@
+[
+  {
+    "observation_id": "06e3c431-7b3e-4fb1-8dff-5d10d47864ea",
+    "package_id": "cfa3225d-2b14-429b-a557-d95e5a317fb9",
+    "package_version": 2,
+    "zone_id": "4bb3378b-2537-4c56-8ae6-b5498a855d43",
+    "zone_code": "A",
+    "zone_label_at_capture": "Synthetic smaller lawn",
+    "spatial_support": "point",
+    "round_type": "standard"
+  },
+  {
+    "observation_id": "0cde73c0-a0a7-480c-ad85-7acc2c44748d",
+    "package_id": "3b1d246b-306b-4ca5-a2ff-8afc35da70a4",
+    "package_version": 1,
+    "zone_id": "4bb3378b-2537-4c56-8ae6-b5498a855d43",
+    "zone_code": "A",
+    "zone_label_at_capture": "Lawn",
+    "spatial_support": "zone",
+    "round_type": "inventory"
+  },
+  {
+    "observation_id": "75dee706-c688-4898-92ca-e7cba815344f",
+    "package_id": "3b1d246b-306b-4ca5-a2ff-8afc35da70a4",
+    "package_version": 1,
+    "zone_id": "4bb3378b-2537-4c56-8ae6-b5498a855d43",
+    "zone_code": "A",
+    "zone_label_at_capture": "Lawn",
+    "spatial_support": "point",
+    "round_type": "standard"
+  }
+]

@@ -10,8 +10,6 @@ from pydantic import TypeAdapter
 from fieldmaps_api.domain.packages import PackageError, PreparationCheck
 from fieldmaps_api.domain.zone_archive_jobs import (
     JOBS,
-    Bootstrap,
-    ExtractJob,
     ImportJob,
     Job,
     PublishJob,
@@ -53,15 +51,6 @@ async def run(directory: Path, job: Job, archive: tuple[bytes, str] | None) -> N
     if result.returncode != 0:
         message = "Archive processing unavailable; retry later"
         raise StorageUnavailableError(message)
-
-
-async def extract(archive: tuple[bytes, str]) -> Bootstrap:
-    with TemporaryDirectory(prefix="zone-archive-") as temporary:
-        directory = Path(temporary)
-        await run(directory, ExtractJob(), archive)
-        return Bootstrap.model_validate_json(
-            await anyio.Path(directory / "bootstrap.json").read_bytes()
-        )
 
 
 async def prepare(

@@ -44,6 +44,8 @@ Run long-lived services in separate terminals. There is no command that silently
 | `pnpm test`                                  | Mobile, local API, and local SQL suites                     |
 | `pnpm api:hosted:up`, `pnpm api:hosted:stop` | Local API process using hosted Supabase                     |
 
+For backend checks without a database, run `cd backend && EMAIL_ENABLED=false uv run --frozen python -m pytest -m 'not integration'`. This selection needs no database credentials or startup; database fixtures require an explicit integration marker. Signed validation tests use the database-free client. The full suite still runs those integration scenarios.
+
 For the full integration suite, first run `pnpm db:start`, then `pnpm test`. These operations create/migrate the local test databases. They do not apply hosted migrations or change deployed Supabase settings.
 
 ### Web browser tests

@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fieldmaps_api.domain.forms import StoredFormDefinition
+from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.queries import bound_uploads as queries
 from fieldmaps_api.repositories.upload_receipts import ReceiptIdentity
 from fieldmaps_api.schemas import UploadTarget
@@ -27,7 +27,7 @@ class BoundTarget(BaseModel):
     zone_present: bool
     form_version_id: UUID | None
     form_version: str | None
-    definition: StoredFormDefinition | None
+    definition: FormDefinition | None
     point_covered: bool
 
 

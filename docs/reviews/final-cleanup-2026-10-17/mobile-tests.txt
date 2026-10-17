@@ -1,0 +1,17 @@
+
+> decamark@0.1.0 mobile:test /workspace/deca-mark
+> pnpm --dir mobile test
+
+
+> decamark-mobile@0.1.0 test /workspace/deca-mark/mobile
+> vitest run
+
+
+ RUN  v4.1.11 /workspace/deca-mark/mobile
+
+
+ Test Files  94 passed | 5 skipped (99)
+      Tests  834 passed | 5 skipped (839)
+   Start at  16:14:37
+   Duration  55.72s (transform 5.90s, setup 0ms, import 26.73s, tests 6.29s, environment 15ms)
+

@@ -18,6 +18,9 @@ if TYPE_CHECKING:
 pytest_plugins = ("tests.observation_analysis_fixtures",)
 
 
+pytestmark = pytest.mark.integration
+
+
 def test_query_plan_uses_scoped_index_when_zone_scope_is_selected(
     analysis_site: AnalysisSite,
 ) -> None:

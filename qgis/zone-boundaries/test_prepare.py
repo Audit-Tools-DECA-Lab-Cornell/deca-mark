@@ -233,6 +233,7 @@ class ProjectionChecks(unittest.TestCase):
 
     def test_csv_compares_scope_identity_attribution_and_coordinates(self):
         for field, value in (
+            ("form_version", "other-v2"),
             ("package_id", "wrong-package"),
             ("map_version", "8"),
             ("zone_label_at_capture", "wrong-label"),

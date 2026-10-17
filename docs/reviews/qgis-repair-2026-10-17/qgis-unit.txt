@@ -1,0 +1,7 @@
+/usr/lib/python3.13/zipfile/__init__.py:1655: UserWarning: Duplicate name: 'metadata.json'
+  return self._open_to_write(zinfo, force_zip64=force_zip64)
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+OK

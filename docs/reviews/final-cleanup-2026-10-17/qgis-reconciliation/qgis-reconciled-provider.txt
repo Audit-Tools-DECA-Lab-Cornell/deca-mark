@@ -1,0 +1,98 @@
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+ERROR 6: The PNG driver does not support update access to existing datasets.
+
+{
+  "qgis_version": "3.40.6-Bratislava",
+  "provider": "ogr",
+  "crs": "EPSG:4326",
+  "mode": "installed PyQGIS offscreen provider and layout rendering",
+  "delayed_point": "75dee706-c688-4898-92ca-e7cba815344f",
+  "delayed_point_version": 1,
+  "inside_recorded_snapshot": true,
+  "outside_successor_snapshot": true,
+  "point_events": 2,
+  "inventory_records": 1,
+  "inventory_polygons": 1,
+  "zone_snapshots": 2,
+  "inventory_source_event_geometry_null": true,
+  "prepared_attribution_agrees_with_source_events": true,
+  "point_geometry_agrees_with_source_events": true,
+  "all_layers_read_only": true,
+  "loaded_attribution": {
+    "point_events": [
+      {
+        "observation_id": "06e3c431-7b3e-4fb1-8dff-5d10d47864ea",
+        "package_id": "cfa3225d-2b14-429b-a557-d95e5a317fb9",
+        "map_version": 2,
+        "zone_id": "4bb3378b-2537-4c56-8ae6-b5498a855d43",
+        "zone_code": "A",
+        "zone_label_at_capture": "Synthetic smaller lawn",
+        "spatial_support": "point",
+        "round_type": "standard"
+      },
+      {
+        "observation_id": "75dee706-c688-4898-92ca-e7cba815344f",
+        "package_id": "3b1d246b-306b-4ca5-a2ff-8afc35da70a4",
+        "map_version": 1,
+        "zone_id": "4bb3378b-2537-4c56-8ae6-b5498a855d43",
+        "zone_code": "A",
+        "zone_label_at_capture": "Lawn",
+        "spatial_support": "point",
+        "round_type": "standard"
+      }
+    ],
+    "inventory_records": [
+      {
+        "observation_id": "0cde73c0-a0a7-480c-ad85-7acc2c44748d",
+        "package_id": "3b1d246b-306b-4ca5-a2ff-8afc35da70a4",
+        "map_version": 1,
+        "zone_id": "4bb3378b-2537-4c56-8ae6-b5498a855d43",
+        "zone_code": "A",
+        "zone_label_at_capture": "Lawn",
+        "spatial_support": "zone",
+        "round_type": "inventory"
+      }
+    ]
+  },
+  "snapshot_labels": [
+    {
+      "snapshot_key": "cfa3225d-2b14-429b-a557-d95e5a317fb9:4bb3378b-2537-4c56-8ae6-b5498a855d43",
+      "map_version": 2,
+      "zone_label_at_capture": "Synthetic smaller lawn"
+    },
+    {
+      "snapshot_key": "3b1d246b-306b-4ca5-a2ff-8afc35da70a4:4bb3378b-2537-4c56-8ae6-b5498a855d43",
+      "map_version": 1,
+      "zone_label_at_capture": "Lawn"
+    }
+  ],
+  "inventory_polygon_parts": {
+    "0cde73c0-a0a7-480c-ad85-7acc2c44748d": 2
+  },
+  "sql_readback_agrees": true,
+  "desktop_interaction": "not evaluated; offscreen provider/layout acceptance only",
+  "hosted_or_live_database": "not accessed"
+}
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+Could not create AF_NETLINK socket (Operation not permitted)
+{
+  "qgis_version": "3.40.6-Bratislava",
+  "mode": "separate installed QGIS process reopening saved project",
+  "saved_project_reopens": true,
+  "all_layers_read_only": true,
+  "counts": {
+    "point-events.geojson": 2,
+    "historical-zones.geojson": 2,
+    "inventory-records.geojson": 1
+  },
+  "sources_beside_project": true
+}
+
+renderer_exit_code=0

@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
 from fieldmaps_api.zone_response_schemas import HistoricalZones
@@ -9,6 +10,9 @@ from tests.signing import PROJECT, Signer
 from tests.zone_api_fixtures import document
 
 SITE = "10000000-0000-4000-8000-000000000003"
+
+
+pytestmark = pytest.mark.integration
 
 
 def test_org_admin_without_project_membership_can_list_upload_and_prepare(

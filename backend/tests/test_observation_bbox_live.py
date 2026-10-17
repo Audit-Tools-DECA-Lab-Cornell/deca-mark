@@ -2,6 +2,8 @@ import csv
 from io import StringIO
 from uuid import uuid4
 
+import pytest
+
 from fieldmaps_api.observation_analysis_schemas import ObservationPage, ObservationSummary
 from tests.bound_upload_fixtures import BoundSite
 from tests.observation_analysis_fixtures import AnalysisSite, seed_copies
@@ -10,6 +12,9 @@ from tests.test_zone_api_live import LiveApi
 from tests.zone_api_fixtures import document
 
 pytest_plugins = ("tests.bound_upload_live_fixtures",)
+
+
+pytestmark = pytest.mark.integration
 
 
 def test_signed_viewport_reads_share_scope_and_preserve_viewer_isolation(

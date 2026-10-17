@@ -42,7 +42,7 @@ ignore = ["COM812", "ISC001", "D203", "D213", "D100", "D101", "D102", "D103", "D
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = ["-ra", "--strict-config", "--strict-markers"]
-markers = ["integration: requires the local DECA Mark Supabase stack"]
+markers = ["integration: requires local or disposable PostgreSQL/PostGIS"]
 
 [tool.uv]
 package = false

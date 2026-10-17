@@ -10,8 +10,6 @@ from fieldmaps_api.domain.packages import PackageError
 from fieldmaps_api.domain.zone_archive import extract_base_archive, prepare_import_base
 from fieldmaps_api.domain.zone_archive_jobs import (
     JOBS,
-    Bootstrap,
-    ExtractJob,
     ImportJob,
     PublishJob,
 )
@@ -28,11 +26,6 @@ def resource_limits() -> None:
 def process(directory: Path) -> None:
     job = JOBS.validate_json((directory / "job.json").read_bytes())
     match job:
-        case ExtractJob():
-            base = extract_base_archive((directory / "base.zip").read_bytes())
-            bootstrap = Bootstrap(ground=base.ground, zones=base.zones)
-            (directory / "bootstrap.json").write_text(bootstrap.model_dump_json())
-            return
         case PublishJob():
             base = extract_base_archive((directory / "base.zip").read_bytes())
         case ImportJob():

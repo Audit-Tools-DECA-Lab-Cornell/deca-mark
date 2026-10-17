@@ -12,6 +12,13 @@ Language-neutral JSON shared by the independently managed mobile, web and API ap
 | `openapi.json` | Generated from FastAPI with `make -C backend openapi`; never edit by hand. | Separate generated TypeScript declarations in web and mobile |
 | `zones/*.cases.json` | Authored synthetic geometry, publication, upload and fingerprint expectations. Never regenerate expectations from implementation. See [zone contracts](zones/README.md). | Current SQL/API and mobile coverage/immutable serializer/receipt adapters; MOB-29 has disposable HTTP/SQLite acceptance, with native QGIS readback verified; physical iPad/Android collector acceptance pending |
 
+The backend accepts canonical `questions` definitions only. The fresh database's synthetic
+shell initializer preserves its original two answer IDs, `people` and `notes`, bounds,
+requiredness and export names. It deliberately differs from the collector practice file,
+which also authors an observer question. No golden upload JSON, canonical bytes or
+fingerprints changed. Historical stored `fields` definitions require the separate
+[transition assessment](../docs/reviews/final-cleanup-2026-10-17/implementation.md) before rollout.
+
 ## Generate and verify
 
 With Node 24 and pnpm 10.17.1, from the repository root:

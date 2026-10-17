@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
 from fieldmaps_api.observation_analysis_schemas import ObservationSummary
@@ -8,6 +9,9 @@ from tests.observation_analysis_fixtures import AnalysisSite, read_page
 from tests.zone_api_fixtures import ZoneSite, create_draft, document, zones_body
 
 pytest_plugins = ("tests.observation_analysis_fixtures",)
+
+
+pytestmark = pytest.mark.integration
 
 
 def test_historical_labels_when_zone_is_renamed_in_successor(

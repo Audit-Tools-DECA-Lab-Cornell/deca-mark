@@ -9,7 +9,7 @@ import anyio
 import pytest
 
 from fieldmaps_api.observation_analysis_schemas import ObservationExportQuery
-from tests.test_observation_analysis_domain import snapshot
+from tests.test_observation_analysis_domain import canonical, question, snapshot
 
 
 @pytest.mark.parametrize("count", [601, 10_000])
@@ -18,7 +18,7 @@ def test_dense_synthetic_serializer_when_answers_and_polygon_are_nontrivial(
     count: int, export_format: str, tmp_path: Path
 ) -> None:
     # Given synthetic 400-character answers and one deduplicated 2,000-position polygon.
-    data = snapshot({"notes": "s" * 400}, {"fields": [{"code": "notes", "type": "text"}]})
+    data = snapshot({"notes": "s" * 400}, canonical([question("notes", "notes")]))
     package, zone = uuid4(), uuid4()
     rows = [
         data.items[0].model_copy(

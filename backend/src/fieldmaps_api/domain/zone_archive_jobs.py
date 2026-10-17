@@ -2,17 +2,13 @@ from typing import Annotated, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
-from fieldmaps_api.domain.zone_package_schemas import GroundGeometry, PackageIdentity, PackageZone
+from fieldmaps_api.domain.zone_package_schemas import PackageIdentity
 from fieldmaps_api.zone_import_schemas import PackageRequest
 from fieldmaps_api.zone_response_schemas import ImportValidation, PackageForms
 
 
 class ArchiveJob(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
-
-
-class ExtractJob(ArchiveJob):
-    operation: Literal["extract"] = "extract"
 
 
 class PublishJob(ArchiveJob):
@@ -30,10 +26,5 @@ class ImportJob(ArchiveJob):
     submission: PackageRequest
 
 
-type Job = Annotated[ExtractJob | PublishJob | ImportJob, Field(discriminator="operation")]
+type Job = Annotated[PublishJob | ImportJob, Field(discriminator="operation")]
 JOBS = TypeAdapter[Job](Job)
-
-
-class Bootstrap(ArchiveJob):
-    ground: GroundGeometry
-    zones: tuple[PackageZone, ...]

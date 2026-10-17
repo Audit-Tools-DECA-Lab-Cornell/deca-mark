@@ -11,7 +11,7 @@ from pydantic import JsonValue, ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fieldmaps_api.domain.forms import FormDefinition, definition_format
+from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.errors import ConflictError, NotFoundError, ValidationFailedError
 from fieldmaps_api.form_preconditions import require_form_etag, revision_conflict
 from fieldmaps_api.form_schemas import (
@@ -108,14 +108,6 @@ async def create_draft(
     if source is None:
         message = "This form has no version to copy; send a definition"
         raise ValidationFailedError(message, field="definition")
-    if payload.definition is None and definition_format(source) == "legacy":
-        # The practice form predates the editor: a field list, not questions. Converting it would
-        # invent an instrument nobody wrote, so the manager starts the draft from a definition.
-        message = (
-            f"{form.code} is a practice form from before the form editor and cannot be copied; "
-            "start the draft from a definition instead"
-        )
-        raise ConflictError(message)
     number = await forms.next_version(session, form.id)
     code = version_code(form.code, number)
     definition = checked_definition(source, code, "draft")

@@ -1,0 +1,1727 @@
+diff --git a/backend/pyproject.toml b/backend/pyproject.toml
+index 422510c..cb34449 100644
+--- a/backend/pyproject.toml
++++ b/backend/pyproject.toml
+@@ -42,7 +42,7 @@ ignore = ["COM812", "ISC001", "D203", "D213", "D100", "D101", "D102", "D103", "D
+ testpaths = ["tests"]
+ pythonpath = ["src"]
+ addopts = ["-ra", "--strict-config", "--strict-markers"]
+-markers = ["integration: requires the local DECA Mark Supabase stack"]
++markers = ["integration: requires local or disposable PostgreSQL/PostGIS"]
+ 
+ [tool.uv]
+ package = false
+diff --git a/backend/src/fieldmaps_api/domain/forms.py b/backend/src/fieldmaps_api/domain/forms.py
+index 5fe5373..0b4b45c 100644
+--- a/backend/src/fieldmaps_api/domain/forms.py
++++ b/backend/src/fieldmaps_api/domain/forms.py
+@@ -1,10 +1,10 @@
+-"""Canonical validation and compatibility with immutable legacy field definitions."""
++"""Canonical form and answer validation."""
+ 
+ import math
+ from dataclasses import dataclass
+-from typing import Annotated, Literal, Self, assert_never
++from typing import Literal, Self, assert_never
+ 
+-from pydantic import Discriminator, JsonValue, Tag, model_validator
++from pydantic import JsonValue, model_validator
+ 
+ from fieldmaps_api.domain.form_definition import CanonicalDefinition, Question
+ from fieldmaps_api.domain.form_engine import (
+@@ -15,15 +15,6 @@ from fieldmaps_api.domain.form_engine import (
+     visible_questions,
+ )
+ from fieldmaps_api.domain.form_references import definition_problems
+-from fieldmaps_api.domain.legacy_forms import (
+-    AnswerError,
+-)
+-from fieldmaps_api.domain.legacy_forms import (
+-    FormDefinition as LegacyFormDefinition,
+-)
+-from fieldmaps_api.domain.legacy_forms import (
+-    validate_answers as validate_legacy_answers,
+-)
+ 
+ __all__ = [
+     "AnswerError",
+@@ -34,6 +25,10 @@ __all__ = [
+ ]
+ 
+ 
++class AnswerError(ValueError):
++    """An answer the form does not allow, phrased for the observer who sent it."""
++
++
+ class FormDefinition(CanonicalDefinition):
+     @model_validator(mode="after")
+     def check_references(self) -> Self:
+@@ -44,22 +39,6 @@ class FormDefinition(CanonicalDefinition):
+         return self
+ 
+ 
+-def definition_format(value: JsonValue | FormDefinition | LegacyFormDefinition) -> str:
+-    match value:
+-        case FormDefinition():
+-            return "canonical"
+-        case LegacyFormDefinition():
+-            return "legacy"
+-        case dict() if "questions" in value:
+-            return "canonical"
+-        case _:
+-            return "legacy"
+-
+-
+-type StoredFormDefinition = Annotated[
+-    Annotated[FormDefinition, Tag("canonical")] | Annotated[LegacyFormDefinition, Tag("legacy")],
+-    Discriminator(definition_format),
+-]
+ type Reason = Literal["required", "range", "type", "option", "duplicate", "maxLength"]
+ 
+ 
+@@ -135,26 +114,15 @@ class NormalizedAnswers:
+     pruned: list[str]
+ 
+ 
+-def normalize_answers(definition: StoredFormDefinition, answers: Answers) -> NormalizedAnswers:
+-    """Validate before pruning; retain the old PUT's field-keyed storage contract.
+-
+-    Stored shell-v1 uses field codes people/notes, which are already its canonical
+-    question IDs. Its observer is envelope metadata, not a legacy answer field.
+-    Legacy definitions keep their existing bounds and types; no migration rewrites them.
+-    """
+-    match definition:
+-        case LegacyFormDefinition():
+-            return NormalizedAnswers(validate_legacy_answers(definition, answers), [])
+-        case FormDefinition():
+-            problems = review_problems(definition, answers)
+-            if problems:
+-                message = "; ".join(f"{problem.id}: {problem.reason}" for problem in problems)
+-                raise AnswerError(message)
+-            result = prune_answers(definition, answers)
+-            return NormalizedAnswers(result.answers, result.dropped)
+-        case _:
+-            assert_never(definition)
++def normalize_answers(definition: FormDefinition, answers: Answers) -> NormalizedAnswers:
++    """Validate answers against the frozen canonical definition before pruning."""
++    problems = review_problems(definition, answers)
++    if problems:
++        message = "; ".join(f"{problem.id}: {problem.reason}" for problem in problems)
++        raise AnswerError(message)
++    result = prune_answers(definition, answers)
++    return NormalizedAnswers(result.answers, result.dropped)
+ 
+ 
+-def validate_answers(definition: StoredFormDefinition, answers: Answers) -> Answers:
++def validate_answers(definition: FormDefinition, answers: Answers) -> Answers:
+     return normalize_answers(definition, answers).answers
+diff --git a/backend/src/fieldmaps_api/domain/legacy_forms.py b/backend/src/fieldmaps_api/domain/legacy_forms.py
+deleted file mode 100644
+index 415930d..0000000
+--- a/backend/src/fieldmaps_api/domain/legacy_forms.py
++++ /dev/null
+@@ -1,94 +0,0 @@
+-"""Read immutable pre-canonical field definitions without changing legacy uploads."""
+-
+-from typing import ClassVar, Literal
+-
+-from pydantic import BaseModel, ConfigDict, Field, JsonValue
+-
+-FieldType = Literal["text", "integer", "number", "choice", "multi-choice", "boolean"]
+-
+-
+-class FormField(BaseModel):
+-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="ignore")
+-
+-    code: str = Field(min_length=1, max_length=100)
+-    type: FieldType
+-    required: bool = False
+-    minimum: float | None = None
+-    maximum: float | None = None
+-    maxLength: int | None = None  # noqa: N815 — the stored definitions spell it this way.
+-    options: list[str] = Field(default_factory=list[str])
+-
+-
+-class FormDefinition(BaseModel):
+-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="ignore")
+-
+-    fields: list[FormField]
+-
+-
+-class AnswerError(ValueError):
+-    """An answer the form does not allow, phrased for the observer who sent it."""
+-
+-
+-def validate_answers(
+-    definition: FormDefinition, answers: dict[str, JsonValue]
+-) -> dict[str, JsonValue]:
+-    """Check every answer against its field, and every required field against the answers."""
+-    known = {field.code: field for field in definition.fields}
+-    unknown = sorted(set(answers) - set(known))
+-    if unknown:
+-        message = f"This form has no field named {', '.join(unknown)}"
+-        raise AnswerError(message)
+-    for field in definition.fields:
+-        value = answers.get(field.code)
+-        if value is None:
+-            if field.required:
+-                message = f"{field.code} is required by this form"
+-                raise AnswerError(message)
+-            continue
+-        _check(field, value)
+-    return answers
+-
+-
+-def _check(field: FormField, value: JsonValue) -> None:
+-    if field.type == "text":
+-        _require(isinstance(value, str), field, "text")
+-        if field.maxLength is not None and isinstance(value, str) and len(value) > field.maxLength:
+-            message = f"{field.code} may hold {field.maxLength} characters"
+-            raise AnswerError(message)
+-    elif field.type in {"integer", "number"}:
+-        # bool is an int in Python, and a checkbox answer is not a count.
+-        numeric = isinstance(value, int | float) and not isinstance(value, bool)
+-        _require(numeric and (field.type == "number" or isinstance(value, int)), field, field.type)
+-        _range(field, float(value) if isinstance(value, int | float) else 0.0)
+-    elif field.type == "boolean":
+-        _require(isinstance(value, bool), field, "yes or no")
+-    elif field.type == "choice":
+-        _require(isinstance(value, str), field, "one option")
+-        _option(field, value)
+-    else:
+-        _require(isinstance(value, list), field, "a list of options")
+-        for chosen in value if isinstance(value, list) else []:
+-            _option(field, chosen)
+-
+-
+-def _require(condition: bool, field: FormField, expected: str) -> None:  # noqa: FBT001
+-    if not condition:
+-        message = f"{field.code} takes {expected}"
+-        raise AnswerError(message)
+-
+-
+-def _range(field: FormField, value: float) -> None:
+-    if field.minimum is not None and value < field.minimum:
+-        message = f"{field.code} cannot be below {field.minimum:g}"
+-        raise AnswerError(message)
+-    if field.maximum is not None and value > field.maximum:
+-        message = f"{field.code} cannot be above {field.maximum:g}"
+-        raise AnswerError(message)
+-
+-
+-def _option(field: FormField, value: JsonValue) -> None:
+-    if not field.options:
+-        return
+-    if not isinstance(value, str) or value not in field.options:
+-        message = f"{value!r} is not an option of {field.code}"
+-        raise AnswerError(message)
+diff --git a/backend/src/fieldmaps_api/domain/observation_export_columns.py b/backend/src/fieldmaps_api/domain/observation_export_columns.py
+index 0154e5f..c9f53a1 100644
+--- a/backend/src/fieldmaps_api/domain/observation_export_columns.py
++++ b/backend/src/fieldmaps_api/domain/observation_export_columns.py
+@@ -2,13 +2,12 @@
+ 
+ from collections.abc import Sequence
+ from dataclasses import dataclass
+-from typing import Final, assert_never
++from typing import Final
+ 
+-from pydantic import JsonValue, TypeAdapter
++from pydantic import JsonValue
+ 
+ from fieldmaps_api.domain.form_definition import Option, Question
+-from fieldmaps_api.domain.forms import FormDefinition, StoredFormDefinition
+-from fieldmaps_api.domain.legacy_forms import FormDefinition as LegacyDefinition
++from fieldmaps_api.domain.forms import FormDefinition
+ 
+ RECORD_COLUMNS: Final = (
+     "observation_id",
+@@ -116,20 +115,8 @@ def canonical_question(question: Question) -> ExportQuestion:
+ 
+ 
+ def questions(raw: dict[str, JsonValue]) -> tuple[ExportQuestion, ...]:
+-    adapter: TypeAdapter[StoredFormDefinition] = TypeAdapter(StoredFormDefinition)
+-    definition = adapter.validate_python(raw)
+-    match definition:
+-        case FormDefinition():
+-            return tuple(canonical_question(question) for question in definition.questions)
+-        case LegacyDefinition():
+-            return tuple(
+-                ExportQuestion(
+-                    field.code, field.code, field.code, field.type, "; ".join(field.options)
+-                )
+-                for field in definition.fields
+-            )
+-        case _:
+-            assert_never(definition)
++    definition = FormDefinition.model_validate(raw)
++    return tuple(canonical_question(question) for question in definition.questions)
+ 
+ 
+ def repeated(question_id: str) -> bool:
+diff --git a/backend/src/fieldmaps_api/domain/zone_archive_jobs.py b/backend/src/fieldmaps_api/domain/zone_archive_jobs.py
+index c021167..0395060 100644
+--- a/backend/src/fieldmaps_api/domain/zone_archive_jobs.py
++++ b/backend/src/fieldmaps_api/domain/zone_archive_jobs.py
+@@ -2,7 +2,7 @@ from typing import Annotated, ClassVar, Literal
+ 
+ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+ 
+-from fieldmaps_api.domain.zone_package_schemas import GroundGeometry, PackageIdentity, PackageZone
++from fieldmaps_api.domain.zone_package_schemas import PackageIdentity
+ from fieldmaps_api.zone_import_schemas import PackageRequest
+ from fieldmaps_api.zone_response_schemas import ImportValidation, PackageForms
+ 
+@@ -11,10 +11,6 @@ class ArchiveJob(BaseModel):
+     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+ 
+ 
+-class ExtractJob(ArchiveJob):
+-    operation: Literal["extract"] = "extract"
+-
+-
+ class PublishJob(ArchiveJob):
+     operation: Literal["publish"] = "publish"
+     identity: PackageIdentity
+@@ -30,10 +26,5 @@ class ImportJob(ArchiveJob):
+     submission: PackageRequest
+ 
+ 
+-type Job = Annotated[ExtractJob | PublishJob | ImportJob, Field(discriminator="operation")]
++type Job = Annotated[PublishJob | ImportJob, Field(discriminator="operation")]
+ JOBS = TypeAdapter[Job](Job)
+-
+-
+-class Bootstrap(ArchiveJob):
+-    ground: GroundGeometry
+-    zones: tuple[PackageZone, ...]
+diff --git a/backend/src/fieldmaps_api/domain/zone_archive_worker.py b/backend/src/fieldmaps_api/domain/zone_archive_worker.py
+index c889b60..a4a43a4 100644
+--- a/backend/src/fieldmaps_api/domain/zone_archive_worker.py
++++ b/backend/src/fieldmaps_api/domain/zone_archive_worker.py
+@@ -10,8 +10,6 @@ from fieldmaps_api.domain.packages import PackageError
+ from fieldmaps_api.domain.zone_archive import extract_base_archive, prepare_import_base
+ from fieldmaps_api.domain.zone_archive_jobs import (
+     JOBS,
+-    Bootstrap,
+-    ExtractJob,
+     ImportJob,
+     PublishJob,
+ )
+@@ -28,11 +26,6 @@ def resource_limits() -> None:
+ def process(directory: Path) -> None:
+     job = JOBS.validate_json((directory / "job.json").read_bytes())
+     match job:
+-        case ExtractJob():
+-            base = extract_base_archive((directory / "base.zip").read_bytes())
+-            bootstrap = Bootstrap(ground=base.ground, zones=base.zones)
+-            (directory / "bootstrap.json").write_text(bootstrap.model_dump_json())
+-            return
+         case PublishJob():
+             base = extract_base_archive((directory / "base.zip").read_bytes())
+         case ImportJob():
+diff --git a/backend/src/fieldmaps_api/queries/zones.py b/backend/src/fieldmaps_api/queries/zones.py
+index eb30eef..d871e89 100644
+--- a/backend/src/fieldmaps_api/queries/zones.py
++++ b/backend/src/fieldmaps_api/queries/zones.py
+@@ -78,16 +78,4 @@ IMPORT_FORMS: Final = text("""
+ SELECT fieldmaps_private.resolve_zone_import_forms(
+  :project,:site,:expected,CAST(:body AS jsonb))::text
+ """)
+-CAPABILITY: Final = text("""
+-SELECT fieldmaps_private.zone_authoring_available(:project,:site,CAST(:ground AS jsonb))
+-""")
+-SITE_BY_ID: Final = text(
+-    "SELECT id FROM fieldmaps.sites WHERE project_id=:project AND id=:site"
+-)
+-GET_FORMS: Final = text("""
+-SELECT jsonb_build_object('play',jsonb_build_object('form_version_id',p.id,'form_version',p.code),
+- 'inventory',CASE WHEN i.id IS NULL THEN NULL ELSE
+-  jsonb_build_object('form_version_id',i.id,'form_version',i.code) END)::text
+-FROM fieldmaps.site_packages k JOIN fieldmaps.form_versions p ON p.id=k.form_version_id
+-LEFT JOIN fieldmaps.form_versions i ON i.id=k.inventory_form_version_id WHERE k.id=:package
+-""")
++SITE_BY_ID: Final = text("SELECT id FROM fieldmaps.sites WHERE project_id=:project AND id=:site")
+diff --git a/backend/src/fieldmaps_api/repositories/bound_uploads.py b/backend/src/fieldmaps_api/repositories/bound_uploads.py
+index e278914..4ea6798 100644
+--- a/backend/src/fieldmaps_api/repositories/bound_uploads.py
++++ b/backend/src/fieldmaps_api/repositories/bound_uploads.py
+@@ -5,7 +5,7 @@ from uuid import UUID
+ from pydantic import BaseModel, ConfigDict
+ from sqlalchemy.ext.asyncio import AsyncSession
+ 
+-from fieldmaps_api.domain.forms import StoredFormDefinition
++from fieldmaps_api.domain.forms import FormDefinition
+ from fieldmaps_api.queries import bound_uploads as queries
+ from fieldmaps_api.repositories.upload_receipts import ReceiptIdentity
+ from fieldmaps_api.schemas import UploadTarget
+@@ -27,7 +27,7 @@ class BoundTarget(BaseModel):
+     zone_present: bool
+     form_version_id: UUID | None
+     form_version: str | None
+-    definition: StoredFormDefinition | None
++    definition: FormDefinition | None
+     point_covered: bool
+ 
+ 
+diff --git a/backend/src/fieldmaps_api/repositories/zones.py b/backend/src/fieldmaps_api/repositories/zones.py
+index 3ade248..049d5ad 100644
+--- a/backend/src/fieldmaps_api/repositories/zones.py
++++ b/backend/src/fieldmaps_api/repositories/zones.py
+@@ -134,13 +134,6 @@ async def finalize(session: AsyncSession, params: Parameters) -> tuple[UUID, boo
+         ) from error
+ 
+ 
+-async def available(session: AsyncSession, project: UUID, site: UUID, ground: str | None) -> bool:
+-    result: Result[tuple[bool]] = await session.execute(
+-        q.CAPABILITY, {"project": project, "site": site, "ground": ground}
+-    )
+-    return result.scalar_one()
+-
+-
+ async def package_belongs(session: AsyncSession, project: UUID, site: UUID, package: UUID) -> bool:
+     result: Result[tuple[bool]] = await session.execute(
+         text("""
+diff --git a/backend/src/fieldmaps_api/schemas.py b/backend/src/fieldmaps_api/schemas.py
+index 875d12a..b8a3fe7 100644
+--- a/backend/src/fieldmaps_api/schemas.py
++++ b/backend/src/fieldmaps_api/schemas.py
+@@ -9,13 +9,14 @@ from pydantic import (
+     JsonValue,
+ )
+ 
+-from fieldmaps_api.domain.forms import StoredFormDefinition
++from fieldmaps_api.domain.forms import FormDefinition
+ from fieldmaps_api.domain.packages import PreparationCheck
+ 
+ #: A site or form version is named by its code within a project, which is what the collector
+ #: carries and what an export column is keyed by.
+ Code = Annotated[str, Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][\w.-]*$")]
+ 
++
+ class ProjectAccess(BaseModel):
+     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+ 
+@@ -61,6 +62,6 @@ class UploadTarget(BaseModel):
+     organization_id: UUID
+     site_id: UUID
+     form_version_id: UUID
+-    definition: StoredFormDefinition
++    definition: FormDefinition
+     #: Uploads only ever resolve published or retired versions; a package target reports its state.
+     form_state: Literal["draft", "published", "retired"] = "published"
+diff --git a/backend/src/fieldmaps_api/services/forms.py b/backend/src/fieldmaps_api/services/forms.py
+index 82445f6..01da730 100644
+--- a/backend/src/fieldmaps_api/services/forms.py
++++ b/backend/src/fieldmaps_api/services/forms.py
+@@ -11,7 +11,7 @@ from pydantic import JsonValue, ValidationError
+ from sqlalchemy.exc import IntegrityError
+ from sqlalchemy.ext.asyncio import AsyncSession
+ 
+-from fieldmaps_api.domain.forms import FormDefinition, definition_format
++from fieldmaps_api.domain.forms import FormDefinition
+ from fieldmaps_api.errors import ConflictError, NotFoundError, ValidationFailedError
+ from fieldmaps_api.form_preconditions import require_form_etag, revision_conflict
+ from fieldmaps_api.form_schemas import (
+@@ -108,14 +108,6 @@ async def create_draft(
+     if source is None:
+         message = "This form has no version to copy; send a definition"
+         raise ValidationFailedError(message, field="definition")
+-    if payload.definition is None and definition_format(source) == "legacy":
+-        # The practice form predates the editor: a field list, not questions. Converting it would
+-        # invent an instrument nobody wrote, so the manager starts the draft from a definition.
+-        message = (
+-            f"{form.code} is a practice form from before the form editor and cannot be copied; "
+-            "start the draft from a definition instead"
+-        )
+-        raise ConflictError(message)
+     number = await forms.next_version(session, form.id)
+     code = version_code(form.code, number)
+     definition = checked_definition(source, code, "draft")
+diff --git a/backend/src/fieldmaps_api/services/observation_answers.py b/backend/src/fieldmaps_api/services/observation_answers.py
+index 26f8042..54416da 100644
+--- a/backend/src/fieldmaps_api/services/observation_answers.py
++++ b/backend/src/fieldmaps_api/services/observation_answers.py
+@@ -1,11 +1,11 @@
+ import json
+ 
+ from fieldmaps_api.domain.form_engine import Answers
+-from fieldmaps_api.domain.forms import AnswerError, StoredFormDefinition, validate_answers
++from fieldmaps_api.domain.forms import AnswerError, FormDefinition, validate_answers
+ from fieldmaps_api.errors import ValidationFailedError
+ 
+ 
+-def validated_answers(definition: StoredFormDefinition, answers: Answers) -> str:
++def validated_answers(definition: FormDefinition, answers: Answers) -> str:
+     try:
+         normalized = validate_answers(definition, answers)
+     except AnswerError as error:
+diff --git a/backend/src/fieldmaps_api/services/zone_archives.py b/backend/src/fieldmaps_api/services/zone_archives.py
+index 8adce06..2ccdaed 100644
+--- a/backend/src/fieldmaps_api/services/zone_archives.py
++++ b/backend/src/fieldmaps_api/services/zone_archives.py
+@@ -10,8 +10,6 @@ from pydantic import TypeAdapter
+ from fieldmaps_api.domain.packages import PackageError, PreparationCheck
+ from fieldmaps_api.domain.zone_archive_jobs import (
+     JOBS,
+-    Bootstrap,
+-    ExtractJob,
+     ImportJob,
+     Job,
+     PublishJob,
+@@ -55,15 +53,6 @@ async def run(directory: Path, job: Job, archive: tuple[bytes, str] | None) -> N
+         raise StorageUnavailableError(message)
+ 
+ 
+-async def extract(archive: tuple[bytes, str]) -> Bootstrap:
+-    with TemporaryDirectory(prefix="zone-archive-") as temporary:
+-        directory = Path(temporary)
+-        await run(directory, ExtractJob(), archive)
+-        return Bootstrap.model_validate_json(
+-            await anyio.Path(directory / "bootstrap.json").read_bytes()
+-        )
+-
+-
+ async def prepare(
+     job: PublishJob | ImportJob, archive: tuple[bytes, str] | None = None
+ ) -> PreparedZonePackage:
+diff --git a/backend/tests/conftest.py b/backend/tests/conftest.py
+index 6dbd895..4652778 100644
+--- a/backend/tests/conftest.py
++++ b/backend/tests/conftest.py
+@@ -18,13 +18,23 @@ def signer() -> Signer:
+ 
+ 
+ @pytest.fixture
+-def api_client(signer: Signer) -> Iterator[TestClient]:
++def api_client(signer: Signer, request: pytest.FixtureRequest) -> Iterator[TestClient]:
++    if "integration" not in request.keywords:
++        pytest.fail("Database-backed api_client requires @pytest.mark.integration")
+     settings = database_settings()
+     with TestClient(create_app(settings, JwksVerifier(ISSUER, "authenticated", signer))) as client:
+         client.headers["Authorization"] = f"Bearer {signer.issue()}"
+         yield client
+ 
+ 
++@pytest.fixture
++def validation_client(signer: Signer) -> Iterator[TestClient]:
++    """Signed HTTP boundary checks with no database settings, password file or startup probe."""
++    with TestClient(create_app(verifier=JwksVerifier(ISSUER, "authenticated", signer))) as client:
++        client.headers["Authorization"] = f"Bearer {signer.issue()}"
++        yield client
++
++
+ @pytest.fixture(autouse=True)
+ def isolated_startup(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+     """Pure HTTP tests replace only the database startup probe; integration tests do not."""
+diff --git a/backend/tests/gis_current_acceptance.py b/backend/tests/gis_current_acceptance.py
+index 43094d7..7d3754d 100644
+--- a/backend/tests/gis_current_acceptance.py
++++ b/backend/tests/gis_current_acceptance.py
+@@ -377,6 +377,8 @@ def assert_prepared_layers(  # noqa: PLR0913, PLR0917 - explicit synthetic ident
+         check=False,
+         capture_output=True,
+         text=True,
++        env={},
++        timeout=10,
+     )
+     assert conversion.returncode == 0, conversion.stdout + conversion.stderr
+     checks = document((prepared / "projection-checks.json").read_bytes())
+diff --git a/backend/tests/test_errors.py b/backend/tests/test_errors.py
+index ce40f9e..0bbbc2b 100644
+--- a/backend/tests/test_errors.py
++++ b/backend/tests/test_errors.py
+@@ -98,9 +98,8 @@ def test_server_failures_are_sanitized(failure: Exception, status: int, code: st
+     assert "private" not in response.text
+ 
+ 
+-@pytest.mark.integration
+-def test_request_validation_reports_fields_without_input(api_client: TestClient) -> None:
+-    response = api_client.put(
++def test_request_validation_reports_fields_without_input(validation_client: TestClient) -> None:
++    response = validation_client.put(
+         f"/v1/projects/{PROJECT}/observations/{uuid4()}",
+         json={"round_type": "standard", "observer": "private field note"},
+     )
+@@ -130,15 +129,14 @@ def test_domain_validation_reports_answer_field(
+     assert JSON.validate_json(response.content) == {
+         "error": {
+             "code": "validation_failed",
+-            "message": "people cannot be below 0",
+-            "details": {"fields": [{"id": "answers", "problem": "people cannot be below 0"}]},
++            "message": "people: range",
++            "details": {"fields": [{"id": "answers", "problem": "people: range"}]},
+         }
+     }
+ 
+ 
+-@pytest.mark.integration
+-def test_invalid_body_encoding_keeps_bad_request_status(api_client: TestClient) -> None:
+-    response = api_client.put(
++def test_invalid_body_encoding_keeps_bad_request_status(validation_client: TestClient) -> None:
++    response = validation_client.put(
+         f"/v1/projects/{PROJECT}/observations/{uuid4()}",
+         content=b"\xff",
+         headers={"Content-Type": "application/json"},
+diff --git a/backend/tests/test_form_contracts.py b/backend/tests/test_form_contracts.py
+index 4fa93f5..1c7d571 100644
+--- a/backend/tests/test_form_contracts.py
++++ b/backend/tests/test_form_contracts.py
+@@ -11,11 +11,9 @@ from fieldmaps_api.domain.form_engine import prune_answers, visible_questions
+ from fieldmaps_api.domain.forms import (
+     AnswerError,
+     FormDefinition,
+-    StoredFormDefinition,
+     normalize_answers,
+     review_problems,
+ )
+-from fieldmaps_api.domain.legacy_forms import FormDefinition as LegacyFormDefinition
+ 
+ CONTRACTS = Path(__file__).resolve().parents[2] / "contracts" / "forms"
+ 
+@@ -79,38 +77,12 @@ def test_shared_cases(path: Path) -> None:
+                 assert normalized.pruned == step.expected.dropped, label
+ 
+ 
+-def test_legacy_shell_adapter_keeps_codes_and_bounds() -> None:
+-    form = LegacyFormDefinition.model_validate(
+-        {
+-            "fields": [
+-                {
+-                    "code": "people",
+-                    "type": "integer",
+-                    "required": True,
+-                    "minimum": 0,
+-                    "maximum": 999,
+-                },
+-                {"code": "notes", "type": "text", "maxLength": 1000},
+-            ]
+-        }
+-    )
+-    answers: dict[str, JsonValue] = {"people": 4, "notes": "Practice"}
+-    assert normalize_answers(form, answers).answers == answers
+-    assert normalize_answers(form, answers).pruned == []
+-    invalid_answers: list[dict[str, JsonValue]] = [
+-        {"people": True},
+-        {"people": -1},
+-        {"people": 1000},
+-        {"unknown": 2},
+-    ]
+-    for invalid in invalid_answers:
+-        with pytest.raises(AnswerError):
+-            normalize_answers(form, invalid)
+-
+-
+-def test_bad_canonical_definition_cannot_fall_back_to_empty_legacy() -> None:
++@pytest.mark.parametrize(
++    "definition", [{"fields": []}, {"questions": []}, {"questions": [], "fields": []}]
++)
++def test_obsolete_or_incomplete_definitions_are_rejected(definition: dict[str, JsonValue]) -> None:
+     with pytest.raises(ValidationError):
+-        TypeAdapter(StoredFormDefinition).validate_python({"questions": []})
++        FormDefinition.model_validate(definition)
+ 
+ 
+ @pytest.mark.parametrize(
+@@ -161,8 +133,3 @@ def test_input_defaults_unknown_properties_and_integer_json_numbers() -> None:
+     definition["questions"] = TypeAdapter(JsonValue).validate_python(questions)
+     with pytest.raises(ValidationError):
+         FormDefinition.model_validate(definition)
+-
+-
+-def test_canonical_definition_never_falls_back_to_legacy_fields() -> None:
+-    with pytest.raises(ValidationError):
+-        TypeAdapter(StoredFormDefinition).validate_python({"questions": [], "fields": []})
+diff --git a/backend/tests/test_observation_analysis.py b/backend/tests/test_observation_analysis.py
+index 686afdc..152756b 100644
+--- a/backend/tests/test_observation_analysis.py
++++ b/backend/tests/test_observation_analysis.py
+@@ -16,6 +16,9 @@ from tests.tenant_fixtures import sign_in
+ pytest_plugins = ("tests.observation_analysis_fixtures",)
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def test_complete_cursor_pages_when_601_timestamps_tie(
+     api_client: TestClient, analysis_site: AnalysisSite
+ ) -> None:
+@@ -41,34 +44,6 @@ def test_complete_cursor_pages_when_601_timestamps_tie(
+     assert third.next_cursor is None
+ 
+ 
+-@pytest.mark.parametrize(
+-    "filters",
+-    [
+-        {"site_id": "malformed"},
+-        {"zone_id": str(uuid4())},
+-        {"limit": "501"},
+-        {"observer": "             "},
+-        {"observer": "1234567890123"},
+-        {"observed_from": "2026-11-01T01:00:00"},
+-        {"observed_from": "0001-01-01T00:00:00+01:00"},
+-        {"observed_before": "9999-12-31T23:59:59-01:00"},
+-        {"observed_from": "2026-10-11T00:00:00Z", "observed_before": "2026-10-11T00:00:00Z"},
+-    ],
+-)
+-def test_invalid_filter_when_query_is_not_scoped(
+-    api_client: TestClient, analysis_site: AnalysisSite, filters: dict[str, str]
+-) -> None:
+-    # Given an invalid filter combination or value.
+-    # When the historical page is requested.
+-    response = api_client.get(analysis_site.url, params=filters)
+-    # Then safe structured validation is returned.
+-    assert response.status_code == 422, response.text
+-    error = ErrorEnvelope.model_validate_json(response.content)
+-    assert error.error.details["issues"] == [
+-        {"code": "invalid_filter", "zone_ids": [], "path": "", "message": "Invalid query"}
+-    ]
+-
+-
+ @pytest.mark.parametrize("suffix", ["", "/summary", "/export"])
+ def test_zero_scope_when_observer_has_no_records(
+     api_client: TestClient, analysis_site: AnalysisSite, suffix: str
+diff --git a/backend/tests/test_observation_analysis_budgets.py b/backend/tests/test_observation_analysis_budgets.py
+index 9874dda..d7cb644 100644
+--- a/backend/tests/test_observation_analysis_budgets.py
++++ b/backend/tests/test_observation_analysis_budgets.py
+@@ -5,7 +5,7 @@ import pytest
+ from fieldmaps_api.domain.observation_export import BYTE_LIMIT, SOURCE_BYTE_LIMIT, bundle
+ from fieldmaps_api.errors import DomainError
+ from fieldmaps_api.observation_analysis_schemas import ExportSnapshot, ObservationExportQuery
+-from tests.test_observation_analysis_domain import snapshot
++from tests.test_observation_analysis_domain import canonical, question, snapshot
+ 
+ 
+ @pytest.mark.parametrize("extra", [0, 1])
+@@ -22,7 +22,7 @@ def test_actual_asset_ceiling_when_boundary_is_measured(
+         return {"synthetic.bin": b"x" * (BYTE_LIMIT + extra)}
+ 
+     monkeypatch.setattr("fieldmaps_api.domain.observation_export.assets", boundary_assets)
+-    data = snapshot({}, {"fields": []})
++    data = snapshot({}, canonical([question("notes", "notes")]))
+     # When the complete bundle is preflighted.
+     if extra:
+         with pytest.raises(DomainError) as caught:
+@@ -53,7 +53,7 @@ def test_actual_final_zip_ceiling_when_boundary_is_measured(
+ 
+     monkeypatch.setattr("fieldmaps_api.domain.observation_export.assets", boundary_assets)
+     monkeypatch.setattr("fieldmaps_api.domain.observation_export.ZIP_DEFLATED", ZIP_STORED)
+-    data = snapshot({}, {"fields": []})
++    data = snapshot({}, canonical([question("notes", "notes")]))
+     # When final ZIP bytes are measured independently of asset bytes.
+     if extra:
+         with pytest.raises(DomainError) as caught:
+@@ -68,7 +68,7 @@ def test_actual_final_zip_ceiling_when_boundary_is_measured(
+ @pytest.mark.parametrize("extra", [0, 1])
+ def test_source_budget_when_snapshot_reports_exact_or_excess_bytes(extra: int) -> None:
+     # Given a SQL snapshot budget at or one byte beyond the frozen 64 MiB ceiling.
+-    data = snapshot({}, {"fields": []}).model_copy(
++    data = snapshot({}, canonical([question("notes", "notes")])).model_copy(
+         update={"source_bytes": SOURCE_BYTE_LIMIT + extra}
+     )
+     # When the source preflight executes before serialization.
+diff --git a/backend/tests/test_observation_analysis_database.py b/backend/tests/test_observation_analysis_database.py
+index 785a3c3..87d8ba1 100644
+--- a/backend/tests/test_observation_analysis_database.py
++++ b/backend/tests/test_observation_analysis_database.py
+@@ -18,6 +18,9 @@ if TYPE_CHECKING:
+ pytest_plugins = ("tests.observation_analysis_fixtures",)
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def test_query_plan_uses_scoped_index_when_zone_scope_is_selected(
+     analysis_site: AnalysisSite,
+ ) -> None:
+diff --git a/backend/tests/test_observation_analysis_dense.py b/backend/tests/test_observation_analysis_dense.py
+index dc4cf29..5f1eb67 100644
+--- a/backend/tests/test_observation_analysis_dense.py
++++ b/backend/tests/test_observation_analysis_dense.py
+@@ -9,7 +9,7 @@ import anyio
+ import pytest
+ 
+ from fieldmaps_api.observation_analysis_schemas import ObservationExportQuery
+-from tests.test_observation_analysis_domain import snapshot
++from tests.test_observation_analysis_domain import canonical, question, snapshot
+ 
+ 
+ @pytest.mark.parametrize("count", [601, 10_000])
+@@ -18,7 +18,7 @@ def test_dense_synthetic_serializer_when_answers_and_polygon_are_nontrivial(
+     count: int, export_format: str, tmp_path: Path
+ ) -> None:
+     # Given synthetic 400-character answers and one deduplicated 2,000-position polygon.
+-    data = snapshot({"notes": "s" * 400}, {"fields": [{"code": "notes", "type": "text"}]})
++    data = snapshot({"notes": "s" * 400}, canonical([question("notes", "notes")]))
+     package, zone = uuid4(), uuid4()
+     rows = [
+         data.items[0].model_copy(
+diff --git a/backend/tests/test_observation_analysis_domain.py b/backend/tests/test_observation_analysis_domain.py
+index 79571e0..61d9326 100644
+--- a/backend/tests/test_observation_analysis_domain.py
++++ b/backend/tests/test_observation_analysis_domain.py
+@@ -204,7 +204,7 @@ def test_invalid_cursor_when_structure_or_utc_range_is_invalid(value: str) -> No
+ 
+ def test_byte_ceiling_when_actual_assets_exceed_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+     # Given a small source snapshot whose actual generated assets exceed a reduced test limit.
+-    data = snapshot({"text": "Synthetic"}, {"fields": [{"code": "text", "type": "text"}]})
++    data = snapshot({"text": "Synthetic"}, canonical([question("text", "text")]))
+     monkeypatch.setattr("fieldmaps_api.domain.observation_export.BYTE_LIMIT", 100)
+     # When bundle preflight measures actual assets.
+     with pytest.raises(DomainError) as caught:
+diff --git a/backend/tests/test_observation_analysis_exports.py b/backend/tests/test_observation_analysis_exports.py
+index 580f310..e266d22 100644
+--- a/backend/tests/test_observation_analysis_exports.py
++++ b/backend/tests/test_observation_analysis_exports.py
+@@ -13,6 +13,9 @@ from tests.zone_api_fixtures import document
+ pytest_plugins = ("tests.observation_analysis_fixtures",)
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def files(content: bytes) -> dict[str, bytes]:
+ 
+     with ZipFile(BytesIO(content)) as archive:
+@@ -101,14 +104,3 @@ def test_boundary_export_when_scope_has_10000_records(
+         f"BE20 measurement format=csv rows=10000 seconds={elapsed:.3f} "
+         f"zip_bytes={len(response.content)} asset_bytes={sum(map(len, assets.values()))}"
+     )
+-
+-
+-@pytest.mark.parametrize("extra", [{"limit": "10"}, {"cursor": "abc"}])
+-def test_export_rejects_page_controls_when_scope_requested(
+-    api_client: TestClient, analysis_site: AnalysisSite, extra: dict[str, str]
+-) -> None:
+-    # Given pagination controls inappropriate for a complete export.
+-    # When they are included in its query.
+-    response = api_client.get(analysis_site.url + "/export", params=extra)
+-    # Then it refuses a potentially misleading scope.
+-    assert response.status_code == 422
+diff --git a/backend/tests/test_observation_analysis_history.py b/backend/tests/test_observation_analysis_history.py
+index d9a3b42..7910e9f 100644
+--- a/backend/tests/test_observation_analysis_history.py
++++ b/backend/tests/test_observation_analysis_history.py
+@@ -1,5 +1,6 @@
+ from uuid import UUID, uuid4
+ 
++import pytest
+ from fastapi.testclient import TestClient
+ 
+ from fieldmaps_api.observation_analysis_schemas import ObservationSummary
+@@ -10,6 +11,9 @@ from tests.zone_api_fixtures import ZoneSite, create_draft, document, zones_body
+ pytest_plugins = ("tests.observation_analysis_fixtures",)
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def test_historical_labels_when_zone_is_renamed_in_successor(
+     api_client: TestClient, analysis_site: AnalysisSite
+ ) -> None:
+diff --git a/backend/tests/test_observation_analysis_inputs.py b/backend/tests/test_observation_analysis_inputs.py
+new file mode 100644
+index 0000000..07ef545
+--- /dev/null
++++ b/backend/tests/test_observation_analysis_inputs.py
+@@ -0,0 +1,59 @@
++"""Signed query validation runs before opening a database transaction."""
++
++from uuid import uuid4
++
++import pytest
++from fastapi.testclient import TestClient
++
++from fieldmaps_api.errors import ErrorEnvelope
++from tests.signing import PROJECT
++
++OBSERVATIONS = f"/v1/projects/{PROJECT}/observations"
++
++
++@pytest.mark.parametrize(
++    "filters",
++    [
++        {"site_id": "malformed"},
++        {"zone_id": str(uuid4())},
++        {"limit": "501"},
++        {"observer": "             "},
++        {"observer": "1234567890123"},
++        {"observed_from": "2026-11-01T01:00:00"},
++        {"observed_from": "0001-01-01T00:00:00+01:00"},
++        {"observed_before": "9999-12-31T23:59:59-01:00"},
++        {"observed_from": "2026-10-11T00:00:00Z", "observed_before": "2026-10-11T00:00:00Z"},
++    ],
++)
++def test_invalid_filter_when_query_is_not_scoped(
++    validation_client: TestClient, filters: dict[str, str]
++) -> None:
++    # Given an invalid filter combination or value.
++    # When the historical page is requested.
++    response = validation_client.get(OBSERVATIONS, params=filters)
++    # Then safe structured validation is returned.
++    assert response.status_code == 422, response.text
++    error = ErrorEnvelope.model_validate_json(response.content)
++    assert error.error.details["issues"] == [
++        {"code": "invalid_filter", "zone_ids": [], "path": "", "message": "Invalid query"}
++    ]
++
++
++@pytest.mark.parametrize("extra", [{"limit": "10"}, {"cursor": "abc"}])
++def test_export_rejects_page_controls_when_scope_requested(
++    validation_client: TestClient, extra: dict[str, str]
++) -> None:
++    # Given pagination controls inappropriate for a complete export.
++    # When they are included in its query.
++    response = validation_client.get(OBSERVATIONS + "/export", params=extra)
++    # Then it refuses a potentially misleading scope.
++    assert response.status_code == 422
++
++
++@pytest.mark.parametrize("suffix", ["", "/summary", "/export"])
++def test_bbox_rejects_invalid_coordinates(validation_client: TestClient, suffix: str) -> None:
++    # Given a reversed longitude interval.
++    # When any filtered read is requested.
++    response = validation_client.get(OBSERVATIONS + suffix, params={"bbox": "1,0,0,1"})
++    # Then the query fails at the validation boundary.
++    assert response.status_code == 422, response.text
+diff --git a/backend/tests/test_observation_analysis_live.py b/backend/tests/test_observation_analysis_live.py
+index f609262..8b3af70 100644
+--- a/backend/tests/test_observation_analysis_live.py
++++ b/backend/tests/test_observation_analysis_live.py
+@@ -26,6 +26,9 @@ from tests.zone_api_fixtures import document
+ pytest_plugins = ("tests.bound_upload_live_fixtures",)
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def test_signed_live_complete_reads_when_offline_upload_is_historical(
+     live_api: LiveApi, live_bound_site: BoundSite
+ ) -> None:
+diff --git a/backend/tests/test_observation_bbox.py b/backend/tests/test_observation_bbox.py
+index cfdcf4f..617cf21 100644
+--- a/backend/tests/test_observation_bbox.py
++++ b/backend/tests/test_observation_bbox.py
+@@ -11,6 +11,9 @@ from tests.test_zone_form_succession import published_form, successor_body
+ pytest_plugins = ("tests.observation_analysis_fixtures",)
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def test_bbox_excludes_records_outside_viewport(
+     api_client: TestClient, analysis_site: AnalysisSite
+ ) -> None:
+@@ -24,17 +27,6 @@ def test_bbox_excludes_records_outside_viewport(
+     assert page.items == []
+ 
+ 
+-@pytest.mark.parametrize("suffix", ["", "/summary", "/export"])
+-def test_bbox_rejects_invalid_coordinates(
+-    api_client: TestClient, analysis_site: AnalysisSite, suffix: str
+-) -> None:
+-    # Given a reversed longitude interval.
+-    # When any filtered read is requested.
+-    response = api_client.get(analysis_site.url + suffix, params={"bbox": "1,0,0,1"})
+-    # Then the query fails at the validation boundary.
+-    assert response.status_code == 422, response.text
+-
+-
+ def test_bbox_covers_boundary_and_keeps_inventory_separate(
+     api_client: TestClient, analysis_site: AnalysisSite
+ ) -> None:
+diff --git a/backend/tests/test_observation_bbox_live.py b/backend/tests/test_observation_bbox_live.py
+index 2790db3..1b2bc68 100644
+--- a/backend/tests/test_observation_bbox_live.py
++++ b/backend/tests/test_observation_bbox_live.py
+@@ -2,6 +2,8 @@ import csv
+ from io import StringIO
+ from uuid import uuid4
+ 
++import pytest
++
+ from fieldmaps_api.observation_analysis_schemas import ObservationPage, ObservationSummary
+ from tests.bound_upload_fixtures import BoundSite
+ from tests.observation_analysis_fixtures import AnalysisSite, seed_copies
+@@ -12,6 +14,9 @@ from tests.zone_api_fixtures import document
+ pytest_plugins = ("tests.bound_upload_live_fixtures",)
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def test_signed_viewport_reads_share_scope_and_preserve_viewer_isolation(
+     live_api: LiveApi, live_bound_site: BoundSite
+ ) -> None:
+diff --git a/backend/tests/test_org_admin.py b/backend/tests/test_org_admin.py
+index 762531a..2ddd418 100644
+--- a/backend/tests/test_org_admin.py
++++ b/backend/tests/test_org_admin.py
+@@ -1,5 +1,6 @@
+ from uuid import uuid4
+ 
++import pytest
+ from fastapi.testclient import TestClient
+ 
+ from fieldmaps_api.zone_response_schemas import HistoricalZones
+@@ -11,6 +12,9 @@ from tests.zone_api_fixtures import document
+ SITE = "10000000-0000-4000-8000-000000000003"
+ 
+ 
++pytestmark = pytest.mark.integration
++
++
+ def test_org_admin_without_project_membership_can_list_upload_and_prepare(
+     api_client: TestClient, signer: Signer
+ ) -> None:
+diff --git a/backend/tests/test_tenancy_api.py b/backend/tests/test_tenancy_api.py
+index a3e47ff..8978d65 100644
+--- a/backend/tests/test_tenancy_api.py
++++ b/backend/tests/test_tenancy_api.py
+@@ -43,9 +43,9 @@ def recipient() -> Iterator[UUID]:
+         admin_sql("DELETE FROM auth.users WHERE id=:'user';", f"user={user}")
+ 
+ 
+-def test_organization_creation_requires_identity(api_client: TestClient) -> None:
+-    api_client.headers.pop("Authorization")
+-    response = api_client.post("/v1/orgs", json={})
++def test_organization_creation_requires_identity(validation_client: TestClient) -> None:
++    validation_client.headers.pop("Authorization")
++    response = validation_client.post("/v1/orgs", json={})
+     assert response.status_code == 401
+ 
+ 
+diff --git a/backend/tests/test_tenancy_inputs.py b/backend/tests/test_tenancy_inputs.py
+index 514bbce..d7a2a68 100644
+--- a/backend/tests/test_tenancy_inputs.py
++++ b/backend/tests/test_tenancy_inputs.py
+@@ -14,9 +14,9 @@ from pydantic import JsonValue
+     ],
+ )
+ def test_project_input_rejected_before_database(
+-    api_client: TestClient, payload: dict[str, JsonValue]
++    validation_client: TestClient, payload: dict[str, JsonValue]
+ ) -> None:
+-    response = api_client.post(
++    response = validation_client.post(
+         "/v1/orgs/10000000-0000-4000-8000-000000000001/projects", json=payload
+     )
+     assert response.status_code == 422, response.text
+@@ -32,9 +32,9 @@ def test_project_input_rejected_before_database(
+     ],
+ )
+ def test_invitation_requires_exactly_one_credential(
+-    api_client: TestClient, payload: dict[str, JsonValue]
++    validation_client: TestClient, payload: dict[str, JsonValue]
+ ) -> None:
+-    response = api_client.post("/v1/invitations/preview", json=payload)
++    response = validation_client.post("/v1/invitations/preview", json=payload)
+     assert response.status_code == 422, response.text
+ 
+ 
+@@ -48,6 +48,6 @@ def test_invitation_requires_exactly_one_credential(
+     ],
+ )
+ def test_patch_rejects_null_required_fields_and_immutable_fields(
+-    api_client: TestClient, path: str, payload: dict[str, JsonValue]
++    validation_client: TestClient, path: str, payload: dict[str, JsonValue]
+ ) -> None:
+-    assert api_client.patch(path, json=payload).status_code == 422
++    assert validation_client.patch(path, json=payload).status_code == 422
+diff --git a/backend/tests/test_workspace_api.py b/backend/tests/test_workspace_api.py
+index d8f78fd..9185bd2 100644
+--- a/backend/tests/test_workspace_api.py
++++ b/backend/tests/test_workspace_api.py
+@@ -1,6 +1,8 @@
+ """Sites, forms and records as a manager's workspace and an observer's device use them."""
+ 
++import csv
+ from collections.abc import Iterator
++from io import StringIO
+ from pathlib import Path
+ from uuid import uuid4
+ 
+@@ -8,15 +10,23 @@ import pytest
+ from fastapi.testclient import TestClient
+ from pydantic import JsonValue, TypeAdapter
+ 
++from fieldmaps_api.domain.forms import FormDefinition
+ from fieldmaps_api.errors import ErrorEnvelope
+ from fieldmaps_api.form_schemas import FormSummary, FormVersionDetail
+ from fieldmaps_api.site_schemas import Site
+ from fieldmaps_api.tenancy_schemas import ProjectMember
+-from fieldmaps_api.zone_response_schemas import PackageForms, Publication
++from fieldmaps_api.zone_response_schemas import HistoricalZones, PackageForms, Publication
+ from tests.local_database import admin_sql
+ from tests.package_fixtures import submission
+ from tests.signing import Signer
+-from tests.tenant_fixtures import Tenant, cleanup_tenant, create_tenant, sign_in
++from tests.tenant_fixtures import (
++    Tenant,
++    cleanup_tenant,
++    create_tenant,
++    observation_payload,
++    sign_in,
++)
++from tests.test_observation_analysis_exports import files
+ 
+ pytestmark = pytest.mark.integration
+ 
+@@ -219,18 +229,98 @@ def test_question_ids_are_independent_of_record_metadata(
+     assert stored.definition["questions"] == definition["questions"]
+ 
+ 
+-def test_the_practice_form_is_not_copied_into_a_draft(
+-    api_client: TestClient, tenant: Tenant
++@pytest.mark.parametrize("number", [1, 2])
++def test_canonical_practice_form_publish_package_upload_read_and_export(
++    api_client: TestClient, signer: Signer, tenant: Tenant, number: int
+ ) -> None:
+-    # The tenant's shell-v1 predates the editor: a field list, which no draft can be made from.
+     base = f"/v1/projects/{tenant.project}"
+-    refused = api_client.post(f"{base}/forms/shell/versions", json={})
+-    assert refused.status_code == 409, refused.text
+-    assert "cannot be copied" in error(refused.content).error.message
+-    # Starting from a definition still works.
+-    started = api_client.post(f"{base}/forms/shell/versions", json={"definition": inventory()})
+-    assert started.status_code == 201, started.text
+-    assert FormVersionDetail.model_validate_json(started.content).code == "shell-v2"
++    original = api_client.get(f"{base}/form-versions/shell-v1")
++    assert original.status_code == 200, original.text
++    frozen = FormVersionDetail.model_validate_json(original.content)
++    definition = FormDefinition.model_validate(frozen.definition)
++    assert [
++        (q.id, q.required, q.min, q.max, q.max_length, q.export_column)
++        for q in definition.questions
++    ] == [
++        ("people", True, 0, 999, None, "people"),
++        ("notes", False, None, None, 1000, "notes"),
++    ]
++    code = f"shell-v{number}"
++    if number == 2:
++        started = api_client.post(f"{base}/forms/shell/versions", json={})
++        assert started.status_code == 201, started.text
++        draft = FormVersionDetail.model_validate_json(started.content)
++        assert draft.code == code
++        assert draft.definition["questions"] == frozen.definition["questions"]
++        published = api_client.post(
++            f"{base}/form-versions/{code}/publish", headers={"If-Match": draft.etag}
++        )
++        assert published.status_code == 200, published.text
++    created = api_client.post(
++        f"{base}/packages", json=submission(site_id=str(tenant.site), form_version=code)
++    )
++    assert created.status_code == 201, created.text
++    package = Publication.model_validate_json(created.content).package.package_id
++    zone_response = api_client.get(
++        f"{base}/sites/{tenant.site}/zones", params={"package_id": str(package)}
++    )
++    zones = HistoricalZones.model_validate_json(zone_response.content)
++    zone = zones.zones[0].zone_id
++    sign_in(api_client, signer, tenant.users["observer"])
++    url = f"{base}/observations/{tenant.observation}"
++    body = observation_payload(tenant.site, package, zone)
++    body.update(form_version=code, answers={"people": 999, "notes": "café"})
++    for answers in (
++        {},
++        {"people": -1},
++        {"people": 1000},
++        {"people": 1.5},
++        {"people": True},
++        {"people": 1, "notes": "x" * 1001},
++    ):
++        invalid = api_client.put(url, json={**body, "answers": answers})
++        assert invalid.status_code == 422, invalid.text
++    accepted = api_client.put(url, json=body)
++    assert accepted.status_code == 200, accepted.text
++    assert api_client.put(url, json=body).content == accepted.content
++    assert api_client.put(url, json={**body, "answers": {"people": 0}}).status_code == 409
++    detail = api_client.get(url)
++    assert detail.status_code == 200, detail.text
++    assert detail.json()["answers"] == {"people": 999, "notes": "café"}
++    assert detail.json()["form_version"] == code
++    assert detail.json()["package_id"] == str(package)
++    assert detail.json()["zone_id"] == str(zone)
++    sign_in(api_client, signer, tenant.users["viewer"])
++    assert_practice_exports(api_client, base, code, str(package), str(zone))
++
++
++def assert_practice_exports(
++    api_client: TestClient, base: str, code: str, package: str, zone: str
++) -> None:
++    exported = api_client.get(f"{base}/observations/export", params={"format": "csv"})
++    assert exported.status_code == 200, exported.text
++    assets = files(exported.content)
++    row = next(csv.DictReader(StringIO(assets["observations.csv"].decode("utf-8-sig"))))
++    assert (
++        row["people"],
++        row["notes"],
++        row["form_version"],
++        row["package_id"],
++        row["zone_id"],
++    ) == ("999", "café", code, package, zone)
++    exported = api_client.get(f"{base}/observations/export", params={"format": "geojson"})
++    assert exported.status_code == 200, exported.text
++    assets = files(exported.content)
++    collection = DEFINITION.validate_json(assets["observations.geojson"])
++    features = collection["features"]
++    assert isinstance(features, list)
++    feature = features[0]
++    assert isinstance(feature, dict)
++    properties = feature["properties"]
++    assert isinstance(properties, dict)
++    assert properties["answers"] == {"people": 999, "notes": "café"}
++    assert (properties["people"], properties["notes"]) == (999, "café")
++    assert code in DEFINITION.validate_json(assets["forms.json"])
+ 
+ 
+ def test_viewers_and_observers_cannot_author_forms(
+diff --git a/backend/tests/test_zone_archive_process.py b/backend/tests/test_zone_archive_process.py
+index 9e5f338..ca5b4f0 100644
+--- a/backend/tests/test_zone_archive_process.py
++++ b/backend/tests/test_zone_archive_process.py
+@@ -1,10 +1,15 @@
++from functools import partial
+ from hashlib import sha256
++from io import BytesIO
++from pathlib import Path
++from tempfile import TemporaryDirectory
++from zipfile import ZipFile
+ 
+ import anyio
+ import pytest
+ 
+ from fieldmaps_api.domain.packages import PackageError
+-from fieldmaps_api.domain.zone_archive_jobs import ImportJob
++from fieldmaps_api.domain.zone_archive_jobs import ImportJob, PublishJob
+ from fieldmaps_api.errors import StorageUnavailableError
+ from fieldmaps_api.services import zone_archives
+ from fieldmaps_api.services.zones import ZoneWork
+@@ -22,22 +27,52 @@ def test_real_archive_subprocess_reads_actual_ground() -> None:
+             submission=request,
+         ),
+     )
+-    base = anyio.run(zone_archives.extract, (result.archive, result.archive_sha256))
+-    assert base.ground.type == "Polygon"
+-    assert base.zones[0].zone_code == "A0"
++    published = anyio.run(
++        zone_archives.prepare,
++        PublishJob(identity=identity(), forms=forms(), validation=validation()),
++        (result.archive, result.archive_sha256),
++    )
++    assert published.manifest.zones[0].zone_code == "A0"
++    assert published.zone_layer == result.zone_layer
++    with (
++        ZipFile(BytesIO(result.archive)) as original,
++        ZipFile(BytesIO(published.archive)) as successor,
++    ):
++        for layer in ("ground", "paths", "trees"):
++            assert successor.read(f"layers/{layer}.json") == original.read(f"layers/{layer}.json")
+ 
+ 
+-def test_corrupted_archive_subprocess_returns_safe_failure() -> None:
++def test_corrupted_archive_subprocess_returns_safe_failure(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    monkeypatch.setattr(
++        zone_archives, "TemporaryDirectory", partial(TemporaryDirectory, dir=tmp_path)
++    )
+     payload = b"invalid-archive"
+     with pytest.raises(PackageError, match="not a valid publication source"):
+-        anyio.run(zone_archives.extract, (payload, sha256(payload).hexdigest()))
++        anyio.run(
++            zone_archives.prepare,
++            PublishJob(identity=identity(), forms=forms(), validation=validation()),
++            (payload, sha256(payload).hexdigest()),
++        )
++    assert list(tmp_path.iterdir()) == []
+ 
+ 
+-def test_archive_subprocess_deadline_is_enforced(monkeypatch: pytest.MonkeyPatch) -> None:
++def test_archive_subprocess_deadline_is_enforced(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
+     result = prepared()
++    monkeypatch.setattr(
++        zone_archives, "TemporaryDirectory", partial(TemporaryDirectory, dir=tmp_path)
++    )
+     monkeypatch.setattr(zone_archives, "ARCHIVE_TIMEOUT_SECONDS", 0.001)
+     with pytest.raises(StorageUnavailableError, match="timed out"):
+-        anyio.run(zone_archives.extract, (result.archive, result.archive_sha256))
++        anyio.run(
++            zone_archives.prepare,
++            PublishJob(identity=identity(), forms=forms(), validation=validation()),
++            (result.archive, result.archive_sha256),
++        )
++    assert list(tmp_path.iterdir()) == []
+ 
+ 
+ def test_shared_zone_capacity_refuses_a_third_worker() -> None:
+diff --git a/backend/tests/test_zone_case_integrity.py b/backend/tests/test_zone_case_integrity.py
+index 6b0f610..939c062 100644
+--- a/backend/tests/test_zone_case_integrity.py
++++ b/backend/tests/test_zone_case_integrity.py
+@@ -1,9 +1,9 @@
+-from typing import ClassVar, Literal, assert_never
++from typing import ClassVar, Literal
+ 
+ import pytest
+ from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
+ 
+-from tests.zone_case_models import ROOT, upload_cases
++from tests.zone_case_models import ROOT
+ 
+ 
+ class Step(BaseModel):
+@@ -26,20 +26,6 @@ class PublicationCases(BaseModel):
+     scenarios: tuple[PublicationCase, ...]
+ 
+ 
+-def publication_cases() -> dict[str, dict[str, JsonValue]]:
+-    data = TypeAdapter(dict[str, JsonValue]).validate_json(
+-        (ROOT / "publication.cases.json").read_text()
+-    )
+-    cases = TypeAdapter(tuple[dict[str, JsonValue], ...]).validate_python(data["scenarios"])
+-    return {TypeAdapter(str).validate_python(case["id"]): case for case in cases}
+-
+-
+-def first_step(case: dict[str, JsonValue]) -> dict[str, JsonValue]:
+-    steps = TypeAdapter(tuple[dict[str, JsonValue], ...]).validate_python(case["steps"])
+-    assert steps
+-    return steps[0]
+-
+-
+ @pytest.mark.parametrize(
+     "filename", ["geometry.cases.json", "publication.cases.json", "upload.cases.json"]
+ )
+@@ -55,17 +41,6 @@ def test_ids_when_contract_sections_are_loaded(filename: str) -> None:
+             assert len(ids) == len(set(ids))
+ 
+ 
+-def test_upload_cases_contain_one_contract_without_old_envelopes() -> None:
+-    suite = upload_cases()
+-    assert suite.envelopes
+-    assert {case.id for case in suite.fingerprints} == {"point", "jcs_numbers_and_utf16_order"}
+-    for case in suite.envelopes:
+-        assert "schema_version" not in case.payload
+-    for case in suite.fingerprints:
+-        assert TypeAdapter(dict[str, JsonValue]).validate_json(case.canonical) == case.document
+-        assert case.document["canonicalization_version"] == "observation-jcs-1"
+-
+-
+ def test_publication_cases_when_steps_are_read() -> None:
+     suite = PublicationCases.model_validate_json((ROOT / "publication.cases.json").read_text())
+     geometries = TypeAdapter(dict[str, JsonValue]).validate_json(
+@@ -78,74 +53,3 @@ def test_publication_cases_when_steps_are_read() -> None:
+         for step in case.steps:
+             assert step.expected
+             assert set(step.zones) <= set(names)
+-
+-
+-def test_first_upload_cases_require_complete_explicit_identity_and_start_at_one() -> None:
+-    cases = publication_cases()
+-    complete = first_step(cases["first_upload_explicit_identities"])
+-    expected = TypeAdapter(dict[str, JsonValue]).validate_python(complete["expected"])
+-    mappings = TypeAdapter(tuple[dict[str, JsonValue], ...]).validate_python(
+-        complete["zone_identity_map"]
+-    )
+-    assert complete["action"] == "upload"
+-    assert "expected_current" in complete
+-    assert complete["expected_current"] is None
+-    assert expected["status"] == 201
+-    assert expected["package_version"] == 1
+-    assert expected["state"] == "ready"
+-    assert expected["current"] == expected["package"]
+-    assert expected["zone_count"] == len(mappings) == 2
+-    for field in ("source_feature_id", "zone_id", "zone_code"):
+-        values = {TypeAdapter(str).validate_python(mapping[field]) for mapping in mappings}
+-        assert len(values) == 2
+-    incomplete = first_step(cases["first_upload_missing_identity"])
+-    rejected = TypeAdapter(dict[str, JsonValue]).validate_python(incomplete["expected"])
+-    assert rejected["status"] == 422
+-    assert rejected["issue"] == "identity_conflict"
+-    assert rejected["current"] is None
+-    assert rejected["new_versions"] == 0
+-
+-
+-def test_replay_returns_prior_success_and_live_current_without_new_version() -> None:
+-    case = publication_cases()["prior_success_replay_after_newer_publish"]
+-    given = TypeAdapter(dict[str, JsonValue]).validate_python(case["given"])
+-    expected = TypeAdapter(dict[str, JsonValue]).validate_python(first_step(case)["expected"])
+-    assert expected["status"] == 200
+-    assert expected["replayed"] is True
+-    assert expected["package"] == given["completed_result"]
+-    assert expected["current_package_id"] == given["current"]
+-    assert expected["package"] != expected["current_package_id"]
+-    assert expected["new_versions"] == 0
+-
+-
+-@pytest.mark.parametrize(
+-    "change", ["added", "removed", "geometry_changed", "label_changed", "unchanged"]
+-)
+-def test_validation_change_case_has_digest_and_recorded_identity(
+-    change: Literal["added", "removed", "geometry_changed", "label_changed", "unchanged"],
+-) -> None:
+-    case = publication_cases()[f"validation_change_{change}"]
+-    given = TypeAdapter(dict[str, JsonValue]).validate_python(case["given"])
+-    expected = TypeAdapter(dict[str, JsonValue]).validate_python(first_step(case)["expected"])
+-    assert expected["status"] == 200
+-    assert expected["change"] == change
+-    assert expected["zone_id"] == given["zone_id"]
+-    assert expected["revision"] == given["revision"]
+-    assert expected["geometry_sha256_present"] is True
+-    match change:
+-        case "added":
+-            assert given["current_geometry"] is None
+-            assert given["draft_geometry"] is not None
+-        case "removed":
+-            assert given["current_geometry"] is not None
+-            assert given["draft_geometry"] is None
+-        case "geometry_changed":
+-            assert given["current_geometry"] != given["draft_geometry"]
+-        case "label_changed":
+-            assert given["current_geometry"] == given["draft_geometry"]
+-            assert given["current_label"] != given["draft_label"]
+-        case "unchanged":
+-            assert given["current_geometry"] == given["draft_geometry"]
+-            assert given["current_label"] == given["draft_label"]
+-        case _:
+-            assert_never(change)
+diff --git a/backend/tests/test_zone_upload_contract.py b/backend/tests/test_zone_upload_contract.py
+index da6a8db..e581c85 100644
+--- a/backend/tests/test_zone_upload_contract.py
++++ b/backend/tests/test_zone_upload_contract.py
+@@ -3,8 +3,8 @@ from typing import Final
+ import pytest
+ from pydantic import TypeAdapter, ValidationError
+ 
+-from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
+-from tests.zone_case_models import AuthoredReceipt, AuthoredUpload, EnvelopeCase, upload_cases
++from fieldmaps_api.zone_observation_schemas import BoundObservationUpload, BoundUploadReceipt
++from tests.zone_case_models import EnvelopeCase, upload_cases
+ 
+ SUITE: Final = upload_cases()
+ VALID_POINT: Final = next(
+@@ -13,8 +13,8 @@ VALID_POINT: Final = next(
+ 
+ 
+ @pytest.mark.parametrize("case", SUITE.envelopes, ids=[case.id for case in SUITE.envelopes])
+-def test_authored_envelope_has_declared_contract_validity(case: EnvelopeCase) -> None:
+-    schema = TypeAdapter[AuthoredUpload](AuthoredUpload)
++def test_production_envelope_has_declared_contract_validity(case: EnvelopeCase) -> None:
++    schema = TypeAdapter[BoundObservationUpload](BoundObservationUpload)
+     if case.valid:
+         assert schema.validate_python(case.payload).model_dump(mode="json")
+     else:
+@@ -23,25 +23,25 @@ def test_authored_envelope_has_declared_contract_validity(case: EnvelopeCase) ->
+ 
+ 
+ @pytest.mark.parametrize("timestamp", [0, "2026-10-10T14:00:00.1234567Z", "2026-10-10T14:00:00"])
+-def test_authored_capture_time_requires_timezone_and_microsecond_precision(
++def test_production_capture_time_requires_timezone_and_microsecond_precision(
+     timestamp: int | str,
+ ) -> None:
+     payload = dict(VALID_POINT, observed_at=timestamp)
+     with pytest.raises(ValidationError):
+-        TypeAdapter[AuthoredUpload](AuthoredUpload).validate_python(payload)
++        TypeAdapter[BoundObservationUpload](BoundObservationUpload).validate_python(payload)
+ 
+ 
+ @pytest.mark.parametrize("number", [float("nan"), float("inf"), float("-inf")])
+-def test_authored_answer_requires_finite_number(number: float) -> None:
++def test_production_answer_requires_finite_number(number: float) -> None:
+     payload = dict(VALID_POINT, answers={"people": number})
+     with pytest.raises(ValidationError):
+-        TypeAdapter[AuthoredUpload](AuthoredUpload).validate_python(payload)
++        TypeAdapter[BoundObservationUpload](BoundObservationUpload).validate_python(payload)
+ 
+ 
+ @pytest.mark.parametrize("count", [200, 201])
+-def test_authored_answer_count_has_inclusive_limit(count: int) -> None:
++def test_production_answer_count_has_inclusive_limit(count: int) -> None:
+     payload = dict(VALID_POINT, answers={f"Q{index}": 1 for index in range(count)})
+-    schema = TypeAdapter[AuthoredUpload](AuthoredUpload)
++    schema = TypeAdapter[BoundObservationUpload](BoundObservationUpload)
+     if count == 200:
+         assert len(schema.validate_python(payload).answers) == count
+     else:
+@@ -50,14 +50,14 @@ def test_authored_answer_count_has_inclusive_limit(count: int) -> None:
+ 
+ 
+ @pytest.mark.parametrize("field", ["schema_version", "zone_code", "assignment_basis"])
+-def test_authored_upload_refuses_protocol_and_server_derived_fields(field: str) -> None:
++def test_production_upload_refuses_protocol_and_server_derived_fields(field: str) -> None:
+     payload = dict(VALID_POINT)
+     payload[field] = 2 if field == "schema_version" else "recorded_package"
+     with pytest.raises(ValidationError):
+-        TypeAdapter[AuthoredUpload](AuthoredUpload).validate_python(payload)
++        TypeAdapter[BoundObservationUpload](BoundObservationUpload).validate_python(payload)
+ 
+ 
+-def test_authored_receipt_requires_recorded_binding_without_protocol_fields() -> None:
++def test_production_receipt_requires_recorded_binding_without_protocol_fields() -> None:
+     receipt = {
+         "observation_id": "40000000-0000-4000-8000-000000000001",
+         "project_id": "50000000-0000-4000-8000-000000000001",
+@@ -67,21 +67,11 @@ def test_authored_receipt_requires_recorded_binding_without_protocol_fields() ->
+         "package_id": VALID_POINT["package_id"],
+         "zone_id": VALID_POINT["zone_id"],
+     }
+-    assert AuthoredReceipt.model_validate(receipt).accepted_revision == 1
++    assert BoundUploadReceipt.model_validate(receipt).accepted_revision == 1
+     for field in ("package_id", "zone_id"):
+         missing = dict(receipt)
+         del missing[field]
+         with pytest.raises(ValidationError):
+-            AuthoredReceipt.model_validate(missing)
++            BoundUploadReceipt.model_validate(missing)
+     with pytest.raises(ValidationError):
+-        AuthoredReceipt.model_validate(dict(receipt, schema_version=2))
+-
+-
+-def test_production_model_accepts_authored_envelopes_without_translation() -> None:
+-    schema = TypeAdapter[BoundObservationUpload](BoundObservationUpload)
+-    for case in SUITE.envelopes:
+-        if case.valid:
+-            assert schema.validate_python(case.payload)
+-        else:
+-            with pytest.raises(ValidationError):
+-                schema.validate_python(case.payload)
++        BoundUploadReceipt.model_validate(dict(receipt, schema_version=2))
+diff --git a/backend/tests/test_zone_upload_fingerprint.py b/backend/tests/test_zone_upload_fingerprint.py
+index c7bb7be..f1ba3bb 100644
+--- a/backend/tests/test_zone_upload_fingerprint.py
++++ b/backend/tests/test_zone_upload_fingerprint.py
+@@ -8,15 +8,14 @@ import rfc8785
+ from pydantic import JsonValue, TypeAdapter
+ 
+ from fieldmaps_api.domain.zone_upload_fingerprint import canonical_bytes, fingerprint
+-from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
+-from tests.zone_case_models import AuthoredFingerprintDocument, FingerprintCase, upload_cases
++from tests.zone_case_models import FingerprintCase, FingerprintDocument, upload_cases
+ 
+ CASES: Final = upload_cases().fingerprints
+ 
+ 
+ @pytest.mark.parametrize("case", CASES, ids=[case.id for case in CASES])
+ def test_authored_canonical_bytes_match_independent_jcs(case: FingerprintCase) -> None:
+-    document = AuthoredFingerprintDocument.model_validate(case.document)
++    document = FingerprintDocument.model_validate(case.document)
+     assert rfc8785.dumps(case.document) == case.canonical.encode()
+     assert sha256(case.canonical.encode()).hexdigest() == case.sha256
+     payload = TypeAdapter(dict[str, JsonValue]).validate_python(case.document["payload"])
+@@ -42,7 +41,13 @@ def test_authored_canonical_bytes_match_independent_jcs(case: FingerprintCase) -
+ def test_authored_request_identities_affect_hash(identity: str) -> None:
+     changed = deepcopy(CASES[0].document)
+     changed[identity] = str(uuid4())
+-    assert sha256(rfc8785.dumps(changed)).hexdigest() != CASES[0].sha256
++    document = FingerprintDocument.model_validate(changed)
++    assert (
++        fingerprint(
++            document.project_id, document.observation_id, document.user_id, document.payload
++        )
++        != CASES[0].sha256
++    )
+ 
+ 
+ @pytest.mark.parametrize("change", ["binding", "answer", "array_order", "unicode"])
+@@ -67,15 +72,21 @@ def test_authored_content_changes_affect_hash(
+         case _:
+             assert_never(change)
+     changed["payload"] = body
+-    assert rfc8785.dumps(original) != rfc8785.dumps(changed)
++    first = FingerprintDocument.model_validate(original)
++    second = FingerprintDocument.model_validate(changed)
++    assert fingerprint(
++        first.project_id, first.observation_id, first.user_id, first.payload
++    ) != fingerprint(second.project_id, second.observation_id, second.user_id, second.payload)
+ 
+ 
+ def test_production_fingerprint_matches_authored_golden_bytes_without_translation() -> None:
+     for case in CASES:
+-        document = AuthoredFingerprintDocument.model_validate(case.document)
+-        payload = TypeAdapter[BoundObservationUpload](BoundObservationUpload).validate_python(
+-            case.document["payload"]
++        document = FingerprintDocument.model_validate(case.document)
++        arguments = (
++            document.project_id,
++            document.observation_id,
++            document.user_id,
++            document.payload,
+         )
+-        arguments = (document.project_id, document.observation_id, document.user_id, payload)
+         assert canonical_bytes(*arguments) == case.canonical.encode()
+         assert fingerprint(*arguments) == case.sha256
+diff --git a/backend/tests/zone_case_models.py b/backend/tests/zone_case_models.py
+index 660f26a..71ca745 100644
+--- a/backend/tests/zone_case_models.py
++++ b/backend/tests/zone_case_models.py
+@@ -1,94 +1,18 @@
+-from datetime import UTC, datetime
+ from pathlib import Path
+-from typing import Annotated, ClassVar, Final, Literal
++from typing import ClassVar, Final, Literal
+ from uuid import UUID
+ 
+-from pydantic import (
+-    AwareDatetime,
+-    BaseModel,
+-    ConfigDict,
+-    Field,
+-    JsonValue,
+-    StrictBool,
+-    StrictFloat,
+-    StrictInt,
+-    StrictStr,
+-    StringConstraints,
+-    TypeAdapter,
+-    field_validator,
+-)
++from pydantic import BaseModel, ConfigDict, JsonValue
++
++from fieldmaps_api.zone_observation_schemas import BoundObservationUpload
+ 
+ ROOT: Final = Path(__file__).resolve().parents[2] / "contracts/zones"
+-MAX_EXACT_INTEGER: Final = 9_007_199_254_740_991
+-type Answer = (
+-    StrictStr
+-    | Annotated[StrictInt, Field(ge=-MAX_EXACT_INTEGER, le=MAX_EXACT_INTEGER)]
+-    | Annotated[
+-        StrictFloat, Field(allow_inf_nan=False, ge=-MAX_EXACT_INTEGER, le=MAX_EXACT_INTEGER)
+-    ]
+-    | tuple[StrictStr, ...]
+-)
+-type CaptureTime = Annotated[
+-    str,
+-    StringConstraints(
+-        strict=True,
+-        pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$",
+-    ),
+-]
+-type Position = tuple[
+-    Annotated[StrictFloat, Field(ge=-180, le=180, allow_inf_nan=False)],
+-    Annotated[StrictFloat, Field(ge=-90, le=90, allow_inf_nan=False)],
+-]
+ 
+ 
+ class AuthoredModel(BaseModel):
+     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+ 
+ 
+-class AuthoredObservation(AuthoredModel):
+-    site_id: UUID
+-    package_id: UUID
+-    zone_id: UUID
+-    form_version: Annotated[
+-        str,
+-        StringConstraints(
+-            strict=True, min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][\w.-]*$"
+-        ),
+-    ]
+-    observer: Annotated[
+-        str, StringConstraints(strict=True, strip_whitespace=True, min_length=1, max_length=12)
+-    ]
+-    observed_at: AwareDatetime
+-    answers: Annotated[dict[str, Answer], Field(max_length=200)]
+-
+-    @field_validator("observed_at", mode="before")
+-    @classmethod
+-    def capture_time_text(cls, value: JsonValue) -> str:
+-        return TypeAdapter[CaptureTime](CaptureTime).validate_python(value)
+-
+-    @field_validator("observed_at")
+-    @classmethod
+-    def utc_capture_time(cls, value: datetime) -> datetime:
+-        return value.astimezone(UTC)
+-
+-
+-class AuthoredPoint(AuthoredObservation):
+-    round_type: Literal["standard", "reliability"]
+-    placement: Literal["hand"]
+-    first_round: StrictBool
+-    coordinates: Position
+-
+-
+-class AuthoredInventory(AuthoredObservation):
+-    round_type: Literal["inventory"]
+-    placement: Literal["zone"]
+-
+-
+-type AuthoredUpload = Annotated[
+-    AuthoredPoint | AuthoredInventory, Field(discriminator="round_type")
+-]
+-
+-
+ class EnvelopeCase(AuthoredModel):
+     id: str
+     payload: dict[str, JsonValue]
+@@ -109,22 +33,12 @@ class UploadCases(AuthoredModel):
+     fingerprints: tuple[FingerprintCase, ...]
+ 
+ 
+-class AuthoredReceipt(AuthoredModel):
+-    observation_id: UUID
+-    project_id: UUID
+-    user_id: UUID
+-    accepted_revision: Literal[1]
+-    received_at: AwareDatetime
+-    package_id: UUID
+-    zone_id: UUID
+-
+-
+-class AuthoredFingerprintDocument(AuthoredModel):
++class FingerprintDocument(AuthoredModel):
+     canonicalization_version: Literal["observation-jcs-1"]
+     observation_id: UUID
+     project_id: UUID
+     user_id: UUID
+-    payload: AuthoredUpload
++    payload: BoundObservationUpload
+ 
+ 
+ def upload_cases() -> UploadCases:
+diff --git a/database/tests/test_gis09_api.py b/database/tests/test_gis09_api.py
+index f8630ac..c57072a 100644
+--- a/database/tests/test_gis09_api.py
++++ b/database/tests/test_gis09_api.py
+@@ -1,11 +1,14 @@
+ """Select the current GIS acceptance scenario after the BE-22 runtime gate."""
+ 
++import pytest
+ from tests.conftest import api_client, signer
+ from tests.gis_current_acceptance import (
+     gis_workspace,
+     test_v1_v2_gis_readback_matches_signed_exports,
+ )
+ 
++pytestmark = pytest.mark.integration
++
+ __all__ = [
+     "api_client",
+     "gis_workspace",
+diff --git a/qgis/zone-boundaries/test_prepare.py b/qgis/zone-boundaries/test_prepare.py
+index ac79a0d..ff6ca5b 100644
+--- a/qgis/zone-boundaries/test_prepare.py
++++ b/qgis/zone-boundaries/test_prepare.py
+@@ -233,6 +233,7 @@ class ProjectionChecks(unittest.TestCase):
+ 
+     def test_csv_compares_scope_identity_attribution_and_coordinates(self):
+         for field, value in (
++            ("form_version", "other-v2"),
+             ("package_id", "wrong-package"),
+             ("map_version", "8"),
+             ("zone_label_at_capture", "wrong-label"),
+diff --git a/supabase/migrations/20261012120000_current_baseline.sql b/supabase/migrations/20261012120000_current_baseline.sql
+index 780267b..92a9bbe 100644
+--- a/supabase/migrations/20261012120000_current_baseline.sql
++++ b/supabase/migrations/20261012120000_current_baseline.sql
+@@ -2930,7 +2930,7 @@ INSERT INTO fieldmaps.projects (id, organization_id, name, code, description, ti
+ INSERT INTO fieldmaps.projects (id, organization_id, name, code, description, timezone, status, is_training, created_at) VALUES ('10000000-0000-4000-8000-000000000102', '10000000-0000-4000-8000-000000000101', 'Training', 'training', NULL, 'America/New_York', 'active', true, '2026-10-12 14:16:34.649052+00');
+ INSERT INTO fieldmaps.forms (id, organization_id, project_id, code, name, created_by, created_at) VALUES ('45c54dbd-24a3-4c54-875a-0c5bf7b6673f', '10000000-0000-4000-8000-000000000101', '10000000-0000-4000-8000-000000000102', 'training', 'training', NULL, '2026-10-12 14:16:34.74243+00');
+ INSERT INTO fieldmaps.forms (id, organization_id, project_id, code, name, created_by, created_at) VALUES ('77f41d15-b653-465a-abb9-39f19f606851', '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002', 'shell', 'shell', NULL, '2026-10-12 14:16:34.74243+00');
+-INSERT INTO fieldmaps.form_versions (id, organization_id, project_id, code, definition, form_id, version, state, schema_version, published_at, published_by, created_by, created_at) VALUES ('10000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002', 'shell-v1', '{"fields": [{"code": "people", "type": "integer", "maximum": 999, "minimum": 0, "required": true}, {"code": "notes", "type": "text", "required": false, "maxLength": 1000}], "status": "practice-only"}', '77f41d15-b653-465a-abb9-39f19f606851', 1, 'published', 1, '2026-10-12 14:16:34.743938+00', NULL, NULL, '2026-10-12 14:16:34.741378+00');
++INSERT INTO fieldmaps.form_versions (id, organization_id, project_id, code, definition, form_id, version, state, schema_version, published_at, published_by, created_by, created_at) VALUES ('10000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002', 'shell-v1', '{"version": "shell-v1", "title": "Shell practice", "summary": "Synthetic practice counts and notes.", "source": "Original shell practice fields", "status": "published", "inclusion": "Synthetic practice only.", "questions": [{"id": "people", "code": "people", "exportColumn": "people", "act": "Social", "label": "people", "kind": "number", "required": true, "min": 0, "max": 999, "source": "Original shell practice fields"}, {"id": "notes", "code": "notes", "exportColumn": "notes", "act": "Record", "label": "notes", "kind": "text", "required": false, "maxLength": 1000, "source": "Original shell practice fields"}]}', '77f41d15-b653-465a-abb9-39f19f606851', 1, 'published', 1, '2026-10-12 14:16:34.743938+00', NULL, NULL, '2026-10-12 14:16:34.741378+00');
+ INSERT INTO fieldmaps.form_versions (id, organization_id, project_id, code, definition, form_id, version, state, schema_version, published_at, published_by, created_by, created_at) VALUES ('10000000-0000-4000-8000-000000000104', '10000000-0000-4000-8000-000000000101', '10000000-0000-4000-8000-000000000102', 'training-v1', '{"title": "Janet test subset", "source": "Variables to use for App testing.xlsx, Sheet1 — see docs/Janet-Test-Form-Scope.md", "status": "draft", "summary": "Twelve questions across five acts, drawn from the confirmed candidate subset.", "version": "janet-test-v1", "inclusion": "Excludes all 16 hidden workbook rows (Sheet1 rows 33–40 and 180–187), as the user confirmed for the first test form. Option codes are provisional implementation identifiers and are not workbook values.", "questions": [{"id": "age_range", "act": "Child", "code": "Age1", "hint": "Closest of the six supplied ranges. Observers are not expected to ask.", "kind": "one", "label": "How old is the target child?", "source": "Sheet1 B44:G49", "columns": 3, "options": [{"code": "age_0_2", "label": "0–2 yrs"}, {"code": "age_3_5", "label": "3–5 yrs"}, {"code": "age_6_8", "label": "6–8 yrs"}, {"code": "age_9_12", "label": "9–12 yrs"}, {"code": "age_13_16", "label": "13–16 yrs"}, {"code": "age_17_plus", "label": "17+"}], "required": true, "exportColumn": "Child_AgeRange"}, {"id": "play_type_1", "act": "Play", "code": "PlayType1", "kind": "one", "label": "Primary play type", "source": "Sheet1 B83:G100", "columns": 3, "options": [{"code": "physical", "label": "Physical"}, {"code": "exploratory", "label": "Exploratory"}, {"code": "imaginative", "label": "Imaginative"}, {"code": "play_with_rules", "label": "Play with Rules"}, {"code": "bio", "label": "Bio"}, {"code": "expressive", "label": "Expressive"}, {"code": "restorative", "label": "Restorative"}, {"code": "digital", "label": "Digital"}, {"code": "non_play", "label": "Non-Play"}], "required": true, "exportColumn": "Play_Type_1"}, {"id": "play_subtype_1", "act": "Play", "code": "PlaySubtype1", "kind": "one", "label": "Which kind of play?", "source": "Sheet1 B101:G133", "columns": 2, "options": [], "openedBy": "Subtypes follow the primary play type you chose", "required": false, "dependsOn": {"kind": "answered", "question": "play_type_1"}, "dynamicFrom": {"sets": {"bio": {"code": "Bio_Subtype", "label": "Bio play — which kind?", "options": [{"code": "plants", "label": "Plants"}, {"code": "wildlife", "label": "Wildlife"}, {"code": "care", "label": "Care"}], "exportColumn": "Bio_Subtype"}, "digital": {"code": "Dig_Subtype", "label": "Digital play — which kind?", "options": [{"code": "device", "label": "Device"}, {"code": "augmented", "label": "Augmented"}, {"code": "embedded", "label": "Embedded"}], "exportColumn": "Dig_Subtype"}, "non_play": {"code": "Non_Subtype", "label": "Non-play — which kind?", "options": [{"code": "self_care", "label": "Self care"}, {"code": "nutrition", "label": "Nutrition"}, {"code": "distress", "label": "Distress"}, {"code": "aggression", "label": "Aggression"}, {"code": "transition", "label": "Transition"}, {"code": "other", "label": "Other"}], "exportColumn": "Non_Subtype"}, "physical": {"code": "Phys_Subtype", "label": "Physical play — which kind?", "options": [{"code": "gross_motor", "label": "Gross motor"}, {"code": "fine_motor", "label": "Fine motor"}, {"code": "vestibular", "label": "Vestibular"}, {"code": "rough_and_tumble", "label": "Rough & tumble"}], "exportColumn": "Phys_Subtype"}, "expressive": {"code": "Expr_Subtype", "label": "Expressive play — which kind?", "options": [{"code": "performance", "label": "Performance"}, {"code": "artistic", "label": "Artistic"}, {"code": "language", "label": "Language"}, {"code": "conversation", "label": "Conversation"}], "exportColumn": "Expr_Subtype"}, "exploratory": {"code": "Expl_Subtype", "label": "Exploratory play — which kind?", "options": [{"code": "sensory", "label": "Sensory"}, {"code": "active", "label": "Active"}, {"code": "constructive", "label": "Constructive"}], "exportColumn": "Expl_Subtype"}, "imaginative": {"code": "Imag_Subtype", "label": "Imaginative play — which kind?", "options": [{"code": "symbolic", "label": "Symbolic"}, {"code": "socio_dramatic", "label": "Socio-dramatic"}, {"code": "fantasy", "label": "Fantasy"}], "exportColumn": "Imag_Subtype"}, "restorative": {"code": "Res_Subtype", "label": "Restorative — which kind?", "options": [{"code": "resting", "label": "Resting"}, {"code": "retreat", "label": "Retreat"}, {"code": "reading", "label": "Reading"}, {"code": "onlooking", "label": "Onlooking"}], "exportColumn": "Res_Subtype"}, "play_with_rules": {"code": "PwR_Subtype", "label": "Rules play — which kind?", "options": [{"code": "conventional", "label": "Conventional"}, {"code": "organic", "label": "Organic"}], "exportColumn": "PwR_Subtype"}}, "question": "play_type_1"}, "exportColumn": ""}, {"id": "play_type_2", "act": "Play", "code": "PlayType2", "hint": "Leave it unanswered when a single type describes the event.", "kind": "one", "label": "A second play type, if there is one", "source": "Sheet1 B83:G100", "columns": 3, "options": [{"code": "physical", "label": "Physical"}, {"code": "exploratory", "label": "Exploratory"}, {"code": "imaginative", "label": "Imaginative"}, {"code": "play_with_rules", "label": "Play with Rules"}, {"code": "bio", "label": "Bio"}, {"code": "expressive", "label": "Expressive"}, {"code": "restorative", "label": "Restorative"}, {"code": "digital", "label": "Digital"}, {"code": "non_play", "label": "Non-Play"}], "required": false, "exportColumn": "Play_Type_2", "protocolFlag": "Whether the second slot is required is still a protocol decision. It is optional here and never blocks a save."}, {"id": "play_subtype_2", "act": "Play", "code": "PlaySubtype2", "kind": "one", "label": "Which kind of play?", "source": "Sheet1 B101:G133", "columns": 2, "options": [], "openedBy": "Subtypes follow the second play type you chose", "required": false, "dependsOn": {"kind": "answered", "question": "play_type_2"}, "dynamicFrom": {"sets": {"bio": {"code": "Bio_Subtype", "label": "Bio play — which kind?", "options": [{"code": "plants", "label": "Plants"}, {"code": "wildlife", "label": "Wildlife"}, {"code": "care", "label": "Care"}], "exportColumn": ""}, "digital": {"code": "Dig_Subtype", "label": "Digital play — which kind?", "options": [{"code": "device", "label": "Device"}, {"code": "augmented", "label": "Augmented"}, {"code": "embedded", "label": "Embedded"}], "exportColumn": ""}, "non_play": {"code": "Non_Subtype", "label": "Non-play — which kind?", "options": [{"code": "self_care", "label": "Self care"}, {"code": "nutrition", "label": "Nutrition"}, {"code": "distress", "label": "Distress"}, {"code": "aggression", "label": "Aggression"}, {"code": "transition", "label": "Transition"}, {"code": "other", "label": "Other"}], "exportColumn": ""}, "physical": {"code": "Phys_Subtype", "label": "Physical play — which kind?", "options": [{"code": "gross_motor", "label": "Gross motor"}, {"code": "fine_motor", "label": "Fine motor"}, {"code": "vestibular", "label": "Vestibular"}, {"code": "rough_and_tumble", "label": "Rough & tumble"}], "exportColumn": ""}, "expressive": {"code": "Expr_Subtype", "label": "Expressive play — which kind?", "options": [{"code": "performance", "label": "Performance"}, {"code": "artistic", "label": "Artistic"}, {"code": "language", "label": "Language"}, {"code": "conversation", "label": "Conversation"}], "exportColumn": ""}, "exploratory": {"code": "Expl_Subtype", "label": "Exploratory play — which kind?", "options": [{"code": "sensory", "label": "Sensory"}, {"code": "active", "label": "Active"}, {"code": "constructive", "label": "Constructive"}], "exportColumn": ""}, "imaginative": {"code": "Imag_Subtype", "label": "Imaginative play — which kind?", "options": [{"code": "symbolic", "label": "Symbolic"}, {"code": "socio_dramatic", "label": "Socio-dramatic"}, {"code": "fantasy", "label": "Fantasy"}], "exportColumn": ""}, "restorative": {"code": "Res_Subtype", "label": "Restorative — which kind?", "options": [{"code": "resting", "label": "Resting"}, {"code": "retreat", "label": "Retreat"}, {"code": "reading", "label": "Reading"}, {"code": "onlooking", "label": "Onlooking"}], "exportColumn": ""}, "play_with_rules": {"code": "PwR_Subtype", "label": "Rules play — which kind?", "options": [{"code": "conventional", "label": "Conventional"}, {"code": "organic", "label": "Organic"}], "exportColumn": ""}}, "question": "play_type_2"}, "exportColumn": "", "protocolFlag": "Slot two keeps its own answer and never shares slot one''s values, but the test sheet supplies only one subtype set, so this answer has no export column yet."}, {"id": "cars_intensity", "act": "Play", "code": "CARS2", "hint": "The three supplied CARS bands. Bands are recorded as bands, never as a number.", "kind": "one", "label": "How physically intense is it?", "source": "Sheet1 B135:G137", "columns": 1, "options": [{"code": "cars_1_2", "label": "1–2 · stationary"}, {"code": "cars_3", "label": "3 · slow"}, {"code": "cars_4_5", "label": "4–5 · moderate to vigorous"}], "required": false, "exportColumn": "CARS"}, {"id": "wildlife_interaction", "act": "Setting", "code": "Wildlife1", "kind": "one", "label": "Is the child interacting with wildlife?", "source": "Sheet1 B188:H197", "columns": 2, "options": [{"code": "no", "label": "No"}, {"code": "yes", "label": "Yes"}], "required": false, "exportColumn": "", "protocolFlag": "This branch has no supplied export columns. Answers are stored by question identifier until they are agreed."}, {"id": "wildlife_type", "act": "Setting", "code": "Wildlife2", "kind": "one", "label": "What kind of interaction?", "source": "Sheet1 B188:H197", "columns": 2, "options": [], "openedBy": "Opened by the wildlife answer", "required": false, "dependsOn": {"kind": "equals", "option": "yes", "question": "wildlife_interaction"}, "exportColumn": "", "protocolFlag": "Supply the interaction type list before this version is published. Nothing can be recorded here until then.", "optionsPending": "The workbook does not supply this list. It is left empty rather than filled with examples."}, {"id": "wildlife_other", "act": "Setting", "code": "Wildlife3", "kind": "text", "rows": 2, "label": "Describe the other kind of interaction", "source": "Sheet1 B188:H197", "columns": 1, "options": [], "openedBy": "Opened by the wildlife answer", "required": false, "dependsOn": {"kind": "equals", "option": "yes", "question": "wildlife_interaction"}, "maxLength": 100, "placeholder": "Up to 100 characters", "exportColumn": "", "protocolFlag": "The broad rule reveals this with the whole branch. Confirm whether it should appear only when the interaction type is Other."}, {"id": "wildlife_description", "act": "Setting", "code": "Wildlife4", "kind": "text", "rows": 2, "label": "Describe the wildlife interaction", "source": "Sheet1 B188:H197", "columns": 1, "options": [], "openedBy": "Opened by the wildlife answer", "required": false, "dependsOn": {"kind": "equals", "option": "yes", "question": "wildlife_interaction"}, "maxLength": 100, "placeholder": "Up to 100 characters", "exportColumn": ""}, {"id": "observer_initials", "act": "Record", "code": "Observer1", "hint": "Up to ten uppercase characters. Carried into the next observation in this session.", "kind": "text", "rows": 1, "label": "Who is observing?", "source": "Sheet1 B4:G5", "columns": 1, "options": [], "required": true, "maxLength": 10, "placeholder": "e.g. JL", "exportColumn": "observer"}, {"id": "play_event_summary", "act": "Record", "code": "Summary1", "hint": "A sentence or two, written as you saw it.", "kind": "text", "rows": 4, "label": "Describe the play event", "source": "Sheet1 B42:G42", "columns": 1, "options": [], "required": true, "maxLength": 1000, "placeholder": "Two children dragging a large branch toward the mud kitchen, negotiating who steers…", "exportColumn": "Play_Event_Summary"}], "protocolNotes": [{"id": "presenting-gender", "title": "Presenting gender has no export column", "detail": "Test E51 and Library E75 are both blank. The field is held out of this version until a column name is agreed rather than shipped under an invented one.", "source": "Sheet1 E51 · Library E75"}, {"id": "manufactured-loose-parts", "title": "Manufactured loose parts collide with natural loose parts", "detail": "Test E168 and E169 both read Nat_LP_Intn_Binary, so the two answers would land in one column. The loose-parts group waits for a distinct export name.", "source": "Sheet1 E168 · E169"}, {"id": "natural-materials-list", "title": "The natural materials list has not been provided", "detail": "Test G171 says the list is to be provided. The checklist is held out rather than shipped with the instruction''s own examples standing in as if they were the instrument.", "source": "Sheet1 G171"}, {"id": "play-type-2-required", "title": "Whether a second play type is required is undecided", "detail": "The scope document leaves this open, so the second slot is optional here and never blocks a save.", "source": "Sheet1 B83:G100"}, {"id": "play-subtype-two-slot", "title": "The two-slot subtype interpretation is unconfirmed", "detail": "The test sheet supplies one subtype set. Slot two keeps its own independent answer, but has no export column until the full library''s interpretation is confirmed.", "source": "Sheet1 B101:G133"}, {"id": "wildlife-columns", "title": "The wildlife branch has no supplied export columns or type list", "detail": "Rows B188:H197 name the fields but not their analysis columns, and the interaction type list is not in the sheet. Answers are stored by question identifier only.", "source": "Sheet1 B188:H197"}, {"id": "wildlife-other-reveal", "title": "The wildlife follow-ups use the broad reveal rule", "detail": "All three follow-ups appear on Yes, as the current rule reads. Confirm whether the Other description should appear only when the interaction type is Other.", "source": "Sheet1 H188"}, {"id": "carry-forward", "title": "Which answers carry across observations is undecided", "detail": "This version carries observer initials, zone and round into the next observation and clears every event answer. Round climate and zone inventory are not collected yet.", "source": "Sheet1 G171, G173, G175, G177, G179"}], "knownExportCollisions": []}', '45c54dbd-24a3-4c54-875a-0c5bf7b6673f', 1, 'published', 1, '2026-10-12 14:16:34.744004+00', NULL, NULL, '2026-10-12 14:16:34.741378+00');
+ INSERT INTO fieldmaps.sites (id, organization_id, project_id, code, name, description, created_by, created_at) VALUES ('10000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002', 'sample-garden', 'Sample garden', NULL, NULL, '2026-10-12 14:16:34.736175+00');
+ INSERT INTO fieldmaps.sites (id, organization_id, project_id, code, name, description, created_by, created_at) VALUES ('10000000-0000-4000-8000-000000000103', '10000000-0000-4000-8000-000000000101', '10000000-0000-4000-8000-000000000102', 'training-garden', 'Training garden', NULL, NULL, '2026-10-12 14:16:34.736175+00');

@@ -293,6 +293,31 @@ Conversion runs in a temporary subprocess with no inherited credentials, at most
 
 ## Verification and limits
 
+The database-free selection runs without database credentials, Docker or database startup:
+
+```sh
+cd backend
+EMAIL_ENABLED=false uv run --frozen python -m pytest -m 'not integration'
+```
+
+Database-backed modules carry `integration`; `api_client` refuses an unmarked test before
+loading database settings. Signed input-validation tests use `validation_client`, which
+opens no database connection. The default full suite still includes both selections.
+
+Stored definitions now use only canonical `questions`. Fresh synthetic shell initialization
+retains `people` (required integer 0–999) and `notes` (optional text, at most 1,000 characters)
+without adding an observer answer; observer remains envelope metadata. Practice forms can
+be copied through the normal revision-protected draft lifecycle. The separate collector
+practice definition in `contracts/forms/shell-v1.json` retains its authored observer question.
+Existing `fields` definitions need an explicitly reviewed transition **before** deploying
+this canonical-only API; see [cleanup prerequisites](../docs/reviews/final-cleanup-2026-10-17/implementation.md).
+No existing immutable definition or observation is rewritten by this cleanup.
+
+Archive preparation supports import and publication. Publication still extracts its retained
+base archive in an isolated worker with its checksum checks, CPU/memory/file-size limits,
+30-second deadline, two-worker capacity and temporary-directory cleanup. Corruption and
+deadline regressions exercise that supported publication operation.
+
 `pnpm backend:test` exercises real local Supabase, including token rejection, membership checks, connection-pool isolation, conflicting/concurrent retries, input boundaries, and restricted GIS readback. It also covers the error envelope, framework errors, sanitized failures and OpenAPI responses. Run `pnpm backend:check` for Ruff and BasedPyright. Current SQL verification is recorded in [the database README](../database/README.md). Native sign-in, mobile-to-running-API reconnect, and QGIS Desktop refresh still need a configured account/device acceptance run.
 
 This is a local development service. Local Supabase is development infrastructure and must not be deployed as a production database. Production rollout still needs approved region/retention choices, a public HTTPS API deployment, managed secret injection, network restrictions, backups, monitoring, and API resource limits. The API has no attachments, update/delete synchronization, incremental sync-download cursor, or closed-app mobile background synchronization yet. Package manifests and archives are available through the versioned API; archive bytes remain transactional in the database and are capped at 16 MB. Mobile offline pinning, retention and restart behavior still require the dependent mobile implementation and device acceptance.

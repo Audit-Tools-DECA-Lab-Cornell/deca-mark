@@ -1,0 +1,58 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 35%]
+........................................................................ [ 44%]
+........................................................................ [ 52%]
+........................................................................ [ 61%]
+........................................................................ [ 70%]
+........................................................................ [ 79%]
+........................................................................ [ 88%]
+........................................................................ [ 96%]
+.........................                                                [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.observation_analysis_fixtures
+    self.import_plugin(import_spec)
+
+tests/test_bound_upload_authorization_races.py: 2 warnings
+tests/test_bound_upload_bindings.py: 12 warnings
+tests/test_bound_upload_live.py: 2 warnings
+tests/test_bound_uploads.py: 7 warnings
+tests/test_errors.py: 2 warnings
+tests/test_observation_analysis.py: 9 warnings
+tests/test_observation_analysis_database.py: 3 warnings
+tests/test_observation_analysis_exports.py: 4 warnings
+tests/test_observation_analysis_history.py: 3 warnings
+tests/test_observation_analysis_live.py: 4 warnings
+tests/test_observation_bbox.py: 3 warnings
+tests/test_observation_bbox_live.py: 1 warning
+tests/test_site_packages.py: 1 warning
+tests/test_workspace_lifecycle.py: 1 warning
+tests/test_zone_api_imports.py: 3 warnings
+tests/test_zone_api_live.py: 3 warnings
+tests/test_zone_api_publication.py: 7 warnings
+tests/test_zone_authorization_races.py: 10 warnings
+tests/test_zone_form_succession.py: 12 warnings
+tests/test_zone_import_identity.py: 21 warnings
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+817 passed, 112 warnings in 615.18s (0:10:15)

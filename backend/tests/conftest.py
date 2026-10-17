@@ -18,9 +18,19 @@ def signer() -> Signer:
 
 
 @pytest.fixture
-def api_client(signer: Signer) -> Iterator[TestClient]:
+def api_client(signer: Signer, request: pytest.FixtureRequest) -> Iterator[TestClient]:
+    if "integration" not in request.keywords:
+        pytest.fail("Database-backed api_client requires @pytest.mark.integration")
     settings = database_settings()
     with TestClient(create_app(settings, JwksVerifier(ISSUER, "authenticated", signer))) as client:
+        client.headers["Authorization"] = f"Bearer {signer.issue()}"
+        yield client
+
+
+@pytest.fixture
+def validation_client(signer: Signer) -> Iterator[TestClient]:
+    """Signed HTTP boundary checks with no database settings, password file or startup probe."""
+    with TestClient(create_app(verifier=JwksVerifier(ISSUER, "authenticated", signer))) as client:
         client.headers["Authorization"] = f"Bearer {signer.issue()}"
         yield client
 

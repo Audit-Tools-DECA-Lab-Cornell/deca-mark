@@ -98,9 +98,8 @@ def test_server_failures_are_sanitized(failure: Exception, status: int, code: st
     assert "private" not in response.text
 
 
-@pytest.mark.integration
-def test_request_validation_reports_fields_without_input(api_client: TestClient) -> None:
-    response = api_client.put(
+def test_request_validation_reports_fields_without_input(validation_client: TestClient) -> None:
+    response = validation_client.put(
         f"/v1/projects/{PROJECT}/observations/{uuid4()}",
         json={"round_type": "standard", "observer": "private field note"},
     )
@@ -130,15 +129,14 @@ def test_domain_validation_reports_answer_field(
     assert JSON.validate_json(response.content) == {
         "error": {
             "code": "validation_failed",
-            "message": "people cannot be below 0",
-            "details": {"fields": [{"id": "answers", "problem": "people cannot be below 0"}]},
+            "message": "people: range",
+            "details": {"fields": [{"id": "answers", "problem": "people: range"}]},
         }
     }
 
 
-@pytest.mark.integration
-def test_invalid_body_encoding_keeps_bad_request_status(api_client: TestClient) -> None:
-    response = api_client.put(
+def test_invalid_body_encoding_keeps_bad_request_status(validation_client: TestClient) -> None:
+    response = validation_client.put(
         f"/v1/projects/{PROJECT}/observations/{uuid4()}",
         content=b"\xff",
         headers={"Content-Type": "application/json"},

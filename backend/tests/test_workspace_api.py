@@ -1,6 +1,8 @@
 """Sites, forms and records as a manager's workspace and an observer's device use them."""
 
+import csv
 from collections.abc import Iterator
+from io import StringIO
 from pathlib import Path
 from uuid import uuid4
 
@@ -8,15 +10,23 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import JsonValue, TypeAdapter
 
+from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.errors import ErrorEnvelope
 from fieldmaps_api.form_schemas import FormSummary, FormVersionDetail
 from fieldmaps_api.site_schemas import Site
 from fieldmaps_api.tenancy_schemas import ProjectMember
-from fieldmaps_api.zone_response_schemas import PackageForms, Publication
+from fieldmaps_api.zone_response_schemas import HistoricalZones, PackageForms, Publication
 from tests.local_database import admin_sql
 from tests.package_fixtures import submission
 from tests.signing import Signer
-from tests.tenant_fixtures import Tenant, cleanup_tenant, create_tenant, sign_in
+from tests.tenant_fixtures import (
+    Tenant,
+    cleanup_tenant,
+    create_tenant,
+    observation_payload,
+    sign_in,
+)
+from tests.test_observation_analysis_exports import files
 
 pytestmark = pytest.mark.integration
 
@@ -219,18 +229,98 @@ def test_question_ids_are_independent_of_record_metadata(
     assert stored.definition["questions"] == definition["questions"]
 
 
-def test_the_practice_form_is_not_copied_into_a_draft(
-    api_client: TestClient, tenant: Tenant
+@pytest.mark.parametrize("number", [1, 2])
+def test_canonical_practice_form_publish_package_upload_read_and_export(
+    api_client: TestClient, signer: Signer, tenant: Tenant, number: int
 ) -> None:
-    # The tenant's shell-v1 predates the editor: a field list, which no draft can be made from.
     base = f"/v1/projects/{tenant.project}"
-    refused = api_client.post(f"{base}/forms/shell/versions", json={})
-    assert refused.status_code == 409, refused.text
-    assert "cannot be copied" in error(refused.content).error.message
-    # Starting from a definition still works.
-    started = api_client.post(f"{base}/forms/shell/versions", json={"definition": inventory()})
-    assert started.status_code == 201, started.text
-    assert FormVersionDetail.model_validate_json(started.content).code == "shell-v2"
+    original = api_client.get(f"{base}/form-versions/shell-v1")
+    assert original.status_code == 200, original.text
+    frozen = FormVersionDetail.model_validate_json(original.content)
+    definition = FormDefinition.model_validate(frozen.definition)
+    assert [
+        (q.id, q.required, q.min, q.max, q.max_length, q.export_column)
+        for q in definition.questions
+    ] == [
+        ("people", True, 0, 999, None, "people"),
+        ("notes", False, None, None, 1000, "notes"),
+    ]
+    code = f"shell-v{number}"
+    if number == 2:
+        started = api_client.post(f"{base}/forms/shell/versions", json={})
+        assert started.status_code == 201, started.text
+        draft = FormVersionDetail.model_validate_json(started.content)
+        assert draft.code == code
+        assert draft.definition["questions"] == frozen.definition["questions"]
+        published = api_client.post(
+            f"{base}/form-versions/{code}/publish", headers={"If-Match": draft.etag}
+        )
+        assert published.status_code == 200, published.text
+    created = api_client.post(
+        f"{base}/packages", json=submission(site_id=str(tenant.site), form_version=code)
+    )
+    assert created.status_code == 201, created.text
+    package = Publication.model_validate_json(created.content).package.package_id
+    zone_response = api_client.get(
+        f"{base}/sites/{tenant.site}/zones", params={"package_id": str(package)}
+    )
+    zones = HistoricalZones.model_validate_json(zone_response.content)
+    zone = zones.zones[0].zone_id
+    sign_in(api_client, signer, tenant.users["observer"])
+    url = f"{base}/observations/{tenant.observation}"
+    body = observation_payload(tenant.site, package, zone)
+    body.update(form_version=code, answers={"people": 999, "notes": "café"})
+    for answers in (
+        {},
+        {"people": -1},
+        {"people": 1000},
+        {"people": 1.5},
+        {"people": True},
+        {"people": 1, "notes": "x" * 1001},
+    ):
+        invalid = api_client.put(url, json={**body, "answers": answers})
+        assert invalid.status_code == 422, invalid.text
+    accepted = api_client.put(url, json=body)
+    assert accepted.status_code == 200, accepted.text
+    assert api_client.put(url, json=body).content == accepted.content
+    assert api_client.put(url, json={**body, "answers": {"people": 0}}).status_code == 409
+    detail = api_client.get(url)
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["answers"] == {"people": 999, "notes": "café"}
+    assert detail.json()["form_version"] == code
+    assert detail.json()["package_id"] == str(package)
+    assert detail.json()["zone_id"] == str(zone)
+    sign_in(api_client, signer, tenant.users["viewer"])
+    assert_practice_exports(api_client, base, code, str(package), str(zone))
+
+
+def assert_practice_exports(
+    api_client: TestClient, base: str, code: str, package: str, zone: str
+) -> None:
+    exported = api_client.get(f"{base}/observations/export", params={"format": "csv"})
+    assert exported.status_code == 200, exported.text
+    assets = files(exported.content)
+    row = next(csv.DictReader(StringIO(assets["observations.csv"].decode("utf-8-sig"))))
+    assert (
+        row["people"],
+        row["notes"],
+        row["form_version"],
+        row["package_id"],
+        row["zone_id"],
+    ) == ("999", "café", code, package, zone)
+    exported = api_client.get(f"{base}/observations/export", params={"format": "geojson"})
+    assert exported.status_code == 200, exported.text
+    assets = files(exported.content)
+    collection = DEFINITION.validate_json(assets["observations.geojson"])
+    features = collection["features"]
+    assert isinstance(features, list)
+    feature = features[0]
+    assert isinstance(feature, dict)
+    properties = feature["properties"]
+    assert isinstance(properties, dict)
+    assert properties["answers"] == {"people": 999, "notes": "café"}
+    assert (properties["people"], properties["notes"]) == (999, "café")
+    assert code in DEFINITION.validate_json(assets["forms.json"])
 
 
 def test_viewers_and_observers_cannot_author_forms(

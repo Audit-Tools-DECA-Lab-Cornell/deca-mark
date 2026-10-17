@@ -11,11 +11,9 @@ from fieldmaps_api.domain.form_engine import prune_answers, visible_questions
 from fieldmaps_api.domain.forms import (
     AnswerError,
     FormDefinition,
-    StoredFormDefinition,
     normalize_answers,
     review_problems,
 )
-from fieldmaps_api.domain.legacy_forms import FormDefinition as LegacyFormDefinition
 
 CONTRACTS = Path(__file__).resolve().parents[2] / "contracts" / "forms"
 
@@ -79,38 +77,12 @@ def test_shared_cases(path: Path) -> None:
                 assert normalized.pruned == step.expected.dropped, label
 
 
-def test_legacy_shell_adapter_keeps_codes_and_bounds() -> None:
-    form = LegacyFormDefinition.model_validate(
-        {
-            "fields": [
-                {
-                    "code": "people",
-                    "type": "integer",
-                    "required": True,
-                    "minimum": 0,
-                    "maximum": 999,
-                },
-                {"code": "notes", "type": "text", "maxLength": 1000},
-            ]
-        }
-    )
-    answers: dict[str, JsonValue] = {"people": 4, "notes": "Practice"}
-    assert normalize_answers(form, answers).answers == answers
-    assert normalize_answers(form, answers).pruned == []
-    invalid_answers: list[dict[str, JsonValue]] = [
-        {"people": True},
-        {"people": -1},
-        {"people": 1000},
-        {"unknown": 2},
-    ]
-    for invalid in invalid_answers:
-        with pytest.raises(AnswerError):
-            normalize_answers(form, invalid)
-
-
-def test_bad_canonical_definition_cannot_fall_back_to_empty_legacy() -> None:
+@pytest.mark.parametrize(
+    "definition", [{"fields": []}, {"questions": []}, {"questions": [], "fields": []}]
+)
+def test_obsolete_or_incomplete_definitions_are_rejected(definition: dict[str, JsonValue]) -> None:
     with pytest.raises(ValidationError):
-        TypeAdapter(StoredFormDefinition).validate_python({"questions": []})
+        FormDefinition.model_validate(definition)
 
 
 @pytest.mark.parametrize(
@@ -161,8 +133,3 @@ def test_input_defaults_unknown_properties_and_integer_json_numbers() -> None:
     definition["questions"] = TypeAdapter(JsonValue).validate_python(questions)
     with pytest.raises(ValidationError):
         FormDefinition.model_validate(definition)
-
-
-def test_canonical_definition_never_falls_back_to_legacy_fields() -> None:
-    with pytest.raises(ValidationError):
-        TypeAdapter(StoredFormDefinition).validate_python({"questions": [], "fields": []})

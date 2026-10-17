@@ -26,6 +26,9 @@ from tests.zone_api_fixtures import document
 pytest_plugins = ("tests.bound_upload_live_fixtures",)
 
 
+pytestmark = pytest.mark.integration
+
+
 def test_signed_live_complete_reads_when_offline_upload_is_historical(
     live_api: LiveApi, live_bound_site: BoundSite
 ) -> None:
