@@ -17,7 +17,7 @@ from fieldmaps_api.domain.observation_export import (
     TIME_LIMIT,
     too_large,
 )
-from fieldmaps_api.errors import DomainError
+from fieldmaps_api.errors import DomainError, RoleRequiredError
 from fieldmaps_api.observation_analysis_schemas import ObservationExportQuery
 from fieldmaps_api.repositories import observation_analysis as db
 from fieldmaps_api.services.tenancy import project
@@ -47,7 +47,10 @@ async def export(
                 ) from None
             try:
                 async with user_transaction(sessions, user_id) as session:
-                    await project(session, project_id)
+                    access = await project(session, project_id)
+                    if access.is_training or access.role not in {"manager", "viewer"}:
+                        message = "Research viewer or manager access required for exports"
+                        raise RoleRequiredError(message)
                     await db.validate_scope(session, project_id, filters)
                     snapshot = await db.export(
                         session,
