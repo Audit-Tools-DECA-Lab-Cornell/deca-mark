@@ -1,0 +1,218 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_v1_v2_gis_readback_matches_signed_exports ________________
+
+gis_workspace = (<starlette.testclient.TestClient object at 0x7f658bfedfd0>, ZoneSite(tenant=Tenant(org=UUID('b48546be-0481-4e0d-a4a6-...'), 'viewer': UUID('5272b35b-970a-45ec-9812-28b4db1a3927')}), package_id=UUID('f86b29a5-a98d-438d-ba1b-435d71d3dbe3')))
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f658c5cc370>)
+tmp_path = PosixPath('/workspace/work/deca-mark-qgis-before-artifacts/test_v1_v2_gis_readback_matche0')
+
+    def test_v1_v2_gis_readback_matches_signed_exports(
+        gis_workspace: tuple[TestClient, ZoneSite], signer: Signer, tmp_path: Path
+    ) -> None:
+        # Given a real first package and a deliberately smaller successor.
+        api_client, site = gis_workspace
+        initial = api_client.get(f"{site.project_url}/packages/{site.package_id}")
+        assert initial.status_code == 200, initial.text
+        manifest = document(initial.content)["manifest"]
+        assert isinstance(manifest, dict)
+        bindings = PackageForms.model_validate(manifest["forms"])
+        assert bindings.inventory is not None, "The synthetic fixture must bind Inventory explicitly"
+        first = api_client.get(f"{site.url}/zones", params={"package_id": str(site.package_id)})
+        history = HistoricalZones.model_validate_json(first.content)
+        zone = history.zones[0]
+        url, etag, draft = create_draft(api_client, site)
+        zones = draft["zones"]
+        assert isinstance(zones, list)
+        assert isinstance(zones[0], dict)
+        zones[0]["geometry"] = {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-76.4858, 42.4480],
+                    [-76.4852, 42.4480],
+                    [-76.4852, 42.4486],
+                    [-76.4858, 42.4486],
+                    [-76.4858, 42.4480],
+                ]
+            ],
+        }
+        zones[0]["zone_label"] = "Synthetic smaller lawn"
+        edited = api_client.put(
+            url,
+            headers={"If-Match": etag},
+            json={
+                "zones": zones,
+                "change_note": "Deliberate shrink; preserve historical attribution",
+            },
+        )
+        assert edited.status_code == 200, edited.text
+        published = api_client.post(
+            url + "/publish",
+            headers={"If-Match": edited.headers["etag"]},
+            json={
+                "request_id": str(uuid4()),
+                "expected_current_package_id": str(site.package_id),
+            },
+        )
+        assert published.status_code == 201, published.text
+        package = document(published.content)["package"]
+        assert isinstance(package, dict)
+        successor = UUID(str(package["package_id"]))
+        assert package["package_version"] == 2
+        analysis = f"{site.project_url}/observations"
+        point, inventory, current = uuid4(), uuid4(), uuid4()
+        payload: dict[str, JsonValue] = {
+            "site_id": str(site.tenant.site),
+            "package_id": str(site.package_id),
+            "zone_id": str(zone.zone_id),
+            "form_version": bindings.play.form_version,
+            "round_type": "standard",
+            "first_round": True,
+            "placement": "hand",
+            "coordinates": [-76.4860, 42.4482],
+            "observer": "QA",
+            "observed_at": "2026-10-10T12:00:00Z",
+            "answers": {"people": 3, "notes": "Synthetic late map-v1 record"},
+        }
+        inventory_payload = {
+            key: value for key, value in payload.items() if key not in {"coordinates", "first_round"}
+        } | {
+            "round_type": "inventory",
+            "placement": "zone",
+            "form_version": bindings.inventory.form_version,
+            "answers": {"notes": "Synthetic delayed whole-zone Inventory"},
+        }
+        # When offline records for v1 arrive after v2, then reads keep their recorded snapshot.
+        sign_in(api_client, signer, site.tenant.users["observer"])
+        for identifier, body in (
+            (point, payload),
+            (inventory, inventory_payload),
+            (
+                current,
+                payload | {"package_id": str(successor), "coordinates": [-76.4855, 42.4482]},
+            ),
+        ):
+            response = api_client.put(f"{analysis}/{identifier}", json=body)
+            assert response.status_code == 200, response.text
+        sign_in(api_client, signer, site.tenant.users["viewer"])
+        response = api_client.get(analysis, params={"site_id": str(site.tenant.site)})
+        assert response.status_code == 200, response.text
+        page = ObservationPage.model_validate_json(response.content)
+        assert page.total_matching == 3
+        by_id = {row.observation_id: row for row in page.items}
+        assert by_id[point].package_version == 1
+        assert by_id[point].zone_label == zone.zone_label
+        assert by_id[inventory].geometry is None
+        assert by_id[current].package_version == 2
+        assert by_id[current].zone_label == "Synthetic smaller lawn"
+        assert_gis_and_export_agree(api_client, site, page, inventory, tmp_path)
+>       assert_prepared_layers(tmp_path, site, page, point, inventory, current)
+
+tests/gis_current_acceptance.py:243:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+output = PosixPath('/workspace/work/deca-mark-qgis-before-artifacts/test_v1_v2_gis_readback_matche0')
+site = ZoneSite(tenant=Tenant(org=UUID('b48546be-0481-4e0d-a4a6-32354cca6bb5'), project=UUID('855d69b3-ba17-4cd3-bf70-081dc0b...d'), 'viewer': UUID('5272b35b-970a-45ec-9812-28b4db1a3927')}), package_id=UUID('f86b29a5-a98d-438d-ba1b-435d71d3dbe3'))
+page = ObservationPage(items=[HistoricalObservation(observation_id=UUID('1d90ed2c-c68a-443e-b2cc-54965280a083'), project_id=U...next_cursor=None, total_matching=3, generated_at=datetime.datetime(2026, 10, 17, 15, 48, 24, 186228, tzinfo=TzInfo(0)))
+delayed = UUID('ccfde4a2-eb76-40a2-a766-5af52f4f8f34')
+inventory = UUID('1d90ed2c-c68a-443e-b2cc-54965280a083')
+current = UUID('88dd5c48-acd7-446c-881f-16b9d14d4012')
+
+    def assert_prepared_layers(  # noqa: PLR0913, PLR0917 - explicit synthetic identities.
+        output: Path,
+        site: ZoneSite,
+        page: ObservationPage,
+        delayed: UUID,
+        inventory: UUID,
+        current: UUID,
+    ) -> None:
+        prepared = output / "analysis"
+        conversion = subprocess.run(  # noqa: S603 - repository CLI and synthetic local paths only.
+            [
+                sys.executable,
+                str(ROOT / "qgis/zone-boundaries/prepare.py"),
+                str(output / "geojson.zip"),
+                str(prepared),
+                "--csv-zip",
+                str(output / "csv.zip"),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+>       assert conversion.returncode == 0, conversion.stdout + conversion.stderr
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Traceback (most recent call last):
+E         File "/workspace/work/deca-mark-qgis-repair-20261017/qgis/zone-boundaries/prepare.py", line 265, in <module>
+E           main()
+E           ~~~~^^
+E         File "/workspace/work/deca-mark-qgis-repair-20261017/qgis/zone-boundaries/prepare.py", line 249, in main
+E           files, report = project_layers(assets)
+E                           ~~~~~~~~~~~~~~^^^^^^^^
+E         File "/workspace/work/deca-mark-qgis-repair-20261017/qgis/zone-boundaries/prepare.py", line 118, in project_layers
+E           raise ValueError("Unknown assignment basis")
+E       ValueError: Unknown assignment basis
+
+tests/gis_current_acceptance.py:336: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"d16a774f0bb34ad68bcb489b20cd6391","method":"POST","status":201,"duration_ms":320,"operation":"createForm"}
+{"event":"http_response","request_id":"cc3d29ee32aa4bf69c95a83634691a7d","method":"POST","status":200,"duration_ms":10,"operation":"publishFormVersion"}
+{"event":"http_response","request_id":"e22d406b15354c9299be95ebbbcc41f0","method":"POST","status":201,"duration_ms":321,"operation":"createPackage"}
+----------------------------- Captured stderr call -----------------------------
+{"event":"http_response","request_id":"8bdb7bcf81e34c6cbb480573b46e0a0f","method":"GET","status":200,"duration_ms":7,"operation":"getPackage"}
+{"event":"http_response","request_id":"904b0a36f2e3428fb7f33b2e9467d9f9","method":"GET","status":200,"duration_ms":14,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"ab32fc8cdc084457a3c12d6833e56ad4","method":"POST","status":201,"duration_ms":36,"operation":"createZoneDraft","zone_count":1}
+{"event":"http_response","request_id":"8948c56017f645278f30bea479a88039","method":"PUT","status":200,"duration_ms":25,"operation":"replaceZoneDraft"}
+{"event":"http_response","request_id":"e1f532623535460fbb176a9da478a063","method":"POST","status":201,"duration_ms":251,"operation":"publishZoneDraft","archive_bytes":1463}
+{"event":"http_response","request_id":"ba60ed08f0b447229f01b508eaaaeed8","method":"PUT","status":200,"duration_ms":16,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"6e5e8f7526864de297699ae7a5944686","method":"PUT","status":200,"duration_ms":11,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"85dab1447069417da1adc16e309ebc41","method":"PUT","status":200,"duration_ms":11,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"7abe84bdd7fb4f2ab82b2bad20988c82","method":"GET","status":200,"duration_ms":27,"operation":"listHistoricalObservations"}
+{"event":"http_response","request_id":"f6591a30820644dda62fbc2704422c5b","method":"GET","status":200,"duration_ms":530,"operation":"exportHistoricalObservations"}
+{"event":"http_response","request_id":"bf044fe36284419492b77a1d74e2983b","method":"GET","status":200,"duration_ms":579,"operation":"exportHistoricalObservations"}
+------------------------------ Captured log call -------------------------------
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"8bdb7bcf81e34c6cbb480573b46e0a0f","method":"GET","status":200,"duration_ms":7,"operation":"getPackage"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"904b0a36f2e3428fb7f33b2e9467d9f9","method":"GET","status":200,"duration_ms":14,"operation":"getHistoricalZones"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"ab32fc8cdc084457a3c12d6833e56ad4","method":"POST","status":201,"duration_ms":36,"operation":"createZoneDraft","zone_count":1}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"8948c56017f645278f30bea479a88039","method":"PUT","status":200,"duration_ms":25,"operation":"replaceZoneDraft"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"e1f532623535460fbb176a9da478a063","method":"POST","status":201,"duration_ms":251,"operation":"publishZoneDraft","archive_bytes":1463}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"ba60ed08f0b447229f01b508eaaaeed8","method":"PUT","status":200,"duration_ms":16,"operation":"uploadObservation"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"6e5e8f7526864de297699ae7a5944686","method":"PUT","status":200,"duration_ms":11,"operation":"uploadObservation"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"85dab1447069417da1adc16e309ebc41","method":"PUT","status":200,"duration_ms":11,"operation":"uploadObservation"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"7abe84bdd7fb4f2ab82b2bad20988c82","method":"GET","status":200,"duration_ms":27,"operation":"listHistoricalObservations"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"f6591a30820644dda62fbc2704422c5b","method":"GET","status":200,"duration_ms":530,"operation":"exportHistoricalObservations"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"bf044fe36284419492b77a1d74e2983b","method":"GET","status":200,"duration_ms":579,"operation":"exportHistoricalObservations"}
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885
+  /workspace/work/deca-mark-qgis-repair-20261017/backend/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.zone_api_fixtures
+    self.import_plugin(import_spec)
+
+.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885
+  /workspace/work/deca-mark-qgis-repair-20261017/backend/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.bound_upload_fixtures
+    self.import_plugin(import_spec)
+
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/work/deca-mark-qgis-repair-20261017/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+::test_v1_v2_gis_readback_matches_signed_exports
+  /workspace/work/deca-mark-qgis-repair-20261017/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED ::test_v1_v2_gis_readback_matches_signed_exports - AssertionError: Tra...
+1 failed, 4 warnings in 3.80s

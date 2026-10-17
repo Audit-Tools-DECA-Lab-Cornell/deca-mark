@@ -1,0 +1,35 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+........................................................................ [ 62%]
+............................................                             [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/work/deca-mark-qgis-repair-20261017/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885
+  /workspace/work/deca-mark-qgis-repair-20261017/backend/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.observation_analysis_fixtures
+    self.import_plugin(import_spec)
+
+::test_v1_v2_gis_readback_matches_signed_exports
+tests/test_observation_analysis_exports.py::test_complete_bundle_when_matching_rows_exceed_500[csv]
+tests/test_observation_analysis_exports.py::test_complete_bundle_when_matching_rows_exceed_500[geojson]
+tests/test_observation_analysis_exports.py::test_row_ceiling_when_scope_has_10001_records
+tests/test_observation_analysis_exports.py::test_boundary_export_when_scope_has_10000_records
+tests/test_observation_analysis_exports.py::test_export_rejects_page_controls_when_scope_requested[extra0]
+tests/test_observation_analysis_exports.py::test_export_rejects_page_controls_when_scope_requested[extra1]
+  /workspace/work/deca-mark-qgis-repair-20261017/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+116 passed, 9 warnings in 165.95s (0:02:45)

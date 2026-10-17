@@ -10,7 +10,7 @@ The website can read a QGIS project with uploaded GeoPackage, shapefile or GeoJS
 
 ## Recorded zone boundaries and inventories
 
-Use the [recorded-boundary analysis guide](zone-boundaries/README.md) for the current `/v1` complete-export/manual QGIS workflow and its explicit historical-adapter limitation. Current SQL projections retain exact package/zone context and whole-zone Inventory; `prepare.py`/`render.py` still require removed metadata and need alignment before current-contract replay. GIS-09’s earlier synthetic QGIS rendering does not establish hosted migration, current-contract Desktop acceptance or the per-project live-reader pilot. See [the current roadmap](../docs/plan/current-state.md) and [GIS task ownership](PLAN.md).
+Use the [recorded-boundary analysis guide](zone-boundaries/README.md) for the current `/v1` complete-export converter and QGIS workflow. `prepare.py` uses exact recorded package/zone references and creates separate point and whole-zone Inventory layers; it does not require removed assignment/anchor-basis metadata. GIS-09’s earlier synthetic QGIS rendering does not establish hosted migration, current-contract Desktop acceptance or the per-project live-reader pilot. See [the current roadmap](../docs/plan/current-state.md) and [GIS task ownership](PLAN.md).
 
 ## Connection
 

@@ -69,10 +69,27 @@ def project_layers(assets: dict[str, bytes]) -> tuple[dict[str, bytes], dict]:
     metadata = json.loads(assets["metadata.json"])
     if metadata.get("total_matching") != len(events) or len(events) > 10_000:
         raise ValueError("Export scope count does not match the observation file")
+    project_id = metadata.get("project_id")
+    if not isinstance(project_id, str) or not project_id:
+        raise ValueError("Export scope requires its project identity")
     snapshots = {}
     for feature in zones:
         props = feature["properties"]
-        key = f"{props.get('package_id')}:{props.get('zone_id')}"
+        if (
+            any(
+                not isinstance(props.get(field), str) or not props[field]
+                for field in (
+                    "package_id",
+                    "zone_id",
+                    "zone_code",
+                    "zone_label_at_capture",
+                )
+            )
+            or type(props.get("map_version")) is not int
+            or props["map_version"] < 1
+        ):
+            raise ValueError("Historical zones require recorded identity and metadata")
+        key = f"{props['package_id']}:{props['zone_id']}"
         if (
             feature["id"] != key
             or (feature.get("geometry") or {}).get("type") != "MultiPolygon"
@@ -81,41 +98,26 @@ def project_layers(assets: dict[str, bytes]) -> tuple[dict[str, bytes], dict]:
                 "Historical zones require exact package:zone IDs and MultiPolygon geometry"
             )
         snapshots[key] = feature
-    point_events, inventories, legacy = [], [], []
+    point_events, inventories = [], []
     for event in events:
         props = event["properties"]
         if props.get("observation_id") != event["id"]:
             raise ValueError("Event feature ID disagrees with observation_id")
-        basis = props.get("assignment_basis")
+        if props.get("project_id") != project_id:
+            raise ValueError("Event project identity disagrees with export scope")
         package, zone = props.get("package_id"), props.get("zone_id")
-        snapshot = None
-        if basis == "recorded_package":
-            snapshot = snapshots.get(f"{package}:{zone}")
-            if package is None or zone is None or snapshot is None:
-                raise ValueError("Bound record is missing its exact historical zone")
-            for field in (
-                "package_id",
-                "zone_id",
-                "map_version",
-                "zone_code",
-                "zone_label_at_capture",
-            ):
-                if props.get(field) != snapshot["properties"].get(field):
-                    raise ValueError(f"Bound record disagrees with historical {field}")
-        elif basis == "legacy_unversioned":
-            if any(
-                props.get(field) is not None
-                for field in (
-                    "package_id",
-                    "zone_id",
-                    "map_version",
-                    "zone_label_at_capture",
-                )
-            ):
-                raise ValueError("Legacy records cannot acquire historical binding")
-            legacy.append(event)
-        else:
-            raise ValueError("Unknown assignment basis")
+        snapshot = snapshots.get(f"{package}:{zone}")
+        if package is None or zone is None or snapshot is None:
+            raise ValueError("Bound record is missing its exact historical zone")
+        for field in (
+            "package_id",
+            "zone_id",
+            "map_version",
+            "zone_code",
+            "zone_label_at_capture",
+        ):
+            if props.get(field) != snapshot["properties"][field]:
+                raise ValueError(f"Bound record disagrees with historical {field}")
         geometry = event.get("geometry")
         support = props.get("spatial_support")
         if props.get("round_type") == "inventory":
@@ -126,11 +128,11 @@ def project_layers(assets: dict[str, bytes]) -> tuple[dict[str, bytes], dict]:
             inventories.append(
                 {
                     **event,
-                    "geometry": None if snapshot is None else snapshot["geometry"],
+                    "geometry": snapshot["geometry"],
                     "properties": {
                         **props,
                         "analysis_layer": "whole_zone_inventory",
-                        "snapshot_key": None if snapshot is None else snapshot["id"],
+                        "snapshot_key": snapshot["id"],
                     },
                 }
             )
@@ -142,17 +144,20 @@ def project_layers(assets: dict[str, bytes]) -> tuple[dict[str, bytes], dict]:
             if (geometry or {}).get("type") != "Point":
                 raise ValueError("Point support requires Point event geometry")
             point_events.append(event)
-        elif support != "legacy_unknown" or geometry is not None:
-            raise ValueError("Unknown spatial support must retain null event geometry")
+        else:
+            raise ValueError("Event must have point or whole-zone Inventory support")
     referenced = {
         f"{event['properties']['package_id']}:{event['properties']['zone_id']}"
         for event in events
-        if event["properties"]["assignment_basis"] == "recorded_package"
     }
     if referenced != set(snapshots):
         raise ValueError(
             "Historical zone file must have exactly the snapshots referenced by this scope"
         )
+    if metadata.get("versions") != sorted(
+        {event["properties"]["map_version"] for event in events}
+    ):
+        raise ValueError("Export scope versions disagree with recorded observations")
     files = {
         name: data for name, data in assets.items() if name != "observations.geojson"
     }
@@ -161,7 +166,6 @@ def project_layers(assets: dict[str, bytes]) -> tuple[dict[str, bytes], dict]:
             "all-events.geojson": assets["observations.geojson"],
             "point-events.geojson": collection(point_events),
             "inventory-records.geojson": collection(inventories),
-            "legacy-records.geojson": collection(legacy),
         }
     )
     report = {
@@ -171,7 +175,6 @@ def project_layers(assets: dict[str, bytes]) -> tuple[dict[str, bytes], dict]:
         "inventory_polygon_count": sum(
             row["geometry"] is not None for row in inventories
         ),
-        "legacy_record_count": len(legacy),
         "historical_snapshot_count": len(snapshots),
         "inventory_event_geometry": "null",
         "snapshot_join": "package_id + zone_id",
@@ -190,10 +193,15 @@ def compare_csv(csv_assets: dict[str, bytes], geojson_assets: dict[str, bytes]) 
         "project_timezone",
         "filters",
         "versions",
-        "assignment_basis",
     ):
         if csv_metadata.get(field) != geojson_metadata.get(field):
             raise ValueError(f"CSV and GeoJSON export scopes disagree on {field}")
+    csv_zones = features(json.loads(csv_assets["historical-zones.geojson"]))
+    geojson_zones = features(json.loads(geojson_assets["historical-zones.geojson"]))
+    if {zone["id"]: zone for zone in csv_zones} != {
+        zone["id"]: zone for zone in geojson_zones
+    }:
+        raise ValueError("CSV and GeoJSON historical snapshots disagree")
     records = list(
         csv.DictReader(StringIO(csv_assets["observations.csv"].decode("utf-8-sig")))
     )
@@ -204,15 +212,17 @@ def compare_csv(csv_assets: dict[str, bytes], geojson_assets: dict[str, bytes]) 
     for event in events:
         props, row = event["properties"], rows[event["id"]]
         for field in (
+            "project_id",
+            "site_id",
+            "form_version",
+            "revision",
             "package_id",
             "map_version",
             "zone_id",
             "zone_code",
             "zone_label_at_capture",
-            "assignment_basis",
             "spatial_support",
             "round_type",
-            "display_anchor_basis",
         ):
             expected = "" if props.get(field) is None else str(props[field])
             if expected.lstrip().startswith(
@@ -220,6 +230,16 @@ def compare_csv(csv_assets: dict[str, bytes], geojson_assets: dict[str, bytes]) 
             ) or expected.startswith(("\t", "\r", "\n")):
                 expected = "'" + expected
             if row.get(field) != expected:
+                raise ValueError(
+                    f"CSV and GeoJSON disagree on observation {event['id']} {field}"
+                )
+        for field in ("display_anchor_longitude", "display_anchor_latitude"):
+            coordinate = props.get(field)
+            if coordinate is None:
+                agrees = row.get(field) == ""
+            else:
+                agrees = bool(row.get(field)) and float(row[field]) == coordinate
+            if not agrees:
                 raise ValueError(
                     f"CSV and GeoJSON disagree on observation {event['id']} {field}"
                 )

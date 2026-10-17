@@ -176,7 +176,7 @@ sh database/gis09-api-rehearsal.sh -q
 
 The API fixture must use the sole `/v1` surface and map versions 1 and 2, upload a delayed
 map-v1 event after map-v2 publication, and compare restricted GIS reads with complete API
-exports. `database/tests/test_gis09_api.py` now selects `test_v1_v2_gis_readback_matches_signed_exports` from the current acceptance adapter. This does not align the separate historical QGIS Desktop preparation/render scripts; see [the QGIS guide](../qgis/zone-boundaries/README.md).
+exports. `database/tests/test_gis09_api.py` selects `test_v1_v2_gis_readback_matches_signed_exports` and exposes its backend fixtures. The scenario publishes/binds synthetic Inventory with revision preconditions and runs the production converter on actual matching CSV/GeoJSON ZIPs. See [the QGIS guide](../qgis/zone-boundaries/README.md) for artifact retention and separate installed-provider checks.
 Current SQL acceptance verifies that Training snapshots cannot expose another creator's
 activity. These checks do not apply hosted migrations or provision a QGIS database reader.
 

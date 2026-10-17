@@ -1,6 +1,7 @@
 import argparse
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from qgis.core import (
     Qgis,
@@ -36,7 +37,6 @@ def attribution(value: QgsVectorLayer) -> list[dict]:
         "zone_id",
         "zone_code",
         "zone_label_at_capture",
-        "assignment_basis",
         "spatial_support",
         "round_type",
     )
@@ -108,22 +108,25 @@ def main() -> None:
     )
     parser.add_argument("directory", type=Path)
     parser.add_argument("--delayed-point", required=True)
-    parser.add_argument("--historical-version", type=int, default=7)
-    parser.add_argument("--current-version", type=int, default=8)
+    parser.add_argument("--historical-version", type=int, default=1)
+    parser.add_argument("--current-version", type=int, default=2)
     parser.add_argument("--prefix", type=Path, required=True)
     parser.add_argument("--sql-readback", type=Path)
     args = parser.parse_args()
     args.directory = args.directory.resolve()
-    application = QgsApplication([], False)
+    profile = TemporaryDirectory(prefix="decamark-qgis-profile-")
+    application = QgsApplication([], False, profile.name)
     application.setPrefixPath(str(args.prefix), True)
     application.initQgis()
     project = QgsProject.instance()
-    try:
+
+    # Drop provider/layout references before the installed QGIS runtime shuts down.
+    def render() -> None:
         checks = json.loads((args.directory / "projection-checks.json").read_text())
         zones = layer(
             args.directory,
             "historical-zones.geojson",
-            "Synthetic recorded zones: v7 and v8",
+            f"Synthetic recorded zones: v{args.historical_version} and v{args.current_version}",
             checks["historical_snapshot_count"],
         )
         points = layer(
@@ -135,16 +138,16 @@ def main() -> None:
         inventories = layer(
             args.directory,
             "inventory-records.geojson",
-            "Synthetic whole-zone inventories; legacy geometry unknown",
+            "Synthetic whole-zone inventories; exact recorded boundaries",
             checks["inventory_record_count"],
         )
-        legacy = layer(
+        events = layer(
             args.directory,
-            "legacy-records.geojson",
-            "Synthetic legacy records; no inferred version",
-            checks["legacy_record_count"],
+            "all-events.geojson",
+            "Synthetic original event geometry; Inventory is nonspatial",
+            checks["total_matching"],
         )
-        for value in (zones, points, inventories, legacy):
+        for value in (zones, points, inventories):
             if value.isSpatial() and value.crs().authid() not in {
                 "EPSG:4326",
                 "OGC:CRS84",
@@ -187,7 +190,7 @@ def main() -> None:
             points,
             'CASE WHEN "observation_id" = \''
             + args.delayed_point
-            + "' THEN 'Delayed v7 point' ELSE 'Point event' END",
+            + f"' THEN 'Delayed v{args.historical_version} point' ELSE 'Point event' END",
         )
         inventories.setRenderer(
             QgsSingleSymbolRenderer(
@@ -229,26 +232,34 @@ def main() -> None:
         if not matching[0].geometry().intersects(delayed[0].geometry()) or current[
             0
         ].geometry().intersects(delayed[0].geometry()):
-            raise ValueError("Synthetic delayed point must be inside v7 and outside v8")
+            raise ValueError(
+                "Synthetic delayed point must be inside its recorded snapshot and outside its successor"
+            )
         if matching[0]["zone_label_at_capture"] == current[0]["zone_label_at_capture"]:
             raise ValueError("Synthetic successor must change its recorded label")
         inventory_geometries = 0
         for feature in inventories.getFeatures():
-            if feature["assignment_basis"] == "recorded_package":
-                key = f"{feature['package_id']}:{feature['zone_id']}"
-                snapshot = [row for row in zones.getFeatures() if str(row["id"]) == key]
-                if (
-                    len(snapshot) != 1
-                    or feature.geometry().asWkb() != snapshot[0].geometry().asWkb()
-                ):
-                    raise ValueError(
-                        "Inventory does not render its exact historical MultiPolygon"
-                    )
-                inventory_geometries += 1
-            elif not feature.geometry().isNull():
+            key = f"{feature['package_id']}:{feature['zone_id']}"
+            snapshot = [row for row in zones.getFeatures() if str(row["id"]) == key]
+            if (
+                len(snapshot) != 1
+                or feature["snapshot_key"] != key
+                or feature.geometry().isNull()
+                or feature.geometry().asWkb() != snapshot[0].geometry().asWkb()
+            ):
                 raise ValueError(
-                    "Legacy inventory cannot receive a contemporary polygon"
+                    "Inventory does not render its exact historical MultiPolygon"
                 )
+            for name in (
+                "package_id",
+                "map_version",
+                "zone_id",
+                "zone_code",
+                "zone_label_at_capture",
+            ):
+                if feature[name] != snapshot[0][name]:
+                    raise ValueError(f"Inventory disagrees with historical {name}")
+            inventory_geometries += 1
         if inventory_geometries != checks["inventory_polygon_count"]:
             raise ValueError(
                 "QGIS inventory polygon count disagrees with export projection"
@@ -256,8 +267,35 @@ def main() -> None:
         loaded_attribution = {
             "point_events": attribution(points),
             "inventory_records": attribution(inventories),
-            "legacy_records": attribution(legacy),
         }
+        original_attribution = attribution(events)
+        projected_attribution = (
+            loaded_attribution["point_events"] + loaded_attribution["inventory_records"]
+        )
+        if sorted(
+            original_attribution, key=lambda row: row["observation_id"]
+        ) != sorted(projected_attribution, key=lambda row: row["observation_id"]):
+            raise ValueError("QGIS prepared layers changed original event attribution")
+        original_inventory_count = 0
+        for feature in events.getFeatures():
+            if feature["round_type"] == "inventory":
+                if (
+                    not feature.geometry().isNull()
+                    or feature["spatial_support"] != "zone"
+                ):
+                    raise ValueError("Inventory event geometry must stay null")
+                original_inventory_count += 1
+            elif feature.geometry().isNull() or feature["spatial_support"] != "point":
+                raise ValueError("Standard/Reliability events must retain real points")
+        if original_inventory_count != inventory_geometries:
+            raise ValueError("QGIS original and projected Inventory counts disagree")
+        source_events = {
+            feature["observation_id"]: feature for feature in events.getFeatures()
+        }
+        for feature in points.getFeatures():
+            source = source_events[feature["observation_id"]]
+            if feature.geometry().asWkb() != source.geometry().asWkb():
+                raise ValueError("QGIS point geometry disagrees with its source event")
         if args.sql_readback is not None:
             compare_readback(
                 loaded_attribution["point_events"]
@@ -269,7 +307,6 @@ def main() -> None:
         extent.scale(1.2)
         root = project.layerTreeRoot()
         root.findLayer(inventories.id()).setItemVisibilityChecked(False)
-        root.findLayer(legacy.id()).setItemVisibilityChecked(False)
         project.viewSettings().setDefaultViewExtent(
             QgsReferencedRectangle(extent, project.crs())
         )
@@ -289,7 +326,7 @@ def main() -> None:
         )
         text_item(
             layout,
-            "Recorded point events: v7 blue; successor v8 orange",
+            f"Recorded point events: v{args.historical_version} blue; successor v{args.current_version} orange",
             8,
             16,
             138,
@@ -314,7 +351,7 @@ def main() -> None:
         text_item(
             layout,
             f"{checks['point_event_count']} point events; all inventory anchors excluded.\n"
-            "Delayed v7 point lies inside its recorded v7 and outside v8.",
+            f"Delayed v{args.historical_version} point lies inside its recorded zone and outside v{args.current_version}.",
             8,
             180,
             138,
@@ -322,9 +359,8 @@ def main() -> None:
         )
         text_item(
             layout,
-            f"{inventory_geometries} bound inventory polygon; "
-            f"{checks['inventory_record_count'] - inventory_geometries} legacy inventory has unknown boundary.\n"
-            "Legacy records retain null package and zone identity.",
+            f"{inventory_geometries} whole-zone Inventory polygon features.\n"
+            "Each retains exact recorded package/zone identity and label.",
             153,
             180,
             138,
@@ -346,15 +382,17 @@ def main() -> None:
             "mode": "installed PyQGIS offscreen provider and layout rendering",
             "delayed_point": args.delayed_point,
             "delayed_point_version": args.historical_version,
-            "inside_recorded_v7": True,
-            "outside_successor_v8": True,
+            "inside_recorded_snapshot": True,
+            "outside_successor_snapshot": True,
             "point_events": points.featureCount(),
             "inventory_records": inventories.featureCount(),
             "inventory_polygons": inventory_geometries,
             "zone_snapshots": zones.featureCount(),
-            "legacy_records": legacy.featureCount(),
+            "inventory_source_event_geometry_null": True,
+            "prepared_attribution_agrees_with_source_events": True,
+            "point_geometry_agrees_with_source_events": True,
             "all_layers_read_only": all(
-                value.readOnly() for value in (zones, points, inventories, legacy)
+                value.readOnly() for value in (zones, points, inventories, events)
             ),
             "loaded_attribution": loaded_attribution,
             "snapshot_labels": [
@@ -371,16 +409,20 @@ def main() -> None:
                 if not feature.geometry().isNull()
             },
             "sql_readback_agrees": args.sql_readback is not None,
-            "desktop_interaction": "not evaluated by this script; see separate Desktop evidence",
+            "desktop_interaction": "not evaluated; offscreen provider/layout acceptance only",
             "hosted_or_live_database": "not accessed",
         }
         (args.directory / "qgis-checks.json").write_text(
             json.dumps(report, indent=2) + "\n"
         )
         print(json.dumps(report, indent=2))
+
+    try:
+        render()
     finally:
         project.clear()
         application.exitQgis()
+        profile.cleanup()
 
 
 if __name__ == "__main__":

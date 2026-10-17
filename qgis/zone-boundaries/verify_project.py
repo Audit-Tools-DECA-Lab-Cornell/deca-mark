@@ -1,6 +1,7 @@
 import argparse
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from qgis.core import Qgis, QgsApplication, QgsProject
 
@@ -12,17 +13,19 @@ def main() -> None:
     args = parser.parse_args()
     directory = args.directory.resolve()
     checks = json.loads((directory / "projection-checks.json").read_text())
-    expected = {
-        "point-events.geojson": checks["point_event_count"],
-        "inventory-records.geojson": checks["inventory_record_count"],
-        "historical-zones.geojson": checks["historical_snapshot_count"],
-        "legacy-records.geojson": checks["legacy_record_count"],
-    }
-    application = QgsApplication([], False)
+    profile = TemporaryDirectory(prefix="decamark-qgis-profile-")
+    application = QgsApplication([], False, profile.name)
     application.setPrefixPath(str(args.prefix), True)
     application.initQgis()
     project = QgsProject.instance()
-    try:
+
+    # Drop provider/layout references before the installed QGIS runtime shuts down.
+    def verify() -> None:
+        expected = {
+            "point-events.geojson": checks["point_event_count"],
+            "inventory-records.geojson": checks["inventory_record_count"],
+            "historical-zones.geojson": checks["historical_snapshot_count"],
+        }
         if not project.read(str(directory / "gis09-synthetic.qgs")):
             raise ValueError("Saved QGIS project cannot reopen")
         actual = {}
@@ -33,7 +36,7 @@ def main() -> None:
             if source.parent.resolve() != directory:
                 raise ValueError("Saved project sources must stay beside the project")
             actual[source.name] = layer.featureCount()
-        if actual != expected or len(project.mapLayers()) != 4:
+        if actual != expected or len(project.mapLayers()) != len(expected):
             raise ValueError("Reopened QGIS counts disagree with export projections")
         report = {
             "qgis_version": Qgis.QGIS_VERSION,
@@ -47,9 +50,13 @@ def main() -> None:
             json.dumps(report, indent=2) + "\n"
         )
         print(json.dumps(report, indent=2))
+
+    try:
+        verify()
     finally:
         project.clear()
         application.exitQgis()
+        profile.cleanup()
 
 
 if __name__ == "__main__":

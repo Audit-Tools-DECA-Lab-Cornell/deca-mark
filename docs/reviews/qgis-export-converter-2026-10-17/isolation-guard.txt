@@ -1,0 +1,26 @@
+E                                                                        [100%]
+==================================== ERRORS ====================================
+_______ ERROR at setup of test_v1_v2_gis_readback_matches_signed_exports _______
+
+request = <SubRequest 'gis_workspace' for <Function test_v1_v2_gis_readback_matches_signed_exports>>
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f5dc9198bb0>)
+
+    @pytest.fixture
+    def gis_workspace(
+        request: pytest.FixtureRequest, signer: Signer
+    ) -> Iterator[tuple[TestClient, ZoneSite]]:
+        # Guard before requesting api_client: ordinary local fixtures may read a password file.
+>       assert disposable_database_selected(), "GIS acceptance requires its disposable database"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: GIS acceptance requires its disposable database
+
+tests/gis_current_acceptance.py:89: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR ::test_v1_v2_gis_readback_matches_signed_exports - AssertionError: GIS ...
+1 warning, 1 error in 0.66s
