@@ -84,8 +84,9 @@ test("a question added to a draft is checked like any other, and gets an id of i
 	accepted(added.raw);
 	const twice = raw.addQuestion(added.raw, "Record", "text", "Is it raining?");
 	assert.equal(twice.id, "is_it_raining_2");
-	const reserved = raw.addQuestion(blank, "Record", "text", "Zone");
-	assert.equal(reserved.id, "zone_2");
+	const zone = raw.addQuestion(blank, "Record", "text", "Zone");
+	assert.equal(zone.id, "zone");
+	accepted(zone.raw);
 });
 
 test("a new question goes after the last question of its act", () => {

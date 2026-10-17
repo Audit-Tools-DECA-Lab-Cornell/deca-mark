@@ -1,0 +1,719 @@
+diff --git a/backend/README.md b/backend/README.md
+index 21aa044..ebd0efe 100644
+--- a/backend/README.md
++++ b/backend/README.md
+@@ -252,0 +253,2 @@ The collector stores and retries the exact envelope for an observation. The serv
++Canonical number questions require `min <= max` when both bounds are supplied. The same definition parser checks new forms, draft creation/replacement and publication. Equal and one-sided bounds remain supported. Question IDs belong to nested `answers`, so an answer named `round_type` is independent of the envelope's round type. Export-column allocation continues to protect record metadata from collisions. See [shared form rules](../contracts/README.md#definition-rules).
++
+diff --git a/backend/src/fieldmaps_api/domain/form_references.py b/backend/src/fieldmaps_api/domain/form_references.py
+index 67e2b13..8db05f7 100644
+--- a/backend/src/fieldmaps_api/domain/form_references.py
++++ b/backend/src/fieldmaps_api/domain/form_references.py
+@@ -3 +3 @@
+-from typing import Final, assert_never
++from typing import assert_never
+@@ -75,17 +74,0 @@ def condition_problems(owner: str, condition: Condition, by_id: dict[str, Questi
+-#: The upload envelope's own fields. An answer travels beside them under its question id, so a
+-#: question with one of these ids would have its answer read as the envelope's and never checked.
+-#: `observer` is the exception: the practice form's observer question is that envelope field.
+-RESERVED_QUESTION_IDS: Final = frozenset(
+-    {
+-        "site_id",
+-        "form_version",
+-        "coordinates",
+-        "observed_at",
+-        "zone",
+-        "round_type",
+-        "first_round",
+-        "placement",
+-    }
+-)
+-
+-
+@@ -98,2 +80,0 @@ def definition_problems(form: CanonicalDefinition) -> list[str]:
+-        if question.id in RESERVED_QUESTION_IDS:
+-            problems.append(f'Question id "{question.id}" is reserved for the record itself.')
+@@ -112,0 +94,7 @@ def definition_problems(form: CanonicalDefinition) -> list[str]:
++        if (
++            question.kind == "number"
++            and question.min is not None
++            and question.max is not None
++            and question.min > question.max
++        ):
++            problems.append(f'"{question.id}" has a minimum greater than its maximum.')
+diff --git a/backend/tests/test_form_definition_cases.py b/backend/tests/test_form_definition_cases.py
+new file mode 100644
+index 0000000..fe571a4
+--- /dev/null
++++ b/backend/tests/test_form_definition_cases.py
+@@ -0,0 +1,44 @@
++from pathlib import Path
++
++import pytest
++from pydantic import BaseModel, JsonValue, ValidationError
++
++from fieldmaps_api.domain.forms import FormDefinition
++
++
++class DefinitionCase(BaseModel):
++    id: str
++    patch: dict[str, JsonValue]
++    valid: bool
++
++
++class DefinitionCases(BaseModel):
++    definition: dict[str, JsonValue]
++    question: dict[str, JsonValue]
++    cases: list[DefinitionCase]
++
++
++SUITE = DefinitionCases.model_validate_json(
++    (Path(__file__).resolve().parents[2] / "contracts/forms/definition.cases.json").read_bytes()
++)
++
++
++@pytest.mark.parametrize("case", SUITE.cases, ids=[case.id for case in SUITE.cases])
++def test_shared_definition_case(case: DefinitionCase) -> None:
++    # Given a synthetic question with an explicitly authored validity expectation.
++    raw = SUITE.definition | {"questions": [SUITE.question | case.patch]}
++    # When the same production parser used for drafts, uploads and exports reads it.
++    # Then the canonical boundary agrees with TypeScript.
++    if case.valid:
++        assert len(FormDefinition.model_validate(raw).questions) == 1
++    else:
++        with pytest.raises(ValidationError):
++            FormDefinition.model_validate(raw)
++
++
++@pytest.mark.parametrize("bound", ["min", "max"])
++@pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan")])
++def test_non_finite_bounds_remain_invalid(bound: str, value: float) -> None:
++    raw = SUITE.definition | {"questions": [SUITE.question | {bound: value}]}
++    with pytest.raises(ValidationError):
++        FormDefinition.model_validate(raw)
+diff --git a/backend/tests/test_form_namespace_exports.py b/backend/tests/test_form_namespace_exports.py
+new file mode 100644
+index 0000000..6e793ad
+--- /dev/null
++++ b/backend/tests/test_form_namespace_exports.py
+@@ -0,0 +1,43 @@
++import csv
++from io import StringIO
++from typing import TYPE_CHECKING
++
++import pytest
++
++from fieldmaps_api.domain.forms import FormDefinition, normalize_answers
++from fieldmaps_api.domain.observation_export import assets
++from fieldmaps_api.observation_analysis_schemas import ObservationExportQuery
++from tests.test_observation_analysis_domain import canonical, question, snapshot
++from tests.zone_api_fixtures import document
++
++if TYPE_CHECKING:
++    from pydantic import JsonValue
++
++
++@pytest.mark.parametrize(
++    ("export_column", "expected_column"),
++    [("Question_Round_Type", "Question_Round_Type"), ("round_type", "answer_round_type")],
++)
++def test_nested_round_type_answer_keeps_its_own_export_column(
++    export_column: str, expected_column: str
++) -> None:
++    definition = canonical([question("round_type", export_column)])
++    answers: dict[str, JsonValue] = {"round_type": "question answer"}
++    parsed = FormDefinition.model_validate(definition)
++    assert normalize_answers(parsed, answers).answers == answers
++    source = snapshot(answers, definition)
++    exported = assets(source, ObservationExportQuery(format="csv"), "synthetic")
++    row = next(csv.DictReader(StringIO(exported["observations.csv"].decode("utf-8-sig"))))
++    assert row["round_type"] == "standard"
++    assert row[expected_column] == "question answer"
++    geojson = assets(source, ObservationExportQuery(format="geojson"), "synthetic")
++    features = document(geojson["observations.geojson"])["features"]
++    assert isinstance(features, list)
++    event = features[0]
++    assert isinstance(event, dict)
++    properties = event["properties"]
++    assert isinstance(properties, dict)
++    assert properties["round_type"] == "standard"
++    assert properties[expected_column] == "question answer"
++    assert properties["answers"] == answers
++    assert document(geojson["forms.json"])["test-v1"] == definition
+diff --git a/backend/tests/test_form_validation_api.py b/backend/tests/test_form_validation_api.py
+new file mode 100644
+index 0000000..229a4b1
+--- /dev/null
++++ b/backend/tests/test_form_validation_api.py
+@@ -0,0 +1,214 @@
++import csv
++import json
++from io import StringIO
++from uuid import uuid4
++
++import pytest
++from fastapi.testclient import TestClient
++from pydantic import JsonValue
++
++from fieldmaps_api.domain.forms import FormDefinition
++from fieldmaps_api.errors import ErrorEnvelope
++from fieldmaps_api.form_schemas import FormVersionDetail
++from fieldmaps_api.observation_analysis_schemas import HistoricalObservationDetail
++from fieldmaps_api.zone_response_schemas import HistoricalZones, Publication
++from tests.local_database import admin_sql, disposable_database_selected
++from tests.package_fixtures import submission
++from tests.signing import Signer
++from tests.tenant_fixtures import Tenant, observation_payload, sign_in
++from tests.test_form_definition_cases import SUITE, DefinitionCase
++from tests.test_observation_analysis_exports import files
++from tests.test_workspace_api import tenant
++from tests.zone_api_fixtures import document
++
++pytestmark = pytest.mark.integration
++__all__ = ["tenant"]
++
++INVERTED = [case for case in SUITE.cases if case.id.startswith("inverted-")]
++
++
++def definition(patch: dict[str, JsonValue]) -> dict[str, JsonValue]:
++    result: dict[str, JsonValue] = {
++        **SUITE.definition,
++        "questions": [SUITE.question | patch],
++    }
++    return result
++
++
++def start_form(client: TestClient, project: str) -> FormVersionDetail:
++    response = client.post(
++        f"{project}/forms",
++        json={
++            "code": "bounded",
++            "name": "Synthetic only",
++            "definition": definition({"min": 0, "max": 10}),
++        },
++    )
++    assert response.status_code == 201, response.text
++    return FormVersionDetail.model_validate_json(response.content)
++
++
++@pytest.mark.parametrize("case", INVERTED, ids=[case.id for case in INVERTED])
++def test_create_form_rejects_contradictory_bounds(
++    api_client: TestClient, tenant: Tenant, case: DefinitionCase
++) -> None:
++    response = api_client.post(
++        f"/v1/projects/{tenant.project}/forms",
++        json={
++            "code": "contradictory",
++            "name": "Synthetic only",
++            "definition": definition(case.patch),
++        },
++    )
++    assert response.status_code == 422, response.text
++    error = ErrorEnvelope.model_validate_json(response.content).error
++    assert error.code == "validation_failed"
++    assert '"count" has a minimum greater than its maximum.' in error.message
++
++
++@pytest.mark.parametrize("case", INVERTED, ids=[case.id for case in INVERTED])
++def test_subsequent_draft_rejects_contradictory_bounds(
++    api_client: TestClient, tenant: Tenant, case: DefinitionCase
++) -> None:
++    project = f"/v1/projects/{tenant.project}"
++    draft = start_form(api_client, project)
++    response = api_client.post(
++        f"{project}/forms/{draft.form_code}/versions",
++        json={"definition": definition(case.patch)},
++    )
++    assert response.status_code == 422, response.text
++    assert "minimum greater than its maximum" in response.text
++    current = api_client.get(f"{project}/form-versions/{draft.code}")
++    assert FormVersionDetail.model_validate_json(current.content) == draft
++    assert api_client.get(f"{project}/form-versions/bounded-v2").status_code == 404
++
++
++@pytest.mark.parametrize("case", INVERTED, ids=[case.id for case in INVERTED])
++def test_revision_checked_update_rejects_bounds_without_changing_draft(
++    api_client: TestClient, tenant: Tenant, case: DefinitionCase
++) -> None:
++    project = f"/v1/projects/{tenant.project}"
++    draft = start_form(api_client, project)
++    url = f"{project}/form-versions/{draft.code}"
++    response = api_client.put(
++        url, headers={"If-Match": draft.etag}, json={"definition": definition(case.patch)}
++    )
++    assert response.status_code == 422, response.text
++    assert "minimum greater than its maximum" in response.text
++    current = api_client.get(url)
++    assert current.headers["etag"] == draft.etag
++    assert FormVersionDetail.model_validate_json(current.content) == draft
++
++
++def test_publication_revalidates_synthetically_stored_invalid_draft(
++    api_client: TestClient, tenant: Tenant
++) -> None:
++    assert disposable_database_selected(), "Stored-invalid acceptance requires disposable data"
++    project = f"/v1/projects/{tenant.project}"
++    draft = start_form(api_client, project)
++    invalid = draft.definition | {"questions": [SUITE.question | {"min": 10, "max": 1}]}
++    admin_sql(
++        "UPDATE fieldmaps.form_versions SET definition=:'definition'::jsonb WHERE id=:'version';",
++        f"definition={json.dumps(invalid)}",
++        f"version={draft.version_id}",
++    )
++    url = f"{project}/form-versions/{draft.code}"
++    current = FormVersionDetail.model_validate_json(api_client.get(url).content)
++    assert current.revision == draft.revision + 1
++    stale = api_client.post(url + "/publish", headers={"If-Match": draft.etag})
++    assert stale.status_code == 412, stale.text
++    response = api_client.post(url + "/publish", headers={"If-Match": current.etag})
++    assert response.status_code == 422, response.text
++    assert "minimum greater than its maximum" in response.text
++    assert FormVersionDetail.model_validate_json(api_client.get(url).content) == current
++
++
++@pytest.mark.parametrize(
++    ("patch", "answer"),
++    [
++        ({"min": 10, "max": 10, "exportColumn": "Count"}, 10),
++        ({"min": -5, "max": -1, "exportColumn": "Count"}, -3),
++        ({"min": 0, "max": 10, "exportColumn": "Count"}, 0),
++        ({"id": "round_type", "min": 0, "max": 10, "exportColumn": "Question_Round_Type"}, 3),
++    ],
++    ids=["equal", "negative", "zero", "round-type-namespace"],
++)
++def test_bounded_form_publishes_uploads_and_exports(
++    api_client: TestClient,
++    tenant: Tenant,
++    signer: Signer,
++    patch: dict[str, JsonValue],
++    answer: int,
++) -> None:
++    project = f"/v1/projects/{tenant.project}"
++    draft = start_form(api_client, project)
++    url = f"{project}/form-versions/{draft.code}"
++    edited = api_client.put(
++        url, headers={"If-Match": draft.etag}, json={"definition": definition(patch)}
++    )
++    assert edited.status_code == 200, edited.text
++    reviewed = FormVersionDetail.model_validate_json(edited.content)
++    assert reviewed.revision == draft.revision + 1
++    published = api_client.post(url + "/publish", headers={"If-Match": reviewed.etag})
++    assert published.status_code == 200, published.text
++    frozen = FormVersionDetail.model_validate_json(published.content)
++    assert frozen.state == "published"
++    assert frozen.revision == reviewed.revision
++    package = api_client.post(
++        f"{project}/packages", json=submission(site_id=str(tenant.site), form_version=frozen.code)
++    )
++    assert package.status_code == 201, package.text
++    binding = Publication.model_validate_json(package.content).package
++    history = api_client.get(
++        f"{project}/sites/{tenant.site}/zones", params={"package_id": str(binding.package_id)}
++    )
++    zone = HistoricalZones.model_validate_json(history.content).zones[0]
++    sign_in(api_client, signer, tenant.users["observer"])
++    downloaded = api_client.get(url)
++    assert FormVersionDetail.model_validate_json(downloaded.content).definition == frozen.definition
++    question = FormDefinition.model_validate(frozen.definition).questions[0]
++    question_id = question.id
++    answers: dict[str, JsonValue] = {question_id: answer}
++    observation = uuid4()
++    payload = observation_payload(tenant.site, binding.package_id, zone.zone_id) | {
++        "form_version": frozen.code,
++        "answers": answers,
++    }
++    upload = api_client.put(f"{project}/observations/{observation}", json=payload)
++    assert upload.status_code == 200, upload.text
++    assert question.max is not None
++    invalid = payload | {"answers": {question_id: question.max + 1}}
++    rejected = api_client.put(f"{project}/observations/{uuid4()}", json=invalid)
++    assert rejected.status_code == 422, rejected.text
++    sign_in(api_client, signer, tenant.users["viewer"])
++    readback = api_client.get(f"{project}/observations/{observation}")
++    stored = HistoricalObservationDetail.model_validate_json(readback.content)
++    assert stored.answers == answers
++    assert stored.round_type == "standard"
++    assert stored.form_version == frozen.code
++    assert_exports(api_client, project, frozen, answers)
++
++
++def assert_exports(
++    client: TestClient, project: str, frozen: FormVersionDetail, answers: dict[str, JsonValue]
++) -> None:
++    question = FormDefinition.model_validate(frozen.definition).questions[0]
++    for format_name in ("csv", "geojson"):
++        response = client.get(f"{project}/observations/export", params={"format": format_name})
++        assert response.status_code == 200, response.text
++        bundle = files(response.content)
++        if format_name == "csv":
++            row = next(csv.DictReader(StringIO(bundle["observations.csv"].decode("utf-8-sig"))))
++            assert row["round_type"] == "standard"
++            assert row[question.export_column] == str(answers[question.id])
++        else:
++            features = document(bundle["observations.geojson"])["features"]
++            assert isinstance(features, list)
++            event = features[0]
++            assert isinstance(event, dict)
++            properties = event["properties"]
++            assert isinstance(properties, dict)
++            assert properties["round_type"] == "standard"
++            assert properties["answers"] == answers
++            assert properties[question.export_column] == answers[question.id]
++        assert document(bundle["forms.json"])[frozen.code] == frozen.definition
+diff --git a/backend/tests/test_workspace_api.py b/backend/tests/test_workspace_api.py
+index e2967e1..d8f78fd 100644
+--- a/backend/tests/test_workspace_api.py
++++ b/backend/tests/test_workspace_api.py
+@@ -203,3 +203,3 @@ def test_an_explicit_empty_definition_is_not_replaced_with_a_copy(
+-@pytest.mark.parametrize("reserved", ["zone", "round_type", "first_round", "placement"])
+-def test_a_question_cannot_take_a_name_the_record_itself_uses(
+-    api_client: TestClient, tenant: Tenant, reserved: str
++@pytest.mark.parametrize("question_id", ["zone", "round_type", "first_round", "placement"])
++def test_question_ids_are_independent_of_record_metadata(
++    api_client: TestClient, tenant: Tenant, question_id: str
+@@ -207 +206,0 @@ def test_a_question_cannot_take_a_name_the_record_itself_uses(
+-    # Its answer would travel beside the record's own field of that name and never be checked.
+@@ -214,3 +213,3 @@ def test_a_question_cannot_take_a_name_the_record_itself_uses(
+-    definition["questions"] = [{**first, "id": reserved}, *questions[1:]]
+-    refused = api_client.post(
+-        f"{base}/forms", json={"code": "reserved", "name": "Reserved", "definition": definition}
++    definition["questions"] = [{**first, "id": question_id}, *questions[1:]]
++    created = api_client.post(
++        f"{base}/forms", json={"code": "nested", "name": "Nested", "definition": definition}
+@@ -218,2 +217,3 @@ def test_a_question_cannot_take_a_name_the_record_itself_uses(
+-    assert refused.status_code == 422, refused.text
+-    assert f'"{reserved}" is reserved' in error(refused.content).error.message
++    assert created.status_code == 201, created.text
++    stored = FormVersionDetail.model_validate_json(created.content)
++    assert stored.definition["questions"] == definition["questions"]
+diff --git a/contracts/README.md b/contracts/README.md
+index 76cc165..dc6254e 100644
+--- a/contracts/README.md
++++ b/contracts/README.md
+@@ -53,0 +54,6 @@ Question IDs and option codes identify answers; labels may change without changi
++Canonical number questions reject `min > max`, including optional questions. Bounds remain safe integers; equal bounds, negative values, zero and omitted one-sided bounds are valid. This is a local constraint check, not a conditional-form satisfiability solver.
++
++Question IDs use the nested `answers` namespace. Names such as `round_type`, `site_id` and `placement` are allowed independently of envelope metadata. Duplicate IDs, reference checks and export-column checks still apply. Exports allocate separate answer columns when a column name conflicts with record metadata.
++
++`forms/definition.cases.json` contains authored definition-boundary expectations shared by Python, mobile and web tests. Each case patches the synthetic `question`, combines it with `definition`, and declares `valid`. These cases exercise the production parsers; they do not define a second validator. The answer cases below retain their existing format.
++
+diff --git a/contracts/forms/definition.cases.json b/contracts/forms/definition.cases.json
+new file mode 100644
+index 0000000..c21e44b
+--- /dev/null
++++ b/contracts/forms/definition.cases.json
+@@ -0,0 +1,55 @@
++{
++  "definition": {
++    "version": "synthetic-validation-v1",
++    "title": "Synthetic validation checks",
++    "summary": "Authored parser regressions, not a research instrument.",
++    "source": "Synthetic regression",
++    "status": "draft",
++    "inclusion": "Synthetic only"
++  },
++  "question": {
++    "id": "count",
++    "code": "Count",
++    "exportColumn": "Count",
++    "act": "Play",
++    "label": "Synthetic count",
++    "kind": "number",
++    "required": true,
++    "source": "Synthetic regression"
++  },
++  "cases": [
++    { "id": "inverted-positive-bounds", "patch": { "min": 10, "max": 1 }, "valid": false },
++    { "id": "inverted-negative-bounds", "patch": { "min": -1, "max": -10 }, "valid": false },
++    { "id": "inverted-zero-bound", "patch": { "min": 0, "max": -1 }, "valid": false },
++    { "id": "inverted-optional-number", "patch": { "required": false, "min": 10, "max": 1 }, "valid": false },
++    { "id": "equal-positive-bounds", "patch": { "min": 10, "max": 10 }, "valid": true },
++    { "id": "equal-negative-bounds", "patch": { "min": -10, "max": -10 }, "valid": true },
++    { "id": "equal-zero-bounds", "patch": { "min": 0, "max": 0 }, "valid": true },
++    { "id": "ordered-negative-bounds", "patch": { "min": -10, "max": -1 }, "valid": true },
++    { "id": "ordered-cross-zero-bounds", "patch": { "min": -10, "max": 10 }, "valid": true },
++    { "id": "minimum-only", "patch": { "min": 10 }, "valid": true },
++    { "id": "maximum-only", "patch": { "max": -1 }, "valid": true },
++    { "id": "zero-minimum-only", "patch": { "min": 0 }, "valid": true },
++    { "id": "zero-maximum-only", "patch": { "max": 0 }, "valid": true },
++    { "id": "omitted-bounds", "patch": {}, "valid": true },
++    { "id": "safe-integer-limits", "patch": { "min": -9007199254740991, "max": 9007199254740991 }, "valid": true },
++    { "id": "unsafe-minimum", "patch": { "min": -9007199254740992 }, "valid": false },
++    { "id": "unsafe-maximum", "patch": { "max": 9007199254740992 }, "valid": false },
++    { "id": "fractional-minimum", "patch": { "min": 0.5 }, "valid": false },
++    { "id": "fractional-maximum", "patch": { "max": 0.5 }, "valid": false },
++    { "id": "boolean-minimum", "patch": { "min": false }, "valid": false },
++    { "id": "boolean-maximum", "patch": { "max": true }, "valid": false },
++    { "id": "string-minimum", "patch": { "min": "0" }, "valid": false },
++    { "id": "string-maximum", "patch": { "max": "10" }, "valid": false },
++    { "id": "null-minimum", "patch": { "min": null }, "valid": false },
++    { "id": "null-maximum", "patch": { "max": null }, "valid": false },
++    { "id": "answer-id-site_id", "patch": { "id": "site_id" }, "valid": true },
++    { "id": "answer-id-form_version", "patch": { "id": "form_version" }, "valid": true },
++    { "id": "answer-id-coordinates", "patch": { "id": "coordinates" }, "valid": true },
++    { "id": "answer-id-observed_at", "patch": { "id": "observed_at" }, "valid": true },
++    { "id": "answer-id-zone", "patch": { "id": "zone" }, "valid": true },
++    { "id": "answer-id-round_type", "patch": { "id": "round_type" }, "valid": true },
++    { "id": "answer-id-first_round", "patch": { "id": "first_round" }, "valid": true },
++    { "id": "answer-id-placement", "patch": { "id": "placement" }, "valid": true }
++  ]
++}
+diff --git a/mobile/src/forms/definition-cases.test.ts b/mobile/src/forms/definition-cases.test.ts
+new file mode 100644
+index 0000000..0153275
+--- /dev/null
++++ b/mobile/src/forms/definition-cases.test.ts
+@@ -0,0 +1,117 @@
++import { readFileSync } from "node:fs";
++import { describe, expect, it } from "vitest";
++import { z } from "zod";
++import { buildObservation, type ObservationInput } from "../domain/build-observation";
++import { packageBindingSchema } from "../domain/package-binding";
++import { serializeBoundObservation, wireBodySchema } from "../sync/wire-body";
++import { parseFormDefinition } from "./definition";
++
++const suite = z
++  .object({
++    definition: z.record(z.string(), z.unknown()),
++    question: z.record(z.string(), z.unknown()),
++    cases: z.array(
++      z.object({
++        id: z.string(),
++        patch: z.record(z.string(), z.unknown()),
++        valid: z.boolean(),
++      }),
++    ),
++  })
++  .parse(
++    JSON.parse(
++      readFileSync(
++        new URL("../../../contracts/forms/definition.cases.json", import.meta.url),
++        "utf8",
++      ),
++    ),
++  );
++
++describe("shared canonical definition cases", () => {
++  for (const scenario of suite.cases) {
++    it(scenario.id, () => {
++      // Given the same authored input as Python.
++      const input = {
++        ...suite.definition,
++        questions: [{ ...suite.question, ...scenario.patch }],
++      };
++      // When the production parser reads it, then it agrees with the contract.
++      if (scenario.valid) expect(parseFormDefinition(input).questions).toHaveLength(1);
++      else expect(() => parseFormDefinition(input)).toThrow();
++    });
++  }
++
++  for (const bound of ["min", "max"]) {
++    for (const value of [Infinity, -Infinity, NaN]) {
++      it(`rejects ${bound}=${value}`, () => {
++        const input = {
++          ...suite.definition,
++          questions: [{ ...suite.question, [bound]: value }],
++        };
++        expect(() => parseFormDefinition(input)).toThrow();
++      });
++    }
++  }
++});
++
++describe("bounded canonical collection", () => {
++  for (const { id, answer } of [
++    { id: "equal-positive-bounds", answer: 10 },
++    { id: "ordered-negative-bounds", answer: -3 },
++    { id: "equal-zero-bounds", answer: 0 },
++    { id: "answer-id-round_type", answer: 3 },
++  ]) {
++    it(`collects and serializes ${id} through the production builder`, () => {
++      const scenario = suite.cases.find((candidate) => candidate.id === id);
++      if (!scenario) throw new Error(`Missing authored case ${id}`);
++      const form = parseFormDefinition({
++        ...suite.definition,
++        status: "published",
++        questions: [{ ...suite.question, min: 0, max: 10, ...scenario.patch }],
++      });
++      const question = form.questions[0];
++      if (!question || question.max === undefined) throw new Error("Bounded question required");
++      const binding = packageBindingSchema.parse({
++        issuer: "https://synthetic.invalid/auth/v1",
++        projectId: "10000000-0000-4000-8000-000000000002",
++        siteId: "10000000-0000-4000-8000-000000000003",
++        packageId: "10000000-0000-4000-8000-000000000004",
++        packageVersion: 1,
++        packageSha256: "a".repeat(64),
++        zoneId: "10000000-0000-4000-8000-000000000005",
++        zoneCode: "A",
++        zoneLabel: "Synthetic zone",
++      });
++      const input: ObservationInput = {
++        id: "10000000-0000-4000-8000-000000000006",
++        form,
++        answers: { [question.id]: answer },
++        binding,
++        projectId: binding.projectId,
++        siteId: binding.siteId,
++        observer: "QA",
++        coordinates: [-76.4857, 42.4482],
++        createdAt: "2026-10-17T12:00:00.000Z",
++        context: {
++          packageId: binding.packageId,
++          packageVersion: "v1",
++          zoneId: binding.zoneCode,
++          zoneLabel: binding.zoneLabel,
++          roundType: "standard",
++          freshPeriod: true,
++          inheritedFrom: "",
++        },
++        placement: { source: "hand", gpsAccuracyMetres: null },
++      };
++      const result = buildObservation(input);
++      expect(result.ok).toBe(true);
++      if (!result.ok) throw new Error(result.message);
++      const wire = wireBodySchema.parse(JSON.parse(serializeBoundObservation(result.record)));
++      expect(wire.round_type).toBe("standard");
++      expect(wire.answers).toEqual({ [question.id]: answer });
++      expect(buildObservation({ ...input, answers: { [question.id]: question.max + 1 } }).ok).toBe(
++        false,
++      );
++    });
++  }
++});
+diff --git a/mobile/src/forms/definition.test.ts b/mobile/src/forms/definition.test.ts
+index 75aaad1..8fca45d 100644
+--- a/mobile/src/forms/definition.test.ts
++++ b/mobile/src/forms/definition.test.ts
+@@ -44,2 +44 @@ describe("Form definition validation", () => {
+-  it("refuses a question named after a field the record itself carries", () => {
+-    // Its answer would travel beside the record's own field of that name and never be checked.
++  it("accepts question identifiers independently of nested upload envelope fields", () => {
+@@ -47,4 +46 @@ describe("Form definition validation", () => {
+-      expect(() => parseFormDefinition(form([choice(id)]))).toThrow(
+-        `Question id "${id}" is reserved for the record itself.`,
+-      );
+-    // The practice form's observer question is the record's observer, and stays allowed.
++      expect(parseFormDefinition(form([choice(id)])).questions).toHaveLength(1);
+diff --git a/mobile/src/forms/definition.ts b/mobile/src/forms/definition.ts
+index e6dd1b1..32a1ce0 100644
+--- a/mobile/src/forms/definition.ts
++++ b/mobile/src/forms/definition.ts
+@@ -196,16 +195,0 @@ function conditionProblems(
+-/**
+- * The upload envelope's own fields. An answer travels beside them under its question id, so a
+- * question with one of these ids would have its answer read as the envelope's and never checked.
+- * `observer` is the exception: the practice form's observer question is that envelope field.
+- */
+-export const RESERVED_QUESTION_IDS: ReadonlySet<string> = new Set([
+-  "site_id",
+-  "form_version",
+-  "coordinates",
+-  "observed_at",
+-  "zone",
+-  "round_type",
+-  "first_round",
+-  "placement",
+-]);
+-
+@@ -217,2 +200,0 @@ export function validateFormDefinition(form: FormDefinition): readonly string[]
+-    if (RESERVED_QUESTION_IDS.has(question.id))
+-      problems.push(`Question id "${question.id}" is reserved for the record itself.`);
+@@ -234,0 +217,7 @@ export function validateFormDefinition(form: FormDefinition): readonly string[]
++    if (
++      question.kind === "number" &&
++      question.min !== undefined &&
++      question.max !== undefined &&
++      question.min > question.max
++    )
++      problems.push(`"${question.id}" has a minimum greater than its maximum.`);
+diff --git a/web/src/features/forms/raw.ts b/web/src/features/forms/raw.ts
+index afb4983..8c1f56d 100644
+--- a/web/src/features/forms/raw.ts
++++ b/web/src/features/forms/raw.ts
+@@ -4 +3,0 @@ import type { formDefinitionSchema, optionSchema, questionSchema } from "@/lib/f
+-import { RESERVED_QUESTION_IDS } from "@/lib/forms/definition";
+@@ -82 +81 @@ export function addQuestion(
+-	const taken = new Set([...raw.questions.map(question => question.id), ...RESERVED_QUESTION_IDS]);
++	const taken = new Set(raw.questions.map(question => question.id));
+diff --git a/web/src/lib/forms/definition.ts b/web/src/lib/forms/definition.ts
+index a308732..3a535f2 100644
+--- a/web/src/lib/forms/definition.ts
++++ b/web/src/lib/forms/definition.ts
+@@ -198,16 +197,0 @@ function conditionProblems(
+-/**
+- * The upload envelope's own fields. An answer travels beside them under its question id, so a
+- * question with one of these ids would have its answer read as the envelope's and never checked.
+- * `observer` is the exception: the practice form's observer question is that envelope field.
+- */
+-export const RESERVED_QUESTION_IDS: ReadonlySet<string> = new Set([
+-  "site_id",
+-  "form_version",
+-  "coordinates",
+-  "observed_at",
+-  "zone",
+-  "round_type",
+-  "first_round",
+-  "placement",
+-]);
+-
+@@ -219,2 +202,0 @@ export function validateFormDefinition(form: FormDefinition): readonly string[]
+-    if (RESERVED_QUESTION_IDS.has(question.id))
+-      problems.push(`Question id "${question.id}" is reserved for the record itself.`);
+@@ -236,0 +219,7 @@ export function validateFormDefinition(form: FormDefinition): readonly string[]
++    if (
++      question.kind === "number" &&
++      question.min !== undefined &&
++      question.max !== undefined &&
++      question.min > question.max
++    )
++      problems.push(`"${question.id}" has a minimum greater than its maximum.`);
+diff --git a/web/tests/unit/form-definition-cases.test.mjs b/web/tests/unit/form-definition-cases.test.mjs
+new file mode 100644
+index 0000000..176ba95
+--- /dev/null
++++ b/web/tests/unit/form-definition-cases.test.mjs
+@@ -0,0 +1,33 @@
++import assert from "node:assert/strict";
++import { readFileSync } from "node:fs";
++import test from "node:test";
++
++import { load } from "./support.mjs";
++
++const suite = JSON.parse(
++	readFileSync(new URL("../../../contracts/forms/definition.cases.json", import.meta.url), "utf8")
++);
++const { parseFormDefinition, loadDefinition } = await load("lib/forms/index.ts");
++const { addQuestion } = await load("features/forms/raw.ts");
++
++for (const scenario of suite.cases) {
++	test(`canonical definition: ${scenario.id}`, () => {
++		const input = {
++			...suite.definition,
++			questions: [{ ...suite.question, ...scenario.patch }]
++		};
++		if (scenario.valid) assert.equal(parseFormDefinition(input).questions.length, 1);
++		else assert.throws(() => parseFormDefinition(input));
++		const loaded = loadDefinition(input);
++		assert.equal(loaded.form !== null, scenario.valid);
++		assert.equal(loaded.problems.length === 0, scenario.valid);
++	});
++}
++
++test("the editor allows an envelope name while retaining duplicate question protection", () => {
++	const first = addQuestion({ ...suite.definition, questions: [] }, "Play", "text", "Round type");
++	const second = addQuestion(first.raw, "Play", "text", "Round type");
++	assert.equal(first.id, "round_type");
++	assert.equal(second.id, "round_type_2");
++	assert.deepEqual(loadDefinition(second.raw).problems, []);
++});
+diff --git a/web/tests/unit/forms-start.test.mjs b/web/tests/unit/forms-start.test.mjs
+index 1c2456a..ac4bc37 100644
+--- a/web/tests/unit/forms-start.test.mjs
++++ b/web/tests/unit/forms-start.test.mjs
+@@ -87,2 +87,3 @@ test("a question added to a draft is checked like any other, and gets an id of i
+-	const reserved = raw.addQuestion(blank, "Record", "text", "Zone");
+-	assert.equal(reserved.id, "zone_2");
++	const zone = raw.addQuestion(blank, "Record", "text", "Zone");
++	assert.equal(zone.id, "zone");
++	accepted(zone.raw);

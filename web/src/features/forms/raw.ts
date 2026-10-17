@@ -1,7 +1,6 @@
 import type { z } from "zod";
 
 import type { formDefinitionSchema, optionSchema, questionSchema } from "@/lib/forms";
-import { RESERVED_QUESTION_IDS } from "@/lib/forms/definition";
 
 /**
  * The form editor works on the definition as authored: the shape `contracts/forms/*.json` holds and the API
@@ -79,7 +78,7 @@ export function addQuestion(
 	kind: QuestionKind,
 	label: string
 ): { readonly raw: RawDefinition; readonly id: string } {
-	const taken = new Set([...raw.questions.map(question => question.id), ...RESERVED_QUESTION_IDS]);
+	const taken = new Set(raw.questions.map(question => question.id));
 	const id = unique(slugify(label), taken);
 	const question: RawQuestion = {
 		id,

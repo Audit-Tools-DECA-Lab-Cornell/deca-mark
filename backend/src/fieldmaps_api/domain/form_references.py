@@ -1,6 +1,6 @@
 """Definition reference, ordering, export and cycle validation."""
 
-from typing import Final, assert_never
+from typing import assert_never
 
 from fieldmaps_api.domain.form_definition import (
     Answered,
@@ -72,31 +72,12 @@ def condition_problems(owner: str, condition: Condition, by_id: dict[str, Questi
             assert_never(condition)
 
 
-#: The upload envelope's own fields. An answer travels beside them under its question id, so a
-#: question with one of these ids would have its answer read as the envelope's and never checked.
-#: `observer` is the exception: the practice form's observer question is that envelope field.
-RESERVED_QUESTION_IDS: Final = frozenset(
-    {
-        "site_id",
-        "form_version",
-        "coordinates",
-        "observed_at",
-        "zone",
-        "round_type",
-        "first_round",
-        "placement",
-    }
-)
-
-
 def definition_problems(form: CanonicalDefinition) -> list[str]:
     problems: list[str] = []
     by_id: dict[str, Question] = {}
     for question in form.questions:
         if question.id in by_id:
             problems.append(f'Duplicate question id "{question.id}".')
-        if question.id in RESERVED_QUESTION_IDS:
-            problems.append(f'Question id "{question.id}" is reserved for the record itself.')
         by_id[question.id] = question
     columns: dict[str, str] = {}
     for question in form.questions:
@@ -110,6 +91,13 @@ def definition_problems(form: CanonicalDefinition) -> list[str]:
             )
         columns[column] = question.id
     for question in form.questions:
+        if (
+            question.kind == "number"
+            and question.min is not None
+            and question.max is not None
+            and question.min > question.max
+        ):
+            problems.append(f'"{question.id}" has a minimum greater than its maximum.')
         problems.extend(question_problems(question, form, by_id))
     problems.extend(cycle_problems(form, by_id))
     return problems

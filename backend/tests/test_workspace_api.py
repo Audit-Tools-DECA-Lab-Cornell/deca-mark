@@ -200,23 +200,23 @@ def test_an_explicit_empty_definition_is_not_replaced_with_a_copy(
     assert [version.code for version in versions] == ["inventory-v1"]
 
 
-@pytest.mark.parametrize("reserved", ["zone", "round_type", "first_round", "placement"])
-def test_a_question_cannot_take_a_name_the_record_itself_uses(
-    api_client: TestClient, tenant: Tenant, reserved: str
+@pytest.mark.parametrize("question_id", ["zone", "round_type", "first_round", "placement"])
+def test_question_ids_are_independent_of_record_metadata(
+    api_client: TestClient, tenant: Tenant, question_id: str
 ) -> None:
-    # Its answer would travel beside the record's own field of that name and never be checked.
     base = f"/v1/projects/{tenant.project}"
     definition = inventory()
     questions = definition["questions"]
     assert isinstance(questions, list)
     first = questions[0]
     assert isinstance(first, dict)
-    definition["questions"] = [{**first, "id": reserved}, *questions[1:]]
-    refused = api_client.post(
-        f"{base}/forms", json={"code": "reserved", "name": "Reserved", "definition": definition}
+    definition["questions"] = [{**first, "id": question_id}, *questions[1:]]
+    created = api_client.post(
+        f"{base}/forms", json={"code": "nested", "name": "Nested", "definition": definition}
     )
-    assert refused.status_code == 422, refused.text
-    assert f'"{reserved}" is reserved' in error(refused.content).error.message
+    assert created.status_code == 201, created.text
+    stored = FormVersionDetail.model_validate_json(created.content)
+    assert stored.definition["questions"] == definition["questions"]
 
 
 def test_the_practice_form_is_not_copied_into_a_draft(

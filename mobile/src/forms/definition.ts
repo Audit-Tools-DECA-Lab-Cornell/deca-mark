@@ -193,29 +193,11 @@ function conditionProblems(
   return problems;
 }
 
-/**
- * The upload envelope's own fields. An answer travels beside them under its question id, so a
- * question with one of these ids would have its answer read as the envelope's and never checked.
- * `observer` is the exception: the practice form's observer question is that envelope field.
- */
-export const RESERVED_QUESTION_IDS: ReadonlySet<string> = new Set([
-  "site_id",
-  "form_version",
-  "coordinates",
-  "observed_at",
-  "zone",
-  "round_type",
-  "first_round",
-  "placement",
-]);
-
 export function validateFormDefinition(form: FormDefinition): readonly string[] {
   const problems: string[] = [];
   const byId = new Map<string, Question>();
   for (const question of form.questions) {
     if (byId.has(question.id)) problems.push(`Duplicate question id "${question.id}".`);
-    if (RESERVED_QUESTION_IDS.has(question.id))
-      problems.push(`Question id "${question.id}" is reserved for the record itself.`);
     byId.set(question.id, question);
   }
 
@@ -232,6 +214,13 @@ export function validateFormDefinition(form: FormDefinition): readonly string[] 
   }
 
   for (const question of form.questions) {
+    if (
+      question.kind === "number" &&
+      question.min !== undefined &&
+      question.max !== undefined &&
+      question.min > question.max
+    )
+      problems.push(`"${question.id}" has a minimum greater than its maximum.`);
     if (question.optionsPending !== undefined && question.required)
       problems.push(`"${question.id}" is required but its option list has not been supplied.`);
     const isChoice = question.kind === "one" || question.kind === "many";

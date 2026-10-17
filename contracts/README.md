@@ -51,6 +51,12 @@ The input schema accepts omitted defaults and unknown properties. Parsing fills 
 
 Question IDs and option codes identify answers; labels may change without changing those identifiers. Export columns are only for analysis. Preserve unresolved protocol notes, empty export names and pending option lists. Do not infer new research fields or choices from test fixtures. `janet-test-v1` remains a draft and is not enabled for upload by this work. Published versions require a new version for changes.
 
+Canonical number questions reject `min > max`, including optional questions. Bounds remain safe integers; equal bounds, negative values, zero and omitted one-sided bounds are valid. This is a local constraint check, not a conditional-form satisfiability solver.
+
+Question IDs use the nested `answers` namespace. Names such as `round_type`, `site_id` and `placement` are allowed independently of envelope metadata. Duplicate IDs, reference checks and export-column checks still apply. Exports allocate separate answer columns when a column name conflicts with record metadata.
+
+`forms/definition.cases.json` contains authored definition-boundary expectations shared by Python, mobile and web tests. Each case patches the synthetic `question`, combines it with `definition`, and declares `valid`. These cases exercise the production parsers; they do not define a second validator. The answer cases below retain their existing format.
+
 Number answers are finite JSON numbers, validated as integers against `min` and `max`. Single choices hold an option code; multiple choices hold distinct option codes. Text limits count Unicode code points, matching JSON Schema and Python string length. Blank text and empty selections count as unanswered. A present value of the wrong type is invalid even when the question is optional.
 
 Visibility follows authored dependency order. Hidden answers cannot reveal descendants. Validate visible answers before pruning: `required`, `type`, `range`, `option`, `duplicate` and `maxLength` errors block saving. Hidden answers are pruned without errors. The interactive mobile pruning helper also removes stale options after a parent changes; that cleanup must not make an invalid incoming payload pass validation. The builder validates first and then prunes.
