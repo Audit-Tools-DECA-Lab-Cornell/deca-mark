@@ -12,6 +12,8 @@ branch switch, commit, push, deployment, existing database mutation, credential-
 or provider call was used. The subsequent user instruction authorized committing the
 completed work to `origin/master`; that Git operation does not apply the migration or deploy it.
 The [post-merge verification](post-merge.md) records integration with the remote authorization fix.
+The later, explicitly authorized [hosted rollout](hosted-rollout.md) supersedes the original
+remaining-release status below; the original audit remains untouched.
 Authorization and QGIS source/artifacts were preserved; relevant regressions remain.
 
 ## Reproduction and result
@@ -162,7 +164,7 @@ installation. API/SQL runs use no existing-database URL or password.
 
 ## Migration and release steps remaining
 
-`supabase/migrations/20261017013242_form_draft_revisions.sql` follows the current baseline
+`supabase/migrations/20261017050453_form_draft_revisions.sql` follows the current baseline
 and email-outbox migration, in line with the canonical migration policy: applied migrations
 remain unchanged. The new column initializes existing supported installations to revision 1;
 published definitions, historical attribution and current permissions remain intact.
