@@ -10,7 +10,8 @@ not just the audited commit, was inspected. The [complete changed-file list](cha
 is recorded alongside this evidence. During implementation and verification, no reset,
 branch switch, commit, push, deployment, existing database mutation, credential-file read
 or provider call was used. The subsequent user instruction authorized committing the
-completed work to local `master`; that Git operation does not apply the migration or deploy it.
+completed work to `origin/master`; that Git operation does not apply the migration or deploy it.
+The [post-merge verification](post-merge.md) records integration with the remote authorization fix.
 Authorization and QGIS source/artifacts were preserved; relevant regressions remain.
 
 ## Reproduction and result

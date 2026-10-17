@@ -1,6 +1,6 @@
 # Changed files
 
-Implementation and verification base: `6f1ac1fe730f8ea2514c56a888fe2ba553f3e920`; the initial worktree was clean. The completed work is committed to local `master` under the subsequent user instruction.
+Implementation and verification base: `6f1ac1fe730f8ea2514c56a888fe2ba553f3e920`; the initial worktree was clean. The completed work is committed to `origin/master` under the subsequent user instruction.
 
 - `backend/README.md`
 - `backend/src/fieldmaps_api/database_errors.py`
@@ -64,3 +64,7 @@ Implementation and verification base: `6f1ac1fe730f8ea2514c56a888fe2ba553f3e920`
 - `web/src/lib/api/mutations.ts`
 - `web/src/lib/api/schema.d.ts`
 - `web/tests/unit/forms-concurrency.test.mjs`
+- `docs/reviews/form-revisions-2026-10-16/merged-focused.txt`
+- `docs/reviews/form-revisions-2026-10-16/merged-mobile.txt`
+- `docs/reviews/form-revisions-2026-10-16/merged-sql-summary.txt`
+- `docs/reviews/form-revisions-2026-10-16/post-merge.md`

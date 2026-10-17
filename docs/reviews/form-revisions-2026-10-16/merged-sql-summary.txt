@@ -1,0 +1,35 @@
+ set_config
+------------
+
+(1 row)
+
+ assert_true
+-------------
+
+(1 row)
+
+ assert_true
+-------------
+
+(1 row)
+
+ assert_true
+-------------
+
+(1 row)
+
+ROLLBACK
+                                                result
+-------------------------------------------------------------------------------------------------------
+ Hosted assertions passed; synthetic accounts, memberships, observations, site and package rolled back
+(1 row)
+
+PASS: 2545 coordinate numbers match Node v24.19.0; geometry JCS digest matches.
+PASS: two managers race publication; one complete publication, one publication_conflict.
+PASS: concurrent identical retries return one durable result and create one version.
+PASS: two managers race whole-draft CAS; one revision advance and no lost update.
+PASS: two null-precondition first uploads race; exactly one version-1 package, snapshot and current pointer.
+PASS: publication commits before a waiting role revocation; one complete package survives.
+PASS: revocation commits first; waiting publication rechecks authority and leaves no package.
+PASS: account forgetting holds the caller lock; a waiting publication is refused without side effects.
+Current schema acceptance passed on disposable PostgreSQL 17/PostGIS; existing databases untouched.

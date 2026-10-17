@@ -118,7 +118,10 @@ def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
             assert str(body.package_id) == str(package.package_id)
             assert str(body.zone_id) == str(zone.zone_id)
         assert HistoricalObservationDetail.model_validate_json(inventory.content).geometry is None
-        exported = observer.get(f"{project}/observations/export", params={"format": "geojson"})
+        denied = observer.get(f"{project}/observations/export", params={"format": "geojson"})
+        assert denied.status_code == 403, denied.text
+    with live_api.client("viewer") as reader:
+        exported = reader.get(f"{project}/observations/export", params={"format": "geojson"})
         assert exported.status_code == 200, exported.text
         artifact = tmp_path / "live-export"
         artifact.mkdir(parents=True, exist_ok=True)
