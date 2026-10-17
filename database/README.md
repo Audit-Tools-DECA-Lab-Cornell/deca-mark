@@ -60,7 +60,7 @@ Restart the API after it succeeds. Do not use `pnpm db:reset` to repair this err
 
 ## Applying the form revision schema change
 
-`20261017013242_form_draft_revisions.sql` is a forward migration after the current
+`20261017050453_form_draft_revisions.sql` is a forward migration after the current
 baseline and email outbox migration. It initializes existing form rows at revision 1,
 advances draft revisions in the existing immutability trigger, and replaces the
 unconditional publication function with a required revision argument. It preserves
@@ -73,7 +73,8 @@ installation, the reviewed command is `pnpm dlx supabase@2.118.0 migration up --
 Coordinate migration, API and web rollout with form writes paused; older API publication
 calls deliberately no longer work. Existing editor tabs must reload. Hosted installations
 must first satisfy the current-baseline preflight and use the separately approved hosted
-migration/release workflow. No existing or hosted database was changed by this remediation.
+migration/release workflow. The explicitly authorized DECA Mark GIS application is
+recorded separately in the [hosted rollout evidence](../docs/reviews/form-revisions-2026-10-16/hosted-rollout.md).
 
 Disposable rehearsals accept `DECAMARK_REHEARSAL_IMAGE` to select an available local
 PostgreSQL 17/PostGIS image containing pg_cron. The default remains the pinned Supabase

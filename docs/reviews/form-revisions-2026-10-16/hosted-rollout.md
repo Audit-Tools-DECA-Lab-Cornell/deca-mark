@@ -41,8 +41,37 @@ served `bb38f134e461c3a5e5884c7adf23b5a228c8481a`. The schema was applied before
 pushing the matching code. During the transition the removed unconditional SQL
 publication entry point fails closed. Existing form tabs must reload.
 
-Application deployment and public smoke-check results will be recorded after the
-Git-triggered builds complete. Real-user hosted save/publication tests require an
-authorized user session; no signing credentials or real-user tokens were obtained.
-Atomicity and role behavior were tested in the disposable database suites recorded
-in the main evidence and post-merge verification.
+Git-triggered production deployments of `4075c5edddb60857dd9a73cdb2aaa1a03d1a4e7a`
+completed successfully:
+
+| Service | Deployment | Result |
+| --- | --- | --- |
+| Render API | `dep-db9g4flg1s2s73adl1i0` | Live at 05:06:53 UTC; approximately 46 seconds |
+| Vercel web | `dpl_GC1eETrVTCnXxWR4SoPrdtmv1f7X` | Production READY at 05:07:08 UTC; approximately 58 seconds |
+
+Read-only public smoke checks passed after deployment:
+
+- [API health](https://field-maps.onrender.com/health): 200, `running`.
+- [API readiness](https://field-maps.onrender.com/ready): 200, `ready`.
+- Hosted OpenAPI equals the generated repository contract as a JSON object;
+  form details include revision/ETag. Canonical sorted compact JSON SHA-256:
+  `57334fc69170440c4c903d87b67e5c567bd502becaf412640a61928554fa4a91`.
+- An unauthenticated forms request returns 401 with the expected sanitized error.
+- Browser preflight from `https://decamark.vercel.app` returns 200 and permits
+  `if-match`, authorization and content-type headers.
+- [Web](https://decamark.vercel.app) and [custom domain](https://maps.decalab-cornell.tech)
+  return 200 HTML; Vercel confirms both aliases point to the new production deployment.
+
+The subsequent evidence/documentation-only commit does not change application or
+migration SQL bytes. Both Git integrations will also be checked at the final pushed tip.
+
+Real-user hosted save/publication tests require an authorized user session; no signing
+credentials or real-user tokens were obtained. Atomicity and role behavior were tested
+in the disposable database suites recorded in the main evidence and post-merge verification.
+Those suites use PostgreSQL/PostGIS + pg_cron and synthetic Auth, rather than a complete
+Supabase Auth/Storage stack. The separate GIS acceptance fixture's preexisting missing
+Inventory binding remains documented in the main evidence; it is outside this change.
+
+No further schema migration is pending for this target. Other installations still need
+the forward migration through their own approved workflow. Existing editor tabs must
+reload; no automatic overwrite retry or old-client compatibility path is provided.
