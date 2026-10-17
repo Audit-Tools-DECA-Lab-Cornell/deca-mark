@@ -2,8 +2,8 @@ import { ApiError, apiRequestError, failedWrite } from "@/lib/api/errors";
 
 /**
  * What a form action answers. A failure says what did not happen and why, in DECA Mark's own words. A 422
- * also carries the API's field problems; a 409 says the form changed under the person, and the screen
- * offers a reload.
+ * also carries the API's field problems; lifecycle/revision conflicts and missing preconditions
+ * require an explicit reload or comparison.
  */
 export type FormActionFailure = {
 	readonly status: "failed";
@@ -18,7 +18,7 @@ export type FormActionResult<T extends object = Record<never, never>> =
 	| ({ readonly status: "done" } & T)
 	| FormActionFailure;
 
-export const CONFLICT_COPY = "Someone else changed this form. Reload to see the latest.";
+export const CONFLICT_COPY = "This draft changed. Reload and review the latest draft before trying again.";
 export const GONE_COPY = "This version is no longer there. It may have been discarded.";
 
 /**
@@ -29,7 +29,8 @@ export const GONE_COPY = "This version is no longer there. It may have been disc
  */
 export function failedChange(nothing: string, error: unknown): FormActionFailure {
 	const failure: ApiError = apiRequestError(error);
-	if (failure.status === 409) return { status: "failed", message: `${nothing} ${CONFLICT_COPY}`, conflict: true };
+	if (failure.status === 409 || failure.status === 412 || failure.status === 428)
+		return { status: "failed", message: `${nothing} ${CONFLICT_COPY}`, conflict: true };
 	if (failure.status === 404) return { status: "failed", message: `${nothing} ${GONE_COPY}` };
 	if (failure.code === "validation_failed")
 		return {

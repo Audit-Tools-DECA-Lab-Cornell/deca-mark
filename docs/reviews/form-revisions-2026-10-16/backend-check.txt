@@ -1,0 +1,8 @@
+
+> decamark@0.1.0 backend:check /workspace/deca-mark
+> make backend-check
+
+cd backend && uv run --frozen ruff check .
+All checks passed!
+cd backend && uv run --frozen basedpyright
+0 errors, 0 warnings, 0 notes

@@ -29,7 +29,7 @@ def signer() -> Signer:
 
 
 def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
-    live_api: LiveApi,
+    live_api: LiveApi, tmp_path: Path,
 ) -> None:
     # Given: a real current package with play and inventory bindings on an isolated API.
     assert disposable_database_selected(), "MOB-29 requires the isolated API rehearsal"
@@ -51,7 +51,10 @@ def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
         )
         assert created.status_code == 201, created.text
         play_form = str(document(created.content)["code"])
-        published = manager.post(f"{project}/form-versions/{play_form}/publish")
+        published = manager.post(
+            f"{project}/form-versions/{play_form}/publish",
+            headers={"If-Match": str(document(created.content)["etag"])},
+        )
         assert published.status_code == 200, published.text
         inventory_form = published_form(manager, site, "synthetic-mob29-inventory")
         response = manager.post(
@@ -117,7 +120,7 @@ def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
         assert HistoricalObservationDetail.model_validate_json(inventory.content).geometry is None
         exported = observer.get(f"{project}/observations/export", params={"format": "geojson"})
         assert exported.status_code == 200, exported.text
-        artifact = ROOT / "docs/reviews/mob29-2026-10-15/live-export"
+        artifact = tmp_path / "live-export"
         artifact.mkdir(parents=True, exist_ok=True)
         with ZipFile(BytesIO(exported.content)) as archive:
             for name in (

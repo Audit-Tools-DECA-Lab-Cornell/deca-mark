@@ -109,8 +109,8 @@ export async function main(args = process.argv.slice(2)) {
     }
     const session = await request(`${authUrl}/auth/v1/token?grant_type=password`, { apikey: publicKey },
       "POST", { email, password });
-    const api = (path, method = "GET", body) => request(`${apiUrl}${path}`,
-      { Authorization: `Bearer ${session.access_token}` }, method, body);
+    const api = (path, method = "GET", body, extraHeaders = {}) => request(`${apiUrl}${path}`,
+      { Authorization: `Bearer ${session.access_token}`, ...extraHeaders }, method, body);
     await api("/v1/me");
     await api("/v1/me", "PATCH", { display_name: `Local ${role}`, observer_initials: role === "observer" ? "OB" : "QA" });
     accounts[role] = { email, id: user.id, api };
@@ -145,7 +145,7 @@ export async function main(args = process.argv.slice(2)) {
     await api(`${base}/forms`, "POST", { code: "workspace-check", name: "Workspace check", definition });
   }
   let version = await api(`${base}/form-versions/workspace-check-v1`);
-  if (version.state === "draft") version = await api(`${base}/form-versions/${version.code}/publish`, "POST");
+  if (version.state === "draft") version = await api(`${base}/form-versions/${version.code}/publish`, "POST", undefined, { "If-Match": version.etag });
   if (version.state !== "published") throw new Error("The fixture form was retired; seed does not rewrite it.");
   forms = await api(`${base}/forms`);
   if (forms.find((form) => form.code === "workspace-check").versions.length === 1) {

@@ -41,6 +41,7 @@ export type CollectorContext = {
 };
 
 export type EditorVersion = {
+	etag: string;
 	code: string;
 	state: VersionState;
 	formCode: string;
@@ -86,6 +87,7 @@ export function DraftEditorScreen({
 	const editable = canManage && version.state === "draft";
 	const readOnly = !editable;
 
+	const [etag, setEtag] = useState(version.etag);
 	const [saved, setSaved] = useState(definition);
 	const [raw, setRaw] = useState(definition);
 	const [chosen, setChosen] = useState<string | null>(null);
@@ -141,7 +143,7 @@ export function DraftEditorScreen({
 	}
 
 	function save(afterwards?: () => void) {
-		if (!editable || pending || blocker) return;
+		if (!editable || pending || blocker || failure?.conflict) return;
 		const sent = raw;
 		setFailure(null);
 		start(async () => {
@@ -149,10 +151,12 @@ export function DraftEditorScreen({
 				org,
 				project,
 				version: version.code,
+				etag,
 				definition: JSON.parse(JSON.stringify(sent)) as Record<string, unknown>
 			});
 			if (result.status === "done") {
 				setSaved(sent);
+				setEtag(result.etag);
 				setRefused({});
 				setGeneral([]);
 				setSavedOnce(true);
@@ -237,9 +241,12 @@ export function DraftEditorScreen({
 								variant="primary"
 								icon="check"
 								busy={pending}
-								disabled={!dirty || blocker !== null}
+								disabled={!dirty || blocker !== null || failure?.conflict}
 								disabledReason={
-									blocker ?? (savedOnce ? "All changes saved." : "No changes since the last save.")
+									failure?.conflict
+										? "Reload and reconcile the changed draft before saving."
+										: (blocker ??
+											(savedOnce ? "All changes saved." : "No changes since the last save."))
 								}
 								onClick={() => save()}>
 								Save draft
@@ -280,7 +287,17 @@ export function DraftEditorScreen({
 					{baseProblem}
 				</Note>
 			)}
-			<ActionNote failure={failure} onReload={() => window.location.reload()} />
+			<ActionNote
+				failure={failure}
+				reloadLabel="Open latest draft"
+				onReload={() => window.open(window.location.href, "_blank", "noopener")}
+			/>
+			{failure?.conflict && (
+				<Note tone="waiting">
+					Your unsaved edits are still here. Open the latest draft in another tab to compare. Reload this page
+					before saving again.
+				</Note>
+			)}
 			{general.length > 0 && (
 				<Note tone="attention" title="The form checker found problems.">
 					{general.map(problem => (
@@ -404,8 +421,14 @@ export function DraftEditorScreen({
 							variant="ink"
 							icon="check"
 							busy={pending}
-							disabled={blocker !== null}
-							disabledReason={blocker ? `${blocker} Or leave without saving.` : undefined}
+							disabled={blocker !== null || failure?.conflict}
+							disabledReason={
+								failure?.conflict
+									? "Reload and reconcile the changed draft before saving."
+									: blocker
+										? `${blocker} Or leave without saving.`
+										: undefined
+							}
 							onClick={() => save(() => guard.leave())}>
 							Save and leave
 						</Button>

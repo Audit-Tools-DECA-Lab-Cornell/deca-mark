@@ -1,0 +1,13 @@
+
+> decamark-mobile@0.1.0 test /workspace/deca-mark/mobile
+> vitest run src/data/api/errors.test.ts src/forms/contracts.test.ts
+
+
+ RUN  v4.1.11 /workspace/deca-mark/mobile
+
+
+ Test Files  2 passed (2)
+      Tests  88 passed (88)
+   Start at  01:49:23
+   Duration  871ms (transform 91ms, setup 0ms, import 299ms, tests 155ms, environment 0ms)
+

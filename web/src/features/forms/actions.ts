@@ -102,40 +102,43 @@ export async function startDraftAction(
 	});
 }
 
-const saveDraftInput = z.object({ ...place, version: versionCode, definition });
+const conditionalVersionInput = z.object({ ...place, version: versionCode, etag: z.string().min(1).max(200) });
+const saveDraftInput = conditionalVersionInput.extend({ definition });
 
 /** Replaces the draft's definition with the editor's. A refused definition comes back with its problems. */
-export async function saveDraftAction(input: z.input<typeof saveDraftInput>): Promise<FormActionResult> {
+export async function saveDraftAction(
+	input: z.input<typeof saveDraftInput>
+): Promise<FormActionResult<{ etag: string; revision: number }>> {
 	const nothing = "Nothing was saved.";
 	const parsed = saveDraftInput.safeParse(input);
 	if (!parsed.success) return refused(nothing);
-	const { org, project, version, definition: body } = parsed.data;
+	const { org, project, version, etag, definition: body } = parsed.data;
 	return asManager(org, project, nothing, async projectId => {
-		await saveDraft(projectId, version, body);
-		return {};
+		const saved = await saveDraft(projectId, version, body, etag);
+		return { etag: saved.etag, revision: saved.revision };
 	});
 }
 
 const versionInput = z.object({ ...place, version: versionCode });
 
-export async function discardDraftAction(input: z.input<typeof versionInput>): Promise<FormActionResult> {
+export async function discardDraftAction(input: z.input<typeof conditionalVersionInput>): Promise<FormActionResult> {
 	const nothing = "Nothing was discarded.";
-	const parsed = versionInput.safeParse(input);
+	const parsed = conditionalVersionInput.safeParse(input);
 	if (!parsed.success) return refused(nothing);
-	const { org, project, version } = parsed.data;
+	const { org, project, version, etag } = parsed.data;
 	return asManager(org, project, nothing, async projectId => {
-		await discardDraft(projectId, version);
+		await discardDraft(projectId, version, etag);
 		return {};
 	});
 }
 
-export async function publishVersionAction(input: z.input<typeof versionInput>): Promise<FormActionResult> {
+export async function publishVersionAction(input: z.input<typeof conditionalVersionInput>): Promise<FormActionResult> {
 	const nothing = "Nothing was published.";
-	const parsed = versionInput.safeParse(input);
+	const parsed = conditionalVersionInput.safeParse(input);
 	if (!parsed.success) return refused(nothing);
-	const { org, project, version } = parsed.data;
+	const { org, project, version, etag } = parsed.data;
 	return asManager(org, project, nothing, async projectId => {
-		await publishVersion(projectId, version);
+		await publishVersion(projectId, version, etag);
 		return {};
 	});
 }

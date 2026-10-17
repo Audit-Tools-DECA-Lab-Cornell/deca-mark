@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fieldmaps_api.domain.forms import FormDefinition, definition_format
 from fieldmaps_api.errors import ConflictError, NotFoundError, ValidationFailedError
+from fieldmaps_api.form_preconditions import require_form_etag, revision_conflict
 from fieldmaps_api.form_schemas import (
     DraftCreate,
     DraftUpdate,
@@ -136,41 +137,58 @@ async def create_draft(
 
 
 async def update_draft(
-    session: AsyncSession, project_id: UUID, code: str, payload: DraftUpdate
+    session: AsyncSession, project_id: UUID, code: str, payload: DraftUpdate, etag: str | None
 ) -> FormVersionDetail:
     await tenancy_db.require_manager(session, tenancy_queries.PROJECT_MANAGER, project_id)
+    expected_id, revision = require_form_etag(etag)
     current = await get_version(session, project_id, code)
     if current.state != "draft":
         message = f"{code} is {current.state}; start a new draft to change it"
         raise ConflictError(message)
+    if current.version_id != expected_id or current.revision != revision:
+        raise revision_conflict()
     definition = checked_definition(payload.definition, code, "draft")
-    if not await forms.update_draft(session, project_id, code, definition):
+    if not await forms.update_draft(session, project_id, code, definition, expected_id, revision):
         # Another manager can publish or discard after the initial read. Distinguish a
         # surviving, frozen version from a missing one; neither is a successful save.
-        await get_version(session, project_id, code)
+        latest = await get_version(session, project_id, code)
+        if latest.state == "draft":
+            raise revision_conflict()
         message = f"{code} changed while you were saving; reload it before trying again"
         raise ConflictError(message)
     return await get_version(session, project_id, code)
 
 
-async def discard_draft(session: AsyncSession, project_id: UUID, code: str) -> None:
+async def discard_draft(
+    session: AsyncSession, project_id: UUID, code: str, etag: str | None
+) -> None:
     await tenancy_db.require_manager(session, tenancy_queries.PROJECT_MANAGER, project_id)
+    expected_id, revision = require_form_etag(etag)
     current = await get_version(session, project_id, code)
     if current.state != "draft":
         message = f"{code} is {current.state}; only a draft can be discarded"
         raise ConflictError(message)
-    if not await forms.discard_draft(session, project_id, code):
-        await get_version(session, project_id, code)
+    if current.version_id != expected_id or current.revision != revision:
+        raise revision_conflict()
+    if not await forms.discard_draft(session, project_id, code, expected_id, revision):
+        latest = await get_version(session, project_id, code)
+        if latest.state == "draft":
+            raise revision_conflict()
         message = f"{code} changed while you were discarding it; reload it before trying again"
         raise ConflictError(message)
 
 
-async def publish(session: AsyncSession, project_id: UUID, code: str) -> FormVersionDetail:
+async def publish(
+    session: AsyncSession, project_id: UUID, code: str, etag: str | None
+) -> FormVersionDetail:
     await tenancy_db.require_manager(session, tenancy_queries.PROJECT_MANAGER, project_id)
+    expected_id, revision = require_form_etag(etag)
     current = await get_version(session, project_id, code)
+    if current.version_id != expected_id or current.revision != revision:
+        raise revision_conflict()
     # Checked again at publication: what devices download must parse exactly as uploads are checked.
     checked_definition(current.definition, code, "published")
-    await forms.publish(session, project_id, current.version_id)
+    await forms.publish(session, project_id, current.version_id, revision)
     return await get_version(session, project_id, code)
 
 

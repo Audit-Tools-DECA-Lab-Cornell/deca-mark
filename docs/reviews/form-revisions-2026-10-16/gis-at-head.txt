@@ -1,0 +1,41 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_v1_v2_gis_readback_matches_signed_exports ________________
+
+api_client = <starlette.testclient.TestClient object at 0x7f11095b97f0>
+zone_site = ZoneSite(tenant=Tenant(org=UUID('f28c8a3e-43a2-410c-a570-55f171e684d8'), project=UUID('8557c36a-cc20-486f-a353-80ec0a5...3'), 'viewer': UUID('676697dd-4203-497e-b810-4f7580bc1cf9')}), package_id=UUID('9dd377e1-58d4-4f65-afad-007b55fec85c'))
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f11099342f0>)
+
+    def test_v1_v2_gis_readback_matches_signed_exports(
+        api_client: TestClient, zone_site: ZoneSite, signer: Signer
+    ) -> None:
+        # Given a real first package and a deliberately smaller successor.
+        assert disposable_database_selected(), "GIS acceptance requires its disposable database"
+        site = zone_site
+        initial = api_client.get(f"{site.project_url}/packages/{site.package_id}")
+        assert initial.status_code == 200, initial.text
+        manifest = document(initial.content)["manifest"]
+        assert isinstance(manifest, dict)
+        bindings = PackageForms.model_validate(manifest["forms"])
+>       assert bindings.inventory is not None, "The synthetic fixture must bind Inventory explicitly"
+E       AssertionError: The synthetic fixture must bind Inventory explicitly
+E       assert None is not None
+E        +  where None = PackageForms(play=FormBinding(form_version_id=UUID('d33fd07b-5231-4831-bc36-6677d6ee7b55'), form_version='shell-v1'), inventory=None).inventory
+
+work/form-revisions/head-source/backend/tests/gis_current_acceptance.py:47: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"b44200891d9942aaa2a9def0afa48c55","method":"POST","status":201,"duration_ms":710,"operation":"createPackage"}
+----------------------------- Captured stderr call -----------------------------
+{"event":"http_response","request_id":"b794f793e39a43228cc716da8930d435","method":"GET","status":200,"duration_ms":33,"operation":"getPackage"}
+------------------------------ Captured log call -------------------------------
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"b794f793e39a43228cc716da8930d435","method":"GET","status":200,"duration_ms":33,"operation":"getPackage"}
+=============================== warnings summary ===============================
+backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED work/form-revisions/head-source/backend/tests/gis_current_acceptance.py::test_v1_v2_gis_readback_matches_signed_exports
+1 failed, 1 warning in 1.50s

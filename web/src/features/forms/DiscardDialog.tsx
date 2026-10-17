@@ -26,7 +26,7 @@ export function DiscardDialog({
 }: {
 	org: string;
 	project: string;
-	version: Pick<VersionRow, "code" | "questionCount">;
+	version: Pick<VersionRow, "code" | "questionCount" | "etag">;
 	size?: ButtonProps["size"];
 	/** Called after the draft is gone, when the page showing it should move on. */
 	onDiscarded?: () => void;
@@ -39,7 +39,7 @@ export function DiscardDialog({
 
 	function discard() {
 		start(async () => {
-			const result = await discardDraftAction({ org, project, version: version.code });
+			const result = await discardDraftAction({ org, project, version: version.code, etag: version.etag });
 			if (result.status === "failed") return setFailure(result);
 			setOpen(false);
 			toast({ title: `${version.code} is discarded`, description: "The draft is deleted.", tone: "saved" });

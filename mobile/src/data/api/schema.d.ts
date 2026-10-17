@@ -260,7 +260,7 @@ export interface paths {
         get: operations["getFormVersion"];
         /**
          * Draft Save
-         * @description Replace a draft's definition. Published and retired versions never change.
+         * @description Replace the expected draft revision (If-Match). Missing: 428; stale: 412.
          */
         put: operations["saveFormDraft"];
         post?: never;
@@ -282,7 +282,7 @@ export interface paths {
         put?: never;
         /**
          * Version Publish
-         * @description Freeze a draft so devices can collect with it. It can never change afterwards.
+         * @description Freeze exactly the reviewed If-Match revision. Missing: 428; stale: 412.
          */
         post: operations["publishFormVersion"];
         delete?: never;
@@ -1211,6 +1211,8 @@ export interface components {
             definition: {
                 [key: string]: components["schemas"]["JsonValue"];
             };
+            /** Etag */
+            readonly etag: string;
             /** Form Code */
             form_code: string;
             /**
@@ -1224,6 +1226,8 @@ export interface components {
             published_at: string | null;
             /** Question Count */
             question_count: number;
+            /** Revision */
+            revision: number;
             state: components["schemas"]["VersionState"];
             /** Title */
             title: string | null;
@@ -1244,10 +1248,14 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Etag */
+            readonly etag: string;
             /** Published At */
             published_at: string | null;
             /** Question Count */
             question_count: number;
+            /** Revision */
+            revision: number;
             state: components["schemas"]["VersionState"];
             /** Title */
             title: string | null;
@@ -5743,7 +5751,10 @@ export interface operations {
     saveFormDraft: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Required strong ETag of the loaded or reviewed form draft */
+                "if-match"?: string | null;
+            };
             path: {
                 project_id: string;
                 version_code: string;
@@ -5896,7 +5907,10 @@ export interface operations {
     discardFormDraft: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Required strong ETag of the loaded or reviewed form draft */
+                "if-match"?: string | null;
+            };
             path: {
                 project_id: string;
                 version_code: string;
@@ -6043,7 +6057,10 @@ export interface operations {
     publishFormVersion: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Required strong ETag of the loaded or reviewed form draft */
+                "if-match"?: string | null;
+            };
             path: {
                 project_id: string;
                 version_code: string;

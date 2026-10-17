@@ -1,0 +1,40 @@
+
+> decamark@0.1.0 contracts:generate /workspace/deca-mark
+> make -C backend openapi && pnpm --dir web api:types && pnpm --dir mobile api:types
+
+make: Entering directory '/workspace/deca-mark/backend'
+uv run --frozen --no-sync --offline --directory . -- python -m fieldmaps_api.openapi > ../contracts/openapi.json.tmp
+mv ../contracts/openapi.json.tmp ../contracts/openapi.json
+make: Leaving directory '/workspace/deca-mark/backend'
+
+> decamark-web@0.1.0 api:types /workspace/deca-mark/web
+> openapi-typescript ../contracts/openapi.json -o src/lib/api/schema.d.ts
+
+✨ openapi-typescript 7.13.0
+🚀 ../contracts/openapi.json → src/lib/api/schema.d.ts [992.7ms]
+
+> decamark-mobile@0.1.0 api:types /workspace/deca-mark/mobile
+> openapi-typescript ../contracts/openapi.json -o src/data/api/schema.d.ts
+
+✨ openapi-typescript 7.13.0
+🚀 ../contracts/openapi.json → src/data/api/schema.d.ts [911.4ms]
+
+> decamark@0.1.0 contracts:generate /workspace/deca-mark
+> make -C backend openapi && pnpm --dir web api:types && pnpm --dir mobile api:types
+
+make: Entering directory '/workspace/deca-mark/backend'
+uv run --frozen --no-sync --offline --directory . -- python -m fieldmaps_api.openapi > ../contracts/openapi.json.tmp
+mv ../contracts/openapi.json.tmp ../contracts/openapi.json
+make: Leaving directory '/workspace/deca-mark/backend'
+
+> decamark-web@0.1.0 api:types /workspace/deca-mark/web
+> openapi-typescript ../contracts/openapi.json -o src/lib/api/schema.d.ts
+
+✨ openapi-typescript 7.13.0
+🚀 ../contracts/openapi.json → src/lib/api/schema.d.ts [630.6ms]
+
+> decamark-mobile@0.1.0 api:types /workspace/deca-mark/mobile
+> openapi-typescript ../contracts/openapi.json -o src/data/api/schema.d.ts
+
+✨ openapi-typescript 7.13.0
+🚀 ../contracts/openapi.json → src/data/api/schema.d.ts [821.5ms]

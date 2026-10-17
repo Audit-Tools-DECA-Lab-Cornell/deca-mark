@@ -58,6 +58,28 @@ pnpm dlx supabase@2.118.0 migration up --local
 This applies pending local migrations without a reset and preserves existing records.
 Restart the API after it succeeds. Do not use `pnpm db:reset` to repair this error.
 
+## Applying the form revision schema change
+
+`20261017013242_form_draft_revisions.sql` is a forward migration after the current
+baseline and email outbox migration. It initializes existing form rows at revision 1,
+advances draft revisions in the existing immutability trigger, and replaces the
+unconditional publication function with a required revision argument. It preserves
+published definitions, attribution, records, RLS and grants; no data reset is needed
+for an installation already on the supported baseline.
+
+Apply this pending file through the normal migration workflow only when the target
+installation is explicitly selected and authorized. For an existing **local** Supabase
+installation, the reviewed command is `pnpm dlx supabase@2.118.0 migration up --local`.
+Coordinate migration, API and web rollout with form writes paused; older API publication
+calls deliberately no longer work. Existing editor tabs must reload. Hosted installations
+must first satisfy the current-baseline preflight and use the separately approved hosted
+migration/release workflow. No existing or hosted database was changed by this remediation.
+
+Disposable rehearsals accept `DECAMARK_REHEARSAL_IMAGE` to select an available local
+PostgreSQL 17/PostGIS image containing pg_cron. The default remains the pinned Supabase
+image. Alternative-image runs use synthetic Auth tables and do not prove full Supabase
+Auth/Storage service behavior. See [form revision evidence](../docs/reviews/form-revisions-2026-10-16/README.md).
+
 ## Schema and access
 
 For browser acceptance data after starting the local Auth-connected API on port 8001, run

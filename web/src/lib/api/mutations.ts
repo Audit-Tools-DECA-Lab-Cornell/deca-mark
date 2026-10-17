@@ -177,33 +177,37 @@ export function createDraft(
 	);
 }
 
-/** Replaces a draft's definition. 422 with field problems when the definition is refused. */
+/** Replaces the loaded draft revision. 412 on conflict; 422 with refused definition problems. */
 export function saveDraft(
 	projectId: string,
 	versionCode: string,
-	definition: RawDefinition
+	definition: RawDefinition,
+	etag: string
 ): Promise<FormVersionDetail> {
 	return call(api =>
 		api.PUT("/v1/projects/{project_id}/form-versions/{version_code}", {
 			params: { path: { project_id: projectId, version_code: versionCode } },
-			body: { definition }
+			body: { definition },
+			headers: { "If-Match": etag }
 		})
 	);
 }
 
-/** Deletes a draft. 409 when it was published meanwhile. */
-export function discardDraft(projectId: string, versionCode: string): Promise<void> {
+/** Deletes the loaded draft revision. 412 when changed; 409 when published meanwhile. */
+export function discardDraft(projectId: string, versionCode: string, etag: string): Promise<void> {
 	return callEmpty(api =>
 		api.DELETE("/v1/projects/{project_id}/form-versions/{version_code}", {
+			headers: { "If-Match": etag },
 			params: { path: { project_id: projectId, version_code: versionCode } }
 		})
 	);
 }
 
-/** Freezes a draft for collection. Older published versions stay published until retired. */
-export function publishVersion(projectId: string, versionCode: string): Promise<FormVersionDetail> {
+/** Freezes the reviewed ETag for collection. Never fetch a fresher precondition here. */
+export function publishVersion(projectId: string, versionCode: string, etag: string): Promise<FormVersionDetail> {
 	return call(api =>
 		api.POST("/v1/projects/{project_id}/form-versions/{version_code}/publish", {
+			headers: { "If-Match": etag },
 			params: { path: { project_id: projectId, version_code: versionCode } }
 		})
 	);

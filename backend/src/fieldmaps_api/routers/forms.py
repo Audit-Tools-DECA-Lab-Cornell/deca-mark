@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, Header, Path, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.deps import Authentication, user_transaction
@@ -22,6 +22,15 @@ def create_router(
     sessions: async_sessionmaker[AsyncSession], authenticate: Authentication
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
+
+    def precondition(
+        request: Request,
+        if_match: Annotated[
+            str | None,
+            Header(description="Required strong ETag of the loaded or reviewed form draft"),
+        ] = None,
+    ) -> str | None:
+        return ",".join(request.headers.getlist("if-match")) or if_match
 
     @router.get("/v1/projects/{project_id}/forms", operation_id="listForms")
     async def form_list(
@@ -60,25 +69,32 @@ def create_router(
         "/v1/projects/{project_id}/form-versions/{version_code}", operation_id="getFormVersion"
     )
     async def version_detail(
+        response: Response,
         project_id: UUID,
         version_code: VersionCode,
         user_id: Annotated[UUID, Depends(authenticate)],
     ) -> FormVersionDetail:
         async with user_transaction(sessions, user_id) as session:
-            return await forms.get_version(session, project_id, version_code)
+            result = await forms.get_version(session, project_id, version_code)
+            response.headers["ETag"] = result.etag
+            return result
 
     @router.put(
         "/v1/projects/{project_id}/form-versions/{version_code}", operation_id="saveFormDraft"
     )
-    async def draft_save(
+    async def draft_save(  # noqa: PLR0913, PLR0917 - HTTP inputs and response headers
+        response: Response,
         project_id: UUID,
         version_code: VersionCode,
         payload: DraftUpdate,
         user_id: Annotated[UUID, Depends(authenticate)],
+        if_match: Annotated[str | None, Depends(precondition)],
     ) -> FormVersionDetail:
-        """Replace a draft's definition. Published and retired versions never change."""
+        """Replace the expected draft revision (If-Match). Missing: 428; stale: 412."""
         async with user_transaction(sessions, user_id) as session:
-            return await forms.update_draft(session, project_id, version_code, payload)
+            result = await forms.update_draft(session, project_id, version_code, payload, if_match)
+            response.headers["ETag"] = result.etag
+            return result
 
     @router.delete(
         "/v1/projects/{project_id}/form-versions/{version_code}",
@@ -90,9 +106,10 @@ def create_router(
         project_id: UUID,
         version_code: VersionCode,
         user_id: Annotated[UUID, Depends(authenticate)],
+        if_match: Annotated[str | None, Depends(precondition)],
     ) -> Response:
         async with user_transaction(sessions, user_id) as session:
-            await forms.discard_draft(session, project_id, version_code)
+            await forms.discard_draft(session, project_id, version_code, if_match)
         return Response(status_code=204)
 
     @router.post(
@@ -103,10 +120,11 @@ def create_router(
         project_id: UUID,
         version_code: VersionCode,
         user_id: Annotated[UUID, Depends(authenticate)],
+        if_match: Annotated[str | None, Depends(precondition)],
     ) -> FormVersionDetail:
-        """Freeze a draft so devices can collect with it. It can never change afterwards."""
+        """Freeze exactly the reviewed If-Match revision. Missing: 428; stale: 412."""
         async with user_transaction(sessions, user_id) as session:
-            return await forms.publish(session, project_id, version_code)
+            return await forms.publish(session, project_id, version_code, if_match)
 
     @router.post(
         "/v1/projects/{project_id}/form-versions/{version_code}/retire",

@@ -126,7 +126,7 @@ SELECT pg_temp.assert_true(EXISTS (SELECT FROM pg_policies WHERE schemaname = 'f
     AND tablename = 'form_versions' AND policyname = 'assigned_forms'),
   'members read published versions only; drafts stay with managers');
 SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.publish_form_version(
-  '10000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000004')$$,
+  '10000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000004', 2)$$,
   'FM006', 'publishing requires identity');
 SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.ensure_profile(NULL)$$, 'FM006', 'tenancy functions require identity');
 SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.ensure_profile_row()$$, '42501', 'internal membership helper is not callable');

@@ -1,0 +1,2 @@
+save A=200, stale save B=200, final title='Janet zone inventory'
+publish old review=200, published title='Not reviewed'

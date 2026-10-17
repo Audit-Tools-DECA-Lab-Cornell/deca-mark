@@ -8,7 +8,7 @@ SELECT json_build_object('form_id', f.id, 'code', f.code, 'name', f.name,
   'created_at', f.created_at,
   'versions', coalesce((SELECT json_agg(json_build_object(
       'version_id', v.id, 'code', v.code, 'version', v.version, 'state', v.state,
-      'title', v.definition ->> 'title',
+      'revision', v.revision, 'title', v.definition ->> 'title',
       'question_count', CASE WHEN jsonb_typeof(v.definition -> 'questions') = 'array'
         THEN jsonb_array_length(v.definition -> 'questions') ELSE 0 END,
       'created_at', v.created_at, 'published_at', v.published_at) ORDER BY v.version DESC)
@@ -19,7 +19,7 @@ FROM fieldmaps.forms f WHERE f.project_id = :project ORDER BY f.name, f.id
 VERSION: Final = text("""
 SELECT json_build_object(
   'version_id', v.id, 'code', v.code, 'version', v.version, 'state', v.state,
-  'title', v.definition ->> 'title',
+  'revision', v.revision, 'title', v.definition ->> 'title',
   'question_count', CASE WHEN jsonb_typeof(v.definition -> 'questions') = 'array'
     THEN jsonb_array_length(v.definition -> 'questions') ELSE 0 END,
   'created_at', v.created_at, 'published_at', v.published_at,
@@ -57,14 +57,16 @@ VALUES (:id, :organization, :project, :form, :version, :code, CAST(:definition A
 UPDATE_DRAFT: Final = text("""
 UPDATE fieldmaps.form_versions SET definition = CAST(:definition AS jsonb)
 WHERE project_id = :project AND code = :code AND state = 'draft'
+  AND id = :version_id AND revision = :revision
 RETURNING id
 """)
 
 DISCARD_DRAFT: Final = text("""
 DELETE FROM fieldmaps.form_versions
 WHERE project_id = :project AND code = :code AND state = 'draft'
+  AND id = :version_id AND revision = :revision
 RETURNING id
 """)
 
-PUBLISH: Final = text("SELECT fieldmaps_private.publish_form_version(:project, :id)")
+PUBLISH: Final = text("SELECT fieldmaps_private.publish_form_version(:project, :id, :revision)")
 RETIRE: Final = text("SELECT fieldmaps_private.retire_form_version(:project, :id)")

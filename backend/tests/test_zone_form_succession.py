@@ -51,7 +51,10 @@ def published_form(client: TestClient | httpx2.Client, site: ZoneSite, code: str
     )
     assert created.status_code == 201, created.text
     version = str(document(created.content)["code"])
-    result = client.post(f"{site.project_url}/form-versions/{version}/publish")
+    result = client.post(
+        f"{site.project_url}/form-versions/{version}/publish",
+        headers={"If-Match": str(document(created.content)["etag"])},
+    )
     assert result.status_code == 200, result.text
     return version
 

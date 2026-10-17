@@ -1,0 +1,16 @@
+
+> decamark@0.1.0 web:check /workspace/deca-mark
+> pnpm --dir web check
+
+
+> decamark-web@0.1.0 check /workspace/deca-mark/web
+> pnpm typecheck && pnpm lint
+
+
+> decamark-web@0.1.0 typecheck /workspace/deca-mark/web
+> tsc --noEmit
+
+
+> decamark-web@0.1.0 lint /workspace/deca-mark/web
+> eslint
+

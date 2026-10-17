@@ -33,6 +33,18 @@ OpenAPI generation needs the installed backend dependencies and each app's own `
 
 Each app's adjacent `errors.ts` parses error envelopes into typed errors and local user copy. Error codes determine retry, sign-in and rejection, with transport fallbacks for 401 and 5xx. Unknown or malformed responses remain retryable; on mobile this preserves the local record, including when an older API returns an unstructured 403/409/422. Known validation/access/conflict codes remain rejected. Run `pnpm --dir web test:api-errors` and `pnpm mobile:test` to verify these decisions.
 
+## Form lifecycle preconditions
+
+`FormVersionSummary` and `FormVersionDetail` expose `revision` and `etag`. Draft save,
+discard and publication require one strong `If-Match: "form-draft:<version UUID>:<revision>"`
+from the loaded definition/review. Detail reads and saves also expose the ETag header.
+The definition body remains `DraftUpdate { definition }`; the revision precondition is
+an HTTP header. A save returns the next revision/ETag. Missing or malformed values are
+428 (`precondition_required`); stale identity/revision is 412 (`revision_conflict`).
+Published/retired versions retain lifecycle protection. Keep the reviewed precondition
+through publication and require explicit review after conflict; no automatic refresh/retry.
+Regenerate OpenAPI and both TypeScript declarations with `pnpm contracts:generate`.
+
 ## Definition rules
 
 The input schema accepts omitted defaults and unknown properties. Parsing fills the defaults and discards unknown properties. JSON Schema checks structure; it does not replace `parseFormDefinition`'s reference, cycle, ordering and export-column checks. Server parity requires those checks too.

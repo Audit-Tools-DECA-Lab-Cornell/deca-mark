@@ -175,7 +175,10 @@ def test_signed_canonical_dynamic_export_when_historical_form_is_published(
         )
         assert created.status_code == 201, created.text
         code = str(document(created.content)["code"])
-        published = manager.post(site.project_url + f"/form-versions/{code}/publish")
+        published = manager.post(
+            site.project_url + f"/form-versions/{code}/publish",
+            headers={"If-Match": str(document(created.content)["etag"])},
+        )
         assert published.status_code == 200, published.text
         body = successor_body(manager, site, {"package_id": str(live_bound_site.package)}, code)
         package = manager.post(site.project_url + "/packages", json=body)

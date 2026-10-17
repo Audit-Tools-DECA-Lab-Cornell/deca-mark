@@ -95,25 +95,41 @@ async def insert_draft(  # noqa: PLR0913 - one row's columns, named at the call 
     )
 
 
-async def update_draft(
-    session: AsyncSession, project_id: UUID, code: str, definition: dict[str, JsonValue]
+async def update_draft(  # noqa: PLR0913, PLR0917 - definition and its atomic precondition
+    session: AsyncSession,
+    project_id: UUID,
+    code: str,
+    definition: dict[str, JsonValue],
+    version_id: UUID,
+    revision: int,
 ) -> bool:
     result: Result[tuple[UUID]] = await session.execute(
         queries.UPDATE_DRAFT,
-        {"project": project_id, "code": code, "definition": json.dumps(definition, sort_keys=True)},
+        {
+            "project": project_id,
+            "code": code,
+            "definition": json.dumps(definition, sort_keys=True),
+            "version_id": version_id,
+            "revision": revision,
+        },
     )
     return result.scalar_one_or_none() is not None
 
 
-async def discard_draft(session: AsyncSession, project_id: UUID, code: str) -> bool:
+async def discard_draft(
+    session: AsyncSession, project_id: UUID, code: str, version_id: UUID, revision: int
+) -> bool:
     result: Result[tuple[UUID]] = await session.execute(
-        queries.DISCARD_DRAFT, {"project": project_id, "code": code}
+        queries.DISCARD_DRAFT,
+        {"project": project_id, "code": code, "version_id": version_id, "revision": revision},
     )
     return result.scalar_one_or_none() is not None
 
 
-async def publish(session: AsyncSession, project_id: UUID, version_id: UUID) -> None:
-    await session.execute(queries.PUBLISH, {"project": project_id, "id": version_id})
+async def publish(session: AsyncSession, project_id: UUID, version_id: UUID, revision: int) -> None:
+    await session.execute(
+        queries.PUBLISH, {"project": project_id, "id": version_id, "revision": revision}
+    )
 
 
 async def retire(session: AsyncSession, project_id: UUID, version_id: UUID) -> None:

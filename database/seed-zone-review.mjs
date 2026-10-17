@@ -48,7 +48,7 @@ export async function main(args = process.argv.slice(2)) {
     if (!(await api(`${base}/forms`)).some(item => item.code === code))
       await api(`${base}/forms`, "POST", { code, name: `Synthetic ${kind} form`, definition: definition(kind) });
     let version = await api(`${base}/form-versions/${code}-v1`);
-    if (version.state === "draft") version = await api(`${base}/form-versions/${code}-v1/publish`, "POST");
+    if (version.state === "draft") version = await api(`${base}/form-versions/${code}-v1/publish`, "POST", undefined, { "If-Match": version.etag });
     assert.equal(version.state, "published", "Fixture form was retired; seed will not rewrite it");
   }
   const sites = {};

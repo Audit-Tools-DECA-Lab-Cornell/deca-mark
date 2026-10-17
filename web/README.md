@@ -38,6 +38,14 @@ The route tree is in [`PLAN.md`](PLAN.md#target-route-tree). Old paths (`/overvi
 
 Filters and the selected record live in the URL, so a filtered view can be sent to a colleague, opened in a second tab, and undone with the back button. A link replaces saved named views.
 
+Form editing carries the loaded draft ETag through save and discard. Each successful
+save replaces the editor's ETag with the returned value. The publication review retains
+its own ETag; publication never reads a newer draft just to obtain a precondition.
+A conflict keeps unsaved wording in the editor and offers the latest draft in another
+tab for comparison. Saving waits for explicit reconciliation/reload. Publication reloads
+the review and clears confirmation when its ETag changes. The focused component/action
+regression is `tests/unit/forms-concurrency.test.mjs` (also in `pnpm test:unit`).
+
 ## Import a QGIS project for a site
 
 Open **Sites → the site → Upload a new version**. Choose a `.qgz` or `.qgs` project and click **Read project**. If its vector data is external, select its GeoPackage or every shapefile part too, or upload a ZIP containing the project folder. A `.qgz` alone works only when it contains the source datasets; a saved project normally refers to files on the author's computer.

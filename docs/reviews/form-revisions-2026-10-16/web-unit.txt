@@ -1,0 +1,54 @@
+
+> decamark-web@0.1.0 test:unit /workspace/deca-mark/web
+> node --experimental-strip-types --test "tests/unit/*.test.mjs"
+
+✔ tests/unit/access.test.mjs (113.256834ms)
+✔ tests/unit/account-deletion.test.mjs (141.6367ms)
+✔ tests/unit/answers.test.mjs (190.232639ms)
+✔ tests/unit/api-shapes.test.mjs (440.703958ms)
+✔ tests/unit/data-map.test.mjs (167.234816ms)
+✔ tests/unit/data-view.test.mjs (257.906086ms)
+✔ tests/unit/errors.test.mjs (346.911697ms)
+✔ tests/unit/export-files.test.mjs (208.417433ms)
+✔ tests/unit/forms-concurrency.test.mjs (1127.199351ms)
+✔ tests/unit/forms-model.test.mjs (204.831308ms)
+✔ tests/unit/forms-start.test.mjs (259.137915ms)
+✔ tests/unit/home.test.mjs (115.384146ms)
+✔ tests/unit/ids.test.mjs (138.5922ms)
+✔ tests/unit/invitation.test.mjs (139.980536ms)
+✔ tests/unit/invitations.test.mjs (98.466488ms)
+✔ tests/unit/labels.test.mjs (112.732514ms)
+✔ tests/unit/org.test.mjs (194.242893ms)
+✔ tests/unit/overview.test.mjs (107.956654ms)
+✔ tests/unit/package-checks.test.mjs (291.605768ms)
+✔ tests/unit/package-history.test.mjs (220.390556ms)
+✔ tests/unit/project-import.test.mjs (163.441769ms)
+✔ tests/unit/project-settings-rules.test.mjs (180.75962ms)
+✔ tests/unit/qgis.test.mjs (126.106039ms)
+✔ tests/unit/reports.test.mjs (200.349172ms)
+✔ tests/unit/site-archive.test.mjs (358.806008ms)
+✔ tests/unit/site-code.test.mjs (154.575792ms)
+✔ tests/unit/site-view.test.mjs (128.077226ms)
+✔ tests/unit/summary.test.mjs (185.26982ms)
+✔ tests/unit/team-rules.test.mjs (210.382006ms)
+✔ tests/unit/time.test.mjs (188.351455ms)
+✔ tests/unit/workspace-index.test.mjs (169.031654ms)
+✔ tests/unit/zone-drafts.test.mjs (460.314748ms)
+✔ tests/unit/zone-drawing.test.mjs (288.488279ms)
+✔ tests/unit/zone-editor-chrome.test.mjs (447.568235ms)
+✔ tests/unit/zone-editor-state.test.mjs (466.421031ms)
+✔ tests/unit/zone-geometry.test.mjs (460.077522ms)
+✔ tests/unit/zone-hints.test.mjs (201.626022ms)
+✔ tests/unit/zone-identity.test.mjs (142.500646ms)
+✔ tests/unit/zone-plan.test.mjs (1428.509873ms)
+✔ tests/unit/zone-publish.test.mjs (126.966098ms)
+✔ tests/unit/zone-save-queue.test.mjs (280.040369ms)
+✔ tests/unit/zones-page.test.mjs (207.321133ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 42
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11471.680275

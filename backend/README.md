@@ -245,6 +245,31 @@ The upload receipt includes observation, project and user UUIDs, original `recei
 
 Project membership is enforced in both the API lookup and database row policies. The API uses a restricted non-owner role with transaction-local identity, preventing pooled connections from retaining another account's context. It can select permitted rows and insert observations; it cannot edit/delete observations or grant membership. The SQLite queue keeps records until matching receipt verification and never uploads unassigned practice records.
 
+## Form draft preconditions
+
+Form summaries and details include `revision` and `etag`. Detail GET and successful PUT
+also return the ETag header. A new draft starts at revision 1; every successful edit,
+including a save with identical content, advances it. The strong precondition is
+`"form-draft:<version UUID>:<revision>"`, so a discarded/recreated version code cannot
+reuse an earlier draft's precondition.
+
+Send that exact value in `If-Match` for draft PUT, DELETE and POST `/publish`.
+Missing, weak, wildcard, list or malformed preconditions return 428; a changed revision
+or draft identity returns 412. Existing 403/404 authorization and 409 frozen-version
+protections remain. There is no unconditional write fallback.
+
+Save and discard compare identity, draft state and revision in their SQL mutation.
+Publication validates the definition at the requested revision, then checks that revision
+again while holding the version row lock before freezing it. A competing edit either
+advances the revision first and prevents publication, or waits behind publication and
+cannot edit the frozen version. Publication retains creator/publisher attribution and
+leaves historical definitions and observation/package bindings intact.
+
+Use the returned ETag after saving. A publication request must carry the ETag belonging
+to the displayed review, without a last-minute fetch to adopt newer content. On 412,
+reload/reconcile edits or review the current draft explicitly; never automatically retry
+with a fresh precondition. See the separate [remediation evidence](../docs/reviews/form-revisions-2026-10-16/README.md).
+
 ## QGIS conversion
 
 `POST /v1/projects/{project}/packages/import` accepts `files`, an array of base64 `ProjectFile` objects. Managers can upload one `.qgz`/`.qgs` with its sources, optionally in a ZIP. The response returns the original `.qgs` as `project_file`, converted `layers` (`name`, `collection`), and per-layer `issues`. It neither creates a site nor saves a package. Clients review and assign the converted layers, optionally replace them with GeoJSON, then submit a package using `site_id`, `zone_identity_map`, `expected_current_package_id` and the other publication fields.

@@ -65,8 +65,9 @@ export function PublishScreen({
 	const editor = projectHref(org, project, `forms/versions/${version.code}`);
 	const versions = projectHref(org, project, `forms/versions?form=${encodeURIComponent(version.formCode)}`);
 	const changedQuestions = new Set(review.changes.map(change => change.questionId)).size;
-	const blocked =
-		review.problems.length > 0
+	const blocked = failure?.conflict
+		? "Reload and review the changed draft before publishing."
+		: review.problems.length > 0
 			? "The form still has problems. Fix them in the editor first."
 			: !confirmed
 				? "Tick the box above to publish."
@@ -76,8 +77,12 @@ export function PublishScreen({
 		if (blocked) return;
 		setFailure(null);
 		start(async () => {
-			const result = await publishVersionAction({ org, project, version: version.code });
-			if (result.status === "failed") return setFailure(result);
+			const result = await publishVersionAction({ org, project, version: version.code, etag: version.etag });
+			if (result.status === "failed") {
+				setFailure(result);
+				if (result.conflict) setConfirmed(false);
+				return;
+			}
 			toast({
 				title: `${version.code} is published`,
 				description:
@@ -206,7 +211,7 @@ export function PublishScreen({
 					<Checkbox
 						id={confirmId}
 						checked={confirmed}
-						disabled={review.problems.length > 0}
+						disabled={review.problems.length > 0 || failure?.conflict}
 						onCheckedChange={setConfirmed}>
 						{review.delivery.confirm}
 					</Checkbox>

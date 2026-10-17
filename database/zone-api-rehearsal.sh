@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 
 zone_container="fieldmaps-zone-api-$$"
 zone_root=/var/lib/postgresql/zone-tests
-zone_image=public.ecr.aws/supabase/postgres:17.6.1.171
+zone_image=${DECAMARK_REHEARSAL_IMAGE:-public.ecr.aws/supabase/postgres:17.6.1.171}
 zone_container_id=$(docker run --rm --pull never -d --name "$zone_container" --user postgres \
   --tmpfs /tmp -p 127.0.0.1::5432 --entrypoint sh "$zone_image" -c \
   'initdb -D /tmp/zone-db -A trust >/tmp/init.log && printf "host all all 0.0.0.0/0 trust\n" >> /tmp/zone-db/pg_hba.conf && exec postgres -D /tmp/zone-db -c shared_preload_libraries=pg_cron -c cron.database_name=postgres -c listen_addresses=* -k /tmp')
@@ -31,6 +31,8 @@ docker cp supabase/migrations "$zone_container:$zone_root/supabase/"
 docker cp supabase/seed.sql "$zone_container:$zone_root/supabase/seed.sql"
 docker cp contracts/forms/janet-test-v1.json "$zone_container:$zone_root/janet-test-v1.json"
 docker cp contracts/zones/geometry.cases.json "$zone_container:$zone_root/zone-geometry.cases.json"
+# docker cp retains restrictive checkout modes; these are public synthetic fixtures only.
+docker exec --user root "$zone_container" chmod -R a+rX "$zone_root"
 zone_psql -f "$zone_root/database/tests/zone-bootstrap.sql"
 for zone_migration in supabase/migrations/*.sql; do
   zone_name=$(basename "$zone_migration")

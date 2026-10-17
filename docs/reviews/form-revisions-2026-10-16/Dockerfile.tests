@@ -1,0 +1,6 @@
+FROM postgis/postgis:17-3.5
+RUN --mount=type=secret,id=ca,required=true,mode=0444 \
+    sed -i 's@http://apt.postgresql.org@https://apt-archive.postgresql.org@' /etc/apt/sources.list.d/pgdg.list \
+    && apt-get -o Acquire::https::CaInfo=/run/secrets/ca update \
+    && apt-get -o Acquire::https::CaInfo=/run/secrets/ca install -y --no-install-recommends postgresql-17-cron \
+    && rm -rf /var/lib/apt/lists/*

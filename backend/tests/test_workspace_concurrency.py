@@ -57,7 +57,7 @@ def test_a_changed_draft_cannot_be_reported_as_saved_or_discarded(
     async def compete() -> None:
         # Commit on another connection after the service read but before its conditional write.
         statement = (
-            "SELECT fieldmaps_private.publish_form_version(:project, :version)"
+            "SELECT fieldmaps_private.publish_form_version(:project, :version, :revision)"
             if competitor == "publish"
             else "DELETE FROM fieldmaps.form_versions WHERE id=:version AND state='draft'"
         )
@@ -79,29 +79,37 @@ def test_a_changed_draft_cannot_be_reported_as_saved_or_discarded(
                     {
                         "project": tenant.project,
                         "version": version.version_id,
+                        "revision": version.revision,
                     },
                 )
         finally:
             await engine.dispose()
 
-    async def save(
-        session: AsyncSession, project_id: UUID, code: str, definition: dict[str, JsonValue]
+    async def save(  # noqa: PLR0913, PLR0917 - repository signature
+        session: AsyncSession,
+        project_id: UUID,
+        code: str,
+        definition: dict[str, JsonValue],
+        version_id: UUID,
+        revision: int,
     ) -> bool:
         await compete()
-        return await original_save(session, project_id, code, definition)
+        return await original_save(session, project_id, code, definition, version_id, revision)
 
-    async def discard(session: AsyncSession, project_id: UUID, code: str) -> bool:
+    async def discard(
+        session: AsyncSession, project_id: UUID, code: str, version_id: UUID, revision: int
+    ) -> bool:
         await compete()
-        return await original_discard(session, project_id, code)
+        return await original_discard(session, project_id, code, version_id, revision)
 
     monkeypatch.setattr(forms, "update_draft", save)
     monkeypatch.setattr(forms, "discard_draft", discard)
     url = f"{base}/form-versions/{version.code}"
     changed = {**inventory(), "title": "A competing edit"}
     response = (
-        api_client.put(url, json={"definition": changed})
+        api_client.put(url, json={"definition": changed}, headers={"If-Match": version.etag})
         if action == "save"
-        else api_client.delete(url)
+        else api_client.delete(url, headers={"If-Match": version.etag})
     )
     assert response.status_code == (409 if competitor == "publish" else 404), response.text
     current = api_client.get(url)
@@ -152,9 +160,7 @@ def test_simultaneous_version_creation_returns_a_conflict_without_partial_rows(
         else:
             patch.setattr(forms, "next_version", form_number)
         with ThreadPoolExecutor(max_workers=2) as pool:
-            futures = [
-                pool.submit(api_client.post, url, json=payload) for payload in payloads
-            ]
+            futures = [pool.submit(api_client.post, url, json=payload) for payload in payloads]
             responses = [future.result(timeout=20) for future in futures]
     assert sorted(response.status_code for response in responses) == [201, 409]
     if resource == "packages":

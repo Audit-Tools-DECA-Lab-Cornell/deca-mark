@@ -89,11 +89,12 @@ async function signIn() {
 
 const token = await signIn();
 
-async function api(method, path, body) {
+async function api(method, path, body, extraHeaders = {}) {
   const response = await fetch(`${apiUrl}${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${token}`,
+      ...extraHeaders,
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -168,7 +169,7 @@ for (const form of FORMS) {
         name: form.name,
         definition: definition(form.file),
       });
-  const done = await api("POST", `${base}/form-versions/${draft.code}/publish`);
+  const done = await api("POST", `${base}/form-versions/${draft.code}/publish`, undefined, { "If-Match": draft.etag });
   published[form.code] = done.code;
   step(`Published ${form.name} as ${done.code}`);
 }

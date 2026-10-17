@@ -17,6 +17,7 @@ export type SiteRef = { readonly code: string; readonly name: string };
 
 export type VersionRow = {
 	readonly code: string;
+	readonly etag: string;
 	readonly version: number;
 	readonly state: VersionState;
 	readonly title: string | null;
@@ -63,6 +64,7 @@ export function formRows(forms: readonly FormSummary[], sites: readonly Site[]):
 			.map(
 				(version): VersionRow => ({
 					code: version.code,
+					etag: version.etag,
 					version: version.version,
 					state: version.state,
 					title: version.title,

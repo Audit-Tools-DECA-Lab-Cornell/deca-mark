@@ -36,6 +36,8 @@ DOMAIN_STATES: Final[dict[str, tuple[str, int, str]]] = {
     "FM006": ("role_required", 403, "You do not have permission for this action"),
     "FM007": ("not_found", 404, "Record not found"),
     "FM008": ("conflict", 409, "The request conflicts with existing data"),
+    "FM009": ("revision_conflict", 412, "The form draft revision has changed"),
+    "FM010": ("precondition_required", 428, "A form draft revision is required"),
     "23505": ("conflict", 409, "The request conflicts with existing data"),
     "42501": ("role_required", 403, "You do not have permission for this action"),
     "ZB001": ("validation_failed", 422, "Zone validation failed"),

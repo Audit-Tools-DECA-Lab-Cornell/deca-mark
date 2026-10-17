@@ -86,18 +86,24 @@ def test_a_manager_drafts_edits_and_publishes_a_form(
     edited = api_client.put(
         f"{base}/form-versions/inventory-v1",
         json={"definition": {**inventory(), "title": "Inventory, by zone"}},
+        headers={"If-Match": draft.etag},
     )
     assert edited.status_code == 200, edited.text
     assert FormVersionDetail.model_validate_json(edited.content).title == "Inventory, by zone"
     broken = api_client.put(
-        f"{base}/form-versions/inventory-v1", json={"definition": {**inventory(), "questions": 3}}
+        f"{base}/form-versions/inventory-v1",
+        json={"definition": {**inventory(), "questions": 3}},
+        headers={"If-Match": FormVersionDetail.model_validate_json(edited.content).etag},
     )
     assert broken.status_code == 422, broken.text
     assert error(broken.content).error.details["fields"] == [
         {"id": "definition", "problem": error(broken.content).error.message}
     ]
 
-    published = api_client.post(f"{base}/form-versions/inventory-v1/publish")
+    published = api_client.post(
+        f"{base}/form-versions/inventory-v1/publish",
+        headers={"If-Match": FormVersionDetail.model_validate_json(edited.content).etag},
+    )
     assert published.status_code == 200, published.text
     version = FormVersionDetail.model_validate_json(published.content)
     assert (version.state, version.definition["status"]) == ("published", "published")
@@ -109,7 +115,8 @@ def test_a_published_version_is_frozen_and_the_next_starts_as_a_copy(
     api_client: TestClient, tenant: Tenant
 ) -> None:
     base = f"/v1/projects/{tenant.project}"
-    _ = start_inventory(api_client, base)
+    draft = start_inventory(api_client, base)
+    api_client.headers["If-Match"] = draft.etag
     assert api_client.post(f"{base}/form-versions/inventory-v1/publish").status_code == 200
     saved = api_client.put(f"{base}/form-versions/inventory-v1", json={"definition": inventory()})
     assert saved.status_code == 409, saved.text
@@ -127,7 +134,12 @@ def test_a_published_version_is_frozen_and_the_next_starts_as_a_copy(
         ("inventory-v2", "draft"),
         ("inventory-v1", "published"),
     ]
-    assert api_client.delete(f"{base}/form-versions/inventory-v2").status_code == 204
+    assert (
+        api_client.delete(
+            f"{base}/form-versions/inventory-v2", headers={"If-Match": second.etag}
+        ).status_code
+        == 204
+    )
     assert api_client.get(f"{base}/form-versions/inventory-v2").status_code == 404
 
 

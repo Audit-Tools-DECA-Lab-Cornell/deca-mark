@@ -59,20 +59,38 @@ SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000001', t
 SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM fieldmaps.form_versions
   WHERE id = '54000000-0000-4000-8000-000000000003'), 'observers do not see drafts');
 SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.publish_form_version(
-  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003')$$,
+  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003', 2)$$,
   'FM006', 'an observer cannot publish');
 SELECT set_config('fieldmaps.user_id', '51000000-0000-4000-8000-000000000002', true);
 SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.publish_form_version(
-  '20000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003')$$,
+  '20000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003', 2)$$,
   'FM007', 'a manager of another project cannot publish this version through their own project');
 SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.publish_form_version(
-  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003')$$,
+  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003', 2)$$,
   'FM006', 'a manager of another project cannot publish this version through its project');
+
+-- Revision preconditions are enforced inside the locking publication function.
+SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000004', true);
+SELECT pg_temp.assert_true((SELECT revision = 2 FROM fieldmaps.form_versions
+  WHERE id = '54000000-0000-4000-8000-000000000003'), 'a draft edit advances its revision');
+SELECT pg_temp.assert_true(to_regprocedure('fieldmaps_private.publish_form_version(uuid,uuid)') IS NULL,
+  'the unconditional publication function is removed');
+SELECT pg_temp.assert_true(NOT has_column_privilege(current_user, 'fieldmaps.form_versions', 'revision', 'UPDATE'),
+  'API callers cannot set the revision');
+SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.publish_form_version(
+  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003', NULL)$$,
+  'FM010', 'publication requires a revision');
+SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.publish_form_version(
+  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003', 1)$$,
+  'FM009', 'publication rejects an unreviewed revision');
+SELECT pg_temp.assert_true((SELECT state = 'draft' AND published_at IS NULL
+  FROM fieldmaps.form_versions WHERE id = '54000000-0000-4000-8000-000000000003'),
+  'a refused publication leaves the draft unpublished');
 
 -- Publishing and retiring.
 SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000004', true);
 SELECT fieldmaps_private.publish_form_version(
-  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003');
+  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003', 2);
 SELECT pg_temp.assert_true((SELECT state = 'published' AND published_at IS NOT NULL
     AND published_by = '50000000-0000-4000-8000-000000000004'
     AND definition ->> 'status' = 'published'
@@ -84,7 +102,7 @@ SELECT pg_temp.assert_true((SELECT definition ->> 'status' = 'published'
   FROM fieldmaps.form_versions WHERE id = '54000000-0000-4000-8000-000000000003'),
   'a published version cannot be edited');
 SELECT pg_temp.assert_rejected($$SELECT fieldmaps_private.publish_form_version(
-  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003')$$,
+  '10000000-0000-4000-8000-000000000002', '54000000-0000-4000-8000-000000000003', 2)$$,
   'FM008', 'a version is published once');
 SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000001', true);
 SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM fieldmaps.form_versions

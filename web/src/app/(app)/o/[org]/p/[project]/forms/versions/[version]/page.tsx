@@ -76,6 +76,7 @@ export default async function FormVersionPage({ params }: { params: Promise<Para
 	const version = detail.data;
 	const editorVersion: EditorVersion = {
 		code: version.code,
+		etag: version.etag,
 		state: version.state,
 		formCode: version.form_code,
 		formName: version.form_name

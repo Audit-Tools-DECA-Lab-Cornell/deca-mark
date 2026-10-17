@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import ClassVar, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, JsonValue
+from pydantic import BaseModel, ConfigDict, JsonValue, computed_field
 
+from fieldmaps_api.form_preconditions import form_etag
 from fieldmaps_api.tenancy_schemas import Input, Name, Slug
 
 type VersionState = Literal["draft", "published", "retired"]
@@ -20,6 +21,12 @@ class FormVersionSummary(BaseModel):
     question_count: int
     created_at: datetime
     published_at: datetime | None
+    revision: int
+
+    @computed_field
+    @property
+    def etag(self) -> str:
+        return form_etag(self.version_id, self.revision)
 
 
 class FormSummary(BaseModel):

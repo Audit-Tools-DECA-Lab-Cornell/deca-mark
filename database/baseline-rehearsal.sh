@@ -9,7 +9,7 @@ esac
 
 baseline_container="decamark-baseline-$$"
 baseline_root=/var/lib/postgresql/baseline-tests
-baseline_image=public.ecr.aws/supabase/postgres:17.6.1.171
+baseline_image=${DECAMARK_REHEARSAL_IMAGE:-public.ecr.aws/supabase/postgres:17.6.1.171}
 baseline_container_id=$(docker run --rm --pull never -d --name "$baseline_container" --user postgres \
   --tmpfs /tmp --entrypoint sh "$baseline_image" -c \
   'initdb -D /tmp/baseline-db -A trust >/tmp/init.log && exec postgres -D /tmp/baseline-db -c shared_preload_libraries=pg_cron -c cron.database_name=postgres -c listen_addresses= -k /tmp')
@@ -39,6 +39,8 @@ docker cp contracts/forms/janet-test-v1.json "$baseline_container:$baseline_root
 docker cp contracts/zones/geometry.cases.json "$baseline_container:$baseline_root/zone-geometry.cases.json"
 docker cp contracts/zones/publication.cases.json "$baseline_container:$baseline_root/zone-publication.cases.json"
 docker cp contracts/zones/upload.cases.json "$baseline_container:$baseline_root/zone-upload.cases.json"
+# docker cp retains restrictive checkout modes; these are public synthetic fixtures only.
+docker exec --user root "$baseline_container" chmod -R a+rX "$baseline_root"
 baseline_psql -f "$baseline_root/database/tests/zone-bootstrap.sql"
 # Start from the canonical baseline, then apply subsequent current feature migrations.
 set -- supabase/migrations/*.sql

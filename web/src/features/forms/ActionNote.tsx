@@ -15,12 +15,14 @@ import type { FormActionFailure } from "./result";
 export function ActionNote({
 	failure,
 	className,
-	onReload
+	onReload,
+	reloadLabel = "Reload"
 }: {
 	failure: FormActionFailure | null;
 	className?: string;
 	/** What Reload does. By default the page's data is read again; the editor reloads the whole page. */
 	onReload?: () => void;
+	reloadLabel?: string;
 }) {
 	const router = useRouter();
 	const [reloading, startReload] = useTransition();
@@ -37,7 +39,7 @@ export function ActionNote({
 						busy={reloading}
 						busyLabel="Reloading…"
 						onClick={() => (onReload ? onReload() : startReload(() => router.refresh()))}>
-						Reload
+						{reloadLabel}
 					</Button>
 				)}
 			</span>
