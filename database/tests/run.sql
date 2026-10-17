@@ -50,6 +50,7 @@ SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['00
 \ir access.sql
 \ir rls_coverage.sql
 \ir tenancy.sql
+\ir observation-ownership.sql
 \ir org-profile-visibility.sql
 \ir tenancy_functions.sql
 \ir training.sql

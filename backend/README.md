@@ -183,6 +183,17 @@ half-open UTC date filters apply consistently to lists, summaries and exports. R
 package/zone labels and form definitions remain historical; Inventory event geometry is null
 and its display anchor is explicit.
 
+RLS limits research observers to their immutable `created_by` user ID, including counts,
+summaries and the invoker-scoped GIS observation views. Observer initials are a research
+label and never establish ownership. Viewers/managers and inherited organization
+owners/admins can review all permitted research records. Training always stays
+creator-only, including for reviewers. Current project access is still required for
+creators; revocation hides their records and denies retries.
+
+Exports require a research viewer or manager (including inherited organization
+owner/admin authority). Observers and all Training projects receive `403 role_required`.
+Missing project access retains the normal `404 not_found` response.
+
 `/export?format=csv|geojson` returns a ZIP containing observations, a codebook, scope
 metadata, frozen forms and separate historical-zone GeoJSON. Export limits are 10,000
 records, 32 MiB of combined uncompressed assets, 32 MiB of ZIP bytes and 10 seconds;

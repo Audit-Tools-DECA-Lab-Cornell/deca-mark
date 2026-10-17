@@ -50,7 +50,7 @@ class Tenant:
         )
 
 
-def create_tenant(tenant: Tenant) -> None:
+def create_tenant(tenant: Tenant, *, is_training: bool = False) -> None:
     admin_sql(
         "BEGIN; CREATE TEMP TABLE fixture_users ON COMMIT DROP AS "
         "SELECT * FROM jsonb_to_recordset(:'users'::jsonb) "
@@ -61,8 +61,8 @@ def create_tenant(tenant: Tenant) -> None:
         "INSERT INTO fieldmaps.profiles(user_id) SELECT id FROM fixture_users; "
         "INSERT INTO fieldmaps.organizations(id,name,slug) "
         "VALUES (:'org','Isolation organization',:'org'); "
-        "INSERT INTO fieldmaps.projects(id,organization_id,name,code) "
-        "VALUES (:'project',:'org','Isolation project','isolation-project'); "
+        "INSERT INTO fieldmaps.projects(id,organization_id,name,code,is_training) "
+        "VALUES (:'project',:'org','Isolation project','isolation-project',:'training'); "
         "INSERT INTO fieldmaps.organization_members(organization_id,user_id,role) "
         "SELECT :'org',id,org_role FROM fixture_users; "
         "INSERT INTO fieldmaps.project_memberships(organization_id,project_id,user_id,role) "
@@ -79,6 +79,7 @@ def create_tenant(tenant: Tenant) -> None:
         "WHERE project_id='10000000-0000-4000-8000-000000000002' AND code='shell-v1'; "
         "COMMIT;",
         *tenant.variables(),
+        f"training={str(is_training).lower()}",
     )
 
 

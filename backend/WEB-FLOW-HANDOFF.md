@@ -35,8 +35,9 @@ organization owner/admin. Training records remain restricted to their creator.
 | Packages | `POST/GET /v1/projects/{p}/packages`, `GET …/packages/{uuid}`, `GET …/packages/{uuid}/archive` | Manager publishes with explicit identity mapping and expected current package; members read/download ready current or historical packages. List optionally filters by `site_id`. |
 | Forms | `GET/POST /v1/projects/{p}/forms`, `POST …/forms/{code}/versions` | Members see published/retired versions; managers also see drafts and author forms. |
 | Form version | `GET/PUT/DELETE …/form-versions/{code}`, `POST …/form-versions/{code}/{publish\|retire}` | Member reads published/retired; manager reads/writes drafts and changes lifecycle. |
-| Data and reports | `GET /v1/projects/{p}/observations` | Member reads; filter-bound cursor envelope and exact counts, semantics below. |
-| Observation direct link | `GET …/observations/{uuid}` | Member reads; includes exact recorded package/zone/form context independently of the visible page. |
+| Data and reports | `GET /v1/projects/{p}/observations` | Observers read their own immutable uploads; research viewers/managers (including inherited org admins/owners) review project records. Filter-bound cursors and exact counts use the same row scope. |
+| Observation direct link | `GET …/observations/{uuid}` | Same creator/reviewer scope; hidden records return 404. Includes exact recorded package/zone/form context independently of the visible page. |
+| Complete export | `GET …/observations/export?format=csv\|geojson` | Research viewer/manager, including inherited org admins/owners. Observers and all Training projects receive 403 `role_required`. |
 | Health | `GET /health`, `GET /ready` | Public; readiness verifies the database, current site/package read helpers and cached identity keys. |
 
 ## Recorded observation detail

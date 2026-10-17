@@ -117,6 +117,19 @@ roles and `service_role` cannot access application tables or execute application
 functions. `fieldmaps_api` cannot bypass RLS or directly grant membership.
 Column-limited grants allow only the documented profile, organization and project edits.
 
+Observation SELECT RLS limits research observers to their immutable creator user ID.
+Research viewers/managers and inherited organization owners/admins retain review access;
+organization membership alone grants no project access. Counts, summaries and invoker GIS
+observation projections use the same row policy. The API separately restricts complete
+exports to research reviewers and rejects Training exports.
+
+`20261017000657_observation_creator_visibility.sql` is an additive policy correction after
+the baseline. Existing installations must apply that pending migration through their normal
+approved migration process, then deploy the matching API export guard. Do not edit/reapply
+the baseline or reset a database to obtain the correction. The migration alters only SELECT
+visibility; immutable records, upload grants and retry receipts remain intact. See
+[local verification and rollout notes](../docs/reviews/engineering-audit-2026-10-16/implementation.md).
+
 Tenancy writes go through `fieldmaps_private` functions with a fixed empty search path, current-user authorization and organization locks. Invitation redemption checks the current Auth email, confirmation and use limit. Account forgetting removes memberships and leaves a durable anonymized profile marker until Auth deletion.
 
 Profile initialization now enrolls active users in the separate Training project. Training observations are visible only to their creator, including for temporary project managers. Platform organization memberships are forbidden. A daily pg_cron job purges observations received more than 30 days ago from the fixed Training project only. The original practice project is unchanged. See the [Training runbook](../docs/Training-Runbook.md) for retention checks and temporary package-upload access. The Training form is a frozen copy of the canonical Janet definition; its lifecycle and downloadable site package remain later tasks.

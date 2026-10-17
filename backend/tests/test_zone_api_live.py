@@ -12,6 +12,7 @@ import uvicorn
 from pydantic import TypeAdapter
 
 from fieldmaps_api.auth import JwksVerifier
+from fieldmaps_api.errors import ErrorEnvelope
 from fieldmaps_api.main import create_app
 from tests.local_database import database_settings
 from tests.package_fixtures import submission
@@ -153,7 +154,13 @@ def test_loopback_http_upload_edit_publish_bound_upload_read_and_export(live_api
         )
         assert read.status_code == 200, read.text
         assert '"people":3' in read.text
-        exported = collector.get(
+        denied = collector.get(
+            f"{project}/observations/export", params={"site_id": str(live_api.tenant.site)}
+        )
+        assert denied.status_code == 403, denied.text
+        assert ErrorEnvelope.model_validate_json(denied.content).error.code == "role_required"
+    with live_api.client("viewer") as reader:
+        exported = reader.get(
             f"{project}/observations/export", params={"site_id": str(live_api.tenant.site)}
         )
         assert exported.status_code == 200, exported.text
