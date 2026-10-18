@@ -94,6 +94,8 @@ jobs:
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
           python-version: '3.13'
+      - name: Install collector dependencies for real queue acceptance
+        run: pnpm --dir mobile install --frozen-lockfile
       - run: pnpm backend:setup
       - run: pnpm backend:check
       - name: Cache pinned disposable database image
