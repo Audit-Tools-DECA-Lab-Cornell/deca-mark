@@ -44,8 +44,8 @@ SELECT pg_temp.assert_true(
     AND notes = 'Database test' AND ST_SRID(geom) = 4326 AND fid > 0
    FROM gis.sample_observations WHERE observation_id = '30000000-0000-4000-8000-000000000001'), 'QGIS projection preserves coordinates and typed answers'
 );
-SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['0001_current_baseline'] FROM fieldmaps_meta.schema_migrations),
-  'one current schema baseline is recorded');
+SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['0001_current_baseline','20261018030756'] FROM fieldmaps_meta.schema_migrations),
+  'current baseline and deletion recovery migration are recorded');
 \ir constraints.sql
 \ir access.sql
 \ir rls_coverage.sql
@@ -55,6 +55,7 @@ SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['00
 \ir tenancy_functions.sql
 \ir training.sql
 \ir lifecycle.sql
+\ir account-deletion-recovery.sql
 \ir zone-foundation.sql
 \ir zone-query-plans.sql
 \ir zone-geometry.sql

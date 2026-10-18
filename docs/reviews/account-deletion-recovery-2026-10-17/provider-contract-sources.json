@@ -1,0 +1,24 @@
+{
+  "changelog.md": {
+    "sha256": "15b3d0d1a7dc3b3f2c0af4788e49acfdf2d2edbd2613f22de0705fa43b1cf58b"
+  },
+  "auth-errors.go": {
+    "sha256": "6ad0ae78043485563410c6b0b502a16c97d405b10baaeb9b04bf1a82a4f091d7"
+  },
+  "auth-admin.go": {
+    "sha256": "d172f492bf020d12727bac2166af4e3f32b9f840f49f0dd23b544616b4392a2f"
+  },
+  "tls-change.html": {
+    "sha256": "96d6c7cf34fa3efc1b40b67b9cf3d31258bb3f715d9520ef97a722b921bfb3e3"
+  },
+  "issuer-change.html": {
+    "sha256": "fb4f58be0adc7d45fff674317994379f29ab03c7bc64fae2d2404f1ff1978bb5"
+  },
+  "public_sources": [
+    "https://supabase.com/changelog.md",
+    "https://raw.githubusercontent.com/supabase/auth/master/internal/api/errors.go",
+    "https://raw.githubusercontent.com/supabase/auth/master/internal/api/admin.go",
+    "https://supabase.com/changelog/cbc-tls-ciphers-deprecated",
+    "https://supabase.com/changelog/47093-self-hosted-supabase-api-external-url-to-include-auth-v1"
+  ]
+}

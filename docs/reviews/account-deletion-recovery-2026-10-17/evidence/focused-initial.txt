@@ -1,0 +1,514 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+......................FFFFFFF.FF                                         [100%]
+=================================== FAILURES ===================================
+_____________ test_success_preserves_research_and_provider_cascade _____________
+
+audit_api = LiveApi(url='http://127.0.0.1:58287', tenant=Tenant(org=UUID('c57e7e96-4375-4be7-9197-af2e310c736e'), project=UUID('09...}), signer=Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d614f6b0>))
+
+    def test_success_preserves_research_and_provider_cascade(audit_api: LiveApi) -> None:
+        history = seed_history(audit_api)
+        user = audit_api.tenant.users["observer"]
+        before = history.frozen()
+        calls: list[str] = []
+    
+        def provider(request: httpx2.Request) -> httpx2.Response:
+            calls.append(request.url.path)
+            assert request.url.path.endswith(str(user))
+            assert state(user).endswith(":true")
+            # Model the real Auth hard-delete transaction's FK cascade, not just its HTTP status.
+            admin_sql("DELETE FROM auth.users WHERE id=:'user';", f"user={user}")
+            return httpx2.Response(200, json={})
+    
+        with application(audit_api.signer, provider) as client:
+            client.headers["Authorization"] = f"Bearer {audit_api.signer.issue(user)}"
+>           assert client.delete("/v1/me").status_code == 204
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_account_deletion_recovery.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/starlette/testclient.py:645: in delete
+    return super().delete(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1311: in delete
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:455: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:797: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx2/_client.py:980: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1008: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1043: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1076: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:354: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1163: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+src/fieldmaps_api/observability.py:159: in __call__
+    await self.app(scope, receive, send_response)
+src/fieldmaps_api/body_limits.py:135: in __call__
+    await self.app(scope, replay, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:670: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2734: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1780: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2789: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1800: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1279: in handle
+    await app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:158: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:144: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:706: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:352: in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fieldmaps_api/routers/identity.py:52: in delete_me
+    if await reconcile_one(sessions, settings, user_id, key):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fieldmaps_api/account_deletion_worker.py:50: in reconcile_one
+    outcome = await delete_auth_user(settings, credential, job.user_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/fieldmaps_api/services/account_deletion.py:57: in delete_auth_user
+    response = await client.delete(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:2149: in delete
+    return await self.request(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1635: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1818: in send
+    response = await self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1846: in _send_handling_auth
+    response = await self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1881: in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx2/_client.py:1915: in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx2/_transports/mock.py:31: in handle_async_request
+    response = self.handler(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+request = <Request('DELETE', 'https://fieldmaps-test.invalid/auth/v1/admin/users/b21e21a7-009d-4ea8-99ff-042c56a0e94f')>
+
+    def provider(request: httpx2.Request) -> httpx2.Response:
+        calls.append(request.url.path)
+        assert request.url.path.endswith(str(user))
+>       assert state(user).endswith(":true")
+E       AssertionError: assert False
+E        +  where False = <built-in method endswith of str object at 0x7f54d882cfc0>(':true')
+E        +    where <built-in method endswith of str object at 0x7f54d882cfc0> = '1::f:t'.endswith
+E        +      where '1::f:t' = state(UUID('b21e21a7-009d-4ea8-99ff-042c56a0e94f'))
+
+tests/test_account_deletion_recovery.py:118: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=False
+----------------------------- Captured stderr call -----------------------------
+{"event":"http_response","request_id":"74ac6c2d8aad476d86914756e8129431","method":"POST","status":201,"duration_ms":708,"operation":"createPackage"}
+{"event":"http_response","request_id":"730cc9ba7e8743f481bf19defbc4c615","method":"GET","status":200,"duration_ms":56,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"202ffbb9a46840ffb5b63448e06202be","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"http_response","request_id":"55ab9f90bbe74e5eb304deddaef7ef87","method":"DELETE","status":500,"duration_ms":255,"operation":"delete_account"}
+------------------------------ Captured log call -------------------------------
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"74ac6c2d8aad476d86914756e8129431","method":"POST","status":201,"duration_ms":708,"operation":"createPackage"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"730cc9ba7e8743f481bf19defbc4c615","method":"GET","status":200,"duration_ms":56,"operation":"getHistoricalZones"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"202ffbb9a46840ffb5b63448e06202be","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+________ test_outage_backoff_restart_and_recovery_without_user_request _________
+
+user = UUID('3ac06336-39c5-4a7f-8165-de60cb5823a8')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d6e1f350>)
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7f54d712e210>
+
+    def test_outage_backoff_restart_and_recovery_without_user_request(
+        user: UUID, signer: Signer, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        calls: list[str] = []
+    
+        def unavailable(request: httpx2.Request) -> httpx2.Response:
+            calls.append(request.url.path)
+            return httpx2.Response(503, text="sensitive upstream content")
+    
+        with application(signer, unavailable) as client:
+            client.headers["Authorization"] = f"Bearer {signer.issue(user)}"
+            assert client.get("/v1/me").status_code == 200
+            response = client.delete("/v1/me")
+            assert response.status_code == 202
+            assert response.json() == {"status": "pending"}
+>           assert state(user) == "1:provider_unavailable:true:false"
+E           AssertionError: assert '1:provider_unavailable:t:f' == '1:provider_u...le:true:false'
+E             
+E             - 1:provider_unavailable:true:false
+E             ?                         ---  ----
+E             + 1:provider_unavailable:t:f
+
+tests/test_account_deletion_recovery.py:153: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"http_response","request_id":"a462a5ae90b8422d88b2d5ab93f823a2","method":"GET","status":200,"duration_ms":133,"operation":"get_identity"}
+{"event":"account_deletion_pending","user_id":"3ac06336-39c5-4a7f-8165-de60cb5823a8"}
+account_deletion_retry user_id=3ac06336-39c5-4a7f-8165-de60cb5823a8 code=provider_unavailable
+{"event":"http_response","request_id":"f16b4d988c3d43698495dc07fad22cad","method":"DELETE","status":202,"duration_ms":14,"operation":"delete_account"}
+___ test_provider_success_with_lost_response_completes_by_confirmed_absence ____
+
+user = UUID('04acfcae-e624-46c9-afcb-c87c6f90265b')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d708c830>)
+
+    def test_provider_success_with_lost_response_completes_by_confirmed_absence(
+        user: UUID, signer: Signer
+    ) -> None:
+        forget(user)
+        removed = Event()
+    
+        def lost(request: httpx2.Request) -> httpx2.Response:
+            removed.set()  # Mock the external effect; deliberately lose both bounded responses.
+            message = "synthetic lost acknowledgement"
+            raise httpx2.ReadTimeout(message, request=request)
+    
+        with application(signer, lost):
+>           eventually(lambda: state(user) == "1:provider_unavailable:true:false")
+
+tests/test_account_deletion_recovery.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+check = <function test_provider_success_with_lost_response_completes_by_confirmed_absence.<locals>.<lambda> at 0x7f54d6283920>
+
+    def eventually(check: Callable[[], bool]) -> None:
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if check():
+                return
+            time.sleep(0.01)
+>       assert check(), "Lifecycle worker did not reach the expected durable state"
+E       AssertionError: Lifecycle worker did not reach the expected durable state
+E       assert False
+E        +  where False = <function test_provider_success_with_lost_response_completes_by_confirmed_absence.<locals>.<lambda> at 0x7f54d6283920>()
+
+tests/test_account_deletion_recovery.py:76: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"account_deletion_pending","user_id":"04acfcae-e624-46c9-afcb-c87c6f90265b"}
+account_deletion_retry user_id=04acfcae-e624-46c9-afcb-c87c6f90265b code=provider_unavailable
+_ test_configuration_and_permission_errors_stay_pending_and_actionable[configuration] _
+
+user = UUID('3fb3d918-0eca-4454-bff8-b5e8afd59225')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d6525af0>)
+failure = 'configuration'
+
+    @pytest.mark.parametrize("failure", ["configuration", "permission", "unconfirmed404"])
+    def test_configuration_and_permission_errors_stay_pending_and_actionable(
+        user: UUID, signer: Signer, failure: str
+    ) -> None:
+        forget(user)
+        calls: list[str] = []
+    
+        def provider(request: httpx2.Request) -> httpx2.Response:
+            calls.append(request.url.path)
+            return httpx2.Response(403 if failure == "permission" else 404)
+    
+        with application(signer, provider, configured=failure != "configuration"):
+            code = "permission" if failure == "permission" else "configuration"
+>           eventually(lambda: state(user) == f"1:{code}:true:false")
+
+tests/test_account_deletion_recovery.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+check = <function test_configuration_and_permission_errors_stay_pending_and_actionable.<locals>.<lambda> at 0x7f54d5895bc0>
+
+    def eventually(check: Callable[[], bool]) -> None:
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if check():
+                return
+            time.sleep(0.01)
+>       assert check(), "Lifecycle worker did not reach the expected durable state"
+E       AssertionError: Lifecycle worker did not reach the expected durable state
+E       assert False
+E        +  where False = <function test_configuration_and_permission_errors_stay_pending_and_actionable.<locals>.<lambda> at 0x7f54d5895bc0>()
+
+tests/test_account_deletion_recovery.py:76: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+account_deletion_retry user_id=3fb3d918-0eca-4454-bff8-b5e8afd59225 code=configuration
+_ test_configuration_and_permission_errors_stay_pending_and_actionable[permission] _
+
+user = UUID('8ed614e9-96dd-485e-8958-beeccb5de3f6')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d89656d0>)
+failure = 'permission'
+
+    @pytest.mark.parametrize("failure", ["configuration", "permission", "unconfirmed404"])
+    def test_configuration_and_permission_errors_stay_pending_and_actionable(
+        user: UUID, signer: Signer, failure: str
+    ) -> None:
+        forget(user)
+        calls: list[str] = []
+    
+        def provider(request: httpx2.Request) -> httpx2.Response:
+            calls.append(request.url.path)
+            return httpx2.Response(403 if failure == "permission" else 404)
+    
+        with application(signer, provider, configured=failure != "configuration"):
+            code = "permission" if failure == "permission" else "configuration"
+>           eventually(lambda: state(user) == f"1:{code}:true:false")
+
+tests/test_account_deletion_recovery.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+check = <function test_configuration_and_permission_errors_stay_pending_and_actionable.<locals>.<lambda> at 0x7f54d5d10a40>
+
+    def eventually(check: Callable[[], bool]) -> None:
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if check():
+                return
+            time.sleep(0.01)
+>       assert check(), "Lifecycle worker did not reach the expected durable state"
+E       AssertionError: Lifecycle worker did not reach the expected durable state
+E       assert False
+E        +  where False = <function test_configuration_and_permission_errors_stay_pending_and_actionable.<locals>.<lambda> at 0x7f54d5d10a40>()
+
+tests/test_account_deletion_recovery.py:76: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"account_deletion_pending","user_id":"8ed614e9-96dd-485e-8958-beeccb5de3f6"}
+account_deletion_retry user_id=8ed614e9-96dd-485e-8958-beeccb5de3f6 code=permission
+_ test_configuration_and_permission_errors_stay_pending_and_actionable[unconfirmed404] _
+
+user = UUID('7638c431-314f-4d0e-b380-59e1ad843b88')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d607f210>)
+failure = 'unconfirmed404'
+
+    @pytest.mark.parametrize("failure", ["configuration", "permission", "unconfirmed404"])
+    def test_configuration_and_permission_errors_stay_pending_and_actionable(
+        user: UUID, signer: Signer, failure: str
+    ) -> None:
+        forget(user)
+        calls: list[str] = []
+    
+        def provider(request: httpx2.Request) -> httpx2.Response:
+            calls.append(request.url.path)
+            return httpx2.Response(403 if failure == "permission" else 404)
+    
+        with application(signer, provider, configured=failure != "configuration"):
+            code = "permission" if failure == "permission" else "configuration"
+>           eventually(lambda: state(user) == f"1:{code}:true:false")
+
+tests/test_account_deletion_recovery.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+check = <function test_configuration_and_permission_errors_stay_pending_and_actionable.<locals>.<lambda> at 0x7f54d5bcfc40>
+
+    def eventually(check: Callable[[], bool]) -> None:
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if check():
+                return
+            time.sleep(0.01)
+>       assert check(), "Lifecycle worker did not reach the expected durable state"
+E       AssertionError: Lifecycle worker did not reach the expected durable state
+E       assert False
+E        +  where False = <function test_configuration_and_permission_errors_stay_pending_and_actionable.<locals>.<lambda> at 0x7f54d5bcfc40>()
+
+tests/test_account_deletion_recovery.py:76: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"account_deletion_pending","user_id":"7638c431-314f-4d0e-b380-59e1ad843b88"}
+account_deletion_retry user_id=7638c431-314f-4d0e-b380-59e1ad843b88 code=configuration
+_________ test_claim_expiry_fences_stale_workers_and_startup_recovers __________
+
+user = UUID('b868bc47-8a3b-4dbd-abe3-d736a8a159d9')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d59984d0>)
+
+    def test_claim_expiry_fences_stale_workers_and_startup_recovers(user: UUID, signer: Signer) -> None:
+        forget(user)
+        old = anyio.run(claim, user)
+        assert old is not None
+        assert anyio.run(claim, user) is None
+        admin_sql(
+            "UPDATE fieldmaps_private.account_deletions SET lease_until=now()-interval '1 second' "
+            "WHERE user_id=:'user';",
+            f"user={user}",
+        )
+        new = anyio.run(claim, user)
+        assert new is not None
+        assert new.lease_token != old.lease_token
+    
+        async def stale() -> None:
+            engine = create_async_engine(database_settings().database_url)
+            try:
+                async with async_sessionmaker(engine).begin() as session:
+                    await account_deletions.retry(session, old, "permission", 3600)
+                    await account_deletions.complete(session, old)
+            finally:
+                await engine.dispose()
+    
+        anyio.run(stale)
+>       assert state(user) == "2::false:true"
+E       AssertionError: assert '2::f:t' == '2::false:true'
+E         
+E         - 2::false:true
+E         + 2::f:t
+
+tests/test_account_deletion_recovery.py:256: AssertionError
+___________ test_failed_account_does_not_starve_another_due_account ____________
+
+user = UUID('90fc8134-aae0-4616-948d-1f28dff54be5')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d599b910>)
+
+            results = list(workers.map(take, range(2)))
+        assert sum(item is not None for item in results) == 1
+    
+    
+    def test_failed_account_does_not_starve_another_due_account(user: UUID, signer: Signer) -> None:
+        other = uuid4()
+        admin_sql("INSERT INTO auth.users(id) VALUES (:'user');", f"user={other}")
+        try:
+            forget(user)
+            forget(other)
+            calls: list[str] = []
+    
+            def provider(request: httpx2.Request) -> httpx2.Response:
+>               calls.append(request.url.path)
+
+tests/test_account_deletion_recovery.py:286: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+check = <function test_failed_account_does_not_starve_another_due_account.<locals>.<lambda> at 0x7f54d5507600>
+
+    def eventually(check: Callable[[], bool]) -> None:
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if check():
+                return
+            time.sleep(0.01)
+>       assert check(), "Lifecycle worker did not reach the expected durable state"
+E       AssertionError: Lifecycle worker did not reach the expected durable state
+E       assert False
+E        +  where False = <function test_failed_account_does_not_starve_another_due_account.<locals>.<lambda> at 0x7f54d5507600>()
+
+tests/test_account_deletion_recovery.py:76: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"account_deletion_pending","user_id":"90fc8134-aae0-4616-948d-1f28dff54be5"}
+account_deletion_retry user_id=90fc8134-aae0-4616-948d-1f28dff54be5 code=provider_unavailable
+account_deletion_complete user_id=18d26b98-99b9-4d52-8590-568fb71ced87
+______ test_commit_before_provider_interruption_recovers_on_real_startup _______
+
+user = UUID('78afd008-1fd8-4323-944e-29fb62c86e74')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f54d62bec30>)
+
+    def test_commit_before_provider_interruption_recovers_on_real_startup(
+        user: UUID, signer: Signer
+    ) -> None:
+        def unexpected(_request: httpx2.Request) -> httpx2.Response:
+            pytest.fail("No provider call should precede the synthetic interruption")
+    
+        with application(signer, unexpected) as client:
+            client.headers["Authorization"] = f"Bearer {signer.issue(user)}"
+            with (
+                patch(
+                    "fieldmaps_api.routers.identity.reconcile_one",
+                    side_effect=RuntimeError("Synthetic interruption after commit"),
+                ),
+                pytest.raises(RuntimeError, match="interruption after commit"),
+            ):
+                client.delete("/v1/me")
+>           assert state(user) == "0::false:false"
+E           AssertionError: assert '0::f:f' == '0::false:false'
+E             
+E             - 0::false:false
+E             + 0::f:f
+
+tests/test_account_deletion_recovery_assessment.py:34: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"http_response","request_id":"4b10793bda824ff78b00ed399d56c3bc","method":"DELETE","status":500,"duration_ms":144,"operation":"delete_account"}
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_account_deletion_recovery.py::test_success_preserves_research_and_provider_cascade
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_account_deletion_recovery.py::test_success_preserves_research_and_provider_cascade
+FAILED tests/test_account_deletion_recovery.py::test_outage_backoff_restart_and_recovery_without_user_request
+FAILED tests/test_account_deletion_recovery.py::test_provider_success_with_lost_response_completes_by_confirmed_absence
+FAILED tests/test_account_deletion_recovery.py::test_configuration_and_permission_errors_stay_pending_and_actionable[configuration]
+FAILED tests/test_account_deletion_recovery.py::test_configuration_and_permission_errors_stay_pending_and_actionable[permission]
+FAILED tests/test_account_deletion_recovery.py::test_configuration_and_permission_errors_stay_pending_and_actionable[unconfirmed404]
+FAILED tests/test_account_deletion_recovery.py::test_claim_expiry_fences_stale_workers_and_startup_recovers
+FAILED tests/test_account_deletion_recovery.py::test_failed_account_does_not_starve_another_due_account
+FAILED tests/test_account_deletion_recovery_assessment.py::test_commit_before_provider_interruption_recovers_on_real_startup
+9 failed, 23 passed, 2 warnings in 45.38s

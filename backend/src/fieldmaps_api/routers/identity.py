@@ -5,12 +5,14 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from fieldmaps_api.account_deletion_worker import reconcile_one
 from fieldmaps_api.config import Settings
 from fieldmaps_api.deps import Authentication, user_transaction
 from fieldmaps_api.errors import ERROR_RESPONSES
 from fieldmaps_api.identity_schemas import Identity, Profile, ProfilePatch
+from fieldmaps_api.repositories.account_deletions import pending
 from fieldmaps_api.repositories.identity import forget_user
-from fieldmaps_api.services.account_deletion import admin_key, delete_auth_user
+from fieldmaps_api.services.account_deletion import admin_key
 from fieldmaps_api.services.identity import get_identity, patch_profile
 
 
@@ -47,7 +49,11 @@ def create_router(
         key = await admin_key(settings)
         async with user_transaction(sessions, user_id) as session:
             await forget_user(session)
-        if await delete_auth_user(settings, key, user_id):
+        if await reconcile_one(sessions, settings, user_id, key):
+            return Response(status_code=204)
+        async with sessions.begin() as session:
+            still_pending = await pending(session, user_id)
+        if not still_pending:
             return Response(status_code=204)
         return Response(
             status_code=202,

@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
+import anyio
 import httpx2
 import pytest
 from fastapi.testclient import TestClient
@@ -40,8 +41,15 @@ def deletion_client(signer: Signer, deletion_user: UUID) -> Iterator[TestClient]
         jwks_url=HttpUrl(f"{ISSUER}/.well-known/jwks.json"),
         auth_admin_key_file=Path("/sb_secret_synthetic-test-value"),
     )
+
+    async def idle_worker(_sessions: object, _settings: object) -> None:
+        await anyio.sleep_forever()
+
     with (
         patch("anyio.Path.read_text", return_value="sb_secret_synthetic-test-value"),
+        # These request-boundary cases control timing; lifecycle recovery is exercised
+        # through real startup/shutdown in test_account_deletion_recovery.py.
+        patch("fieldmaps_api.account_deletion_worker.run", side_effect=idle_worker),
         TestClient(create_app(settings, JwksVerifier(ISSUER, "authenticated", signer))) as client,
     ):
         client.headers["Authorization"] = f"Bearer {signer.issue(deletion_user)}"
@@ -115,7 +123,15 @@ def test_failure_commits_forgetting_and_retry_finishes(
     with patch(
         "fieldmaps_api.services.account_deletion.httpx2.AsyncHTTPTransport",
         return_value=httpx2.MockTransport(lambda _request: httpx2.Response(204)),
-    ):
+    ) as transport:
+        # Another request cannot defeat persistent backoff.
+        assert deletion_client.delete("/v1/me").status_code == 202
+        transport.assert_not_called()
+        admin_sql(
+            "UPDATE fieldmaps_private.account_deletions SET next_attempt_at=now() "
+            "WHERE user_id=:'user';",
+            f"user={deletion_user}",
+        )
         assert deletion_client.delete("/v1/me").status_code == 204
 
 
@@ -129,7 +145,9 @@ def test_success_and_already_deleted(
     with patch(
         "fieldmaps_api.services.account_deletion.httpx2.AsyncHTTPTransport",
         return_value=httpx2.MockTransport(
-            lambda _request: httpx2.Response(404 if auth_missing else 200)
+            lambda _request: httpx2.Response(
+                404 if auth_missing else 200, json={"code": "user_not_found"}
+            )
         ),
     ):
         response = deletion_client.delete("/v1/me")

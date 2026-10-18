@@ -23,7 +23,7 @@ def settings() -> Settings:
 
 
 @pytest.mark.parametrize("failure", ["timeout", "unavailable", "redirect"])
-def test_admin_has_one_retry_and_never_logs_credentials(failure: str) -> None:
+def test_admin_has_bounded_attempts_and_never_logs_credentials(failure: str) -> None:
     user = uuid4()
     attempts: list[httpx2.Request] = []
 
@@ -52,10 +52,10 @@ def test_admin_has_one_retry_and_never_logs_credentials(failure: str) -> None:
         patch("fieldmaps_api.services.account_deletion.LOGGER.error") as log,
         patch("fieldmaps_api.services.account_deletion.sentry_sdk.capture_event") as capture,
     ):
-        assert not anyio.run(
+        assert anyio.run(
             delete_auth_user, settings(), SecretStr("sb_secret_synthetic-test-value"), user
-        )
-    assert len(attempts) == 2
+        ) == ("configuration" if failure == "redirect" else "provider_unavailable")
+    assert len(attempts) == (1 if failure == "redirect" else 2)
     assert all(request.url.host == "fieldmaps-test.invalid" for request in attempts)
     log.assert_called_once_with(f'{{"event":"account_deletion_pending","user_id":"{user}"}}')
     capture.assert_called_once_with(
@@ -77,8 +77,11 @@ def test_retry_recovers_without_pending_event() -> None:
         ),
         patch("fieldmaps_api.services.account_deletion.LOGGER.error") as log,
     ):
-        assert anyio.run(
-            delete_auth_user, settings(), SecretStr("sb_secret_synthetic-test-value"), uuid4()
+        assert (
+            anyio.run(
+                delete_auth_user, settings(), SecretStr("sb_secret_synthetic-test-value"), uuid4()
+            )
+            == "complete"
         )
     assert len(attempts) == 2
     log.assert_not_called()
@@ -109,3 +112,43 @@ def test_pending_sentry_event_keeps_only_user_id() -> None:
         },
         {},
     ) == {"message": "Account deletion pending", "level": "error", "user": {"id": user}}
+
+
+@pytest.mark.parametrize(
+    ("status", "body", "outcome", "attempts"),
+    [
+        (200, {}, "complete", 1),
+        (204, {}, "complete", 1),
+        (404, {"code": "user_not_found"}, "complete", 1),
+        (404, {"error_code": "user_not_found"}, "complete", 1),
+        (404, {"code": "unknown"}, "configuration", 1),
+        (202, {}, "configuration", 1),
+        (401, {}, "permission", 1),
+        (403, {}, "permission", 1),
+        (429, {}, "provider_unavailable", 2),
+    ],
+)
+def test_only_confirmed_completion_clears_pending_work(
+    status: int, body: dict[str, str], outcome: str, attempts: int
+) -> None:
+    calls: list[httpx2.Request] = []
+
+    def handle(request: httpx2.Request) -> httpx2.Response:
+        calls.append(request)
+        assert request.headers["X-Supabase-Api-Version"] == "2024-01-01"
+        return httpx2.Response(status, json=body)
+
+    with (
+        patch(
+            "fieldmaps_api.services.account_deletion.httpx2.AsyncHTTPTransport",
+            return_value=httpx2.MockTransport(handle),
+        ),
+        patch("fieldmaps_api.services.account_deletion.sentry_sdk.capture_event"),
+    ):
+        assert (
+            anyio.run(
+                delete_auth_user, settings(), SecretStr("sb_secret_synthetic-test-value"), uuid4()
+            )
+            == outcome
+        )
+    assert len(calls) == attempts
