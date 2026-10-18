@@ -1,0 +1,4 @@
+# Preserve exact captured output and unified-patch context whitespace.
+evidence/focused-initial.txt -whitespace
+evidence/sql.txt -whitespace
+production-change.patch -whitespace

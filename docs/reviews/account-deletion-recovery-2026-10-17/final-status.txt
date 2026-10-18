@@ -1,0 +1,17 @@
+ M backend/README.md
+ M backend/src/fieldmaps_api/main.py
+ M backend/src/fieldmaps_api/routers/identity.py
+ M backend/src/fieldmaps_api/services/account_deletion.py
+ M backend/tests/test_account_deletion.py
+ M backend/tests/test_account_deletion_admin.py
+ M backend/tests/test_account_deletion_recovery_assessment.py
+ M database/README.md
+ M database/tests/run.sql
+?? backend/src/fieldmaps_api/account_deletion_worker.py
+?? backend/src/fieldmaps_api/queries/account_deletions.py
+?? backend/src/fieldmaps_api/repositories/account_deletions.py
+?? backend/tests/test_account_deletion_recovery.py
+?? database/tests/account-deletion-recovery.sql
+?? database/tests/test_deletion_recovery_migration.py
+?? docs/reviews/account-deletion-recovery-2026-10-17/
+?? supabase/migrations/20261018030756_account_deletion_recovery.sql

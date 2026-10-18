@@ -1,0 +1,30 @@
+{
+  "backend/src/fieldmaps_api/main.py": {
+    "added": 6,
+    "deleted": 5
+  },
+  "backend/src/fieldmaps_api/routers/identity.py": {
+    "added": 8,
+    "deleted": 2
+  },
+  "backend/src/fieldmaps_api/services/account_deletion.py": {
+    "added": 36,
+    "deleted": 6
+  },
+  "backend/src/fieldmaps_api/account_deletion_worker.py": {
+    "added": 76,
+    "deleted": 0
+  },
+  "backend/src/fieldmaps_api/queries/account_deletions.py": {
+    "added": 30,
+    "deleted": 0
+  },
+  "backend/src/fieldmaps_api/repositories/account_deletions.py": {
+    "added": 46,
+    "deleted": 0
+  },
+  "supabase/migrations/20261018030756_account_deletion_recovery.sql": {
+    "added": 43,
+    "deleted": 0
+  }
+}

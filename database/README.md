@@ -81,6 +81,21 @@ PostgreSQL 17/PostGIS image containing pg_cron. The default remains the pinned S
 image. Alternative-image runs use synthetic Auth tables and do not prove full Supabase
 Auth/Storage service behavior. See [form revision evidence](../docs/reviews/form-revisions-2026-10-16/README.md).
 
+## Durable account-deletion recovery
+
+`20261018030756_account_deletion_recovery.sql` follows the four current migrations.
+Apply it transactionally through the authorized target's normal migration workflow
+before the recovery-enabled API. It creates private minimal retry/lease metadata,
+atomically enqueues on tombstoning and backfills retained tombstones. It does not rewrite
+profiles, memberships, forms, observations, package archives or receipts. A configured
+new API refuses startup if its recovery table is missing.
+
+Reconciliation starts automatically in configured API lifespans; multiple processes
+are supported. Keep at least one running with the correct database/issuer/key pairing.
+See the [recovery rollout/runbook](../docs/reviews/account-deletion-recovery-2026-10-17/rollout.md)
+for read-only monitoring and conditional operator retry. Do not clear tombstones,
+delete pending rows or reset data to make deletion appear complete.
+
 ## Canonical synthetic forms and existing targets
 
 The baseline's fresh synthetic shell INSERT now authors canonical `questions`, preserving

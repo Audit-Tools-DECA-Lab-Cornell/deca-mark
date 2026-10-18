@@ -75,8 +75,14 @@ jobs:
         run: pnpm db:stop
   backend:
     runs-on: ubuntu-latest
+    env:
+      # Same pinned version; avoid ECR's unauthenticated data-limit failures.
+      DECAMARK_REHEARSAL_IMAGE: supabase/postgres:17.6.1.171
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Forward rehearsal reads the authentic pre-recovery migration blobs.
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: 10.17.1
@@ -88,15 +94,16 @@ jobs:
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
           python-version: '3.13'
-      - uses: supabase/setup-cli@v1
-        with:
-          version: 2.118.0
+      - name: Install collector dependencies for real queue acceptance
+        run: pnpm --dir mobile install --frozen-lockfile
       - run: pnpm backend:setup
       - run: pnpm backend:check
-      - run: pnpm db:start
-      - run: pnpm backend:test
-      - if: always()
-        run: pnpm db:stop
+      - name: Cache pinned disposable database image
+        run: docker pull "$DECAMARK_REHEARSAL_IMAGE"
+      - name: Full backend suite including isolated recovery acceptance
+        run: pnpm backend:test ZONE_API_REHEARSAL=1
+      - name: Forward account-deletion recovery migration
+        run: sh docs/reviews/account-deletion-recovery-2026-10-17/reproduce-forward.sh -q
   plan:
     runs-on: ubuntu-latest
     steps:

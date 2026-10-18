@@ -102,6 +102,8 @@ def cleanup_tenant(tenant: Tenant) -> None:
         "(SELECT (value->>'id')::uuid FROM jsonb_array_elements(:'users'::jsonb)); "
         "DELETE FROM fieldmaps.projects WHERE organization_id=:'org'; "
         "DELETE FROM fieldmaps.organizations WHERE id=:'org'; "
+        # Resume FK cascades so deleting these fixture profiles removes their recovery jobs.
+        "SET LOCAL session_replication_role=origin; "
         "DELETE FROM fieldmaps.profiles WHERE user_id IN "
         "(SELECT (value->>'id')::uuid FROM jsonb_array_elements(:'users'::jsonb)); "
         "DELETE FROM auth.users WHERE id IN "

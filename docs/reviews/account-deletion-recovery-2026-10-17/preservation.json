@@ -1,0 +1,16 @@
+{
+  "initial_files": 1715,
+  "unchanged": 1706,
+  "changed": [
+    "backend/README.md",
+    "backend/src/fieldmaps_api/main.py",
+    "backend/src/fieldmaps_api/routers/identity.py",
+    "backend/src/fieldmaps_api/services/account_deletion.py",
+    "backend/tests/test_account_deletion.py",
+    "backend/tests/test_account_deletion_admin.py",
+    "backend/tests/test_account_deletion_recovery_assessment.py",
+    "database/README.md",
+    "database/tests/run.sql"
+  ],
+  "missing": []
+}

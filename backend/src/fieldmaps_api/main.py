@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from starlette.middleware.errors import ServerErrorMiddleware
 
-from fieldmaps_api import readiness
+from fieldmaps_api import account_deletion_worker, readiness
 from fieldmaps_api.auth import JwksVerifier, TokenVerifier, UnconfiguredVerifier
 from fieldmaps_api.body_limits import BodySizeMiddleware
 from fieldmaps_api.config import Settings, read_local_settings
@@ -43,7 +43,7 @@ class HealthResponse(BaseModel):
     status: Literal["running"] = "running"
 
 
-def create_app(
+def create_app(  # noqa: PLR0915 - explicit lifecycle and router wiring
     settings: Settings | None = None,
     verifier: TokenVerifier | None = None,
     email_settings: EmailSettings | None = None,
@@ -88,12 +88,15 @@ def create_app(
                 configure_observability()
                 await readiness.assert_safe_role(engine)
                 await assert_email_configured(engine, mail)
+                await account_deletion_worker.assert_configured(engine, configuration)
             except Exception as error:
                 log_startup_failure(error)
                 raise
             async with anyio.create_task_group() as workers:
                 if mail.enabled and not mail.sandbox:
                     workers.start_soon(email_worker, sessions, mail)
+                if account_deletion_worker.enabled(configuration):
+                    workers.start_soon(account_deletion_worker.run, sessions, configuration)
                 try:
                     yield
                 finally:
@@ -148,9 +151,7 @@ def create_app(
             work=zone_work,
         )
     )
-    app.include_router(
-        zones.create_router(sessions, authenticate, work=zone_work)
-    )
+    app.include_router(zones.create_router(sessions, authenticate, work=zone_work))
     app.include_router(forms.create_router(sessions, authenticate))
     return app
 

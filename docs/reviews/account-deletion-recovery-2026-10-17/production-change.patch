@@ -1,0 +1,366 @@
+--- a/backend/src/fieldmaps_api/main.py
++++ b/backend/src/fieldmaps_api/main.py
+@@ -10,7 +10,7 @@
+ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+ from starlette.middleware.errors import ServerErrorMiddleware
+ 
+-from fieldmaps_api import readiness
++from fieldmaps_api import account_deletion_worker, readiness
+ from fieldmaps_api.auth import JwksVerifier, TokenVerifier, UnconfiguredVerifier
+ from fieldmaps_api.body_limits import BodySizeMiddleware
+ from fieldmaps_api.config import Settings, read_local_settings
+@@ -43,7 +43,7 @@
+     status: Literal["running"] = "running"
+ 
+ 
+-def create_app(
++def create_app(  # noqa: PLR0915 - explicit lifecycle and router wiring
+     settings: Settings | None = None,
+     verifier: TokenVerifier | None = None,
+     email_settings: EmailSettings | None = None,
+@@ -88,12 +88,15 @@
+                 configure_observability()
+                 await readiness.assert_safe_role(engine)
+                 await assert_email_configured(engine, mail)
++                await account_deletion_worker.assert_configured(engine, configuration)
+             except Exception as error:
+                 log_startup_failure(error)
+                 raise
+             async with anyio.create_task_group() as workers:
+                 if mail.enabled and not mail.sandbox:
+                     workers.start_soon(email_worker, sessions, mail)
++                if account_deletion_worker.enabled(configuration):
++                    workers.start_soon(account_deletion_worker.run, sessions, configuration)
+                 try:
+                     yield
+                 finally:
+@@ -148,9 +151,7 @@
+             work=zone_work,
+         )
+     )
+-    app.include_router(
+-        zones.create_router(sessions, authenticate, work=zone_work)
+-    )
++    app.include_router(zones.create_router(sessions, authenticate, work=zone_work))
+     app.include_router(forms.create_router(sessions, authenticate))
+     return app
+ 
+--- a/backend/src/fieldmaps_api/routers/identity.py
++++ b/backend/src/fieldmaps_api/routers/identity.py
+@@ -5,12 +5,14 @@
+ from pydantic import BaseModel, ConfigDict
+ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+ 
++from fieldmaps_api.account_deletion_worker import reconcile_one
+ from fieldmaps_api.config import Settings
+ from fieldmaps_api.deps import Authentication, user_transaction
+ from fieldmaps_api.errors import ERROR_RESPONSES
+ from fieldmaps_api.identity_schemas import Identity, Profile, ProfilePatch
++from fieldmaps_api.repositories.account_deletions import pending
+ from fieldmaps_api.repositories.identity import forget_user
+-from fieldmaps_api.services.account_deletion import admin_key, delete_auth_user
++from fieldmaps_api.services.account_deletion import admin_key
+ from fieldmaps_api.services.identity import get_identity, patch_profile
+ 
+ 
+@@ -47,7 +49,11 @@
+         key = await admin_key(settings)
+         async with user_transaction(sessions, user_id) as session:
+             await forget_user(session)
+-        if await delete_auth_user(settings, key, user_id):
++        if await reconcile_one(sessions, settings, user_id, key):
++            return Response(status_code=204)
++        async with sessions.begin() as session:
++            still_pending = await pending(session, user_id)
++        if not still_pending:
+             return Response(status_code=204)
+         return Response(
+             status_code=202,
+--- a/backend/src/fieldmaps_api/services/account_deletion.py
++++ b/backend/src/fieldmaps_api/services/account_deletion.py
+@@ -1,13 +1,14 @@
+ import re
+ import socket
+ from http import HTTPStatus
++from typing import Literal
+ from uuid import UUID
+ 
+ import anyio
+ import httpx2
+ import orjson
+ import sentry_sdk
+-from pydantic import SecretStr
++from pydantic import JsonValue, SecretStr, TypeAdapter, ValidationError
+ 
+ from fieldmaps_api.config import Settings
+ from fieldmaps_api.errors import StorageUnavailableError
+@@ -30,7 +31,10 @@
+     return SecretStr(value)
+ 
+ 
+-async def delete_auth_user(settings: Settings, key: SecretStr, user_id: UUID) -> bool:
++type DeleteOutcome = Literal["complete", "provider_unavailable", "permission", "configuration"]
++
++
++async def delete_auth_user(settings: Settings, key: SecretStr, user_id: UUID) -> DeleteOutcome:
+     """Make two bounded attempts after the durable database deletion has committed."""
+     limits = httpx2.Limits(max_connections=2, max_keepalive_connections=1, keepalive_expiry=30)
+     transport = httpx2.AsyncHTTPTransport(
+@@ -46,15 +50,41 @@
+         follow_redirects=False,
+         trust_env=False,
+     ) as client:
++        outcome: DeleteOutcome = "provider_unavailable"
+         for _attempt in range(2):
+             try:
+                 with anyio.fail_after(10):
+                     response = await client.delete(
+                         f"{str(settings.issuer).rstrip('/')}/admin/users/{user_id}",
+-                        headers={"apikey": key.get_secret_value()},
++                        headers={
++                            "apikey": key.get_secret_value(),
++                            "X-Supabase-Api-Version": "2024-01-01",
++                        },
+                     )
+-                if response.is_success or response.status_code == HTTPStatus.NOT_FOUND:
+-                    return True
++                if response.status_code in (HTTPStatus.OK, HTTPStatus.NO_CONTENT):
++                    return "complete"
++                if response.status_code == HTTPStatus.NOT_FOUND:
++                    try:
++                        value = TypeAdapter[dict[str, JsonValue]](
++                            dict[str, JsonValue]
++                        ).validate_json(response.content)
++                    except ValidationError:
++                        value = None
++                    if value is not None and (
++                        value.get("code") == "user_not_found"
++                        or value.get("error_code") == "user_not_found"
++                    ):
++                        return "complete"
++                if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
++                    outcome = "permission"
++                    break
++                if (
++                    response.status_code
++                    not in (HTTPStatus.REQUEST_TIMEOUT, HTTPStatus.TOO_MANY_REQUESTS)
++                    and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
++                ):
++                    outcome = "configuration"
++                    break
+             except (httpx2.RequestError, TimeoutError):
+                 continue
+     LOGGER.error(
+@@ -63,4 +93,4 @@
+     sentry_sdk.capture_event(
+         {"message": "Account deletion pending", "level": "error", "user": {"id": str(user_id)}}
+     )
+-    return False
++    return outcome
+--- a/backend/src/fieldmaps_api/account_deletion_worker.py
++++ b/backend/src/fieldmaps_api/account_deletion_worker.py
+@@ -0,0 +1,76 @@
++"""Reconcile durable tombstones using bounded calls, leases and persistent backoff."""
++
++from typing import Final
++from uuid import UUID
++
++import anyio
++from pydantic import SecretStr
++from sqlalchemy import text
++from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
++
++from fieldmaps_api.config import Settings
++from fieldmaps_api.errors import StorageUnavailableError
++from fieldmaps_api.observability import LOGGER
++from fieldmaps_api.repositories import account_deletions
++from fieldmaps_api.services.account_deletion import admin_key, delete_auth_user
++
++POLL_SECONDS: Final = 5
++BATCH_SIZE: Final = 10
++
++
++def enabled(settings: Settings) -> bool:
++    return settings.auth_admin_key_file is not None and settings.issuer is not None
++
++
++async def assert_configured(engine: AsyncEngine, settings: Settings) -> None:
++    if enabled(settings):
++        async with engine.connect() as probe:
++            await probe.execute(
++                text("SELECT user_id FROM fieldmaps_private.account_deletions LIMIT 0")
++            )
++    LOGGER.info("account_deletion_recovery_configured enabled=%s", enabled(settings))
++
++
++async def reconcile_one(
++    sessions: async_sessionmaker[AsyncSession],
++    settings: Settings,
++    user_id: UUID | None = None,
++    key: SecretStr | None = None,
++) -> bool | None:
++    """Attempt one due claim; None means another run owns it or nothing is due."""
++    async with sessions.begin() as session:
++        job = await account_deletions.claim(session, user_id)
++    if job is None:
++        return None
++    try:
++        credential = key if key is not None else await admin_key(settings)
++    except StorageUnavailableError:
++        outcome = "configuration"
++    else:
++        outcome = await delete_auth_user(settings, credential, job.user_id)
++    async with sessions.begin() as session:
++        if outcome == "complete":
++            await account_deletions.complete(session, job)
++        else:
++            delay = (
++                3600
++                if outcome != "provider_unavailable"
++                else min(30 * (1 << min(job.attempts - 1, 7)), 3600)
++            )
++            await account_deletions.retry(session, job, outcome, delay)
++    if outcome != "complete":
++        LOGGER.error("account_deletion_retry user_id=%s code=%s", job.user_id, outcome)
++    else:
++        LOGGER.info("account_deletion_complete user_id=%s", job.user_id)
++    return outcome == "complete"
++
++
++async def run(sessions: async_sessionmaker[AsyncSession], settings: Settings) -> None:
++    while True:
++        try:
++            for _ in range(BATCH_SIZE):
++                if await reconcile_one(sessions, settings) is None:
++                    break
++        except Exception:  # noqa: BLE001 - survive DB outages; leases expire; never log secrets.
++            LOGGER.error("account_deletion_worker_unavailable")
++        await anyio.sleep(POLL_SECONDS)
+--- a/backend/src/fieldmaps_api/queries/account_deletions.py
++++ b/backend/src/fieldmaps_api/queries/account_deletions.py
+@@ -0,0 +1,30 @@
++"""Private deletion claims; no provider I/O takes place in these transactions."""
++
++from typing import Final
++
++from sqlalchemy import text
++
++CLAIM: Final = text("""
++WITH due AS (
++    SELECT user_id FROM fieldmaps_private.account_deletions
++    WHERE next_attempt_at <= now() AND (lease_until IS NULL OR lease_until <= now())
++      AND (CAST(:user_id AS uuid) IS NULL OR user_id = CAST(:user_id AS uuid))
++    ORDER BY next_attempt_at, user_id FOR UPDATE SKIP LOCKED LIMIT 1
++)
++UPDATE fieldmaps_private.account_deletions d SET
++    lease_token = :lease, lease_until = now() + interval '60 seconds',
++    attempts = least(attempts,1000) + 1, last_attempt_at = now()
++FROM due WHERE d.user_id = due.user_id
++RETURNING d.user_id, d.attempts, d.lease_token
++""")
++COMPLETE: Final = text("""
++DELETE FROM fieldmaps_private.account_deletions WHERE user_id = :user AND lease_token = :lease
++""")
++RETRY: Final = text("""
++UPDATE fieldmaps_private.account_deletions SET
++    next_attempt_at = now() + :delay, last_error = :error, lease_token = NULL, lease_until = NULL
++WHERE user_id = :user AND lease_token = :lease
++""")
++PENDING: Final = text("""
++SELECT EXISTS (SELECT FROM fieldmaps_private.account_deletions WHERE user_id = :user)
++""")
+--- a/backend/src/fieldmaps_api/repositories/account_deletions.py
++++ b/backend/src/fieldmaps_api/repositories/account_deletions.py
+@@ -0,0 +1,46 @@
++"""Minimal durable recovery metadata, independent of profile or research content."""
++
++from datetime import timedelta
++from typing import TYPE_CHECKING
++from uuid import UUID, uuid4
++
++from pydantic import BaseModel
++from sqlalchemy.ext.asyncio import AsyncSession
++
++from fieldmaps_api.queries import account_deletions as queries
++
++if TYPE_CHECKING:
++    from sqlalchemy import Result
++
++
++class Claim(BaseModel):
++    user_id: UUID
++    attempts: int
++    lease_token: UUID
++
++
++async def claim(session: AsyncSession, user_id: UUID | None = None) -> Claim | None:
++    result = await session.execute(queries.CLAIM, {"user_id": user_id, "lease": uuid4()})
++    row = result.mappings().one_or_none()
++    return Claim.model_validate(row) if row is not None else None
++
++
++async def complete(session: AsyncSession, job: Claim) -> None:
++    await session.execute(queries.COMPLETE, {"user": job.user_id, "lease": job.lease_token})
++
++
++async def retry(session: AsyncSession, job: Claim, error: str, delay: int) -> None:
++    await session.execute(
++        queries.RETRY,
++        {
++            "user": job.user_id,
++            "lease": job.lease_token,
++            "error": error,
++            "delay": timedelta(seconds=delay),
++        },
++    )
++
++
++async def pending(session: AsyncSession, user_id: UUID) -> bool:
++    result: Result[tuple[bool]] = await session.execute(queries.PENDING, {"user": user_id})
++    return result.scalar_one()
+--- a/supabase/migrations/20261018030756_account_deletion_recovery.sql
++++ b/supabase/migrations/20261018030756_account_deletion_recovery.sql
+@@ -0,0 +1,43 @@
++-- A tombstone and its recoverable external deletion commit or roll back together.
++CREATE TABLE fieldmaps_private.account_deletions (
++    user_id uuid PRIMARY KEY REFERENCES fieldmaps.profiles(user_id) ON DELETE CASCADE,
++    requested_at timestamptz NOT NULL DEFAULT now(),
++    attempts integer NOT NULL DEFAULT 0 CHECK (attempts BETWEEN 0 AND 1001),
++    next_attempt_at timestamptz NOT NULL DEFAULT now(),
++    last_attempt_at timestamptz,
++    last_error text CHECK (last_error IN ('provider_unavailable','permission','configuration')),
++    lease_token uuid,
++    lease_until timestamptz,
++    CHECK ((lease_token IS NULL) = (lease_until IS NULL))
++);
++CREATE INDEX account_deletions_due ON fieldmaps_private.account_deletions(next_attempt_at,user_id);
++ALTER TABLE fieldmaps_private.account_deletions ENABLE ROW LEVEL SECURITY;
++REVOKE ALL ON fieldmaps_private.account_deletions FROM PUBLIC, anon, authenticated, service_role;
++GRANT SELECT, DELETE ON fieldmaps_private.account_deletions TO fieldmaps_api;
++GRANT UPDATE(attempts,next_attempt_at,last_attempt_at,last_error,lease_token,lease_until)
++    ON fieldmaps_private.account_deletions TO fieldmaps_api;
++-- Like email delivery, the trusted backend worker claims independently of end-user JWTs.
++CREATE POLICY backend_deletion ON fieldmaps_private.account_deletions
++    TO fieldmaps_api USING (true) WITH CHECK (true);
++
++CREATE FUNCTION fieldmaps_private.enqueue_account_deletion() RETURNS trigger
++LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
++BEGIN
++    IF NEW.deleted_at IS NOT NULL THEN
++        INSERT INTO fieldmaps_private.account_deletions(user_id,requested_at)
++        VALUES (NEW.user_id,NEW.deleted_at) ON CONFLICT (user_id) DO NOTHING;
++    END IF;
++    RETURN NEW;
++END;
++$$;
++REVOKE ALL ON FUNCTION fieldmaps_private.enqueue_account_deletion()
++    FROM PUBLIC, anon, authenticated, service_role, fieldmaps_api;
++CREATE TRIGGER enqueue_account_deletion
++    AFTER INSERT OR UPDATE OF deleted_at ON fieldmaps.profiles
++    FOR EACH ROW EXECUTE FUNCTION fieldmaps_private.enqueue_account_deletion();
++
++-- Recover tombstones committed by previous API versions as well as new requests.
++INSERT INTO fieldmaps_private.account_deletions(user_id,requested_at)
++SELECT user_id,deleted_at FROM fieldmaps.profiles WHERE deleted_at IS NOT NULL;
++
++INSERT INTO fieldmaps_meta.schema_migrations(version) VALUES ('20261018030756');

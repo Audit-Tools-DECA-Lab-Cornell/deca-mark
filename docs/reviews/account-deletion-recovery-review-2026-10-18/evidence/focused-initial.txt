@@ -1,0 +1,115 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+.........................................FF..........                    [100%]
+=================================== FAILURES ===================================
+_____________ test_success_preserves_research_and_provider_cascade _____________
+
+audit_api = LiveApi(url='http://127.0.0.1:59285', tenant=Tenant(org=UUID('f38fbbcd-d2e3-4048-8afd-e0c9185ae9b1'), project=UUID('b7...}), signer=Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f5cec058e90>))
+
+    def test_success_preserves_research_and_provider_cascade(audit_api: LiveApi) -> None:
+        history = seed_history(audit_api)
+        user = audit_api.tenant.users["observer"]
+        before = history.frozen()
+        calls: list[str] = []
+    
+        def provider(request: httpx2.Request) -> httpx2.Response:
+            calls.append(request.url.path)
+            assert request.url.path.endswith(str(user))
+            assert state(user).endswith(":true")
+            # Model the real Auth hard-delete transaction's FK cascade, not just its HTTP status.
+            admin_sql("DELETE FROM auth.users WHERE id=:'user';", f"user={user}")
+            return httpx2.Response(200, json={})
+    
+        with application(audit_api.signer, provider) as client:
+            client.headers["Authorization"] = f"Bearer {audit_api.signer.issue(user)}"
+            assert client.delete("/v1/me").status_code == 204
+            assert client.get("/v1/me").status_code == 403
+            assert client.patch("/v1/me", json={"display_name": "Restore"}).status_code == 403
+>       assert len(calls) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len(['/auth/v1/admin/users/e1b4600a-0bd0-4900-86e8-319614bb5374', '/auth/v1/admin/users/7032a32a-a8b3-4414-832d-fb774aea677b'])
+
+tests/test_account_deletion_recovery.py:132: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=False
+----------------------------- Captured stderr call -----------------------------
+{"event":"http_response","request_id":"0cc8bac550f048028edca3c1321f7c7c","method":"POST","status":201,"duration_ms":746,"operation":"createPackage"}
+{"event":"http_response","request_id":"5c67ad9e46c44dc68f7a8f06ad4c8b9a","method":"GET","status":200,"duration_ms":60,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"e6fdb9dfcc594c1aba71b88b480670ab","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+account_deletion_worker_unavailable
+account_deletion_complete user_id=7032a32a-a8b3-4414-832d-fb774aea677b
+{"event":"http_response","request_id":"f6dd5204f7bf4530890215d84d12242a","method":"DELETE","status":204,"duration_ms":327,"operation":"delete_account"}
+{"event":"http_response","request_id":"7bfc4e7b6a214dc19007e32dd27e01aa","method":"GET","status":403,"duration_ms":6,"operation":"get_identity"}
+{"event":"http_response","request_id":"90d4e57f57e14eaf895f3f846661e41f","method":"PATCH","status":403,"duration_ms":4,"operation":"update_profile"}
+------------------------------ Captured log call -------------------------------
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"0cc8bac550f048028edca3c1321f7c7c","method":"POST","status":201,"duration_ms":746,"operation":"createPackage"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"5c67ad9e46c44dc68f7a8f06ad4c8b9a","method":"GET","status":200,"duration_ms":60,"operation":"getHistoricalZones"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"e6fdb9dfcc594c1aba71b88b480670ab","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+________ test_outage_backoff_restart_and_recovery_without_user_request _________
+
+user = UUID('ce0a5593-b728-4ee0-b58a-a44cefd4e738')
+signer = Signer(private_key=<cryptography.hazmat.bindings._rust.openssl.rsa.RSAPrivateKey object at 0x7f5cedee16b0>)
+caplog = <_pytest.logging.LogCaptureFixture object at 0x7f5cec090910>
+
+    def test_outage_backoff_restart_and_recovery_without_user_request(
+        user: UUID, signer: Signer, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        calls: list[str] = []
+    
+        def unavailable(request: httpx2.Request) -> httpx2.Response:
+            calls.append(request.url.path)
+            return httpx2.Response(503, text="sensitive upstream content")
+    
+        with application(signer, unavailable) as client:
+            client.headers["Authorization"] = f"Bearer {signer.issue(user)}"
+            assert client.get("/v1/me").status_code == 200
+            response = client.delete("/v1/me")
+            assert response.status_code == 202
+            assert response.json() == {"status": "pending"}
+            assert state(user) == "1:provider_unavailable:true:false"
+            assert client.get("/v1/me").status_code == 403
+            assert client.delete("/v1/me").status_code == 202
+>       assert len(calls) == 2
+E       AssertionError: assert 4 == 2
+E        +  where 4 = len(['/auth/v1/admin/users/d92c62db-a16b-4c42-b699-0c7979f14734', '/auth/v1/admin/users/d92c62db-a16b-4c42-b699-0c7979f147...auth/v1/admin/users/ce0a5593-b728-4ee0-b58a-a44cefd4e738', '/auth/v1/admin/users/ce0a5593-b728-4ee0-b58a-a44cefd4e738'])
+
+tests/test_account_deletion_recovery.py:160: AssertionError
+----------------------------- Captured stderr call -----------------------------
+email_delivery_configured enabled=False sandbox=False
+account_deletion_recovery_configured enabled=True
+{"event":"account_deletion_pending","user_id":"d92c62db-a16b-4c42-b699-0c7979f14734"}
+account_deletion_retry user_id=d92c62db-a16b-4c42-b699-0c7979f14734 code=provider_unavailable
+{"event":"http_response","request_id":"2eb0ddd649514903b7a27ed0695b79d4","method":"GET","status":200,"duration_ms":134,"operation":"get_identity"}
+{"event":"account_deletion_pending","user_id":"ce0a5593-b728-4ee0-b58a-a44cefd4e738"}
+account_deletion_retry user_id=ce0a5593-b728-4ee0-b58a-a44cefd4e738 code=provider_unavailable
+{"event":"http_response","request_id":"a7605a3999834bc2860392919833c340","method":"DELETE","status":202,"duration_ms":13,"operation":"delete_account"}
+{"event":"http_response","request_id":"f4e60b33e4bd4ed0baf8e1c4191e29d0","method":"GET","status":403,"duration_ms":5,"operation":"get_identity"}
+{"event":"http_response","request_id":"b0e70c17938546799f216999d255a8a5","method":"DELETE","status":202,"duration_ms":9,"operation":"delete_account"}
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_zone_authorization_races.py: 10 warnings
+tests/test_account_deletion_recovery.py: 1 warning
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_account_deletion_recovery.py::test_success_preserves_research_and_provider_cascade
+FAILED tests/test_account_deletion_recovery.py::test_outage_backoff_restart_and_recovery_without_user_request
+2 failed, 51 passed, 12 warnings in 51.71s

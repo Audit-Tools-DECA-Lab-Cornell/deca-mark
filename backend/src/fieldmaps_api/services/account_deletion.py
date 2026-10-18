@@ -1,13 +1,14 @@
 import re
 import socket
 from http import HTTPStatus
+from typing import Literal
 from uuid import UUID
 
 import anyio
 import httpx2
 import orjson
 import sentry_sdk
-from pydantic import SecretStr
+from pydantic import JsonValue, SecretStr, TypeAdapter, ValidationError
 
 from fieldmaps_api.config import Settings
 from fieldmaps_api.errors import StorageUnavailableError
@@ -30,7 +31,10 @@ async def admin_key(settings: Settings) -> SecretStr:
     return SecretStr(value)
 
 
-async def delete_auth_user(settings: Settings, key: SecretStr, user_id: UUID) -> bool:
+type DeleteOutcome = Literal["complete", "provider_unavailable", "permission", "configuration"]
+
+
+async def delete_auth_user(settings: Settings, key: SecretStr, user_id: UUID) -> DeleteOutcome:
     """Make two bounded attempts after the durable database deletion has committed."""
     limits = httpx2.Limits(max_connections=2, max_keepalive_connections=1, keepalive_expiry=30)
     transport = httpx2.AsyncHTTPTransport(
@@ -46,15 +50,41 @@ async def delete_auth_user(settings: Settings, key: SecretStr, user_id: UUID) ->
         follow_redirects=False,
         trust_env=False,
     ) as client:
+        outcome: DeleteOutcome = "provider_unavailable"
         for _attempt in range(2):
             try:
                 with anyio.fail_after(10):
                     response = await client.delete(
                         f"{str(settings.issuer).rstrip('/')}/admin/users/{user_id}",
-                        headers={"apikey": key.get_secret_value()},
+                        headers={
+                            "apikey": key.get_secret_value(),
+                            "X-Supabase-Api-Version": "2024-01-01",
+                        },
                     )
-                if response.is_success or response.status_code == HTTPStatus.NOT_FOUND:
-                    return True
+                if response.status_code in (HTTPStatus.OK, HTTPStatus.NO_CONTENT):
+                    return "complete"
+                if response.status_code == HTTPStatus.NOT_FOUND:
+                    try:
+                        value = TypeAdapter[dict[str, JsonValue]](
+                            dict[str, JsonValue]
+                        ).validate_json(response.content)
+                    except ValidationError:
+                        value = None
+                    if value is not None and (
+                        value.get("code") == "user_not_found"
+                        or value.get("error_code") == "user_not_found"
+                    ):
+                        return "complete"
+                if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+                    outcome = "permission"
+                    break
+                if (
+                    response.status_code
+                    not in (HTTPStatus.REQUEST_TIMEOUT, HTTPStatus.TOO_MANY_REQUESTS)
+                    and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+                ):
+                    outcome = "configuration"
+                    break
             except (httpx2.RequestError, TimeoutError):
                 continue
     LOGGER.error(
@@ -63,4 +93,4 @@ async def delete_auth_user(settings: Settings, key: SecretStr, user_id: UUID) ->
     sentry_sdk.capture_event(
         {"message": "Account deletion pending", "level": "error", "user": {"id": str(user_id)}}
     )
-    return False
+    return outcome

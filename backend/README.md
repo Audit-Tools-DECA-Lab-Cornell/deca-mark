@@ -127,9 +127,34 @@ Organization and project invitation endpoints create, list and revoke invitation
 
 `DELETE /v1/me` requires a runtime-mounted Supabase secret key (`sb_secret_…`). Set the optional `auth_admin_key_file` configuration field to that file's path, for example `/etc/secrets/supabase-secret-key` on Render. It is used only for the Auth Admin deletion call and never committed. Only `sb_secret_` keys with a nonempty, header-safe ASCII suffix are accepted; publishable keys and legacy JWT keys are rejected. Missing, unreadable or malformed configuration returns `503 storage_unavailable` before account data changes.
 
-The API commits `forget_user()` first, removing memberships and clearing personal profile fields. A sole owner with other organization members, or the last project manager, receives `409 sole_owner` with no account change. It then calls the configured issuer's `/admin/users/{user_id}` endpoint with the key in `apikey`. Each request has a five-second I/O timeout and ten-second overall deadline, with one retry. Redirects are refused. Success or an already-absent Auth user (404) returns an empty 204.
+Local forgetting and its private recovery row commit in the **same transaction**.
+A tombstone trigger also covers older writers; the forward migration backfills retained
+tombstones. Membership removal, profile anonymization, last-owner/manager protection
+and historical research attribution are unchanged.
 
-If both attempts fail, the API returns `202 {"status":"pending"}`. The profile's `deleted_at` persists, prevents rejoining or restoring the account, and remains until Auth deletion cascades the profile away. Clients can repeat DELETE before signing out; GET/PATCH remain forbidden. ERROR logs and Sentry contain only the pending event and user UUID, without the key, upstream response body or exception detail. Pending profiles require operator follow-up if clients stop retrying; automated reconciliation is not implemented. Staging and production still require the runtime Secret File and deployed acceptance verification.
+After commit, the request claims due work. Provider calls have five-second I/O timeouts,
+a ten-second overall deadline and at most two attempts per claim. Redirects are refused.
+Only 200/204 or a 404 explicitly identifying `user_not_found` confirms completion and
+yields 204. Otherwise the API returns durable `202 {"status":"pending"}`; repeated
+requests cannot bypass stored backoff or another worker's claim.
+
+Every API process configured with `auth_admin_key_file` and `issuer` automatically
+starts reconciliation in its existing lifespan task group. Apply the recovery migration
+first and retain its restricted-role grants. Each worker processes at most ten due
+claims per pass, sleeps five seconds, and retries transient failures after 30 seconds,
+doubling to a one-hour cap. Configuration/permission failures stay pending with a
+one-hour retry and a safe failure class. Sixty-second leases expire after interruption;
+tokens fence stale workers. No user session or subsequent DELETE is required.
+
+GET/PATCH and membership access remain revoked while pending. Completion removes only
+retry metadata; real Auth hard deletion normally cascades the profile/job. Recovery
+never clears a tombstone or recreates an account. Jobs/logs contain no profile content,
+key, upstream body or exception detail. With no key setting, new deletion returns 503
+before forgetting and startup logs recovery disabled; restore a configured API worker
+for any old pending work. An unavailable key for already pending work does not discard it.
+
+See [runtime requirements, safe monitoring/retry and rollout evidence](../docs/reviews/account-deletion-recovery-2026-10-17/rollout.md).
+This is locally verified recovery; hosted acceptance and deployment remain separate.
 
 Local Supabase Auth may use HTTP only on literal `localhost`, `127.0.0.1` or `[::1]`. Other identity-provider hosts require HTTPS.
 
