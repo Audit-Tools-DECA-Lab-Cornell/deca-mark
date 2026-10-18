@@ -1,0 +1,115 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "8839b8f4-a016-4470-b8bb-24731c9c3888",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -76.4855,
+          42.4482
+        ]
+      },
+      "properties": {
+        "observation_id": "8839b8f4-a016-4470-b8bb-24731c9c3888",
+        "project_id": "f3bde568-a48f-490b-8b4e-0a98f880cdee",
+        "user_id": "a8dc112b-009e-421b-a55b-cd5780c4b110",
+        "site_id": "9d9ea56c-0487-475f-9cbe-06e809a44cde",
+        "site_code": "sample-garden",
+        "site_name": "Isolation site",
+        "observer": "QA",
+        "observed_at": "2026-10-10T12:00:00Z",
+        "received_at": "2026-10-17T23:47:47.099726Z",
+        "revision": 1,
+        "form_version": "shell-v1",
+        "round_type": "standard",
+        "first_round": true,
+        "placement": "hand",
+        "package_id": "ecb10c5b-3229-4f06-ba07-55e2b4fcecff",
+        "zone_id": "f9ef32bb-7bf9-48fa-9ecd-52b8996c49b9",
+        "zone_code": "A",
+        "spatial_support": "point",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -76.4855,
+            42.4482
+          ]
+        },
+        "display_anchor": null,
+        "label": "OBS-8839b8",
+        "zone": "A",
+        "zone_label_at_capture": "Synthetic smaller lawn",
+        "map_version": 2,
+        "longitude": -76.4855,
+        "latitude": 42.4482,
+        "display_anchor_longitude": null,
+        "display_anchor_latitude": null,
+        "Rel_Round": "no",
+        "First_Round": "yes",
+        "people": 3,
+        "notes": "Synthetic late map-v1 record",
+        "answers": {
+          "notes": "Synthetic late map-v1 record",
+          "people": 3
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "bc9e3a2e-b182-4193-9d09-76d4d19ecb5e",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -76.486,
+          42.4482
+        ]
+      },
+      "properties": {
+        "observation_id": "bc9e3a2e-b182-4193-9d09-76d4d19ecb5e",
+        "project_id": "f3bde568-a48f-490b-8b4e-0a98f880cdee",
+        "user_id": "a8dc112b-009e-421b-a55b-cd5780c4b110",
+        "site_id": "9d9ea56c-0487-475f-9cbe-06e809a44cde",
+        "site_code": "sample-garden",
+        "site_name": "Isolation site",
+        "observer": "QA",
+        "observed_at": "2026-10-10T12:00:00Z",
+        "received_at": "2026-10-17T23:47:47.069176Z",
+        "revision": 1,
+        "form_version": "shell-v1",
+        "round_type": "standard",
+        "first_round": true,
+        "placement": "hand",
+        "package_id": "3daa5925-c0e1-4957-bb62-03993c28da8b",
+        "zone_id": "f9ef32bb-7bf9-48fa-9ecd-52b8996c49b9",
+        "zone_code": "A",
+        "spatial_support": "point",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -76.486,
+            42.4482
+          ]
+        },
+        "display_anchor": null,
+        "label": "OBS-bc9e3a",
+        "zone": "A",
+        "zone_label_at_capture": "Lawn",
+        "map_version": 1,
+        "longitude": -76.486,
+        "latitude": 42.4482,
+        "display_anchor_longitude": null,
+        "display_anchor_latitude": null,
+        "Rel_Round": "no",
+        "First_Round": "yes",
+        "people": 3,
+        "notes": "Synthetic late map-v1 record",
+        "answers": {
+          "notes": "Synthetic late map-v1 record",
+          "people": 3
+        }
+      }
+    }
+  ]
+}

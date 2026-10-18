@@ -1,0 +1,34 @@
+--- a/database/tests/test_audit_forward_api.py
++++ b/database/tests/test_audit_forward_api.py
+@@ -292,10 +292,10 @@
+         )
+         assert manager.post(current_url + "/publish").status_code == 428
+     with api.client("viewer") as viewer:
+-        # A separate rollout blocker: corrected validation cannot parse an immutable
+-        # canonical instrument that the pre-fix code could publish. Do not rewrite it.
++        # Stored interpretation retains the immutable pre-fix instrument, while
++        # new authoring still rejects it. No historical definition is rewritten.
+         whole = viewer.get(f"{project}/observations/export")
+-        assert whole.status_code == 422, whole.text
++        assert whole.status_code == 200, whole.text
+         assert viewer.get(f"{project}/observations/{invalid_record}").status_code == 200
+         for format_name in ("csv", "geojson"):
+             exported = viewer.get(
+@@ -322,7 +322,7 @@
+             f"{project}/observations/export",
+             params={"package_id": str(invalid_package)},
+         )
+-        assert blocked.status_code == 422, blocked.text
++        assert blocked.status_code == 200, blocked.text
+     with api.client("observer") as observer:
+         blocked_upload = observer.put(
+             f"{project}/observations/{uuid4()}",
+@@ -333,7 +333,7 @@
+                 "answers": {},
+             },
+         )
+-        assert blocked_upload.status_code == 500, blocked_upload.text
++        assert blocked_upload.status_code == 200, blocked_upload.text
+     inventory = admin_sql(
+         (
+             ROOT

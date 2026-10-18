@@ -1,0 +1,19 @@
+{
+  "contracts/openapi.json": {
+    "sha256": "677f1cf6916450196432d8c675cd9eaaef918915313581efbb9ec8868ccd48e4",
+    "unchanged": true
+  },
+  "web/src/lib/api/schema.d.ts": {
+    "sha256": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc",
+    "unchanged": true
+  },
+  "mobile/src/data/api/schema.d.ts": {
+    "sha256": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc",
+    "unchanged": true
+  },
+  "backend/src/fieldmaps_api/domain/legacy_forms.py": {
+    "sha256": "c24d7b913367a862636e5cf2a22a96d8e6bb9a6f3cfb23770524811622e4becf",
+    "unchanged": true
+  },
+  "openapi_regenerated_identical": true
+}

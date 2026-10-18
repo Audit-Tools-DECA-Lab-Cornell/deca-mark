@@ -1,0 +1,106 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "c60324d0-1e81-43ad-aae9-30a621165060",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -76.4864,
+                42.4478
+              ],
+              [
+                -76.485,
+                42.4478
+              ],
+              [
+                -76.485,
+                42.4489
+              ],
+              [
+                -76.4864,
+                42.4489
+              ],
+              [
+                -76.4864,
+                42.4478
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                -76.4848,
+                42.448
+              ],
+              [
+                -76.4845,
+                42.448
+              ],
+              [
+                -76.4845,
+                42.4483
+              ],
+              [
+                -76.4848,
+                42.4483
+              ],
+              [
+                -76.4848,
+                42.448
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "observation_id": "c60324d0-1e81-43ad-aae9-30a621165060",
+        "project_id": "f3bde568-a48f-490b-8b4e-0a98f880cdee",
+        "user_id": "a8dc112b-009e-421b-a55b-cd5780c4b110",
+        "site_id": "9d9ea56c-0487-475f-9cbe-06e809a44cde",
+        "site_code": "sample-garden",
+        "site_name": "Isolation site",
+        "observer": "QA",
+        "observed_at": "2026-10-10T12:00:00Z",
+        "received_at": "2026-10-17T23:47:47.084354Z",
+        "revision": 1,
+        "form_version": "gis-inventory-v1",
+        "round_type": "inventory",
+        "first_round": null,
+        "placement": "zone",
+        "package_id": "3daa5925-c0e1-4957-bb62-03993c28da8b",
+        "zone_id": "f9ef32bb-7bf9-48fa-9ecd-52b8996c49b9",
+        "zone_code": "A",
+        "spatial_support": "zone",
+        "geometry": null,
+        "display_anchor": {
+          "type": "Point",
+          "coordinates": [
+            -76.48570000000001,
+            42.448350000000005
+          ]
+        },
+        "label": "OBS-c60324",
+        "zone": "A",
+        "zone_label_at_capture": "Lawn",
+        "map_version": 1,
+        "longitude": null,
+        "latitude": null,
+        "display_anchor_longitude": -76.48570000000001,
+        "display_anchor_latitude": 42.448350000000005,
+        "Rel_Round": null,
+        "First_Round": null,
+        "notes": "Synthetic delayed whole-zone Inventory",
+        "answers": {
+          "notes": "Synthetic delayed whole-zone Inventory"
+        },
+        "analysis_layer": "whole_zone_inventory",
+        "snapshot_key": "3daa5925-c0e1-4957-bb62-03993c28da8b:f9ef32bb-7bf9-48fa-9ecd-52b8996c49b9"
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+ M backend/PLAN.md
+ M backend/README.md
+ M backend/src/fieldmaps_api/domain/forms.py
+ M backend/src/fieldmaps_api/domain/observation_export_columns.py
+ M backend/src/fieldmaps_api/repositories/bound_uploads.py
+ M backend/src/fieldmaps_api/schemas.py
+ M backend/src/fieldmaps_api/services/observation_answers.py
+ M contracts/README.md
+ M database/README.md
+?? backend/src/fieldmaps_api/domain/legacy_forms.py
+?? backend/tests/fields_only_fixtures.py
+?? backend/tests/test_fields_only_history.py
+?? backend/tests/test_stored_form_compatibility.py
+?? database/fields-only-inventory.sql
+?? docs/reviews/fields-only-transition-2026-10-17/README.md
+?? docs/reviews/fields-only-transition-2026-10-17/api-regressions.txt
+?? docs/reviews/fields-only-transition-2026-10-17/backend-types.txt
+?? docs/reviews/fields-only-transition-2026-10-17/before-exports.txt
+?? docs/reviews/fields-only-transition-2026-10-17/before-upload.txt
+?? docs/reviews/fields-only-transition-2026-10-17/code-delta.json
+?? docs/reviews/fields-only-transition-2026-10-17/final-history.txt
+?? docs/reviews/fields-only-transition-2026-10-17/format.txt
+?? docs/reviews/fields-only-transition-2026-10-17/forms-parity.txt
+?? docs/reviews/fields-only-transition-2026-10-17/isolation-refusal.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-lint.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-tests.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-types.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-unit.txt
+?? docs/reviews/fields-only-transition-2026-10-17/no-database-guard.py.txt
+?? docs/reviews/fields-only-transition-2026-10-17/plan.txt
+?? docs/reviews/fields-only-transition-2026-10-17/ruff.txt
+?? docs/reviews/fields-only-transition-2026-10-17/source-preservation.json
+?? docs/reviews/fields-only-transition-2026-10-17/sql.txt
+?? docs/reviews/fields-only-transition-2026-10-17/tracked-archives.json
+?? docs/reviews/fields-only-transition-2026-10-17/unit-guarded.txt
+?? docs/reviews/fields-only-transition-2026-10-17/verification-results.md
+?? docs/reviews/fields-only-transition-2026-10-17/web-history.txt
+?? mobile/src/sync/fields-only-outbox.test.ts

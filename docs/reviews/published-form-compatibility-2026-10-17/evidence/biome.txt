@@ -1,0 +1,102 @@
+src/sync/published-form-outbox.test.ts:17:32 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    16 │ it("retains a rejected published-form body and binding across restart and explicit retry", async () => {
+  > 17 │   const supplied = process.env["PUBLISHED_FORM_API_FIXTURE"];
+       │                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    18 │   const fixture = z
+    19 │     .object({
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     15  15 │   
+     16  16 │   it("retains a rejected published-form body and binding across restart and explicit retry", async () => {
+     17     │ - ··const·supplied·=·process.env["PUBLISHED_FORM_API_FIXTURE"];
+         17 │ + ··const·supplied·=·process.env.PUBLISHED_FORM_API_FIXTURE;
+     18  18 │     const fixture = z
+     19  19 │       .object({
+  
+
+src/sync/published-form-outbox.test.ts:155:23 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    153 │       .prepare("SELECT payload, sync_state, server_receipt, sync_error FROM observations")
+    154 │       .get();
+  > 155 │     expect(rejected?.["payload"]).toBe(saved?.["payload"]);
+        │                       ^^^^^^^^^
+    156 │     expect(rejected?.["sync_state"]).toBe("needs-attention");
+    157 │     expect(rejected?.["server_receipt"]).toBe("");
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    155 │ ····expect(rejected?.["payload"]).toBe(saved?.["payload"]);
+        │                      --       --                           
+
+src/sync/published-form-outbox.test.ts:155:48 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    153 │       .prepare("SELECT payload, sync_state, server_receipt, sync_error FROM observations")
+    154 │       .get();
+  > 155 │     expect(rejected?.["payload"]).toBe(saved?.["payload"]);
+        │                                                ^^^^^^^^^
+    156 │     expect(rejected?.["sync_state"]).toBe("needs-attention");
+    157 │     expect(rejected?.["server_receipt"]).toBe("");
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    155 │ ····expect(rejected?.["payload"]).toBe(saved?.["payload"]);
+        │                                               --       --  
+
+src/sync/published-form-outbox.test.ts:156:23 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    154 │       .get();
+    155 │     expect(rejected?.["payload"]).toBe(saved?.["payload"]);
+  > 156 │     expect(rejected?.["sync_state"]).toBe("needs-attention");
+        │                       ^^^^^^^^^^^^
+    157 │     expect(rejected?.["server_receipt"]).toBe("");
+    158 │     expect(JSON.parse(String(rejected?.["sync_error"]))).toMatchObject({
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    156 │ ····expect(rejected?.["sync_state"]).toBe("needs-attention");
+        │                      --          --                          
+
+src/sync/published-form-outbox.test.ts:157:23 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    155 │     expect(rejected?.["payload"]).toBe(saved?.["payload"]);
+    156 │     expect(rejected?.["sync_state"]).toBe("needs-attention");
+  > 157 │     expect(rejected?.["server_receipt"]).toBe("");
+        │                       ^^^^^^^^^^^^^^^^
+    158 │     expect(JSON.parse(String(rejected?.["sync_error"]))).toMatchObject({
+    159 │       code: "validation_failed",
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    157 │ ····expect(rejected?.["server_receipt"]).toBe("");
+        │                      --              --           
+
+src/sync/published-form-outbox.test.ts:158:41 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━
+
+  i The computed expression can be simplified without the use of a string literal.
+  
+    156 │     expect(rejected?.["sync_state"]).toBe("needs-attention");
+    157 │     expect(rejected?.["server_receipt"]).toBe("");
+  > 158 │     expect(JSON.parse(String(rejected?.["sync_error"]))).toMatchObject({
+        │                                         ^^^^^^^^^^^^
+    159 │       code: "validation_failed",
+    160 │       issueCodes: ["published_form_bounds"],
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    158 │ ····expect(JSON.parse(String(rejected?.["sync_error"]))).toMatchObject({
+        │                                        --          --                   
+
+Checked 2 files in 18ms. No fixes applied.
+Found 6 infos.

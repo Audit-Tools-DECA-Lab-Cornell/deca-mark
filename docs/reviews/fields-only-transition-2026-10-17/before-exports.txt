@@ -1,0 +1,127 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_fields_only_historical_read_and_export[csv] _______________
+
+fields_history = FieldsHistory(api=LiveApi(url='http://127.0.0.1:43425', tenant=Tenant(org=UUID('ec09ceee-25e2-4ed5-a189-7de241e4d351')...00\xa4\x01\r\x03\x00\x00layers/zones.jsonPK\x05\x06\x00\x00\x00\x00\x05\x00\x05\x008\x01\x00\x00F\x04\x00\x00\x00\x00')
+format_name = 'csv'
+
+    @pytest.mark.parametrize("format_name", ["csv", "geojson"])
+    def test_fields_only_historical_read_and_export(
+        fields_history: FieldsHistory, format_name: str
+    ) -> None:
+        history = fields_history
+        before = history.frozen()
+        with history.api.client("observer") as observer:
+            detail = observer.get(f"{history.project}/observations/{history.observation}")
+            assert detail.status_code == 200, detail.text
+            assert detail.json()["answers"] == {"people": 0, "notes": ""}
+            assert detail.json()["package_id"] == str(history.package)
+            assert detail.json()["zone_id"] == str(history.zone)
+            replay = observer.put(
+                f"{history.project}/observations/{history.observation}", json=history.body()
+            )
+            assert replay.status_code == 200, replay.text
+        with history.api.client("viewer") as reader:
+            version = reader.get(f"{history.project}/form-versions/historic-v1")
+            assert version.status_code == 200, version.text
+            assert version.json()["definition"] == FIELDS_ONLY
+            exported = reader.get(
+                f"{history.project}/observations/export", params={"format": format_name}
+            )
+>           assert exported.status_code == 200, exported.text
+E           AssertionError: {"error":{"code":"validation_failed","message":"Narrow the export scope and retry","details":{"issues":[{"code":"export_scope_too_large","zone_ids":[],"path":"","message":"Narrow the export scope and retry"}]}}}
+E           assert 422 == 200
+E            +  where 422 = <Response [422 Unprocessable Content]>.status_code
+
+tests/test_fields_only_history.py:55: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"b09c0ae9ba304a7390ceaa9caab9c84f","method":"POST","status":201,"duration_ms":508,"operation":"createPackage"}
+{"event":"http_response","request_id":"8e63ef8bb6944220ab45ded5f3d8ed30","method":"GET","status":200,"duration_ms":57,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"887fced240c94a6bbb7e12562002d5cc","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+----------------------------- Captured stderr call -----------------------------
+{"event":"http_response","request_id":"cfacb4b618024741b8d6c7c98bb8cd5d","method":"GET","status":200,"duration_ms":22,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"a51b8a4cfeb14bd6b38155d24191c620","method":"PUT","status":200,"duration_ms":8,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"0997bc3da17d481baa6d99f179c8d79f","method":"GET","status":200,"duration_ms":42,"operation":"getFormVersion"}
+{"event":"http_response","request_id":"b3309b7648b74d918344ce7f7b757b6b","method":"GET","status":422,"duration_ms":534,"operation":"exportHistoricalObservations"}
+------------------------------ Captured log call -------------------------------
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"cfacb4b618024741b8d6c7c98bb8cd5d","method":"GET","status":200,"duration_ms":22,"operation":"getHistoricalObservation"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"a51b8a4cfeb14bd6b38155d24191c620","method":"PUT","status":200,"duration_ms":8,"operation":"uploadObservation"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"0997bc3da17d481baa6d99f179c8d79f","method":"GET","status":200,"duration_ms":42,"operation":"getFormVersion"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"b3309b7648b74d918344ce7f7b757b6b","method":"GET","status":422,"duration_ms":534,"operation":"exportHistoricalObservations"}
+_____________ test_fields_only_historical_read_and_export[geojson] _____________
+
+fields_history = FieldsHistory(api=LiveApi(url='http://127.0.0.1:37291', tenant=Tenant(org=UUID('3f176b15-bdb7-48be-b977-ca41857da49a')...00\xa4\x01\n\x03\x00\x00layers/zones.jsonPK\x05\x06\x00\x00\x00\x00\x05\x00\x05\x008\x01\x00\x00A\x04\x00\x00\x00\x00')
+format_name = 'geojson'
+
+    @pytest.mark.parametrize("format_name", ["csv", "geojson"])
+    def test_fields_only_historical_read_and_export(
+        fields_history: FieldsHistory, format_name: str
+    ) -> None:
+        history = fields_history
+        before = history.frozen()
+        with history.api.client("observer") as observer:
+            detail = observer.get(f"{history.project}/observations/{history.observation}")
+            assert detail.status_code == 200, detail.text
+            assert detail.json()["answers"] == {"people": 0, "notes": ""}
+            assert detail.json()["package_id"] == str(history.package)
+            assert detail.json()["zone_id"] == str(history.zone)
+            replay = observer.put(
+                f"{history.project}/observations/{history.observation}", json=history.body()
+            )
+            assert replay.status_code == 200, replay.text
+        with history.api.client("viewer") as reader:
+            version = reader.get(f"{history.project}/form-versions/historic-v1")
+            assert version.status_code == 200, version.text
+            assert version.json()["definition"] == FIELDS_ONLY
+            exported = reader.get(
+                f"{history.project}/observations/export", params={"format": format_name}
+            )
+>           assert exported.status_code == 200, exported.text
+E           AssertionError: {"error":{"code":"validation_failed","message":"Narrow the export scope and retry","details":{"issues":[{"code":"export_scope_too_large","zone_ids":[],"path":"","message":"Narrow the export scope and retry"}]}}}
+E           assert 422 == 200
+E            +  where 422 = <Response [422 Unprocessable Content]>.status_code
+
+tests/test_fields_only_history.py:55: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"1a12585061d2454a95a0007688610e1d","method":"POST","status":201,"duration_ms":497,"operation":"createPackage"}
+{"event":"http_response","request_id":"29e48e44eccf4a448213f139c0acc2d6","method":"GET","status":200,"duration_ms":58,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"9bb05ffe4e7c46868f1a97f7e6f6b1bf","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+----------------------------- Captured stderr call -----------------------------
+{"event":"http_response","request_id":"3d4fb2a602ae466a9492705302fb3e85","method":"GET","status":200,"duration_ms":23,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"58653c9534d748d7a9f5ade74cd9f5eb","method":"PUT","status":200,"duration_ms":10,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"33830f0a14764378acec2f4bdf1824a6","method":"GET","status":200,"duration_ms":43,"operation":"getFormVersion"}
+{"event":"http_response","request_id":"43f5f01e9d854814919d5607d02513ae","method":"GET","status":422,"duration_ms":545,"operation":"exportHistoricalObservations"}
+------------------------------ Captured log call -------------------------------
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"3d4fb2a602ae466a9492705302fb3e85","method":"GET","status":200,"duration_ms":23,"operation":"getHistoricalObservation"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"58653c9534d748d7a9f5ade74cd9f5eb","method":"PUT","status":200,"duration_ms":10,"operation":"uploadObservation"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"33830f0a14764378acec2f4bdf1824a6","method":"GET","status":200,"duration_ms":43,"operation":"getFormVersion"}
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"43f5f01e9d854814919d5607d02513ae","method":"GET","status":422,"duration_ms":545,"operation":"exportHistoricalObservations"}
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_fields_only_history.py::test_fields_only_historical_read_and_export[csv]
+tests/test_fields_only_history.py::test_fields_only_historical_read_and_export[geojson]
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_fields_only_history.py::test_fields_only_historical_read_and_export[csv]
+FAILED tests/test_fields_only_history.py::test_fields_only_historical_read_and_export[geojson]
+2 failed, 1 deselected, 3 warnings in 5.47s

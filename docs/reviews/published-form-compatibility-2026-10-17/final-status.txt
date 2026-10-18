@@ -1,0 +1,27 @@
+ M backend/PLAN.md
+ M backend/README.md
+ M backend/src/fieldmaps_api/domain/form_references.py
+ M backend/src/fieldmaps_api/domain/forms.py
+ M backend/src/fieldmaps_api/domain/observation_export_columns.py
+ M backend/src/fieldmaps_api/repositories/bound_uploads.py
+ M backend/src/fieldmaps_api/schemas.py
+ M backend/src/fieldmaps_api/services/forms.py
+ M backend/src/fieldmaps_api/services/observation_answers.py
+ M contracts/README.md
+ M database/README.md
+ M mobile/src/sync/upload-failure.ts
+?? backend/src/fieldmaps_api/domain/legacy_forms.py
+?? backend/tests/fields_only_fixtures.py
+?? backend/tests/test_account_deletion_recovery_assessment.py
+?? backend/tests/test_consolidated_audit.py
+?? backend/tests/test_fields_only_history.py
+?? backend/tests/test_published_form_compatibility.py
+?? backend/tests/test_stored_form_compatibility.py
+?? database/fields-only-inventory.sql
+?? database/published-form-bounds-inventory.sql
+?? database/tests/test_audit_forward_api.py
+?? docs/reviews/consolidated-audit-2026-10-17/
+?? docs/reviews/fields-only-transition-2026-10-17/
+?? docs/reviews/published-form-compatibility-2026-10-17/
+?? mobile/src/sync/fields-only-outbox.test.ts
+?? mobile/src/sync/published-form-outbox.test.ts

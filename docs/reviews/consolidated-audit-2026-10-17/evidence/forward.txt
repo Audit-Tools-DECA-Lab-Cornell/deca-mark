@@ -1,0 +1,23 @@
+Pre-audit schema source: 2b5bf9aaa7067c98c44520de3c9b3f573a166731
+95bff02295eb21ef1a3d531940dbbd079f63a6943ae0a747c40d283cc21a945b  /workspace/deca-mark/work/consolidated-audit/pre-schema.EuY8ud/20261012120000_current_baseline.sql
+32d0112308cb2383b9519725e6a99f14a3fd5d56657bc7b4be4a8c6449b4e8a3  /workspace/deca-mark/work/consolidated-audit/pre-schema.EuY8ud/20261012142629_transactional_email_outbox.sql
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+.                                                                        [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 8.38s

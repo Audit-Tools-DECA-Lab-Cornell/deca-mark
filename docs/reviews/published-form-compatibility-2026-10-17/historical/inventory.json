@@ -1,0 +1,71 @@
+{
+  "organization_id": "8499f14d-b28b-4b83-9648-c6c86d62afa2",
+  "project_id": "a9396029-c7b3-4903-8c9c-e8e3ba395ced",
+  "form_version_id": "42941604-eab8-4ef0-8816-cd4ad5ea2ce7",
+  "code": "past-v1",
+  "state": "retired",
+  "definition": {
+    "title": "Synthetic audit instrument",
+    "source": "Authored synthetic case",
+    "status": "published",
+    "summary": "Consolidated local acceptance",
+    "version": "past-v1",
+    "inclusion": "Synthetic only",
+    "questions": [
+      {
+        "id": "people",
+        "act": "Social",
+        "max": 1,
+        "min": 10,
+        "code": "people",
+        "kind": "number",
+        "label": "People",
+        "source": "Synthetic",
+        "required": false,
+        "exportColumn": "people"
+      },
+      {
+        "id": "notes",
+        "act": "Record",
+        "code": "notes",
+        "kind": "text",
+        "label": "Notes",
+        "source": "Synthetic",
+        "maxLength": 1000,
+        "exportColumn": "notes"
+      },
+      {
+        "id": "round_type",
+        "act": "Record",
+        "max": 7,
+        "min": 7,
+        "code": "round_type",
+        "kind": "number",
+        "label": "Independent answer",
+        "source": "Synthetic",
+        "required": true,
+        "exportColumn": "round_type"
+      }
+    ]
+  },
+  "question_id": "people",
+  "required": false,
+  "depends_on": null,
+  "minimum": 10,
+  "maximum": 1,
+  "observations": 2,
+  "observations_with_answer": 0,
+  "package_bindings": [
+    {
+      "play": true,
+      "state": "ready",
+      "current": false,
+      "site_id": "e74ed532-041d-489d-bfde-8a543dd6aab3",
+      "version": 1,
+      "inventory": false,
+      "package_id": "99ca710d-34a5-45f9-b989-f2bfaf5e88a1",
+      "archive_sha256": "0e124fa3e90dfb568c83640319936b0fb692f123f4bcf68299282f80f3c28588"
+    }
+  ],
+  "drafts": 0
+}

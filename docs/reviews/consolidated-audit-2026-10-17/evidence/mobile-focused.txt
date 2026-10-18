@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /workspace/deca-mark/mobile
+
+
+ Test Files  6 passed (6)
+      Tests  101 passed (101)
+   Start at  23:07:14
+   Duration  2.74s (transform 588ms, setup 0ms, import 1.62s, tests 161ms, environment 1ms)
+

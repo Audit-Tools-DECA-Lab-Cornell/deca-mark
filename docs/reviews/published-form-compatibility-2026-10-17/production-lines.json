@@ -1,0 +1,26 @@
+{
+  "backend/src/fieldmaps_api/domain/form_references.py": {
+    "added": 18,
+    "deleted": 7
+  },
+  "backend/src/fieldmaps_api/domain/forms.py": {
+    "added": 43,
+    "deleted": 7
+  },
+  "backend/src/fieldmaps_api/domain/observation_export_columns.py": {
+    "added": 2,
+    "deleted": 2
+  },
+  "backend/src/fieldmaps_api/services/forms.py": {
+    "added": 3,
+    "deleted": 3
+  },
+  "backend/src/fieldmaps_api/services/observation_answers.py": {
+    "added": 10,
+    "deleted": 1
+  },
+  "mobile/src/sync/upload-failure.ts": {
+    "added": 3,
+    "deleted": 0
+  }
+}

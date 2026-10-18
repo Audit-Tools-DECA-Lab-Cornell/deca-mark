@@ -1,0 +1,25 @@
+"""Verification-only audit guard; no application or test behavior is replaced."""
+import socket
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def guard(event, arguments):
+    if event == 'open':
+        name = arguments[0]
+        if isinstance(name, (str, bytes)):
+            path = Path(name.decode() if isinstance(name, bytes) else name)
+            if path.is_absolute() and ROOT in path.parents and (
+                path.name == '.env' or path.name.startswith('.env.')
+                or 'database/.local' in str(path)
+            ):
+                raise AssertionError(f'Database-free selection attempted private configuration: {path.name}')
+    if event == 'socket.connect' and arguments[0].family in (socket.AF_INET, socket.AF_INET6):
+        raise AssertionError('Database-free selection attempted an actual TCP connection')
+    if event == 'subprocess.Popen' and Path(arguments[0]).name == 'docker':
+        raise AssertionError('Database-free selection attempted Docker startup or access')
+
+
+sys.addaudithook(guard)

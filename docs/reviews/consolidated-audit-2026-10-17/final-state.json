@@ -1,0 +1,10 @@
+{
+  "head": "577959a2a99c9d8390203eded76e2149ac780162",
+  "branch": "work",
+  "production_changes_by_this_assessment": false,
+  "existing_test_correction": "TYPE_CHECKING import in backend/tests/test_fields_only_history.py",
+  "staged_changes": false,
+  "committed": false,
+  "pushed": false,
+  "deployed": false
+}

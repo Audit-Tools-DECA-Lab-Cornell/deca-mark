@@ -1,0 +1,2 @@
+Current validator rejects the same immutable definition:
+Value error, Form "forward-invalid-v1" cannot be used: "people" has a minimum greater than its maximum.

@@ -1,0 +1,92 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"0c5a7815c0c049809956022f64ff2c9f","method":"POST","status":201,"duration_ms":550,"operation":"createPackage"}
+{"event":"http_response","request_id":"c0dcbf7593104a6aab8dc015ee64911c","method":"GET","status":200,"duration_ms":56,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"d0762186ff6648258509b1adac44ec38","method":"GET","status":200,"duration_ms":7,"operation":"downloadPackageArchive"}
+{"event":"http_response","request_id":"136cf9ce579246ada82c50c72f2a58ef","method":"GET","status":200,"duration_ms":23,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"2c492ea2d7164c2a85aeb1d63b12f2df","method":"PUT","status":200,"duration_ms":8,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"f0f5641d9b9545afa43678519eab0db0","method":"GET","status":200,"duration_ms":46,"operation":"getFormVersion"}
+{"event":"http_response","request_id":"faf4b7e7bb2f4c5faf6145da77fe8677","method":"GET","status":200,"duration_ms":564,"operation":"exportHistoricalObservations"}
+.email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"fd4b97f3af2144a1b7d5f6187deef7cd","method":"POST","status":201,"duration_ms":475,"operation":"createPackage"}
+{"event":"http_response","request_id":"64080fd687e8400499f5df403394ce2f","method":"GET","status":200,"duration_ms":57,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"0d103779baab46d9b2da60096e8f0824","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+{"event":"http_response","request_id":"c0f064a9e5cc4892b7b888bc11509b7a","method":"GET","status":200,"duration_ms":21,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"3a4fe936e819442c9f0a04fb755c0eed","method":"PUT","status":200,"duration_ms":8,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"3a59353d1e224519b6d257ab0a7661ff","method":"GET","status":200,"duration_ms":43,"operation":"getFormVersion"}
+{"event":"http_response","request_id":"c44acde8155f4eec85f726511a231ec1","method":"GET","status":200,"duration_ms":550,"operation":"exportHistoricalObservations"}
+.email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"7ea5f5e9e5d24932a56a5656236515c7","method":"POST","status":201,"duration_ms":481,"operation":"createPackage"}
+{"event":"http_response","request_id":"21a58fec0d2147038e02d4c036c9a087","method":"GET","status":200,"duration_ms":57,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"850a611ffb8248c0bcde431f5789d36a","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+{"event":"http_response","request_id":"9ce5e1142d794c3d94324ca8eed14d29","method":"POST","status":422,"duration_ms":43,"operation":"createForm"}
+{"event":"http_response","request_id":"de91b725c64b4454b856934fbade59b8","method":"POST","status":422,"duration_ms":9,"operation":"createFormDraft"}
+{"event":"http_response","request_id":"33e73788cbfa41cb9b30761e60eb7e55","method":"GET","status":200,"duration_ms":5,"operation":"getFormVersion"}
+{"event":"http_response","request_id":"348cddbb688f4e1d8e4509356acb213c","method":"POST","status":201,"duration_ms":11,"operation":"createFormDraft"}
+{"event":"http_response","request_id":"7818e83a584f4e12954e6b9f0a393583","method":"POST","status":200,"duration_ms":10,"operation":"publishFormVersion"}
+{"event":"http_response","request_id":"87daefbaaeb04d8ca3365fcb0c1261bf","method":"POST","status":201,"duration_ms":251,"operation":"createPackage"}
+{"event":"http_response","request_id":"9e7721e92e6d471d96bb3cedd3fc5beb","method":"POST","status":200,"duration_ms":10,"operation":"retireFormVersion"}
+{"event":"http_response","request_id":"d48a1a29cc9740e296ff5e808fc862f1","method":"GET","status":200,"duration_ms":4,"operation":"downloadPackageArchive"}
+{"event":"http_response","request_id":"eff0e5c7677449d681551cfefe30abb1","method":"PUT","status":200,"duration_ms":20,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"ee2d734082834e60b25bb14c8e27e852","method":"PUT","status":200,"duration_ms":7,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"282711da84d24446bc87596eccb220ec","method":"PUT","status":200,"duration_ms":7,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"694e058f8e364121ba98d1c11dc1478a","method":"GET","status":200,"duration_ms":21,"operation":"getHistoricalObservation"}
+{"event":"http_response","request_id":"cf82dc708e184dc895014687f4fa4d78","method":"PUT","status":200,"duration_ms":15,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"6480cd60759e465190e7c657928e7c51","method":"GET","status":200,"duration_ms":534,"operation":"exportHistoricalObservations"}
+{"event":"http_response","request_id":"e7e418afb98c47db891261e84ed8e225","method":"GET","status":200,"duration_ms":524,"operation":"exportHistoricalObservations"}
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/workspace/deca-mark/mobile[39m
+
+ [32m✓[39m src/sync/fields-only-outbox.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 81[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 22:27:42
+[2m   Duration [22m 555ms[2m (transform 183ms, setup 0ms, import 344ms, tests 81ms, environment 0ms)[22m
+
+
+.email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"bc23c9d5137c4b6f96a8802d3a6fd8a2","method":"POST","status":201,"duration_ms":531,"operation":"createPackage"}
+{"event":"http_response","request_id":"667ed8ac50284f8cb646cfe5dc922cdb","method":"GET","status":200,"duration_ms":67,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"a29e6dd81a834bf0a691f53302ee85d8","method":"GET","status":200,"duration_ms":6,"operation":"downloadPackageArchive"}
+{"event":"http_response","request_id":"acdcf002a2f04f0994e4194d645c03b4","method":"PUT","status":200,"duration_ms":21,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"bd4733184b6b4e66a2c2654c906d0268","method":"PUT","status":200,"duration_ms":6,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"2e3e9eaadbe149719cdbb38f9b7f7d0d","method":"PUT","status":422,"duration_ms":19,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"a06bb59c15964b72b530ed0db0495f50","method":"PUT","status":422,"duration_ms":19,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"48e565cf98c449198f8c3db0ae7a43c9","method":"PUT","status":422,"duration_ms":16,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"d305941b63eb46acbb09476d41890c0d","method":"PUT","status":422,"duration_ms":9,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"6317d081af684f85bea0e20cc80376a3","method":"PUT","status":422,"duration_ms":9,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"d1a648bb697849a896c07cbbae6f1059","method":"PUT","status":422,"duration_ms":10,"operation":"uploadObservation"}
+{"event":"http_response","request_id":"d609c8b767d54fc2b5bdd2a3d154a868","method":"PUT","status":409,"duration_ms":7,"operation":"uploadObservation"}
+.email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"b5f727ef1f2543ebbb3b66da799f9f0a","method":"POST","status":201,"duration_ms":489,"operation":"createPackage"}
+{"event":"http_response","request_id":"fda43bbd26d642359a333bda88c07a15","method":"GET","status":200,"duration_ms":56,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"4727735afc984a978609367144b74c75","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+.
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_fields_only_history.py::test_fields_only_historical_read_and_export[csv]
+tests/test_fields_only_history.py::test_fields_only_historical_read_and_export[geojson]
+tests/test_fields_only_history.py::test_fields_only_queue_after_canonical_successor
+tests/test_fields_only_history.py::test_fields_only_queue_after_canonical_successor
+tests/test_fields_only_history.py::test_fields_only_fresh_bound_upload
+tests/test_fields_only_history.py::test_fields_only_inventory_counts_existing_references
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+5 passed, 7 warnings in 14.45s

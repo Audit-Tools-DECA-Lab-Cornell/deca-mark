@@ -8,6 +8,7 @@ const issueCodeSchema = z.enum([
   "package_not_ready",
   "zone_not_in_package",
   "form_not_in_package",
+  "published_form_bounds",
 ]);
 const detailSchema = z.object({
   error: z.object({ details: z.object({ issues: z.array(z.object({ code: z.string() })) }) }),
@@ -16,6 +17,8 @@ function bindingCopy(record: Observation, code: z.infer<typeof issueCodeSchema>)
   if (!isBoundObservation(record)) return null;
   const map = `map v${record.binding.packageVersion}`;
   switch (code) {
+    case "published_form_bounds":
+      return "Needs attention. This published form has contradictory number limits. No answer can satisfy them. Keep this record on this device and tell your coordinator; a new form will not change this record's binding.";
     case "point_outside_zone":
       return `Needs attention. DECA Mark did not accept ${record.binding.zoneLabel} for this point on ${map}. The record keeps its number and stays on this device. Tell your coordinator.`;
     case "form_not_in_package":

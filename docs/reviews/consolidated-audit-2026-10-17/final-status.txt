@@ -1,0 +1,107 @@
+ M backend/PLAN.md
+ M backend/README.md
+ M backend/src/fieldmaps_api/domain/forms.py
+ M backend/src/fieldmaps_api/domain/observation_export_columns.py
+ M backend/src/fieldmaps_api/repositories/bound_uploads.py
+ M backend/src/fieldmaps_api/schemas.py
+ M backend/src/fieldmaps_api/services/observation_answers.py
+ M contracts/README.md
+ M database/README.md
+?? backend/src/fieldmaps_api/domain/legacy_forms.py
+?? backend/tests/fields_only_fixtures.py
+?? backend/tests/test_account_deletion_recovery_assessment.py
+?? backend/tests/test_consolidated_audit.py
+?? backend/tests/test_fields_only_history.py
+?? backend/tests/test_stored_form_compatibility.py
+?? database/fields-only-inventory.sql
+?? database/tests/test_audit_forward_api.py
+?? docs/reviews/consolidated-audit-2026-10-17/canonical-bound-preflight.sql
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/all-events.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/codebook.csv
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/forms.json
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/historical-zones.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/inventory-records.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/metadata.json
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/observations.csv
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/point-events.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/analysis/projection-checks.json
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/csv.zip
+?? docs/reviews/consolidated-audit-2026-10-17/canonical/geojson.zip
+?? docs/reviews/consolidated-audit-2026-10-17/commands.md
+?? docs/reviews/consolidated-audit-2026-10-17/contracts-checked.json
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/backend-types.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/combined.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/current-validator.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/format.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/forms-parity.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/forward-types.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/forward-with-inverted.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/forward.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/gis-collection.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/history-import.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/history-types.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/mobile-focused.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/mobile-generate.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/mobile-types.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/old-validator.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/plan.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/ruff-final.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/ruff-initial.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/shared-cases.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/web-generate.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/web-preconditions.txt
+?? docs/reviews/consolidated-audit-2026-10-17/evidence/web-types.txt
+?? docs/reviews/consolidated-audit-2026-10-17/final-state.json
+?? docs/reviews/consolidated-audit-2026-10-17/final-status.txt
+?? docs/reviews/consolidated-audit-2026-10-17/form-contract.json
+?? docs/reviews/consolidated-audit-2026-10-17/forward-artifact-checks.json
+?? docs/reviews/consolidated-audit-2026-10-17/forward/after.json
+?? docs/reviews/consolidated-audit-2026-10-17/forward/applied.json
+?? docs/reviews/consolidated-audit-2026-10-17/forward/before.json
+?? docs/reviews/consolidated-audit-2026-10-17/forward/canonical-bound-preflight.txt
+?? docs/reviews/consolidated-audit-2026-10-17/forward/csv.zip
+?? docs/reviews/consolidated-audit-2026-10-17/forward/geojson.zip
+?? docs/reviews/consolidated-audit-2026-10-17/gis/acceptance-context.json
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/all-events.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/codebook.csv
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/forms.json
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/historical-zones.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/inventory-records.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/metadata.json
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/observations.csv
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/point-events.geojson
+?? docs/reviews/consolidated-audit-2026-10-17/gis/analysis/projection-checks.json
+?? docs/reviews/consolidated-audit-2026-10-17/gis/csv.zip
+?? docs/reviews/consolidated-audit-2026-10-17/gis/geojson.zip
+?? docs/reviews/consolidated-audit-2026-10-17/gis/sql-readback.json
+?? docs/reviews/consolidated-audit-2026-10-17/initial-state.json
+?? docs/reviews/consolidated-audit-2026-10-17/initial-status.txt
+?? docs/reviews/consolidated-audit-2026-10-17/lint-only-correction.patch
+?? docs/reviews/consolidated-audit-2026-10-17/old-validator-source.json
+?? docs/reviews/consolidated-audit-2026-10-17/preservation.json
+?? docs/reviews/consolidated-audit-2026-10-17/reproduce-forward.sh
+?? docs/reviews/consolidated-audit-2026-10-17/rollout.md
+?? docs/reviews/fields-only-transition-2026-10-17/README.md
+?? docs/reviews/fields-only-transition-2026-10-17/api-regressions.txt
+?? docs/reviews/fields-only-transition-2026-10-17/backend-types.txt
+?? docs/reviews/fields-only-transition-2026-10-17/before-exports.txt
+?? docs/reviews/fields-only-transition-2026-10-17/before-upload.txt
+?? docs/reviews/fields-only-transition-2026-10-17/code-delta.json
+?? docs/reviews/fields-only-transition-2026-10-17/final-history.txt
+?? docs/reviews/fields-only-transition-2026-10-17/format.txt
+?? docs/reviews/fields-only-transition-2026-10-17/forms-parity.txt
+?? docs/reviews/fields-only-transition-2026-10-17/isolation-refusal.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-lint.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-tests.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-types.txt
+?? docs/reviews/fields-only-transition-2026-10-17/mobile-unit.txt
+?? docs/reviews/fields-only-transition-2026-10-17/no-database-guard.py.txt
+?? docs/reviews/fields-only-transition-2026-10-17/plan.txt
+?? docs/reviews/fields-only-transition-2026-10-17/ruff.txt
+?? docs/reviews/fields-only-transition-2026-10-17/source-preservation.json
+?? docs/reviews/fields-only-transition-2026-10-17/sql.txt
+?? docs/reviews/fields-only-transition-2026-10-17/tracked-archives.json
+?? docs/reviews/fields-only-transition-2026-10-17/unit-guarded.txt
+?? docs/reviews/fields-only-transition-2026-10-17/verification-results.md
+?? docs/reviews/fields-only-transition-2026-10-17/web-history.txt
+?? mobile/src/sync/fields-only-outbox.test.ts

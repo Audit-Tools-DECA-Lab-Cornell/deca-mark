@@ -1,0 +1,53 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ test_fields_only_fresh_bound_upload ______________________
+
+fields_history = FieldsHistory(api=LiveApi(url='http://127.0.0.1:60669', tenant=Tenant(org=UUID('93da11ad-ba99-40d7-b3eb-db4da2ec2bd4')...00\xa4\x01\t\x03\x00\x00layers/zones.jsonPK\x05\x06\x00\x00\x00\x00\x05\x00\x05\x008\x01\x00\x00B\x04\x00\x00\x00\x00')
+
+    def test_fields_only_fresh_bound_upload(fields_history: FieldsHistory) -> None:
+        history = fields_history
+        with history.api.client("observer") as observer:
+            url = f"{history.project}/observations/{uuid4()}"
+            body = history.body()
+            accepted = observer.put(url, json=body)
+>           assert accepted.status_code == 200, accepted.text
+E           AssertionError: {"error":{"code":"internal","message":"Internal server error","details":{}}}
+E           assert 500 == 200
+E            +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests/test_fields_only_history.py:156: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+email_delivery_configured enabled=False sandbox=False
+{"event":"http_response","request_id":"e140076ac1b646a9943d0c7f69d652e2","method":"POST","status":201,"duration_ms":463,"operation":"createPackage"}
+{"event":"http_response","request_id":"fbd726e0f32e420d9cb0be01e3b70a31","method":"GET","status":200,"duration_ms":57,"operation":"getHistoricalZones"}
+{"event":"http_response","request_id":"2d79f01af47d4fe1a50f63d6d5e256e9","method":"GET","status":200,"duration_ms":5,"operation":"downloadPackageArchive"}
+----------------------------- Captured stderr call -----------------------------
+{"event":"http_response","request_id":"745a6a526f914fcbb25ed89202dfe1f2","method":"PUT","status":500,"duration_ms":26,"operation":"uploadObservation"}
+{"event":"server_log","level":"ERROR","logger":"uvicorn.error","exception":["pydantic_core._pydantic_core.ValidationError"]}
+------------------------------ Captured log call -------------------------------
+INFO     fieldmaps.requests:observability.py:144 {"event":"http_response","request_id":"745a6a526f914fcbb25ed89202dfe1f2","method":"PUT","status":500,"duration_ms":26,"operation":"uploadObservation"}
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_fields_only_history.py::test_fields_only_fresh_bound_upload
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_fields_only_history.py::test_fields_only_fresh_bound_upload
+1 failed, 3 deselected, 2 warnings in 1.89s

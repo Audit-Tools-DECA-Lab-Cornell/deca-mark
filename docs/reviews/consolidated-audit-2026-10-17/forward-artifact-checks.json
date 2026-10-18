@@ -1,0 +1,18 @@
+{
+  "snapshots_equal": true,
+  "before_sha256": "36d40e10291ca4850e60ec50078d39204316d23fc90e158a0e523c146df0adc0",
+  "after_sha256": "36d40e10291ca4850e60ec50078d39204316d23fc90e158a0e523c146df0adc0",
+  "csv_answer_values": {
+    "ratio": "1.25",
+    "supervised": "no",
+    "notes": ""
+  },
+  "geojson_answers": {
+    "notes": "",
+    "ratio": 1.25,
+    "supervised": false
+  },
+  "package_count": 3,
+  "form_count": 5,
+  "pre_migration_observation_count": 4
+}

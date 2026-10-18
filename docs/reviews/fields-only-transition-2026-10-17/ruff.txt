@@ -1,0 +1,14 @@
+TC001 Move application import `tests.test_zone_api_live.LiveApi` into a type-checking block
+  --> backend/tests/test_fields_only_history.py:22:38
+   |
+20 | from tests.signing import ISSUER
+21 | from tests.test_observation_analysis_exports import files
+22 | from tests.test_zone_api_live import LiveApi
+   |                                      ^^^^^^^
+23 | from tests.test_zone_api_live import live_api as live_api  # noqa: PLC0414 - shared pytest fixture
+24 | from tests.zone_api_fixtures import document
+   |
+help: Move into type-checking block
+
+Found 1 error.
+No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).

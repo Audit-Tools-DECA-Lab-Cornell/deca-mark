@@ -72,7 +72,25 @@ def condition_problems(owner: str, condition: Condition, by_id: dict[str, Questi
             assert_never(condition)
 
 
+def inverted_bounds(question: Question) -> bool:
+    return (
+        question.kind == "number"
+        and question.min is not None
+        and question.max is not None
+        and question.min > question.max
+    )
+
+
 def definition_problems(form: CanonicalDefinition) -> list[str]:
+    """Check authoring eligibility in addition to safe historical interpretation."""
+    return structural_problems(form) + [
+        f'"{question.id}" has a minimum greater than its maximum.'
+        for question in form.questions
+        if inverted_bounds(question)
+    ]
+
+
+def structural_problems(form: CanonicalDefinition) -> list[str]:
     problems: list[str] = []
     by_id: dict[str, Question] = {}
     for question in form.questions:
@@ -91,13 +109,6 @@ def definition_problems(form: CanonicalDefinition) -> list[str]:
             )
         columns[column] = question.id
     for question in form.questions:
-        if (
-            question.kind == "number"
-            and question.min is not None
-            and question.max is not None
-            and question.min > question.max
-        ):
-            problems.append(f'"{question.id}" has a minimum greater than its maximum.')
         problems.extend(question_problems(question, form, by_id))
     problems.extend(cycle_problems(form, by_id))
     return problems

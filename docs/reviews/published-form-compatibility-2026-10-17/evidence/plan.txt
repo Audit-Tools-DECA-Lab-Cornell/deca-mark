@@ -1,0 +1,5 @@
+
+> decamark@0.1.0 plan:check /workspace/deca-mark
+> node docs/plan/check-plan.mjs
+
+Plan check passed: 158 tasks across 13 files (46 todo, 31 doing, 79 done, 0 blocked, 2 dropped).

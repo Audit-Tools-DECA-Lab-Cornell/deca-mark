@@ -1,0 +1,4 @@
+
+> decamark-mobile@0.1.0 typecheck /workspace/deca-mark/mobile
+> tsc --noEmit
+

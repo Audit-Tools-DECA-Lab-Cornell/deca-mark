@@ -1,0 +1,24 @@
+E                                                                        [100%]
+==================================== ERRORS ====================================
+____________ ERROR at setup of test_fields_only_fresh_bound_upload _____________
+
+request = <SubRequest 'fields_history' for <Function test_fields_only_fresh_bound_upload>>
+
+    @pytest.fixture
+    def fields_history(request: pytest.FixtureRequest) -> FieldsHistory:
+        # Refuse before requesting live_api: that fixture otherwise creates its tenant first.
+>       assert disposable_database_selected(), "Fields-only acceptance requires disposable selection"
+E       AssertionError: Fields-only acceptance requires disposable selection
+E       assert False
+E        +  where False = disposable_database_selected()
+
+tests/test_fields_only_history.py:33: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/test_fields_only_history.py::test_fields_only_fresh_bound_upload
+4 deselected, 1 warning, 1 error in 0.10s

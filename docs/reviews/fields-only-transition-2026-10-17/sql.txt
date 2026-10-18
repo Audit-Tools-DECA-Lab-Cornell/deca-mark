@@ -1,0 +1,3404 @@
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+BEGIN
+GRANT ROLE
+SET
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+CREATE FUNCTION
+ fixture_package 
+-----------------
+ 
+(1 row)
+
+ fixture_package 
+-----------------
+ 
+(1 row)
+
+ fixture_package 
+-----------------
+ 
+(1 row)
+
+INSERT 0 1
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/run.sql:46: NOTICE:  PASS: QGIS projection preserves coordinates and typed answers
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/run.sql:48: NOTICE:  PASS: one current schema baseline is recorded
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:8: NOTICE:  PASS: duplicate observation IDs cannot create a second record
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+UPDATE 1
+ assert_true 
+-------------
+ 
+(1 row)
+
+UPDATE 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:12: NOTICE:  PASS: an observation cannot reference another organization site
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:16: NOTICE:  PASS: an observation cannot reference another project form
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:20: NOTICE:  PASS: out-of-range longitude is rejected
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:24: NOTICE:  PASS: empty locations are rejected
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:28: NOTICE:  PASS: a projected CRS cannot be silently relabelled as WGS84
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:32: NOTICE:  PASS: answers must be a JSON object
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:36: NOTICE:  PASS: published form definitions cannot be rewritten
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:40: NOTICE:  PASS: published form versions cannot be deleted
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:44: NOTICE:  PASS: rejected writes preserve the original record and revision
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:51: NOTICE:  PASS: accepted edits advance the server revision
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/constraints.sql:57: NOTICE:  PASS: deleted records remain as tombstones but disappear from the GIS layer
+UPDATE 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/access.sql:18: NOTICE:  PASS: sample GIS role cannot see another organization observations
+INSERT 0 1
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/access.sql:21: NOTICE:  PASS: GIS role cannot read raw observation tables
+psql:/var/lib/postgresql/baseline-tests/database/tests/access.sql:25: NOTICE:  PASS: GIS projection rejects edits
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/access.sql:31: NOTICE:  PASS: GIS role has no write privileges
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+psql:/var/lib/postgresql/baseline-tests/database/tests/access.sql:35: NOTICE:  PASS: GIS role cannot create objects in the extension schema
+psql:/var/lib/postgresql/baseline-tests/database/tests/rls_coverage.sql:4: NOTICE:  PASS: every application table enables RLS
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/rls_coverage.sql:12: NOTICE:  PASS: browser and service roles have no application table grants
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/rls_coverage.sql:21: NOTICE:  PASS: application functions are not publicly executable
+psql:/var/lib/postgresql/baseline-tests/database/tests/rls_coverage.sql:25: NOTICE:  PASS: API role cannot bypass row security
+ assert_true 
+-------------
+ 
+(1 row)
+
+CREATE FUNCTION
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/rls_coverage.sql:31: NOTICE:  PASS: new functions default to private
+DROP FUNCTION
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+SET
+ set_config 
+------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:14: NOTICE:  PASS: no identity sees no projects
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:17: NOTICE:  PASS: manager in B is not manager in A
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:23: NOTICE:  PASS: manager in B cannot insert a package in A
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:24: NOTICE:  PASS: manager reads only its project
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:25: NOTICE:  PASS: manager reads only its sites
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:26: NOTICE:  PASS: manager reads only its forms
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:28: NOTICE:  PASS: org admin reads project without project membership
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:29: NOTICE:  PASS: org admin reads site without project membership
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:31: NOTICE:  PASS: org admin acts as manager
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:32: NOTICE:  PASS: org member reads its organization
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:33: NOTICE:  PASS: manager sees project memberships
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:34: NOTICE:  PASS: manager sees own profile and collaborators
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000003
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:37: NOTICE:  PASS: viewer cannot borrow another member role
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:38: NOTICE:  PASS: viewer reads own profile only
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+INSERT 0 1
+INSERT 0 2
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000002
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:44: NOTICE:  PASS: viewer cannot insert observations on a project with a manager
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:46: NOTICE:  PASS: API cannot change protected flags
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:49: NOTICE:  PASS: API cannot grant membership directly
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:52: NOTICE:  PASS: trigger protects project identity even for owner
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:54: NOTICE:  PASS: trigger protects platform organization flag
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:63: NOTICE:  PASS: trainee cannot enumerate profiles
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy.sql:64: NOTICE:  PASS: trainee cannot enumerate training memberships
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+ set_config 
+------------
+ 
+(1 row)
+
+SAVEPOINT
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+INSERT 0 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:16: NOTICE:  PASS: manager can upload, read the new row and review another creator
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:24: NOTICE:  PASS: research observer ownership uses creator identity, never shared initials
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:30: NOTICE:  PASS: observation GIS projections cannot disclose a different creator
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000003
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:36: NOTICE:  PASS: research viewer retains both creators records
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:41: NOTICE:  PASS: organization admin retains review access without project membership
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:46: NOTICE:  PASS: foreign manager cannot see either creator
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:49: NOTICE:  PASS: missing identity has no observation access
+RESET
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:63: NOTICE:  PASS: organization membership alone grants no observation access
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:75: NOTICE:  PASS: demoted reviewer immediately reads only their own immutable uploads
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+SET
+              set_config              
+--------------------------------------
+ 59000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+UPDATE 1
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+DELETE 1
+SET
+psql:/var/lib/postgresql/baseline-tests/database/tests/observation-ownership.sql:83: NOTICE:  PASS: revoked membership hides even the callers own immutable uploads
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+ROLLBACK
+INSERT 0 3
+INSERT 0 3
+INSERT 0 3
+SET
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000003
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/org-profile-visibility.sql:22: NOTICE:  PASS: org owner reads names of members without project membership
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/org-profile-visibility.sql:24: NOTICE:  PASS: org owner cannot read another organization profile
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/org-profile-visibility.sql:27: NOTICE:  PASS: org admin reads org-only member profiles
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000003
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/org-profile-visibility.sql:30: NOTICE:  PASS: project viewer cannot enumerate organization profiles
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/org-profile-visibility.sql:32: NOTICE:  PASS: ordinary org member reads only own profile
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/org-profile-visibility.sql:34: NOTICE:  PASS: Training does not grant profile enumeration
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/org-profile-visibility.sql:36: NOTICE:  PASS: missing identity cannot read organization profiles
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+DELETE 3
+DELETE 3
+DELETE 3
+SET
+ set_config 
+------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:3: NOTICE:  PASS: identity required
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:5: NOTICE:  PASS: missing Auth user cannot create profile
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 59999999-0000-4000-8000-000000000099
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+INSERT 0 5
+SET
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:19: NOTICE:  PASS: organization creator is owner
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:22: NOTICE:  PASS: preview returns live invite role
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:23: NOTICE:  PASS: preview reveals no bound email
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+                                        redeem_invitation                                         
+--------------------------------------------------------------------------------------------------
+ {"role": "admin", "project_id": null, "organization_id": "eaf80a41-d2a7-4e84-b561-c61f9fa4b54b"}
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:25: assert_true 
+-------------
+ 
+(1 row)
+
+ NOTICE:  PASS: redeem creates missing profile
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:26: NOTICE:  PASS: single use invite rejects replay
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:27: NOTICE:  PASS: admin cannot promote self
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:28: NOTICE:  PASS: admin cannot demote owner
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:29: NOTICE:  PASS: admin cannot invite admin
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:30: NOTICE:  PASS: owner role is not invitable
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:32: NOTICE:  PASS: last owner cannot be removed
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:33: NOTICE:  PASS: last manager cannot be removed
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:35: NOTICE:  PASS: existing project member cannot consume invitation
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:36: NOTICE:  PASS: existing project member preserves invitation uses
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:37: NOTICE:  PASS: existing project role is preserved
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:39: NOTICE:  PASS: existing organization member cannot consume invitation
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:40: NOTICE:  PASS: existing organization member preserves invitation uses
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000002
+(1 row)
+
+                                                          redeem_invitation                                                          
+-------------------------------------------------------------------------------------------------------------------------------------
+ {"role": "viewer", "project_id": "33439a23-7e71-4fab-8f9f-a4f42454b97b", "organization_id": "eaf80a41-d2a7-4e84-b561-c61f9fa4b54b"}
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:43: NOTICE:  PASS: successful multi-use redemption cannot be repeated
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:44: NOTICE:  PASS: new project member consumes exactly one use
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:45: NOTICE:  PASS: joining a project preserves existing organization role
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000001
+(1 row)
+
+psql: assert_rejected 
+-----------------
+ 
+(1 row)
+
+/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:47: NOTICE:  PASS: sole owner with teammates cannot delete account
+          create_invitation           
+--------------------------------------
+ 5eef0217-a914-4365-9b55-69c2e33c8762
+(1 row)
+
+          create_invitation           
+--------------------------------------
+ 2e2b6c07-9bbf-42d8-ac46-1ac9d42d4237
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:50: NOTICE:  PASS: revoke checks URL scope
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000004
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:52: NOTICE:  PASS: unconfirmed bound email is rejected
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000003
+(1 row)
+
+                                                           redeem_invitation                                                           
+---------------------------------------------------------------------------------------------------------------------------------------
+ {"role": "observer", "project_id": "33439a23-7e71-4fab-8f9f-a4f42454b97b", "organization_id": "eaf80a41-d2a7-4e84-b561-c61f9fa4b54b"}
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:55: NOTICE:  PASS: project invite also joins organization
+ assert_true 
+-------------
+ 
+(1 row)
+
+ forget_user 
+-------------
+ 
+(1 row)
+
+ forget_user 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:58: NOTICE:  PASS: forgotten account cannot recreate profile
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:59: NOTICE:  PASS: forgotten account cannot create org
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:60: NOTICE:  PASS: forgotten account cannot redeem
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000005
+(1 row)
+
+ forget_user 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:63: NOTICE:  PASS: forget without profile cannot revive account
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:64: NOTICE:  PASS: unknown invite rejected
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+ set_config 
+------------
+ 
+(1 row)
+
+SET
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql: assert_true 
+-------------
+ 
+(1 row)
+
+70: NOTICE:  PASS: admin creates project as manager
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:71: NOTICE:  PASS: account deletion cannot remove last project manager
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000004
+(1 row)
+
+                                                          redeem_invitation                                                          
+-------------------------------------------------------------------------------------------------------------------------------------
+ {"role": "viewer", "project_id": "33439a23-7e71-4fab-8f9f-a4f42454b97b", "organization_id": "eaf80a41-d2a7-4e84-b561-c61f9fa4b54b"}
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:75: NOTICE:  PASS: member cannot create project
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000001
+(1 row)
+
+ set_project_role 
+------------------
+ 
+(1 row)
+
+ remove_project_member 
+-----------------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_org_role 
+--------------
+ 
+(1 row)
+
+ set_org_role 
+--------------
+ 
+(1 row)
+
+ remove_org_member 
+-------------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:76: NOTICE:  PASS: ordinary member cannot list invitations
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:80: NOTICE:  PASS: manager can remove another member
+ transfer_ownership 
+--------------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:85: NOTICE:  PASS: ownership transfer promotes recipient
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:86: NOTICE:  PASS: ownership transfer demotes former owner
+ assert_true 
+-------------
+ 
+(1 row)
+
+ revoke_invitation 
+-------------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:89: NOTICE:  PASS: revoked invitation cannot be previewed
+RESET
+UPDATE 1
+SET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:94: NOTICE:  PASS: expired invitation has distinct error
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:95: NOTICE:  PASS: expired invitation cannot be redeemed
+                                                                 create_organization                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ (371aa5c4-02b1-412a-a887-d4144115214d,"Limit one",limit-one,52000000-0000-4000-8000-000000000001,pilot,us-east-1,f,"2026-10-17 22:22:45.912954+00",)
+(1 row)
+
+                                                                 create_organization                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ (dcad212d-c77c-4baa-a7b3-8d9920ac3658,"Limit two",limit-two,52000000-0000-4000-8000-000000000001,pilot,us-east-1,f,"2026-10-17 22:22:45.912954+00",)
+(1 row)
+
+                                                                   create_organization                                                                    
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ (d1a611f1-bb54-49d0-9274-4eae4bfa5876,"Limit three",limit-three,52000000-0000-4000-8000-000000000001,pilot,us-east-1,f,"2026-10-17 22:22:45.912954+00",)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:99: NOTICE:  PASS: organization ownership limit enforced
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 52000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:101: NOTICE:  PASS: ownership transfer enforces recipient limit
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/tenancy_functions.sql:102: NOTICE:  PASS: internal profile helper is not an API entry point
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 59999999-0000-4000-8000-000000000099
+(1 row)
+
+ forget_user 
+-------------
+ 
+(1 row)
+
+RESET
+ set_config 
+------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:4: NOTICE:  PASS: Training definition matches the complete canonical Janet form
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:15: NOTICE:  PASS: Training has its own fixed organization, project, site and Janet form
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:20: NOTICE:  PASS: practice remains a normal project with its observations
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+INSERT 0 2
+SET
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000001
+(1 row)
+
+                                     ensure_profile                                      
+-----------------------------------------------------------------------------------------
+ (53000000-0000-4000-8000-000000000001,"Trainee one",,,"2026-10-17 22:22:45.912954+00",)
+(1 row)
+
+                                     ensure_profile                                      
+-----------------------------------------------------------------------------------------
+ (53000000-0000-4000-8000-000000000001,"Trainee one",,,"2026-10-17 22:22:45.912954+00",)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:33: NOTICE:  PASS: ensure_profile enrolls the caller once as Training observer
+ assert_true 
+-------------
+ 
+(1 row)
+
+INSERT 0 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:43: NOTICE:  PASS: trainee reads own upload
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000002
+(1 row)
+
+                                     ensure_profile                                      
+-----------------------------------------------------------------------------------------
+ (53000000-0000-4000-8000-000000000002,"Trainee two",,,"2026-10-17 22:22:45.912954+00",)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:47: NOTICE:  PASS: second trainee cannot read first trainee upload
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+UPDATE 1
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:49: NOTICE:  PASS: Training does not reveal other memberships
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:52: NOTICE:  PASS: API cannot grant itself platform organization membership
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:61: NOTICE:  PASS: operator-granted Training manager can prepare packages
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:63: NOTICE:  PASS: Training manager still cannot read another trainee upload
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:67: NOTICE:  PASS: platform organization membership is forbidden even through privileged writes
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:69: NOTICE:  PASS: platform organization has no members
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:73: NOTICE:  PASS: GIS reader cannot see Training
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:75: NOTICE:  PASS: GIS reader still sees practice
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:76: NOTICE:  PASS: GIS cannot bypass its scoped view
+ fixture_package 
+-----------------
+ 
+(1 row)
+
+INSERT 0 4
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:108: NOTICE:  PASS: one active Training purge job is scheduled
+DELETE 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:113: NOTICE:  PASS: purge uses receipt age over 30 days and only the fixed Training project
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:118: NOTICE:  PASS: application and browser roles cannot access cron
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:121: NOTICE:  PASS: API cannot schedule jobs through extension functions
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:129: NOTICE:  PASS: privileged invitation cannot grant platform organization membership through API
+psql:/var/lib/postgresql/baseline-tests/database/tests/training.sql:132: NOTICE:  PASS: rejected platform invitation does not consume a use
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:8: NOTICE:  PASS: the Training form version has its form in the current baseline
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+INSERT 0 1
+SET
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+RESET
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:12: NOTICE:  PASS: a version inserted without a form is given one from its code
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+INSERT 0 1
+UPDATE 1
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+INSERT 0 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:25: NOTICE:  PASS: a manager creates and renames a site
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:28: NOTICE:  PASS: a site code never changes
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:34: NOTICE:  PASS: an observer cannot create a site
+INSERT 0 1
+UPDATE 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:50: NOTICE:  PASS: a manager edits a draft
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:56: NOTICE:  PASS: a version is created as a draft, never published directly
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000002
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:60: NOTICE:  PASS: observers do not see drafts
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:63: NOTICE:  PASS: an observer cannot publish
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:67: NOTICE:  PASS: a manager of another project cannot publish this version through their own project
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:70: NOTICE:  PASS: a manager of another project cannot publish this version through its project
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:75: NOTICE:  PASS: a draft edit advances its revision
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:77: NOTICE:  PASS: the unconditional publication function is removed
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:79: NOTICE:  PASS: API callers cannot set the revision
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:82: NOTICE:  PASS: publication requires a revision
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:85: NOTICE:  PASS: publication rejects an unreviewed revision
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:88: NOTICE:  PASS: a refused publication leaves the draft unpublished
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:98: NOTICE:  PASS: publishing freezes the draft and marks its definition published
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:103: NOTICE:  PASS: a published version cannot be edited
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:106: NOTICE:  PASS: a version is published once
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:109: NOTICE:  PASS: observers read published versions
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:114: NOTICE:  PASS: a published version can be retired
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:117: NOTICE:  PASS: a version is retired once
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+ publish_form_version 
+----------------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+UPDATE 0
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+ retire_form_version 
+---------------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+INSERT 0 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:131: NOTICE:  PASS: an observer stores round context while SQL derives the immutable zone code
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/lifecycle.sql:140: NOTICE:  PASS: only the three round types are stored
+RESET
+RESET
+SET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 6
+INSERT 0 4
+INSERT 0 3
+INSERT 0 3
+UPDATE 2
+INSERT 0 2
+INSERT 0 1
+UPDATE 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: square
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: adjacent
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: gap_neighbor
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: holed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: concave
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: contained
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: in_hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: crossing
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: vertex_neighbor
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: multipart
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: bow_tie
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: outside_hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: collinear
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: duplicate_vertex
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: reversed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: multipart_overlap
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: multipart_shared_edge
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: antimeridian
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: polar
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: large_extent
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: empty
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: empty_part
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: unclosed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: short
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: few_distinct
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: z_dimension
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: projected
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: numeric_string
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:8: NOTICE:  PASS: SQL draft structure agrees with authored case: boolean_coordinate
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:9: NOTICE:  PASS: an empty draft is retained
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:10: NOTICE:  PASS: a zones object is rejected
+ assert_true 
+-------------
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+(29 rows)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:11: NOTICE:  PASS: a null zone is rejected
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:17: NOTICE:  PASS: a complete self-intersecting draft can be saved before correction
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:19: NOTICE:  PASS: duplicate provisional UUIDs and codes are rejected
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:22: NOTICE:  PASS: a repeated code cannot name a different provisional UUID
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:24: NOTICE:  PASS: draft code syntax is enforced in SQL
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:27: NOTICE:  PASS: draft positions cannot carry a third dimension
+ assert_true 
+-------------
+ 
+(1 row)
+
+SELECT 1
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+CREATE FUNCTION
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:38: NOTICE:  PASS: per-zone limits include closing positions and accept exactly 2000
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:42: NOTICE:  PASS: per-zone position limits span every multipart component
+SELECT 4
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:50: NOTICE:  PASS: SQL inclusive package limits for 10 zones
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:50: NOTICE:  PASS: SQL inclusive package limits for 11 zones
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:50: NOTICE:  PASS: SQL inclusive package limits for 250 zones
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:50: NOTICE:  PASS: SQL inclusive package limits for 251 zones
+ assert_true 
+-------------
+ 
+ 
+ 
+ 
+(4 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:56: NOTICE:  PASS: a stable code cannot be reused within its site
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:58: NOTICE:  PASS: different sites and projects may use the same code
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:60: NOTICE:  PASS: a stable code is immutable
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:62: NOTICE:  PASS: identities cannot move between sites
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:64: NOTICE:  PASS: removed identities remain reserved
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:69: NOTICE:  PASS: a zone cannot link to another tenant site
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:75: NOTICE:  PASS: a snapshot cannot link to another site identity
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:80: NOTICE:  PASS: a snapshot cannot link to another project identity
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:86: NOTICE:  PASS: blocked packages cannot acquire snapshots
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:91: NOTICE:  PASS: a superseded published snapshot set cannot be appended even by its owner
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:94: NOTICE:  PASS: historical labels cannot be rewritten
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:97: NOTICE:  PASS: historical geometry cannot be deleted
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+CREATE FUNCTION
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:107: NOTICE:  PASS: published snapshot geometry must be present
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:110: NOTICE:  PASS: empty published geometry is rejected
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:113: NOTICE:  Self-intersection at or near point 0.0050000000000000001 0.0050000000000000001
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:113: NOTICE:  PASS: invalid published topology is rejected
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:116: NOTICE:  PASS: an anchor must be covered by its snapshot
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+CREATE FUNCTION
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:128: NOTICE:  PASS: packages require actual site ground
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:131: NOTICE:  PASS: missing format metadata cannot bypass a nullable CHECK
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:134: NOTICE:  PASS: package inventory binding cannot cross projects
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:142: NOTICE:  PASS: draft bases must belong to the same site
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:149: NOTICE:  PASS: draft inventory binding cannot cross tenants
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:156: NOTICE:  PASS: draft creation request identity is durable
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+CREATE FUNCTION
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:158: NOTICE:  PASS: published drafts are frozen
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:160: NOTICE:  PASS: draft updates must advance revision
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:163: NOTICE:  PASS: draft form selection is frozen
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:168: NOTICE:  PASS: rollback cannot reactivate an older package
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:171: NOTICE:  PASS: an unfinalized package cannot become current
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:174: NOTICE:  PASS: blocked packages cannot become current
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:175: NOTICE:  PASS: current package state cannot be erased
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:177: NOTICE:  PASS: publication mapping audit is immutable
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:179: NOTICE:  PASS: durable replay evidence cannot be deleted
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:184: NOTICE:  PASS: publication results cannot cross sites
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:200: NOTICE:  PASS: both binding IDs are required
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:204: NOTICE:  PASS: an observation requires the exact package-zone snapshot
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql: assert_rejected 
+-----------------
+ 
+(1 row)
+
+/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:208: NOTICE:  PASS: an observation cannot bind another site package
+ bound_observation 
+-------------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:213: NOTICE:  PASS: bound observations cannot be moved to newer boundaries
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:218: NOTICE:  PASS: observers read current and superseded snapshots while unfinalized snapshots stay hidden
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:220: NOTICE:  PASS: history uses the recorded label
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:222: NOTICE:  PASS: observers cannot read draft geometry or mapping notes
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:225: NOTICE:  PASS: current revision is the package version and exact package version is retained
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:227: NOTICE:  PASS: direct snapshot writes are denied
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:229: NOTICE:  PASS: direct identity writes are denied
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:231: NOTICE:  PASS: observers cannot change current selection
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:235: NOTICE:  PASS: bound insert grants are guarded by server-side binding validation
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000003
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:238: NOTICE:  PASS: viewers read history but cannot inspect drafts
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:241: NOTICE:  PASS: managers read their project drafts and publication audit
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:243: NOTICE:  PASS: managers cannot bypass future draft validation functions
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:245: NOTICE:  PASS: managers cannot activate packages directly
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:247: NOTICE:  PASS: managers cannot forge publication audit
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:250: NOTICE:  PASS: inherited organization admins have manager reads
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:255: NOTICE:  PASS: a manager of another tenant cannot discover zone resources
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:257: NOTICE:  PASS: the finalization read helper does not leak another tenant publication
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:260: NOTICE:  PASS: anonymous API sessions cannot read zones
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+GRANT
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-foundation.sql:270: NOTICE:  PASS: the append trigger still protects history if an INSERT grant accidentally appears
+RESET
+REVOKE
+RESET
+INSERT 0 12000
+ANALYZE
+CREATE FUNCTION
+GRANT
+CREATE TABLE
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-query-plans.sql:42: NOTICE:  PASS: restricted-role history query uses observations_zone_time_idx on 12000 synthetic bound rows
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-query-plans.sql:42: NOTICE:  PASS: restricted-role history query uses observations_package_time_idx on 12000 synthetic bound rows
+GRANT
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+INSERT 0 2
+ assert_true 
+-------------
+ 
+ 
+(2 rows)
+
+             label             | execution_ms | shared_hit_blocks 
+-------------------------------+--------------+-------------------
+ observations_zone_time_idx    | 1.946        | 156
+ observations_package_time_idx | 1.845        | 148
+(2 rows)
+
+RESET
+RESET
+CREATE FUNCTION
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: square
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: adjacent
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: gap_neighbor
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: holed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: concave
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: contained
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: in_hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: crossing
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: vertex_neighbor
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: multipart
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: bow_tie
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: outside_hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: collinear
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: duplicate_vertex
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: reversed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: multipart_overlap
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:16: NOTICE:  PASS: publication topology: multipart_shared_edge
+ assert_true 
+-------------
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+(17 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: inside
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: outside
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: exterior_edge
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: exterior_vertex
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: shared_edge_left
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: shared_edge_right
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: near_edge_inside
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: near_edge_outside
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: hole_interior
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: hole_edge
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: hole_vertex
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: gap
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: concave_inside
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: concave_notch
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: multipart_second_part
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:19: NOTICE:  PASS: selected-zone point coverage: multipart_gap
+ assert_true 
+-------------
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+(16 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:22: NOTICE:  PASS: interior intersection: shared_edge
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:22: NOTICE:  PASS: interior intersection: shared_vertex
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:22: NOTICE:  PASS: interior intersection: ordinary_crossing
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:22: NOTICE:  PASS: interior intersection: contained_zone
+ assert_true 
+-------------
+ 
+ 
+ 
+ 
+ 
+(5 rows)
+
+ assert_true 
+-------------
+ 
+ 
+ 
+(3 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:22: NOTICE:  PASS: interior intersection: identical_zones
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:25: NOTICE:  PASS: actual-ground containment: inside_ground
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:25: NOTICE:  PASS: actual-ground containment: outside_actual_ground_inside_bbox
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:25: NOTICE:  PASS: actual-ground containment: zone_inside_site_hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:28: NOTICE:  PASS: ring winding and rotation normalize to identical full-precision geometry
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:31: NOTICE:  PASS: consecutive duplicate positions do not change canonical geometry
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:35: NOTICE:  PASS: normalization retains accepted double precision below GeoJSON decimal output defaults
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:39: NOTICE:  PASS: caller float-output settings cannot reduce canonical precision
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-geometry.sql:44: NOTICE:  PASS: multipart order cannot change canonical geometry or its digest
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+SET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+ fixture_package 
+-----------------
+ 
+(1 row)
+
+INSERT 0 1
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+GRANT
+CREATE FUNCTION
+GRANT
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:16: NOTICE:  PASS: observer cannot create zone drafts
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000003
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:19: NOTICE:  PASS: viewer cannot create zone drafts
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:22: NOTICE:  PASS: another tenant manager cannot create drafts here
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000002
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:25: NOTICE:  PASS: inherited organization admin can create a draft
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: square
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: adjacent
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: gap_neighbor
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: holed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: concave
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: contained
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: in_hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: crossing
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: vertex_neighbor
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: multipart
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: bow_tie
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: outside_hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: collinear
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: duplicate_vertex
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: reversed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: multipart_overlap
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: multipart_shared_edge
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: antimeridian
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: polar
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: large_extent
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: empty
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: empty_part
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: unclosed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: short
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: few_distinct
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: z_dimension
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: projected
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: numeric_string
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:38: NOTICE:  PASS: restricted authoring validation: boolean_coordinate
+ assert_true 
+-------------
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+(29 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:44: NOTICE:  PASS: restricted authoring intersection: shared_edge
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:44: NOTICE:  PASS: restricted authoring intersection: shared_vertex
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:44: NOTICE:  PASS: restricted authoring intersection: ordinary_crossing
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:44: NOTICE:  PASS: restricted authoring intersection: contained_zone
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:44: NOTICE:  PASS: restricted authoring intersection: identical_zones
+ assert_true 
+-------------
+ 
+ 
+ 
+ 
+ 
+(5 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:50: NOTICE:  PASS: restricted authoring ground containment: inside_ground
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:50: NOTICE:  PASS: restricted authoring ground containment: outside_actual_ground_inside_bbox
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:50: NOTICE:  PASS: restricted authoring ground containment: zone_inside_site_hole
+ assert_true 
+-------------
+ 
+ 
+ 
+(3 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:52: NOTICE:  PASS: empty saved draft cannot be published
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:55: NOTICE:  PASS: small zones and unsampled ground gaps are warnings
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:58: NOTICE:  PASS: restricted draft rejects over-limit zone/position count: 11
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:58: NOTICE:  PASS: restricted draft rejects over-limit zone/position count: 251
+ assert_true 
+-------------
+ 
+ 
+(2 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:61: NOTICE:  PASS: restricted draft uses the frozen duplicate UUID issue code
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:65: NOTICE:  PASS: publication includes the exact one-degree span and latitude support boundary
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:65: NOTICE:  PASS: publication includes the exact one-degree span and latitude support boundary
+ assert_true 
+-------------
+ 
+ 
+(2 rows)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-set-validation.sql:69: NOTICE:  PASS: restricted draft uses the frozen duplicate code issue
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+SELECT 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication-limits.sql:9: NOTICE:  PASS: authoritative validation accepts 20000 positions across ten 2000-position zones within 20 seconds
+ assert_true 
+-------------
+ 
+(1 row)
+
+SELECT 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication-limits.sql:16: NOTICE:  PASS: authoritative validation accepts exactly 250 non-overlapping zones within 20 seconds
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication-limits.sql:22: NOTICE:  PASS: retained site ground is not incorrectly subject to the per-zone 2000-position cap
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:33: NOTICE:  PASS: create replay retains provisional UUIDs and explicitly selected inventory form
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:35: NOTICE:  PASS: draft creation keeps the exact forms and current pointer
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:38: NOTICE:  PASS: create request reuse with a different base conflicts
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:40: NOTICE:  PASS: missing draft revision requires a precondition
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (7515e3b7-4364-44bd-bf3b-a0bdadd815e3,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000001,80000000-0000-4000-8000-000000000004,2,draft,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]], [[0.003, 0.003], [0.003, 0.007], [0.007, 0.007], [0.007, 0.003], [0.003, 0.003]]]]}, ""zone_code"": ""A"", ""zone_label"": ""Original A""}, {""zone_id"": ""82000000-0000-4000-8000-000000000002"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0.01, 0], [0.02, 0], [0.02, 0.01], [0.01, 0.01], [0.01, 0]]]]}, ""zone_code"": ""B"", ""zone_label"": ""Original B""}]","Preserve recorded identity A.",84000000-0000-4000-8000-000000000001,ec72c55a7e91830fde03b23aa9dde01730c1b70660e9d2f956898a0a63efe30b,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000001""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.312772+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.323825+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:46: NOTICE:  PASS: draft mutation trims Unicode whitespace from labels and notes
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:48: NOTICE:  PASS: stale whole-draft replacement cannot overwrite work
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:50: NOTICE:  PASS: validation is ready and does not mutate revision
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:53: NOTICE:  PASS: manifest geometry checksum must match normalized snapshots
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:56: NOTICE:  PASS: manifest anchor cannot substitute a different covered point
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:59: NOTICE:  PASS: archive layer input must match canonical snapshot geometry
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:62: NOTICE:  PASS: check failure after package insertion rolls back the transaction
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:65: NOTICE:  PASS: failed finalization leaves no package, activation or draft transition
+CREATE FUNCTION
+CREATE TRIGGER
+SET
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:77: NOTICE:  PASS: failure after snapshot, audit and activation rolls back the full publication
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:81: NOTICE:  PASS: late failure retains the original package and editable draft
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+DROP TRIGGER
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:89: NOTICE:  PASS: publication atomically activates, freezes the draft and skips blocked version 2
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:91: NOTICE:  PASS: successful publication creates the complete snapshot set with stable identities
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:94: NOTICE:  PASS: distinct stale publication does not activate a second package
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:96: NOTICE:  PASS: published draft cannot be discarded
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:101: NOTICE:  PASS: direct package inserts cannot bypass finalization
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:103: NOTICE:  PASS: runtime cannot append checks to a managed publication
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-validation-changes.sql:5: NOTICE:  PASS: unchanged validation compares exact current geometry and label
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (849a8168-40fd-45d6-b17b-b72a746957b2,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000003,80000000-0000-4000-8000-000000000004,2,draft,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]], [[0.003, 0.003], [0.003, 0.007], [0.007, 0.007], [0.007, 0.003], [0.003, 0.003]]]]}, ""zone_code"": ""A"", ""zone_label"": ""Validation rename""}, {""zone_id"": ""82000000-0000-4000-8000-000000000002"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0.01, 0], [0.02, 0], [0.02, 0.01], [0.01, 0.01], [0.01, 0]]]]}, ""zone_code"": ""B"", ""zone_label"": ""Original B""}]","Label only",94000000-0000-4000-8000-000000000001,d94135ded531873d3bfc85a7922f3fe2802a6d14a85bafcaec286b00a58d0df9,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000003""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.544147+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.58441+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-validation-changes.sql:11: NOTICE:  PASS: label-only validation retains geometry digest and reports label_changed
+ assert_true 
+-------------
+ 
+(1 row)
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (849a8168-40fd-45d6-b17b-b72a746957b2,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000003,80000000-0000-4000-8000-000000000004,3,draft,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""Polygon"", ""coordinates"": [[[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]]]}, ""zone_code"": ""A"", ""zone_label"": ""Validation rename""}, {""zone_id"": ""94000000-0000-4000-8000-000000000002"", ""geometry"": {""type"": ""Polygon"", ""coordinates"": [[[0.02, 0], [0.025, 0], [0.025, 0.005], [0.02, 0.005], [0.02, 0]]]}, ""zone_code"": ""C"", ""zone_label"": ""Added C""}]","Changed shape, removed B, added C",94000000-0000-4000-8000-000000000001,d94135ded531873d3bfc85a7922f3fe2802a6d14a85bafcaec286b00a58d0df9,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000003""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.544147+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.592109+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-validation-changes.sql:20: NOTICE:  PASS: validation covers added/removed and geometry_changed takes precedence over a label change
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-validation-changes.sql:25: NOTICE:  PASS: removed-zone validation retains its current snapshot digest and anchor
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-validation-changes.sql:28: NOTICE:  PASS: validation never advances the revision or current package
+ assert_true 
+-------------
+ 
+(1 row)
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (849a8168-40fd-45d6-b17b-b72a746957b2,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000003,80000000-0000-4000-8000-000000000004,4,draft,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""Polygon"", ""coordinates"": [[[0, 0], [0.01, 0.01], [0.01, 0], [0, 0.01], [0, 0]]]}, ""zone_code"": ""A"", ""zone_label"": ""Validation rename""}]","Save invalid topology for correction",94000000-0000-4000-8000-000000000001,d94135ded531873d3bfc85a7922f3fe2802a6d14a85bafcaec286b00a58d0df9,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000003""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.544147+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.60859+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-validation-changes.sql:37: NOTICE:  PASS: invalid proposed geometry has no misleading derived summary metadata
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (849a8168-40fd-45d6-b17b-b72a746957b2,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000003,80000000-0000-4000-8000-000000000004,5,discarded,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""Polygon"", ""coordinates"": [[[0, 0], [0.01, 0.01], [0.01, 0], [0, 0.01], [0, 0]]]}, ""zone_code"": ""A"", ""zone_label"": ""Validation rename""}]","Save invalid topology for correction",94000000-0000-4000-8000-000000000001,d94135ded531873d3bfc85a7922f3fe2802a6d14a85bafcaec286b00a58d0df9,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000003""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.544147+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.611645+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:107: NOTICE:  PASS: a successor draft inherits exact frozen forms
+ assert_true 
+-------------
+ 
+(1 row)
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (53d3aa28-168b-4e54-a466-4a0975e2deec,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000003,80000000-0000-4000-8000-000000000004,2,draft,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]], [[0.003, 0.003], [0.003, 0.007], [0.007, 0.007], [0.007, 0.003], [0.003, 0.003]]]]}, ""zone_code"": ""A"", ""zone_label"": ""Renamed A""}]","Retain A, remove B.",84000000-0000-4000-8000-000000000003,d94135ded531873d3bfc85a7922f3fe2802a6d14a85bafcaec286b00a58d0df9,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000003""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.614132+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.617097+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:114: NOTICE:  PASS: rename and removal retain historical snapshots and labels
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:119: NOTICE:  PASS: old replay returns its original package before stale preconditions without moving current backwards
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:121: NOTICE:  PASS: changed revision under published request ID conflicts
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (3b343b09-7938-43d4-8ef1-baf7db43fd81,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000004,80000000-0000-4000-8000-000000000004,2,draft,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]], [[0.003, 0.003], [0.003, 0.007], [0.007, 0.007], [0.007, 0.003], [0.003, 0.003]]]]}, ""zone_code"": ""A"", ""zone_label"": ""Original A""}, {""zone_id"": ""82000000-0000-4000-8000-000000000002"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0.01, 0], [0.02, 0], [0.02, 0.01], [0.01, 0.01], [0.01, 0]]]]}, ""zone_code"": ""B"", ""zone_label"": ""Original B""}]","Explicit rollback by publishing original boundaries as a new package.",84000000-0000-4000-8000-000000000004,4775421254f4d85b09c7a00d5a3142f27eb15a7f3870cb066f18177ba80dac68,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000004""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.641617+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.64408+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:128: NOTICE:  PASS: rollback publishes a higher version and retains all prior artifacts
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (06d030f8-e749-45bc-9554-b680019f93e9,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000001,80000000-0000-4000-8000-000000000004,2,discarded,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]], [[0.003, 0.003], [0.003, 0.007], [0.007, 0.007], [0.007, 0.003], [0.003, 0.003]]]]}, ""zone_code"": ""A"", ""zone_label"": ""Original A""}, {""zone_id"": ""82000000-0000-4000-8000-000000000002"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0.01, 0], [0.02, 0], [0.02, 0.01], [0.01, 0.01], [0.01, 0]]]]}, ""zone_code"": ""B"", ""zone_label"": ""Original B""}]","",84000000-0000-4000-8000-000000000002,ec72c55a7e91830fde03b23aa9dde01730c1b70660e9d2f956898a0a63efe30b,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000001""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.315229+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.693461+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-publication.sql:131: NOTICE:  PASS: discard replay accepts the acknowledged discarded revision
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 change_zone_draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ (b7aea41f-2996-49fb-9ec1-ab40ea1fadd3,10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002,80000000-0000-4000-8000-000000000001,81000000-0000-4000-8000-000000000005,80000000-0000-4000-8000-000000000004,2,draft,"[{""zone_id"": ""82000000-0000-4000-8000-000000000001"", ""geometry"": {""type"": ""MultiPolygon"", ""coordinates"": [[[[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]], [[0.003, 0.003], [0.003, 0.007], [0.007, 0.007], [0.007, 0.003], [0.003, 0.003]]]]}, ""zone_code"": ""A"", ""zone_label"": ""Original A""}]","Explicit import mapping for A.",84000000-0000-4000-8000-000000000005,121aa844ae2d64eb5a07f7e47925d1feb8abad6e0e9d47bbe35d76dd103fe322,"{""actor"": ""50000000-0000-4000-8000-000000000004"", ""site_id"": ""80000000-0000-4000-8000-000000000001"", ""operation"": ""draft_create"", ""project_id"": ""10000000-0000-4000-8000-000000000002"", ""base_package_id"": ""81000000-0000-4000-8000-000000000005""}",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.698227+00",50000000-0000-4000-8000-000000000004,"2026-10-17 22:22:59.700516+00",,0106000020E6100000010000000103000000010000000500000000000000000000000000000000000000B81E85EB51B89E3F0000000000000000B81E85EB51B89E3F7B14AE47E17A943F00000000000000007B14AE47E17A943F00000000000000000000000000000000)
+(1 row)
+
+SELECT 1
+SELECT 1
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-managed-import.sql:20: NOTICE:  PASS: layer import requires exactly one mapping per source feature
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-managed-import.sql:24: NOTICE:  PASS: unused layer import mapping cannot infer an identity from a label
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-managed-import.sql:31: NOTICE:  PASS: layer import uses the same atomic finalizer and retains exact source mapping in its operation-scoped audit
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-managed-import.sql:35: NOTICE:  PASS: layer import replay resolves before stale-current validation with an explicit replay result
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-managed-import.sql:38: NOTICE:  PASS: layer import request ID cannot accept changed source content
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+UPDATE 1
+SET
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-managed-import.sql:43: NOTICE:  PASS: publication replay rechecks current account authorization
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+UPDATE 1
+UPDATE 1
+SET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+UPDATE 1
+RESET
+INSERT 0 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-managed-import.sql:50: NOTICE:  PASS: publication replay refuses a manager whose role was revoked
+SELECT 1
+UPDATE 1
+GRANT
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-first-upload.sql:21: NOTICE:  PASS: first upload requires an explicit null current-package precondition
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-first-upload.sql:25: NOTICE:  PASS: first upload rejects missing source identity mapping
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-first-upload.sql:29: NOTICE:  PASS: first upload rejects an unused mapping without label inference
+SELECT 1
+SELECT 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-first-upload.sql:44: NOTICE:  PASS: first null-precondition upload atomically creates and activates map version 1
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-first-upload.sql:49: NOTICE:  PASS: first-upload replay resolves before the now-stale null current precondition
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+RESET
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-first-upload.sql:52: NOTICE:  PASS: replay creates neither duplicate package nor extra snapshots
+CREATE FUNCTION
+GRANT
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:21: NOTICE:  PASS: superseded package accepts a bound point and derives immutable code
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:24: NOTICE:  PASS: Reliability accepts explicit false first_round and the frozen play binding
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:27: NOTICE:  PASS: shared boundary accepts either explicitly selected covering zone
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:29: NOTICE:  PASS: hole boundary is included without snapping
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:31: NOTICE:  PASS: hole interior cannot be attributed to the selected zone
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:33: NOTICE:  PASS: unsampled site gap cannot be attributed to a zone
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:35: NOTICE:  PASS: near-edge exterior point is rejected without a tolerance
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:37:  assert_rejected 
+-----------------
+ 
+(1 row)
+
+NOTICE:  PASS: point observations require an event coordinate
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:39: NOTICE:  PASS: point first_round is required
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:41: NOTICE:  PASS: point placement must be hand
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:43: NOTICE:  PASS: Inventory first_round must be null
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:45: NOTICE:  PASS: inventory cannot use the package play binding
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:48: NOTICE:  PASS: Inventory cannot submit an event coordinate in place of its zone snapshot
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:53: NOTICE:  PASS: Inventory stores no event point and keeps the exact snapshot reference
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:55: NOTICE:  PASS: blocked package cannot bind an observation
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:57: NOTICE:  PASS: removed zone is valid in its retained package only
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000003
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:60: NOTICE:  PASS: viewer cannot upload through the binding trigger
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:63: NOTICE:  PASS: another tenant cannot upload against a guessed package
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:65: NOTICE:  PASS: authorization precedes geometry validation and does not disclose a guessed hole
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:68: NOTICE:  PASS: Inventory cannot acquire a point retrospectively
+psql: assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:70: NOTICE:  PASS: bound form attribution cannot be changed
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:73: NOTICE:  PASS: current bound play form cannot retire before an explicit successor
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+INSERT 0 1
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:93: NOTICE:  PASS: successor binds an explicit replacement play form and disables inventory
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+UPDATE 2
+UPDATE 1
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-observation-binding.sql:101: NOTICE:  PASS: archived project and retired frozen forms still accept authorized historical offline work
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+RESET
+SET
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000002
+(1 row)
+
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000001
+(1 row)
+
+INSERT 0 1
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-training-binding.sql:17: NOTICE:  PASS: bound Training upload remains visible to its creator
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-training-binding.sql:24: NOTICE:  PASS: unavailable package inventory cannot search for a replacement form
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/zone-training-binding.sql:27: NOTICE:  PASS: Training manager cannot read another creator bound observations
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+RESET
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:7: NOTICE:  PASS: all companion GIS views enforce invoker RLS and security barriers
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:14: NOTICE:  PASS: new GIS views grant no access to browser, service or existing sample readers
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:22: NOTICE:  PASS: companion GIS interface remains read-only
+SET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:25: NOTICE:  PASS: existing sample reader cannot access new project-wide GIS metadata
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000003
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:27: NOTICE:  PASS: existing sample reader cannot access new zone snapshot geometry
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:35: NOTICE:  PASS: viewer GIS metadata count matches live authorized observations
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:39: NOTICE:  PASS: Inventory never enters point-event counts
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:45: NOTICE:  PASS: superseded Inventory retains recorded version and original label
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:52: NOTICE:  PASS: Inventory polygon and anchor come from exact immutable package-zone snapshot
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:58: NOTICE:  PASS: multipart geometry cannot multiply Inventory or snapshot rows
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:60: NOTICE:  PASS: Inventory has no stored event geometry
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:67: NOTICE:  PASS: snapshot projection exposes historical area and real publication metadata
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:71: NOTICE:  PASS: GIS metadata excludes foreign project observations
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:74: NOTICE:  PASS: new runtime GIS usage does not grant the scoped sample view
+              set_config              
+--------------------------------------
+ 51000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:81: NOTICE:  PASS: guessed site and package identities cannot cross tenant scope
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 53000000-0000-4000-8000-000000000002
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:86: NOTICE:  PASS: Training creator sees own event and its recorded snapshot
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:92: NOTICE:  PASS: Training manager cannot infer another creator activity from GIS snapshots
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/gis-recorded-zone-context.sql:97: NOTICE:  PASS: missing caller identity exposes no GIS data
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+ROLLBACK
+All database scenarios passed; test records rolled back.
+BEGIN
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+ set_config 
+------------
+ 
+(1 row)
+
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:15: NOTICE:  PASS: Auth rejects disposable signup without a request identity
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:19: NOTICE:  PASS: Auth normalizes disposable email domain case
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:23: NOTICE:  PASS: Auth rejects subdomains of disposable domains
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:28: NOTICE:  PASS: Auth domain matching respects DNS label boundaries
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:33: NOTICE:  PASS: Auth permits permanent email providers
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:38: NOTICE:  PASS: Auth role can read the maintained blocklist through RLS
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:42: NOTICE:  PASS: Auth role cannot add blocked domains
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:46: NOTICE:  PASS: Auth role cannot change blocked domains
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:50: NOTICE:  PASS: Auth role cannot delete blocked domains
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:54: NOTICE:  PASS: Auth hook role gains no access to private tenancy functions
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:61: NOTICE:  PASS: Auth hook uses invoker security, an empty search path and an RLS blocklist
+ assert_true 
+-------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:68: NOTICE:  PASS: only Auth can access the signup hook and its blocklist
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:73: NOTICE:  PASS: API callers cannot invoke the Auth hook
+RESET
+SET
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:79: NOTICE:  PASS: anonymous callers cannot invoke the Auth hook
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+SET
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:85: NOTICE:  PASS: authenticated callers cannot invoke the Auth hook
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+SET
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+psql:/var/lib/postgresql/baseline-tests/database/tests/auth_hooks.sql:91: NOTICE:  PASS: service callers cannot invoke the Auth hook
+RESET
+ROLLBACK
+All Auth hook scenarios passed; test records rolled back.
+BEGIN
+GRANT ROLE
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+INSERT 0 0
+INSERT 0 0
+INSERT 0 0
+CREATE FUNCTION
+INSERT 0 1
+ fixture_package 
+-----------------
+ 
+(1 row)
+
+ fixture_package 
+-----------------
+ 
+(1 row)
+
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+DO
+ assert_true 
+-------------
+ 
+(1 row)
+
+INSERT 0 1
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000009
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+INSERT 0 0
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000009
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+ assert_rejected 
+-----------------
+ 
+(1 row)
+
+RESET
+CREATE FUNCTION
+ assert_true 
+-------------
+ 
+(1 row)
+
+SET
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000001
+(1 row)
+
+                               ensure_profile                               
+----------------------------------------------------------------------------
+ (50000000-0000-4000-8000-000000000001,,,,"2026-10-17 22:22:45.688883+00",)
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+INSERT 0 1
+ assert_true 
+-------------
+ 
+(1 row)
+
+              set_config              
+--------------------------------------
+ 50000000-0000-4000-8000-000000000004
+(1 row)
+
+                               ensure_profile                               
+----------------------------------------------------------------------------
+ (50000000-0000-4000-8000-000000000004,,,,"2026-10-17 22:22:45.688883+00",)
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+SET
+ assert_true 
+-------------
+ 
+(1 row)
+
+RESET
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ assert_true 
+-------------
+ 
+(1 row)
+
+ROLLBACK
+                                                result                                                 
+-------------------------------------------------------------------------------------------------------
+ Hosted assertions passed; synthetic accounts, memberships, observations, site and package rolled back
+(1 row)
+
+PASS: 2545 coordinate numbers match Node v24.19.0; geometry JCS digest matches.
+PASS: two managers race publication; one complete publication, one publication_conflict.
+PASS: concurrent identical retries return one durable result and create one version.
+PASS: two managers race whole-draft CAS; one revision advance and no lost update.
+PASS: two null-precondition first uploads race; exactly one version-1 package, snapshot and current pointer.
+PASS: publication commits before a waiting role revocation; one complete package survives.
+PASS: revocation commits first; waiting publication rechecks authority and leaves no package.
+PASS: account forgetting holds the caller lock; a waiting publication is refused without side effects.
+Current schema acceptance passed on disposable PostgreSQL 17/PostGIS; existing databases untouched.

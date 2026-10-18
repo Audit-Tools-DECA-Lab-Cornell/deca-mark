@@ -304,14 +304,25 @@ Database-backed modules carry `integration`; `api_client` refuses an unmarked te
 loading database settings. Signed input-validation tests use `validation_client`, which
 opens no database connection. The default full suite still includes both selections.
 
-Stored definitions now use only canonical `questions`. Fresh synthetic shell initialization
+New form authoring uses canonical `questions`. Fresh synthetic shell initialization
 retains `people` (required integer 0–999) and `notes` (optional text, at most 1,000 characters)
 without adding an observer answer; observer remains envelope metadata. Practice forms can
 be copied through the normal revision-protected draft lifecycle. The separate collector
 practice definition in `contracts/forms/shell-v1.json` retains its authored observer question.
-Existing `fields` definitions need an explicitly reviewed transition **before** deploying
-this canonical-only API; see [cleanup prerequisites](../docs/reviews/final-cleanup-2026-10-17/implementation.md).
-No existing immutable definition or observation is rewritten by this cleanup.
+Existing immutable `fields` definitions retain the original stored-form validator and
+export reader. Exact bound uploads and receipt retries remain supported within the current
+wire contract; this does not add legacy form installation to the collector or allow new
+fields-only authoring. An explicit canonical successor applies to new packages only.
+See the [compatibility resolution and removal gates](../docs/reviews/fields-only-transition-2026-10-17/README.md).
+
+Stored canonical definitions use structural validation for historical interpretation;
+new creation, editing and publication additionally enforce current authoring eligibility.
+An old published numeric question with `min > max` therefore does not block historical
+export. Uploads still enforce its original constraints: exact receipts replay, but a
+visible required impossible question or an attempted answer to it returns an actionable
+422. The collector retains the original record and binding for coordinator attention.
+See the [published-form preservation and rollout assessment](../docs/reviews/published-form-compatibility-2026-10-17/rollout.md).
+No existing immutable definition, observation, package or queued body is converted.
 
 Archive preparation supports import and publication. Publication still extracts its retained
 base archive in an isolated worker with its checksum checks, CPU/memory/file-size limits,

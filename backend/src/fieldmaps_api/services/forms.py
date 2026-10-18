@@ -1,8 +1,8 @@
 """The instrument lifecycle: forms, drafts a manager edits, publishing and retiring (BE-11).
 
-A definition is checked by the same canonical parser that validates uploads, so a version that
-publishes is one every device and the server read identically. The stored definition names its own
-version code and state, which is what the collector keys records and uploadability by.
+A definition must pass current authoring eligibility before publication. Historical reads retain
+structural validation and uploads enforce the original answer constraints. The definition names
+its own version code and state, which is what the collector keys records and uploadability by.
 """
 
 from uuid import UUID

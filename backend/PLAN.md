@@ -34,7 +34,7 @@ This file is part of the [DECA Mark production plan](../docs/plan/README.md) and
 - SQLSTATE determines database error responses; unknown failures are sanitized 500s.
 - Separate runtime/test container stages keep test tooling out of the non-root runtime image.
 
-**Forms.** `domain/forms.py` validates the canonical contract with conditions and dynamic choices. The final audit cleanup removes experimental `fields` parsing and export dispatch after converting fresh synthetic initialization to canonical questions. Existing stored `fields` definitions require the [documented transition assessment](../docs/reviews/final-cleanup-2026-10-17/implementation.md) before rollout. BE-22 owns current exact-bound upload/fingerprint acceptance; dated earlier upload/readback results remain historical evidence.
+**Forms.** `domain/forms.py` validates the canonical contract with conditions and dynamic choices. New authoring and fresh synthetic initialization use canonical questions. The narrow existing `fields` reader/validator and export dispatch remain for historical records and supported queued uploads until the [defined inventory, queue and retention gates](../docs/reviews/fields-only-transition-2026-10-17/README.md) permit removal. No immutable definitions or packages are rewritten. BE-22 owns current exact-bound upload/fingerprint acceptance; dated earlier upload/readback results remain historical evidence.
 
 **Tests.** The suite covers real local Supabase plus pure domain and HTTP boundary behavior. BE-03 preserves the existing upload/package scenarios and adds error-envelope coverage.
 

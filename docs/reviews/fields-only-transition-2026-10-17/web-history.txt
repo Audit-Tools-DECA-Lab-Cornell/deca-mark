@@ -1,0 +1,44 @@
+✔ reads a canonical definition (2.193923ms)
+✔ reads a legacy fields definition, with labels from the codes (1.105778ms)
+✔ labels one, many, text and number answers (0.725781ms)
+✔ a missing, null or empty answer reads Not answered; an unknown option reads as stored (0.179383ms)
+✔ a dynamic option set is chosen by the parent's answer (0.41399ms)
+✔ rows follow the form's order, skip hidden and unanswered questions, and keep unknown answers last (0.322581ms)
+✔ legacy records list their answers in field order (0.329082ms)
+✔ an unreadable definition still lists the answers (0.325395ms)
+✔ play type is the first single-choice Play question (0.371852ms)
+✔ the address holds the view and reads back to the same view (1.144109ms)
+✔ a malformed view is read without what does not make sense (0.390097ms)
+✔ Next's searchParams object reads the same, a repeated key as a list (0.245457ms)
+✔ filters: whether any applies, and days that run backwards (0.166821ms)
+✔ the view becomes the API's filters: identities, one exact version, and days as instants (0.9456ms)
+✔ an answer is cut on one line without splitting an emoji (0.490142ms)
+✔ the summary is the play type when answered, otherwise the first answer in the form's order (0.506863ms)
+✔ records are worded by their own form version and map version, in the project's timezone (0.844712ms)
+✔ the search finds words in the loaded records: a label, an answer, an option's wording, a zone, a version (0.512064ms)
+✔ map versions read as ranges (0.186416ms)
+✔ zone choices: the current map's zones first, then zones only earlier versions had, each with its versions (0.436091ms)
+✔ the count line says how many loaded, how many match, and when they were counted (0.269933ms)
+✔ the plan is drawn for the chosen site, the only site, or the only site that has observations (0.220149ms)
+✔ one map version is offered only where every chosen zone is (0.334803ms)
+✔ a form row names its newest published version, its drafts and the sites that use it (0.699011ms)
+✔ a form without a published version has none, and a reader's form can hold no versions (0.152052ms)
+✔ a version with no counted questions is from before the form editor (0.165438ms)
+✔ a version is compared with the nearest frozen version before it (0.227543ms)
+✔ an earlier version from before the form editor is not a base to compare with (0.14496ms)
+✔ sitesUsing lists the sites whose current package names exactly that version, as either form (0.233335ms)
+✔ the inventory form asks only about a zone; the behaviour form is a play form (0.181478ms)
+✔ publishing a play form says it reaches observers only through a map package that names it (0.170458ms)
+✔ draft changes name the field that changed, and a new question is new (0.709471ms)
+✔ guidance that is only emptied reads as 'No guidance' (0.18814ms)
+✔ two definitions are the same when only the order of their keys differs (0.285411ms)
+✔ questions waiting on a note or an option list are flagged (0.229497ms)
+✔ questions are numbered 01, 02 … as the editor shows them (0.110135ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 188.604102

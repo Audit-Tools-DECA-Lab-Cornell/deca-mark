@@ -1,0 +1,26 @@
+✔ an untouched form takes what the server kept and shows the saved note (1.503268ms)
+✔ typing during the save keeps the newer edits and retires the saved note (0.530287ms)
+✔ typing during a save that follows an earlier saved answer still retires the new note (0.211363ms)
+✔ edits undone before the answer count as untouched (0.183652ms)
+✔ fields already holding what the server kept show the saved note (0.143718ms)
+✔ a failure leaves the fields alone and stays shown after typing during the save (0.201786ms)
+✔ a failure on an untouched form leaves the fields as typed (0.141884ms)
+✔ edits after an answer retire it (0.166941ms)
+✔ compares every field (0.326678ms)
+✔ reads a canonical definition (0.918479ms)
+✔ reads a legacy fields definition, with labels from the codes (0.554501ms)
+✔ labels one, many, text and number answers (0.723647ms)
+✔ a missing, null or empty answer reads Not answered; an unknown option reads as stored (0.171118ms)
+✔ a dynamic option set is chosen by the parent's answer (0.385588ms)
+✔ rows follow the form's order, skip hidden and unanswered questions, and keep unknown answers last (0.260454ms)
+✔ legacy records list their answers in field order (0.288286ms)
+✔ an unreadable definition still lists the answers (0.315838ms)
+✔ play type is the first single-choice Play question (0.15048ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 82.529367

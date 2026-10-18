@@ -1,0 +1,14 @@
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+✔ actual save → review → publish flow retains ETags, local edits and explicit review on conflict (178.935495ms)
+✔ form precondition HTTP 412 requires reconciliation (0.180677ms)
+✔ form precondition HTTP 428 requires reconciliation (0.143106ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2179.564034

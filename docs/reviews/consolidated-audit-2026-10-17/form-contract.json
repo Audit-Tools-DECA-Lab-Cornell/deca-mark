@@ -1,0 +1,128 @@
+[
+  {
+    "path": "/v1/projects/{project_id}/form-versions/{version_code}",
+    "method": "delete",
+    "operation": "discardFormDraft",
+    "precondition": [
+      {
+        "description": "Required strong ETag of the loaded or reviewed form draft",
+        "in": "header",
+        "name": "if-match",
+        "required": false,
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Required strong ETag of the loaded or reviewed form draft",
+          "title": "If-Match"
+        }
+      }
+    ],
+    "responses": [
+      "204",
+      "400",
+      "401",
+      "403",
+      "404",
+      "405",
+      "409",
+      "410",
+      "412",
+      "413",
+      "422",
+      "428",
+      "429",
+      "500",
+      "503"
+    ]
+  },
+  {
+    "path": "/v1/projects/{project_id}/form-versions/{version_code}",
+    "method": "put",
+    "operation": "saveFormDraft",
+    "precondition": [
+      {
+        "description": "Required strong ETag of the loaded or reviewed form draft",
+        "in": "header",
+        "name": "if-match",
+        "required": false,
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Required strong ETag of the loaded or reviewed form draft",
+          "title": "If-Match"
+        }
+      }
+    ],
+    "responses": [
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+      "405",
+      "409",
+      "410",
+      "412",
+      "413",
+      "422",
+      "428",
+      "429",
+      "500",
+      "503"
+    ]
+  },
+  {
+    "path": "/v1/projects/{project_id}/form-versions/{version_code}/publish",
+    "method": "post",
+    "operation": "publishFormVersion",
+    "precondition": [
+      {
+        "description": "Required strong ETag of the loaded or reviewed form draft",
+        "in": "header",
+        "name": "if-match",
+        "required": false,
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Required strong ETag of the loaded or reviewed form draft",
+          "title": "If-Match"
+        }
+      }
+    ],
+    "responses": [
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+      "405",
+      "409",
+      "410",
+      "412",
+      "413",
+      "422",
+      "428",
+      "429",
+      "500",
+      "503"
+    ]
+  }
+]

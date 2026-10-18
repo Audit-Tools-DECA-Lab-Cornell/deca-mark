@@ -86,10 +86,19 @@ Auth/Storage service behavior. See [form revision evidence](../docs/reviews/form
 The baseline's fresh synthetic shell INSERT now authors canonical `questions`, preserving
 the original two IDs, bounds and export names. This edits initialization source only; do not
 reapply the baseline or change migration history on an existing installation. No forward
-migration mutates frozen forms. Existing published or draft `fields` definitions, their
-packages and observations require a separately approved transition before running the
-canonical-only API. Publishing a canonical successor does not convert old package bindings.
-See the [cleanup evidence and preflight](../docs/reviews/final-cleanup-2026-10-17/implementation.md).
+migration mutates frozen forms. The original historical `fields` reader/validator is retained
+for existing packages, records and supported queued uploads. Publishing a canonical
+successor does not convert old package bindings. The read-only
+[inventory](fields-only-inventory.sql) reports exact form/package references on an explicitly
+selected target; it does not discover device queues or authorize hosted access.
+See the [compatibility resolution and exact remaining steps](../docs/reviews/fields-only-transition-2026-10-17/README.md).
+
+The [published numeric-bound inventory](published-form-bounds-inventory.sql) separately
+identifies canonical `min > max` questions, their exact definitions and server-side
+observation/package/draft references. Run it only on an explicitly authorized target
+inside a read-only transaction. It cannot account for offline devices. The
+[procedure and owner decisions](../docs/reviews/published-form-compatibility-2026-10-17/inventory.md)
+accompany the historical reader protection; no conversion migration is required or supplied.
 Training's canonical Janet definition, retention, creator isolation and immutable metadata
 remain unchanged.
 

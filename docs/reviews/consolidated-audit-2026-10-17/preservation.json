@@ -1,0 +1,14 @@
+{
+  "initial_file_hashes_checked": 1570,
+  "unchanged_existing_files": 1569,
+  "changed_existing_files": [
+    {
+      "path": "backend/tests/test_fields_only_history.py",
+      "reason": "TC001: move type-only import under TYPE_CHECKING",
+      "before_sha256": "5a22b0ab6e0aaf7f9a75f3dd45037543c05e92dc2f19c97850f1c25b5ea21cfe",
+      "after_sha256": "98424993af234f979c65dcb662a81175abf08dd930ff286af6d5184f1693b6e8"
+    }
+  ],
+  "head": "577959a2a99c9d8390203eded76e2149ac780162",
+  "production_changes_during_assessment": []
+}

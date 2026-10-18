@@ -1,0 +1,57 @@
+[
+  {
+    "path": "docs/reviews/final-cleanup-2026-10-17/qgis-reconciliation/analysis/gis09-synthetic_attachments.zip",
+    "entries": 1,
+    "form_snapshots": {}
+  },
+  {
+    "path": "docs/reviews/final-cleanup-2026-10-17/qgis-reconciliation/csv.zip",
+    "entries": 5,
+    "form_snapshots": {
+      "forms.json": {
+        "shell-v1": "canonical",
+        "gis-inventory-v1": "canonical"
+      }
+    }
+  },
+  {
+    "path": "docs/reviews/final-cleanup-2026-10-17/qgis-reconciliation/geojson.zip",
+    "entries": 5,
+    "form_snapshots": {
+      "forms.json": {
+        "shell-v1": "canonical",
+        "gis-inventory-v1": "canonical"
+      }
+    }
+  },
+  {
+    "path": "docs/reviews/qgis-repair-2026-10-17/synthetic/csv.zip",
+    "entries": 5,
+    "form_snapshots": {
+      "forms.json": {
+        "shell-v1": "canonical",
+        "inventory-v1": "canonical"
+      }
+    }
+  },
+  {
+    "path": "docs/reviews/qgis-repair-2026-10-17/synthetic/geojson.zip",
+    "entries": 5,
+    "form_snapshots": {
+      "forms.json": {
+        "shell-v1": "canonical",
+        "inventory-v1": "canonical"
+      }
+    }
+  },
+  {
+    "path": "qgis/demo-playground-2026-10-15/janet-desktop-project.zip",
+    "entries": 5,
+    "form_snapshots": {}
+  },
+  {
+    "path": "qgis/demo-playground-2026-10-15/janet-synthetic-playground.qgz",
+    "entries": 5,
+    "form_snapshots": {}
+  }
+]

@@ -1,0 +1,4 @@
+
+> decamark-web@0.1.0 typecheck /workspace/deca-mark/web
+> tsc --noEmit
+

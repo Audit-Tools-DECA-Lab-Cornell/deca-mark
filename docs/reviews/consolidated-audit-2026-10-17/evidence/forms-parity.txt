@@ -1,0 +1,5 @@
+
+> decamark@0.1.0 forms:parity /workspace/deca-mark
+> node scripts/check-form-engine-parity.mjs
+
+forms:parity: web/src/lib/forms matches mobile/src/forms.

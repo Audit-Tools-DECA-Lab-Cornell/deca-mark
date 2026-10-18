@@ -1,0 +1,59 @@
+{
+  "head": "577959a2a99c9d8390203eded76e2149ac780162",
+  "initial_worktree": "clean",
+  "unchanged_paths": [
+    "backend/src/fieldmaps_api/domain/form_references.py",
+    "backend/src/fieldmaps_api/domain/zone_upload_fingerprint.py",
+    "backend/src/fieldmaps_api/form_preconditions.py",
+    "backend/src/fieldmaps_api/services/forms.py",
+    "backend/src/fieldmaps_api/zone_observation_schemas.py",
+    "contracts/forms/cases/janet-inventory-v1.cases.json",
+    "contracts/forms/cases/janet-test-v1.cases.json",
+    "contracts/forms/definition.cases.json",
+    "contracts/forms/janet-inventory-v1.json",
+    "contracts/forms/janet-test-v1.json",
+    "contracts/forms/shell-v1.json",
+    "contracts/openapi.json",
+    "contracts/zones/upload.cases.json",
+    "mobile/pnpm-lock.yaml",
+    "qgis/zone-boundaries/prepare.py",
+    "supabase/migrations/20261012120000_current_baseline.sql",
+    "supabase/migrations/20261012142629_transactional_email_outbox.sql",
+    "supabase/migrations/20261017000657_observation_creator_visibility.sql",
+    "supabase/migrations/20261017050453_form_draft_revisions.sql",
+    "supabase/seed.sql",
+    "web/pnpm-lock.yaml"
+  ],
+  "restored_consumers": [
+    {
+      "path": "backend/src/fieldmaps_api/domain/legacy_forms.py",
+      "sha256": "c24d7b913367a862636e5cf2a22a96d8e6bb9a6f3cfb23770524811622e4becf",
+      "matches": "49caa05 byte-for-byte"
+    },
+    {
+      "path": "backend/src/fieldmaps_api/domain/forms.py",
+      "sha256": "b7451d83d55e0270bff7411740ba7fe9c30e413dcb97ddc5095e67310156558a",
+      "matches": "49caa05 byte-for-byte"
+    },
+    {
+      "path": "backend/src/fieldmaps_api/domain/observation_export_columns.py",
+      "sha256": "ede694bfc3ea8350ddc3613d07d5c8e87315534d0ae2e013ab83332b54e69fc5",
+      "matches": "49caa05 byte-for-byte"
+    },
+    {
+      "path": "backend/src/fieldmaps_api/repositories/bound_uploads.py",
+      "sha256": "785ded6abe108e93034ba8c5086374628599def8e42934f67c0cdcab947ee711",
+      "matches": "49caa05 byte-for-byte"
+    },
+    {
+      "path": "backend/src/fieldmaps_api/schemas.py",
+      "sha256": "f74799bb03ca7cfaafddd90d64b85ab98dd4b76dc726e169e2e1556d29ae4302",
+      "matches": "49caa05 AST; cleanup blank-line formatting retained"
+    },
+    {
+      "path": "backend/src/fieldmaps_api/services/observation_answers.py",
+      "sha256": "b9ef2c70846d39b5e0a6606bd06025ce03fa02607d4a6b263accc477e237c653",
+      "matches": "49caa05 byte-for-byte"
+    }
+  ]
+}

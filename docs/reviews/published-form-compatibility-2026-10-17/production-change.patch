@@ -1,0 +1,218 @@
+--- a/backend/src/fieldmaps_api/domain/form_references.py
++++ b/backend/src/fieldmaps_api/domain/form_references.py
+@@ -72,7 +72,25 @@
+             assert_never(condition)
+ 
+ 
++def inverted_bounds(question: Question) -> bool:
++    return (
++        question.kind == "number"
++        and question.min is not None
++        and question.max is not None
++        and question.min > question.max
++    )
++
++
+ def definition_problems(form: CanonicalDefinition) -> list[str]:
++    """Check authoring eligibility in addition to safe historical interpretation."""
++    return structural_problems(form) + [
++        f'"{question.id}" has a minimum greater than its maximum.'
++        for question in form.questions
++        if inverted_bounds(question)
++    ]
++
++
++def structural_problems(form: CanonicalDefinition) -> list[str]:
+     problems: list[str] = []
+     by_id: dict[str, Question] = {}
+     for question in form.questions:
+@@ -91,13 +109,6 @@
+             )
+         columns[column] = question.id
+     for question in form.questions:
+-        if (
+-            question.kind == "number"
+-            and question.min is not None
+-            and question.max is not None
+-            and question.min > question.max
+-        ):
+-            problems.append(f'"{question.id}" has a minimum greater than its maximum.')
+         problems.extend(question_problems(question, form, by_id))
+     problems.extend(cycle_problems(form, by_id))
+     return problems
+--- a/backend/src/fieldmaps_api/domain/forms.py
++++ b/backend/src/fieldmaps_api/domain/forms.py
+@@ -14,7 +14,11 @@
+     trim_text,
+     visible_questions,
+ )
+-from fieldmaps_api.domain.form_references import definition_problems
++from fieldmaps_api.domain.form_references import (
++    definition_problems,
++    inverted_bounds,
++    structural_problems,
++)
+ from fieldmaps_api.domain.legacy_forms import (
+     AnswerError,
+ )
+@@ -34,9 +38,23 @@
+ ]
+ 
+ 
+-class FormDefinition(CanonicalDefinition):
++class StoredCanonicalDefinition(CanonicalDefinition):
++    """Interpret immutable instruments without applying new authoring eligibility."""
++
+     @model_validator(mode="after")
+     def check_references(self) -> Self:
++        problems = structural_problems(self)
++        if problems:
++            message = f'Form "{self.version}" cannot be used: {" ".join(problems)}'
++            raise ValueError(message)
++        return self
++
++
++class FormDefinition(StoredCanonicalDefinition):
++    """Strict eligibility for creation, editing and reviewed publication."""
++
++    @model_validator(mode="after")
++    def check_authoring(self) -> Self:
+         problems = definition_problems(self)
+         if problems:
+             message = f'Form "{self.version}" cannot be used: {" ".join(problems)}'
+@@ -44,9 +62,13 @@
+         return self
+ 
+ 
+-def definition_format(value: JsonValue | FormDefinition | LegacyFormDefinition) -> str:
++class PublishedFormBoundsError(AnswerError):
++    """A submitted answer requires an impossible published numeric constraint."""
++
++
++def definition_format(value: JsonValue | StoredCanonicalDefinition | LegacyFormDefinition) -> str:
+     match value:
+-        case FormDefinition():
++        case StoredCanonicalDefinition():
+             return "canonical"
+         case LegacyFormDefinition():
+             return "legacy"
+@@ -57,7 +79,8 @@
+ 
+ 
+ type StoredFormDefinition = Annotated[
+-    Annotated[FormDefinition, Tag("canonical")] | Annotated[LegacyFormDefinition, Tag("legacy")],
++    Annotated[StoredCanonicalDefinition, Tag("canonical")]
++    | Annotated[LegacyFormDefinition, Tag("legacy")],
+     Discriminator(definition_format),
+ ]
+ type Reason = Literal["required", "range", "type", "option", "duplicate", "maxLength"]
+@@ -113,7 +136,7 @@
+     return None if all(isinstance(code, str) and code in codes for code in value) else "option"
+ 
+ 
+-def review_problems(form: FormDefinition, answers: Answers) -> list[ReviewProblem]:
++def review_problems(form: StoredCanonicalDefinition, answers: Answers) -> list[ReviewProblem]:
+     problems: list[ReviewProblem] = []
+     for question in visible_questions(form, answers):
+         if question.id not in answers:
+@@ -145,7 +168,20 @@
+     match definition:
+         case LegacyFormDefinition():
+             return NormalizedAnswers(validate_legacy_answers(definition, answers), [])
+-        case FormDefinition():
++        case StoredCanonicalDefinition():
++            impossible = [
++                question.id
++                for question in visible_questions(definition, answers)
++                if inverted_bounds(question) and (question.required or question.id in answers)
++            ]
++            if impossible:
++                message = (
++                    f'Published form "{definition.version}" has contradictory numeric bounds for '
++                    f"{', '.join(impossible)}. No answer can satisfy these bounds. "
++                    "Keep this record and contact the project coordinator; "
++                    "do not change its binding."
++                )
++                raise PublishedFormBoundsError(message)
+             problems = review_problems(definition, answers)
+             if problems:
+                 message = "; ".join(f"{problem.id}: {problem.reason}" for problem in problems)
+--- a/backend/src/fieldmaps_api/domain/observation_export_columns.py
++++ b/backend/src/fieldmaps_api/domain/observation_export_columns.py
+@@ -7,7 +7,7 @@
+ from pydantic import JsonValue, TypeAdapter
+ 
+ from fieldmaps_api.domain.form_definition import Option, Question
+-from fieldmaps_api.domain.forms import FormDefinition, StoredFormDefinition
++from fieldmaps_api.domain.forms import StoredCanonicalDefinition, StoredFormDefinition
+ from fieldmaps_api.domain.legacy_forms import FormDefinition as LegacyDefinition
+ 
+ RECORD_COLUMNS: Final = (
+@@ -119,7 +119,7 @@
+     adapter: TypeAdapter[StoredFormDefinition] = TypeAdapter(StoredFormDefinition)
+     definition = adapter.validate_python(raw)
+     match definition:
+-        case FormDefinition():
++        case StoredCanonicalDefinition():
+             return tuple(canonical_question(question) for question in definition.questions)
+         case LegacyDefinition():
+             return tuple(
+--- a/backend/src/fieldmaps_api/services/forms.py
++++ b/backend/src/fieldmaps_api/services/forms.py
+@@ -1,8 +1,8 @@
+ """The instrument lifecycle: forms, drafts a manager edits, publishing and retiring (BE-11).
+ 
+-A definition is checked by the same canonical parser that validates uploads, so a version that
+-publishes is one every device and the server read identically. The stored definition names its own
+-version code and state, which is what the collector keys records and uploadability by.
++A definition must pass current authoring eligibility before publication. Historical reads retain
++structural validation and uploads enforce the original answer constraints. The definition names
++its own version code and state, which is what the collector keys records and uploadability by.
+ """
+ 
+ from uuid import UUID
+--- a/backend/src/fieldmaps_api/services/observation_answers.py
++++ b/backend/src/fieldmaps_api/services/observation_answers.py
+@@ -1,13 +1,22 @@
+ import json
+ 
+ from fieldmaps_api.domain.form_engine import Answers
+-from fieldmaps_api.domain.forms import AnswerError, StoredFormDefinition, validate_answers
++from fieldmaps_api.domain.forms import (
++    AnswerError,
++    PublishedFormBoundsError,
++    StoredFormDefinition,
++    validate_answers,
++)
+ from fieldmaps_api.errors import ValidationFailedError
+ 
+ 
+ def validated_answers(definition: StoredFormDefinition, answers: Answers) -> str:
+     try:
+         normalized = validate_answers(definition, answers)
++    except PublishedFormBoundsError as error:
++        failure = ValidationFailedError(str(error), field="answers")
++        failure.details["issues"] = [{"code": "published_form_bounds"}]
++        raise failure from error
+     except AnswerError as error:
+         raise ValidationFailedError(str(error), field="answers") from error
+     return json.dumps(normalized, sort_keys=True)
+--- a/mobile/src/sync/upload-failure.ts
++++ b/mobile/src/sync/upload-failure.ts
+@@ -8,6 +8,7 @@
+   "package_not_ready",
+   "zone_not_in_package",
+   "form_not_in_package",
++  "published_form_bounds",
+ ]);
+ const detailSchema = z.object({
+   error: z.object({ details: z.object({ issues: z.array(z.object({ code: z.string() })) }) }),
+@@ -16,6 +17,8 @@
+   if (!isBoundObservation(record)) return null;
+   const map = `map v${record.binding.packageVersion}`;
+   switch (code) {
++    case "published_form_bounds":
++      return "Needs attention. This published form has contradictory number limits. No answer can satisfy them. Keep this record on this device and tell your coordinator; a new form will not change this record's binding.";
+     case "point_outside_zone":
+       return `Needs attention. DECA Mark did not accept ${record.binding.zoneLabel} for this point on ${map}. The record keeps its number and stays on this device. Tell your coordinator.`;
+     case "form_not_in_package":

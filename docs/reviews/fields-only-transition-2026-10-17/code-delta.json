@@ -1,0 +1,15 @@
+{
+  "production": {
+    "added": 166,
+    "deleted": 27,
+    "net": 139,
+    "files": 6
+  },
+  "new_tests": {
+    "backend/tests/fields_only_fixtures.py": 139,
+    "backend/tests/test_fields_only_history.py": 241,
+    "backend/tests/test_stored_form_compatibility.py": 61,
+    "mobile/src/sync/fields-only-outbox.test.ts": 152
+  },
+  "inventory_sql_lines": 26
+}
