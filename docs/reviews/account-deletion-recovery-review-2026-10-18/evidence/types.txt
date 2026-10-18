@@ -1,0 +1,113 @@
+Loading pyproject.toml file at /workspace/deca-mark/backend/pyproject.toml
+Setting pythonPath for service "<default>": "/workspace/deca-mark/backend/.venv/bin/python"
+Auto-excluding **/node_modules
+Auto-excluding **/__pycache__
+Auto-excluding **/.*
+Auto-excluding **/__editable__.*
+Execution environment: file:///workspace/deca-mark/backend/.venv/bin/python
+  Extra paths:
+    /workspace/deca-mark/backend/src
+  Python version: 3.13
+  Python platform: All
+  Search paths:
+    /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib
+    /workspace/deca-mark/backend
+    /workspace/deca-mark/backend/src
+    /workspace/deca-mark/backend/typings
+    /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stubs/...
+    /usr/lib/python3.13
+    /usr/lib/python3.13/lib-dynload
+    /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages
+Found 210 source files
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib/typing_extensions.pyi'
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib/typing.pyi'
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib/typing.pyi'
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib/_typeshed/__init__.pyi'
+Could not import 'email_validator' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/pydantic/networks.py'
+Could not import 'email_validator' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/pydantic/networks.py'
+Heap stats: total_memory_size=9968MB, total_free_size=8234MB, total_heap_size=144MB, used_heap_size=97MB, cross_worker_used_heap_size=97MB, total_physical_size=145MB, total_available_size=2142MB, heap_size_limit=2240MB
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/pydantic/_internal/_model_construction.py'
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib/inspect.pyi'
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib/inspect.pyi'
+Could not import 'pathlib.types' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/basedpyright/dist/typeshed-fallback/stdlib/pathlib/__init__.pyi'
+  Looking in stubPath 'file:///workspace/deca-mark/backend/typings'
+  Looking in root directory of execution environment 'file:///workspace/deca-mark/backend'
+  Looking in extraPath 'file:///workspace/deca-mark/backend/src'
+  Looking for typeshed stdlib path
+  Looking for typeshed stdlib path
+  Typeshed path not found
+  Looking in python search path 'file:///usr/lib/python3.13'
+  Attempting to resolve stub package using root path 'file:///usr/lib/python3.13'
+  Attempting to resolve using root path 'file:///usr/lib/python3.13'
+  Resolved import with file 'file:///usr/lib/python3.13/pathlib/__init__.py'
+  Looking in python search path 'file:///usr/lib/python3.13/lib-dynload'
+  Looking in python search path 'file:///workspace/deca-mark/backend/.venv/lib/python3.13/site-packages'
+  Looking for typeshed third-party path
+  Looking for typeshed stubs path
+  Typeshed path not found
+Heap stats: total_memory_size=9968MB, total_free_size=8082MB, total_heap_size=291MB, used_heap_size=168MB, cross_worker_used_heap_size=168MB, total_physical_size=291MB, total_available_size=2071MB, heap_size_limit=2240MB
+Could not import 'sniffio' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/anyio/_core/_eventloop.py'
+[FG] Long operation: checking: file:///workspace/deca-mark/backend/src/fieldmaps_api/account_deletion_worker.py (2001ms)
+[FG] Long operation: analyzing: file:///workspace/deca-mark/backend/src/fieldmaps_api/account_deletion_worker.py (2025ms)
+Could not import 'python_multipart.multipart' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/requests.py'
+Could not import 'python_multipart.multipart' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/requests.py'
+Could not import 'multipart.multipart' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/requests.py'
+Heap stats: total_memory_size=9968MB, total_free_size=8023MB, total_heap_size=361MB, used_heap_size=279MB, cross_worker_used_heap_size=279MB, total_physical_size=362MB, total_available_size=1961MB, heap_size_limit=2240MB
+Heap stats: total_memory_size=9968MB, total_free_size=7970MB, total_heap_size=407MB, used_heap_size=300MB, cross_worker_used_heap_size=300MB, total_physical_size=401MB, total_available_size=1939MB, heap_size_limit=2240MB
+Heap stats: total_memory_size=9968MB, total_free_size=7931MB, total_heap_size=430MB, used_heap_size=356MB, cross_worker_used_heap_size=356MB, total_physical_size=430MB, total_available_size=1884MB, heap_size_limit=2240MB
+Could not import 'httpx2_jsfetch' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/httpx2/_transports/__init__.py'
+Could not import 'brotlicffi' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/httpx2/_decoders.py'
+Could not import 'compression.zstd' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/httpx2/_decoders.py'
+Could not import 'compression.zstd' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/httpx2/_decoders.py'
+Heap stats: total_memory_size=9968MB, total_free_size=7883MB, total_heap_size=473MB, used_heap_size=367MB, cross_worker_used_heap_size=367MB, total_physical_size=473MB, total_available_size=1872MB, heap_size_limit=2240MB
+Could not import 'email_validator' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/fastapi/openapi/models.py'
+Could not import 'pathlib.types' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/anyio/_core/_fileio.py'
+  Looking in stubPath 'file:///workspace/deca-mark/backend/typings'
+  Looking in root directory of execution environment 'file:///workspace/deca-mark/backend'
+  Looking in extraPath 'file:///workspace/deca-mark/backend/src'
+  Looking for typeshed stdlib path
+  Looking for typeshed stdlib path
+  Typeshed path not found
+  Looking in python search path 'file:///usr/lib/python3.13'
+  Attempting to resolve stub package using root path 'file:///usr/lib/python3.13'
+  Attempting to resolve using root path 'file:///usr/lib/python3.13'
+  Resolved import with file 'file:///usr/lib/python3.13/pathlib/__init__.py'
+  Looking in python search path 'file:///usr/lib/python3.13/lib-dynload'
+  Looking in python search path 'file:///workspace/deca-mark/backend/.venv/lib/python3.13/site-packages'
+  Looking for typeshed third-party path
+  Looking for typeshed stubs path
+  Typeshed path not found
+Could not import 'socksio' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/httpx2/_transports/default.py'
+Could not import 'socksio' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/httpx2/_transports/default.py'
+Could not import 'exceptiongroup' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/anyio/_core/_exceptions.py'
+Could not import 'httpx' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py'
+Could not import 'exceptiongroup' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/fixtures.py'
+Heap stats: total_memory_size=9968MB, total_free_size=7836MB, total_heap_size=515MB, used_heap_size=396MB, cross_worker_used_heap_size=396MB, total_physical_size=516MB, total_available_size=1843MB, heap_size_limit=2240MB
+Could not import 'pkg_resources' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/monkeypatch.py'
+Could not import 'pkg_resources' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/monkeypatch.py'
+Could not import 'annotationlib' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/compat.py'
+Could not import 'exceptiongroup' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/raises.py'
+Could not import 'exceptiongroup' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/raises.py'
+Could not import 'exceptiongroup' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/_code/code.py'
+Heap stats: total_memory_size=9968MB, total_free_size=7778MB, total_heap_size=568MB, used_heap_size=459MB, cross_worker_used_heap_size=459MB, total_physical_size=569MB, total_available_size=1780MB, heap_size_limit=2240MB
+Heap stats: total_memory_size=9968MB, total_free_size=7739MB, total_heap_size=603MB, used_heap_size=502MB, cross_worker_used_heap_size=502MB, total_physical_size=603MB, total_available_size=1738MB, heap_size_limit=2240MB
+Could not import 'numpy' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/python_api.py'
+Could not import 'numpy' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/python_api.py'
+Could not import 'numpy' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/python_api.py'
+Could not resolve source for 'gevent.hub' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not resolve source for 'gevent' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not resolve source for 'gevent.monkey' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not import 'eventlet.patcher' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not import 'aiocontextvars' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not import 'pkg_resources' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not resolve source for 'gevent' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not resolve source for 'gevent.monkey' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/sentry_sdk/utils.py'
+Could not resolve source for 'colorama' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/capture.py'
+Heap stats: total_memory_size=9968MB, total_free_size=7697MB, total_heap_size=637MB, used_heap_size=522MB, cross_worker_used_heap_size=522MB, total_physical_size=637MB, total_available_size=1718MB, heap_size_limit=2240MB
+Could not import 'dotenv' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/uvicorn/config.py'
+Could not resolve source for 'yaml' in file '/workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/uvicorn/config.py'
+Heap stats: total_memory_size=9968MB, total_free_size=7638MB, total_heap_size=677MB, used_heap_size=603MB, cross_worker_used_heap_size=603MB, total_physical_size=677MB, total_available_size=1637MB, heap_size_limit=2240MB
+basedpyright 1.40.1
+based on pyright 1.1.414
+0 errors, 0 warnings, 0 notes
+Completed in 11.581sec

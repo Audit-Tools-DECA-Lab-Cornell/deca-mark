@@ -1,0 +1,13 @@
+{
+  ".gitattributes": "06b4487511cfb76a93ba5de0155839f810d8eb53256230682756bbbf6fc4203d",
+  "README.md": "989cde9e710f5904b53c0c8119b537b8c4f2ae73cc1d89ee808daf0810b54dcb",
+  "commands.md": "238d8292a9c746c90fd9bcc841a200a244cb9ebf64eea035f0c15b62ead1b50f",
+  "evidence/focused-initial.txt": "2f7a41b44461e4c1e473183728e6f445f8e50e29424b94b411a802abf603a604",
+  "evidence/focused.txt": "4e521745ef828657e886bfc7a277a6410e7e67e5c4d8f0381de9f99fa34f332e",
+  "evidence/format.txt": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938",
+  "evidence/forward-fresh.txt": "76e402d68cc24dd4887a8168aa12935516b885ce6191c4dc01d08e8257692d31",
+  "evidence/full-backend.txt": "6f8468b81dca706d0c76fdd48e0e034add8911f00f7e7904c2dd6800513f1ebe",
+  "evidence/ruff.txt": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+  "evidence/types.txt": "f17574626e242750f435e9b5e95c69c6b45d7bc83d831bac85d399806525f0ef",
+  "source-sha256.json": "eeda531387ee4bcd7d018cff615f86652969a271f03b2e0cde46528f68fa4575"
+}

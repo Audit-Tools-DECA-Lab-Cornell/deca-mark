@@ -1,0 +1,2 @@
+# Preserve the exact captured pytest failure output.
+evidence/focused-initial.txt -whitespace

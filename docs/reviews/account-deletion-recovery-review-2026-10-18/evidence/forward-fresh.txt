@@ -1,0 +1,29 @@
+Pre-audit schema source: b93a2b2456cf5d7dc96cfc2fc3eaf5174bc34f4c
+de62c56281b47faf241ba0c9e898bc4299c5bf2f3b71f5e6c285f080bd4ef903  /workspace/deca-mark/work/pr30-review/fresh-final/work/deletion-recovery/pre-schema.x4KfPR/20261012120000_current_baseline.sql
+32d0112308cb2383b9519725e6a99f14a3fd5d56657bc7b4be4a8c6449b4e8a3  /workspace/deca-mark/work/pr30-review/fresh-final/work/deletion-recovery/pre-schema.x4KfPR/20261012142629_transactional_email_outbox.sql
+aa6aacb69b5103f5255c2f2af96d5b0a68c428085e26bc05165f514fc9e6e023  /workspace/deca-mark/work/pr30-review/fresh-final/work/deletion-recovery/pre-schema.x4KfPR/20261017000657_observation_creator_visibility.sql
+cbe23d1a996fadb356c72aea31068efceb1cc64173fdc14ea95dc2c5c410c468  /workspace/deca-mark/work/pr30-review/fresh-final/work/deletion-recovery/pre-schema.x4KfPR/20261017050453_form_draft_revisions.sql
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+.                                                                        [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/work/pr30-review/fresh-final/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+::test_forward_migration_backfills_atomic_jobs_without_rewriting_retained_data
+  /workspace/deca-mark/work/pr30-review/fresh-final/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 2 warnings in 5.45s

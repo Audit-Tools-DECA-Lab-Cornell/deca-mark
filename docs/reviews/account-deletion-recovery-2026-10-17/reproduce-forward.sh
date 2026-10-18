@@ -10,6 +10,7 @@ export DOCKER_HOST=unix:///var/run/docker.sock
 export EMAIL_ENABLED=false
 
 audit_previous=b93a2b2456cf5d7dc96cfc2fc3eaf5174bc34f4c
+mkdir -p "$PWD/work/deletion-recovery"
 audit_source=$(mktemp -d "$PWD/work/deletion-recovery/pre-schema.XXXXXX")
 for audit_file in 20261012120000_current_baseline.sql 20261012142629_transactional_email_outbox.sql 20261017000657_observation_creator_visibility.sql 20261017050453_form_draft_revisions.sql; do
   git show "$audit_previous:supabase/migrations/$audit_file" > "$audit_source/$audit_file"

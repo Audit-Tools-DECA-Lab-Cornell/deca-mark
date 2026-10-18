@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 import anyio
 import httpx2
 import pytest
+from pydantic import SecretStr
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.sql.elements import TextClause
@@ -121,20 +122,26 @@ def setup_race(api: LiveApi, change: Change, monkeypatch: pytest.MonkeyPatch) ->
         )
     if change == "forget":
 
-        async def synthetic_key(_settings: Settings) -> str:
-            return "sb_secret_synthetic-race"
+        async def synthetic_key(_settings: Settings) -> SecretStr:
+            return SecretStr("sb_secret_synthetic-race")
 
-        async def pending_deletion(_settings: Settings, _key: str, _user: UUID) -> bool:
+        async def pending_deletion(
+            _sessions: async_sessionmaker[AsyncSession],
+            _settings: Settings,
+            user_id: UUID | None = None,
+            key: SecretStr | None = None,
+        ) -> bool:
+            assert user_id == api.tenant.users["manager"]
+            assert key is not None
+            assert key.get_secret_value() == "sb_secret_synthetic-race"
             return False
 
         monkeypatch.setattr(identity_router, "admin_key", synthetic_key)
-        monkeypatch.setattr(identity_router, "delete_auth_user", pending_deletion)
+        monkeypatch.setattr(identity_router, "reconcile_one", pending_deletion)
     project = f"/v1/projects/{api.tenant.project}"
     drafts = f"{project}/sites/{api.tenant.site}/zone-drafts"
     with api.client("admin" if change == "inherited_admin" else "manager") as client:
-        package = client.post(
-            f"{project}/packages", json=submission(site_id=str(api.tenant.site))
-        )
+        package = client.post(f"{project}/packages", json=submission(site_id=str(api.tenant.site)))
         assert package.status_code == 201, package.text
         published = document(package.content)["package"]
         assert isinstance(published, dict)
@@ -217,6 +224,8 @@ def test_authorization_change_wins_before_finalization(
     assert changed_response.status_code == (202 if change == "forget" else 204), (
         changed_response.text
     )
+    if change == "forget":
+        assert changed_response.json() == {"status": "pending"}
     assert response.status_code == race.rejected_status, response.text
     assert race.snapshot() == before
 
@@ -252,6 +261,8 @@ def test_publication_wins_and_authorization_change_waits_for_commit(
     assert changed_response.status_code == (202 if change == "forget" else 204), (
         changed_response.text
     )
+    if change == "forget":
+        assert changed_response.json() == {"status": "pending"}
     assert (
         admin_sql(
             "SELECT count(*) FROM fieldmaps.zone_publications WHERE project_id=:'project';",

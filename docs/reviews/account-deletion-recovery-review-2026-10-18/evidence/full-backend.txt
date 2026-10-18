@@ -1,0 +1,146 @@
+
+> decamark@0.1.0 backend:test /workspace/deca-mark
+> make backend-test ZONE_API_REHEARSAL=1
+
+CREATE SCHEMA
+CREATE SCHEMA
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE TABLE
+REVOKE
+INSERT 0 4
+INSERT 0 4
+INSERT 0 3
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/deca-mark/backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 864 items
+
+tests/test_account_deletion.py ...........                               [  1%]
+tests/test_account_deletion_admin.py ....................                [  3%]
+tests/test_account_deletion_recovery.py ...........                      [  4%]
+tests/test_account_deletion_recovery_assessment.py .                     [  4%]
+tests/test_authentication.py .....                                       [  5%]
+tests/test_bound_upload_authorization_races.py ..                        [  5%]
+tests/test_bound_upload_bindings.py ...........                          [  7%]
+tests/test_bound_upload_live.py ..                                       [  7%]
+tests/test_bound_uploads.py ......                                       [  7%]
+tests/test_boundary.py .                                                 [  8%]
+tests/test_config.py ........                                            [  9%]
+tests/test_configuration.py .....                                        [  9%]
+tests/test_consolidated_audit.py .                                       [  9%]
+tests/test_container.py ....                                             [ 10%]
+tests/test_cors.py ........                                              [ 11%]
+tests/test_database_settings.py ...                                      [ 11%]
+tests/test_demo_playground_import.py .....                               [ 12%]
+tests/test_email.py .....................                                [ 14%]
+tests/test_email_live.py .............                                   [ 15%]
+tests/test_errors.py ............                                        [ 17%]
+tests/test_fields_only_history.py .....                                  [ 17%]
+tests/test_form_contracts.py .................                           [ 19%]
+tests/test_form_definition_cases.py .................................... [ 24%]
+...                                                                      [ 24%]
+tests/test_form_namespace_exports.py ..                                  [ 24%]
+tests/test_form_revisions.py ......................................      [ 29%]
+tests/test_form_validation_api.py .................                      [ 31%]
+tests/test_gis_readback.py .                                             [ 31%]
+tests/test_identity.py ..................                                [ 33%]
+tests/test_local_database.py ..                                          [ 33%]
+tests/test_local_email_policy.py ............                            [ 34%]
+tests/test_observation_analysis.py .........                             [ 35%]
+tests/test_observation_analysis_budgets.py ......                        [ 36%]
+tests/test_observation_analysis_database.py ...                          [ 36%]
+tests/test_observation_analysis_dense.py ....                            [ 37%]
+tests/test_observation_analysis_domain.py ......................         [ 39%]
+tests/test_observation_analysis_exports.py ....                          [ 40%]
+tests/test_observation_analysis_history.py ..                            [ 40%]
+tests/test_observation_analysis_inputs.py ..............                 [ 42%]
+tests/test_observation_analysis_live.py ....                             [ 42%]
+tests/test_observation_authorization.py ................................ [ 46%]
+................                                                         [ 48%]
+tests/test_observation_bbox.py ...                                       [ 48%]
+tests/test_observation_bbox_domain.py .................                  [ 50%]
+tests/test_observation_bbox_live.py .                                    [ 50%]
+tests/test_openapi.py ...                                                [ 51%]
+tests/test_org_admin.py .                                                [ 51%]
+tests/test_project_access.py ...                                         [ 51%]
+tests/test_project_import.py ...............                             [ 53%]
+tests/test_published_form_compatibility.py ............                  [ 54%]
+tests/test_reliability.py ..........................................     [ 59%]
+tests/test_reliability_database.py ........                              [ 60%]
+tests/test_request_limits.py .............                               [ 61%]
+tests/test_site_packages.py .......                                      [ 62%]
+tests/test_stored_form_compatibility.py ........                         [ 63%]
+tests/test_tenancy_api.py ..........                                     [ 64%]
+tests/test_tenancy_concurrency.py ...                                    [ 65%]
+tests/test_tenancy_inputs.py .............                               [ 66%]
+tests/test_tenant_isolation.py .....                                     [ 67%]
+tests/test_token_policy.py ..................                            [ 69%]
+tests/test_workspace_api.py ................                             [ 71%]
+tests/test_workspace_concurrency.py ......                               [ 71%]
+tests/test_workspace_lifecycle.py ....                                   [ 72%]
+tests/test_zone_api_drafts.py ...........                                [ 73%]
+tests/test_zone_api_imports.py .....                                     [ 74%]
+tests/test_zone_api_isolation.py .......                                 [ 75%]
+tests/test_zone_api_live.py ....                                         [ 75%]
+tests/test_zone_api_publication.py ......                                [ 76%]
+tests/test_zone_archive_process.py ....                                  [ 76%]
+tests/test_zone_authorization_races.py ..........                        [ 77%]
+tests/test_zone_case_integrity.py ....                                   [ 78%]
+tests/test_zone_diagnostics.py ..                                        [ 78%]
+tests/test_zone_draft_contract.py .......................                [ 81%]
+tests/test_zone_form_succession.py .....                                 [ 81%]
+tests/test_zone_geometry_contract.py .................................   [ 85%]
+tests/test_zone_http_boundaries.py ..........................            [ 88%]
+tests/test_zone_import_identity.py .....................                 [ 90%]
+tests/test_zone_packages.py .........                                    [ 92%]
+tests/test_zone_route_contract.py .                                      [ 92%]
+tests/test_zone_upload_contract.py ..................................... [ 96%]
+                                                                         [ 96%]
+tests/test_zone_upload_fingerprint.py ..........                         [ 97%]
+tests/test_zone_upload_json.py .....................                     [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/starlette/testclient.py:53
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885
+  /workspace/deca-mark/backend/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:885: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; tests.observation_analysis_fixtures
+    self.import_plugin(import_spec)
+
+tests/test_account_deletion_recovery.py: 1 warning
+tests/test_bound_upload_authorization_races.py: 2 warnings
+tests/test_bound_upload_bindings.py: 12 warnings
+tests/test_bound_upload_live.py: 2 warnings
+tests/test_bound_uploads.py: 7 warnings
+tests/test_consolidated_audit.py: 1 warning
+tests/test_errors.py: 2 warnings
+tests/test_fields_only_history.py: 6 warnings
+tests/test_observation_analysis.py: 9 warnings
+tests/test_observation_analysis_database.py: 3 warnings
+tests/test_observation_analysis_exports.py: 4 warnings
+tests/test_observation_analysis_history.py: 3 warnings
+tests/test_observation_analysis_live.py: 4 warnings
+tests/test_observation_bbox.py: 3 warnings
+tests/test_observation_bbox_live.py: 1 warning
+tests/test_published_form_compatibility.py: 2 warnings
+tests/test_site_packages.py: 1 warning
+tests/test_workspace_lifecycle.py: 1 warning
+tests/test_zone_api_imports.py: 3 warnings
+tests/test_zone_api_live.py: 3 warnings
+tests/test_zone_api_publication.py: 7 warnings
+tests/test_zone_authorization_races.py: 10 warnings
+tests/test_zone_form_succession.py: 12 warnings
+tests/test_zone_import_identity.py: 21 warnings
+  /workspace/deca-mark/backend/src/fieldmaps_api/repositories/sites.py:39: SADeprecationWarning: The Row.tuple() method is deprecated in favor of Row._tuple(); all Row methods and library-level attributes are intended to be underscored to avoid name conflicts.  Please use Row._tuple(). (deprecated since: 2.0.19)
+    return None if row is None else row.tuple()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================ 864 passed, 122 warnings in 590.97s (0:09:50) =================
