@@ -8,7 +8,8 @@ not complete these checks. No credentials belong in this checklist.
   primary/backup names, alert destination and response deadline. Monitor disabled/
   unavailable worker, permission/configuration failures, repeated provider failures,
   overdue due times/expired leases and pending age over 24 hours.
-- [ ] **Approve the concrete production config:** existing Render Decamark service,
+- [x] **Approve the concrete production config:** approved by the user; activation
+  still awaits the file/preview prerequisites. Scope: existing Render Decamark service,
   existing `7264f84` build (or exact tree-identical `0279fd3` for platform-triggered
   file deploys), private `supabase-secret-key` file, public `decamark-runtime.json`
   file and `DECAMARK_CONFIG=/etc/secrets/decamark-runtime.json`, including file-save

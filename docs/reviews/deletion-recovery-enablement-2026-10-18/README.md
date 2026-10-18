@@ -1,5 +1,9 @@
 # Deletion recovery enablement — production approval required
 
+> **Approval received:** The user subsequently approved this proposal. See
+> [activation status and exact remaining operator prerequisites](activation-status.md).
+> Activation is not yet applied; the historical preparation record below is retained.
+
 October 18, 2026, America/New_York. **Prepared, not applied.** The user explicitly
 requires approval of the concrete production configuration before mutation. This
 document is the approval artifact; committing it does not enable recovery.
