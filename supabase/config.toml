@@ -245,62 +245,62 @@ otp_expiry = 3600
 # Uncomment to customize email template
 [auth.email.template.confirmation]
 subject = "Your DECA Mark verification code"
-content_path = "./supabase/templates/confirmation.html"
+content_path = "./templates/confirmation.html"
 
 [auth.email.template.recovery]
 subject = "Your DECA Mark password reset code"
-content_path = "./supabase/templates/recovery.html"
+content_path = "./templates/recovery.html"
 
 [auth.email.template.invite]
 subject = "You are invited to DECA Mark"
-content_path = "./supabase/templates/invite.html"
+content_path = "./templates/invite.html"
 
 [auth.email.template.magic_link]
 subject = "Sign in to DECA Mark"
-content_path = "./supabase/templates/magic_link.html"
+content_path = "./templates/magic_link.html"
 
 [auth.email.template.email_change]
 subject = "Confirm your DECA Mark email change"
-content_path = "./supabase/templates/email_change.html"
+content_path = "./templates/email_change.html"
 
 [auth.email.template.reauthentication]
 subject = "Your DECA Mark security code"
-content_path = "./supabase/templates/reauthentication.html"
+content_path = "./templates/reauthentication.html"
 
 [auth.email.notification.password_changed]
 enabled = true
 subject = "DECA Mark: your password was changed"
-content_path = "./supabase/templates/password_changed_notification.html"
+content_path = "./templates/password_changed_notification.html"
 
 [auth.email.notification.email_changed]
 enabled = true
 subject = "DECA Mark: your sign-in email was changed"
-content_path = "./supabase/templates/email_changed_notification.html"
+content_path = "./templates/email_changed_notification.html"
 
 [auth.email.notification.phone_changed]
 enabled = true
 subject = "DECA Mark: your phone number was changed"
-content_path = "./supabase/templates/phone_changed_notification.html"
+content_path = "./templates/phone_changed_notification.html"
 
 [auth.email.notification.identity_linked]
 enabled = true
 subject = "DECA Mark: a sign-in method was added"
-content_path = "./supabase/templates/identity_linked_notification.html"
+content_path = "./templates/identity_linked_notification.html"
 
 [auth.email.notification.identity_unlinked]
 enabled = true
 subject = "DECA Mark: a sign-in method was removed"
-content_path = "./supabase/templates/identity_unlinked_notification.html"
+content_path = "./templates/identity_unlinked_notification.html"
 
 [auth.email.notification.mfa_factor_enrolled]
 enabled = true
 subject = "DECA Mark: two-step verification was added"
-content_path = "./supabase/templates/mfa_factor_enrolled_notification.html"
+content_path = "./templates/mfa_factor_enrolled_notification.html"
 
 [auth.email.notification.mfa_factor_unenrolled]
 enabled = true
 subject = "DECA Mark: two-step verification was removed"
-content_path = "./supabase/templates/mfa_factor_unenrolled_notification.html"
+content_path = "./templates/mfa_factor_unenrolled_notification.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
