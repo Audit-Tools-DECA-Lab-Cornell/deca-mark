@@ -75,6 +75,9 @@ jobs:
         run: pnpm db:stop
   backend:
     runs-on: ubuntu-latest
+    env:
+      # Same pinned version; avoid ECR's unauthenticated data-limit failures.
+      DECAMARK_REHEARSAL_IMAGE: supabase/postgres:17.6.1.171
     steps:
       - uses: actions/checkout@v4
         with:
@@ -94,7 +97,7 @@ jobs:
       - run: pnpm backend:setup
       - run: pnpm backend:check
       - name: Cache pinned disposable database image
-        run: docker pull public.ecr.aws/supabase/postgres:17.6.1.171
+        run: docker pull "$DECAMARK_REHEARSAL_IMAGE"
       - name: Full backend suite including isolated recovery acceptance
         run: pnpm backend:test ZONE_API_REHEARSAL=1
       - name: Forward account-deletion recovery migration
