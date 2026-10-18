@@ -1,5 +1,15 @@
 # Consolidated audit verification and rollout assessment — October 17, 2026
 
+> **October 18 deployed-release update:** [Current release verification and open
+> closure gates](../deployed-audit-2026-10-18/README.md) records deployed `7264f84`,
+> all five hosted migrations, the read-only historical inventory and recovery grants.
+> Account-recovery implementation is now present, but observed hosted startup disables
+> it; provider/device acceptance and monitoring/retention ownership remain open.
+> [Exact enablement proposal and approval checklist](../deletion-recovery-enablement-2026-10-18/README.md)
+> are prepared; no production configuration change has been approved or applied.
+> Both compatibility readers remain. The October 17 assessment below is preserved
+> as historical evidence and does not describe the latest implementation status.
+
 ## Verdict
 
 **The combined worktree passes the scoped local integration checks, but the full
