@@ -1,5 +1,10 @@
 # Deployed release assessment — October 18, 2026
 
+> **October 20 update:** [Recovery activation verification](../deletion-recovery-activation-2026-10-20/README.md)
+> confirms approved `0279fd3` live, enabled startup, healthy endpoints and restricted
+> grants. Preview isolation and provider/device/ownership gates remain open; the
+> earlier disabled-startup findings below remain historical evidence.
+
 **The audited code is deployed, but the audit cannot close.** Read-only hosted
 checks confirm the release, migration ledger, security grants and current server
 inventory. The observed API startup explicitly disables account-deletion recovery.

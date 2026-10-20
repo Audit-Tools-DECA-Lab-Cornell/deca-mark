@@ -1,5 +1,9 @@
 # Deletion recovery enablement — production approval required
 
+> **October 20:** [Approved release is now live with recovery enabled](../deletion-recovery-activation-2026-10-20/README.md).
+> Health/readiness and restricted grants pass; Manual-preview configuration and
+> provider/device/ownership gates remain open. Earlier proposal/status below is historical.
+
 > **Approval received:** The user subsequently approved this proposal. See
 > [activation status and exact remaining operator prerequisites](activation-status.md).
 > Activation is not yet applied; the historical preparation record below is retained.

@@ -1,5 +1,11 @@
 # Consolidated audit verification and rollout assessment — October 17, 2026
 
+> **October 20 recovery activation:** [Approved API is live and recovery startup is
+> enabled](../deletion-recovery-activation-2026-10-20/README.md); health, contract,
+> grants and zero pending backlog were checked read-only. PR previews still require
+> Manual mode. Real-provider acceptance, device census, retention decisions and
+> named monitoring ownership remain open. This is not full audit closure.
+
 > **October 18 deployed-release update:** [Current release verification and open
 > closure gates](../deployed-audit-2026-10-18/README.md) records deployed `7264f84`,
 > all five hosted migrations, the read-only historical inventory and recovery grants.
