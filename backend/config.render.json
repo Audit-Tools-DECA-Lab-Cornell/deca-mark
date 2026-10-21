@@ -14,5 +14,6 @@
 		"http://localhost:5173",
 		"http://127.0.0.1:5173"
 	],
-	"browser_origin_pattern": "https://deca-?mark-[a-z0-9-]+-audit-tools-web-apps-deca-lab-at-cornell\\.vercel\\.app"
+	"browser_origin_pattern": "https://deca-?mark-[a-z0-9-]+-audit-tools-web-apps-deca-lab-at-cornell\\.vercel\\.app",
+	"auth_admin_key_file": "/etc/secrets/supabase-secret-key"
 }
