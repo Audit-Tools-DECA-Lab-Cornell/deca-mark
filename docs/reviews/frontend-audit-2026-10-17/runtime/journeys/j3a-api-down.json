@@ -1,0 +1,244 @@
+{
+ "steps": [
+  {
+   "name": "DOWN overview",
+   "url": "~WP",
+   "status": 200,
+   "ms": 1359,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-overview.png"
+  },
+  {
+   "name": "DOWN data",
+   "url": "~WP/data",
+   "status": 200,
+   "ms": 1264,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-data.png"
+  },
+  {
+   "name": "DOWN sites",
+   "url": "~WP/sites",
+   "status": 200,
+   "ms": 1247,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-sites.png"
+  },
+  {
+   "name": "DOWN forms",
+   "url": "~WP/forms",
+   "status": 200,
+   "ms": 1256,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-forms.png"
+  },
+  {
+   "name": "DOWN team",
+   "url": "~WP/team",
+   "status": 200,
+   "ms": 1235,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-team.png"
+  },
+  {
+   "name": "DOWN settings",
+   "url": "~WP/settings",
+   "status": 200,
+   "ms": 1245,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-settings.png"
+  },
+  {
+   "name": "DOWN site-detail",
+   "url": "~WP/sites/fall-creek",
+   "status": 200,
+   "ms": 1258,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-site-detail.png"
+  },
+  {
+   "name": "DOWN org-projects",
+   "url": "/o/web-acceptance",
+   "status": 200,
+   "ms": 1246,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-org-projects.png"
+  },
+  {
+   "name": "DOWN overview-390",
+   "url": "~WP",
+   "status": 200,
+   "ms": 1245,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-overview-390.png"
+  },
+  {
+   "name": "DOWN data-390",
+   "url": "~WP/data",
+   "status": 200,
+   "ms": 1250,
+   "err": null,
+   "h1": null,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "tableRows": 0,
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again",
+   "screenshot": "screens/3a-down-data-390.png"
+  },
+  {
+   "name": "DOWN client-nav Sites",
+   "url": "~WP/sites",
+   "ms": 1905,
+   "h1": "Something went wrong.",
+   "classification": "ERROR-BOUNDARY (crash page)",
+   "main": "REQUEST INTERRUPTED Something went wrong. Your records remain available. Try again or return to the workspace. Try again Return to projects What we know Page Si",
+   "headerStillShown": true
+  },
+  {
+   "name": "DOWN client-nav Data",
+   "url": "~WP/data",
+   "ms": 1816,
+   "h1": "Something went wrong.",
+   "classification": "ERROR-BOUNDARY (crash page)",
+   "main": "REQUEST INTERRUPTED Something went wrong. Your records remain available. Try again or return to the workspace. Try again Return to projects What we know Page Ob",
+   "headerStillShown": true
+  },
+  {
+   "name": "DOWN client-nav Team",
+   "url": "~WP/team",
+   "ms": 1813,
+   "h1": "Something went wrong.",
+   "classification": "ERROR-BOUNDARY (crash page)",
+   "main": "REQUEST INTERRUPTED Something went wrong. Your records remain available. Try again or return to the workspace. Try again Return to projects What we know Page Pr",
+   "headerStillShown": true
+  },
+  {
+   "name": "DOWN client-nav Forms",
+   "url": "~WP/forms",
+   "ms": 1816,
+   "h1": "Something went wrong.",
+   "classification": "ERROR-BOUNDARY (crash page)",
+   "main": "REQUEST INTERRUPTED Something went wrong. Your records remain available. Try again or return to the workspace. Try again Return to projects What we know Page Fo",
+   "headerStillShown": true
+  },
+  {
+   "name": "DOWN zone editor edit (API down)",
+   "metaLines": [
+    "saved…",
+    "saved…",
+    "saved…"
+   ],
+   "alerts": [],
+   "reviewDisabled": [
+    true
+   ],
+   "nameValue": "Synthetic smaller lawn v2 (api down)"
+  },
+  {
+   "name": "DOWN zone editor after reload",
+   "url": "1a2fa02b",
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "main": "Couldn't load this organization. DECA Mark cannot be reached right now. Try again in a few minutes. Try again"
+  },
+  {
+   "name": "RECOVER Try again (no reload)",
+   "url": "~WP/forms",
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "h1": "Forms",
+   "main": "Forms Couldn't load the forms. DECA Mark could not finish this. Try again in a few minutes. Try again"
+  },
+  {
+   "name": "RECOVER fresh load overview",
+   "url": "overview",
+   "status": 200,
+   "ms": 1573,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "h1": "What came back from the field",
+   "main": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 observations at Fall Creek test sit"
+  },
+  {
+   "name": "RECOVER fresh load data",
+   "url": "data",
+   "status": 200,
+   "ms": 1365,
+   "classification": "content-or-empty",
+   "h1": "Observation data",
+   "main": "Observation data Filter what observers have uploaded, then copy a link to the view or export it. Copy link to this view "
+  },
+  {
+   "name": "RECOVER fresh load sites",
+   "url": "sites",
+   "status": 200,
+   "ms": 1298,
+   "classification": "content-or-empty",
+   "h1": "Sites",
+   "main": "Sites Places where observers collect, each with its own map package and zones. Create site All sites 10 sites E2E site 1"
+  },
+  {
+   "name": "RECOVER fresh load forms",
+   "url": "forms",
+   "status": 200,
+   "ms": 1402,
+   "classification": "LoadFailure (\"Couldn't load ...\")",
+   "h1": "Forms",
+   "main": "Forms Couldn't load the forms. DECA Mark could not finish this. Try again in a few minutes. Try again"
+  },
+  {
+   "name": "RECOVER fresh load team",
+   "url": "team",
+   "status": 200,
+   "ms": 1285,
+   "classification": "content-or-empty",
+   "h1": "Project team",
+   "main": "Project team Who can open this project, and the invitations still waiting to be used. Invite Members 5 people QA Local o"
+  }
+ ],
+ "readyBefore": 200,
+ "apiStopped": {
+  "confirmedRefusing": true,
+  "afterMs": 521
+ },
+ "webLogBytesDuringOutage": 6493,
+ "restart": {
+  "apiReadyAgain": true,
+  "secondsUntilReady": 6,
+  "newPid": "26862"
+ },
+ "tryAgainVisible": 1,
+ "sessionStillValid": true
+}

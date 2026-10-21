@@ -1,0 +1,1284 @@
+{
+ "no-preference": {
+  "mq": {
+   "reduceMatches": false
+  },
+  "pages": {
+   "overview": {
+    "html": {
+     "scrollBehavior": "auto"
+    },
+    "withTransition": {
+     "button.inline-flex.h-control": {
+      "n": 3,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "button.hidden.h-control": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "button.inline-flex.shrink-0": {
+      "n": 4,
+      "maxMs": 120,
+      "props": "color, background-color, border-color, opacity, tr"
+     },
+     "button.shrink-0.rounded-pill": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "opacity"
+     },
+     "span.pointer-events-none.absolute": {
+      "n": 1,
+      "maxMs": 200,
+      "props": "translate, width"
+     },
+     "a.relative.flex": {
+      "n": 8,
+      "maxMs": 200,
+      "props": "color, background-color"
+     },
+     "a.inline-flex.items-center": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "color, background-color, border-color, opacity, tr"
+     },
+     "g": {
+      "n": 2,
+      "maxMs": 240,
+      "props": "transform, translate, scale, rotate"
+     },
+     "tr.[--ct-size-focus-gap:calc(var(--ct-size-focus-ring)*-2)].transition-[background-color]": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "button.inline-flex.items-center": {
+      "n": 2,
+      "maxMs": 120,
+      "props": "color, background-color, border-color, opacity, tr"
+     }
+    },
+    "withAnimation": {},
+    "samples": {
+     "primary/ink button": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "color, background-color, border-color, opacity, transform",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "project tab link": {
+      "transitionDuration": "0.2s",
+      "transitionProperty": "color, background-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "account trigger": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "opacity",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "search pill": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "background-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "island card": {
+      "transitionDuration": "0s",
+      "transitionProperty": "all",
+      "animationName": "none",
+      "animationDuration": "0s"
+     }
+    }
+   },
+   "data": {
+    "html": {
+     "scrollBehavior": "auto"
+    },
+    "withTransition": {
+     "button.inline-flex.h-control": {
+      "n": 3,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "button.hidden.h-control": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "button.inline-flex.shrink-0": {
+      "n": 4,
+      "maxMs": 120,
+      "props": "color, background-color, border-color, opacity, tr"
+     },
+     "button.shrink-0.rounded-pill": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "opacity"
+     },
+     "span.pointer-events-none.absolute": {
+      "n": 1,
+      "maxMs": 200,
+      "props": "translate, width"
+     },
+     "a.relative.flex": {
+      "n": 8,
+      "maxMs": 200,
+      "props": "color, background-color"
+     },
+     "button.inline-flex.items-center": {
+      "n": 3,
+      "maxMs": 120,
+      "props": "color, background-color, border-color, opacity, tr"
+     },
+     "select.w-full.rounded-input": {
+      "n": 4,
+      "maxMs": 120,
+      "props": "color, background-color, border-color"
+     },
+     "input.w-full.rounded-input": {
+      "n": 4,
+      "maxMs": 120,
+      "props": "color, background-color, border-color"
+     },
+     "tr.[--ct-size-focus-gap:calc(var(--ct-size-focus-ring)*-2)].transition-[background-color]": {
+      "n": 9,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "g": {
+      "n": 8,
+      "maxMs": 240,
+      "props": "transform, translate, scale, rotate"
+     }
+    },
+    "withAnimation": {},
+    "samples": {
+     "primary/ink button": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "color, background-color, border-color, opacity, transform",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "project tab link": {
+      "transitionDuration": "0.2s",
+      "transitionProperty": "color, background-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "account trigger": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "opacity",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "search pill": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "background-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "select": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "color, background-color, border-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "island card": {
+      "transitionDuration": "0s",
+      "transitionProperty": "all",
+      "animationName": "none",
+      "animationDuration": "0s"
+     }
+    }
+   },
+   "team": {
+    "html": {
+     "scrollBehavior": "auto"
+    },
+    "withTransition": {
+     "button.inline-flex.h-control": {
+      "n": 3,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "button.hidden.h-control": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "background-color"
+     },
+     "button.inline-flex.shrink-0": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "color, background-color, border-color, opacity, tr"
+     },
+     "button.shrink-0.rounded-pill": {
+      "n": 1,
+      "maxMs": 120,
+      "props": "opacity"
+     },
+     "span.pointer-events-none.absolute": {
+      "n": 1,
+      "maxMs": 200,
+      "props": "translate, width"
+     },
+     "a.relative.flex": {
+      "n": 8,
+      "maxMs": 200,
+      "props": "color, background-color"
+     },
+     "button.inline-flex.items-center": {
+      "n": 11,
+      "maxMs": 120,
+      "props": "color, background-color, border-color, opacity, tr"
+     },
+     "select.w-full.rounded-input": {
+      "n": 5,
+      "maxMs": 120,
+      "props": "color, background-color, border-color"
+     }
+    },
+    "withAnimation": {},
+    "samples": {
+     "primary/ink button": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "color, background-color, border-color, opacity, transform",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "project tab link": {
+      "transitionDuration": "0.2s",
+      "transitionProperty": "color, background-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "account trigger": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "opacity",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "search pill": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "background-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "select": {
+      "transitionDuration": "0.12s",
+      "transitionProperty": "color, background-color, border-color",
+      "animationName": "none",
+      "animationDuration": "0s"
+     },
+     "island card": {
+      "transitionDuration": "0s",
+      "transitionProperty": "all",
+      "animationName": "none",
+      "animationDuration": "0s"
+     }
+    }
+   }
+  },
+  "interactions": {
+   "accountMenuOpen": [
+    {
+     "k": "ct-pop-in|div.rounded-panel",
+     "kind": "CSSAnimation",
+     "durationMs": 200
+    }
+   ],
+   "dialogOpen": [
+    {
+     "k": "opacity|button.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 120
+    },
+    {
+     "k": "ct-fade-in|div.fixed",
+     "kind": "CSSAnimation",
+     "durationMs": 120
+    },
+    {
+     "k": "ct-pop-in|div.fixed",
+     "kind": "CSSAnimation",
+     "durationMs": 200
+    }
+   ],
+   "buttonHover": [],
+   "clientNavToData": [
+    {
+     "k": "background-color|a.relative",
+     "kind": "CSSTransition",
+     "durationMs": 200
+    },
+    {
+     "k": "background-color|button.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 120
+    },
+    {
+     "k": "translate|span.pointer-events-none",
+     "kind": "CSSTransition",
+     "durationMs": 200
+    },
+    {
+     "k": "width|span.pointer-events-none",
+     "kind": "CSSTransition",
+     "durationMs": 200
+    },
+    {
+     "k": "color|a.relative",
+     "kind": "CSSTransition",
+     "durationMs": 200
+    },
+    {
+     "k": "ct-fade-in|div.animate-fade-in",
+     "kind": "CSSAnimation",
+     "durationMs": 120
+    },
+    {
+     "k": "transform|g",
+     "kind": "CSSTransition",
+     "durationMs": 240
+    }
+   ],
+   "mapZoomFrames": {
+    "frames": 57,
+    "distinctPositions": 10,
+    "intermediateFrames": true,
+    "sample": [
+     [
+      0,
+      1170.5,
+      27
+     ],
+     [
+      176,
+      1170.4,
+      27.3
+     ],
+     [
+      193,
+      1170,
+      28
+     ],
+     [
+      210,
+      1169.9,
+      28.1
+     ],
+     [
+      226,
+      1170,
+      28
+     ],
+     [
+      243,
+      1170.1,
+      27.8
+     ],
+     [
+      259,
+      1170.2,
+      27.7
+     ],
+     [
+      276,
+      1170.2,
+      27.5
+     ]
+    ]
+   }
+  }
+ },
+ "reduce": {
+  "mq": {
+   "reduceMatches": true
+  },
+  "pages": {
+   "overview": {
+    "html": {
+     "scrollBehavior": "auto"
+    },
+    "withTransition": {},
+    "withAnimation": {},
+    "samples": {
+     "primary/ink button": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color, border-color, opacity, transform",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "project tab link": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "account trigger": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "opacity",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "search pill": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "background-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "island card": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "all",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     }
+    }
+   },
+   "data": {
+    "html": {
+     "scrollBehavior": "auto"
+    },
+    "withTransition": {},
+    "withAnimation": {},
+    "samples": {
+     "primary/ink button": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color, border-color, opacity, transform",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "project tab link": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "account trigger": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "opacity",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "search pill": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "background-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "select": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color, border-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "island card": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "all",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     }
+    }
+   },
+   "team": {
+    "html": {
+     "scrollBehavior": "auto"
+    },
+    "withTransition": {},
+    "withAnimation": {},
+    "samples": {
+     "primary/ink button": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color, border-color, opacity, transform",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "project tab link": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "account trigger": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "opacity",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "search pill": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "background-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "select": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "color, background-color, border-color",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     },
+     "island card": {
+      "transitionDuration": "1e-05s",
+      "transitionProperty": "all",
+      "animationName": "none",
+      "animationDuration": "1e-05s"
+     }
+    }
+   }
+  },
+  "interactions": {
+   "accountMenuOpen": [
+    {
+     "k": "scrollbar-color|body.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.relative",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|a.sr-only",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|header.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.hidden",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|a.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|img.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-island",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.hidden",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.whitespace-nowrap",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|svg",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|path",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-lead",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.ml-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|circle",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|kbd.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.kbd-mac",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.sr-only",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-mono-label",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|nav.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.group/tabs",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|ul.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|li.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|main.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|header.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|h1.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.mt-2",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|section.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|h2.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.type-small",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|ul.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|li.border-t",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|p.type-body",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.wrap-anywhere",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|p.type-small",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|option.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|button.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.font-normal",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-small",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.border-t",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|strong.font-semibold",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|ol.pointer-events-none",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|next-route-announcer.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "transform|div.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "outline-offset|div.rounded-panel",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.rounded-panel",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "transform-origin|div.rounded-panel",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|p.mt-1",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.-mx-1.5",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.px-3",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "ct-pop-in|div.rounded-panel",
+     "kind": "CSSAnimation",
+     "durationMs": 0.01
+    }
+   ],
+   "dialogOpen": [
+    {
+     "k": "scrollbar-color|body.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.relative",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|a.sr-only",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|header.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.hidden",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|a.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|img.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-island",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.hidden",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.whitespace-nowrap",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|svg",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|path",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-lead",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.ml-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|circle",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|kbd.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.kbd-mac",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.sr-only",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-mono-label",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "opacity|button.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|nav.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.group/tabs",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|ul.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|li.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|main.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|header.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|h1.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.mt-2",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|section.min-w-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|h2.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.type-small",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|ul.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|li.border-t",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|p.type-body",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.wrap-anywhere",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|p.type-small",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|option.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|button.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.font-normal",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.type-small",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.border-t",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|strong.font-semibold",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|ol.pointer-events-none",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|next-route-announcer.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.fixed",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|h2.type-section",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|p.mt-2",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.mt-5",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|form.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|p.mb-2",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.size-2",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.block",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|input.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|label.mb-2",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.text-ink-2",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.mt-6",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.grid",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.col-start-1",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "ct-fade-in|div.fixed",
+     "kind": "CSSAnimation",
+     "durationMs": 0.01
+    },
+    {
+     "k": "ct-pop-in|div.fixed",
+     "kind": "CSSAnimation",
+     "durationMs": 0.01
+    }
+   ],
+   "buttonHover": [],
+   "clientNavToData": [
+    {
+     "k": "background-color|a.relative",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "background-color|button.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|html.geologica_1088bf5-module__wz_yKa__variable",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|a.sr-only",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|header.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|a.inline-flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|div.group/tabs",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "translate|span.pointer-events-none",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "width|span.pointer-events-none",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|ul.flex",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|li.shrink-0",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "color|a.relative",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|main.mx-auto",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|next-route-announcer.",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "ct-fade-in|div.animate-fade-in",
+     "kind": "CSSAnimation",
+     "durationMs": 0.01
+    },
+    {
+     "k": "transform|g",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "scrollbar-color|span.block",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    },
+    {
+     "k": "width|span.block",
+     "kind": "CSSTransition",
+     "durationMs": 0.01
+    }
+   ],
+   "mapZoomFrames": {
+    "frames": 57,
+    "distinctPositions": 1,
+    "intermediateFrames": false,
+    "sample": [
+     [
+      1,
+      1170.5,
+      27
+     ]
+    ]
+   }
+  }
+ }
+}

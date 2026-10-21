@@ -1,0 +1,412 @@
+{
+ "mode": "default",
+ "snapshots": [
+  {
+   "url": "/sign-in",
+   "localStorage": [],
+   "sessionStorage": [],
+   "documentCookieNames": [],
+   "indexedDB": [],
+   "serviceWorkerRegistrations": [],
+   "caches": {},
+   "label": "signed-out-start",
+   "cookies": []
+  },
+  {
+   "url": "/o/web-acceptance/p/play-study/data/70000000-0000-4000-8000-000000000001",
+   "localStorage": [],
+   "sessionStorage": [],
+   "documentCookieNames": [
+    "sb-127-auth-token",
+    "fm-place"
+   ],
+   "indexedDB": [],
+   "serviceWorkerRegistrations": [
+    {
+     "scope": "http://127.0.0.1:3000/",
+     "active": true,
+     "script": "http://127.0.0.1:3000/sw.js"
+    }
+   ],
+   "caches": {
+    "decamark-public-2c384842-3db3-44c6-a5da-f7e9259599a0": [
+     "/",
+     "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+     "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+     "/_next/static/chunks/1t4ilaqyfskyf.js",
+     "/_next/static/chunks/28gf-u4e69t0x.js",
+     "/_next/static/chunks/2c0z7k0e60fdc.css",
+     "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+     "/_next/static/chunks/262ez5ras4i7e.js",
+     "/_next/static/chunks/1z3z_fx6b_867.js",
+     "/_next/static/chunks/0pvgdur4tzjzi.js",
+     "/_next/static/chunks/3cofoymsl6dpn.js",
+     "/_next/static/chunks/25o6rfbjysz5f.js",
+     "/_next/static/chunks/1dyk9db-_7hyl.js",
+     "/_next/static/chunks/10uv514i7spsv.js",
+     "/_next/static/chunks/1ry06mlq7arvq.js",
+     "/_next/static/chunks/1i9f2af4ujan8.js",
+     "/_next/static/chunks/01qi5x5y7xmzd.js",
+     "/_next/static/chunks/1zz4_vykseajt.js",
+     "/_next/static/chunks/0reayt05ebhzt.js",
+     "/_next/static/chunks/39xlq5fubsvat.js",
+     "/_next/static/chunks/06vt3zqzynhkj.js",
+     "/_next/static/chunks/3tbhe33anca8u.js",
+     "/_next/static/chunks/10fqtmfyuy748.js",
+     "/_next/static/chunks/3qi5lz1xg5xyx.js",
+     "/_next/static/chunks/3_n1otntdmkpm.js",
+     "/_next/static/chunks/0xhp3myuwh1xt.js",
+     "/_next/static/chunks/2ixa2k67u9gvt.js",
+     "/icons/icon.svg",
+     "/_next/static/chunks/0wstr41mffx5k.js"
+    ]
+   },
+   "label": "manager-before-signout (on data/<obs>)",
+   "cookies": [
+    {
+     "name": "sb-127-auth-token",
+     "httpOnly": false,
+     "secure": false,
+     "sameSite": "Lax",
+     "session": false,
+     "expiresInSec": 34559993,
+     "path": "/"
+    },
+    {
+     "name": "fm-place",
+     "httpOnly": false,
+     "secure": false,
+     "sameSite": "Lax",
+     "session": false,
+     "expiresInSec": 31535993,
+     "path": "/"
+    }
+   ]
+  },
+  {
+   "url": "/sign-in",
+   "localStorage": [],
+   "sessionStorage": [],
+   "documentCookieNames": [
+    "fm-place"
+   ],
+   "indexedDB": [],
+   "serviceWorkerRegistrations": [
+    {
+     "scope": "http://127.0.0.1:3000/",
+     "active": true,
+     "script": "http://127.0.0.1:3000/sw.js"
+    }
+   ],
+   "caches": {
+    "decamark-public-2c384842-3db3-44c6-a5da-f7e9259599a0": [
+     "/",
+     "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+     "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+     "/_next/static/chunks/1t4ilaqyfskyf.js",
+     "/_next/static/chunks/28gf-u4e69t0x.js",
+     "/_next/static/chunks/2c0z7k0e60fdc.css",
+     "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+     "/_next/static/chunks/262ez5ras4i7e.js",
+     "/_next/static/chunks/1z3z_fx6b_867.js",
+     "/_next/static/chunks/0pvgdur4tzjzi.js",
+     "/_next/static/chunks/3cofoymsl6dpn.js",
+     "/_next/static/chunks/25o6rfbjysz5f.js",
+     "/_next/static/chunks/1dyk9db-_7hyl.js",
+     "/_next/static/chunks/10uv514i7spsv.js",
+     "/_next/static/chunks/1ry06mlq7arvq.js",
+     "/_next/static/chunks/1i9f2af4ujan8.js",
+     "/_next/static/chunks/01qi5x5y7xmzd.js",
+     "/_next/static/chunks/1zz4_vykseajt.js",
+     "/_next/static/chunks/0reayt05ebhzt.js",
+     "/_next/static/chunks/39xlq5fubsvat.js",
+     "/_next/static/chunks/06vt3zqzynhkj.js",
+     "/_next/static/chunks/3tbhe33anca8u.js",
+     "/_next/static/chunks/10fqtmfyuy748.js",
+     "/_next/static/chunks/3qi5lz1xg5xyx.js",
+     "/_next/static/chunks/3_n1otntdmkpm.js",
+     "/_next/static/chunks/0xhp3myuwh1xt.js",
+     "/_next/static/chunks/2ixa2k67u9gvt.js",
+     "/icons/icon.svg",
+     "/_next/static/chunks/0wstr41mffx5k.js"
+    ]
+   },
+   "label": "after-signout (on sign-in)",
+   "cookies": [
+    {
+     "name": "fm-place",
+     "httpOnly": false,
+     "secure": false,
+     "sameSite": "Lax",
+     "session": false,
+     "expiresInSec": 31535992,
+     "path": "/"
+    }
+   ]
+  },
+  {
+   "url": "/o/web-acceptance/collect",
+   "localStorage": [],
+   "sessionStorage": [],
+   "documentCookieNames": [
+    "fm-place",
+    "sb-127-auth-token"
+   ],
+   "indexedDB": [],
+   "serviceWorkerRegistrations": [
+    {
+     "scope": "http://127.0.0.1:3000/",
+     "active": true,
+     "script": "http://127.0.0.1:3000/sw.js"
+    }
+   ],
+   "caches": {
+    "decamark-public-2c384842-3db3-44c6-a5da-f7e9259599a0": [
+     "/",
+     "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+     "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+     "/_next/static/chunks/1t4ilaqyfskyf.js",
+     "/_next/static/chunks/28gf-u4e69t0x.js",
+     "/_next/static/chunks/2c0z7k0e60fdc.css",
+     "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+     "/_next/static/chunks/262ez5ras4i7e.js",
+     "/_next/static/chunks/1z3z_fx6b_867.js",
+     "/_next/static/chunks/0pvgdur4tzjzi.js",
+     "/_next/static/chunks/3cofoymsl6dpn.js",
+     "/_next/static/chunks/25o6rfbjysz5f.js",
+     "/_next/static/chunks/1dyk9db-_7hyl.js",
+     "/_next/static/chunks/10uv514i7spsv.js",
+     "/_next/static/chunks/1ry06mlq7arvq.js",
+     "/_next/static/chunks/1i9f2af4ujan8.js",
+     "/_next/static/chunks/01qi5x5y7xmzd.js",
+     "/_next/static/chunks/1zz4_vykseajt.js",
+     "/_next/static/chunks/0reayt05ebhzt.js",
+     "/_next/static/chunks/39xlq5fubsvat.js",
+     "/_next/static/chunks/06vt3zqzynhkj.js",
+     "/_next/static/chunks/3tbhe33anca8u.js",
+     "/_next/static/chunks/10fqtmfyuy748.js",
+     "/_next/static/chunks/3qi5lz1xg5xyx.js",
+     "/_next/static/chunks/3_n1otntdmkpm.js",
+     "/_next/static/chunks/0xhp3myuwh1xt.js",
+     "/_next/static/chunks/2ixa2k67u9gvt.js",
+     "/icons/icon.svg",
+     "/_next/static/chunks/0wstr41mffx5k.js"
+    ]
+   },
+   "label": "observer-signed-in",
+   "cookies": [
+    {
+     "name": "fm-place",
+     "httpOnly": false,
+     "secure": false,
+     "sameSite": "Lax",
+     "session": false,
+     "expiresInSec": 31535991,
+     "path": "/"
+    },
+    {
+     "name": "sb-127-auth-token",
+     "httpOnly": false,
+     "secure": false,
+     "sameSite": "Lax",
+     "session": false,
+     "expiresInSec": 34559999,
+     "path": "/"
+    }
+   ]
+  },
+  {
+   "url": "/o/web-acceptance/collect",
+   "localStorage": [],
+   "sessionStorage": [],
+   "documentCookieNames": [
+    "fm-place",
+    "sb-127-auth-token"
+   ],
+   "indexedDB": [],
+   "serviceWorkerRegistrations": [
+    {
+     "scope": "http://127.0.0.1:3000/",
+     "active": true,
+     "script": "http://127.0.0.1:3000/sw.js"
+    }
+   ],
+   "caches": {
+    "decamark-public-2c384842-3db3-44c6-a5da-f7e9259599a0": [
+     "/",
+     "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+     "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+     "/_next/static/chunks/1t4ilaqyfskyf.js",
+     "/_next/static/chunks/28gf-u4e69t0x.js",
+     "/_next/static/chunks/2c0z7k0e60fdc.css",
+     "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+     "/_next/static/chunks/262ez5ras4i7e.js",
+     "/_next/static/chunks/1z3z_fx6b_867.js",
+     "/_next/static/chunks/0pvgdur4tzjzi.js",
+     "/_next/static/chunks/3cofoymsl6dpn.js",
+     "/_next/static/chunks/25o6rfbjysz5f.js",
+     "/_next/static/chunks/1dyk9db-_7hyl.js",
+     "/_next/static/chunks/10uv514i7spsv.js",
+     "/_next/static/chunks/1ry06mlq7arvq.js",
+     "/_next/static/chunks/1i9f2af4ujan8.js",
+     "/_next/static/chunks/01qi5x5y7xmzd.js",
+     "/_next/static/chunks/1zz4_vykseajt.js",
+     "/_next/static/chunks/0reayt05ebhzt.js",
+     "/_next/static/chunks/39xlq5fubsvat.js",
+     "/_next/static/chunks/06vt3zqzynhkj.js",
+     "/_next/static/chunks/3tbhe33anca8u.js",
+     "/_next/static/chunks/10fqtmfyuy748.js",
+     "/_next/static/chunks/3qi5lz1xg5xyx.js",
+     "/_next/static/chunks/3_n1otntdmkpm.js",
+     "/_next/static/chunks/0xhp3myuwh1xt.js",
+     "/_next/static/chunks/2ixa2k67u9gvt.js",
+     "/icons/icon.svg",
+     "/_next/static/chunks/0wstr41mffx5k.js"
+    ]
+   },
+   "label": "end (observer)",
+   "cookies": [
+    {
+     "name": "fm-place",
+     "httpOnly": false,
+     "secure": false,
+     "sameSite": "Lax",
+     "session": false,
+     "expiresInSec": 31535981,
+     "path": "/"
+    },
+    {
+     "name": "sb-127-auth-token",
+     "httpOnly": false,
+     "secure": false,
+     "sameSite": "Lax",
+     "session": false,
+     "expiresInSec": 34559989,
+     "path": "/"
+    }
+   ]
+  }
+ ],
+ "back": [
+  {
+   "step": 1,
+   "url": "/sign-in",
+   "h1": "Welcome back",
+   "main": "DECA MARK · RESEARCH IN PLACE Welcome back Sign in to your research workspace. Email address Password Show Sign in Forgot password? Create account Observers col",
+   "managerContent": false,
+   "header": "DECA Mark Privacy",
+   "pageshowPersisted": [
+    false
+   ],
+   "markerSurvived": true,
+   "navIndex": 4,
+   "screenshot": "screens/4-default-back-1.png"
+  },
+  {
+   "step": 2,
+   "url": "/o/web-acceptance/collect",
+   "h1": "Collect with the DECA Mark app",
+   "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-s",
+   "managerContent": false,
+   "header": "DECA Mark Web acceptance lab Search or jump to ⌘K Command K MEMBER OB",
+   "pageshowPersisted": [
+    false
+   ],
+   "markerSurvived": true,
+   "navIndex": 3,
+   "screenshot": "screens/4-default-back-2.png"
+  },
+  {
+   "step": 3,
+   "url": "/o/web-acceptance/collect",
+   "h1": "Collect with the DECA Mark app",
+   "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-s",
+   "managerContent": false,
+   "header": "DECA Mark Web acceptance lab Search or jump to ⌘K Command K MEMBER OB",
+   "pageshowPersisted": [
+    false
+   ],
+   "markerSurvived": false,
+   "navIndex": 2,
+   "screenshot": "screens/4-default-back-3.png"
+  },
+  {
+   "step": 4,
+   "url": "/o/web-acceptance/collect",
+   "h1": "Collect with the DECA Mark app",
+   "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-s",
+   "managerContent": false,
+   "header": "DECA Mark Web acceptance lab Search or jump to ⌘K Command K MEMBER OB",
+   "pageshowPersisted": [
+    false
+   ],
+   "markerSurvived": false,
+   "navIndex": 1,
+   "screenshot": "screens/4-default-back-4.png"
+  },
+  {
+   "step": 5,
+   "url": "/sign-in",
+   "h1": "Welcome back",
+   "main": "DECA MARK · RESEARCH IN PLACE Welcome back Sign in to your research workspace. Email address Password Show Sign in Forgot password? Create account Observers col",
+   "managerContent": false,
+   "header": "DECA Mark Privacy",
+   "pageshowPersisted": [
+    false
+   ],
+   "markerSurvived": false,
+   "navIndex": 0,
+   "screenshot": "screens/4-default-back-5.png"
+  }
+ ],
+ "managerSignIn": {
+  "markerSurvived": true,
+  "path": "/o/web-acceptance/p/play-study"
+ },
+ "swSim": {
+  "registered": true,
+  "scope": "http://127.0.0.1:3000/",
+  "sentUrlCount": 29
+ },
+ "signOut": {
+  "markerSurvived": true,
+  "path": "/sign-in"
+ },
+ "observerSignIn": {
+  "markerSurvived": true,
+  "path": "/o/web-acceptance/collect"
+ },
+ "historyVisited": [
+  "/o/web-acceptance/p/play-study",
+  "/o/web-acceptance/p/play-study",
+  "/o/web-acceptance/p/play-study/data",
+  "/o/web-acceptance/p/play-study/data/70000000-0000-4000-8000-000000000001",
+  "/sign-in",
+  "/o/web-acceptance/collect"
+ ],
+ "historyTrailBeforeBack": {
+  "index": 5,
+  "entries": [
+   "null",
+   "null",
+   "null",
+   "/o/web-acceptance/p/play-study/data/70000000-0000-4000-8000-000000000001",
+   "/sign-in",
+   "/o/web-acceptance/collect"
+  ]
+ },
+ "directManagerDataUrlAsObserver": {
+  "status": 200,
+  "url": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark ap",
+  "managerContent": false,
+  "shot": "screens/4-default-observer-direct-data.png"
+ },
+ "directManagerObsUrlAsObserver": {
+  "status": 200,
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark ap",
+  "managerContent": false
+ }
+}

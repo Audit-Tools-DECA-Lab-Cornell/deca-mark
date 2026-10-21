@@ -1,0 +1,267 @@
+{
+ "dataMap": {
+  "groups": [
+   {
+    "label": "Fall Creek test site",
+    "tabindex": "0",
+    "focusable": true
+   },
+   {
+    "label": "Fall Creek test site. One zone: Zone A · Whole playground. 6 observations",
+    "tabindex": null,
+    "focusable": false
+   }
+  ],
+  "markerCount": 6,
+  "markerSample": [
+   {
+    "tabindex": "0",
+    "label": "OBS-700000, Zone A · Whole playground, Reliability, map v1",
+    "pressed": "false"
+   },
+   {
+    "tabindex": "0",
+    "label": "OBS-700000, Zone A · Whole playground, Reliability, map v1",
+    "pressed": "false"
+   },
+   {
+    "tabindex": "0",
+    "label": "OBS-700000, Zone A · Whole playground, Standard, map v1",
+    "pressed": "false"
+   }
+  ],
+  "svgRole": [
+   {
+    "role": "group",
+    "label": "Fall Creek test site. One zone: Zone A · Whole playground. 6 observations",
+    "hidden": null,
+    "w": 396
+   }
+  ],
+  "tableRows": 9,
+  "obsLinks": 8,
+  "mapStatement": [
+   "6 points on v1",
+   "Select a marker or a row to see which observation it is."
+  ]
+ },
+ "markerEnter": {
+  "sideBefore": "Select a marker or a row to see which observation it is.",
+  "afterEnter": "Site plan | Fall Creek test site · Map v1 | Drawn on map v1. | Zone A · Whole playground | Fall Creek test site | 6 points on v1 | 0–25 m | Map v1 · north ↑ | Scale bar 0–25 m. Map v1. North is up. | Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys to move the plan. |",
+  "ariaPressed": "false",
+  "selectedRowHighlight": 1
+ },
+ "mapKeyboard": {
+  "start": {
+   "viewBox": "0 0 720 500",
+   "style": "background-color: rgb(236, 234, 228);"
+  },
+  "afterZoomInButtonKeyboardx2": {
+   "viewBox": "0 0 720 500",
+   "style": "background-color: rgb(236, 234, 228);"
+  },
+  "focusedElementRole": "group",
+  "afterArrowRightx2": {
+   "viewBox": "0 0 720 500",
+   "style": "background-color: rgb(236, 234, 228);"
+  },
+  "afterMinusKey": {
+   "viewBox": "0 0 720 500",
+   "style": "background-color: rgb(236, 234, 228);"
+  },
+  "zoomChangedByButton": false,
+  "panChangedByArrow": false
+ },
+ "zoneData": {
+  "showing": "Showing 1–500 of 520 matching observations ",
+  "rows": 500,
+  "controls": [
+   "Show the next 20",
+   "Refresh"
+  ],
+  "markers": 460,
+  "mapNote": [
+   "Filter what observers have uploaded, then copy a link to the view or export it.",
+   "Some questions could not be loaded. Answers made with zone-review-inventory-v1, zone-review-play-v1 are shown under their question ids.",
+   "Search loaded observations",
+   "Every filter but the search applies to all observations. The search finds words in the ones that have loaded."
+  ],
+  "afterLoadMore": {
+   "showing": "Showing all 520 matching observations ",
+   "rows": 520
+  }
+ },
+ "keysOnPlan": "Keys on the plan | Tab | From the plan to the selected zone's current point | ← | ↑ | → | ↓ | Move the point 10 cm; with Shift, 1 m | [ | ] | Previous and next point; Home and End for the first and last | Delete | Remove the point; a ring keeps three | I | Add a point after it, at the middle of the edge | Esc | Back to the zone in the Zones list | Ctrl | Z | Undo; with Shift, redo (⌘ on a Mac) | + | − | Zoom, with the plan itself in focus | V | Select | P | Draw a shape at the cross: Space adds a point, Enter finishes, Backspace removes the last | R | Draw a rectangle at the cross: Space sets each corner | T | While drawing, follow the edge between the last two points; again for the other wa",
+ "zoneOptions": 2,
+ "zoneListKeyboard": [
+  {
+   "after": "focus first option",
+   "focus": {
+    "role": "option",
+    "text": "Synthetic smaller lawn v2 A · Unchanged",
+    "selected": "false"
+   },
+   "selectedPanel": "Selected zone Select a zone on the plan or in the Zones list. Problems None found while editing Check"
+  },
+  {
+   "after": "ArrowDown",
+   "focus": {
+    "role": "option",
+    "text": "Synthetic two-part zone B · Unchanged",
+    "selected": "true"
+   },
+   "selectedPanel": "Selected zone Synthetic two-part zone Name Up to 200 characters. Observers see it. Code Codes never cha"
+  },
+  {
+   "after": "Enter",
+   "focus": {
+    "role": "button",
+    "text": "",
+    "selected": null
+   },
+   "selectedPanel": "Selected zone Synthetic two-part zone Name Up to 200 characters. Observers see it. Code Codes never cha"
+  },
+  {
+   "after": "ArrowUp",
+   "focus": {
+    "role": "button",
+    "text": "",
+    "selected": null
+   },
+   "selectedPanel": "Selected zone Synthetic two-part zone Name Up to 200 characters. Observers see it. Code Codes never cha"
+  },
+  {
+   "after": "Space",
+   "focus": {
+    "role": "button",
+    "text": "",
+    "selected": null
+   },
+   "selectedPanel": "Selected zone Synthetic two-part zone Name Up to 200 characters. Observers see it. Code Codes never cha"
+  }
+ ],
+ "tabAfterSelect": [
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Zoom in",
+   "inPoints": false
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Zoom out",
+   "inPoints": false
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Map layers",
+   "inPoints": false
+  },
+  {
+   "tag": "summary",
+   "role": null,
+   "label": "Keys on the plan",
+   "inPoints": false
+  },
+  {
+   "tag": "li",
+   "role": "option",
+   "label": "Synthetic two-part zone B · Changed",
+   "inPoints": false
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Add a zone",
+   "inPoints": false
+  },
+  {
+   "tag": "input",
+   "role": null,
+   "label": "Name",
+   "inPoints": false
+  },
+  {
+   "tag": "input",
+   "role": null,
+   "label": "Code",
+   "inPoints": false
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Remove part 1",
+   "inPoints": false
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Remove part 2",
+   "inPoints": false
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Remove zone",
+   "inPoints": false
+  },
+  {
+   "tag": "select",
+   "role": null,
+   "label": "Part 1 outer edge Part 2 outer edge",
+   "inPoints": false
+  },
+  {
+   "tag": "div",
+   "role": "region",
+   "label": "Points of part 1 outer edge, Synthetic two-p",
+   "inPoints": false
+  },
+  {
+   "tag": "tr",
+   "role": null,
+   "label": "Point 1 Longitude of point 1 Latitude of poi",
+   "inPoints": true
+  },
+  {
+   "tag": "input",
+   "role": null,
+   "label": "Longitude of point 1",
+   "inPoints": true
+  },
+  {
+   "tag": "input",
+   "role": null,
+   "label": "Latitude of point 1",
+   "inPoints": true
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Insert after point 1",
+   "inPoints": false
+  },
+  {
+   "tag": "button",
+   "role": null,
+   "label": "Remove point 1",
+   "inPoints": false
+  }
+ ],
+ "pointsTable": {
+  "caption": "Points of part 1 outer edge, Synthetic two-part zone",
+  "rows": 4,
+  "inputs": 2,
+  "head": [
+   "POINT",
+   "LONGITUDE",
+   "LATITUDE"
+  ]
+ },
+ "canvasFocus": {
+  "focusedRole": "group",
+  "label": "Synthetic review-site"
+ }
+}

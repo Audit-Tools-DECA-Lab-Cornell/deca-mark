@@ -1,0 +1,13 @@
+scanRoute invocations with attachment: 46 readable bodies: 46
+pages with axeDay findings: []
+pages with axeDusk findings: []
+pages with loadFailure: [
+  'project-overview',
+  'packages-upload',
+  'forms',
+  'form-versions',
+  'form-published',
+  'viewer-overview'
+]
+pages with pageErrors/sideways/jargon/sample: []
+names: home, sign-in, sign-up, forgot-password, verify, reset-password, privacy, privacy-delete-data, no-project, join, invite-without-link, account, project-overview, data, observation, sites, site, site-empty, packages, zones, zones-empty-site, packages-upload, forms, form-versions, form-published, team, qgis, reports, project-settings, project-missing-page, sample-workspace-gone, viewer-overview, viewer-team, viewer-zones, observer-collect, org-projects, org-members, org-settings, org-missing, zones-current, zones-earlier-version, zones-no-package, zone-draft-editor, zone-draft-publish, viewer-zones-current, viewer-zone-draft

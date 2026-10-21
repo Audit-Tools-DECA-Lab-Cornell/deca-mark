@@ -1,0 +1,926 @@
+{
+ "meta": {
+  "profile": "cold",
+  "samples": 1,
+  "chromium": "141.0.7390.37",
+  "ts": "2026-10-17T16:17:49.554Z",
+  "throttle": null,
+  "node": "v24.18.0"
+ },
+ "routes": {
+  "sign-in": {
+   "path": "/sign-in",
+   "ready": "password input + submit button visible (signed out)",
+   "finalPath": "/sign-in",
+   "status": [
+    200
+   ],
+   "errs": [],
+   "h1": "Welcome back",
+   "mainText": "DECA MARK · RESEARCH IN PLACE Welcome back Sign in to your research workspace. Email addre",
+   "ttfb": {
+    "median": 27.8,
+    "min": 27.8,
+    "max": 27.8,
+    "n": 1
+   },
+   "fcp": {
+    "median": 104,
+    "min": 104,
+    "max": 104,
+    "n": 1
+   },
+   "lcp": {
+    "median": 104,
+    "min": 104,
+    "max": 104,
+    "n": 1
+   },
+   "lcpEl": "P",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "longTaskTotal": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "longTaskCount": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "tbt": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "dcl": {
+    "median": 97,
+    "min": 97,
+    "max": 97,
+    "n": 1
+   },
+   "load": {
+    "median": 149,
+    "min": 149,
+    "max": 149,
+    "n": 1
+   },
+   "usable": {
+    "median": 108.7,
+    "min": 108.7,
+    "max": 108.7,
+    "n": 1
+   },
+   "docEncodedKB": {
+    "median": 10.6,
+    "min": 10.6,
+    "max": 10.6,
+    "n": 1
+   },
+   "docDecodedKB": {
+    "median": 32.82,
+    "min": 32.82,
+    "max": 32.82,
+    "n": 1
+   },
+   "domNodes": {
+    "median": 117,
+    "min": 117,
+    "max": 117,
+    "n": 1
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 1
+     },
+     "kb": {
+      "median": 11.29,
+      "min": 11.29,
+      "max": 11.29,
+      "n": 1
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 19,
+      "min": 19,
+      "max": 19,
+      "n": 1
+     },
+     "kb": {
+      "median": 286.46,
+      "min": 286.46,
+      "max": 286.46,
+      "n": 1
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 1
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 1
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 1
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 1
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 14,
+      "min": 14,
+      "max": 14,
+      "n": 1
+     },
+     "kb": {
+      "median": 200.43,
+      "min": 200.43,
+      "max": 200.43,
+      "n": 1
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 1
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 1
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 1351,
+     "finalPath": "/sign-in",
+     "h1": "Welcome back",
+     "mainText": "DECA MARK · RESEARCH IN PLACE Welcome back Sign in to your research workspace. Email addre",
+     "ttfb": 27.80000001192093,
+     "dcl": 97,
+     "load": 149,
+     "docEncoded": 10851,
+     "docDecoded": 33605,
+     "docTransfer": 11151,
+     "fcp": 104,
+     "lcp": 104,
+     "lcpSize": 26400,
+     "lcpTag": "P",
+     "lcpUrl": "",
+     "cls": 0,
+     "shifts": 0,
+     "usableAt": 108.69999998807907,
+     "longTaskCount": 0,
+     "longTaskTotal": 0,
+     "tbt": 0,
+     "domNodes": 117,
+     "jsHeapMB": 9.5,
+     "usable": 108.69999998807907,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 11560
+       },
+       "TOTAL": {
+        "count": 19,
+        "bytes": 293330
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 14,
+        "bytes": 205245
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/sign-in",
+        "status": 200,
+        "bytes": 11560,
+        "cache": false,
+        "sw": false,
+        "dur": 29
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 3
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 3
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 4
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 11
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 11
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 27
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 26
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 19
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 19
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 22
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1d6xqqp640wd_.js",
+        "status": 200,
+        "bytes": 5974,
+        "cache": false,
+        "sw": false,
+        "dur": 20
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 24
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2pwz46ti8u02r.js",
+        "status": 200,
+        "bytes": 13083,
+        "cache": false,
+        "sw": false,
+        "dur": 26
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1vyum9x3gt9at.js",
+        "status": 200,
+        "bytes": 7829,
+        "cache": false,
+        "sw": false,
+        "dur": 24
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0tyykjokwfl-l.js",
+        "status": 200,
+        "bytes": 5792,
+        "cache": false,
+        "sw": false,
+        "dur": 26
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 27
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 27
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 2
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "overview": {
+   "path": "/o/web-acceptance/p/play-study",
+   "ready": "h1 + field-return stat list (dl) visible",
+   "finalPath": "/o/web-acceptance/p/play-study",
+   "status": [
+    200
+   ],
+   "errs": [],
+   "h1": "What came back from the field",
+   "mainText": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 obser",
+   "ttfb": {
+    "median": 61.7,
+    "min": 61.7,
+    "max": 61.7,
+    "n": 1
+   },
+   "fcp": {
+    "median": 112,
+    "min": 112,
+    "max": 112,
+    "n": 1
+   },
+   "lcp": {
+    "median": 480,
+    "min": 480,
+    "max": 480,
+    "n": 1
+   },
+   "lcpEl": "H1#page-title",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "longTaskTotal": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "longTaskCount": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "tbt": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 1
+   },
+   "dcl": {
+    "median": 488.4,
+    "min": 488.4,
+    "max": 488.4,
+    "n": 1
+   },
+   "load": {
+    "median": 488.5,
+    "min": 488.5,
+    "max": 488.5,
+    "n": 1
+   },
+   "usable": {
+    "median": 499.5,
+    "min": 499.5,
+    "max": 499.5,
+    "n": 1
+   },
+   "docEncodedKB": {
+    "median": 34.02,
+    "min": 34.02,
+    "max": 34.02,
+    "n": 1
+   },
+   "docDecodedKB": {
+    "median": 152.48,
+    "min": 152.48,
+    "max": 152.48,
+    "n": 1
+   },
+   "domNodes": {
+    "median": 631,
+    "min": 631,
+    "max": 631,
+    "n": 1
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 1
+     },
+     "kb": {
+      "median": 34.96,
+      "min": 34.96,
+      "max": 34.96,
+      "n": 1
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 29,
+      "min": 29,
+      "max": 29,
+      "n": 1
+     },
+     "kb": {
+      "median": 475.65,
+      "min": 475.65,
+      "max": 475.65,
+      "n": 1
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 1
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 1
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 1
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 1
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 24,
+      "min": 24,
+      "max": 24,
+      "n": 1
+     },
+     "kb": {
+      "median": 365.95,
+      "min": 365.95,
+      "max": 365.95,
+      "n": 1
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 1
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 1
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 1732,
+     "finalPath": "/o/web-acceptance/p/play-study",
+     "h1": "What came back from the field",
+     "mainText": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 obser",
+     "ttfb": 61.69999998807907,
+     "dcl": 488.4000000357628,
+     "load": 488.5,
+     "docEncoded": 34833,
+     "docDecoded": 156143,
+     "docTransfer": 35133,
+     "fcp": 112,
+     "lcp": 480,
+     "lcpSize": 23760,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0,
+     "shifts": 0,
+     "usableAt": 499.5,
+     "longTaskCount": 0,
+     "longTaskTotal": 0,
+     "tbt": 0,
+     "domNodes": 631,
+     "jsHeapMB": 10.1,
+     "usable": 499.5,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 35802
+       },
+       "TOTAL": {
+        "count": 29,
+        "bytes": 487064
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 24,
+        "bytes": 374737
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study",
+        "status": 200,
+        "bytes": 35802,
+        "cache": false,
+        "sw": false,
+        "dur": 474
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 6
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 6
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 10
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 23
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 27
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 53
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 45
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 30
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 44
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 48
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 48
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 64
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 71
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 78
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 78
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 90
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 94
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 121
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 95
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 94
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pfrnrxlf-jpf.js",
+        "status": 200,
+        "bytes": 10619,
+        "cache": false,
+        "sw": false,
+        "dur": 96
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 101
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 98
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 100
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 103
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 113
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 114
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 79
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

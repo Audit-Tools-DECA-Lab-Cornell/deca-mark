@@ -1,0 +1,35 @@
+totals { files: 220, tests: 839, passed: 834, failed: 0, pending: 5, todo: 0 }
+
+GROUPS
+src/auth                     {"files":5,"passed":27,"failed":0,"skipped":0,"skippedFiles":0}
+src/data                     {"files":3,"passed":55,"failed":0,"skipped":0,"skippedFiles":0}
+src/domain                   {"files":3,"passed":13,"failed":0,"skipped":0,"skippedFiles":0}
+src/features                 {"files":30,"passed":296,"failed":0,"skipped":3,"skippedFiles":3}
+src/forms                    {"files":5,"passed":121,"failed":0,"skipped":0,"skippedFiles":0}
+src/layout                   {"files":1,"passed":20,"failed":0,"skipped":0,"skippedFiles":0}
+src/maps                     {"files":6,"passed":72,"failed":0,"skipped":0,"skippedFiles":0}
+src/packages                 {"files":14,"passed":61,"failed":0,"skipped":1,"skippedFiles":1}
+src/platform                 {"files":2,"passed":16,"failed":0,"skipped":0,"skippedFiles":0}
+src/session                  {"files":7,"passed":31,"failed":0,"skipped":0,"skippedFiles":0}
+src/storage                  {"files":18,"passed":78,"failed":0,"skipped":0,"skippedFiles":0}
+src/sync                     {"files":4,"passed":34,"failed":0,"skipped":1,"skippedFiles":1}
+src/ui                       {"files":1,"passed":10,"failed":0,"skipped":0,"skippedFiles":0}
+
+FILES WITH SKIPPED
+src/sync/bound-upload-api.acceptance.test.ts 0 passed 1 skipped passed
+src/features/account/deletion.acceptance.test.ts 0 passed 1 skipped passed
+src/features/auth/auth-calls.acceptance.test.ts 0 passed 1 skipped passed
+src/features/onboarding/join.acceptance.test.ts 0 passed 1 skipped passed
+src/packages/hosted/bound-install-api.acceptance.test.ts 0 passed 1 skipped passed
+
+SLOWEST 8
+src/forms/contracts.test.ts 405ms 48p
+src/platform/auth-storage.test.ts 282ms 14p
+src/packages/hosted/bound-prepare.test.ts 222ms 11p
+src/features/projects/device-screens.test.tsx 194ms 5p
+src/storage/observation-store.test.ts 176ms 5p
+src/sync/coordinator.test.ts 169ms 7p
+src/session/bound-provider.test.tsx 158ms 2p
+src/features/auth/auth-screens.test.tsx 154ms 7p
+
+FAILED: []

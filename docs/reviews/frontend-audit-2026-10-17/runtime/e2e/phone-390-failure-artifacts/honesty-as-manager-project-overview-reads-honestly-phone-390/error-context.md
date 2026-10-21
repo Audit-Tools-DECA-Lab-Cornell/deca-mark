@@ -1,0 +1,368 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to content" [ref=e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "DECA Mark" [ref=e7] [cursor=pointer]:
+          - /url: /o
+          - img "DECA Mark" [ref=e8]
+        - 'button "Web acceptance lab, project: Play study acceptance" [ref=e10]':
+          - generic [ref=e11]: Play study acceptance
+          - img [ref=e12]
+        - generic [ref=e14]:
+          - button "Search or jump to" [ref=e15]:
+            - img [ref=e16]
+          - button "Account, Local manager" [ref=e19]:
+            - generic [ref=e20]: QA
+    - navigation "Project" [ref=e22]:
+      - list [ref=e25]:
+        - listitem [ref=e26]:
+          - link "Overview" [ref=e27] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study
+        - listitem [ref=e28]:
+          - link "Data" [ref=e29] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/data
+        - listitem [ref=e30]:
+          - link "Sites" [ref=e31] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/sites
+        - listitem [ref=e32]:
+          - link "Forms" [ref=e33] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/forms
+        - listitem [ref=e34]:
+          - link "Team" [ref=e35] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/team
+        - listitem [ref=e36]:
+          - link "QGIS" [ref=e37] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/qgis
+        - listitem [ref=e38]:
+          - link "Reports" [ref=e39] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/reports
+        - listitem [ref=e40]:
+          - link "Settings" [ref=e41] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/settings
+    - main [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - heading "What came back from the field" [level=1] [ref=e48]
+            - generic [ref=e49]: Play study acceptance
+          - link "Open observations" [ref=e51] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/data
+            - text: Open observations
+            - img [ref=e52]
+        - region "8 observations at Fall Creek test site." [ref=e54]:
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - paragraph [ref=e58]: Field return
+              - heading "8 observations at Fall Creek test site." [level=2] [ref=e59]
+              - paragraph [ref=e60]: The total adds up every site's own count. Records still on devices are not counted here.
+              - generic [ref=e62]:
+                - generic [ref=e63]:
+                  - term [ref=e64]: Last received
+                  - definition [ref=e65]: Oct 12 · 22:09
+                - generic [ref=e66]:
+                  - term [ref=e67]: Observed today
+                  - definition [ref=e68]: "0"
+                - generic [ref=e69]:
+                  - term [ref=e70]: Observed in the last 7 days
+                  - definition [ref=e71]: "0"
+              - paragraph [ref=e72]: Days and times use the project's time zone, America/New_York.
+            - generic [ref=e73]:
+              - heading "By site" [level=3] [ref=e74]
+              - generic "Observations by site" [ref=e75]:
+                - generic [ref=e76]:
+                  - term [ref=e77]:
+                    - link "E2E site 1013-205904" [ref=e78] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1013-205904
+                  - definition [ref=e79]
+                  - definition [ref=e80]: "0"
+                - generic [ref=e81]:
+                  - term [ref=e82]:
+                    - link "E2E site 1013-210336" [ref=e83] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1013-210336
+                  - definition [ref=e84]
+                  - definition [ref=e85]: "0"
+                - generic [ref=e86]:
+                  - term [ref=e87]:
+                    - link "E2E site 1013-211207" [ref=e88] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1013-211207
+                  - definition [ref=e89]
+                  - definition [ref=e90]: "0"
+                - generic [ref=e91]:
+                  - term [ref=e92]:
+                    - link "E2E site 1013-211608" [ref=e93] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1013-211608
+                  - definition [ref=e94]
+                  - definition [ref=e95]: "0"
+                - generic [ref=e96]:
+                  - term [ref=e97]:
+                    - link "E2E site 1013-212334" [ref=e98] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1013-212334
+                  - definition [ref=e99]
+                  - definition [ref=e100]: "0"
+                - generic [ref=e101]:
+                  - term [ref=e102]:
+                    - link "E2E site 1013-212731" [ref=e103] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1013-212731
+                  - definition [ref=e104]
+                  - definition [ref=e105]: "0"
+                - generic [ref=e106]:
+                  - term [ref=e107]:
+                    - link "E2E site 1015-230156" [ref=e108] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1015-230156
+                  - definition [ref=e109]
+                  - definition [ref=e110]: "0"
+                - generic [ref=e111]:
+                  - term [ref=e112]:
+                    - link "E2E site 1015-230813" [ref=e113] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1015-230813
+                  - definition [ref=e114]
+                  - definition [ref=e115]: "0"
+                - generic [ref=e116]:
+                  - term [ref=e117]:
+                    - link "E2E site 1018-223700" [ref=e118] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=e2e-site-1018-223700
+                  - definition [ref=e119]
+                  - definition [ref=e120]: "0"
+                - generic [ref=e121]:
+                  - term [ref=e122]:
+                    - link "Empty test site" [ref=e123] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=empty-site
+                  - definition [ref=e124]
+                  - definition [ref=e125]: "0"
+                - generic [ref=e126]:
+                  - term [ref=e127]:
+                    - link "Fall Creek test site" [ref=e128] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/data?site=fall-creek
+                  - definition [ref=e129]
+                  - definition [ref=e131]: "8"
+        - generic [ref=e132]:
+          - region "Coverage by zone" [ref=e133]:
+            - generic [ref=e134]:
+              - heading "Coverage by zone" [level=2] [ref=e135]:
+                - generic [ref=e136]: Coverage by zone
+              - generic [ref=e137]:
+                - generic [ref=e138]: Fall Creek test site · 8 observations
+                - link "Open Fall Creek test site" [ref=e139] [cursor=pointer]:
+                  - /url: /o/web-acceptance/p/play-study/sites/fall-creek
+                  - generic [ref=e140]: Open Fall Creek test site
+                  - img [ref=e141]
+            - generic [ref=e143]:
+              - group "Fall Creek test site · plan" [ref=e145]:
+                - 'img "Fall Creek test site · plan. One zone: Zone A · Whole playground" [ref=e146]':
+                  - generic [ref=e171]: Zone A · Whole playground
+                - generic:
+                  - paragraph [ref=e175]: Fall Creek test site · plan
+                  - generic [ref=e176]:
+                    - button "Zoom in" [ref=e177]:
+                      - img [ref=e178]
+                    - button "Zoom out" [ref=e179]:
+                      - img [ref=e180]
+                    - button "Map layers" [ref=e181]:
+                      - img [ref=e182]
+                - generic [ref=e186]:
+                  - generic [ref=e188]: 0–25 m
+                  - generic [ref=e190]: Map v49 · north ↑
+                  - generic [ref=e191]: Scale bar 0–25 m. Map v49. North is up.
+                - paragraph [ref=e192]: Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys to move the plan.
+              - region "Observations by zone and round at Fall Creek test site" [ref=e194]:
+                - table "Observations by zone and round at Fall Creek test site" [ref=e195]:
+                  - caption [ref=e196]: Observations by zone and round at Fall Creek test site
+                  - rowgroup [ref=e197]:
+                    - row "Zone Standard Reliability Inventory Total" [ref=e198]:
+                      - columnheader "Zone" [ref=e199]
+                      - columnheader "Standard" [ref=e200]
+                      - columnheader "Reliability" [ref=e201]
+                      - columnheader "Inventory" [ref=e202]
+                      - columnheader "Total" [ref=e203]
+                  - rowgroup [ref=e204]:
+                    - row "Zone A · Whole playground 4 2 2 8" [ref=e205]:
+                      - cell "Zone A · Whole playground" [ref=e206]:
+                        - link "Zone A · Whole playground" [ref=e207] [cursor=pointer]:
+                          - /url: /o/web-acceptance/p/play-study/data?site=fall-creek&zone=70000000-0000-4000-8000-000000000011
+                      - cell "4" [ref=e208]
+                      - cell "2" [ref=e209]
+                      - cell "2" [ref=e210]
+                      - cell "8" [ref=e211]
+            - generic [ref=e213]:
+              - paragraph [ref=e214]: Counts are every observation recorded in each zone and round, on every map version. They show where records exist, not whether a round is complete.
+              - paragraph [ref=e215]: Inventory observations describe a whole zone, not a place in it.
+          - generic [ref=e216]:
+            - region "Needs attention" [ref=e217]:
+              - generic [ref=e218]:
+                - heading "Needs attention" [level=2] [ref=e219]:
+                  - generic [ref=e220]: Needs attention
+                - generic [ref=e222]: 10 items
+              - generic [ref=e223]:
+                - list [ref=e224]:
+                  - listitem [ref=e225]:
+                    - img [ref=e226]
+                    - generic [ref=e228]:
+                      - paragraph [ref=e229]: E2E site 1013-205904 has no ready map package.
+                      - paragraph [ref=e230]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e232] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1013-205904/packages?step=upload
+                      - generic [ref=e233]: Upload a map package
+                      - img [ref=e234]
+                  - listitem [ref=e236]:
+                    - img [ref=e237]
+                    - generic [ref=e239]:
+                      - paragraph [ref=e240]: E2E site 1013-210336 has no ready map package.
+                      - paragraph [ref=e241]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e243] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1013-210336/packages?step=upload
+                      - generic [ref=e244]: Upload a map package
+                      - img [ref=e245]
+                  - listitem [ref=e247]:
+                    - img [ref=e248]
+                    - generic [ref=e250]:
+                      - paragraph [ref=e251]: E2E site 1013-211207 has no ready map package.
+                      - paragraph [ref=e252]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e254] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1013-211207/packages?step=upload
+                      - generic [ref=e255]: Upload a map package
+                      - img [ref=e256]
+                  - listitem [ref=e258]:
+                    - img [ref=e259]
+                    - generic [ref=e261]:
+                      - paragraph [ref=e262]: E2E site 1013-211608 has no ready map package.
+                      - paragraph [ref=e263]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e265] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1013-211608/packages?step=upload
+                      - generic [ref=e266]: Upload a map package
+                      - img [ref=e267]
+                  - listitem [ref=e269]:
+                    - img [ref=e270]
+                    - generic [ref=e272]:
+                      - paragraph [ref=e273]: E2E site 1013-212334 has no ready map package.
+                      - paragraph [ref=e274]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e276] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1013-212334/packages?step=upload
+                      - generic [ref=e277]: Upload a map package
+                      - img [ref=e278]
+                  - listitem [ref=e280]:
+                    - img [ref=e281]
+                    - generic [ref=e283]:
+                      - paragraph [ref=e284]: E2E site 1013-212731 has no ready map package.
+                      - paragraph [ref=e285]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e287] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1013-212731/packages?step=upload
+                      - generic [ref=e288]: Upload a map package
+                      - img [ref=e289]
+                  - listitem [ref=e291]:
+                    - img [ref=e292]
+                    - generic [ref=e294]:
+                      - paragraph [ref=e295]: E2E site 1015-230156 has no ready map package.
+                      - paragraph [ref=e296]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e298] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1015-230156/packages?step=upload
+                      - generic [ref=e299]: Upload a map package
+                      - img [ref=e300]
+                  - listitem [ref=e302]:
+                    - img [ref=e303]
+                    - generic [ref=e305]:
+                      - paragraph [ref=e306]: E2E site 1015-230813 has no ready map package.
+                      - paragraph [ref=e307]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e309] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1015-230813/packages?step=upload
+                      - generic [ref=e310]: Upload a map package
+                      - img [ref=e311]
+                  - listitem [ref=e313]:
+                    - img [ref=e314]
+                    - generic [ref=e316]:
+                      - paragraph [ref=e317]: E2E site 1018-223700 has no ready map package.
+                      - paragraph [ref=e318]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e320] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/e2e-site-1018-223700/packages?step=upload
+                      - generic [ref=e321]: Upload a map package
+                      - img [ref=e322]
+                  - listitem [ref=e324]:
+                    - img [ref=e325]
+                    - generic [ref=e327]:
+                      - paragraph [ref=e328]: Empty test site has no ready map package.
+                      - paragraph [ref=e329]: Observers have no map to download for this site.
+                    - link "Upload a map package" [ref=e331] [cursor=pointer]:
+                      - /url: /o/web-acceptance/p/play-study/sites/empty-site/packages?step=upload
+                      - generic [ref=e332]: Upload a map package
+                      - img [ref=e333]
+                - alert [ref=e336]:
+                  - img [ref=e338]
+                  - heading "Couldn't load the forms." [level=3] [ref=e340]
+                  - generic [ref=e341]: DECA Mark could not finish this. Try again in a few minutes.
+                  - button "Try again" [ref=e343]:
+                    - img [ref=e344]
+                    - generic [ref=e348]: Try again
+            - region "Recent activity" [ref=e349]:
+              - generic [ref=e350]:
+                - heading "Recent activity" [level=2] [ref=e351]:
+                  - generic [ref=e352]: Recent activity
+                - link "All observations" [ref=e354] [cursor=pointer]:
+                  - /url: /o/web-acceptance/p/play-study/data
+                  - generic [ref=e355]: All observations
+                  - img [ref=e356]
+              - generic [ref=e358]:
+                - list [ref=e360]:
+                  - listitem [ref=e361]:
+                    - generic [ref=e365]:
+                      - generic [ref=e367]: Site E2E site 1018-223700 added
+                      - generic [ref=e368]: Today 18:37
+                  - listitem [ref=e369]:
+                    - generic [ref=e373]:
+                      - generic [ref=e375]: Site E2E site 1015-230813 added
+                      - generic [ref=e376]: Oct 15 · 19:08
+                  - listitem [ref=e377]:
+                    - generic [ref=e381]:
+                      - generic [ref=e383]: Map package v49 prepared for Fall Creek test site
+                      - generic [ref=e384]: Oct 15 · 19:06
+                  - listitem [ref=e385]:
+                    - generic [ref=e389]:
+                      - generic [ref=e391]: Map package v48 prepared for Fall Creek test site
+                      - generic [ref=e392]: Oct 15 · 19:06
+                  - listitem [ref=e393]:
+                    - generic [ref=e397]:
+                      - generic [ref=e399]: Map package v47 prepared for Fall Creek test site
+                      - generic [ref=e400]: Oct 15 · 19:06
+                  - listitem [ref=e401]:
+                    - generic [ref=e405]:
+                      - generic [ref=e407]: Map package v46 prepared for Fall Creek test site
+                      - generic [ref=e408]: Oct 15 · 19:06
+                  - listitem [ref=e409]:
+                    - generic [ref=e413]:
+                      - generic [ref=e415]: Map package v45 prepared for Fall Creek test site
+                      - generic [ref=e416]: Oct 15 · 19:06
+                  - listitem [ref=e417]:
+                    - generic [ref=e421]:
+                      - generic [ref=e423]: Map package v44 prepared for Fall Creek test site
+                      - generic [ref=e424]: Oct 15 · 19:06
+                  - listitem [ref=e425]:
+                    - generic [ref=e429]:
+                      - generic [ref=e431]: Site E2E site 1015-230156 added
+                      - generic [ref=e432]: Oct 15 · 19:01
+                  - listitem [ref=e433]:
+                    - generic [ref=e437]:
+                      - generic [ref=e439]: Map package v43 prepared for Fall Creek test site
+                      - generic [ref=e440]: Oct 15 · 19:00
+                  - listitem [ref=e441]:
+                    - generic [ref=e445]:
+                      - generic [ref=e447]: Map package v42 prepared for Fall Creek test site
+                      - generic [ref=e448]: Oct 15 · 19:00
+                  - listitem [ref=e449]:
+                    - generic [ref=e452]:
+                      - generic [ref=e454]: Map package v41 prepared for Fall Creek test site
+                      - generic [ref=e455]: Oct 15 · 19:00
+                - alert [ref=e457]:
+                  - img [ref=e459]
+                  - heading "Couldn't load form activity." [level=3] [ref=e461]
+                  - generic [ref=e462]: DECA Mark could not finish this. Try again in a few minutes.
+                  - button "Try again" [ref=e464]:
+                    - img [ref=e465]
+                    - generic [ref=e469]: Try again
+              - paragraph [ref=e471]: Built from the dates on observations, map packages, forms and sites. It does not list every change.
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e472]
+```

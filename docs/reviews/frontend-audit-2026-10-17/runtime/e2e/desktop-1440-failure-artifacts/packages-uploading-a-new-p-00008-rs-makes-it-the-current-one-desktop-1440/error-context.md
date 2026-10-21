@@ -1,0 +1,749 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to content" [ref=e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "DECA Mark" [ref=e7] [cursor=pointer]:
+          - /url: /o
+          - img [ref=e8]
+          - generic [ref=e9]: DECA Mark
+        - generic [ref=e10]:
+          - 'button "Organization: Web acceptance lab" [ref=e12]':
+            - generic [ref=e13]: Web acceptance lab
+            - img [ref=e14]
+          - generic [ref=e16]: /
+          - 'button "Project: Play study acceptance" [ref=e18]':
+            - generic [ref=e19]: Play study acceptance
+            - img [ref=e20]
+        - generic [ref=e22]:
+          - button "Search or jump to Command K" [ref=e23]:
+            - img [ref=e24]
+            - generic [ref=e27]: Search or jump to
+            - generic [ref=e29]:
+              - generic [ref=e30]: ⌘K
+              - generic [ref=e31]: Command K
+          - generic [ref=e32]: Manager
+          - button "Account, Local manager" [ref=e33]:
+            - generic [ref=e34]: QA
+    - navigation "Project" [ref=e36]:
+      - list [ref=e39]:
+        - listitem [ref=e40]:
+          - link "Overview" [ref=e41] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study
+        - listitem [ref=e42]:
+          - link "Data" [ref=e43] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/data
+        - listitem [ref=e44]:
+          - link "Sites" [ref=e45] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/sites
+        - listitem [ref=e46]:
+          - link "Forms" [ref=e47] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/forms
+        - listitem [ref=e48]:
+          - link "Team" [ref=e49] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/team
+        - listitem [ref=e50]:
+          - link "QGIS" [ref=e51] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/qgis
+        - listitem [ref=e52]:
+          - link "Reports" [ref=e53] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/reports
+        - listitem [ref=e54]:
+          - link "Settings" [ref=e55] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/settings
+    - main [ref=e56]:
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - navigation "Breadcrumb" [ref=e59]:
+            - list [ref=e60]:
+              - listitem [ref=e61]:
+                - link "Sites" [ref=e62] [cursor=pointer]:
+                  - /url: /o/web-acceptance/p/play-study/sites
+              - listitem [ref=e63]:
+                - img [ref=e64]
+                - link "Fall Creek test site" [ref=e66] [cursor=pointer]:
+                  - /url: /o/web-acceptance/p/play-study/sites/fall-creek
+              - listitem [ref=e67]:
+                - img [ref=e68]
+                - generic [ref=e70]: Map packages
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - heading "Fall Creek test site map packages" [active] [level=1] [ref=e74]
+              - generic [ref=e75]: Prepare a map package from QGIS layers. The current version is the one observers get; records keep the version they were collected on.
+            - link "Back to history" [ref=e77] [cursor=pointer]:
+              - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages
+              - img [ref=e78]
+              - text: Back to history
+        - alert [ref=e82]:
+          - img [ref=e84]
+          - heading "Couldn't load the forms." [level=3] [ref=e86]
+          - generic [ref=e87]: DECA Mark could not finish this. Try again in a few minutes.
+          - button "Try again" [ref=e89]:
+            - img [ref=e90]
+            - generic [ref=e94]: Try again
+        - region "History" [ref=e95]:
+          - generic [ref=e96]:
+            - heading "History" [level=2] [ref=e97]:
+              - generic [ref=e98]: History
+            - generic [ref=e100]: 49 versions
+          - table "Map package versions, newest first" [ref=e105]:
+            - caption [ref=e106]: Map package versions, newest first
+            - rowgroup [ref=e107]:
+              - row "Version State Prepared Size Forms Notes" [ref=e108]:
+                - columnheader "Version" [ref=e109]
+                - columnheader "State" [ref=e110]
+                - columnheader "Prepared" [ref=e111]
+                - columnheader "Size" [ref=e112]
+                - columnheader "Forms" [ref=e113]
+                - columnheader "Notes" [ref=e114]
+            - rowgroup [ref=e115]:
+              - row "v49 Active Oct 15, 2026 · 19:06 2 KB workspace-check-v1 · workspace-check-v1 Observers get this version. Uploaded from QGIS." [ref=e116]:
+                - cell "v49" [ref=e117]:
+                  - link "v49" [ref=e118] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=92ead55b-0d66-4fac-8e94-928d3917f4f2
+                - cell "Active" [ref=e119]:
+                  - generic [ref=e120]:
+                    - img [ref=e121]
+                    - generic [ref=e123]: Active
+                - cell "Oct 15, 2026 · 19:06" [ref=e124]
+                - cell "2 KB" [ref=e125]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e126]
+                - cell "Observers get this version. Uploaded from QGIS." [ref=e127]:
+                  - generic [ref=e128]: Observers get this version. Uploaded from QGIS.
+              - row "v48 Archived Oct 15, 2026 · 19:06 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e129]:
+                - cell "v48" [ref=e130]:
+                  - link "v48" [ref=e131] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=6cfdec54-b69c-4ff8-aa1d-27539d59256b
+                - cell "Archived" [ref=e132]:
+                  - generic [ref=e133]:
+                    - img [ref=e134]
+                    - generic [ref=e136]: Archived
+                - cell "Oct 15, 2026 · 19:06" [ref=e137]
+                - cell "2 KB" [ref=e138]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e139]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e140]:
+                  - generic [ref=e141]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v47 Archived Oct 15, 2026 · 19:06 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e142]:
+                - cell "v47" [ref=e143]:
+                  - link "v47" [ref=e144] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=966406df-660e-4a71-abd9-6450659f547c
+                - cell "Archived" [ref=e145]:
+                  - generic [ref=e146]:
+                    - img [ref=e147]
+                    - generic [ref=e149]: Archived
+                - cell "Oct 15, 2026 · 19:06" [ref=e150]
+                - cell "1 KB" [ref=e151]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e152]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e153]:
+                  - generic [ref=e154]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v46 Archived Oct 15, 2026 · 19:06 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e155]:
+                - cell "v46" [ref=e156]:
+                  - link "v46" [ref=e157] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=ed34b8ae-4669-486c-8cbe-944e9ee4f6eb
+                - cell "Archived" [ref=e158]:
+                  - generic [ref=e159]:
+                    - img [ref=e160]
+                    - generic [ref=e162]: Archived
+                - cell "Oct 15, 2026 · 19:06" [ref=e163]
+                - cell "1 KB" [ref=e164]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e165]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e166]:
+                  - generic [ref=e167]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v45 Archived Oct 15, 2026 · 19:06 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e168]:
+                - cell "v45" [ref=e169]:
+                  - link "v45" [ref=e170] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=6a75d665-39f0-4922-981d-4df934e45ade
+                - cell "Archived" [ref=e171]:
+                  - generic [ref=e172]:
+                    - img [ref=e173]
+                    - generic [ref=e175]: Archived
+                - cell "Oct 15, 2026 · 19:06" [ref=e176]
+                - cell "2 KB" [ref=e177]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e178]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e179]:
+                  - generic [ref=e180]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v44 Archived Oct 15, 2026 · 19:06 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e181]:
+                - cell "v44" [ref=e182]:
+                  - link "v44" [ref=e183] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=728a5ae9-5707-495f-95fd-40daa477844d
+                - cell "Archived" [ref=e184]:
+                  - generic [ref=e185]:
+                    - img [ref=e186]
+                    - generic [ref=e188]: Archived
+                - cell "Oct 15, 2026 · 19:06" [ref=e189]
+                - cell "2 KB" [ref=e190]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e191]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e192]:
+                  - generic [ref=e193]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v43 Archived Oct 15, 2026 · 19:00 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e194]:
+                - cell "v43" [ref=e195]:
+                  - link "v43" [ref=e196] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=13f7e188-0647-4bb6-ac6a-c2fc90e093a5
+                - cell "Archived" [ref=e197]:
+                  - generic [ref=e198]:
+                    - img [ref=e199]
+                    - generic [ref=e201]: Archived
+                - cell "Oct 15, 2026 · 19:00" [ref=e202]
+                - cell "2 KB" [ref=e203]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e204]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e205]:
+                  - generic [ref=e206]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS.
+              - row "v42 Archived Oct 15, 2026 · 19:00 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e207]:
+                - cell "v42" [ref=e208]:
+                  - link "v42" [ref=e209] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=9f3dc066-4b24-431a-8248-85c622d79994
+                - cell "Archived" [ref=e210]:
+                  - generic [ref=e211]:
+                    - img [ref=e212]
+                    - generic [ref=e214]: Archived
+                - cell "Oct 15, 2026 · 19:00" [ref=e215]
+                - cell "2 KB" [ref=e216]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e217]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e218]:
+                  - generic [ref=e219]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v41 Archived Oct 15, 2026 · 19:00 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e220]:
+                - cell "v41" [ref=e221]:
+                  - link "v41" [ref=e222] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=a7d893a9-d048-47a9-8c22-ac63625df5ad
+                - cell "Archived" [ref=e223]:
+                  - generic [ref=e224]:
+                    - img [ref=e225]
+                    - generic [ref=e227]: Archived
+                - cell "Oct 15, 2026 · 19:00" [ref=e228]
+                - cell "1 KB" [ref=e229]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e230]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e231]:
+                  - generic [ref=e232]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v40 Archived Oct 15, 2026 · 19:00 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e233]:
+                - cell "v40" [ref=e234]:
+                  - link "v40" [ref=e235] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=9c17f90e-8ad4-4fcd-a3b6-39d647c88027
+                - cell "Archived" [ref=e236]:
+                  - generic [ref=e237]:
+                    - img [ref=e238]
+                    - generic [ref=e240]: Archived
+                - cell "Oct 15, 2026 · 19:00" [ref=e241]
+                - cell "1 KB" [ref=e242]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e243]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e244]:
+                  - generic [ref=e245]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v39 Archived Oct 15, 2026 · 19:00 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e246]:
+                - cell "v39" [ref=e247]:
+                  - link "v39" [ref=e248] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=834243c6-71bf-44fd-a2c9-5d752b1438a7
+                - cell "Archived" [ref=e249]:
+                  - generic [ref=e250]:
+                    - img [ref=e251]
+                    - generic [ref=e253]: Archived
+                - cell "Oct 15, 2026 · 19:00" [ref=e254]
+                - cell "2 KB" [ref=e255]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e256]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e257]:
+                  - generic [ref=e258]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v38 Archived Oct 15, 2026 · 19:00 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e259]:
+                - cell "v38" [ref=e260]:
+                  - link "v38" [ref=e261] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=4a4d7101-a721-4a0c-8fd7-1fc4773b5306
+                - cell "Archived" [ref=e262]:
+                  - generic [ref=e263]:
+                    - img [ref=e264]
+                    - generic [ref=e266]: Archived
+                - cell "Oct 15, 2026 · 19:00" [ref=e267]
+                - cell "2 KB" [ref=e268]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e269]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e270]:
+                  - generic [ref=e271]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v37 Archived Oct 13, 2026 · 17:26 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e272]:
+                - cell "v37" [ref=e273]:
+                  - link "v37" [ref=e274] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=7b1d0978-0ba3-441f-a44a-1eeca246497c
+                - cell "Archived" [ref=e275]:
+                  - generic [ref=e276]:
+                    - img [ref=e277]
+                    - generic [ref=e279]: Archived
+                - cell "Oct 13, 2026 · 17:26" [ref=e280]
+                - cell "2 KB" [ref=e281]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e282]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e283]:
+                  - generic [ref=e284]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS.
+              - row "v36 Archived Oct 13, 2026 · 17:25 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e285]:
+                - cell "v36" [ref=e286]:
+                  - link "v36" [ref=e287] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=bddc6d9b-376f-4f7c-acbb-a9bac4256325
+                - cell "Archived" [ref=e288]:
+                  - generic [ref=e289]:
+                    - img [ref=e290]
+                    - generic [ref=e292]: Archived
+                - cell "Oct 13, 2026 · 17:25" [ref=e293]
+                - cell "2 KB" [ref=e294]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e295]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e296]:
+                  - generic [ref=e297]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v35 Archived Oct 13, 2026 · 17:25 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e298]:
+                - cell "v35" [ref=e299]:
+                  - link "v35" [ref=e300] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=a6afa0e8-543c-4242-8111-1c6adf0d0758
+                - cell "Archived" [ref=e301]:
+                  - generic [ref=e302]:
+                    - img [ref=e303]
+                    - generic [ref=e305]: Archived
+                - cell "Oct 13, 2026 · 17:25" [ref=e306]
+                - cell "1 KB" [ref=e307]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e308]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e309]:
+                  - generic [ref=e310]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v34 Archived Oct 13, 2026 · 17:25 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e311]:
+                - cell "v34" [ref=e312]:
+                  - link "v34" [ref=e313] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=46d3f897-f22b-4252-b449-a4628a4882aa
+                - cell "Archived" [ref=e314]:
+                  - generic [ref=e315]:
+                    - img [ref=e316]
+                    - generic [ref=e318]: Archived
+                - cell "Oct 13, 2026 · 17:25" [ref=e319]
+                - cell "1 KB" [ref=e320]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e321]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e322]:
+                  - generic [ref=e323]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v33 Archived Oct 13, 2026 · 17:25 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e324]:
+                - cell "v33" [ref=e325]:
+                  - link "v33" [ref=e326] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=acf9c168-5a8b-42c2-8c75-8851b505f059
+                - cell "Archived" [ref=e327]:
+                  - generic [ref=e328]:
+                    - img [ref=e329]
+                    - generic [ref=e331]: Archived
+                - cell "Oct 13, 2026 · 17:25" [ref=e332]
+                - cell "2 KB" [ref=e333]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e334]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e335]:
+                  - generic [ref=e336]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v32 Archived Oct 13, 2026 · 17:25 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e337]:
+                - cell "v32" [ref=e338]:
+                  - link "v32" [ref=e339] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=04ca8204-f669-4cab-b53c-d7833632b891
+                - cell "Archived" [ref=e340]:
+                  - generic [ref=e341]:
+                    - img [ref=e342]
+                    - generic [ref=e344]: Archived
+                - cell "Oct 13, 2026 · 17:25" [ref=e345]
+                - cell "2 KB" [ref=e346]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e347]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e348]:
+                  - generic [ref=e349]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v31 Archived Oct 13, 2026 · 17:22 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e350]:
+                - cell "v31" [ref=e351]:
+                  - link "v31" [ref=e352] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=7fac8080-ea4c-43ee-ad4b-13883fc1b07a
+                - cell "Archived" [ref=e353]:
+                  - generic [ref=e354]:
+                    - img [ref=e355]
+                    - generic [ref=e357]: Archived
+                - cell "Oct 13, 2026 · 17:22" [ref=e358]
+                - cell "2 KB" [ref=e359]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e360]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e361]:
+                  - generic [ref=e362]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS.
+              - row "v30 Archived Oct 13, 2026 · 17:22 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e363]:
+                - cell "v30" [ref=e364]:
+                  - link "v30" [ref=e365] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=ce9b6b19-eb8f-4237-a7d9-3b619238740d
+                - cell "Archived" [ref=e366]:
+                  - generic [ref=e367]:
+                    - img [ref=e368]
+                    - generic [ref=e370]: Archived
+                - cell "Oct 13, 2026 · 17:22" [ref=e371]
+                - cell "2 KB" [ref=e372]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e373]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e374]:
+                  - generic [ref=e375]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v29 Archived Oct 13, 2026 · 17:22 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e376]:
+                - cell "v29" [ref=e377]:
+                  - link "v29" [ref=e378] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=564fe4f7-f6ba-4565-96b8-2cb0118b5a0f
+                - cell "Archived" [ref=e379]:
+                  - generic [ref=e380]:
+                    - img [ref=e381]
+                    - generic [ref=e383]: Archived
+                - cell "Oct 13, 2026 · 17:22" [ref=e384]
+                - cell "1 KB" [ref=e385]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e386]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e387]:
+                  - generic [ref=e388]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v28 Archived Oct 13, 2026 · 17:22 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e389]:
+                - cell "v28" [ref=e390]:
+                  - link "v28" [ref=e391] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=c0ef3873-7fb6-49d0-9269-826e006e4d50
+                - cell "Archived" [ref=e392]:
+                  - generic [ref=e393]:
+                    - img [ref=e394]
+                    - generic [ref=e396]: Archived
+                - cell "Oct 13, 2026 · 17:22" [ref=e397]
+                - cell "1 KB" [ref=e398]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e399]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e400]:
+                  - generic [ref=e401]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v27 Archived Oct 13, 2026 · 17:22 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e402]:
+                - cell "v27" [ref=e403]:
+                  - link "v27" [ref=e404] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=f35bd7cf-23f3-4eca-9776-3e2123b5396a
+                - cell "Archived" [ref=e405]:
+                  - generic [ref=e406]:
+                    - img [ref=e407]
+                    - generic [ref=e409]: Archived
+                - cell "Oct 13, 2026 · 17:22" [ref=e410]
+                - cell "2 KB" [ref=e411]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e412]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e413]:
+                  - generic [ref=e414]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v26 Archived Oct 13, 2026 · 17:22 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e415]:
+                - cell "v26" [ref=e416]:
+                  - link "v26" [ref=e417] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=15e76103-324c-4d9f-aa61-e67ab7efe594
+                - cell "Archived" [ref=e418]:
+                  - generic [ref=e419]:
+                    - img [ref=e420]
+                    - generic [ref=e422]: Archived
+                - cell "Oct 13, 2026 · 17:22" [ref=e423]
+                - cell "2 KB" [ref=e424]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e425]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e426]:
+                  - generic [ref=e427]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v25 Archived Oct 13, 2026 · 17:14 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e428]:
+                - cell "v25" [ref=e429]:
+                  - link "v25" [ref=e430] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=0acfa0bd-5a47-4802-b1f4-0a0802c05f0e
+                - cell "Archived" [ref=e431]:
+                  - generic [ref=e432]:
+                    - img [ref=e433]
+                    - generic [ref=e435]: Archived
+                - cell "Oct 13, 2026 · 17:14" [ref=e436]
+                - cell "2 KB" [ref=e437]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e438]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e439]:
+                  - generic [ref=e440]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS.
+              - row "v24 Archived Oct 13, 2026 · 17:14 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e441]:
+                - cell "v24" [ref=e442]:
+                  - link "v24" [ref=e443] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=5abeafb0-5210-4af7-b5a4-1db80402b710
+                - cell "Archived" [ref=e444]:
+                  - generic [ref=e445]:
+                    - img [ref=e446]
+                    - generic [ref=e448]: Archived
+                - cell "Oct 13, 2026 · 17:14" [ref=e449]
+                - cell "2 KB" [ref=e450]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e451]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e452]:
+                  - generic [ref=e453]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v23 Archived Oct 13, 2026 · 17:14 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e454]:
+                - cell "v23" [ref=e455]:
+                  - link "v23" [ref=e456] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=70d5c7ed-2c7e-4a03-871f-a1bac49cbe4f
+                - cell "Archived" [ref=e457]:
+                  - generic [ref=e458]:
+                    - img [ref=e459]
+                    - generic [ref=e461]: Archived
+                - cell "Oct 13, 2026 · 17:14" [ref=e462]
+                - cell "1 KB" [ref=e463]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e464]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e465]:
+                  - generic [ref=e466]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v22 Archived Oct 13, 2026 · 17:14 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e467]:
+                - cell "v22" [ref=e468]:
+                  - link "v22" [ref=e469] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=b6971493-8e34-4569-91f4-6637d066ba52
+                - cell "Archived" [ref=e470]:
+                  - generic [ref=e471]:
+                    - img [ref=e472]
+                    - generic [ref=e474]: Archived
+                - cell "Oct 13, 2026 · 17:14" [ref=e475]
+                - cell "1 KB" [ref=e476]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e477]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e478]:
+                  - generic [ref=e479]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v21 Archived Oct 13, 2026 · 17:14 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e480]:
+                - cell "v21" [ref=e481]:
+                  - link "v21" [ref=e482] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=a294f32e-4c1a-4ffe-b0b1-0865df30d7ce
+                - cell "Archived" [ref=e483]:
+                  - generic [ref=e484]:
+                    - img [ref=e485]
+                    - generic [ref=e487]: Archived
+                - cell "Oct 13, 2026 · 17:14" [ref=e488]
+                - cell "2 KB" [ref=e489]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e490]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e491]:
+                  - generic [ref=e492]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v20 Archived Oct 13, 2026 · 17:14 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e493]:
+                - cell "v20" [ref=e494]:
+                  - link "v20" [ref=e495] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=1a7019f1-b043-454b-886b-7701f4ed1338
+                - cell "Archived" [ref=e496]:
+                  - generic [ref=e497]:
+                    - img [ref=e498]
+                    - generic [ref=e500]: Archived
+                - cell "Oct 13, 2026 · 17:14" [ref=e501]
+                - cell "2 KB" [ref=e502]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e503]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e504]:
+                  - generic [ref=e505]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v19 Archived Oct 13, 2026 · 17:11 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e506]:
+                - cell "v19" [ref=e507]:
+                  - link "v19" [ref=e508] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=985b4566-a6e1-46ea-8995-23ea6976c513
+                - cell "Archived" [ref=e509]:
+                  - generic [ref=e510]:
+                    - img [ref=e511]
+                    - generic [ref=e513]: Archived
+                - cell "Oct 13, 2026 · 17:11" [ref=e514]
+                - cell "2 KB" [ref=e515]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e516]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e517]:
+                  - generic [ref=e518]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS.
+              - row "v18 Archived Oct 13, 2026 · 17:11 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e519]:
+                - cell "v18" [ref=e520]:
+                  - link "v18" [ref=e521] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=8ea736ad-8241-4963-ac9d-68293733c73f
+                - cell "Archived" [ref=e522]:
+                  - generic [ref=e523]:
+                    - img [ref=e524]
+                    - generic [ref=e526]: Archived
+                - cell "Oct 13, 2026 · 17:11" [ref=e527]
+                - cell "2 KB" [ref=e528]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e529]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e530]:
+                  - generic [ref=e531]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v17 Archived Oct 13, 2026 · 17:11 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e532]:
+                - cell "v17" [ref=e533]:
+                  - link "v17" [ref=e534] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=4aa36103-c15f-4d6d-a4ea-c0d5cb66200f
+                - cell "Archived" [ref=e535]:
+                  - generic [ref=e536]:
+                    - img [ref=e537]
+                    - generic [ref=e539]: Archived
+                - cell "Oct 13, 2026 · 17:11" [ref=e540]
+                - cell "1 KB" [ref=e541]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e542]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e543]:
+                  - generic [ref=e544]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v16 Archived Oct 13, 2026 · 17:10 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e545]:
+                - cell "v16" [ref=e546]:
+                  - link "v16" [ref=e547] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=47d24779-eb8a-49f3-a60b-f83a9e97d965
+                - cell "Archived" [ref=e548]:
+                  - generic [ref=e549]:
+                    - img [ref=e550]
+                    - generic [ref=e552]: Archived
+                - cell "Oct 13, 2026 · 17:10" [ref=e553]
+                - cell "1 KB" [ref=e554]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e555]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e556]:
+                  - generic [ref=e557]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v15 Archived Oct 13, 2026 · 17:10 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e558]:
+                - cell "v15" [ref=e559]:
+                  - link "v15" [ref=e560] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=fed2a80e-5b27-49c2-9863-82aa0745206c
+                - cell "Archived" [ref=e561]:
+                  - generic [ref=e562]:
+                    - img [ref=e563]
+                    - generic [ref=e565]: Archived
+                - cell "Oct 13, 2026 · 17:10" [ref=e566]
+                - cell "2 KB" [ref=e567]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e568]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e569]:
+                  - generic [ref=e570]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v14 Archived Oct 13, 2026 · 17:10 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e571]:
+                - cell "v14" [ref=e572]:
+                  - link "v14" [ref=e573] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=29e9a2ad-7ac8-4bfc-9dd2-b322a0b7eb4f
+                - cell "Archived" [ref=e574]:
+                  - generic [ref=e575]:
+                    - img [ref=e576]
+                    - generic [ref=e578]: Archived
+                - cell "Oct 13, 2026 · 17:10" [ref=e579]
+                - cell "2 KB" [ref=e580]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e581]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e582]:
+                  - generic [ref=e583]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v13 Archived Oct 13, 2026 · 17:02 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e584]:
+                - cell "v13" [ref=e585]:
+                  - link "v13" [ref=e586] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=c785ba38-8110-4750-8847-ab24af12a035
+                - cell "Archived" [ref=e587]:
+                  - generic [ref=e588]:
+                    - img [ref=e589]
+                    - generic [ref=e591]: Archived
+                - cell "Oct 13, 2026 · 17:02" [ref=e592]
+                - cell "2 KB" [ref=e593]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e594]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e595]:
+                  - generic [ref=e596]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS.
+              - row "v12 Archived Oct 13, 2026 · 17:02 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e597]:
+                - cell "v12" [ref=e598]:
+                  - link "v12" [ref=e599] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=6144a8fa-4727-47a4-952d-de74f6dd7991
+                - cell "Archived" [ref=e600]:
+                  - generic [ref=e601]:
+                    - img [ref=e602]
+                    - generic [ref=e604]: Archived
+                - cell "Oct 13, 2026 · 17:02" [ref=e605]
+                - cell "2 KB" [ref=e606]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e607]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e608]:
+                  - generic [ref=e609]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v11 Archived Oct 13, 2026 · 17:02 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e610]:
+                - cell "v11" [ref=e611]:
+                  - link "v11" [ref=e612] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=7aa6b79d-9c9d-4d5e-819d-05f46728529d
+                - cell "Archived" [ref=e613]:
+                  - generic [ref=e614]:
+                    - img [ref=e615]
+                    - generic [ref=e617]: Archived
+                - cell "Oct 13, 2026 · 17:02" [ref=e618]
+                - cell "1 KB" [ref=e619]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e620]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e621]:
+                  - generic [ref=e622]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v10 Archived Oct 13, 2026 · 17:01 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e623]:
+                - cell "v10" [ref=e624]:
+                  - link "v10" [ref=e625] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=7076c1dc-d44e-4b0b-b428-5cf0f02c24e1
+                - cell "Archived" [ref=e626]:
+                  - generic [ref=e627]:
+                    - img [ref=e628]
+                    - generic [ref=e630]: Archived
+                - cell "Oct 13, 2026 · 17:01" [ref=e631]
+                - cell "1 KB" [ref=e632]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e633]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e634]:
+                  - generic [ref=e635]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v9 Archived Oct 13, 2026 · 17:01 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e636]:
+                - cell "v9" [ref=e637]:
+                  - link "v9" [ref=e638] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=0462495a-03f8-4202-ad87-9b9725ae0a3e
+                - cell "Archived" [ref=e639]:
+                  - generic [ref=e640]:
+                    - img [ref=e641]
+                    - generic [ref=e643]: Archived
+                - cell "Oct 13, 2026 · 17:01" [ref=e644]
+                - cell "2 KB" [ref=e645]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e646]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e647]:
+                  - generic [ref=e648]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v8 Archived Oct 13, 2026 · 17:01 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e649]:
+                - cell "v8" [ref=e650]:
+                  - link "v8" [ref=e651] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=4450876e-c25b-4011-9ac9-71ce6addf8a7
+                - cell "Archived" [ref=e652]:
+                  - generic [ref=e653]:
+                    - img [ref=e654]
+                    - generic [ref=e656]: Archived
+                - cell "Oct 13, 2026 · 17:01" [ref=e657]
+                - cell "2 KB" [ref=e658]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e659]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e660]:
+                  - generic [ref=e661]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v7 Archived Oct 13, 2026 · 16:57 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e662]:
+                - cell "v7" [ref=e663]:
+                  - link "v7" [ref=e664] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=16b3156a-16f7-4208-84c7-3b27e2d2fa30
+                - cell "Archived" [ref=e665]:
+                  - generic [ref=e666]:
+                    - img [ref=e667]
+                    - generic [ref=e669]: Archived
+                - cell "Oct 13, 2026 · 16:57" [ref=e670]
+                - cell "2 KB" [ref=e671]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e672]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS." [ref=e673]:
+                  - generic [ref=e674]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS.
+              - row "v6 Archived Oct 13, 2026 · 16:57 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e675]:
+                - cell "v6" [ref=e676]:
+                  - link "v6" [ref=e677] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=560f1ea1-1213-4150-b695-c3b09485eada
+                - cell "Archived" [ref=e678]:
+                  - generic [ref=e679]:
+                    - img [ref=e680]
+                    - generic [ref=e682]: Archived
+                - cell "Oct 13, 2026 · 16:57" [ref=e683]
+                - cell "2 KB" [ref=e684]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e685]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload" [ref=e686]:
+                  - generic [ref=e687]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Browser acceptance upload
+              - row "v5 Archived Oct 13, 2026 · 16:57 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e688]:
+                - cell "v5" [ref=e689]:
+                  - link "v5" [ref=e690] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=65588ca9-b7f3-4f89-a325-bf17785194c7
+                - cell "Archived" [ref=e691]:
+                  - generic [ref=e692]:
+                    - img [ref=e693]
+                    - generic [ref=e695]: Archived
+                - cell "Oct 13, 2026 · 16:57" [ref=e696]
+                - cell "1 KB" [ref=e697]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e698]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile" [ref=e699]:
+                  - generic [ref=e700]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Uploaded meanwhile
+              - row "v4 Archived Oct 13, 2026 · 16:57 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e701]:
+                - cell "v4" [ref=e702]:
+                  - link "v4" [ref=e703] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=68da534d-7854-4992-83a5-7a997972f5c1
+                - cell "Archived" [ref=e704]:
+                  - generic [ref=e705]:
+                    - img [ref=e706]
+                    - generic [ref=e708]: Archived
+                - cell "Oct 13, 2026 · 16:57" [ref=e709]
+                - cell "1 KB" [ref=e710]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e711]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone" [ref=e712]:
+                  - generic [ref=e713]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Back to one zone
+              - row "v3 Archived Oct 13, 2026 · 16:57 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e714]:
+                - cell "v3" [ref=e715]:
+                  - link "v3" [ref=e716] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=f8105683-2a27-440a-b182-e8c102677b1b
+                - cell "Archived" [ref=e717]:
+                  - generic [ref=e718]:
+                    - img [ref=e719]
+                    - generic [ref=e721]: Archived
+                - cell "Oct 13, 2026 · 16:57" [ref=e722]
+                - cell "2 KB" [ref=e723]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e724]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half" [ref=e725]:
+                  - generic [ref=e726]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Replace the east half
+              - row "v2 Archived Oct 13, 2026 · 16:57 2 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e727]:
+                - cell "v2" [ref=e728]:
+                  - link "v2" [ref=e729] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=1a3c519b-8d2d-40a5-9367-8107d0d8993d
+                - cell "Archived" [ref=e730]:
+                  - generic [ref=e731]:
+                    - img [ref=e732]
+                    - generic [ref=e734]: Archived
+                - cell "Oct 13, 2026 · 16:57" [ref=e735]
+                - cell "2 KB" [ref=e736]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e737]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground" [ref=e738]:
+                  - generic [ref=e739]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Split the playground
+              - row "v1 Archived Oct 12, 2026 · 22:09 1 KB workspace-check-v1 · workspace-check-v1 Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Synthetic browser acceptance map" [ref=e740]:
+                - cell "v1" [ref=e741]:
+                  - link "v1" [ref=e742] [cursor=pointer]:
+                    - /url: /o/web-acceptance/p/play-study/sites/fall-creek/packages?package=1d6148a2-9717-44c4-82e0-a29259c26108
+                - cell "Archived" [ref=e743]:
+                  - generic [ref=e744]:
+                    - img [ref=e745]
+                    - generic [ref=e747]: Archived
+                - cell "Oct 12, 2026 · 22:09" [ref=e748]
+                - cell "1 KB" [ref=e749]
+                - cell "workspace-check-v1 · workspace-check-v1" [ref=e750]
+                - cell "Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Synthetic browser acceptance map" [ref=e751]:
+                  - generic [ref=e752]: Replaced by v49. Records collected on it keep it. Uploaded from QGIS. Synthetic browser acceptance map
+        - generic [ref=e753]:
+          - img [ref=e754]
+          - generic [ref=e756]:
+            - strong [ref=e757]: Deleting a map package is not available yet.
+            - text: To replace what observers download, upload a new version.
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e758]: Fall Creek test site map packages · DECA Mark
+```

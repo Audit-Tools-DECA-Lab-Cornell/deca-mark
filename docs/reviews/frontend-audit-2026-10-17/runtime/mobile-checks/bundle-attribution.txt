@@ -1,0 +1,85 @@
+bundle bytes (sum attributed incl. wrapper/unmapped): 6264552; JS file bytes: 6269081; sources: 4171
+unmapped (module wrappers, ids, dep arrays, newlines): 598.1 KB (9.8%)
+
+BY CATEGORY
+node_modules                    5031.7 KB   82.2%
+app source (src/, app/)          485.0 KB    7.9%
+other                              2.9 KB    0.0%
+
+TOP 35 PACKAGES / APP DIRS (minified JS bytes, pre-Hermes)
+lucide-react-native                             1543.9 KB   25.2%  1892 modules
+react-native-reanimated                          737.5 KB   12.1%  295 modules
+react-native                                     561.4 KB    9.2%  450 modules
+zod                                              493.1 KB    8.1%  95 modules
+expo-router                                      451.7 KB    7.4%  378 modules
+[app] src/features                               155.8 KB    2.5%  64 modules
+@supabase/auth-js                                121.7 KB    2.0%  18 modules
+react-native-gesture-handler                     103.1 KB    1.7%  83 modules
+react-native-svg                                 101.8 KB    1.7%  112 modules
+expo                                              96.4 KB    1.6%  49 modules
+[app] app/                                        95.3 KB    1.6%  36 modules
+react-native-worklets                             90.5 KB    1.5%  43 modules
+[app] src/ui                                      70.1 KB    1.1%  43 modules
+react-native-screens                              63.4 KB    1.0%  83 modules
+@maplibre/maplibre-react-native                   52.5 KB    0.9%  68 modules
+@react-native/virtualized-lists                   48.3 KB    0.8%  15 modules
+[app] src/packages                                40.9 KB    0.7%  26 modules
+ky                                                39.2 KB    0.6%  21 modules
+@supabase/realtime-js                             37.3 KB    0.6%  14 modules
+fflate                                            32.7 KB    0.5%  1 modules
+@noble/ciphers                                    29.1 KB    0.5%  3 modules
+expo-sqlite                                       27.0 KB    0.4%  14 modules
+@supabase/phoenix                                 25.2 KB    0.4%  1 modules
+[app] src/storage                                 23.9 KB    0.4%  15 modules
+@supabase/storage-js                              23.4 KB    0.4%  1 modules
+react-native-url-polyfill                         20.5 KB    0.3%  6 modules
+expo-file-system                                  20.0 KB    0.3%  18 modules
+[app] src/session                                 18.9 KB    0.3%  12 modules
+whatwg-url-minimum                                17.9 KB    0.3%  1 modules
+semver                                            17.6 KB    0.3%  21 modules
+@supabase/postgrest-js                            17.5 KB    0.3%  1 modules
+[app] src/maps                                    17.1 KB    0.3%  13 modules
+@expo/devtools                                    14.3 KB    0.2%  13 modules
+expo-modules-core                                 13.4 KB    0.2%  34 modules
+@supabase/supabase-js                             12.4 KB    0.2%  2 modules
+
+TOP 30 INDIVIDUAL MODULES
+    615.9 KB  /node_modules/lucide-react-native/dist/esm/lucide-react-native.mjs
+    116.8 KB  /node_modules/react-native/Libraries/Renderer/implementations/ReactFabric-prod.js
+     71.3 KB  /node_modules/@supabase/auth-js/dist/main/GoTrueClient.js
+     61.0 KB  /node_modules/expo/virtual/streams.js
+     46.2 KB  /node_modules/zod/v4/core/schemas.js
+     32.7 KB  /node_modules/fflate/esm/browser.js
+     32.3 KB  /node_modules/zod/v4/classic/schemas.js
+     29.1 KB  /node_modules/zod/v4/core/compile.js
+     25.9 KB  /node_modules/@react-native/virtualized-lists/Lists/VirtualizedList.js
+     25.2 KB  /node_modules/@supabase/phoenix/priv/static/phoenix.cjs.js
+     24.8 KB  /node_modules/react-native-reanimated/src/layoutReanimation/defaultAnimations/Zoom.ts
+     24.7 KB  /app/(dev)/gallery.tsx
+     23.4 KB  /node_modules/@supabase/storage-js/dist/index.cjs
+     21.1 KB  /node_modules/react-native-reanimated/src/animation/util.ts
+     19.9 KB  /node_modules/react-native-reanimated/src/layoutReanimation/defaultAnimations/Fade.ts
+     19.6 KB  /node_modules/react-native-reanimated/src/layoutReanimation/defaultAnimations/Flip.ts
+     19.6 KB  /node_modules/@noble/ciphers/aes.js
+     19.6 KB  /node_modules/react-native-url-polyfill/js/URL.js
+     19.2 KB  /node_modules/react-native-reanimated/src/layoutReanimation/defaultAnimations/Bounce.ts
+     19.2 KB  /node_modules/react-native-reanimated/src/layoutReanimation/defaultAnimations/Rotate.ts
+     18.9 KB  /node_modules/react-native-reanimated/src/Colors.ts
+     18.7 KB  /node_modules/react-native-reanimated/src/index.ts
+     17.9 KB  /node_modules/whatwg-url-minimum/dist/whatwg-url-minimum.mjs
+     17.5 KB  /node_modules/react-native/src/private/featureflags/ReactNativeFeatureFlags.js
+     17.5 KB  /node_modules/@supabase/postgrest-js/dist/index.cjs
+     16.8 KB  /node_modules/react-native-reanimated/src/animation/transformationMatrix/matrixUtils.tsx
+     16.7 KB  /node_modules/react-native-reanimated/src/animation/spring/spring.ts
+     16.1 KB  /node_modules/zod/v4/core/json-schema-processors.js
+     15.5 KB  /node_modules/ky/distribution/core/Ky.js
+     14.8 KB  /src/features/collect/CollectMap.tsx
+
+EXTRA
+lucide barrel (lucide-react-native.mjs): 615.9 KB across 1 modules
+lucide per-icon modules (dist/esm/icons/*): 922.4 KB across 1877 modules
+zod locales (v4/locales/*): 268.6 KB across 64 modules
+reanimated layoutReanimation (default animations etc.): 227.3 KB across 51 modules
+app/(dev)/* review-only routes: 29.8 KB across 3 modules
+src/features/preview + src/forms/fixtures: 11.7 KB across 12 modules
+expo/virtual/streams.js: 61.0 KB across 1 modules

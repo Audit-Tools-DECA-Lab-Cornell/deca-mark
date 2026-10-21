@@ -1,0 +1,734 @@
+[
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "#_r_8_ > .min-w-0",
+  "html": "<span class=\"min-w-0\">Coverage by zone</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Coverage by zone"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_8_\"] > .pt-6.gap-y-2.pb-4 > .gap-y-2.gap-x-4.flex-wr",
+  "html": "<div class=\"type-small text-ink-2\">Fall Creek test site · 8 observations</div>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Fall Creek test site · 8 observations"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_8_\"] > .pt-6.gap-y-2.pb-4 > .gap-y-2.gap-x-4.flex-wr",
+  "html": "<span>Open Fall Creek test site</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Open Fall Creek test site"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "text",
+  "html": "<text x=\"-98.45\" y=\"0\" dominant-baseline=\"central\" font-size=\"14.5\" font-weight=\"600\" fill",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": ".type-mono-data[aria-hidden=\"true\"]",
+  "html": "<span class=\"type-mono-data\" aria-hidden=\"true\">Map v49 · north ↑</span>",
+  "messageKey": "elmPartiallyObscuring",
+  "ratio": 0,
+  "text": "Map v49 · north ↑"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "tr > .text-left",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(2)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Standard"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(3)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Reliability"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(4)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Inventory"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(5)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Total"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(1) > .underline.decoration-1.hover\\:decoration-2",
+  "html": "<a class=\"text-ink underline decoration-1 underline-offset-4 hover:decoration-2\" href=\"/o/",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(2)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 4 "
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(3)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 2 "
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(4)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 2 "
+ },
+ {
+  "theme": "day",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(5)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 8 "
+ },
+ {
+  "theme": "day",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "#data-round",
+  "html": "<select id=\"data-round\" class=\"peer w-full rounded-...\">",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "day",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "label[for=\"data-search\"]",
+  "html": "<label for=\"data-search\" class=\"mb-2 type-small font-semibold text-ink\">Search loaded obse",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Search loaded observations"
+ },
+ {
+  "theme": "day",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "#data-search",
+  "html": "<input id=\"data-search\" class=\"peer w-full rounded-...\" placeholder=\"Label, observer, zon.",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "day",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "text",
+  "html": "<text x=\"-98.45\" y=\"0\" dominant-baseline=\"central\" font-size=\"14.5\" font-weight=\"600\" fill",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "day",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": ".type-body[aria-live=\"polite\"] > p",
+  "html": "<p class=\"text-ink-2\">Select a marker or a row to see which observation it is.</p>",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "day",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": ".gap-4.flex-col.flex > p:nth-child(4)",
+  "html": "<p class=\"type-small text-ink-2\">Drawn on map v1. v49 is current.</p>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Drawn on map v1. v49 is current."
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "#page-title",
+  "html": "<h1 id=\"page-title\" tabindex=\"-1\" class=\"min-w-0 text-ink type-page\">Fall Creek test site<",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Fall Creek test site"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".mt-2",
+  "html": "<div class=\"mt-2 type-body text-ink-2 lg:type-lead\">1 zone · 8 observations</div>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "1 zone · 8 observations"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "text",
+  "html": "<text x=\"-98.45\" y=\"0\" dominant-baseline=\"central\" font-size=\"14.5\" font-weight=\"600\" fill",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".type-mono-data[aria-hidden=\"true\"]",
+  "html": "<span class=\"type-mono-data\" aria-hidden=\"true\">Map v49 · north ↑</span>",
+  "messageKey": "elmPartiallyObscuring",
+  "ratio": 0,
+  "text": "Map v49 · north ↑"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "#_r_f_ > span",
+  "html": "<span class=\"min-w-0\">Zones</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zones"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".break-words",
+  "html": "<a class=\"text-ink underline decoration-1 underline-offset-4 hover:decoration-2 break-word",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".break-all",
+  "html": "<p class=\"mt-1 type-mono-data break-all text-ink-2\">A</p>",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": "A"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "#_r_g_ > span",
+  "html": "<span class=\"min-w-0\">Current map package</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Current map package"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_g_\"] > div:nth-child(2) > .gap-5.pt-4.pb-island-pad ",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Version</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Version"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_g_\"] > div:nth-child(2) > .gap-5.pt-4.pb-island-pad ",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Prepared</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Prepared"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-span-2.grid-cols-subgrid.first\\:pt-0:nth-child(3) > dt",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Size</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Size"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-span-2.grid-cols-subgrid.first\\:pt-0:nth-child(4) > dt",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Form version</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Form version"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-span-2.grid-cols-subgrid.first\\:pt-0:nth-child(5) > dt",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Inventory form</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Inventory form"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-start-1.row-start-1:nth-child(1)",
+  "html": "<span class=\"col-start-1 row-start-1\">Download</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Download"
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".gap-5.pt-4.pb-island-pad > p",
+  "html": "<p class=\"type-small text-ink-2\">Observers get this version the next time they make the si",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "day",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".pointer-coarse\\:relative > span",
+  "html": "<span>Package history</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Package history"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "#_r_8_ > .min-w-0",
+  "html": "<span class=\"min-w-0\">Coverage by zone</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Coverage by zone"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_8_\"] > .pt-6.gap-y-2.pb-4 > .gap-y-2.gap-x-4.flex-wr",
+  "html": "<div class=\"type-small text-ink-2\">Fall Creek test site · 8 observations</div>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Fall Creek test site · 8 observations"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_8_\"] > .pt-6.gap-y-2.pb-4 > .gap-y-2.gap-x-4.flex-wr",
+  "html": "<span>Open Fall Creek test site</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Open Fall Creek test site"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "text",
+  "html": "<text x=\"-98.45\" y=\"0\" dominant-baseline=\"central\" font-size=\"14.5\" font-weight=\"600\" fill",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": ".type-mono-data[aria-hidden=\"true\"]",
+  "html": "<span class=\"type-mono-data\" aria-hidden=\"true\">Map v49 · north ↑</span>",
+  "messageKey": "elmPartiallyObscuring",
+  "ratio": 0,
+  "text": "Map v49 · north ↑"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "tr > .text-left",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(2)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Standard"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(3)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Reliability"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(4)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Inventory"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "th:nth-child(5)",
+  "html": "<th scope=\"col\" class=\"h-9 px-3 py-2 align-middle type-mono-label text-ink-2 first:pl-isla",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Total"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(1) > .underline.decoration-1.hover\\:decoration-2",
+  "html": "<a class=\"text-ink underline decoration-1 underline-offset-4 hover:decoration-2\" href=\"/o/",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(2)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 4 "
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(3)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 2 "
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(4)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 2 "
+ },
+ {
+  "theme": "dusk",
+  "route": "overview",
+  "rule": "color-contrast",
+  "target": "td:nth-child(5)",
+  "html": "<td class=\"h-table-row border-t border-rule px-3 py-2 align-middle text-ink first:pl-islan",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": " 8 "
+ },
+ {
+  "theme": "dusk",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "#data-round",
+  "html": "<select id=\"data-round\" class=\"peer w-full rounded-...\">",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "dusk",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "label[for=\"data-search\"]",
+  "html": "<label for=\"data-search\" class=\"mb-2 type-small font-semibold text-ink\">Search loaded obse",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Search loaded observations"
+ },
+ {
+  "theme": "dusk",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "#data-search",
+  "html": "<input id=\"data-search\" class=\"peer w-full rounded-...\" placeholder=\"Label, observer, zon.",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "dusk",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": "text",
+  "html": "<text x=\"-98.45\" y=\"0\" dominant-baseline=\"central\" font-size=\"14.5\" font-weight=\"600\" fill",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "dusk",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": ".type-body[aria-live=\"polite\"] > p",
+  "html": "<p class=\"text-ink-2\">Select a marker or a row to see which observation it is.</p>",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "dusk",
+  "route": "data",
+  "rule": "color-contrast",
+  "target": ".gap-4.flex-col.flex > p:nth-child(4)",
+  "html": "<p class=\"type-small text-ink-2\">Drawn on map v1. v49 is current.</p>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Drawn on map v1. v49 is current."
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "#page-title",
+  "html": "<h1 id=\"page-title\" tabindex=\"-1\" class=\"min-w-0 text-ink type-page\">Fall Creek test site<",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Fall Creek test site"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".mt-2",
+  "html": "<div class=\"mt-2 type-body text-ink-2 lg:type-lead\">1 zone · 8 observations</div>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "1 zone · 8 observations"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "text",
+  "html": "<text x=\"-98.45\" y=\"0\" dominant-baseline=\"central\" font-size=\"14.5\" font-weight=\"600\" fill",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".type-mono-data[aria-hidden=\"true\"]",
+  "html": "<span class=\"type-mono-data\" aria-hidden=\"true\">Map v49 · north ↑</span>",
+  "messageKey": "elmPartiallyObscuring",
+  "ratio": 0,
+  "text": "Map v49 · north ↑"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "#_r_f_ > span",
+  "html": "<span class=\"min-w-0\">Zones</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zones"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".break-words",
+  "html": "<a class=\"text-ink underline decoration-1 underline-offset-4 hover:decoration-2 break-word",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Zone A · Whole playground"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".break-all",
+  "html": "<p class=\"mt-1 type-mono-data break-all text-ink-2\">A</p>",
+  "messageKey": "shortTextContent",
+  "ratio": 0,
+  "text": "A"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "#_r_g_ > span",
+  "html": "<span class=\"min-w-0\">Current map package</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Current map package"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_g_\"] > div:nth-child(2) > .gap-5.pt-4.pb-island-pad ",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Version</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Version"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": "section[aria-labelledby=\"_r_g_\"] > div:nth-child(2) > .gap-5.pt-4.pb-island-pad ",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Prepared</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Prepared"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-span-2.grid-cols-subgrid.first\\:pt-0:nth-child(3) > dt",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Size</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Size"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-span-2.grid-cols-subgrid.first\\:pt-0:nth-child(4) > dt",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Form version</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Form version"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-span-2.grid-cols-subgrid.first\\:pt-0:nth-child(5) > dt",
+  "html": "<dt class=\"min-w-0 text-ink-2\">Inventory form</dt>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Inventory form"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".col-start-1.row-start-1:nth-child(1)",
+  "html": "<span class=\"col-start-1 row-start-1\">Download</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Download"
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".gap-5.pt-4.pb-island-pad > p",
+  "html": "<p class=\"type-small text-ink-2\">Observers get this version the next time they make the si",
+  "messageKey": "bgOverlap",
+  "ratio": 0
+ },
+ {
+  "theme": "dusk",
+  "route": "site-detail",
+  "rule": "color-contrast",
+  "target": ".pointer-coarse\\:relative > span",
+  "html": "<span>Package history</span>",
+  "messageKey": "bgOverlap",
+  "ratio": 0,
+  "text": "Package history"
+ }
+]

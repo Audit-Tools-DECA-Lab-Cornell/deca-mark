@@ -1,0 +1,32 @@
+// Does CDP network emulation (as applied in measure.cjs: page-level CDP session on the browser context) delay loopback requests?
+// Uses a throwaway Node http server on 127.0.0.1 (no repo app, no auth). Loopback only.
+const http = require("http");
+const L = require("./lib.cjs");
+const BLOB = Buffer.alloc(300 * 1024, 97);
+const server = http.createServer((req, res) => {
+  if (req.url.startsWith("/blob")) { res.writeHead(200, { "content-type": "application/octet-stream", "cache-control": "no-store" }); res.end(BLOB); return; }
+  if (req.url.startsWith("/tiny")) { res.writeHead(200, { "content-type": "text/plain", "cache-control": "no-store" }); res.end("ok"); return; }
+  res.writeHead(200, { "content-type": "text/html", "cache-control": "no-store" }); res.end("<!doctype html><title>t</title><h1>hi</h1>");
+});
+(async () => {
+  await new Promise(r => server.listen(0, "127.0.0.1", r));
+  const base = "http://127.0.0.1:" + server.address().port;
+  const browser = await L.chromium.launch(L.launchOptions());
+  const out = [];
+  for (const mode of ["none", "page-session", "page-session+localhost-name"]) {
+    const ctx = await browser.newContext({ baseURL: base });
+    const page = await ctx.newPage();
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send("Network.enable");
+    if (mode !== "none") await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 150, downloadThroughput: 1.6e6 / 8, uploadThroughput: 750e3 / 8 });
+    const origin = mode.endsWith("localhost-name") ? base.replace("127.0.0.1", "localhost") : base;
+    await page.goto(origin + "/", { waitUntil: "load" });
+    const nav = await page.evaluate(() => { const n = performance.getEntriesByType("navigation")[0]; return { ttfb: Math.round(n.responseStart), end: Math.round(n.responseEnd), load: Math.round(n.loadEventEnd) }; });
+    const tiny = await page.evaluate(async () => { const o = []; for (let i = 0; i < 3; i++) { const t = performance.now(); const r = await fetch("/tiny?x=" + Math.random(), { cache: "no-store" }); await r.text(); o.push(Math.round(performance.now() - t)); } return o; });
+    const blob = await page.evaluate(async () => { const t = performance.now(); const r = await fetch("/blob?x=" + Math.random(), { cache: "no-store" }); await r.arrayBuffer(); return Math.round(performance.now() - t); });
+    const row = { mode, nav, tinyFetchMs: tiny, blob300KB_ms: blob };
+    out.push(row); console.log(JSON.stringify(row));
+    await ctx.close();
+  }
+  await browser.close(); server.close();
+})().catch(e => { console.error("ERR", e.message); process.exit(1); });

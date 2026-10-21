@@ -1,0 +1,13 @@
+--- 30bcba6 2026-10-14 23:52:17 -0400 update mobile version
+
+ mobile/app.config.ts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+--- 6da4359 2026-10-11 13:06:04 -0400 Implement versioned zone package authoring and validation
+
+ mobile/app.config.ts  |    4 +-
+ mobile/pnpm-lock.yaml | 1169 ++++++++++++++++++++++++-------------------------
+ 2 files changed, 586 insertions(+), 587 deletions(-)
+--- 6a9028e 2026-10-10 21:07:38 -0400 format screenshot files, update ios package name
+
+ mobile/app.config.ts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)

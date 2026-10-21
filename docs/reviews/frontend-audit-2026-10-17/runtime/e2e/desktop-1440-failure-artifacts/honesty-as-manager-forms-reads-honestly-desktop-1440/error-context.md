@@ -1,0 +1,71 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to content" [ref=e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "DECA Mark" [ref=e7] [cursor=pointer]:
+          - /url: /o
+          - img [ref=e8]
+          - generic [ref=e9]: DECA Mark
+        - generic [ref=e10]:
+          - 'button "Organization: Web acceptance lab" [ref=e12]':
+            - generic [ref=e13]: Web acceptance lab
+            - img [ref=e14]
+          - generic [ref=e16]: /
+          - 'button "Project: Play study acceptance" [ref=e18]':
+            - generic [ref=e19]: Play study acceptance
+            - img [ref=e20]
+        - generic [ref=e22]:
+          - button "Search or jump to Command K" [ref=e23]:
+            - img [ref=e24]
+            - generic [ref=e27]: Search or jump to
+            - generic [ref=e29]:
+              - generic [ref=e30]: ⌘K
+              - generic [ref=e31]: Command K
+          - generic [ref=e32]: Manager
+          - button "Account, Local manager" [ref=e33]:
+            - generic [ref=e34]: QA
+    - navigation "Project" [ref=e36]:
+      - list [ref=e39]:
+        - listitem [ref=e40]:
+          - link "Overview" [ref=e41] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study
+        - listitem [ref=e42]:
+          - link "Data" [ref=e43] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/data
+        - listitem [ref=e44]:
+          - link "Sites" [ref=e45] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/sites
+        - listitem [ref=e46]:
+          - link "Forms" [ref=e47] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/forms
+        - listitem [ref=e48]:
+          - link "Team" [ref=e49] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/team
+        - listitem [ref=e50]:
+          - link "QGIS" [ref=e51] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/qgis
+        - listitem [ref=e52]:
+          - link "Reports" [ref=e53] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/reports
+        - listitem [ref=e54]:
+          - link "Settings" [ref=e55] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/settings
+    - main [ref=e56]:
+      - generic [ref=e57]:
+        - heading "Forms" [level=1] [ref=e62]
+        - alert [ref=e65]:
+          - img [ref=e67]
+          - heading "Couldn't load the forms." [level=3] [ref=e69]
+          - generic [ref=e70]: DECA Mark could not finish this. Try again in a few minutes.
+          - button "Try again" [ref=e72]:
+            - img [ref=e73]
+            - generic [ref=e77]: Try again
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e78]
+```

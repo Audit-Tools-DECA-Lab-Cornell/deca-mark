@@ -1,0 +1,3911 @@
+{
+ "chromium": "141.0.7390.37",
+ "chains": [
+  {
+   "ws": "web",
+   "rep": 0,
+   "passes": [
+    [
+     {
+      "name": "overview->data",
+      "rscRT": [
+       {
+        "enc": 3135,
+        "dec": 14160,
+        "ttfb": 6.5,
+        "dur": 116.89999997615814,
+        "start": 1354
+       }
+      ],
+      "rscEncKB": 3.1,
+      "rscDecKB": 13.8,
+      "rscServerMs": 7,
+      "rscTotalMs": 117,
+      "usableMs": 353,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.5,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 93.9,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data 3545B"
+      ]
+     },
+     {
+      "name": "data->observation",
+      "rscRT": [
+       {
+        "enc": 5257,
+        "dec": 17007,
+        "ttfb": 7.600000023841858,
+        "dur": 70.39999997615814,
+        "start": 2443.199999988079
+       }
+      ],
+      "rscEncKB": 5.1,
+      "rscDecKB": 16.6,
+      "rscServerMs": 8,
+      "rscTotalMs": 70,
+      "usableMs": 88,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 5.6,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 7.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data/<uuid> 5688B"
+      ]
+     },
+     {
+      "name": "observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 19,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "data->sites",
+      "rscRT": [
+       {
+        "enc": 2988,
+        "dec": 9039,
+        "ttfb": 11.400000035762787,
+        "dur": 70.29999995231628,
+        "start": 3274
+       }
+      ],
+      "rscEncKB": 2.9,
+      "rscDecKB": 8.8,
+      "rscServerMs": 11,
+      "rscTotalMs": 70,
+      "usableMs": 332,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.3,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 15.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites 3386B"
+      ]
+     },
+     {
+      "name": "sites->site",
+      "rscRT": [
+       {
+        "enc": 2855,
+        "dec": 7401,
+        "ttfb": 7.400000035762787,
+        "dur": 87.69999998807907,
+        "start": 4070
+       }
+      ],
+      "rscEncKB": 2.8,
+      "rscDecKB": 7.2,
+      "rscServerMs": 7,
+      "rscTotalMs": 88,
+      "usableMs": 120,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 85.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek 0B"
+      ]
+     },
+     {
+      "name": "site->zones",
+      "rscRT": [
+       {
+        "enc": 49531,
+        "dec": 121768,
+        "ttfb": 4.699999988079071,
+        "dur": 148.79999995231628,
+        "start": 4902
+       }
+      ],
+      "rscEncKB": 48.4,
+      "rscDecKB": 118.9,
+      "rscServerMs": 5,
+      "rscTotalMs": 149,
+      "usableMs": 173,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 49.2,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 16.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek/zones 50331B"
+      ]
+     },
+     {
+      "name": "site/zones->forms",
+      "rscRT": [
+       {
+        "enc": 1798,
+        "dec": 4156,
+        "ttfb": 5.399999976158142,
+        "dur": 63.30000001192093,
+        "start": 5778.599999964237
+       }
+      ],
+      "rscEncKB": 1.8,
+      "rscDecKB": 4.1,
+      "rscServerMs": 5,
+      "rscTotalMs": 63,
+      "usableMs": 327,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 8.5,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listForms:500",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/forms 0B"
+      ]
+     }
+    ],
+    [
+     {
+      "name": "overview->data",
+      "rscRT": [
+       {
+        "enc": 3135,
+        "dec": 14160,
+        "ttfb": 5.099999964237213,
+        "dur": 106.19999998807907,
+        "start": 7526
+       }
+      ],
+      "rscEncKB": 3.1,
+      "rscDecKB": 13.8,
+      "rscServerMs": 5,
+      "rscTotalMs": 106,
+      "usableMs": 320,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.5,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data 3545B"
+      ]
+     },
+     {
+      "name": "data->observation",
+      "rscRT": [
+       {
+        "enc": 5258,
+        "dec": 17007,
+        "ttfb": 5.900000035762787,
+        "dur": 70.10000002384186,
+        "start": 8376.899999976158
+       }
+      ],
+      "rscEncKB": 5.1,
+      "rscDecKB": 16.6,
+      "rscServerMs": 6,
+      "rscTotalMs": 70,
+      "usableMs": 81,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 5.6,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data/<uuid> 5689B"
+      ]
+     },
+     {
+      "name": "observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 16,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "data->sites",
+      "rscRT": [
+       {
+        "enc": 2989,
+        "dec": 9039,
+        "ttfb": 7.399999976158142,
+        "dur": 86.90000003576279,
+        "start": 9235.299999952316
+       }
+      ],
+      "rscEncKB": 2.9,
+      "rscDecKB": 8.8,
+      "rscServerMs": 7,
+      "rscTotalMs": 87,
+      "usableMs": 326,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites 0B"
+      ]
+     },
+     {
+      "name": "sites->site",
+      "rscRT": [
+       {
+        "enc": 2853,
+        "dec": 7401,
+        "ttfb": 4.699999988079071,
+        "dur": 83,
+        "start": 10067.099999964237
+       }
+      ],
+      "rscEncKB": 2.8,
+      "rscDecKB": 7.2,
+      "rscServerMs": 5,
+      "rscTotalMs": 83,
+      "usableMs": 93,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek 0B"
+      ]
+     },
+     {
+      "name": "site->zones",
+      "rscRT": [
+       {
+        "enc": 49530,
+        "dec": 121768,
+        "ttfb": 9.099999964237213,
+        "dur": 177.20000004768372,
+        "start": 10897.299999952316
+       }
+      ],
+      "rscEncKB": 48.4,
+      "rscDecKB": 118.9,
+      "rscServerMs": 9,
+      "rscTotalMs": 177,
+      "usableMs": 197,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek/zones 0B"
+      ]
+     },
+     {
+      "name": "site/zones->forms",
+      "rscRT": [
+       {
+        "enc": 1798,
+        "dec": 4156,
+        "ttfb": 4.699999988079071,
+        "dur": 64.79999995231628,
+        "start": 11795
+       }
+      ],
+      "rscEncKB": 1.8,
+      "rscDecKB": 4.1,
+      "rscServerMs": 5,
+      "rscTotalMs": 65,
+      "usableMs": 327,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listForms:500",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/forms 0B"
+      ]
+     }
+    ]
+   ]
+  },
+  {
+   "ws": "web",
+   "rep": 1,
+   "passes": [
+    [
+     {
+      "name": "overview->data",
+      "rscRT": [
+       {
+        "enc": 3135,
+        "dec": 14160,
+        "ttfb": 10.399999976158142,
+        "dur": 124.69999998807907,
+        "start": 1319.5
+       }
+      ],
+      "rscEncKB": 3.1,
+      "rscDecKB": 13.8,
+      "rscServerMs": 10,
+      "rscTotalMs": 125,
+      "usableMs": 345,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.5,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 93.9,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data 3545B"
+      ]
+     },
+     {
+      "name": "data->observation",
+      "rscRT": [
+       {
+        "enc": 5261,
+        "dec": 17007,
+        "ttfb": 4.800000011920929,
+        "dur": 84.5,
+        "start": 2402.599999964237
+       }
+      ],
+      "rscEncKB": 5.1,
+      "rscDecKB": 16.6,
+      "rscServerMs": 5,
+      "rscTotalMs": 85,
+      "usableMs": 105,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 7.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data/<uuid> 0B"
+      ]
+     },
+     {
+      "name": "observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 14,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "data->sites",
+      "rscRT": [
+       {
+        "enc": 2991,
+        "dec": 9039,
+        "ttfb": 4.199999988079071,
+        "dur": 60,
+        "start": 3246.899999976158
+       }
+      ],
+      "rscEncKB": 2.9,
+      "rscDecKB": 8.8,
+      "rscServerMs": 4,
+      "rscTotalMs": 60,
+      "usableMs": 328,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.3,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 15.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites 3389B"
+      ]
+     },
+     {
+      "name": "sites->site",
+      "rscRT": [
+       {
+        "enc": 2857,
+        "dec": 7401,
+        "ttfb": 4.699999988079071,
+        "dur": 90.10000002384186,
+        "start": 4049.2999999523163
+       }
+      ],
+      "rscEncKB": 2.8,
+      "rscDecKB": 7.2,
+      "rscServerMs": 5,
+      "rscTotalMs": 90,
+      "usableMs": 112,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.2,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 85.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek 3267B"
+      ]
+     },
+     {
+      "name": "site->zones",
+      "rscRT": [
+       {
+        "enc": 49530,
+        "dec": 121768,
+        "ttfb": 4.800000011920929,
+        "dur": 169.39999997615814,
+        "start": 4860.899999976158
+       }
+      ],
+      "rscEncKB": 48.4,
+      "rscDecKB": 118.9,
+      "rscServerMs": 5,
+      "rscTotalMs": 169,
+      "usableMs": 191,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 16.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek/zones 0B"
+      ]
+     },
+     {
+      "name": "site/zones->forms",
+      "rscRT": [
+       {
+        "enc": 1798,
+        "dec": 4156,
+        "ttfb": 4.899999976158142,
+        "dur": 62.69999998807907,
+        "start": 5756.5
+       }
+      ],
+      "rscEncKB": 1.8,
+      "rscDecKB": 4.1,
+      "rscServerMs": 5,
+      "rscTotalMs": 63,
+      "usableMs": 333,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 8.5,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listForms:500",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/forms 0B"
+      ]
+     }
+    ],
+    [
+     {
+      "name": "overview->data",
+      "rscRT": [
+       {
+        "enc": 3136,
+        "dec": 14160,
+        "ttfb": 5.199999988079071,
+        "dur": 102.10000002384186,
+        "start": 7537.799999952316
+       }
+      ],
+      "rscEncKB": 3.1,
+      "rscDecKB": 13.8,
+      "rscServerMs": 5,
+      "rscTotalMs": 102,
+      "usableMs": 323,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.5,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data 3546B"
+      ]
+     },
+     {
+      "name": "data->observation",
+      "rscRT": [
+       {
+        "enc": 5258,
+        "dec": 17007,
+        "ttfb": 8.700000047683716,
+        "dur": 72.70000004768372,
+        "start": 8358.299999952316
+       }
+      ],
+      "rscEncKB": 5.1,
+      "rscDecKB": 16.6,
+      "rscServerMs": 9,
+      "rscTotalMs": 73,
+      "usableMs": 83,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data/<uuid> 0B"
+      ]
+     },
+     {
+      "name": "observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 15,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "data->sites",
+      "rscRT": [
+       {
+        "enc": 2992,
+        "dec": 9039,
+        "ttfb": 4.800000011920929,
+        "dur": 75.09999996423721,
+        "start": 9219
+       }
+      ],
+      "rscEncKB": 2.9,
+      "rscDecKB": 8.8,
+      "rscServerMs": 5,
+      "rscTotalMs": 75,
+      "usableMs": 327,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites 0B"
+      ]
+     },
+     {
+      "name": "sites->site",
+      "rscRT": [
+       {
+        "enc": 2856,
+        "dec": 7401,
+        "ttfb": 5.100000023841858,
+        "dur": 76.69999998807907,
+        "start": 10010.899999976158
+       }
+      ],
+      "rscEncKB": 2.8,
+      "rscDecKB": 7.2,
+      "rscServerMs": 5,
+      "rscTotalMs": 77,
+      "usableMs": 86,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek 0B"
+      ]
+     },
+     {
+      "name": "site->zones",
+      "rscRT": [
+       {
+        "enc": 49530,
+        "dec": 121768,
+        "ttfb": 5.300000011920929,
+        "dur": 178.89999997615814,
+        "start": 10832.899999976158
+       }
+      ],
+      "rscEncKB": 48.4,
+      "rscDecKB": 118.9,
+      "rscServerMs": 5,
+      "rscTotalMs": 179,
+      "usableMs": 198,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek/zones 0B"
+      ]
+     },
+     {
+      "name": "site/zones->forms",
+      "rscRT": [
+       {
+        "enc": 1797,
+        "dec": 4156,
+        "ttfb": 5.300000011920929,
+        "dur": 64.10000002384186,
+        "start": 11724.099999964237
+       }
+      ],
+      "rscEncKB": 1.8,
+      "rscDecKB": 4.1,
+      "rscServerMs": 5,
+      "rscTotalMs": 64,
+      "usableMs": 332,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listForms:500",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/forms 0B"
+      ]
+     }
+    ]
+   ]
+  },
+  {
+   "ws": "web",
+   "rep": 2,
+   "passes": [
+    [
+     {
+      "name": "overview->data",
+      "rscRT": [
+       {
+        "enc": 3136,
+        "dec": 14160,
+        "ttfb": 10.5,
+        "dur": 136.29999995231628,
+        "start": 1349.1000000238419
+       }
+      ],
+      "rscEncKB": 3.1,
+      "rscDecKB": 13.8,
+      "rscServerMs": 11,
+      "rscTotalMs": 136,
+      "usableMs": 339,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 93.9,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data 0B"
+      ]
+     },
+     {
+      "name": "data->observation",
+      "rscRT": [
+       {
+        "enc": 5258,
+        "dec": 17007,
+        "ttfb": 4.700000047683716,
+        "dur": 85.19999998807907,
+        "start": 2421.800000011921
+       }
+      ],
+      "rscEncKB": 5.1,
+      "rscDecKB": 16.6,
+      "rscServerMs": 5,
+      "rscTotalMs": 85,
+      "usableMs": 101,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 5.6,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 7.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data/<uuid> 5689B"
+      ]
+     },
+     {
+      "name": "observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 20,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "data->sites",
+      "rscRT": [
+       {
+        "enc": 2989,
+        "dec": 9039,
+        "ttfb": 4.200000047683716,
+        "dur": 58.30000001192093,
+        "start": 3301
+       }
+      ],
+      "rscEncKB": 2.9,
+      "rscDecKB": 8.8,
+      "rscServerMs": 4,
+      "rscTotalMs": 58,
+      "usableMs": 335,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.3,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 15.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites 3387B"
+      ]
+     },
+     {
+      "name": "sites->site",
+      "rscRT": [
+       {
+        "enc": 2856,
+        "dec": 7401,
+        "ttfb": 6.100000023841858,
+        "dur": 89.90000003576279,
+        "start": 4097.899999976158
+       }
+      ],
+      "rscEncKB": 2.8,
+      "rscDecKB": 7.2,
+      "rscServerMs": 6,
+      "rscTotalMs": 90,
+      "usableMs": 110,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 85.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek 0B"
+      ]
+     },
+     {
+      "name": "site->zones",
+      "rscRT": [
+       {
+        "enc": 49531,
+        "dec": 121768,
+        "ttfb": 6.100000023841858,
+        "dur": 204.30000001192093,
+        "start": 4913
+       }
+      ],
+      "rscEncKB": 48.4,
+      "rscDecKB": 118.9,
+      "rscServerMs": 6,
+      "rscTotalMs": 204,
+      "usableMs": 228,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 49.2,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 16.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek/zones 50331B"
+      ]
+     },
+     {
+      "name": "site/zones->forms",
+      "rscRT": [
+       {
+        "enc": 1798,
+        "dec": 4156,
+        "ttfb": 4.899999976158142,
+        "dur": 73.69999998807907,
+        "start": 5855.5
+       }
+      ],
+      "rscEncKB": 1.8,
+      "rscDecKB": 4.1,
+      "rscServerMs": 5,
+      "rscTotalMs": 74,
+      "usableMs": 331,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 8.5,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "listForms:500",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/forms 0B"
+      ]
+     }
+    ],
+    [
+     {
+      "name": "overview->data",
+      "rscRT": [
+       {
+        "enc": 3133,
+        "dec": 14160,
+        "ttfb": 6.099999964237213,
+        "dur": 126.39999997615814,
+        "start": 7641.100000023842
+       }
+      ],
+      "rscEncKB": 3.1,
+      "rscDecKB": 13.8,
+      "rscServerMs": 6,
+      "rscTotalMs": 126,
+      "usableMs": 328,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data 0B"
+      ]
+     },
+     {
+      "name": "data->observation",
+      "rscRT": [
+       {
+        "enc": 5259,
+        "dec": 17007,
+        "ttfb": 5.900000035762787,
+        "dur": 78.10000002384186,
+        "start": 8473.899999976158
+       }
+      ],
+      "rscEncKB": 5.1,
+      "rscDecKB": 16.6,
+      "rscServerMs": 6,
+      "rscTotalMs": 78,
+      "usableMs": 96,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 5.6,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/data/<uuid> 5690B"
+      ]
+     },
+     {
+      "name": "observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 12,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "data->sites",
+      "rscRT": [
+       {
+        "enc": 2991,
+        "dec": 9039,
+        "ttfb": 6.899999976158142,
+        "dur": 64.10000002384186,
+        "start": 9309.199999988079
+       }
+      ],
+      "rscEncKB": 2.9,
+      "rscDecKB": 8.8,
+      "rscServerMs": 7,
+      "rscTotalMs": 64,
+      "usableMs": 327,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites 0B"
+      ]
+     },
+     {
+      "name": "sites->site",
+      "rscRT": [
+       {
+        "enc": 2856,
+        "dec": 7401,
+        "ttfb": 4.400000035762787,
+        "dur": 73.19999998807907,
+        "start": 10100.199999988079
+       }
+      ],
+      "rscEncKB": 2.8,
+      "rscDecKB": 7.2,
+      "rscServerMs": 4,
+      "rscTotalMs": 73,
+      "usableMs": 86,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek 0B"
+      ]
+     },
+     {
+      "name": "site->zones",
+      "rscRT": [
+       {
+        "enc": 49530,
+        "dec": 121768,
+        "ttfb": 7.199999988079071,
+        "dur": 193.10000002384186,
+        "start": 10880.899999976158
+       }
+      ],
+      "rscEncKB": 48.4,
+      "rscDecKB": 118.9,
+      "rscServerMs": 7,
+      "rscTotalMs": 193,
+      "usableMs": 213,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 49.2,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/sites/fall-creek/zones 50330B"
+      ]
+     },
+     {
+      "name": "site/zones->forms",
+      "rscRT": [
+       {
+        "enc": 1797,
+        "dec": 4156,
+        "ttfb": 5.100000023841858,
+        "dur": 59.59999996423721,
+        "start": 11794.800000011921
+       }
+      ],
+      "rscEncKB": 1.8,
+      "rscDecKB": 4.1,
+      "rscServerMs": 5,
+      "rscTotalMs": 60,
+      "usableMs": 324,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 4,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listForms:500",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/web-acceptance/p/play-study/forms 0B"
+      ]
+     }
+    ]
+   ]
+  },
+  {
+   "ws": "zone",
+   "rep": 0,
+   "passes": [
+    [
+     {
+      "name": "Z overview->data(500 rows)",
+      "rscRT": [
+       {
+        "enc": 13105,
+        "dec": 428680,
+        "ttfb": 6.199999988079071,
+        "dur": 542.1000000238419,
+        "start": 1657
+       }
+      ],
+      "rscEncKB": 12.8,
+      "rscDecKB": 418.6,
+      "rscServerMs": 6,
+      "rscTotalMs": 542,
+      "usableMs": 733,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 13.2,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 93.9,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data 13521B"
+      ]
+     },
+     {
+      "name": "Z data->observation",
+      "rscRT": [
+       {
+        "enc": 5594,
+        "dec": 17919,
+        "ttfb": 6.199999988079071,
+        "dur": 150.30000001192093,
+        "start": 3123.300000011921
+       }
+      ],
+      "rscEncKB": 5.5,
+      "rscDecKB": 17.5,
+      "rscServerMs": 6,
+      "rscTotalMs": 150,
+      "usableMs": 178,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 5.9,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 7.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data/<uuid> 6031B"
+      ]
+     },
+     {
+      "name": "Z observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 149,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "Z data->sites(28)",
+      "rscRT": [
+       {
+        "enc": 6149,
+        "dec": 32519,
+        "ttfb": 7.699999988079071,
+        "dur": 141.39999997615814,
+        "start": 4203.600000023842
+       }
+      ],
+      "rscEncKB": 6,
+      "rscDecKB": 31.8,
+      "rscServerMs": 8,
+      "rscTotalMs": 141,
+      "usableMs": 411,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 6.4,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 15.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 9,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites 6548B"
+      ]
+     },
+     {
+      "name": "Z sites->site",
+      "rscRT": [
+       {
+        "enc": 2783,
+        "dec": 7041,
+        "ttfb": 7.199999988079071,
+        "dur": 213.10000002384186,
+        "start": 5076.5
+       }
+      ],
+      "rscEncKB": 2.7,
+      "rscDecKB": 6.9,
+      "rscServerMs": 7,
+      "rscTotalMs": 213,
+      "usableMs": 238,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.1,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 85.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site 3193B"
+      ]
+     },
+     {
+      "name": "Z site->zones",
+      "rscRT": [
+       {
+        "enc": 8230,
+        "dec": 30553,
+        "ttfb": 6.800000011920929,
+        "dur": 191.0999999642372,
+        "start": 6018.900000035763
+       }
+      ],
+      "rscEncKB": 8,
+      "rscDecKB": 29.8,
+      "rscServerMs": 7,
+      "rscTotalMs": 191,
+      "usableMs": 211,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 8.5,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 16.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 8690B"
+      ]
+     },
+     {
+      "name": "Z zones->draft editor",
+      "rscRT": [
+       {
+        "enc": 2571,
+        "dec": 7399,
+        "ttfb": 5.5,
+        "dur": 170.30000001192093,
+        "start": 6946.300000011921
+       }
+      ],
+      "rscEncKB": 2.5,
+      "rscDecKB": 7.2,
+      "rscServerMs": 6,
+      "rscTotalMs": 170,
+      "usableMs": 254,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 2.9,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 5,
+      "scriptKB": 114.3,
+      "api8001": 2,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "getZoneDraft:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200",
+       "undefined:200",
+       "getZoneDraft:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 2982B"
+      ]
+     }
+    ],
+    [
+     {
+      "name": "Z overview->data(500 rows)",
+      "rscRT": [
+       {
+        "enc": 13105,
+        "dec": 428680,
+        "ttfb": 5.300000011920929,
+        "dur": 482.9000000357628,
+        "start": 9143.5
+       }
+      ],
+      "rscEncKB": 12.8,
+      "rscDecKB": 418.6,
+      "rscServerMs": 5,
+      "rscTotalMs": 483,
+      "usableMs": 618,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data 0B"
+      ]
+     },
+     {
+      "name": "Z data->observation",
+      "rscRT": [
+       {
+        "enc": 5592,
+        "dec": 17919,
+        "ttfb": 4.300000011920929,
+        "dur": 139.5999999642372,
+        "start": 10362.900000035763
+       }
+      ],
+      "rscEncKB": 5.5,
+      "rscDecKB": 17.5,
+      "rscServerMs": 4,
+      "rscTotalMs": 140,
+      "usableMs": 163,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "getProject:200",
+       "downloadPackageArchive:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data/<uuid> 0B"
+      ]
+     },
+     {
+      "name": "Z observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 130,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "Z data->sites(28)",
+      "rscRT": [
+       {
+        "enc": 6146,
+        "dec": 32519,
+        "ttfb": 4.599999964237213,
+        "dur": 137.19999998807907,
+        "start": 11427.700000047684
+       }
+      ],
+      "rscEncKB": 6,
+      "rscDecKB": 31.8,
+      "rscServerMs": 5,
+      "rscTotalMs": 137,
+      "usableMs": 389,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 9,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites 0B"
+      ]
+     },
+     {
+      "name": "Z sites->site",
+      "rscRT": [
+       {
+        "enc": 2782,
+        "dec": 7041,
+        "ttfb": 6.899999976158142,
+        "dur": 178.80000001192093,
+        "start": 12281
+       }
+      ],
+      "rscEncKB": 2.7,
+      "rscDecKB": 6.9,
+      "rscServerMs": 7,
+      "rscTotalMs": 179,
+      "usableMs": 190,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site 0B"
+      ]
+     },
+     {
+      "name": "Z site->zones",
+      "rscRT": [
+       {
+        "enc": 8233,
+        "dec": 30553,
+        "ttfb": 7.100000023841858,
+        "dur": 222.9000000357628,
+        "start": 13206.800000011921
+       }
+      ],
+      "rscEncKB": 8,
+      "rscDecKB": 29.8,
+      "rscServerMs": 7,
+      "rscTotalMs": 223,
+      "usableMs": 241,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 8.5,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 8693B"
+      ]
+     },
+     {
+      "name": "Z zones->draft editor",
+      "rscRT": [
+       {
+        "enc": 2570,
+        "dec": 7399,
+        "ttfb": 9.100000023841858,
+        "dur": 191.10000002384186,
+        "start": 14159.5
+       }
+      ],
+      "rscEncKB": 2.5,
+      "rscDecKB": 7.2,
+      "rscServerMs": 9,
+      "rscTotalMs": 191,
+      "usableMs": 242,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 1,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "getZoneDraft:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200",
+       "getZoneDraft:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 0B"
+      ]
+     }
+    ]
+   ]
+  },
+  {
+   "ws": "zone",
+   "rep": 1,
+   "passes": [
+    [
+     {
+      "name": "Z overview->data(500 rows)",
+      "rscRT": [
+       {
+        "enc": 13102,
+        "dec": 428680,
+        "ttfb": 6.399999976158142,
+        "dur": 493.60000002384186,
+        "start": 1548.699999988079
+       }
+      ],
+      "rscEncKB": 12.8,
+      "rscDecKB": 418.6,
+      "rscServerMs": 6,
+      "rscTotalMs": 494,
+      "usableMs": 685,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 13.2,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 93.9,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data 13518B"
+      ]
+     },
+     {
+      "name": "Z data->observation",
+      "rscRT": [
+       {
+        "enc": 5592,
+        "dec": 17919,
+        "ttfb": 11,
+        "dur": 126,
+        "start": 2963.399999976158
+       }
+      ],
+      "rscEncKB": 5.5,
+      "rscDecKB": 17.5,
+      "rscServerMs": 11,
+      "rscTotalMs": 126,
+      "usableMs": 152,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 5.9,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 7.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data/<uuid> 6029B"
+      ]
+     },
+     {
+      "name": "Z observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 152,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "Z data->sites(28)",
+      "rscRT": [
+       {
+        "enc": 6147,
+        "dec": 32519,
+        "ttfb": 5.300000011920929,
+        "dur": 136.79999995231628,
+        "start": 4007.100000023842
+       }
+      ],
+      "rscEncKB": 6,
+      "rscDecKB": 31.8,
+      "rscServerMs": 5,
+      "rscTotalMs": 137,
+      "usableMs": 395,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 6.4,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 15.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 9,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites 6546B"
+      ]
+     },
+     {
+      "name": "Z sites->site",
+      "rscRT": [
+       {
+        "enc": 2785,
+        "dec": 7041,
+        "ttfb": 4.199999988079071,
+        "dur": 254.5,
+        "start": 4861.199999988079
+       }
+      ],
+      "rscEncKB": 2.7,
+      "rscDecKB": 6.9,
+      "rscServerMs": 4,
+      "rscTotalMs": 255,
+      "usableMs": 275,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 85.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site 0B"
+      ]
+     },
+     {
+      "name": "Z site->zones",
+      "rscRT": [
+       {
+        "enc": 8234,
+        "dec": 30553,
+        "ttfb": 4.900000035762787,
+        "dur": 213.5,
+        "start": 5870.300000011921
+       }
+      ],
+      "rscEncKB": 8,
+      "rscDecKB": 29.8,
+      "rscServerMs": 5,
+      "rscTotalMs": 214,
+      "usableMs": 229,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 16.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 0B"
+      ]
+     },
+     {
+      "name": "Z zones->draft editor",
+      "rscRT": [
+       {
+        "enc": 2569,
+        "dec": 7399,
+        "ttfb": 4.300000011920929,
+        "dur": 174.39999997615814,
+        "start": 6833.600000023842
+       }
+      ],
+      "rscEncKB": 2.5,
+      "rscDecKB": 7.2,
+      "rscServerMs": 4,
+      "rscTotalMs": 174,
+      "usableMs": 254,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 2.9,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 5,
+      "scriptKB": 114.3,
+      "api8001": 2,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "getZoneDraft:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200",
+       "undefined:200",
+       "getZoneDraft:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 2980B"
+      ]
+     }
+    ],
+    [
+     {
+      "name": "Z overview->data(500 rows)",
+      "rscRT": [
+       {
+        "enc": 13107,
+        "dec": 428680,
+        "ttfb": 8,
+        "dur": 601.2000000476837,
+        "start": 8996.399999976158
+       }
+      ],
+      "rscEncKB": 12.8,
+      "rscDecKB": 418.6,
+      "rscServerMs": 8,
+      "rscTotalMs": 601,
+      "usableMs": 773,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data 0B"
+      ]
+     },
+     {
+      "name": "Z data->observation",
+      "rscRT": [
+       {
+        "enc": 5592,
+        "dec": 17919,
+        "ttfb": 5.300000011920929,
+        "dur": 177.10000002384186,
+        "start": 10331.699999988079
+       }
+      ],
+      "rscEncKB": 5.5,
+      "rscDecKB": 17.5,
+      "rscServerMs": 5,
+      "rscTotalMs": 177,
+      "usableMs": 201,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "getProject:200",
+       "downloadPackageArchive:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data/<uuid> 0B"
+      ]
+     },
+     {
+      "name": "Z observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 139,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "Z data->sites(28)",
+      "rscRT": [
+       {
+        "enc": 6149,
+        "dec": 32519,
+        "ttfb": 4.800000011920929,
+        "dur": 177.5999999642372,
+        "start": 11406.300000011921
+       }
+      ],
+      "rscEncKB": 6,
+      "rscDecKB": 31.8,
+      "rscServerMs": 5,
+      "rscTotalMs": 178,
+      "usableMs": 392,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 9,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites 0B"
+      ]
+     },
+     {
+      "name": "Z sites->site",
+      "rscRT": [
+       {
+        "enc": 2785,
+        "dec": 7041,
+        "ttfb": 5.600000023841858,
+        "dur": 219.19999998807907,
+        "start": 12300.600000023842
+       }
+      ],
+      "rscEncKB": 2.7,
+      "rscDecKB": 6.9,
+      "rscServerMs": 6,
+      "rscTotalMs": 219,
+      "usableMs": 229,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 3.1,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site 3195B"
+      ]
+     },
+     {
+      "name": "Z site->zones",
+      "rscRT": [
+       {
+        "enc": 8229,
+        "dec": 30553,
+        "ttfb": 11.699999988079071,
+        "dur": 265,
+        "start": 13275.100000023842
+       }
+      ],
+      "rscEncKB": 8,
+      "rscDecKB": 29.8,
+      "rscServerMs": 12,
+      "rscTotalMs": 265,
+      "usableMs": 275,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 0B"
+      ]
+     },
+     {
+      "name": "Z zones->draft editor",
+      "rscRT": [
+       {
+        "enc": 2570,
+        "dec": 7399,
+        "ttfb": 4.800000011920929,
+        "dur": 205.0999999642372,
+        "start": 14294.300000011921
+       }
+      ],
+      "rscEncKB": 2.5,
+      "rscDecKB": 7.2,
+      "rscServerMs": 5,
+      "rscTotalMs": 205,
+      "usableMs": 266,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 1,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "getZoneDraft:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200",
+       "getZoneDraft:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 0B"
+      ]
+     }
+    ]
+   ]
+  },
+  {
+   "ws": "zone",
+   "rep": 2,
+   "passes": [
+    [
+     {
+      "name": "Z overview->data(500 rows)",
+      "rscRT": [
+       {
+        "enc": 13103,
+        "dec": 428680,
+        "ttfb": 43.19999998807907,
+        "dur": 919.7999999523163,
+        "start": 1691.5
+       }
+      ],
+      "rscEncKB": 12.8,
+      "rscDecKB": 418.6,
+      "rscServerMs": 43,
+      "rscTotalMs": 920,
+      "usableMs": 1115,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 93.9,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data 0B"
+      ]
+     },
+     {
+      "name": "Z data->observation",
+      "rscRT": [
+       {
+        "enc": 5595,
+        "dec": 17919,
+        "ttfb": 12.699999988079071,
+        "dur": 189.60000002384186,
+        "start": 3525.899999976158
+       }
+      ],
+      "rscEncKB": 5.5,
+      "rscDecKB": 17.5,
+      "rscServerMs": 13,
+      "rscTotalMs": 190,
+      "usableMs": 221,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 5.9,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 7.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "downloadPackageArchive:200",
+       "getProject:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data/<uuid> 6032B"
+      ]
+     },
+     {
+      "name": "Z observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 166,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "Z data->sites(28)",
+      "rscRT": [
+       {
+        "enc": 6151,
+        "dec": 32519,
+        "ttfb": 8.899999976158142,
+        "dur": 197.9000000357628,
+        "start": 4666.299999952316
+       }
+      ],
+      "rscEncKB": 6,
+      "rscDecKB": 31.8,
+      "rscServerMs": 9,
+      "rscTotalMs": 198,
+      "usableMs": 424,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 6.4,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 15.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 9,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites 6550B"
+      ]
+     },
+     {
+      "name": "Z sites->site",
+      "rscRT": [
+       {
+        "enc": 2783,
+        "dec": 7041,
+        "ttfb": 5.5,
+        "dur": 215,
+        "start": 5586.199999988079
+       }
+      ],
+      "rscEncKB": 2.7,
+      "rscDecKB": 6.9,
+      "rscServerMs": 6,
+      "rscTotalMs": 215,
+      "usableMs": 238,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 2,
+      "scriptKB": 85.1,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site 0B"
+      ]
+     },
+     {
+      "name": "Z site->zones",
+      "rscRT": [
+       {
+        "enc": 8234,
+        "dec": 30553,
+        "ttfb": 7.199999988079071,
+        "dur": 227,
+        "start": 6534.799999952316
+       }
+      ],
+      "rscEncKB": 8,
+      "rscDecKB": 29.8,
+      "rscServerMs": 7,
+      "rscTotalMs": 227,
+      "usableMs": 243,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 1,
+      "scriptKB": 16.4,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 0B"
+      ]
+     },
+     {
+      "name": "Z zones->draft editor",
+      "rscRT": [
+       {
+        "enc": 2569,
+        "dec": 7399,
+        "ttfb": 5.5,
+        "dur": 191.79999995231628,
+        "start": 7478
+       }
+      ],
+      "rscEncKB": 2.5,
+      "rscDecKB": 7.2,
+      "rscServerMs": 6,
+      "rscTotalMs": 192,
+      "usableMs": 280,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 2.9,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 5,
+      "scriptKB": 114.3,
+      "api8001": 2,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "getZoneDraft:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200",
+       "undefined:200",
+       "getZoneDraft:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 2980B"
+      ]
+     }
+    ],
+    [
+     {
+      "name": "Z overview->data(500 rows)",
+      "rscRT": [
+       {
+        "enc": 13104,
+        "dec": 428680,
+        "ttfb": 5.899999976158142,
+        "dur": 538,
+        "start": 9751.599999964237
+       }
+      ],
+      "rscEncKB": 12.8,
+      "rscDecKB": 418.6,
+      "rscServerMs": 6,
+      "rscTotalMs": 538,
+      "usableMs": 682,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 13.2,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 8,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "summarizeHistoricalObservations:200",
+       "listHistoricalObservations:200",
+       "getFormVersion:500",
+       "getFormVersion:500",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data 13520B"
+      ]
+     },
+     {
+      "name": "Z data->observation",
+      "rscRT": [
+       {
+        "enc": 5592,
+        "dec": 17919,
+        "ttfb": 7.799999952316284,
+        "dur": 159.10000002384186,
+        "start": 11000.899999976158
+       }
+      ],
+      "rscEncKB": 5.5,
+      "rscDecKB": 17.5,
+      "rscServerMs": 8,
+      "rscTotalMs": 159,
+      "usableMs": 185,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getHistoricalObservation:200",
+       "getProject:200",
+       "downloadPackageArchive:200",
+       "listSites:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/data/<uuid> 0B"
+      ]
+     },
+     {
+      "name": "Z observation->back(data)",
+      "rscRT": [],
+      "rscEncKB": 0,
+      "rscDecKB": 0,
+      "rscServerMs": 0,
+      "rscTotalMs": 0,
+      "usableMs": 141,
+      "softNav": true,
+      "rscNav": 0,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 0,
+      "apiOps": [],
+      "rscPaths": []
+     },
+     {
+      "name": "Z data->sites(28)",
+      "rscRT": [
+       {
+        "enc": 6152,
+        "dec": 32519,
+        "ttfb": 5.599999964237213,
+        "dur": 153.30000001192093,
+        "start": 12095.899999976158
+       }
+      ],
+      "rscEncKB": 6,
+      "rscDecKB": 31.8,
+      "rscServerMs": 6,
+      "rscTotalMs": 153,
+      "usableMs": 395,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 6.4,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 9,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200",
+       "downloadPackageArchive:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites 6551B"
+      ]
+     },
+     {
+      "name": "Z sites->site",
+      "rscRT": [
+       {
+        "enc": 2783,
+        "dec": 7041,
+        "ttfb": 11.400000035762787,
+        "dur": 238.20000004768372,
+        "start": 12985.799999952316
+       }
+      ],
+      "rscEncKB": 2.7,
+      "rscDecKB": 6.9,
+      "rscServerMs": 11,
+      "rscTotalMs": 238,
+      "usableMs": 254,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 5,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "downloadPackageArchive:200",
+       "summarizeHistoricalObservations:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site 0B"
+      ]
+     },
+     {
+      "name": "Z site->zones",
+      "rscRT": [
+       {
+        "enc": 8230,
+        "dec": 30553,
+        "ttfb": 8.799999952316284,
+        "dur": 203.30000001192093,
+        "start": 13975.899999976158
+       }
+      ],
+      "rscEncKB": 8,
+      "rscDecKB": 29.8,
+      "rscServerMs": 9,
+      "rscTotalMs": 203,
+      "usableMs": 215,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 8.5,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 0,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "listPackages:200",
+       "listZoneDrafts:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 8690B"
+      ]
+     },
+     {
+      "name": "Z zones->draft editor",
+      "rscRT": [
+       {
+        "enc": 2570,
+        "dec": 7399,
+        "ttfb": 4.399999976158142,
+        "dur": 193.10000002384186,
+        "start": 14899.299999952316
+       }
+      ],
+      "rscEncKB": 2.5,
+      "rscDecKB": 7.2,
+      "rscServerMs": 4,
+      "rscTotalMs": 193,
+      "usableMs": 243,
+      "softNav": true,
+      "rscNav": 1,
+      "rscNavKB": 0,
+      "rscPrefetch": 0,
+      "rscPrefetchKB": 0,
+      "script": 0,
+      "scriptKB": 0,
+      "api8001": 1,
+      "other": 0,
+      "otherKB": 0,
+      "serverApiCalls": 7,
+      "apiOps": [
+       "get_identity:200",
+       "getProject:200",
+       "listSites:200",
+       "getZoneDraft:200",
+       "downloadPackageArchive:200",
+       "getHistoricalZones:200",
+       "getZoneDraft:200"
+      ],
+      "rscPaths": [
+       "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 0B"
+      ]
+     }
+    ]
+   ]
+  }
+ ],
+ "prefetch": {
+  "internalLinksOnOverview": 31,
+  "rscRequestsOnLoadAfterIdle": 0,
+  "rscPrefetchOnLoad": 0,
+  "rscAfterScroll": 0,
+  "rscAfterHover": [],
+  "prefetchAttrSample": [
+   null,
+   null,
+   null
+  ]
+ },
+ "summary": [
+  {
+   "key": "web|overview->data|pass1",
+   "n": 3,
+   "usableMs": 345,
+   "min": 339,
+   "max": 353,
+   "rscNav": 1,
+   "rscEncKB": 3.1,
+   "rscDecKB": 13.8,
+   "rscServerMs": 10,
+   "rscTotalMs": 125,
+   "rscPrefetch": 0,
+   "scripts": 2,
+   "scriptKB": 93.9,
+   "serverApiCalls": 7,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "summarizeHistoricalObservations:200",
+    "listHistoricalObservations:200",
+    "getFormVersion:500",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/data 3545B"
+   ]
+  },
+  {
+   "key": "web|data->observation|pass1",
+   "n": 3,
+   "usableMs": 101,
+   "min": 88,
+   "max": 105,
+   "rscNav": 1,
+   "rscEncKB": 5.1,
+   "rscDecKB": 16.6,
+   "rscServerMs": 5,
+   "rscTotalMs": 85,
+   "rscPrefetch": 0,
+   "scripts": 1,
+   "scriptKB": 7.1,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getHistoricalObservation:200",
+    "downloadPackageArchive:200",
+    "getProject:200",
+    "listSites:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/data/<uuid> 5688B"
+   ]
+  },
+  {
+   "key": "web|observation->back(data)|pass1",
+   "n": 3,
+   "usableMs": 19,
+   "min": 14,
+   "max": 20,
+   "rscNav": 0,
+   "rscEncKB": 0,
+   "rscDecKB": 0,
+   "rscServerMs": 0,
+   "rscTotalMs": 0,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 0,
+   "soft": true,
+   "apiOps": [],
+   "rscPaths": []
+  },
+  {
+   "key": "web|data->sites|pass1",
+   "n": 3,
+   "usableMs": 332,
+   "min": 328,
+   "max": 335,
+   "rscNav": 1,
+   "rscEncKB": 2.9,
+   "rscDecKB": 8.8,
+   "rscServerMs": 4,
+   "rscTotalMs": 60,
+   "rscPrefetch": 0,
+   "scripts": 2,
+   "scriptKB": 15.4,
+   "serverApiCalls": 4,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/sites 3386B"
+   ]
+  },
+  {
+   "key": "web|sites->site|pass1",
+   "n": 3,
+   "usableMs": 112,
+   "min": 110,
+   "max": 120,
+   "rscNav": 1,
+   "rscEncKB": 2.8,
+   "rscDecKB": 7.2,
+   "rscServerMs": 6,
+   "rscTotalMs": 90,
+   "rscPrefetch": 0,
+   "scripts": 2,
+   "scriptKB": 85.1,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200",
+    "summarizeHistoricalObservations:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/sites/fall-creek 0B"
+   ]
+  },
+  {
+   "key": "web|site->zones|pass1",
+   "n": 3,
+   "usableMs": 191,
+   "min": 173,
+   "max": 228,
+   "rscNav": 1,
+   "rscEncKB": 48.4,
+   "rscDecKB": 118.9,
+   "rscServerMs": 5,
+   "rscTotalMs": 169,
+   "rscPrefetch": 0,
+   "scripts": 1,
+   "scriptKB": 16.4,
+   "serverApiCalls": 7,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "listPackages:200",
+    "listZoneDrafts:200",
+    "downloadPackageArchive:200",
+    "getHistoricalZones:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/sites/fall-creek/zones 50331B"
+   ]
+  },
+  {
+   "key": "web|site/zones->forms|pass1",
+   "n": 3,
+   "usableMs": 331,
+   "min": 327,
+   "max": 333,
+   "rscNav": 1,
+   "rscEncKB": 1.8,
+   "rscDecKB": 4.1,
+   "rscServerMs": 5,
+   "rscTotalMs": 63,
+   "rscPrefetch": 0,
+   "scripts": 1,
+   "scriptKB": 8.5,
+   "serverApiCalls": 4,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listForms:500",
+    "listSites:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/forms 0B"
+   ]
+  },
+  {
+   "key": "web|overview->data|pass2",
+   "n": 3,
+   "usableMs": 323,
+   "min": 320,
+   "max": 328,
+   "rscNav": 1,
+   "rscEncKB": 3.1,
+   "rscDecKB": 13.8,
+   "rscServerMs": 5,
+   "rscTotalMs": 106,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 7,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "summarizeHistoricalObservations:200",
+    "listHistoricalObservations:200",
+    "getFormVersion:500",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/data 3545B"
+   ]
+  },
+  {
+   "key": "web|data->observation|pass2",
+   "n": 3,
+   "usableMs": 83,
+   "min": 81,
+   "max": 96,
+   "rscNav": 1,
+   "rscEncKB": 5.1,
+   "rscDecKB": 16.6,
+   "rscServerMs": 6,
+   "rscTotalMs": 73,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getHistoricalObservation:200",
+    "downloadPackageArchive:200",
+    "getProject:200",
+    "listSites:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/data/<uuid> 5689B"
+   ]
+  },
+  {
+   "key": "web|observation->back(data)|pass2",
+   "n": 3,
+   "usableMs": 15,
+   "min": 12,
+   "max": 16,
+   "rscNav": 0,
+   "rscEncKB": 0,
+   "rscDecKB": 0,
+   "rscServerMs": 0,
+   "rscTotalMs": 0,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 0,
+   "soft": true,
+   "apiOps": [],
+   "rscPaths": []
+  },
+  {
+   "key": "web|data->sites|pass2",
+   "n": 3,
+   "usableMs": 327,
+   "min": 326,
+   "max": 327,
+   "rscNav": 1,
+   "rscEncKB": 2.9,
+   "rscDecKB": 8.8,
+   "rscServerMs": 7,
+   "rscTotalMs": 75,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 4,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/sites 0B"
+   ]
+  },
+  {
+   "key": "web|sites->site|pass2",
+   "n": 3,
+   "usableMs": 86,
+   "min": 86,
+   "max": 93,
+   "rscNav": 1,
+   "rscEncKB": 2.8,
+   "rscDecKB": 7.2,
+   "rscServerMs": 5,
+   "rscTotalMs": 77,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200",
+    "summarizeHistoricalObservations:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/sites/fall-creek 0B"
+   ]
+  },
+  {
+   "key": "web|site->zones|pass2",
+   "n": 3,
+   "usableMs": 198,
+   "min": 197,
+   "max": 213,
+   "rscNav": 1,
+   "rscEncKB": 48.4,
+   "rscDecKB": 118.9,
+   "rscServerMs": 7,
+   "rscTotalMs": 179,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 7,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "listPackages:200",
+    "listZoneDrafts:200",
+    "downloadPackageArchive:200",
+    "getHistoricalZones:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/sites/fall-creek/zones 0B"
+   ]
+  },
+  {
+   "key": "web|site/zones->forms|pass2",
+   "n": 3,
+   "usableMs": 327,
+   "min": 324,
+   "max": 332,
+   "rscNav": 1,
+   "rscEncKB": 1.8,
+   "rscDecKB": 4.1,
+   "rscServerMs": 5,
+   "rscTotalMs": 64,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 4,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listForms:500",
+    "listSites:200"
+   ],
+   "rscPaths": [
+    "/o/web-acceptance/p/play-study/forms 0B"
+   ]
+  },
+  {
+   "key": "zone|Z overview->data(500 rows)|pass1",
+   "n": 3,
+   "usableMs": 733,
+   "min": 685,
+   "max": 1115,
+   "rscNav": 1,
+   "rscEncKB": 12.8,
+   "rscDecKB": 418.6,
+   "rscServerMs": 6,
+   "rscTotalMs": 542,
+   "rscPrefetch": 0,
+   "scripts": 2,
+   "scriptKB": 93.9,
+   "serverApiCalls": 8,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "summarizeHistoricalObservations:200",
+    "listHistoricalObservations:200",
+    "getFormVersion:500",
+    "getFormVersion:500",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/data 13521B"
+   ]
+  },
+  {
+   "key": "zone|Z data->observation|pass1",
+   "n": 3,
+   "usableMs": 178,
+   "min": 152,
+   "max": 221,
+   "rscNav": 1,
+   "rscEncKB": 5.5,
+   "rscDecKB": 17.5,
+   "rscServerMs": 11,
+   "rscTotalMs": 150,
+   "rscPrefetch": 0,
+   "scripts": 1,
+   "scriptKB": 7.1,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getHistoricalObservation:200",
+    "downloadPackageArchive:200",
+    "getProject:200",
+    "listSites:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/data/<uuid> 6031B"
+   ]
+  },
+  {
+   "key": "zone|Z observation->back(data)|pass1",
+   "n": 3,
+   "usableMs": 152,
+   "min": 149,
+   "max": 166,
+   "rscNav": 0,
+   "rscEncKB": 0,
+   "rscDecKB": 0,
+   "rscServerMs": 0,
+   "rscTotalMs": 0,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 0,
+   "soft": true,
+   "apiOps": [],
+   "rscPaths": []
+  },
+  {
+   "key": "zone|Z data->sites(28)|pass1",
+   "n": 3,
+   "usableMs": 411,
+   "min": 395,
+   "max": 424,
+   "rscNav": 1,
+   "rscEncKB": 6,
+   "rscDecKB": 31.8,
+   "rscServerMs": 8,
+   "rscTotalMs": 141,
+   "rscPrefetch": 0,
+   "scripts": 2,
+   "scriptKB": 15.4,
+   "serverApiCalls": 9,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites 6548B"
+   ]
+  },
+  {
+   "key": "zone|Z sites->site|pass1",
+   "n": 3,
+   "usableMs": 238,
+   "min": 238,
+   "max": 275,
+   "rscNav": 1,
+   "rscEncKB": 2.7,
+   "rscDecKB": 6.9,
+   "rscServerMs": 6,
+   "rscTotalMs": 215,
+   "rscPrefetch": 0,
+   "scripts": 2,
+   "scriptKB": 85.1,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200",
+    "summarizeHistoricalObservations:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites/review-site 3193B"
+   ]
+  },
+  {
+   "key": "zone|Z site->zones|pass1",
+   "n": 3,
+   "usableMs": 229,
+   "min": 211,
+   "max": 243,
+   "rscNav": 1,
+   "rscEncKB": 8,
+   "rscDecKB": 29.8,
+   "rscServerMs": 7,
+   "rscTotalMs": 214,
+   "rscPrefetch": 0,
+   "scripts": 1,
+   "scriptKB": 16.4,
+   "serverApiCalls": 7,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "listPackages:200",
+    "listZoneDrafts:200",
+    "downloadPackageArchive:200",
+    "getHistoricalZones:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 8690B"
+   ]
+  },
+  {
+   "key": "zone|Z zones->draft editor|pass1",
+   "n": 3,
+   "usableMs": 254,
+   "min": 254,
+   "max": 280,
+   "rscNav": 1,
+   "rscEncKB": 2.5,
+   "rscDecKB": 7.2,
+   "rscServerMs": 6,
+   "rscTotalMs": 174,
+   "rscPrefetch": 0,
+   "scripts": 5,
+   "scriptKB": 114.3,
+   "serverApiCalls": 8,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "getZoneDraft:200",
+    "downloadPackageArchive:200",
+    "getHistoricalZones:200",
+    "undefined:200",
+    "getZoneDraft:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 2982B"
+   ]
+  },
+  {
+   "key": "zone|Z overview->data(500 rows)|pass2",
+   "n": 3,
+   "usableMs": 682,
+   "min": 618,
+   "max": 773,
+   "rscNav": 1,
+   "rscEncKB": 12.8,
+   "rscDecKB": 418.6,
+   "rscServerMs": 6,
+   "rscTotalMs": 538,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 8,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "summarizeHistoricalObservations:200",
+    "listHistoricalObservations:200",
+    "getFormVersion:500",
+    "getFormVersion:500",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/data 0B"
+   ]
+  },
+  {
+   "key": "zone|Z data->observation|pass2",
+   "n": 3,
+   "usableMs": 185,
+   "min": 163,
+   "max": 201,
+   "rscNav": 1,
+   "rscEncKB": 5.5,
+   "rscDecKB": 17.5,
+   "rscServerMs": 5,
+   "rscTotalMs": 159,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getHistoricalObservation:200",
+    "getProject:200",
+    "downloadPackageArchive:200",
+    "listSites:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/data/<uuid> 0B"
+   ]
+  },
+  {
+   "key": "zone|Z observation->back(data)|pass2",
+   "n": 3,
+   "usableMs": 139,
+   "min": 130,
+   "max": 141,
+   "rscNav": 0,
+   "rscEncKB": 0,
+   "rscDecKB": 0,
+   "rscServerMs": 0,
+   "rscTotalMs": 0,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 0,
+   "soft": true,
+   "apiOps": [],
+   "rscPaths": []
+  },
+  {
+   "key": "zone|Z data->sites(28)|pass2",
+   "n": 3,
+   "usableMs": 392,
+   "min": 389,
+   "max": 395,
+   "rscNav": 1,
+   "rscEncKB": 6,
+   "rscDecKB": 31.8,
+   "rscServerMs": 5,
+   "rscTotalMs": 153,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 9,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200",
+    "downloadPackageArchive:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites 0B"
+   ]
+  },
+  {
+   "key": "zone|Z sites->site|pass2",
+   "n": 3,
+   "usableMs": 229,
+   "min": 190,
+   "max": 254,
+   "rscNav": 1,
+   "rscEncKB": 2.7,
+   "rscDecKB": 6.9,
+   "rscServerMs": 7,
+   "rscTotalMs": 219,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 5,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "downloadPackageArchive:200",
+    "summarizeHistoricalObservations:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites/review-site 0B"
+   ]
+  },
+  {
+   "key": "zone|Z site->zones|pass2",
+   "n": 3,
+   "usableMs": 241,
+   "min": 215,
+   "max": 275,
+   "rscNav": 1,
+   "rscEncKB": 8,
+   "rscDecKB": 29.8,
+   "rscServerMs": 9,
+   "rscTotalMs": 223,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 7,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "listPackages:200",
+    "listZoneDrafts:200",
+    "downloadPackageArchive:200",
+    "getHistoricalZones:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones 8693B"
+   ]
+  },
+  {
+   "key": "zone|Z zones->draft editor|pass2",
+   "n": 3,
+   "usableMs": 243,
+   "min": 242,
+   "max": 266,
+   "rscNav": 1,
+   "rscEncKB": 2.5,
+   "rscDecKB": 7.2,
+   "rscServerMs": 5,
+   "rscTotalMs": 193,
+   "rscPrefetch": 0,
+   "scripts": 0,
+   "scriptKB": 0,
+   "serverApiCalls": 7,
+   "soft": true,
+   "apiOps": [
+    "get_identity:200",
+    "getProject:200",
+    "listSites:200",
+    "getZoneDraft:200",
+    "downloadPackageArchive:200",
+    "getHistoricalZones:200",
+    "getZoneDraft:200"
+   ],
+   "rscPaths": [
+    "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid> 0B"
+   ]
+  }
+ ]
+}

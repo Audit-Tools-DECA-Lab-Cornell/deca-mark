@@ -1,0 +1,24 @@
+{
+ "placeWhileManager": "/o/web-acceptance/p/play-study",
+ "placeAfterSignOut": "/o/web-acceptance/p/play-study",
+ "outsiderLanding": "/o",
+ "outsiderSlashO": {
+  "status": 200,
+  "finalPath": "/o",
+  "h1": "You are not in a project yet",
+  "main": "You are not in a project yet A project manager adds you with a join code or an invitation link. If your project manager gave you a join code, enter it to join their project. Enter a join code Or open the invitation link "
+ },
+ "outsiderPlaceCookieAfter": "/o/web-acceptance/p/play-study",
+ "outsiderShot": "screens/4-outsider-after-manager-slash-o.png",
+ "outsiderDirectManagerData": {
+  "status": 404,
+  "finalPath": "/o/web-acceptance/p/play-study/data",
+  "h1": "This page is not on the map.",
+  "main": "PAGE NOT FOUND This page is not on the map. The link may be outdated or the page may have moved. Return to your projects to continue. Return to projects Or press ⌘K Command K to search and jump anywhere."
+ },
+ "outsiderDirectShot": "screens/4-outsider-direct-manager-data.png",
+ "signedInOpensSignIn": {
+  "status": 200,
+  "finalPath": "/sign-in"
+ }
+}

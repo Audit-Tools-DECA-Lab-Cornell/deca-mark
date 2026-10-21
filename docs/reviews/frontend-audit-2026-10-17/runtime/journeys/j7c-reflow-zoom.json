@@ -1,0 +1,2699 @@
+[
+ {
+  "combo": "320x640@100%",
+  "route": "overview",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v49. North is \"",
+    "sw": 303,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Observations by zone and round at Fa\"",
+    "sw": 414,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 132,
+  "textOffRight": [
+   {
+    "text": "Forms",
+    "right": 362
+   },
+   {
+    "text": "Team",
+    "right": 444
+   },
+   {
+    "text": "QGIS",
+    "right": 525
+   },
+   {
+    "text": "Reports",
+    "right": 628
+   },
+   {
+    "text": "Settings",
+    "right": 735
+   },
+   {
+    "text": ". North is up.",
+    "right": 373
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Fall Creek test site · plan",
+    "b": "Scale bar",
+    "overlapPct": 39
+   },
+   {
+    "a": "Fall Creek test site · plan",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 79
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 44
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 100
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 71
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Counts are every observation",
+    "overlapPct": 27
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Inventory observations descr",
+    "overlapPct": 27
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Needs attention",
+    "overlapPct": 41
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    13
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main td",
+    16
+   ]
+  ],
+  "pageHeight": 5828,
+  "screenshot": "screens/7c-320x640@100%-overview.png"
+ },
+ {
+  "combo": "320x640@100%",
+  "route": "data",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Drawn on map v1.\"",
+    "sw": 49,
+    "cw": 1,
+    "sh": 96,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v1. North is u\"",
+    "sw": 291,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Zone inventories in this view. Arrow\"",
+    "sw": 822,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 164,
+  "textOffRight": [
+   {
+    "text": "Forms",
+    "right": 362
+   },
+   {
+    "text": "Team",
+    "right": 444
+   },
+   {
+    "text": "QGIS",
+    "right": 525
+   },
+   {
+    "text": "Reports",
+    "right": 628
+   },
+   {
+    "text": "Settings",
+    "right": 735
+   },
+   {
+    "text": ". North is up.",
+    "right": 361
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Drawn on map v1.",
+    "b": "Fall Creek test site",
+    "overlapPct": 40
+   },
+   {
+    "a": "Drawn on map v1.",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 97
+   },
+   {
+    "a": "Fall Creek test site",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 79
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 44
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Select a marker or a row to ",
+    "overlapPct": 26
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Drawn on map v1. v49 is curr",
+    "overlapPct": 29
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone inventories in this vie",
+    "overlapPct": 40
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "2 inventories",
+    "overlapPct": 72
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 100
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 71
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "A",
+    "overlapPct": 100
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main label",
+    14
+   ]
+  ],
+  "pageHeight": 4258,
+  "screenshot": "screens/7c-320x640@100%-data.png"
+ },
+ {
+  "combo": "320x640@100%",
+  "route": "forms(load-failure)",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 14,
+  "textOffRight": [
+   {
+    "text": "Team",
+    "right": 344
+   },
+   {
+    "text": "QGIS",
+    "right": 425
+   },
+   {
+    "text": "Reports",
+    "right": 528
+   },
+   {
+    "text": "Settings",
+    "right": 635
+   }
+  ],
+  "textOffLeft": [
+   {
+    "text": "Overview",
+    "left": -58
+   }
+  ],
+  "overlappingText": [],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 682,
+  "screenshot": "screens/7c-320x640@100%-formsload-failure.png"
+ },
+ {
+  "combo": "320x640@100%",
+  "route": "site-detail",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v49. North is \"",
+    "sw": 303,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 54,
+  "textOffRight": [
+   {
+    "text": "Forms",
+    "right": 362
+   },
+   {
+    "text": "Team",
+    "right": 444
+   },
+   {
+    "text": "QGIS",
+    "right": 525
+   },
+   {
+    "text": "Reports",
+    "right": 628
+   },
+   {
+    "text": "Settings",
+    "right": 735
+   },
+   {
+    "text": ". North is up.",
+    "right": 348
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Fall Creek test site · Day p",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 50
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 44
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zones",
+    "overlapPct": 67
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 53
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    14
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 2777,
+  "screenshot": "screens/7c-320x640@100%-site-detail.png"
+ },
+ {
+  "combo": "320x640@100%",
+  "route": "team",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 78,
+  "textOffRight": [
+   {
+    "text": "QGIS",
+    "right": 348
+   },
+   {
+    "text": "Reports",
+    "right": 451
+   },
+   {
+    "text": "Settings",
+    "right": 558
+   }
+  ],
+  "textOffLeft": [
+   {
+    "text": "Overview",
+    "left": -135
+   },
+   {
+    "text": "Data",
+    "left": -21
+   }
+  ],
+  "overlappingText": [],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    16
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 2607,
+  "screenshot": "screens/7c-320x640@100%-team.png"
+ },
+ {
+  "combo": "320x640@200%",
+  "route": "overview",
+  "docScrollWidth": 352,
+  "clientWidth": 320,
+  "rootFontPx": 32,
+  "overflowsDoc": true,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "section.min-w-0.rounded-island \"FIELD RETURN 8 observations at Fall \"",
+    "sw": 357,
+    "cw": 254,
+    "sh": 1506,
+    "ch": 1506
+   },
+   {
+    "el": "div.@container.relative \"Zone A · Whole playground Fall Creek\"",
+    "sw": 410,
+    "cw": 234,
+    "sh": 178,
+    "ch": 162
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v49. North is \"",
+    "sw": 303,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Observations by zone and round at Fa\"",
+    "sw": 414,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 128,
+  "textOffRight": [
+   {
+    "text": "Sites",
+    "right": 394
+   },
+   {
+    "text": "Forms",
+    "right": 524
+   },
+   {
+    "text": "Team",
+    "right": 646
+   },
+   {
+    "text": "QGIS",
+    "right": 767
+   },
+   {
+    "text": "Reports",
+    "right": 910
+   },
+   {
+    "text": "Settings",
+    "right": 1057
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 100
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 71
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Counts are every observation",
+    "overlapPct": 27
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Inventory observations descr",
+    "overlapPct": 27
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "10%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    13
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    32
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main td",
+    16
+   ]
+  ],
+  "pageHeight": 8493,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main p: 13px -> 13px (x1.00)",
+   "main button: 16px -> 16px (x1.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-320x640@200%-overview.png"
+ },
+ {
+  "combo": "320x640@200%",
+  "route": "data",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "section.min-w-0.rounded-island \"Observations Showing all 8 matching \"",
+    "sw": 379,
+    "cw": 254,
+    "sh": 3584,
+    "ch": 3584
+   },
+   {
+    "el": "p.sr-only \"Drawn on map v1.\"",
+    "sw": 49,
+    "cw": 1,
+    "sh": 96,
+    "ch": 1
+   },
+   {
+    "el": "div.@container.relative \"Zone A · Whole playground Fall Creek\"",
+    "sw": 410,
+    "cw": 204,
+    "sh": 141,
+    "ch": 141
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v1. North is u\"",
+    "sw": 291,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Zone inventories in this view. Arrow\"",
+    "sw": 822,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 163,
+  "textOffRight": [
+   {
+    "text": "Sites",
+    "right": 394
+   },
+   {
+    "text": "Forms",
+    "right": 524
+   },
+   {
+    "text": "Team",
+    "right": 646
+   },
+   {
+    "text": "QGIS",
+    "right": 767
+   },
+   {
+    "text": "Reports",
+    "right": 910
+   },
+   {
+    "text": "Settings",
+    "right": 1057
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Drawn on map v1.",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 97
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Select a marker or a row to ",
+    "overlapPct": 30
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Drawn on map v1. v49 is curr",
+    "overlapPct": 43
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone inventories in this vie",
+    "overlapPct": 40
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "2 inventories",
+    "overlapPct": 72
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 50
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "10%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    32
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main label",
+    14
+   ]
+  ],
+  "pageHeight": 6066,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main p: 14px -> 14px (x1.00)",
+   "main button: 16px -> 32px (x2.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-320x640@200%-data.png"
+ },
+ {
+  "combo": "320x640@200%",
+  "route": "forms(load-failure)",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "section.min-w-0.rounded-island \"Couldn't load the forms. DECA Mark c\"",
+    "sw": 260,
+    "cw": 254,
+    "sh": 648,
+    "ch": 648
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 14,
+  "textOffRight": [
+   {
+    "text": "Team",
+    "right": 403
+   },
+   {
+    "text": "QGIS",
+    "right": 524
+   },
+   {
+    "text": "Reports",
+    "right": 667
+   },
+   {
+    "text": "Settings",
+    "right": 814
+   }
+  ],
+  "textOffLeft": [
+   {
+    "text": "Overview",
+    "left": -159
+   },
+   {
+    "text": "Data",
+    "left": -5
+   }
+  ],
+  "overlappingText": [],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "10%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main button",
+    32
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 1260,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main button: 16px -> 32px (x2.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-320x640@200%-formsload-failure.png"
+ },
+ {
+  "combo": "320x640@200%",
+  "route": "site-detail",
+  "docScrollWidth": 356,
+  "clientWidth": 320,
+  "rootFontPx": 32,
+  "overflowsDoc": true,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "div.@container.relative \"Zone A · Whole playground Fall Creek\"",
+    "sw": 410,
+    "cw": 254,
+    "sh": 198,
+    "ch": 176
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v49. North is \"",
+    "sw": 303,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "section.min-w-0.rounded-island \"Current map package Active Version v\"",
+    "sw": 412,
+    "cw": 254,
+    "sh": 1180,
+    "ch": 1180
+   },
+   {
+    "el": "section.min-w-0.rounded-island \"Details Site code fall-creek Descrip\"",
+    "sw": 415,
+    "cw": 254,
+    "sh": 459,
+    "ch": 459
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 47,
+  "textOffRight": [
+   {
+    "text": "Forms",
+    "right": 398
+   },
+   {
+    "text": "Team",
+    "right": 520
+   },
+   {
+    "text": "QGIS",
+    "right": 641
+   },
+   {
+    "text": "Reports",
+    "right": 784
+   },
+   {
+    "text": "Settings",
+    "right": 931
+   },
+   {
+    "text": ". North is up.",
+    "right": 392
+   }
+  ],
+  "textOffLeft": [
+   {
+    "text": "Overview",
+    "left": -42
+   }
+  ],
+  "overlappingText": [
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zones",
+    "overlapPct": 67
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "1 zone",
+    "overlapPct": 89
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 34
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "10%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    14
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 4307,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main button: 16px -> 16px (x1.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-320x640@200%-site-detail.png"
+ },
+ {
+  "combo": "320x640@200%",
+  "route": "team",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 78,
+  "textOffRight": [
+   {
+    "text": "QGIS",
+    "right": 405
+   },
+   {
+    "text": "Reports",
+    "right": 548
+   },
+   {
+    "text": "Settings",
+    "right": 695
+   }
+  ],
+  "textOffLeft": [
+   {
+    "text": "Overview",
+    "left": -278
+   },
+   {
+    "text": "Data",
+    "left": -124
+   },
+   {
+    "text": "Sites",
+    "left": -7
+   }
+  ],
+  "overlappingText": [],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "10%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    16
+   ],
+   [
+    "main button",
+    32
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 4487,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main p: 16px -> 16px (x1.00)",
+   "main button: 16px -> 32px (x2.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-320x640@200%-team.png"
+ },
+ {
+  "combo": "1440x900@200%",
+  "route": "overview",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 130,
+    "cw": 1,
+    "sh": 40,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–20 m. Map v49. North is \"",
+    "sw": 303,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Observations by zone and round at Fa\"",
+    "sw": 414,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 138,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 87
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 30
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 80
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    13
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    32
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main td",
+    16
+   ]
+  ],
+  "pageHeight": 4708,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main p: 13px -> 13px (x1.00)",
+   "main button: 16px -> 16px (x1.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-1440x900@200%-overview.png"
+ },
+ {
+  "combo": "1440x900@200%",
+  "route": "data",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 130,
+    "cw": 1,
+    "sh": 40,
+    "ch": 1
+   },
+   {
+    "el": "section.min-w-0.rounded-island \"Observations Showing all 8 matching \"",
+    "sw": 459,
+    "cw": 430,
+    "sh": 1996,
+    "ch": 1996
+   },
+   {
+    "el": "caption.sr-only \"Observations in this view. Arrow key\"",
+    "sw": 692,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Drawn on map v1.\"",
+    "sw": 49,
+    "cw": 1,
+    "sh": 96,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–10 m. Map v1. North is u\"",
+    "sw": 287,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Zone inventories in this view. Arrow\"",
+    "sw": 822,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 162,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 87
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 30
+   },
+   {
+    "a": "Observations in this view. A",
+    "b": "Select a marker or a row to ",
+    "overlapPct": 26
+   },
+   {
+    "a": "Inventory",
+    "b": "Zone inventories in this vie",
+    "overlapPct": 28
+   },
+   {
+    "a": "v1",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 72
+   },
+   {
+    "a": "Reliability",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 68
+   },
+   {
+    "a": "Synthetic record 6 — 🌿",
+    "b": "Zone inventories in this vie",
+    "overlapPct": 28
+   },
+   {
+    "a": "Synthetic record 6 — 🌿",
+    "b": "v1",
+    "overlapPct": 28
+   },
+   {
+    "a": "Drawn on map v1.",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 97
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    32
+   ],
+   [
+    "main a",
+    14
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main label",
+    14
+   ],
+   [
+    "main td",
+    14
+   ]
+  ],
+  "pageHeight": 2660,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main p: 14px -> 14px (x1.00)",
+   "main button: 16px -> 32px (x2.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-1440x900@200%-data.png"
+ },
+ {
+  "combo": "1440x900@200%",
+  "route": "forms(load-failure)",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 130,
+    "cw": 1,
+    "sh": 40,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 20,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 87
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 30
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main button",
+    32
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 998,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main button: 16px -> 32px (x2.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-1440x900@200%-formsload-failure.png"
+ },
+ {
+  "combo": "1440x900@200%",
+  "route": "site-detail",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 130,
+    "cw": 1,
+    "sh": 40,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–10 m. Map v49. North is \"",
+    "sw": 299,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 62,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 61,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 87
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 30
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    14
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 2369,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main p: 14px -> 14px (x1.00)",
+   "main button: 16px -> 16px (x1.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-1440x900@200%-site-detail.png"
+ },
+ {
+  "combo": "1440x900@200%",
+  "route": "team",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 32,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 118,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 130,
+    "cw": 1,
+    "sh": 40,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 84,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 87
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 30
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    16
+   ],
+   [
+    "main button",
+    32
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 2273,
+  "fontScaleVsBaseline": [
+   "h1: 36px -> 36px (x1.00)",
+   "main p: 16px -> 16px (x1.00)",
+   "main button: 16px -> 32px (x2.00)",
+   "nav a: 16px -> 16px (x1.00)"
+  ],
+  "screenshot": "screens/7c-1440x900@200%-team.png"
+ },
+ {
+  "combo": "320x640@100%+text-spacing",
+  "route": "overview",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "div.@container.relative \"Zone A · Whole playground Fall Creek\"",
+    "sw": 236,
+    "cw": 236,
+    "sh": 184,
+    "ch": 163
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v49. North is \"",
+    "sw": 398,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 73,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Observations by zone and round at Fa\"",
+    "sw": 541,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 132,
+  "textOffRight": [
+   {
+    "text": "Forms",
+    "right": 404
+   },
+   {
+    "text": "Team",
+    "right": 494
+   },
+   {
+    "text": "QGIS",
+    "right": 583
+   },
+   {
+    "text": "Reports",
+    "right": 699
+   },
+   {
+    "text": "Settings",
+    "right": 821
+   },
+   {
+    "text": "v49",
+    "right": 336
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Fall Creek test site · plan",
+    "b": "Scale bar",
+    "overlapPct": 50
+   },
+   {
+    "a": "Fall Creek test site · plan",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 89
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 45
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 100
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 69
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Counts are every observation",
+    "overlapPct": 33
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Inventory observations descr",
+    "overlapPct": 32
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    13
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main td",
+    16
+   ]
+  ],
+  "pageHeight": 7870,
+  "screenshot": "screens/7c-320x640@100%+text-spacing-overview.png"
+ },
+ {
+  "combo": "320x640@100%+text-spacing",
+  "route": "data",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Drawn on map v1.\"",
+    "sw": 59,
+    "cw": 1,
+    "sh": 96,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v1. North is u\"",
+    "sw": 384,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 73,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Zone inventories in this view. Arrow\"",
+    "sw": 1076,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 164,
+  "textOffRight": [
+   {
+    "text": "Forms",
+    "right": 404
+   },
+   {
+    "text": "Team",
+    "right": 494
+   },
+   {
+    "text": "QGIS",
+    "right": 583
+   },
+   {
+    "text": "Reports",
+    "right": 699
+   },
+   {
+    "text": "Settings",
+    "right": 821
+   },
+   {
+    "text": "v1",
+    "right": 322
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Drawn on map v1.",
+    "b": "Fall Creek test site",
+    "overlapPct": 49
+   },
+   {
+    "a": "Drawn on map v1.",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 97
+   },
+   {
+    "a": "Fall Creek test site",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 89
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 45
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Select a marker or a row to ",
+    "overlapPct": 37
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Drawn on map v1. v49 is curr",
+    "overlapPct": 39
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone inventories in this vie",
+    "overlapPct": 38
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "2 inventories",
+    "overlapPct": 67
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 100
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main label",
+    14
+   ]
+  ],
+  "pageHeight": 5849,
+  "screenshot": "screens/7c-320x640@100%+text-spacing-data.png"
+ },
+ {
+  "combo": "320x640@100%+text-spacing",
+  "route": "forms(load-failure)",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 14,
+  "textOffRight": [
+   {
+    "text": "Team",
+    "right": 378
+   },
+   {
+    "text": "QGIS",
+    "right": 467
+   },
+   {
+    "text": "Reports",
+    "right": 583
+   },
+   {
+    "text": "Settings",
+    "right": 705
+   }
+  ],
+  "textOffLeft": [
+   {
+    "text": "Overview",
+    "left": -74
+   }
+  ],
+  "overlappingText": [],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 779,
+  "screenshot": "screens/7c-320x640@100%+text-spacing-formsload-failure.png"
+ },
+ {
+  "combo": "320x640@100%+text-spacing",
+  "route": "site-detail",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–50 m. Map v49. North is \"",
+    "sw": 398,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 73,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 54,
+  "textOffRight": [
+   {
+    "text": "Forms",
+    "right": 404
+   },
+   {
+    "text": "Team",
+    "right": 494
+   },
+   {
+    "text": "QGIS",
+    "right": 583
+   },
+   {
+    "text": "Reports",
+    "right": 699
+   },
+   {
+    "text": "Settings",
+    "right": 821
+   },
+   {
+    "text": ". North is up.",
+    "right": 443
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Fall Creek test site · Day p",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 89
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 45
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zones",
+    "overlapPct": 72
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "1 zone",
+    "overlapPct": 90
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone A · Whole playground",
+    "overlapPct": 46
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    14
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 3149,
+  "screenshot": "screens/7c-320x640@100%+text-spacing-site-detail.png"
+ },
+ {
+  "combo": "320x640@100%+text-spacing",
+  "route": "team",
+  "docScrollWidth": 320,
+  "clientWidth": 320,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 78,
+  "textOffRight": [
+   {
+    "text": "QGIS",
+    "right": 383
+   },
+   {
+    "text": "Reports",
+    "right": 499
+   },
+   {
+    "text": "Settings",
+    "right": 621
+   }
+  ],
+  "textOffLeft": [
+   {
+    "text": "Overview",
+    "left": -158
+   },
+   {
+    "text": "Data",
+    "left": -28
+   }
+  ],
+  "overlappingText": [],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 32,
+    "viewportShare": "5%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    16
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 3443,
+  "screenshot": "screens/7c-320x640@100%+text-spacing-team.png"
+ },
+ {
+  "combo": "1440x900@100%+text-spacing",
+  "route": "overview",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 80,
+    "cw": 1,
+    "sh": 18,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–20 m. Map v49. North is \"",
+    "sw": 398,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 73,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Observations by zone and round at Fa\"",
+    "sw": 541,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 139,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 54
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 98
+   },
+   {
+    "a": "Map v49",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 61
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 45
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Zone",
+    "overlapPct": 100
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    13
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main td",
+    16
+   ]
+  ],
+  "pageHeight": 4461,
+  "screenshot": "screens/7c-1440x900@100%+text-spacing-overview.png"
+ },
+ {
+  "combo": "1440x900@100%+text-spacing",
+  "route": "data",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 80,
+    "cw": 1,
+    "sh": 18,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Observations in this view. Arrow key\"",
+    "sw": 897,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Drawn on map v1.\"",
+    "sw": 59,
+    "cw": 1,
+    "sh": 96,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–25 m. Map v1. North is u\"",
+    "sw": 383,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 73,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   },
+   {
+    "el": "caption.sr-only \"Zone inventories in this view. Arrow\"",
+    "sw": 1076,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 162,
+  "textOffRight": [
+   {
+    "text": "Zone inventories in this vie",
+    "right": 2036
+   }
+  ],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 54
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 98
+   },
+   {
+    "a": "Drawn on map v1.",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 97
+   },
+   {
+    "a": "Fall Creek test site",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 26
+   },
+   {
+    "a": "6 points on v1",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 35
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 45
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "Drawn on map v1. v49 is curr",
+    "overlapPct": 26
+   },
+   {
+    "a": "Zoom with plus and minus, or",
+    "b": "2 inventories",
+    "overlapPct": 67
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    14
+   ],
+   [
+    "nav a",
+    16
+   ],
+   [
+    "main label",
+    14
+   ],
+   [
+    "main td",
+    14
+   ]
+  ],
+  "pageHeight": 1927,
+  "screenshot": "screens/7c-1440x900@100%+text-spacing-data.png"
+ },
+ {
+  "combo": "1440x900@100%+text-spacing",
+  "route": "forms(load-failure)",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 80,
+    "cw": 1,
+    "sh": 18,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 20,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 54
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 98
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 900,
+  "screenshot": "screens/7c-1440x900@100%+text-spacing-formsload-failure.png"
+ },
+ {
+  "combo": "1440x900@100%+text-spacing",
+  "route": "site-detail",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 80,
+    "cw": 1,
+    "sh": 18,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Scale bar 0–10 m. Map v49. North is \"",
+    "sw": 395,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "p.sr-only \"Zoom with plus and minus, or Control\"",
+    "sw": 73,
+    "cw": 1,
+    "sh": 576,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 62,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 54
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 98
+   },
+   {
+    "a": "Map v49",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 61
+   },
+   {
+    "a": "Scale bar",
+    "b": "Zoom with plus and minus, or",
+    "overlapPct": 45
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    14
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "main a",
+    14
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 1691,
+  "screenshot": "screens/7c-1440x900@100%+text-spacing-site-detail.png"
+ },
+ {
+  "combo": "1440x900@100%+text-spacing",
+  "route": "team",
+  "docScrollWidth": 1440,
+  "clientWidth": 1440,
+  "rootFontPx": 16,
+  "overflowsDoc": false,
+  "clipped": [
+   {
+    "el": "a.sr-only.focus-visible:not-sr-only \"Skip to content\"",
+    "sw": 152,
+    "cw": 1,
+    "sh": 24,
+    "ch": 1
+   },
+   {
+    "el": "span.sr-only \"Command K\"",
+    "sw": 80,
+    "cw": 1,
+    "sh": 18,
+    "ch": 1
+   }
+  ],
+  "ellipsis": [],
+  "textNodes": 84,
+  "textOffRight": [],
+  "textOffLeft": [],
+  "overlappingText": [
+   {
+    "a": "Command",
+    "b": "Manager",
+    "overlapPct": 54
+   },
+   {
+    "a": "K",
+    "b": "Manager",
+    "overlapPct": 98
+   }
+  ],
+  "pinned": [
+   {
+    "el": "ol.pointer-events-none.fixed \"\"",
+    "heightPx": 64,
+    "viewportShare": "7%"
+   }
+  ],
+  "sampleFonts": [
+   [
+    "h1",
+    36
+   ],
+   [
+    "main p",
+    16
+   ],
+   [
+    "main button",
+    16
+   ],
+   [
+    "nav a",
+    16
+   ]
+  ],
+  "pageHeight": 2064,
+  "screenshot": "screens/7c-1440x900@100%+text-spacing-team.png"
+ }
+]

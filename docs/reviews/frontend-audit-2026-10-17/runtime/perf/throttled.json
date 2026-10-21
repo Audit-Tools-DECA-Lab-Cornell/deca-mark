@@ -1,0 +1,5245 @@
+{
+ "meta": {
+  "profile": "throttled",
+  "samples": 2,
+  "chromium": "141.0.7390.37",
+  "ts": "2026-10-18T20:17:11.845Z",
+  "throttle": {
+   "latencyMs": 150,
+   "downKbps": 1600,
+   "upKbps": 750,
+   "cpuRate": 4
+  },
+  "node": "v24.18.0"
+ },
+ "routes": {
+  "overview": {
+   "path": "/o/web-acceptance/p/play-study",
+   "ready": "h1 + field-return stat list (dl) visible",
+   "finalPath": "/o/web-acceptance/p/play-study",
+   "status": [
+    200,
+    200
+   ],
+   "errs": [],
+   "h1": "What came back from the field",
+   "mainText": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 obser",
+   "ttfb": {
+    "median": 50.4,
+    "min": 21.7,
+    "max": 79.1,
+    "n": 2
+   },
+   "docEnd": {
+    "median": 394.85,
+    "min": 357.9,
+    "max": 431.8,
+    "n": 2
+   },
+   "fcp": {
+    "median": 822,
+    "min": 756,
+    "max": 888,
+    "n": 2
+   },
+   "lcp": {
+    "median": 822,
+    "min": 756,
+    "max": 888,
+    "n": 2
+   },
+   "lcpEl": "H1#page-title",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 2
+   },
+   "longTaskTotal": {
+    "median": 327.5,
+    "min": 272,
+    "max": 383,
+    "n": 2
+   },
+   "longTaskCount": {
+    "median": 3,
+    "min": 3,
+    "max": 3,
+    "n": 2
+   },
+   "tbt": {
+    "median": 110,
+    "min": 92,
+    "max": 128,
+    "n": 2
+   },
+   "dcl": {
+    "median": 616.25,
+    "min": 581.5,
+    "max": 651,
+    "n": 2
+   },
+   "load": {
+    "median": 2762.45,
+    "min": 2734.6,
+    "max": 2790.3,
+    "n": 2
+   },
+   "usable": {
+    "median": 822,
+    "min": 756,
+    "max": 888,
+    "n": 2
+   },
+   "docEncodedKB": {
+    "median": 34.02,
+    "min": 34.02,
+    "max": 34.02,
+    "n": 2
+   },
+   "docDecodedKB": {
+    "median": 152.48,
+    "min": 152.48,
+    "max": 152.48,
+    "n": 2
+   },
+   "domNodes": {
+    "median": 631,
+    "min": 631,
+    "max": 631,
+    "n": 2
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 34.96,
+      "min": 34.96,
+      "max": 34.96,
+      "n": 2
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 29,
+      "min": 29,
+      "max": 29,
+      "n": 2
+     },
+     "kb": {
+      "median": 475.65,
+      "min": 475.65,
+      "max": 475.65,
+      "n": 2
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 2
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 2
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 2
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 24,
+      "min": 24,
+      "max": 24,
+      "n": 2
+     },
+     "kb": {
+      "median": 365.95,
+      "min": 365.95,
+      "max": 365.95,
+      "n": 2
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 2
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 3974,
+     "finalPath": "/o/web-acceptance/p/play-study",
+     "h1": "What came back from the field",
+     "mainText": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 obser",
+     "ttfb": 79.10000002384186,
+     "rend": 431.8000000715256,
+     "dcl": 651,
+     "load": 2790.3000000715256,
+     "docEncoded": 34833,
+     "docDecoded": 156143,
+     "docTransfer": 35133,
+     "fcp": 888,
+     "lcp": 888,
+     "lcpSize": 23760,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.0003855601704496742,
+     "shifts": 1,
+     "usableAt": 850.1000000238419,
+     "longTaskCount": 3,
+     "longTaskTotal": 383,
+     "tbt": 128,
+     "domNodes": 631,
+     "jsHeapMB": 29.8,
+     "usable": 888,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 35802
+       },
+       "TOTAL": {
+        "count": 29,
+        "bytes": 487064
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 24,
+        "bytes": 374737
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study",
+        "status": 200,
+        "bytes": 35802,
+        "cache": false,
+        "sw": false,
+        "dur": 430
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 500
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 565
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 401
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 715
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 796
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 2027
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1321
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 781
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 787
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1253
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1163
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1147
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1335
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1522
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1544
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1755
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1642
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2534
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2046
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1768
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pfrnrxlf-jpf.js",
+        "status": 200,
+        "bytes": 10619,
+        "cache": false,
+        "sw": false,
+        "dur": 2077
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2174
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2129
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2189
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2241
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2279
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2309
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 211
+       }
+      ]
+     }
+    },
+    {
+     "idx": 1,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 3962,
+     "finalPath": "/o/web-acceptance/p/play-study",
+     "h1": "What came back from the field",
+     "mainText": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 obser",
+     "ttfb": 21.699999928474426,
+     "rend": 357.89999997615814,
+     "dcl": 581.5,
+     "load": 2734.600000023842,
+     "docEncoded": 34833,
+     "docDecoded": 156143,
+     "docTransfer": 35133,
+     "fcp": 756,
+     "lcp": 756,
+     "lcpSize": 23760,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.0003855601704496742,
+     "shifts": 1,
+     "usableAt": 734.7999999523163,
+     "longTaskCount": 3,
+     "longTaskTotal": 272,
+     "tbt": 92,
+     "domNodes": 631,
+     "jsHeapMB": 29.8,
+     "usable": 756,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 35802
+       },
+       "TOTAL": {
+        "count": 29,
+        "bytes": 487064
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 24,
+        "bytes": 374737
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study",
+        "status": 200,
+        "bytes": 35802,
+        "cache": false,
+        "sw": false,
+        "dur": 358
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 488
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 563
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 390
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 688
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 763
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 2031
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1302
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 777
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 785
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1235
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1167
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1129
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1317
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1498
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1542
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1737
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1632
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2516
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 1999
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1766
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pfrnrxlf-jpf.js",
+        "status": 200,
+        "bytes": 10619,
+        "cache": false,
+        "sw": false,
+        "dur": 2059
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2156
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2119
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2171
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2224
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2261
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2299
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 286
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "data": {
+   "path": "/o/web-acceptance/p/play-study/data",
+   "ready": "first observation row link visible (8 rows)",
+   "finalPath": "/o/web-acceptance/p/play-study/data",
+   "status": [
+    200,
+    200
+   ],
+   "errs": [],
+   "h1": "Observation data",
+   "mainText": "Observation data Filter what observers have uploaded, then copy a link to the view or expo",
+   "ttfb": {
+    "median": 26.2,
+    "min": 21.5,
+    "max": 30.9,
+    "n": 2
+   },
+   "docEnd": {
+    "median": 275.35,
+    "min": 275.3,
+    "max": 275.4,
+    "n": 2
+   },
+   "fcp": {
+    "median": 768,
+    "min": 760,
+    "max": 776,
+    "n": 2
+   },
+   "lcp": {
+    "median": 768,
+    "min": 760,
+    "max": 776,
+    "n": 2
+   },
+   "lcpEl": "DIV",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 2
+   },
+   "longTaskTotal": {
+    "median": 321,
+    "min": 320,
+    "max": 322,
+    "n": 2
+   },
+   "longTaskCount": {
+    "median": 3,
+    "min": 3,
+    "max": 3,
+    "n": 2
+   },
+   "tbt": {
+    "median": 121.5,
+    "min": 115,
+    "max": 128,
+    "n": 2
+   },
+   "dcl": {
+    "median": 563.6,
+    "min": 563.4,
+    "max": 563.8,
+    "n": 2
+   },
+   "load": {
+    "median": 3120.05,
+    "min": 3119.2,
+    "max": 3120.9,
+    "n": 2
+   },
+   "usable": {
+    "median": 768,
+    "min": 760,
+    "max": 776,
+    "n": 2
+   },
+   "docEncodedKB": {
+    "median": 21.43,
+    "min": 21.43,
+    "max": 21.43,
+    "n": 2
+   },
+   "docDecodedKB": {
+    "median": 115.72,
+    "min": 115.72,
+    "max": 115.72,
+    "n": 2
+   },
+   "domNodes": {
+    "median": 597,
+    "min": 597,
+    "max": 597,
+    "n": 2
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 22.25,
+      "min": 22.24,
+      "max": 22.25,
+      "n": 2
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 30,
+      "min": 30,
+      "max": 30,
+      "n": 2
+     },
+     "kb": {
+      "median": 546.43,
+      "min": 546.43,
+      "max": 546.43,
+      "n": 2
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 2
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 2
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 2
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 25,
+      "min": 25,
+      "max": 25,
+      "n": 2
+     },
+     "kb": {
+      "median": 449.46,
+      "min": 449.46,
+      "max": 449.46,
+      "n": 2
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 2
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4348,
+     "finalPath": "/o/web-acceptance/p/play-study/data",
+     "h1": "Observation data",
+     "mainText": "Observation data Filter what observers have uploaded, then copy a link to the view or expo",
+     "ttfb": 30.899999976158142,
+     "rend": 275.3000000715256,
+     "dcl": 563.3999999761581,
+     "load": 3119.2000000476837,
+     "docEncoded": 21946,
+     "docDecoded": 118497,
+     "docTransfer": 22246,
+     "fcp": 760,
+     "lcp": 760,
+     "lcpSize": 17560,
+     "lcpTag": "DIV",
+     "lcpUrl": "",
+     "cls": 0.0047022735553840875,
+     "shifts": 2,
+     "usableAt": 729.8999999761581,
+     "longTaskCount": 3,
+     "longTaskTotal": 322,
+     "tbt": 128,
+     "domNodes": 597,
+     "jsHeapMB": 24.8,
+     "usable": 760,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 22778
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 559546
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 460243
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study/data",
+        "status": 200,
+        "bytes": 22778,
+        "cache": false,
+        "sw": false,
+        "dur": 275
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 473
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 556
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 374
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 673
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 748
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 1783
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1274
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 763
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 779
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1221
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 1145
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1182
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1212
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1550
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1624
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1662
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1730
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1632
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2877
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2000
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1827
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 1834
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 1946
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2015
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2037
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2171
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2d013804da0kj.js",
+        "status": 200,
+        "bytes": 72545,
+        "cache": false,
+        "sw": false,
+        "dur": 2929
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0mdkekfyzteng.js",
+        "status": 200,
+        "bytes": 23580,
+        "cache": false,
+        "sw": false,
+        "dur": 2517
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 272
+       }
+      ]
+     }
+    },
+    {
+     "idx": 1,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4336,
+     "finalPath": "/o/web-acceptance/p/play-study/data",
+     "h1": "Observation data",
+     "mainText": "Observation data Filter what observers have uploaded, then copy a link to the view or expo",
+     "ttfb": 21.5,
+     "rend": 275.39999997615814,
+     "dcl": 563.7999999523163,
+     "load": 3120.899999976158,
+     "docEncoded": 21948,
+     "docDecoded": 118497,
+     "docTransfer": 22248,
+     "fcp": 776,
+     "lcp": 776,
+     "lcpSize": 17560,
+     "lcpTag": "DIV",
+     "lcpUrl": "",
+     "cls": 0.0047022735553840875,
+     "shifts": 2,
+     "usableAt": 739.3999999761581,
+     "longTaskCount": 3,
+     "longTaskTotal": 320,
+     "tbt": 115,
+     "domNodes": 597,
+     "jsHeapMB": 28,
+     "usable": 776,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 22780
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 559548
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 460243
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study/data",
+        "status": 200,
+        "bytes": 22780,
+        "cache": false,
+        "sw": false,
+        "dur": 275
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 475
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 541
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 376
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 670
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 744
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 1779
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1277
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 767
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 752
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1225
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 1142
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1164
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1202
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1569
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1600
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1660
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1718
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1636
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2874
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 1988
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1830
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 1838
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 1936
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2003
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2034
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2176
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2d013804da0kj.js",
+        "status": 200,
+        "bytes": 72545,
+        "cache": false,
+        "sw": false,
+        "dur": 2926
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0mdkekfyzteng.js",
+        "status": 200,
+        "bytes": 23580,
+        "cache": false,
+        "sw": false,
+        "dur": 2512
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 259
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "site": {
+   "path": "/o/web-acceptance/p/play-study/sites/fall-creek",
+   "ready": "SVG zone map (aria-labelled, >300x200) visible",
+   "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek",
+   "status": [
+    200,
+    200
+   ],
+   "errs": [],
+   "h1": "Fall Creek test site",
+   "mainText": "Sites Fall Creek test site Fall Creek test site 1 zone · 8 observations See observations Z",
+   "ttfb": {
+    "median": 33.95,
+    "min": 25.2,
+    "max": 42.7,
+    "n": 2
+   },
+   "docEnd": {
+    "median": 259.7,
+    "min": 259.5,
+    "max": 259.9,
+    "n": 2
+   },
+   "fcp": {
+    "median": 716,
+    "min": 716,
+    "max": 716,
+    "n": 2
+   },
+   "lcp": {
+    "median": 716,
+    "min": 716,
+    "max": 716,
+    "n": 2
+   },
+   "lcpEl": "H1#page-title",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 2
+   },
+   "longTaskTotal": {
+    "median": 282.5,
+    "min": 276,
+    "max": 289,
+    "n": 2
+   },
+   "longTaskCount": {
+    "median": 3,
+    "min": 3,
+    "max": 3,
+    "n": 2
+   },
+   "tbt": {
+    "median": 128,
+    "min": 124,
+    "max": 132,
+    "n": 2
+   },
+   "dcl": {
+    "median": 562.2,
+    "min": 561.1,
+    "max": 563.3,
+    "n": 2
+   },
+   "load": {
+    "median": 3106.45,
+    "min": 3100.6,
+    "max": 3112.3,
+    "n": 2
+   },
+   "usable": {
+    "median": 716,
+    "min": 716,
+    "max": 716,
+    "n": 2
+   },
+   "docEncodedKB": {
+    "median": 19.58,
+    "min": 19.58,
+    "max": 19.58,
+    "n": 2
+   },
+   "docDecodedKB": {
+    "median": 79.62,
+    "min": 79.62,
+    "max": 79.62,
+    "n": 2
+   },
+   "domNodes": {
+    "median": 316,
+    "min": 316,
+    "max": 316,
+    "n": 2
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 20.41,
+      "min": 20.41,
+      "max": 20.41,
+      "n": 2
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 30,
+      "min": 30,
+      "max": 30,
+      "n": 2
+     },
+     "kb": {
+      "median": 535.85,
+      "min": 535.85,
+      "max": 535.85,
+      "n": 2
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 2
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 2
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 2
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 25,
+      "min": 25,
+      "max": 25,
+      "n": 2
+     },
+     "kb": {
+      "median": 440.71,
+      "min": 440.71,
+      "max": 440.71,
+      "n": 2
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 2
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4334,
+     "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek",
+     "h1": "Fall Creek test site",
+     "mainText": "Sites Fall Creek test site Fall Creek test site 1 zone · 8 observations See observations Z",
+     "ttfb": 25.200000047683716,
+     "rend": 259.5,
+     "dcl": 561.1000000238419,
+     "load": 3100.600000023842,
+     "docEncoded": 20055,
+     "docDecoded": 81529,
+     "docTransfer": 20355,
+     "fcp": 716,
+     "lcp": 716,
+     "lcpSize": 14265,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.0005242544501243141,
+     "shifts": 2,
+     "usableAt": 701.3000000715256,
+     "longTaskCount": 3,
+     "longTaskTotal": 289,
+     "tbt": 132,
+     "domNodes": 316,
+     "jsHeapMB": 54.2,
+     "usable": 716,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 20900
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 548707
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 451282
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study/sites/fall-creek",
+        "status": 200,
+        "bytes": 20900,
+        "cache": false,
+        "sw": false,
+        "dur": 260
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 476
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 557
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 377
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 671
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 746
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 1969
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1285
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 760
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 774
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1218
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1149
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1135
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1299
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1509
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1532
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1711
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1614
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2867
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2034
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1748
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2071
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3-dr7pv7v6of6.js",
+        "status": 200,
+        "bytes": 72622,
+        "cache": false,
+        "sw": false,
+        "dur": 2881
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2331_66vdlxbq.js",
+        "status": 200,
+        "bytes": 14542,
+        "cache": false,
+        "sw": false,
+        "dur": 2236
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2304
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2221
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2319
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2454
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2446
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 309
+       }
+      ]
+     }
+    },
+    {
+     "idx": 1,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4350,
+     "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek",
+     "h1": "Fall Creek test site",
+     "mainText": "Sites Fall Creek test site Fall Creek test site 1 zone · 8 observations See observations Z",
+     "ttfb": 42.699999928474426,
+     "rend": 259.89999997615814,
+     "dcl": 563.2999999523163,
+     "load": 3112.2999999523163,
+     "docEncoded": 20055,
+     "docDecoded": 81529,
+     "docTransfer": 20355,
+     "fcp": 716,
+     "lcp": 716,
+     "lcpSize": 14265,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.0005242544501243141,
+     "shifts": 2,
+     "usableAt": 697.6000000238419,
+     "longTaskCount": 3,
+     "longTaskTotal": 276,
+     "tbt": 124,
+     "domNodes": 316,
+     "jsHeapMB": 57.5,
+     "usable": 716,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 20900
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 548707
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 451282
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study/sites/fall-creek",
+        "status": 200,
+        "bytes": 20900,
+        "cache": false,
+        "sw": false,
+        "dur": 260
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 482
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 542
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 377
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 672
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 747
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 2013
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1285
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 767
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 760
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1219
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1150
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1113
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1299
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1480
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1524
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1720
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1615
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2868
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 1982
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1749
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2071
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3-dr7pv7v6of6.js",
+        "status": 200,
+        "bytes": 72622,
+        "cache": false,
+        "sw": false,
+        "dur": 2882
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2331_66vdlxbq.js",
+        "status": 200,
+        "bytes": 14542,
+        "cache": false,
+        "sw": false,
+        "dur": 2221
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2320
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2198
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2311
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2423
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2431
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 313
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "zones": {
+   "path": "/o/web-acceptance/p/play-study/sites/fall-creek/zones",
+   "ready": "SVG zone map visible (site has 48 zone versions from earlier e2e)",
+   "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek/zones",
+   "status": [
+    200,
+    200
+   ],
+   "errs": [],
+   "h1": "Zones · Fall Creek test site",
+   "mainText": "Sites Fall Creek test site Zones Zones · Fall Creek test site Map v49 · published Oct 15, ",
+   "ttfb": {
+    "median": 32.65,
+    "min": 22.2,
+    "max": 43.1,
+    "n": 2
+   },
+   "docEnd": {
+    "median": 1129.45,
+    "min": 1129.1,
+    "max": 1129.8,
+    "n": 2
+   },
+   "fcp": {
+    "median": 766,
+    "min": 760,
+    "max": 772,
+    "n": 2
+   },
+   "lcp": {
+    "median": 1214,
+    "min": 1208,
+    "max": 1220,
+    "n": 2
+   },
+   "lcpEl": "H1#page-title",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 2
+   },
+   "longTaskTotal": {
+    "median": 222,
+    "min": 190,
+    "max": 254,
+    "n": 2
+   },
+   "longTaskCount": {
+    "median": 2.5,
+    "min": 2,
+    "max": 3,
+    "n": 2
+   },
+   "tbt": {
+    "median": 97,
+    "min": 90,
+    "max": 104,
+    "n": 2
+   },
+   "dcl": {
+    "median": 1141.4,
+    "min": 1140.9,
+    "max": 1141.9,
+    "n": 2
+   },
+   "load": {
+    "median": 3321.45,
+    "min": 3321,
+    "max": 3321.9,
+    "n": 2
+   },
+   "usable": {
+    "median": 1181.95,
+    "min": 1181.6,
+    "max": 1182.3,
+    "n": 2
+   },
+   "docEncodedKB": {
+    "median": 71.05,
+    "min": 71.05,
+    "max": 71.05,
+    "n": 2
+   },
+   "docDecodedKB": {
+    "median": 306.03,
+    "min": 306.03,
+    "max": 306.03,
+    "n": 2
+   },
+   "domNodes": {
+    "median": 1249,
+    "min": 1249,
+    "max": 1249,
+    "n": 2
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 72.27,
+      "min": 72.27,
+      "max": 72.27,
+      "n": 2
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 30,
+      "min": 30,
+      "max": 30,
+      "n": 2
+     },
+     "kb": {
+      "median": 589.89,
+      "min": 589.89,
+      "max": 589.89,
+      "n": 2
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 2
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 2
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 2
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 25,
+      "min": 25,
+      "max": 25,
+      "n": 2
+     },
+     "kb": {
+      "median": 442.89,
+      "min": 442.89,
+      "max": 442.89,
+      "n": 2
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 2
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4498,
+     "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek/zones",
+     "h1": "Zones · Fall Creek test site",
+     "mainText": "Sites Fall Creek test site Zones Zones · Fall Creek test site Map v49 · published Oct 15, ",
+     "ttfb": 22.200000047683716,
+     "rend": 1129.1000000238419,
+     "dcl": 1140.8999999761581,
+     "load": 3321.899999976158,
+     "docEncoded": 72760,
+     "docDecoded": 313377,
+     "docTransfer": 73060,
+     "fcp": 772,
+     "lcp": 1208,
+     "lcpSize": 19980,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.00048756312826860423,
+     "shifts": 3,
+     "usableAt": 1182.2999999523163,
+     "longTaskCount": 3,
+     "longTaskTotal": 254,
+     "tbt": 104,
+     "domNodes": 1249,
+     "jsHeapMB": 16.3,
+     "usable": 1182.2999999523163,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 74001
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 604044
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 453518
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study/sites/fall-creek/zones",
+        "status": 200,
+        "bytes": 74001,
+        "cache": false,
+        "sw": false,
+        "dur": 1129
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 594
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 885
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 443
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 765
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 855
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 2084
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1545
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 1110
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 1086
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1401
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1296
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1431
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1558
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1679
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1791
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1933
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1858
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 3103
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2166
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 2000
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2293
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3-dr7pv7v6of6.js",
+        "status": 200,
+        "bytes": 72622,
+        "cache": false,
+        "sw": false,
+        "dur": 3095
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/126ibiuddydfg.js",
+        "status": 200,
+        "bytes": 16778,
+        "cache": false,
+        "sw": false,
+        "dur": 2547
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2428
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2353
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2532
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2593
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2629
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 352
+       }
+      ]
+     }
+    },
+    {
+     "idx": 1,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4546,
+     "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek/zones",
+     "h1": "Zones · Fall Creek test site",
+     "mainText": "Sites Fall Creek test site Zones Zones · Fall Creek test site Map v49 · published Oct 15, ",
+     "ttfb": 43.09999990463257,
+     "rend": 1129.7999999523163,
+     "dcl": 1141.8999999761581,
+     "load": 3321,
+     "docEncoded": 72760,
+     "docDecoded": 313377,
+     "docTransfer": 73060,
+     "fcp": 760,
+     "lcp": 1220,
+     "lcpSize": 19980,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.00048756312826860423,
+     "shifts": 3,
+     "usableAt": 1181.5999999046326,
+     "longTaskCount": 2,
+     "longTaskTotal": 190,
+     "tbt": 90,
+     "domNodes": 1249,
+     "jsHeapMB": 13.6,
+     "usable": 1181.5999999046326,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 74001
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 604044
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 453518
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/web-acceptance/p/play-study/sites/fall-creek/zones",
+        "status": 200,
+        "bytes": 74001,
+        "cache": false,
+        "sw": false,
+        "dur": 1130
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 595
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 903
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 437
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 761
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 842
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 2073
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1548
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 1082
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 1106
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1398
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1292
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1426
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1555
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1675
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1787
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1922
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1870
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 3099
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2154
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1996
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2304
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3-dr7pv7v6of6.js",
+        "status": 200,
+        "bytes": 72622,
+        "cache": false,
+        "sw": false,
+        "dur": 3091
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/126ibiuddydfg.js",
+        "status": 200,
+        "bytes": 16778,
+        "cache": false,
+        "sw": false,
+        "dur": 2536
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2432
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2341
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2544
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2588
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2634
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 361
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Z-data": {
+   "path": "/o/zone-review-acceptance/p/zone-review/data",
+   "ready": "first of 500 rendered rows visible",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/data",
+   "status": [
+    200,
+    200
+   ],
+   "errs": [],
+   "h1": "Observation data",
+   "mainText": "Observation data Filter what observers have uploaded, then copy a link to the view or expo",
+   "ttfb": {
+    "median": 43.15,
+    "min": 27.1,
+    "max": 59.2,
+    "n": 2
+   },
+   "docEnd": {
+    "median": 1384.5,
+    "min": 1324.1,
+    "max": 1444.9,
+    "n": 2
+   },
+   "fcp": {
+    "median": 716,
+    "min": 704,
+    "max": 728,
+    "n": 2
+   },
+   "lcp": {
+    "median": 1776,
+    "min": 1712,
+    "max": 1840,
+    "n": 2
+   },
+   "lcpEl": "DIV",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 2
+   },
+   "longTaskTotal": {
+    "median": 944,
+    "min": 789,
+    "max": 1099,
+    "n": 2
+   },
+   "longTaskCount": {
+    "median": 6,
+    "min": 4,
+    "max": 8,
+    "n": 2
+   },
+   "tbt": {
+    "median": 643,
+    "min": 589,
+    "max": 697,
+    "n": 2
+   },
+   "dcl": {
+    "median": 1414.55,
+    "min": 1354.9,
+    "max": 1474.2,
+    "n": 2
+   },
+   "load": {
+    "median": 3540.5,
+    "min": 3474.8,
+    "max": 3606.2,
+    "n": 2
+   },
+   "usable": {
+    "median": 1708.7,
+    "min": 1645.3,
+    "max": 1772.1,
+    "n": 2
+   },
+   "docEncodedKB": {
+    "median": 54.8,
+    "min": 54.8,
+    "max": 54.81,
+    "n": 2
+   },
+   "docDecodedKB": {
+    "median": 2214.77,
+    "min": 2214.77,
+    "max": 2214.77,
+    "n": 2
+   },
+   "domNodes": {
+    "median": 15213,
+    "min": 15213,
+    "max": 15213,
+    "n": 2
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 55.64,
+      "min": 55.64,
+      "max": 55.64,
+      "n": 2
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 30,
+      "min": 30,
+      "max": 30,
+      "n": 2
+     },
+     "kb": {
+      "median": 579.83,
+      "min": 579.83,
+      "max": 579.83,
+      "n": 2
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 2
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 2
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 2
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 25,
+      "min": 25,
+      "max": 25,
+      "n": 2
+     },
+     "kb": {
+      "median": 449.46,
+      "min": 449.46,
+      "max": 449.46,
+      "n": 2
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 2
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4610,
+     "finalPath": "/o/zone-review-acceptance/p/zone-review/data",
+     "h1": "Observation data",
+     "mainText": "Observation data Filter what observers have uploaded, then copy a link to the view or expo",
+     "ttfb": 27.100000023841858,
+     "rend": 1324.1000000238419,
+     "dcl": 1354.9000000953674,
+     "load": 3474.8000000715256,
+     "docEncoded": 56121,
+     "docDecoded": 2267926,
+     "docTransfer": 56421,
+     "fcp": 728,
+     "lcp": 1712,
+     "lcpSize": 21540,
+     "lcpTag": "DIV",
+     "lcpUrl": "",
+     "cls": 0.0005407064974226252,
+     "shifts": 3,
+     "usableAt": 1645.3000000715256,
+     "longTaskCount": 8,
+     "longTaskTotal": 1099,
+     "tbt": 697,
+     "domNodes": 15213,
+     "jsHeapMB": 20.7,
+     "usable": 1645.3000000715256,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 56977
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 593745
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 460243
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/zone-review-acceptance/p/zone-review/data",
+        "status": 200,
+        "bytes": 56977,
+        "cache": false,
+        "sw": false,
+        "dur": 1324
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 552
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 842
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 401
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 718
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 807
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 2037
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1534
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 1084
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 1054
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1332
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 1414
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1451
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1481
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1691
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1826
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1894
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1983
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1870
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 3056
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2223
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 2081
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2073
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2201
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2267
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2275
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2418
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2d013804da0kj.js",
+        "status": 200,
+        "bytes": 72545,
+        "cache": false,
+        "sw": false,
+        "dur": 3144
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0mdkekfyzteng.js",
+        "status": 200,
+        "bytes": 23580,
+        "cache": false,
+        "sw": false,
+        "dur": 2740
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 342
+       }
+      ]
+     }
+    },
+    {
+     "idx": 1,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4579,
+     "finalPath": "/o/zone-review-acceptance/p/zone-review/data",
+     "h1": "Observation data",
+     "mainText": "Observation data Filter what observers have uploaded, then copy a link to the view or expo",
+     "ttfb": 59.199999928474426,
+     "rend": 1444.8999999761581,
+     "dcl": 1474.1999999284744,
+     "load": 3606.1999999284744,
+     "docEncoded": 56119,
+     "docDecoded": 2267926,
+     "docTransfer": 56419,
+     "fcp": 704,
+     "lcp": 1840,
+     "lcpSize": 21540,
+     "lcpTag": "DIV",
+     "lcpUrl": "",
+     "cls": 0.0005407064974226252,
+     "shifts": 3,
+     "usableAt": 1772.1000000238419,
+     "longTaskCount": 4,
+     "longTaskTotal": 789,
+     "tbt": 589,
+     "domNodes": 15213,
+     "jsHeapMB": 19.6,
+     "usable": 1772.1000000238419,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 56975
+       },
+       "TOTAL": {
+        "count": 30,
+        "bytes": 593743
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 25,
+        "bytes": 460243
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/zone-review-acceptance/p/zone-review/data",
+        "status": 200,
+        "bytes": 56975,
+        "cache": false,
+        "sw": false,
+        "dur": 1445
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 503
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 773
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 374
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 710
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 792
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 1998
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1505
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 1055
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 1017
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1354
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 1391
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1421
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1541
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1766
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1804
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1856
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1967
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1878
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 3078
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2185
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 2050
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2058
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2192
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2216
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2244
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2387
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2d013804da0kj.js",
+        "status": 200,
+        "bytes": 72545,
+        "cache": false,
+        "sw": false,
+        "dur": 3144
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0mdkekfyzteng.js",
+        "status": 200,
+        "bytes": 23580,
+        "cache": false,
+        "sw": false,
+        "dur": 2709
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 357
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "Z-zone-draft-editor": {
+   "path": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid>",
+   "ready": "zone draft editor SVG map visible",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/<uuid>",
+   "status": [
+    200,
+    200
+   ],
+   "errs": [],
+   "h1": "Edit zones · Synthetic review-site",
+   "mainText": "Sites Synthetic review-site Zones Draft Edit zones · Synthetic review-site A draft based o",
+   "ttfb": {
+    "median": 37.6,
+    "min": 37.3,
+    "max": 37.9,
+    "n": 2
+   },
+   "docEnd": {
+    "median": 233.8,
+    "min": 230.1,
+    "max": 237.5,
+    "n": 2
+   },
+   "fcp": {
+    "median": 698,
+    "min": 696,
+    "max": 700,
+    "n": 2
+   },
+   "lcp": {
+    "median": 2044,
+    "min": 700,
+    "max": 3388,
+    "n": 2
+   },
+   "lcpEl": "H1#page-title",
+   "cls": {
+    "median": 0,
+    "min": 0,
+    "max": 0,
+    "n": 2
+   },
+   "longTaskTotal": {
+    "median": 273.5,
+    "min": 261,
+    "max": 286,
+    "n": 2
+   },
+   "longTaskCount": {
+    "median": 3,
+    "min": 3,
+    "max": 3,
+    "n": 2
+   },
+   "tbt": {
+    "median": 123.5,
+    "min": 111,
+    "max": 136,
+    "n": 2
+   },
+   "dcl": {
+    "median": 556.15,
+    "min": 555.5,
+    "max": 556.8,
+    "n": 2
+   },
+   "load": {
+    "median": 3399.75,
+    "min": 3388.4,
+    "max": 3411.1,
+    "n": 2
+   },
+   "usable": {
+    "median": 3628.4,
+    "min": 3617.4,
+    "max": 3639.4,
+    "n": 2
+   },
+   "docEncodedKB": {
+    "median": 14.62,
+    "min": 14.62,
+    "max": 14.62,
+    "n": 2
+   },
+   "docDecodedKB": {
+    "median": 59.58,
+    "min": 59.58,
+    "max": 59.58,
+    "n": 2
+   },
+   "domNodes": {
+    "median": 398,
+    "min": 398,
+    "max": 398,
+    "n": 2
+   },
+   "requests": {
+    "Document": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 15.42,
+      "min": 15.42,
+      "max": 15.42,
+      "n": 2
+     }
+    },
+    "TOTAL": {
+     "count": {
+      "median": 35,
+      "min": 35,
+      "max": 35,
+      "n": 2
+     },
+     "kb": {
+      "median": 561.88,
+      "min": 561.88,
+      "max": 561.88,
+      "n": 2
+     }
+    },
+    "Font": {
+     "count": {
+      "median": 2,
+      "min": 2,
+      "max": 2,
+      "n": 2
+     },
+     "kb": {
+      "median": 60.64,
+      "min": 60.64,
+      "max": 60.64,
+      "n": 2
+     }
+    },
+    "Stylesheet": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 13.23,
+      "min": 13.23,
+      "max": 13.23,
+      "n": 2
+     }
+    },
+    "Script": {
+     "count": {
+      "median": 28,
+      "min": 28,
+      "max": 28,
+      "n": 2
+     },
+     "kb": {
+      "median": 469.85,
+      "min": 469.85,
+      "max": 469.85,
+      "n": 2
+     }
+    },
+    "Image": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 0.86,
+      "min": 0.86,
+      "max": 0.86,
+      "n": 2
+     }
+    },
+    "Other": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 0,
+      "min": 0,
+      "max": 0,
+      "n": 2
+     }
+    },
+    "api-8001": {
+     "count": {
+      "median": 1,
+      "min": 1,
+      "max": 1,
+      "n": 2
+     },
+     "kb": {
+      "median": 1.87,
+      "min": 1.87,
+      "max": 1.87,
+      "n": 2
+     }
+    }
+   },
+   "external": 0,
+   "raw": [
+    {
+     "idx": 0,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4779,
+     "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+     "h1": "Edit zones · Synthetic review-site",
+     "mainText": "Sites Synthetic review-site Zones Draft Edit zones · Synthetic review-site A draft based o",
+     "ttfb": 37.89999997615814,
+     "rend": 230.10000002384186,
+     "dcl": 555.5,
+     "load": 3411.100000023842,
+     "docEncoded": 14969,
+     "docDecoded": 61011,
+     "docTransfer": 15269,
+     "fcp": 700,
+     "lcp": 700,
+     "lcpSize": 25470,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.0003855601704496742,
+     "shifts": 1,
+     "usableAt": 3639.399999976158,
+     "longTaskCount": 3,
+     "longTaskTotal": 286,
+     "tbt": 136,
+     "domNodes": 398,
+     "jsHeapMB": 10.1,
+     "usable": 3639.399999976158,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 15793
+       },
+       "TOTAL": {
+        "count": 35,
+        "bytes": 575363
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 28,
+        "bytes": 481128
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       },
+       "Other": {
+        "count": 1,
+        "bytes": 0
+       },
+       "api-8001": {
+        "count": 1,
+        "bytes": 1917
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+        "status": 200,
+        "bytes": 15793,
+        "cache": false,
+        "sw": false,
+        "dur": 230
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 476
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 542
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 377
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 672
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 745
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 1967
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1308
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 768
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 760
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1218
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1149
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1112
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1300
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1472
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1547
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1718
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1622
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2972
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 1973
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1763
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t8sn3zwbn_oa.js",
+        "status": 200,
+        "bytes": 6798,
+        "cache": false,
+        "sw": false,
+        "dur": 1929
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0tpa_v-qlaver.js",
+        "status": 200,
+        "bytes": 12996,
+        "cache": false,
+        "sw": false,
+        "dur": 2124
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/12wg92ypucdvv.js",
+        "status": 200,
+        "bytes": 9797,
+        "cache": false,
+        "sw": false,
+        "dur": 2117
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/159n5qswl4qfq.js",
+        "status": 200,
+        "bytes": 72614,
+        "cache": false,
+        "sw": false,
+        "dur": 3038
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2417
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1etpo3b5ld5a2.js",
+        "status": 200,
+        "bytes": 14805,
+        "cache": false,
+        "sw": false,
+        "dur": 2461
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2483
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2318
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2543
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2633
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2662
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 316
+       },
+       {
+        "k": "Other",
+        "path": "/v1/projects/b9acbc26-5071-4821-8d7c-98701bc88c86/sites/d5046752-dab3-41db-84d7-3ab355a2f28e/zone-drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+        "status": 200,
+        "bytes": 0,
+        "cache": false,
+        "sw": false,
+        "dur": 2
+       },
+       {
+        "k": "api-8001",
+        "path": "/v1/projects/b9acbc26-5071-4821-8d7c-98701bc88c86/sites/d5046752-dab3-41db-84d7-3ab355a2f28e/zone-drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+        "status": 200,
+        "bytes": 1917,
+        "cache": false,
+        "sw": false,
+        "dur": 168
+       }
+      ]
+     }
+    },
+    {
+     "idx": 1,
+     "status": 200,
+     "err": null,
+     "settled": true,
+     "wallMs": 4797,
+     "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+     "h1": "Edit zones · Synthetic review-site",
+     "mainText": "Sites Synthetic review-site Zones Draft Edit zones · Synthetic review-site A draft based o",
+     "ttfb": 37.299999952316284,
+     "rend": 237.5,
+     "dcl": 556.7999999523163,
+     "load": 3388.399999976158,
+     "docEncoded": 14969,
+     "docDecoded": 61011,
+     "docTransfer": 15269,
+     "fcp": 696,
+     "lcp": 3388,
+     "lcpSize": 25470,
+     "lcpTag": "H1#page-title",
+     "lcpUrl": "",
+     "cls": 0.000535314639998071,
+     "shifts": 2,
+     "usableAt": 3617.399999976158,
+     "longTaskCount": 3,
+     "longTaskTotal": 261,
+     "tbt": 111,
+     "domNodes": 398,
+     "jsHeapMB": 10.1,
+     "usable": 3617.399999976158,
+     "req": {
+      "by": {
+       "Document": {
+        "count": 1,
+        "bytes": 15793
+       },
+       "TOTAL": {
+        "count": 35,
+        "bytes": 575363
+       },
+       "Font": {
+        "count": 2,
+        "bytes": 62092
+       },
+       "Stylesheet": {
+        "count": 1,
+        "bytes": 13551
+       },
+       "Script": {
+        "count": 28,
+        "bytes": 481128
+       },
+       "Image": {
+        "count": 1,
+        "bytes": 882
+       },
+       "Other": {
+        "count": 1,
+        "bytes": 0
+       },
+       "api-8001": {
+        "count": 1,
+        "bytes": 1917
+       }
+      },
+      "external": 0,
+      "externalHosts": [],
+      "list": [
+       {
+        "k": "Document",
+        "path": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+        "status": 200,
+        "bytes": 15793,
+        "cache": false,
+        "sw": false,
+        "dur": 237
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/0981397205f5a2e0-s.p.1i0-tkhmnd6is.woff2",
+        "status": 200,
+        "bytes": 25264,
+        "cache": false,
+        "sw": false,
+        "dur": 482
+       },
+       {
+        "k": "Font",
+        "path": "/_next/static/media/d2d62b05021c6286-s.p.2d9e_tvweuz-y.woff2",
+        "status": 200,
+        "bytes": 36828,
+        "cache": false,
+        "sw": false,
+        "dur": 572
+       },
+       {
+        "k": "Stylesheet",
+        "path": "/_next/static/chunks/2c0z7k0e60fdc.css",
+        "status": 200,
+        "bytes": 13551,
+        "cache": false,
+        "sw": false,
+        "dur": 376
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t4ilaqyfskyf.js",
+        "status": 200,
+        "bytes": 7003,
+        "cache": false,
+        "sw": false,
+        "dur": 674
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/28gf-u4e69t0x.js",
+        "status": 200,
+        "bytes": 9666,
+        "cache": false,
+        "sw": false,
+        "dur": 742
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1zz4_vykseajt.js",
+        "status": 200,
+        "bytes": 73087,
+        "cache": false,
+        "sw": false,
+        "dur": 1956
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10uv514i7spsv.js",
+        "status": 200,
+        "bytes": 40009,
+        "cache": false,
+        "sw": false,
+        "dur": 1288
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/turbopack-16m8pxs02sp77.js",
+        "status": 200,
+        "bytes": 4546,
+        "cache": false,
+        "sw": false,
+        "dur": 771
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/262ez5ras4i7e.js",
+        "status": 200,
+        "bytes": 2088,
+        "cache": false,
+        "sw": false,
+        "dur": 868
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1z3z_fx6b_867.js",
+        "status": 200,
+        "bytes": 13279,
+        "cache": false,
+        "sw": false,
+        "dur": 1205
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0pvgdur4tzjzi.js",
+        "status": 200,
+        "bytes": 8735,
+        "cache": false,
+        "sw": false,
+        "dur": 1130
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3cofoymsl6dpn.js",
+        "status": 200,
+        "bytes": 7016,
+        "cache": false,
+        "sw": false,
+        "dur": 1124
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/25o6rfbjysz5f.js",
+        "status": 200,
+        "bytes": 12823,
+        "cache": false,
+        "sw": false,
+        "dur": 1318
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1dyk9db-_7hyl.js",
+        "status": 200,
+        "bytes": 10807,
+        "cache": false,
+        "sw": false,
+        "dur": 1528
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1ry06mlq7arvq.js",
+        "status": 200,
+        "bytes": 11418,
+        "cache": false,
+        "sw": false,
+        "dur": 1535
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1i9f2af4ujan8.js",
+        "status": 200,
+        "bytes": 16306,
+        "cache": false,
+        "sw": false,
+        "dur": 1693
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/01qi5x5y7xmzd.js",
+        "status": 200,
+        "bytes": 7096,
+        "cache": false,
+        "sw": false,
+        "dur": 1626
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0wstr41mffx5k.js",
+        "status": 200,
+        "bytes": 91362,
+        "cache": false,
+        "sw": false,
+        "dur": 2975
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0reayt05ebhzt.js",
+        "status": 200,
+        "bytes": 15396,
+        "cache": false,
+        "sw": false,
+        "dur": 2029
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/39xlq5fubsvat.js",
+        "status": 200,
+        "bytes": 2393,
+        "cache": false,
+        "sw": false,
+        "dur": 1745
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1t8sn3zwbn_oa.js",
+        "status": 200,
+        "bytes": 6798,
+        "cache": false,
+        "sw": false,
+        "dur": 1948
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0tpa_v-qlaver.js",
+        "status": 200,
+        "bytes": 12996,
+        "cache": false,
+        "sw": false,
+        "dur": 2120
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/12wg92ypucdvv.js",
+        "status": 200,
+        "bytes": 9797,
+        "cache": false,
+        "sw": false,
+        "dur": 2111
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/159n5qswl4qfq.js",
+        "status": 200,
+        "bytes": 72614,
+        "cache": false,
+        "sw": false,
+        "dur": 3041
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3tbhe33anca8u.js",
+        "status": 200,
+        "bytes": 12595,
+        "cache": false,
+        "sw": false,
+        "dur": 2397
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/1etpo3b5ld5a2.js",
+        "status": 200,
+        "bytes": 14805,
+        "cache": false,
+        "sw": false,
+        "dur": 2508
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/10fqtmfyuy748.js",
+        "status": 200,
+        "bytes": 8749,
+        "cache": false,
+        "sw": false,
+        "dur": 2478
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3qi5lz1xg5xyx.js",
+        "status": 200,
+        "bytes": 1331,
+        "cache": false,
+        "sw": false,
+        "dur": 2314
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/3_n1otntdmkpm.js",
+        "status": 200,
+        "bytes": 3249,
+        "cache": false,
+        "sw": false,
+        "dur": 2554
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/0xhp3myuwh1xt.js",
+        "status": 200,
+        "bytes": 3342,
+        "cache": false,
+        "sw": false,
+        "dur": 2622
+       },
+       {
+        "k": "Script",
+        "path": "/_next/static/chunks/2ixa2k67u9gvt.js",
+        "status": 200,
+        "bytes": 1822,
+        "cache": false,
+        "sw": false,
+        "dur": 2667
+       },
+       {
+        "k": "Image",
+        "path": "/icons/icon.svg",
+        "status": 200,
+        "bytes": 882,
+        "cache": false,
+        "sw": false,
+        "dur": 239
+       },
+       {
+        "k": "Other",
+        "path": "/v1/projects/b9acbc26-5071-4821-8d7c-98701bc88c86/sites/d5046752-dab3-41db-84d7-3ab355a2f28e/zone-drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+        "status": 200,
+        "bytes": 0,
+        "cache": false,
+        "sw": false,
+        "dur": 2
+       },
+       {
+        "k": "api-8001",
+        "path": "/v1/projects/b9acbc26-5071-4821-8d7c-98701bc88c86/sites/d5046752-dab3-41db-84d7-3ab355a2f28e/zone-drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+        "status": 200,
+        "bytes": 1917,
+        "cache": false,
+        "sw": false,
+        "dur": 172
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

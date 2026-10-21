@@ -1,0 +1,60 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to content" [ref=e3] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "DECA Mark" [ref=e7] [cursor=pointer]:
+          - /url: /o
+          - img "DECA Mark" [ref=e8]
+        - 'button "Web acceptance lab, project: Play study acceptance" [ref=e10]':
+          - generic [ref=e11]: Play study acceptance
+          - img [ref=e12]
+        - generic [ref=e14]:
+          - button "Search or jump to" [ref=e15]:
+            - img [ref=e16]
+          - button "Account, Local manager" [ref=e19]:
+            - generic [ref=e20]: QA
+    - navigation "Project" [ref=e22]:
+      - list [ref=e25]:
+        - listitem [ref=e26]:
+          - link "Overview" [ref=e27] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study
+        - listitem [ref=e28]:
+          - link "Data" [ref=e29] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/data
+        - listitem [ref=e30]:
+          - link "Sites" [ref=e31] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/sites
+        - listitem [ref=e32]:
+          - link "Forms" [ref=e33] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/forms
+        - listitem [ref=e34]:
+          - link "Team" [ref=e35] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/team
+        - listitem [ref=e36]:
+          - link "QGIS" [ref=e37] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/qgis
+        - listitem [ref=e38]:
+          - link "Reports" [ref=e39] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/reports
+        - listitem [ref=e40]:
+          - link "Settings" [ref=e41] [cursor=pointer]:
+            - /url: /o/web-acceptance/p/play-study/settings
+    - main [ref=e42]:
+      - generic [ref=e43]:
+        - heading "Forms" [level=1] [ref=e48]
+        - alert [ref=e51]:
+          - img [ref=e53]
+          - heading "Couldn't load the forms." [level=3] [ref=e55]
+          - generic [ref=e56]: DECA Mark could not finish this. Try again in a few minutes.
+          - button "Try again" [ref=e58]:
+            - img [ref=e59]
+            - generic [ref=e63]: Try again
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e64]
+```

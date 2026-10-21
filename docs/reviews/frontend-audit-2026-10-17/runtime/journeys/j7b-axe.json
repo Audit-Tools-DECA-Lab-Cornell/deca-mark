@@ -1,0 +1,864 @@
+{
+ "tags": [
+  "wcag2a",
+  "wcag2aa",
+  "wcag21a",
+  "wcag21aa",
+  "wcag22aa"
+ ],
+ "axeVersion": "4.13.0 (@axe-core/playwright 4.13.0)",
+ "runs": [
+  {
+   "route": "sign-in",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/sign-in",
+   "violations": [],
+   "incomplete": [],
+   "passes": 28
+  },
+  {
+   "route": "overview",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 15
+    }
+   ],
+   "passes": 30
+  },
+  {
+   "route": "data",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 6
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "data-observation",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/data/70000000-0000-4000-8000-000000000001",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 11
+    }
+   ],
+   "passes": 27
+  },
+  {
+   "route": "sites",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/sites",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 3
+    }
+   ],
+   "passes": 24
+  },
+  {
+   "route": "site-detail",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 16
+    }
+   ],
+   "passes": 27
+  },
+  {
+   "route": "forms(load-failure-state)",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/forms",
+   "violations": [],
+   "incomplete": [],
+   "passes": 23
+  },
+  {
+   "route": "team",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/team",
+   "violations": [],
+   "incomplete": [],
+   "passes": 26
+  },
+  {
+   "route": "project-settings",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/settings",
+   "violations": [],
+   "incomplete": [],
+   "passes": 30
+  },
+  {
+   "route": "qgis",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/qgis",
+   "violations": [],
+   "incomplete": [],
+   "passes": 28
+  },
+  {
+   "route": "reports",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/reports",
+   "violations": [],
+   "incomplete": [],
+   "passes": 29
+  },
+  {
+   "route": "account",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/account",
+   "violations": [],
+   "incomplete": [],
+   "passes": 28
+  },
+  {
+   "route": "site-zones",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 15
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "zone-draft-editor",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "zone-data(520 rows)",
+   "theme": "day",
+   "vp": 1440,
+   "dataTheme": "day",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 12
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "sign-in",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/sign-in",
+   "violations": [],
+   "incomplete": [],
+   "passes": 26
+  },
+  {
+   "route": "overview",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 32
+  },
+  {
+   "route": "data",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 33
+  },
+  {
+   "route": "data-observation",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/data/70000000-0000-4000-8000-000000000001",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "sites",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/sites",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 3
+    }
+   ],
+   "passes": 26
+  },
+  {
+   "route": "site-detail",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 8
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "forms(load-failure-state)",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/forms",
+   "violations": [],
+   "incomplete": [],
+   "passes": 25
+  },
+  {
+   "route": "team",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/team",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 28
+  },
+  {
+   "route": "project-settings",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/settings",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 32
+  },
+  {
+   "route": "qgis",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/qgis",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 30
+  },
+  {
+   "route": "reports",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/web-acceptance/p/play-study/reports",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "account",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/account",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 30
+  },
+  {
+   "route": "site-zones",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "zone-draft-editor",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 3
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "zone-data(520 rows)",
+   "theme": "day",
+   "vp": 390,
+   "dataTheme": "day",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 33
+  },
+  {
+   "route": "sign-in",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/sign-in",
+   "violations": [],
+   "incomplete": [],
+   "passes": 28
+  },
+  {
+   "route": "overview",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 15
+    }
+   ],
+   "passes": 30
+  },
+  {
+   "route": "data",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 6
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "data-observation",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/data/70000000-0000-4000-8000-000000000001",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 11
+    }
+   ],
+   "passes": 27
+  },
+  {
+   "route": "sites",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/sites",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 3
+    }
+   ],
+   "passes": 24
+  },
+  {
+   "route": "site-detail",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 16
+    }
+   ],
+   "passes": 27
+  },
+  {
+   "route": "forms(load-failure-state)",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/forms",
+   "violations": [],
+   "incomplete": [],
+   "passes": 23
+  },
+  {
+   "route": "team",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/team",
+   "violations": [],
+   "incomplete": [],
+   "passes": 26
+  },
+  {
+   "route": "project-settings",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/settings",
+   "violations": [],
+   "incomplete": [],
+   "passes": 30
+  },
+  {
+   "route": "qgis",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/qgis",
+   "violations": [],
+   "incomplete": [],
+   "passes": 28
+  },
+  {
+   "route": "reports",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/reports",
+   "violations": [],
+   "incomplete": [],
+   "passes": 29
+  },
+  {
+   "route": "account",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/account",
+   "violations": [],
+   "incomplete": [],
+   "passes": 28
+  },
+  {
+   "route": "site-zones",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 15
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "zone-draft-editor",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "zone-data(520 rows)",
+   "theme": "dusk",
+   "vp": 1440,
+   "dataTheme": "dusk",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 12
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "sign-in",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/sign-in",
+   "violations": [],
+   "incomplete": [],
+   "passes": 26
+  },
+  {
+   "route": "overview",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 32
+  },
+  {
+   "route": "data",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 33
+  },
+  {
+   "route": "data-observation",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/data/70000000-0000-4000-8000-000000000001",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "sites",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/sites",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 3
+    }
+   ],
+   "passes": 26
+  },
+  {
+   "route": "site-detail",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/sites/fall-creek",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 8
+    }
+   ],
+   "passes": 29
+  },
+  {
+   "route": "forms(load-failure-state)",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/forms",
+   "violations": [],
+   "incomplete": [],
+   "passes": 25
+  },
+  {
+   "route": "team",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/team",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 28
+  },
+  {
+   "route": "project-settings",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/settings",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 32
+  },
+  {
+   "route": "qgis",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/qgis",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 30
+  },
+  {
+   "route": "reports",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/web-acceptance/p/play-study/reports",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "account",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/account",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 1
+    }
+   ],
+   "passes": 30
+  },
+  {
+   "route": "site-zones",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "zone-draft-editor",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/sites/review-site/zones/drafts/1a2fa02b-df76-4e16-ae1d-e80bc2c88f6e",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 3
+    }
+   ],
+   "passes": 31
+  },
+  {
+   "route": "zone-data(520 rows)",
+   "theme": "dusk",
+   "vp": 390,
+   "dataTheme": "dusk",
+   "finalPath": "/o/zone-review-acceptance/p/zone-review/data",
+   "violations": [],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "nodes": 5
+    }
+   ],
+   "passes": 33
+  }
+ ]
+}

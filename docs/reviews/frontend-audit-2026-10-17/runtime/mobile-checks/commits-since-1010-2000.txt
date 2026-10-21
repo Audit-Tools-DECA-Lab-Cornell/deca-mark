@@ -1,0 +1,116 @@
+9928f53 2026-10-17 11:43:06 -0400 fix(forms): validate numeric bounds and allow nested answer IDs
+7f12470 2026-10-17 01:08:04 -0400 docs: record successful hosted form revision verification
+4075c5e 2026-10-17 01:06:03 -0400 docs: record authorized form revision migration rollout
+4a7a9f7 2026-10-17 00:59:58 -0400 test: verify form revisions with master authorization fixes
+7d8ccfc 2026-10-17 00:56:05 -0400 Merge remote-tracking branch 'origin/master'
+221e375 2026-10-17 00:55:42 -0400 fix(forms): require reviewed draft revisions for edits and publication
+bb38f13 2026-10-16 20:09:58 -0400 fix: enforce observation ownership and export authorization
+6f1ac1f 2026-10-16 10:56:40 -0400 fix(mobile): default to real data and show measured map sizes
+8ad122e 2026-10-15 23:51:05 -0400 feat: Add observation viewport filters and block local email delivery
+eb91193 2026-10-15 23:45:41 -0400 Merge master and reconcile completed viewport work
+2b5bf9a 2026-10-15 23:36:28 -0400 feat(backend): add viewport filters and disable local email delivery
+32a2d6b 2026-10-15 23:18:39 -0400 fix(mobile): isolate account cleanup and stabilize package fixtures
+84d0553 2026-10-15 20:44:09 -0400 Merge current master with zone uploader and planning updates
+875828e 2026-10-15 20:42:16 -0400 docs: reconcile zone progress and remaining product milestones
+59ffd41 2026-10-15 20:42:07 -0400 feat(qgis): add a portable synthetic playground demo
+3612b17 2026-10-15 20:41:58 -0400 feat(mobile): upload immutable zone-bound observations
+26d7f9a 2026-10-15 20:38:09 -0400 Merge pull request #28 from Audit-Tools-DECA-Lab-Cornell/claude/frontend-pending
+2eefc52 2026-10-15 19:15:32 -0400 Address review: keep onboarding finished, scope deletion cleanup, never read a failed count as zero
+b2e462f 2026-10-15 19:03:51 -0400 Say when an account deletion was recorded while another account signed in
+ace1115 2026-10-15 19:00:17 -0400 Wait for the stored session before asking to sign in again
+c0b0577 2026-10-15 18:57:22 -0400 Add the October device and manual checklist
+3643e78 2026-10-15 18:54:56 -0400 Record WEB-11 and WEB-15, and hand requests to the other owners
+e8ce779 2026-10-15 18:53:52 -0400 Keep email off on the local e2e API, and check the overview against SQL
+93bfeba 2026-10-15 18:47:43 -0400 Make pnpm db:start work on its first try right after Docker starts
+6f8d8b8 2026-10-15 18:44:02 -0400 Build the mobile Account tab, sign-out and account deletion (MOB-07)
+272a8b2 2026-10-15 18:33:25 -0400 Stop the e2e web server's whole process group under dash and macOS
+725516c 2026-10-15 18:26:54 -0400 Verify mobile join on the local stack and close WEB-07 (MOB-06)
+a6438ad 2026-10-15 18:19:21 -0400 Wire mobile sign-up, codes and recovery to Supabase Auth (MOB-03, MOB-05)
+dbbc92e 2026-10-15 18:19:14 -0400 Name the retained form on the form-missing recovery card
+529e81b 2026-10-15 00:14:14 -0400 Enable invitation email delivery when Brevo is configured
+30bcba6 2026-10-14 23:52:17 -0400 update mobile version
+5a41a02 2026-10-14 23:49:56 -0400 some zone boundaries stuff
+7d65b0a 2026-10-14 23:47:46 -0400 add .vscode
+8aa5c12 2026-10-14 14:26:59 -0400 Add retained form identity to approved UI test fixtures
+a76d445 2026-10-14 14:10:14 -0400 Expose retained form identity and verified site readiness
+d529134 2026-10-14 14:10:14 -0400 Make mobile closed zone coverage exact
+b294457 2026-10-14 13:55:06 -0400 feat: Zone boundaries on mobile, the web identity chain and tablet targets
+8cb55be 2026-10-14 12:32:22 -0400 Bind account deletion to the account that confirmed it
+4c69deb 2026-10-14 12:13:32 -0400 Merge master (#27) into the PR branch
+71fafe7 2026-10-14 12:11:08 -0400 Merge pull request #27 from Audit-Tools-DECA-Lab-Cornell/work
+0144859 2026-10-14 10:51:35 -0400 Fix backend CI and exports; reduce workspace request traffic
+917d3b5 2026-10-14 10:46:14 -0400 Keep practice drafts resumable and say why a re-download did not help (MOB-32)
+3f346a0 2026-10-14 01:49:27 -0400 Read the Site header from verified maps and settle parked restores (MOB-30, MOB-32)
+f9e29c1 2026-10-14 01:41:07 -0400 Hand the zone read-model follow-ups to the mobile data agent (MOB-31)
+a61865f 2026-10-14 01:38:58 -0400 Record verified status for the zone clients and the web identity chain
+31914b6 2026-10-14 01:38:49 -0400 Keep 44 px touch targets on tablets and check the Contour gallery (WEB-13, WEB-20)
+643e884 2026-10-14 01:13:19 -0400 Render Projects, Project and Brief on device data with map v2 published (MOB-30)
+4c1653e 2026-10-14 01:09:40 -0400 Render placement, recovery and map-version states in component tests (MOB-30, MOB-31, MOB-32)
+9ac7a61 2026-10-14 00:46:20 -0400 Show map versions and recover exact drafts on Projects, Site and Brief (MOB-30, MOB-32)
+0a5712a 2026-10-14 00:46:11 -0400 Acknowledge MOB-33 and make placement boundary-aware on zoneCovers (MOB-31)
+f389cfb 2026-10-14 00:42:23 -0400 Send the bootstrap script's first map on the single upload path (WEB-43)
+7c90302 2026-10-14 00:42:23 -0400 Describe public sign-up, the Training project and self-serve deletion in the privacy pages (WEB-14)
+1cd0d25 2026-10-14 00:42:22 -0400 Verify the Contour identity screens and retry a pending account deletion (WEB-04, WEB-06)
+e1c6280 2026-10-14 00:42:22 -0400 Run the zone editor's account fence in a browser (WEB-28, WEB-35)
+4eaf103 2026-10-13 23:52:14 -0400 Retain offline map versions and add bound mobile read models
+23afd83 2026-10-13 17:29:33 -0400 Complete DB-18 local zone acceptance
+40a9ef9 2026-10-13 16:10:23 -0400 Web: historical map versions, zone drafts, the Zones page, publishing and the acceptance gates (WEB-40, WEB-35, WEB-37, WEB-38, WEB-28, WEB-29)
+c42f9f7 2026-10-13 14:04:59 -0400 Record the traced-strip run in WEB-28's evidence
+2c59f87 2026-10-13 14:02:22 -0400 Keep the change note in a saved draft file, trace a shared edge, and record WEB-28/29
+0685d84 2026-10-13 13:56:57 -0400 Add the WEB-28 zone acceptance specs, and name the version a published draft became
+8439c67 2026-10-13 13:37:58 -0400 Resolve draft conflicts on the review page, and publish without pulling anyone back
+7e8b1bd 2026-10-13 12:59:54 -0400 Ask before leaving every draft screen, and say when versions did not load
+1cd872b 2026-10-13 12:52:19 -0400 Review and publish zone drafts, and discard them (WEB-38)
+abc6281 2026-10-13 12:10:23 -0400 Add each site's Zones page with drafts and version history (WEB-37)
+8cead1d 2026-10-13 11:53:16 -0400 Save zone drafts to DECA Mark as they are edited (WEB-35)
+4268e29 2026-10-13 11:53:16 -0400 Hatch only the zone chosen last, and keep the newest plan read
+4885158 2026-10-13 11:17:44 -0400 Draw one map version at a time on Data and record pages (WEB-40)
+8d25f3d 2026-10-13 10:54:53 -0400 Merge pull request #24 from Audit-Tools-DECA-Lab-Cornell/pratyush-cc/optimistic-meitner-1ulwx6
+994e99f 2026-10-13 03:58:42 -0400 Say when the map version choices could not be read
+449a950 2026-10-13 03:52:09 -0400 Print a report only for the days it counts; keep applied map versions offered
+7eb3b01 2026-10-13 03:41:51 -0400 Record WEB-41 as done with its local-stack evidence
+27deef8 2026-10-13 03:36:21 -0400 Offer only zone-only inventory forms and only map versions with the zones
+2b4226f 2026-10-13 03:34:11 -0400 Export, report and count on the server's scope (WEB-41)
+ef77871 2026-10-13 03:23:38 -0400 Record WEB-36, WEB-39 and WEB-42 as done with their local-stack evidence
+59ca6b7 2026-10-13 03:21:42 -0400 Match the upload conflict note without anchoring to its first word
+97c6993 2026-10-13 03:16:11 -0400 Keep an unanswered upload until it is answered; bound recent counts
+e4056ca 2026-10-13 03:15:05 -0400 Merge remote-tracking branch 'origin/master' into pratyush-cc/optimistic-meitner-1ulwx6
+4f96194 2026-10-12 23:15:43 -0400 Read sites, packages and observations through the BE-22 API; map zone identities on upload
+04f1c8a 2026-10-12 22:38:46 -0400 feat: Add shared Contour emails and durable Brevo delivery
+f95e16b 2026-10-12 22:34:44 -0400 Mount Supabase email templates read-only in API Docker tests
+01a7e23 2026-10-12 22:32:48 -0400 Merge branch 'master' into work
+ca500f6 2026-10-12 22:29:30 -0400 Build the zone boundary editor on the SVG site plan (WEB-30 to WEB-34) (#22)
+71cf66f 2026-10-12 22:25:14 -0400 Regenerate API contracts after master merge
+5225958 2026-10-12 22:22:09 -0400 Add local zone review acceptance fixtures
+6da8182 2026-10-12 22:20:57 -0400 Order imports in scheduled email regression test
+ef9e4f2 2026-10-12 22:20:03 -0400 Type-check scheduled replay regression test with explicit datetime override
+99e074d 2026-10-12 22:18:17 -0400 Extract new-email scheduling validation to satisfy router complexity check
+3b7d8f2 2026-10-12 22:17:03 -0400 Merge branch 'master' into work
+7b891fe 2026-10-12 19:35:29 -0400 Document explicit idempotency comparison parameters
+ac93ccb 2026-10-12 19:31:08 -0400 Test project manager email access and late idempotent schedule retries
+e818210 2026-10-12 19:30:49 -0400 Let project managers schedule emails and accept valid late retries
+a625dd4 2026-10-12 19:30:35 -0400 Validate idempotent delivery replay before schedule time checks
+bab715a 2026-10-12 19:29:40 -0400 Make pending invitation expiry tests independent of calendar date
+dfcce1c 2026-10-12 19:29:35 -0400 Index uncleared outbox payloads for expiration cleanup
+5d7cda4 2026-10-12 19:29:30 -0400 Allow authorized project managers to render invitation emails
+0c10c1b 2026-10-12 18:30:47 -0400 Serve zone workflows on one API path
+fe7e76c 2026-10-12 17:08:03 -0400 Replace zone schema migrations with the current baseline
+6793095 2026-10-12 17:07:22 -0400 Add shared Contour emails and durable Brevo delivery
+1619e5d 2026-10-12 10:14:43 -0400 Complete single-path zone contract acceptance
+c9f63ef 2026-10-12 10:08:39 -0400 Align zone plans and shared cases to the single-path contract
+a86a1ee 2026-10-11 23:48:58 -0400 Implement offline package retention and GIS zone projections
+4a57abf 2026-10-11 22:13:51 -0400 Drop legacy paths from the zone boundary UI plans
+fac74dd 2026-10-11 21:53:26 -0400 Plan zone boundary web and mobile frontends against the shipped API
+33faa58 2026-10-11 16:43:48 -0400 Document zone boundary handoff readiness and regression evidence
+78eb825 2026-10-11 16:33:33 -0400 Add historical zone analysis and complete bounded exports
+92f8451 2026-10-11 15:39:46 -0400 Bind observation uploads to immutable historical zone packages
+6da4359 2026-10-11 13:06:04 -0400 Implement versioned zone package authoring and validation
+6a9028e 2026-10-10 21:07:38 -0400 format screenshot files, update ios package name
+4e40cc0 2026-10-10 20:35:11 -0400 screenshots package.json scripts
+90f99f9 2026-10-10 20:31:48 -0400 dev-feat: screenshots scripts
+cbb8e7c 2026-10-10 20:22:27 -0400 feat: Redesign the public landing page
+4aaf718 2026-10-10 20:21:58 -0400 Change FieldMaps references to DECA Mark
+b67ef51 2026-10-10 20:18:09 -0400 Rename app from FieldMaps to DECA Mark
+3698681 2026-10-10 20:16:34 -0400 Merge branch 'master' into claude/elegant-carson-dcyvho
+65d49a0 2026-10-10 20:13:44 -0400 update .env.example name and formatting
+c0273fa 2026-10-10 20:03:14 -0400 Allow deca-mark Vercel previews and name the DECA Mark GIS project

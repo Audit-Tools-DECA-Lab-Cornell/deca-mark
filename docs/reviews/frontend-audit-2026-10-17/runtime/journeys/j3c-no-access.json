@@ -1,0 +1,958 @@
+[
+ {
+  "role": "web:manager",
+  "vp": 1440,
+  "name": "project forms",
+  "url": "/o/web-acceptance/p/play-study/forms",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms",
+  "h1": "Forms",
+  "main": "Forms Couldn't load the forms. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": "MANAGER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-manager-1440-project_forms.png"
+ },
+ {
+  "role": "web:manager",
+  "vp": 1440,
+  "name": "project forms/versions",
+  "url": "/o/web-acceptance/p/play-study/forms/versions",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms/versions",
+  "h1": "Form versions",
+  "main": "Form versions Couldn't load the form versions. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": "MANAGER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-manager-1440-project_forms_versions.png"
+ },
+ {
+  "role": "web:manager",
+  "vp": 1440,
+  "name": "project settings",
+  "url": "/o/web-acceptance/p/play-study/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/settings",
+  "h1": "Project settings",
+  "main": "Project settings Name, description and timezone. Renaming a project does not change its web address. General Project name Shown in the header and in the list of projects. Description (optional) What the study is about, for the people who manage it. 32 / 10000 Timezone Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Afr",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": "MANAGER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-manager-1440-project_settings.png"
+ },
+ {
+  "role": "web:manager",
+  "vp": 1440,
+  "name": "project team",
+  "url": "/o/web-acceptance/p/play-study/team",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/team",
+  "h1": "Project team",
+  "main": "Project team Who can open this project, and the invitations still waiting to be used. Invite Members 5 people QA Local owner Added Oct 12, 2026 Observer Viewer Manager Remove QA Local manager (you) Added Oct 12, 2026 Observer Viewer Manager Leave OB Local observer Added Oct 12, 2026 Observer Viewer Manager Remove QA Local viewer Added Oct 12, 2026 Observer Viewer Manager Remove MO Mobile Observer Added Oct 15, 2026 O",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": "MANAGER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listProjectMembers:200": 1,
+   "listProjectInvitations:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-manager-1440-project_team.png"
+ },
+ {
+  "role": "web:manager",
+  "vp": 1440,
+  "name": "org settings",
+  "url": "/o/web-acceptance/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/settings",
+  "h1": null,
+  "main": "Only organization owners and admins can open Settings. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": "MANAGER",
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-manager-1440-org_settings.png"
+ },
+ {
+  "role": "web:manager",
+  "vp": 1440,
+  "name": "org members",
+  "url": "/o/web-acceptance/members",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/members",
+  "h1": null,
+  "main": "Only organization owners and admins can open Members. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": "MANAGER",
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-manager-1440-org_members.png"
+ },
+ {
+  "role": "web:manager",
+  "vp": 1440,
+  "name": "project overview (control)",
+  "url": "/o/web-acceptance/p/play-study",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study",
+  "h1": "What came back from the field",
+  "main": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 observations at Fall Creek test site. The total adds up every site's own count. Records still on devices are not counted here. Last received Oct 12 · 22:09 Observed today 0 Observed in the last 7 days 0 Days and times use the project's time zone, America/New_York. BY SITE E2E site 1013-205904 0 E2E site 1013-210336 0 E2E site 1013-21",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": "MANAGER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1,
+   "listHistoricalObservations:200": 1,
+   "listPackages:200": 10,
+   "summarizeHistoricalObservations:200": 3,
+   "downloadPackageArchive:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-manager-1440-project_overview__control_.png"
+ },
+ {
+  "role": "web:manager",
+  "vp": 390,
+  "name": "project forms",
+  "url": "/o/web-acceptance/p/play-study/forms",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms",
+  "h1": "Forms",
+  "main": "Forms Couldn't load the forms. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:manager",
+  "vp": 390,
+  "name": "project forms/versions",
+  "url": "/o/web-acceptance/p/play-study/forms/versions",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms/versions",
+  "h1": "Form versions",
+  "main": "Form versions Couldn't load the form versions. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:manager",
+  "vp": 390,
+  "name": "project settings",
+  "url": "/o/web-acceptance/p/play-study/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/settings",
+  "h1": "Project settings",
+  "main": "Project settings Name, description and timezone. Renaming a project does not change its web address. General Project name Shown in the header and in the list of projects. Description (optional) What the study is about, for the people who manage it. 32 / 10000 Timezone Africa/Abidjan Africa/Accra Africa/Addis_Ababa Africa/Algiers Africa/Asmera Africa/Bamako Africa/Bangui Africa/Banjul Africa/Bissau Africa/Blantyre Afr",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:manager",
+  "vp": 390,
+  "name": "project team",
+  "url": "/o/web-acceptance/p/play-study/team",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/team",
+  "h1": "Project team",
+  "main": "Project team Who can open this project, and the invitations still waiting to be used. Invite Members 5 people QA Local owner Added Oct 12, 2026 Observer Viewer Manager Remove QA Local manager (you) Added Oct 12, 2026 Observer Viewer Manager Leave OB Local observer Added Oct 12, 2026 Observer Viewer Manager Remove QA Local viewer Added Oct 12, 2026 Observer Viewer Manager Remove MO Mobile Observer Added Oct 15, 2026 O",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listProjectMembers:200": 1,
+   "listProjectInvitations:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:manager",
+  "vp": 390,
+  "name": "org settings",
+  "url": "/o/web-acceptance/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/settings",
+  "h1": null,
+  "main": "Only organization owners and admins can open Settings. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:manager",
+  "vp": 390,
+  "name": "org members",
+  "url": "/o/web-acceptance/members",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/members",
+  "h1": null,
+  "main": "Only organization owners and admins can open Members. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:manager",
+  "vp": 390,
+  "name": "project overview (control)",
+  "url": "/o/web-acceptance/p/play-study",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study",
+  "h1": "What came back from the field",
+  "main": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 observations at Fall Creek test site. The total adds up every site's own count. Records still on devices are not counted here. Last received Oct 12 · 22:09 Observed today 0 Observed in the last 7 days 0 Days and times use the project's time zone, America/New_York. BY SITE E2E site 1013-205904 0 E2E site 1013-210336 0 E2E site 1013-21",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "Team",
+   "QGIS",
+   "Reports",
+   "Settings"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1,
+   "listHistoricalObservations:200": 1,
+   "listPackages:200": 10,
+   "summarizeHistoricalObservations:200": 3,
+   "downloadPackageArchive:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:observer",
+  "vp": 1440,
+  "name": "project forms",
+  "url": "/o/web-acceptance/p/play-study/forms",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-1440-project_forms.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 1440,
+  "name": "project forms/versions",
+  "url": "/o/web-acceptance/p/play-study/forms/versions",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-1440-project_forms_versions.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 1440,
+  "name": "project settings",
+  "url": "/o/web-acceptance/p/play-study/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-1440-project_settings.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 1440,
+  "name": "project team",
+  "url": "/o/web-acceptance/p/play-study/team",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-1440-project_team.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 1440,
+  "name": "org settings",
+  "url": "/o/web-acceptance/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/settings",
+  "h1": null,
+  "main": "Only organization owners and admins can open Settings. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-1440-org_settings.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 1440,
+  "name": "org members",
+  "url": "/o/web-acceptance/members",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/members",
+  "h1": null,
+  "main": "Only organization owners and admins can open Members. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-1440-org_members.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 1440,
+  "name": "project overview (control)",
+  "url": "/o/web-acceptance/p/play-study",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-1440-project_overview__control_.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 390,
+  "name": "project forms",
+  "url": "/o/web-acceptance/p/play-study/forms",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-390-project_forms.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 390,
+  "name": "project forms/versions",
+  "url": "/o/web-acceptance/p/play-study/forms/versions",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-390-project_forms_versions.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 390,
+  "name": "project settings",
+  "url": "/o/web-acceptance/p/play-study/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-390-project_settings.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 390,
+  "name": "project team",
+  "url": "/o/web-acceptance/p/play-study/team",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-390-project_team.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 390,
+  "name": "org settings",
+  "url": "/o/web-acceptance/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/settings",
+  "h1": null,
+  "main": "Only organization owners and admins can open Settings. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-390-org_settings.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 390,
+  "name": "org members",
+  "url": "/o/web-acceptance/members",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/members",
+  "h1": null,
+  "main": "Only organization owners and admins can open Members. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-390-org_members.png"
+ },
+ {
+  "role": "web:observer",
+  "vp": 390,
+  "name": "project overview (control)",
+  "url": "/o/web-acceptance/p/play-study",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/collect",
+  "h1": "Collect with the DECA Mark app",
+  "main": "Collect with the DECA Mark app Observers collect in the app. This site is for managers and viewers. Your project Web acceptance lab Play study acceptance play-study Observer Next Open the DECA Mark app, sign in with this account, and choose the project.",
+  "tabs": [],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 2
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-observer-390-project_overview__control_.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 1440,
+  "name": "project forms",
+  "url": "/o/web-acceptance/p/play-study/forms",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms",
+  "h1": "Forms",
+  "main": "Forms Couldn't load the forms. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": "VIEWER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-viewer-1440-project_forms.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 1440,
+  "name": "project forms/versions",
+  "url": "/o/web-acceptance/p/play-study/forms/versions",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms/versions",
+  "h1": "Form versions",
+  "main": "Form versions Couldn't load the form versions. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": "VIEWER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-viewer-1440-project_forms_versions.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 1440,
+  "name": "project settings",
+  "url": "/o/web-acceptance/p/play-study/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/settings",
+  "h1": "Project settings",
+  "main": "Project settings Only project managers can open the project settings. You are a viewer on Play study acceptance. Ask a project manager if you need to change the project’s name, timezone or status.",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": "VIEWER",
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-viewer-1440-project_settings.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 1440,
+  "name": "project team",
+  "url": "/o/web-acceptance/p/play-study/team",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/team",
+  "h1": "Project team",
+  "main": "Project team Only project managers can open the team. You are a viewer on Play study acceptance. Ask a project manager if you need to invite or remove people.",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": "VIEWER",
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-viewer-1440-project_team.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 1440,
+  "name": "org settings",
+  "url": "/o/web-acceptance/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/settings",
+  "h1": null,
+  "main": "Only organization owners and admins can open Settings. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": "VIEWER",
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-viewer-1440-org_settings.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 1440,
+  "name": "org members",
+  "url": "/o/web-acceptance/members",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/members",
+  "h1": null,
+  "main": "Only organization owners and admins can open Members. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": "VIEWER",
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-viewer-1440-org_members.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 1440,
+  "name": "project overview (control)",
+  "url": "/o/web-acceptance/p/play-study",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study",
+  "h1": "What came back from the field",
+  "main": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 observations at Fall Creek test site. The total adds up every site's own count. Records still on devices are not counted here. Last received Oct 12 · 22:09 Observed today 0 Observed in the last 7 days 0 Days and times use the project's time zone, America/New_York. BY SITE E2E site 1013-205904 0 E2E site 1013-210336 0 E2E site 1013-21",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": "VIEWER",
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listHistoricalObservations:200": 1,
+   "listSites:200": 1,
+   "listPackages:200": 10,
+   "summarizeHistoricalObservations:200": 3,
+   "downloadPackageArchive:200": 1
+  },
+  "pageErrors": [],
+  "screenshot": "screens/3c-web-viewer-1440-project_overview__control_.png"
+ },
+ {
+  "role": "web:viewer",
+  "vp": 390,
+  "name": "project forms",
+  "url": "/o/web-acceptance/p/play-study/forms",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms",
+  "h1": "Forms",
+  "main": "Forms Couldn't load the forms. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:viewer",
+  "vp": 390,
+  "name": "project forms/versions",
+  "url": "/o/web-acceptance/p/play-study/forms/versions",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/forms/versions",
+  "h1": "Form versions",
+  "main": "Form versions Couldn't load the form versions. DECA Mark could not finish this. Try again in a few minutes. Try again",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:viewer",
+  "vp": 390,
+  "name": "project settings",
+  "url": "/o/web-acceptance/p/play-study/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/settings",
+  "h1": "Project settings",
+  "main": "Project settings Only project managers can open the project settings. You are a viewer on Play study acceptance. Ask a project manager if you need to change the project’s name, timezone or status.",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:viewer",
+  "vp": 390,
+  "name": "project team",
+  "url": "/o/web-acceptance/p/play-study/team",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study/team",
+  "h1": "Project team",
+  "main": "Project team Only project managers can open the team. You are a viewer on Play study acceptance. Ask a project manager if you need to invite or remove people.",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:viewer",
+  "vp": 390,
+  "name": "org settings",
+  "url": "/o/web-acceptance/settings",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/settings",
+  "h1": null,
+  "main": "Only organization owners and admins can open Settings. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:viewer",
+  "vp": 390,
+  "name": "org members",
+  "url": "/o/web-acceptance/members",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/members",
+  "h1": null,
+  "main": "Only organization owners and admins can open Members. Ask an owner or admin of this organization if you need to see it.",
+  "tabs": [
+   "Projects"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1
+  },
+  "pageErrors": []
+ },
+ {
+  "role": "web:viewer",
+  "vp": 390,
+  "name": "project overview (control)",
+  "url": "/o/web-acceptance/p/play-study",
+  "status": 200,
+  "finalPath": "/o/web-acceptance/p/play-study",
+  "h1": "What came back from the field",
+  "main": "What came back from the field Play study acceptance Open observations FIELD RETURN 8 observations at Fall Creek test site. The total adds up every site's own count. Records still on devices are not counted here. Last received Oct 12 · 22:09 Observed today 0 Observed in the last 7 days 0 Days and times use the project's time zone, America/New_York. BY SITE E2E site 1013-205904 0 E2E site 1013-210336 0 E2E site 1013-21",
+  "tabs": [
+   "Overview",
+   "Data",
+   "Sites",
+   "Forms",
+   "QGIS",
+   "Reports"
+  ],
+  "roleLabelInHeader": null,
+  "ops": {
+   "get_identity:200": 1,
+   "getProject:200": 1,
+   "listForms:500": 1,
+   "listSites:200": 1,
+   "listHistoricalObservations:200": 1,
+   "listPackages:200": 10,
+   "summarizeHistoricalObservations:200": 3,
+   "downloadPackageArchive:200": 1
+  },
+  "pageErrors": []
+ }
+]
