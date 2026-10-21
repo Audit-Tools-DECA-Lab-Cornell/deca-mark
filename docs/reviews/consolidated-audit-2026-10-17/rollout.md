@@ -1,5 +1,14 @@
 # Consolidated audit verification and rollout assessment — October 17, 2026
 
+> **October 20 recovery acceptance:** [One authorized new hosted account was deleted
+> through the deployed API](../deletion-recovery-acceptance-2026-10-20/README.md),
+> with actual Auth absence, revoked access, zero backlog and unchanged research/package
+> fingerprints. Real GoTrue HTTP outage, post-commit SIGKILL/restart and lost-success
+> acknowledgement passed on disposable local infrastructure. No redeploy was needed.
+> Render previews remain Automatic; the named operations owner must finish Manual
+> mode and backlog alerts. Collection-lead device census and research-owner retention
+> decisions remain unassigned/open. Both readers remain; this is not audit closure.
+
 > **October 20 recovery activation:** [Approved API is live and recovery startup is
 > enabled](../deletion-recovery-activation-2026-10-20/README.md); health, contract,
 > grants and zero pending backlog were checked read-only. PR previews still require

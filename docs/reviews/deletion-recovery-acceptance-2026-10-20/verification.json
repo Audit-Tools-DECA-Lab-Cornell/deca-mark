@@ -1,0 +1,29 @@
+{
+  "record_date": "2026-10-20",
+  "timezone": "America/New_York",
+  "tested_source_head": "89a7ca75e06ab1e2b122488ce7277380a269b3bd",
+  "production_migration_client_changes": false,
+  "protected_contracts_compatibility_hashes_match": {
+    "backend/src/fieldmaps_api/domain/forms.py": "4ec8ff72918877fd360a8526f6309470122b74f18a1ce2f1a6c36c425976c520",
+    "backend/src/fieldmaps_api/domain/legacy_forms.py": "c24d7b913367a862636e5cf2a22a96d8e6bb9a6f3cfb23770524811622e4becf",
+    "backend/src/fieldmaps_api/domain/form_references.py": "43aae0f3afa8d58b310d3306b8f065ac29ea309f729b5e068bba20527c3d4e28",
+    "backend/src/fieldmaps_api/repositories/bound_uploads.py": "785ded6abe108e93034ba8c5086374628599def8e42934f67c0cdcab947ee711",
+    "mobile/src/sync/upload-failure.ts": "bd9f6689110773983e5957509c3e3d05abc32282764c68eabf104dbd9e336d3c",
+    "contracts/openapi.json": "677f1cf6916450196432d8c675cd9eaaef918915313581efbb9ec8868ccd48e4",
+    "web/src/lib/api/schema.d.ts": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc",
+    "mobile/src/data/api/schema.d.ts": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc"
+  },
+  "historical_manifests_preserved": [
+    "deletion-recovery-enablement-2026-10-18",
+    "deletion-recovery-activation-2026-10-20"
+  ],
+  "new_evidence_credential_pattern_scan": "passed; only new evidence files read",
+  "new_local_markdown_links": "passed",
+  "json_parse_and_acceptance_assertions": "passed",
+  "git_diff_check": "passed",
+  "script_py_compile": "passed",
+  "script_ruff_E9_F_and_format": "passed",
+  "existing_full_CI_reused": "39159850774 on unchanged application tree",
+  "new_execution": "One hosted account; final-path isolated actual Auth HTTP 3 cases passed; owned resources removed",
+  "deployment": "none"
+}
