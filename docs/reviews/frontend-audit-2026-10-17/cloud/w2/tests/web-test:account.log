@@ -1,0 +1,28 @@
+
+> decamark-web@0.1.0 test:account /home/user/deca-mark/web
+> node --experimental-strip-types --test tests/profile-answer.test.mjs tests/data-export.test.mjs
+
+✔ leaves out the observer answer, which the record column already carries (1.054207ms)
+✔ renames an answer whose column matches a record column, so every header is unique (0.29774ms)
+✔ the codebook lists exactly the file's columns, each once, with the question label (1.440436ms)
+✔ an untouched form takes what the server kept and shows the saved note (1.258285ms)
+✔ typing during the save keeps the newer edits and retires the saved note (0.735877ms)
+✔ typing during a save that follows an earlier saved answer still retires the new note (0.176265ms)
+✔ edits undone before the answer count as untouched (0.126257ms)
+✔ fields already holding what the server kept show the saved note (0.207757ms)
+✔ a failure leaves the fields alone and stays shown after typing during the save (0.147987ms)
+✔ a failure on an untouched form leaves the fields as typed (0.103028ms)
+✔ edits after an answer retire it (0.096945ms)
+✔ compares every field (0.220401ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 129.658888
+
+real	0m0.510s
+user	0m0.547s
+sys	0m0.128s

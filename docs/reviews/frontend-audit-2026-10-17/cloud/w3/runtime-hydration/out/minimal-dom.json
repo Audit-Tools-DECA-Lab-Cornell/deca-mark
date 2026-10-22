@@ -1,0 +1,27 @@
+{
+ "A_no_hydration_write": {
+  "value": "NEW",
+  "selStart": 3,
+  "selEnd": 3
+ },
+ "B_react_initTextarea_writes": {
+  "value": "NEW",
+  "selStart": 3,
+  "selEnd": 3
+ },
+ "C_only_defaultValue_set": {
+  "value": "NEW",
+  "selStart": 3,
+  "selEnd": 3
+ },
+ "D_only_value_set_same": {
+  "value": "NEW",
+  "selStart": 3,
+  "selEnd": 3
+ },
+ "E_dirty_then_react_writes": {
+  "value": "OLD",
+  "selStart": 3
+ },
+ "F_input_dirty_then_react_hydrating_initInput": "typed-by-user"
+}

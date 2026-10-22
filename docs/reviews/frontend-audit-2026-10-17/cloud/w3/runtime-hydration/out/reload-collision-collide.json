@@ -1,0 +1,101 @@
+[
+ {
+  "i": 0,
+  "result": "FAILED after 725 ms",
+  "err": "page.reload: net::ERR_ABORTED; maybe frame was detached?",
+  "events": [
+   "59:framenavigated",
+   "316:load",
+   "389:framenavigated",
+   "872:framenavigated",
+   "965:clickDone",
+   "1026:apiStored",
+   "1026:reloadCalled",
+   "1032:dialogOpening(beforeunload)",
+   "1037:dialogClosed(true)",
+   "1045:actionServerDone-holding",
+   "1046:reloadDocRequest-holding",
+   "1727:actionResponseReleased",
+   "1750:requestfailed(net::ERR_ABORTED)",
+   "1751:reloadReturned(FAILED after 725 ms)",
+   "1758:framenavigated",
+   "1765:framenavigated",
+   "2599:reloadDocResponseReleased"
+  ],
+  "historyCallsInLastDocument": "[{\"m\":\"replaceState\",\"t\":371},{\"m\":\"pushState\",\"t\":855},{\"m\":\"replaceState\",\"t\":1753}]"
+ },
+ {
+  "i": 1,
+  "result": "FAILED after 718 ms",
+  "err": "page.reload: net::ERR_ABORTED; maybe frame was detached?",
+  "events": [
+   "58:framenavigated",
+   "227:load",
+   "307:framenavigated",
+   "792:framenavigated",
+   "878:clickDone",
+   "931:apiStored",
+   "931:reloadCalled",
+   "938:dialogOpening(beforeunload)",
+   "942:dialogClosed(true)",
+   "947:reloadDocRequest-holding",
+   "967:actionServerDone-holding",
+   "1630:actionResponseReleased",
+   "1649:requestfailed(net::ERR_ABORTED)",
+   "1649:reloadReturned(FAILED after 718 ms)",
+   "1656:framenavigated",
+   "1661:framenavigated",
+   "2508:reloadDocResponseReleased"
+  ],
+  "historyCallsInLastDocument": "[{\"m\":\"replaceState\",\"t\":291},{\"m\":\"pushState\",\"t\":779},{\"m\":\"replaceState\",\"t\":1650}]"
+ },
+ {
+  "i": 2,
+  "result": "FAILED after 718 ms",
+  "err": "page.reload: net::ERR_ABORTED; maybe frame was detached?",
+  "events": [
+   "54:framenavigated",
+   "222:load",
+   "281:framenavigated",
+   "763:framenavigated",
+   "839:clickDone",
+   "889:apiStored",
+   "889:reloadCalled",
+   "894:dialogOpening(beforeunload)",
+   "897:dialogClosed(true)",
+   "901:reloadDocRequest-holding",
+   "904:actionServerDone-holding",
+   "1589:actionResponseReleased",
+   "1606:requestfailed(net::ERR_ABORTED)",
+   "1607:reloadReturned(FAILED after 718 ms)",
+   "1612:framenavigated",
+   "1616:framenavigated",
+   "2443:reloadDocResponseReleased"
+  ],
+  "historyCallsInLastDocument": "[{\"m\":\"replaceState\",\"t\":265},{\"m\":\"pushState\",\"t\":746},{\"m\":\"replaceState\",\"t\":1601}]"
+ },
+ {
+  "i": 3,
+  "result": "FAILED after 726 ms",
+  "err": "page.reload: net::ERR_ABORTED; maybe frame was detached?",
+  "events": [
+   "52:framenavigated",
+   "238:load",
+   "303:framenavigated",
+   "788:framenavigated",
+   "867:clickDone",
+   "918:apiStored",
+   "918:reloadCalled",
+   "923:dialogOpening(beforeunload)",
+   "926:dialogClosed(true)",
+   "930:reloadDocRequest-holding",
+   "955:actionServerDone-holding",
+   "1619:actionResponseReleased",
+   "1643:requestfailed(net::ERR_ABORTED)",
+   "1644:reloadReturned(FAILED after 726 ms)",
+   "1651:framenavigated",
+   "1654:framenavigated"
+  ],
+  "historyCallsInLastDocument": "[{\"m\":\"replaceState\",\"t\":292},{\"m\":\"pushState\",\"t\":777},{\"m\":\"replaceState\",\"t\":1643}]"
+ }
+]

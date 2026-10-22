@@ -1,0 +1,103 @@
+Skip to content
+UXW2 clean project
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Sites
+Site A
+Map packages
+Site A map packages
+Prepare a map package from QGIS layers. The current version is the one observers get; records keep the version they were collected on.
+Back to history
+Upload from QGIS
+Ground and zones are required
+
+Start with your QGIS project
+
+Choose a .qgz or .qgs file. Include any GeoPackage or shapefiles it uses, or choose a ZIP of the project folder. GeoJSON exports are optional and replace matching project layers.
+
+QGIS project and source files
+Up to 64 files totalling 16 MB. Include only the project and its vector layers.
+Read project
+
+Reading sends these files for conversion. Review the layers below before saving a map package. Imagery and QGIS styling are not imported.
+
+Form version
+UXW2 form · uxw2-form-v2
+UXW2 form · uxw2-form-v1
+The published form observers use with this map.
+Inventory form
+Keep the current one · uxw2-form-v1
+None: no Inventory on this map
+No published form asks about a zone alone, so Inventory stays as it is or is off on this map.
+
+Add or replace layers with GeoJSON
+
+Optional after reading a project. You can also upload ground and zones directly, with paths and trees if needed. Files are matched to their slot by name.
+
+Choose files
+Ground
+Required
+—
+No file yet
+Not chosen
+Choose
+Zones
+Required
+—
+No file yet
+Not chosen
+Choose
+Paths
+Optional
+—
+No file yet
+Not chosen
+Choose
+Trees
+Optional
+—
+No file yet
+Not chosen
+Choose
+QGIS project
+Optional
+—
+Without it, the project and imagery checks are skipped.
+Not chosen
+Choose
+What changed
+Recommended. Kept with the version, for whoever reads its history.
+0 of 2000
+Upload package
+The button turns on when ground and zones are chosen.
+
+The package is sent to DECA Mark as you. It becomes the site’s next version once its checks pass.
+
+Checked in this browser
+Ground is chosen
+Required, and not chosen yet.
+Fails
+Zones is chosen
+Required, and not chosen yet.
+Fails
+History
+1 version
+v1
+STATE
+Active
+PREPARED
+Oct 21, 2026 · 12:04
+SIZE
+1 KB
+FORMS
+uxw2-form-v1 · uxw2-form-v1
+NOTES
+Observers get this version. Uploaded from QGIS. Synthetic audit map
+Deleting a map package is not available yet. To replace what observers download, upload a new version.

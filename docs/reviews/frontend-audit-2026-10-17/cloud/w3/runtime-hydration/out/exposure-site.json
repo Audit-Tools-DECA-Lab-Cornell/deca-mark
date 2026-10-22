@@ -1,0 +1,62 @@
+[
+ {
+  "label": "cold#1",
+  "targetInDOM": 571,
+  "targetPainted_rAF2": 830,
+  "FCP": 885,
+  "targetHasReactProps": 3461,
+  "firstHandlerResponse": 3613,
+  "ms_paint_to_react_props": 2631,
+  "ms_paint_to_first_handler": 2783
+ },
+ {
+  "label": "warm#1",
+  "targetInDOM": 676,
+  "FCP": 851,
+  "targetPainted_rAF2": 858,
+  "targetHasReactProps": 1463,
+  "firstHandlerResponse": 1595,
+  "ms_paint_to_react_props": 605,
+  "ms_paint_to_first_handler": 737
+ },
+ {
+  "label": "cold#2",
+  "targetInDOM": 580,
+  "targetPainted_rAF2": 788,
+  "FCP": 843,
+  "targetHasReactProps": 3563,
+  "firstHandlerResponse": 3740,
+  "ms_paint_to_react_props": 2775,
+  "ms_paint_to_first_handler": 2952
+ },
+ {
+  "label": "warm#2",
+  "targetInDOM": 666,
+  "targetHasReactProps": 1564,
+  "targetPainted_rAF2": 1702,
+  "firstHandlerResponse": 1729,
+  "FCP": 1802,
+  "ms_paint_to_react_props": -138,
+  "ms_paint_to_first_handler": 27
+ },
+ {
+  "label": "cold#3",
+  "targetInDOM": 619,
+  "targetPainted_rAF2": 876,
+  "FCP": 931,
+  "targetHasReactProps": 3596,
+  "firstHandlerResponse": 3749,
+  "ms_paint_to_react_props": 2720,
+  "ms_paint_to_first_handler": 2873
+ },
+ {
+  "label": "warm#3",
+  "FCP": 789,
+  "targetInDOM": 800,
+  "targetHasReactProps": 1751,
+  "firstHandlerResponse": 1753,
+  "targetPainted_rAF2": 1788,
+  "ms_paint_to_react_props": -37,
+  "ms_paint_to_first_handler": -35
+ }
+]

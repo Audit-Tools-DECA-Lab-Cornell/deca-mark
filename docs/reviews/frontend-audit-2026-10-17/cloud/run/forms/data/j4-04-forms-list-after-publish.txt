@@ -1,0 +1,44 @@
+Skip to content
+DECA Mark
+Web acceptance lab
+/
+Play study acceptance
+Search or jump to
+Ctrl K
+MANAGER
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Forms
+A form is the set of questions observers answer at each observation. A draft can change; a published version never does.
+New form
+Forms in this project
+1 form
+Workspace check
+workspace-check
+PUBLISHED
+workspace-check-v5
+Oct 21, 2026
+DRAFT
+Draft · v2
+QUESTIONS
+1 question
+USED BY
+Fall Creek test site
+Draft
+
+Wording can change. Observers cannot collect with it.
+
+Published
+
+Fixed. Observers collect with it through a map package that names it.
+
+Retired
+
+No new map package can name it. Records already collected with it stay readable and still upload.

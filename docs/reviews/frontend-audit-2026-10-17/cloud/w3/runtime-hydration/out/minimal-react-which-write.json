@@ -1,0 +1,20 @@
+{
+ "unpatched": [
+  "NEWOLD (defaultValue= calls 0, value= calls 0)",
+  "NEWOLD (defaultValue= calls 0, value= calls 0)",
+  "NEWOLD (defaultValue= calls 0, value= calls 0)",
+  "NEWOLD (defaultValue= calls 0, value= calls 0)"
+ ],
+ "defaultValue setter = no-op": [
+  "NEW (defaultValue= calls 3, value= calls 0)",
+  "NEW (defaultValue= calls 3, value= calls 0)",
+  "NEW (defaultValue= calls 3, value= calls 0)",
+  "NEW (defaultValue= calls 3, value= calls 0)"
+ ],
+ "value setter = no-op": [
+  "NEWOLD (defaultValue= calls 0, value= calls 1)",
+  "NEWOLD (defaultValue= calls 0, value= calls 1)",
+  "NEWOLD (defaultValue= calls 0, value= calls 1)",
+  "NEWOLD (defaultValue= calls 0, value= calls 1)"
+ ]
+}

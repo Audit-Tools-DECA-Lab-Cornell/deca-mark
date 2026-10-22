@@ -1,0 +1,59 @@
+[
+ {
+  "i": 0,
+  "tag": "INPUT",
+  "after": {
+   "Email address": "kept typed text",
+   "Password": "kept typed text"
+  },
+  "unsavedIndicator": false,
+  "afterSubmit": {
+   "newPosts": [],
+   "alerts": [
+    "Email address",
+    "Enter the email address you signed up with.",
+    "Password",
+    "Enter your password."
+   ],
+   "url": "/sign-in"
+  }
+ },
+ {
+  "i": 1,
+  "tag": "INPUT",
+  "after": {
+   "Email address": "kept typed text",
+   "Password": "kept typed text"
+  },
+  "unsavedIndicator": false,
+  "afterSubmit": {
+   "newPosts": [],
+   "alerts": [
+    "Email address",
+    "Enter the email address you signed up with.",
+    "Password",
+    "Enter your password."
+   ],
+   "url": "/sign-in"
+  }
+ },
+ {
+  "i": 2,
+  "tag": "INPUT",
+  "after": {
+   "Email address": "kept typed text",
+   "Password": "kept typed text"
+  },
+  "unsavedIndicator": false,
+  "afterSubmit": {
+   "newPosts": [],
+   "alerts": [
+    "Email address",
+    "Enter the email address you signed up with.",
+    "Password",
+    "Enter your password."
+   ],
+   "url": "/sign-in"
+  }
+ }
+]

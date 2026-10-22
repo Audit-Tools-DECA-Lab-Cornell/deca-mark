@@ -1,0 +1,189 @@
+e2e-local: Docker already running
+e2e-local: starting local Supabase (pnpm db:start; running services are kept)
+
+> decamark@0.1.0 db:start /home/user/deca-mark
+> sh database/local-supabase.sh start
+
+Stopped services: [supabase_imgproxy_field-maps supabase_pooler_field-maps]
+Local Supabase ready. Studio: http://127.0.0.1:54323; Mailpit: http://127.0.0.1:54324
+e2e-local: API already answering at http://127.0.0.1:8001
+e2e-local: building the web app (log: /home/user/deca-mark/database/.local/e2e/web-build.log)
+e2e-local: starting the web app on http://127.0.0.1:3000 (log: /home/user/deca-mark/database/.local/e2e/web.log)
+e2e-local: web app ready
+e2e-local: running Playwright against http://127.0.0.1:3000
+
+> decamark-web@0.1.0 test:e2e /home/user/deca-mark/web
+> playwright test --project=phone-390 --reporter=list,json --trace=off
+
+
+Running 134 tests using 1 worker
+
+  ✓    1 [setup] › e2e/auth.setup.ts:14:3 › sign in as owner (202ms)
+  ✓    2 [setup] › e2e/auth.setup.ts:14:3 › sign in as admin (129ms)
+  ✓    3 [setup] › e2e/auth.setup.ts:14:3 › sign in as manager (141ms)
+  ✓    4 [setup] › e2e/auth.setup.ts:14:3 › sign in as observer (142ms)
+  ✓    5 [setup] › e2e/auth.setup.ts:14:3 › sign in as viewer (122ms)
+  ✓    6 [setup] › e2e/auth.setup.ts:14:3 › sign in as outsider (139ms)
+  ✓    7 [setup] › e2e/auth.setup.ts:14:3 › sign in as joiner (136ms)
+  ✓    8 [setup] › e2e/auth.setup.ts:14:3 › sign in as other-owner (186ms)
+  ✓    9 [phone-390] › e2e/account-deletion.spec.ts:80:1 › a deletion confirmed for one account deletes nothing once another signs in from a second tab (6.0s)
+  ✓   10 [phone-390] › e2e/auth-flows.spec.ts:34:1 › signs up with an email code, then resets the password with a recovery code (4.2s)
+  ✓   11 [phone-390] › e2e/data-history.spec.ts:40:1 › Data counts, pages and filters every matching observation across map versions (12.9s)
+  ✓   12 [phone-390] › e2e/data-history.spec.ts:140:1 › The plan draws one map version, dims the others and lists inventories by zone (8.0s)
+  ✓   13 [phone-390] › e2e/data.spec.ts:11:1 › the data lists every seeded record and the round filter narrows it (1.4s)
+  ✓   14 [phone-390] › e2e/data.spec.ts:24:1 › opening a record shows its answers labelled from its form (1.1s)
+  ✓   15 [phone-390] › e2e/data.spec.ts:40:1 › exporting downloads every matching record as DECA Mark writes it, with its codebook (2.3s)
+  ✓   16 [phone-390] › e2e/forms.spec.ts:21:1 › a manager starts a new draft, saves a change and publishes it (8.2s)
+  ✓   17 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › home reads honestly (3.5s)
+  ✓   18 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › sign-in reads honestly (2.9s)
+  ✓   19 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › sign-up reads honestly (3.0s)
+  ✓   20 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › forgot-password reads honestly (2.7s)
+  ✓   21 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › verify reads honestly (3.0s)
+  ✓   22 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › reset-password reads honestly (3.2s)
+  ✓   23 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › privacy reads honestly (6.2s)
+  ✓   24 [phone-390] › e2e/honesty.spec.ts:22:7 › signed out › privacy-delete-data reads honestly (4.2s)
+  ✓   25 [phone-390] › e2e/honesty.spec.ts:22:7 › as outsider › no-project reads honestly (2.9s)
+  ✓   26 [phone-390] › e2e/honesty.spec.ts:22:7 › as joiner › join reads honestly (3.0s)
+  ✓   27 [phone-390] › e2e/honesty.spec.ts:22:7 › as joiner › invite-without-link reads honestly (3.3s)
+  ✓   28 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › account reads honestly (3.6s)
+  ✓   29 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › project-overview reads honestly (4.2s)
+  ✓   30 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › data reads honestly (4.7s)
+  ✓   31 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › observation reads honestly (3.8s)
+  ✓   32 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › sites reads honestly (3.4s)
+  ✓   33 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › site reads honestly (4.1s)
+  ✓   34 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › site-empty reads honestly (3.7s)
+  ✓   35 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › packages reads honestly (4.2s)
+  ✓   36 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › zones reads honestly (4.5s)
+  ✓   37 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › zones-empty-site reads honestly (3.3s)
+  ✓   38 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › packages-upload reads honestly (6.0s)
+  ✓   39 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › forms reads honestly (3.4s)
+  ✓   40 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › form-versions reads honestly (3.9s)
+  ✓   41 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › form-published reads honestly (4.5s)
+  ✓   42 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › form-draft reads honestly (4.7s)
+  ✓   43 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › form-publish reads honestly (3.5s)
+  ✓   44 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › team reads honestly (3.4s)
+  ✓   45 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › qgis reads honestly (4.1s)
+  ✓   46 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › reports reads honestly (3.5s)
+  ✓   47 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › project-settings reads honestly (4.0s)
+  ✓   48 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › project-missing-page reads honestly (3.0s)
+  ✓   49 [phone-390] › e2e/honesty.spec.ts:22:7 › as manager › sample-workspace-gone reads honestly (2.8s)
+  ✓   50 [phone-390] › e2e/honesty.spec.ts:22:7 › as viewer › viewer-overview reads honestly (4.2s)
+  ✓   51 [phone-390] › e2e/honesty.spec.ts:22:7 › as viewer › viewer-team reads honestly (3.0s)
+  ✓   52 [phone-390] › e2e/honesty.spec.ts:22:7 › as viewer › viewer-zones reads honestly (4.0s)
+  ✓   53 [phone-390] › e2e/honesty.spec.ts:22:7 › as observer › observer-collect reads honestly (2.8s)
+  ✓   54 [phone-390] › e2e/honesty.spec.ts:22:7 › as owner › org-projects reads honestly (3.1s)
+  ✓   55 [phone-390] › e2e/honesty.spec.ts:22:7 › as owner › org-members reads honestly (3.3s)
+  ✓   56 [phone-390] › e2e/honesty.spec.ts:22:7 › as owner › org-settings reads honestly (3.2s)
+  ✓   57 [phone-390] › e2e/honesty.spec.ts:22:7 › as owner › org-missing reads honestly (2.9s)
+  ✓   58 [phone-390] › e2e/invite-viewer.spec.ts:17:1 › a person invited as a viewer joins from the link and sees no Team or Settings (938ms)
+  ✓   59 [phone-390] › e2e/join-observer.spec.ts:16:1 › an observer joins by code and lands on the collect page (809ms)
+  ✓   60 [phone-390] › e2e/org.spec.ts:12:3 › the owner › opens the organization's projects, members and settings (1.4s)
+  ✓   61 [phone-390] › e2e/org.spec.ts:33:3 › a project manager who is not an owner or admin › sees the projects but no Members or Settings (443ms)
+  ✓   62 [phone-390] › e2e/org.spec.ts:46:3 › the owner of another organization › cannot open this organization (468ms)
+  ✓   63 [phone-390] › e2e/org.spec.ts:56:3 › the owner of another organization › creates a project in their own organization and lands in it as its manager (1.1s)
+  ✓   64 [phone-390] › e2e/overview-sql.spec.ts:32:1 › the overview's total and its coverage by zone and round equal the database's counts (925ms)
+  ✓   65 [phone-390] › e2e/overview.spec.ts:12:1 › the overview totals equal the seeded observations (709ms)
+  ✓   66 [phone-390] › e2e/overview.spec.ts:25:1 › coverage counts the seeded rounds in Zone A (845ms)
+  ✓   67 [phone-390] › e2e/packages-identity.spec.ts:76:1 › a later upload keeps one zone, adds one and leaves one out, and the records stay with their zone (6.5s)
+  ✓   68 [phone-390] › e2e/packages-identity.spec.ts:139:1 › an upload checked against a map that changed meanwhile is refused, and nothing is replaced (3.7s)
+  ✓   69 [phone-390] › e2e/packages.spec.ts:55:1 › uploading a new package from QGIS layers makes it the current one (2.2s)
+  ✓   70 [phone-390] › e2e/packages.spec.ts:116:1 › a self-contained QGIS project becomes the site's current map without separate GeoJSON files (2.4s)
+  ✓   71 [phone-390] › e2e/packages.spec.ts:150:1 › a project with missing sources names them and accepts optional GeoJSON exports (3.3s)
+  ✓   72 [phone-390] › e2e/qgis-reports.spec.ts:11:1 › the QGIS page exports every record as GeoJSON: points, and inventories as whole-zone records (1.3s)
+  ✓   73 [phone-390] › e2e/qgis-reports.spec.ts:45:1 › the QGIS page downloads a map version's zone boundaries for joining inventories (633ms)
+  ✓   74 [phone-390] › e2e/qgis-reports.spec.ts:66:1 › the reports count the records by round type and zone, and can be printed (578ms)
+  ✓   75 [phone-390] › e2e/removed-routes.spec.ts:11:3 › the onboarding page is gone (682ms)
+  ✓   76 [phone-390] › e2e/removed-routes.spec.ts:11:3 › the old overview page is gone (651ms)
+  ✓   77 [phone-390] › e2e/removed-routes.spec.ts:11:3 › the old QGIS page page is gone (697ms)
+  ✓   78 [phone-390] › e2e/removed-routes.spec.ts:11:3 › the organization library page is gone (498ms)
+  ✓   79 [phone-390] › e2e/removed-routes.spec.ts:11:3 › the saved report views page is gone (510ms)
+  ✓   80 [phone-390] › e2e/removed-routes.spec.ts:11:3 › the rounds plan page is gone (568ms)
+  ✓   81 [phone-390] › e2e/removed-routes.spec.ts:11:3 › the sample workspace page is gone (510ms)
+  ✓   82 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as public › @screenshots home (3.6s)
+  ✓   83 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as public › @screenshots sign-in (1.1s)
+  ✓   84 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as public › @screenshots sign-up (1.2s)
+  ✓   85 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as public › @screenshots forgot-password (1.2s)
+  ✓   86 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as public › @screenshots privacy (11.1s)
+  ✓   87 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots account (2.8s)
+  ✓   88 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots project-overview (4.7s)
+  ✓   89 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots data (3.1s)
+  ✓   90 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots observation (3.0s)
+  ✓   91 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots sites (2.2s)
+  ✓   92 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots site (2.8s)
+  ✓   93 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots packages (5.4s)
+  ✓   94 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots packages-upload (4.6s)
+  ✓   95 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots forms (1.9s)
+  ✓   96 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots form-versions (1.9s)
+  ✓   97 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots team (2.6s)
+  ✓   98 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots qgis (4.5s)
+  ✓   99 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots reports (2.0s)
+  ✓  100 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots project-settings (2.6s)
+  ✓  101 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots team / invite-dialog (2.9s)
+  ✓  102 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots data / export-dialog (4.5s)
+  ✓  103 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as manager › @screenshots sites / create-site-dialog (2.2s)
+  ✓  104 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as owner › @screenshots org-projects (1.3s)
+  ✓  105 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as owner › @screenshots org-members (2.5s)
+  ✓  106 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as owner › @screenshots org-settings (2.7s)
+  ✓  107 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as viewer › @screenshots viewer-overview (2.6s)
+  ✓  108 [phone-390] › e2e/screenshots.spec.ts:207:7 › screenshots as observer › @screenshots observer-collect (1.2s)
+  ✘  109 [phone-390] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (19.9s)
+  ✓  110 [phone-390] › e2e/sign-in.spec.ts:14:3 › signing in › a manager signs in, lands on their project and sees their own name, email and initials (1.2s)
+  ✓  111 [phone-390] › e2e/sign-in.spec.ts:31:3 › signing in › a signed-out visit to the workspace asks for sign-in and keeps the destination (499ms)
+  ✓  112 [phone-390] › e2e/sign-in.spec.ts:44:5 › where the workspace opens › a manager › opening DECA Mark goes to the only project (772ms)
+  ✓  113 [phone-390] › e2e/sign-in.spec.ts:50:5 › where the workspace opens › a manager › the home page sends a signed-in person to their workspace (793ms)
+  ✓  114 [phone-390] › e2e/sign-in.spec.ts:61:5 › where the workspace opens › an observer › goes to the collect page, which names their project (583ms)
+  ✓  115 [phone-390] › e2e/sign-in.spec.ts:73:5 › where the workspace opens › someone in no project › is told so and offered the join code (506ms)
+  ✓  116 [phone-390] › e2e/sites.spec.ts:12:1 › the Fall Creek site plan shows Zone A and its observations (1.1s)
+  ✓  117 [phone-390] › e2e/sites.spec.ts:32:1 › a manager creates a site (1.4s)
+  ✓  118 [phone-390] › e2e/team.spec.ts:15:1 › a manager invites someone, sees the link and code once, and revokes the invitation (2.1s)
+  ✓  119 [phone-390] › e2e/zones-access.spec.ts:27:1 › a manager finds the drafts, starts one and restores an earlier version (8.0s)
+  ✓  120 [phone-390] › e2e/zones-access.spec.ts:129:1 › a viewer sees every version and no drafts, and cannot open a draft or its review (2.9s)
+  ✓  121 [phone-390] › e2e/zones-access.spec.ts:171:1 › an observer never reaches the zones or a draft (1.1s)
+  ✓  122 [phone-390] › e2e/zones-account.spec.ts:85:1 › signing out in another tab pauses saving, and signing back in saves the edit (11.8s)
+  ✓  123 [phone-390] › e2e/zones-account.spec.ts:145:1 › another account signing in replaces the editor, and sends nothing of the previous account's (23.4s)
+  ✓  124 [phone-390] › e2e/zones-conflict.spec.ts:35:1 › two managers save the same revision: one wins, the other keeps its edits and chooses (9.1s)
+  ✓  125 [phone-390] › e2e/zones-conflict.spec.ts:124:1 › two managers publish from one base: the first becomes v2, the second is refused (7.0s)
+  ✓  126 [phone-390] › e2e/zones-conflict.spec.ts:166:1 › two tabs publish the same revision with their own requests: the second says it was already published (5.2s)
+  ✓  127 [phone-390] › e2e/zones-conflict.spec.ts:206:1 › the editor, its review and Back to the editor save without a conflict (6.1s)
+  ✓  128 [phone-390] › e2e/zones-draft.spec.ts:24:3 › the zone draft editor › saves each change as a new revision, checks it, and keeps edits through a conflict (9.9s)
+  ✓  129 [phone-390] › e2e/zones-draft.spec.ts:178:3 › a viewer › cannot open a zone draft, and nothing about it is read (588ms)
+  ✓  130 [phone-390] › e2e/zones-editor.spec.ts:53:1 › a manager draws, edits, checks, fixes, reloads and publishes zones (23.5s)
+  ✓  131 [phone-390] › e2e/zones-honesty.spec.ts:40:3 › the zone routes read honestly as the manager (20.8s)
+  ✓  132 [phone-390] › e2e/zones-honesty.spec.ts:40:3 › the zone routes read honestly as the viewer (7.8s)
+  ✓  133 [phone-390] › e2e/zones-network.spec.ts:13:1 › an edit made offline saves on reconnecting, and every way out asks first (5.4s)
+  ✓  134 [phone-390] › e2e/zones-publish.spec.ts:15:1 › a draft is reviewed and published once, a conflict keeps it, and Discard asks first (22.6s)
+
+
+  1) [phone-390] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Local acceptance run 1021-151829"[39m
+    Received: [31m"Local acceptance run 1021-151829[7mLocal acceptance run 1021-150949[27m"[39m
+
+    Call Log:
+    - Timeout 20000ms exceeded while waiting on the predicate
+
+      16 | 	await page.getByRole("button", { name: /^save/i }).first().click();
+      17 |
+    > 18 | 	await expect.poll(async () => (await getProject()).description, { timeout: 20_000 }).toBe(description);
+         | 	^
+      19 | 	await page.reload();
+      20 | 	await expect(page.getByLabel(/^description/i).first()).toHaveValue(description);
+      21 | });
+        at /home/user/deca-mark/web/e2e/settings.spec.ts:18:2
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/settings-a-manager-changes-6cfc0-description-and-it-is-saved-phone-390/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/settings-a-manager-changes-6cfc0-description-and-it-is-saved-phone-390/error-context.md
+
+  1 failed
+    [phone-390] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved 
+  133 passed (8.5m)
+ ELIFECYCLE  Command failed with exit code 1.
+e2e-local: left running: Docker, local Supabase (stop: pnpm db:stop) and the API on :8001 (stop: kill -TERM -$(cat database/.local/e2e/api.pid))
+e2e-local: web app still on :3000 (stop: scripts/e2e-local.sh --stop)
+e2e-local: rerun quickly: scripts/e2e-local.sh --skip-seed [playwright args]
+e2e-local: screenshots: web/e2e/screenshots/   report: pnpm --dir web exec playwright show-report ../database/.local/e2e/playwright-report

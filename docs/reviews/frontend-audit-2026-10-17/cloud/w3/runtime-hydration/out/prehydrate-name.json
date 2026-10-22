@@ -1,0 +1,44 @@
+[
+ {
+  "i": 0,
+  "typed": "Typed name 0",
+  "fieldAfterHydration": "Typed name 0",
+  "unsavedBadge": false,
+  "messageAfterSave1": "Nothing has changed since the last save.",
+  "sentSecondSave": [
+   "[{\"org\":\"web-acceptance\",\"project\":\"play-study\",\"projectId\":\"f7b9e1b5-95c0-4d14-a958-8d9484fd4705\"},{\"description\":\"DESC-after-0\"}]"
+  ],
+  "fieldAfterSecondSave": "Play study acceptance",
+  "storedName": "Play study acceptance",
+  "storedDescription": "DESC-after-0",
+  "toast": true
+ },
+ {
+  "i": 1,
+  "typed": "Typed name 1",
+  "fieldAfterHydration": "Typed name 1",
+  "unsavedBadge": false,
+  "messageAfterSave1": "Nothing has changed since the last save.",
+  "sentSecondSave": [
+   "[{\"org\":\"web-acceptance\",\"project\":\"play-study\",\"projectId\":\"f7b9e1b5-95c0-4d14-a958-8d9484fd4705\"},{\"description\":\"DESC-after-1\"}]"
+  ],
+  "fieldAfterSecondSave": "Play study acceptance",
+  "storedName": "Play study acceptance",
+  "storedDescription": "DESC-after-1",
+  "toast": true
+ },
+ {
+  "i": 2,
+  "typed": "Typed name 2",
+  "fieldAfterHydration": "Typed name 2",
+  "unsavedBadge": false,
+  "messageAfterSave1": "Nothing has changed since the last save.",
+  "sentSecondSave": [
+   "[{\"org\":\"web-acceptance\",\"project\":\"play-study\",\"projectId\":\"f7b9e1b5-95c0-4d14-a958-8d9484fd4705\"},{\"description\":\"DESC-after-2\"}]"
+  ],
+  "fieldAfterSecondSave": "Play study acceptance",
+  "storedName": "Play study acceptance",
+  "storedDescription": "DESC-after-2",
+  "toast": true
+ }
+]

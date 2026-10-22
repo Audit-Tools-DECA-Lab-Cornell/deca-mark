@@ -1,0 +1,3 @@
+// Synthetic GeoJSON of n point features (~100 bytes each); time JSON.stringify of the whole style object per "render".
+function make(n){const f=[];for(let i=0;i<n;i++)f.push({type:"Feature",properties:{id:"t"+i,kind:"tree",label:"Tree "+i},geometry:{type:"Point",coordinates:[-76.5+i*1e-6,42.4+i*1e-6]}});return {version:8,sources:{g:{type:"geojson",data:{type:"FeatureCollection",features:f}}},layers:[]}}
+for(const n of [100,1000,10000,100000]){const o=make(n);let s;const N=20;for(let k=0;k<5;k++)JSON.stringify(o);const t=performance.now();for(let k=0;k<N;k++)s=JSON.stringify(o);const ms=(performance.now()-t)/N;console.log(String(n).padStart(7),"features",(s.length/1024).toFixed(0).padStart(6),"KB",ms.toFixed(2),"ms/render (V8)")}

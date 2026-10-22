@@ -1,0 +1,13 @@
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+after failure 7 attempts 7 delay_s 300
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+wake drains every 5 s for 240 s after reconnect: upload calls 0 state pending
+stdout | backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention
+after retryAttention + drain: upload calls 1 state synced
+ ✓ backoff.test.ts > a pending row in backoff stays unsent through wake-style drains until retryAttention 29ms

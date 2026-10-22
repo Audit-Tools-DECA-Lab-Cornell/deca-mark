@@ -1,0 +1,14 @@
+{
+ "defaultValue= then read .value": [
+  "NEW"
+ ],
+ "react order + track-style .value read": [
+  "NEW"
+ ],
+ "react order, then 0ms task, then nothing": [
+  "NEW"
+ ],
+ "defaultValue= only, then rAF": [
+  "NEW"
+ ]
+}

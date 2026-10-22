@@ -1,0 +1,38 @@
+Skip to content
+UXW2 clean project
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Forms
+A form is the set of questions observers answer at each observation. A draft can change; a published version never does.
+New form
+Forms in this project
+1 form
+UXW2 form
+uxw2-form
+PUBLISHED
+uxw2-form-v2
+Oct 21, 2026
+DRAFT
+No draft
+QUESTIONS
+1 question
+USED BY
+Site A
+Draft
+
+Wording can change. Observers cannot collect with it.
+
+Published
+
+Fixed. Observers collect with it through a map package that names it.
+
+Retired
+
+No new map package can name it. Records already collected with it stay readable and still upload.

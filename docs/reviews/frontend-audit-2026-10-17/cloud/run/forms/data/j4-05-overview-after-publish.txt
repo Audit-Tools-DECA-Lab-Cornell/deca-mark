@@ -1,0 +1,122 @@
+Skip to content
+DECA Mark
+Web acceptance lab
+/
+Play study acceptance
+Search or jump to
+Ctrl K
+MANAGER
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+What came back from the field
+Play study acceptance
+Open observations
+
+FIELD RETURN
+
+8 observations at Fall Creek test site.
+
+The total adds up every site's own count. Records still on devices are not counted here.
+
+Last received
+Today 11:04
+Observed today
+0
+Observed in the last 7 days
+0
+
+Days and times use the project's time zone, America/New_York.
+
+BY SITE
+E2E site 1021-150955
+0
+E2E site 1021-151856
+0
+Empty test site
+0
+Fall Creek test site
+8
+Coverage by zone
+Fall Creek test site · 8 observations
+Open Fall Creek test site
+Zone A · Whole playground
+
+Fall Creek test site · plan
+
+Map v13
+
+0–20 m
+Map v13 · north ↑
+Scale bar 0–20 m. Map v13. North is up.
+
+Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys to move the plan.
+
+Observations by zone and round at Fall Creek test site
+ZONE	STANDARD	RELIABILITY	INVENTORY	TOTAL
+Zone A · Whole playground	4	2	2	8
+
+Counts are every observation recorded in each zone and round, on every map version. They show where records exist, not whether a round is complete.
+
+Inventory observations describe a whole zone, not a place in it.
+
+Needs attention
+4 items
+
+E2E site 1021-150955 has no ready map package.
+
+Observers have no map to download for this site.
+
+Upload a map package
+
+E2E site 1021-151856 has no ready map package.
+
+Observers have no map to download for this site.
+
+Upload a map package
+
+Empty test site has no ready map package.
+
+Observers have no map to download for this site.
+
+Upload a map package
+
+Workspace check has an unpublished draft, v2.
+
+Observers do not see it until it is published.
+
+Open the draft
+Recent activity
+All observations
+Workspace check v5 published
+Today 12:01
+Site E2E site 1021-151856 added
+Today 11:18
+Map package v13 prepared for Fall Creek test site
+Today 11:16
+Map package v12 prepared for Fall Creek test site
+Today 11:16
+Map package v11 prepared for Fall Creek test site
+Today 11:16
+Map package v10 prepared for Fall Creek test site
+Today 11:16
+Map package v9 prepared for Fall Creek test site
+Today 11:16
+Map package v8 prepared for Fall Creek test site
+Today 11:16
+Workspace check v4 published
+Today 11:14
+Site E2E site 1021-150955 added
+Today 11:09
+Map package v7 prepared for Fall Creek test site
+Today 11:08
+Map package v6 prepared for Fall Creek test site
+Today 11:08
+
+Built from the dates on observations, map packages, forms and sites. It does not list every change.

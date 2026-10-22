@@ -1,0 +1,72 @@
+[
+ {
+  "i": 0,
+  "OLD": "OLD-pressSequentially-0",
+  "NEW": "NEW-pressSequentially-0",
+  "pre": {
+   "value": "OLD-pressSequentially-0",
+   "hydrated": false
+  },
+  "afterAction": "OLD-pressSequentially-0NEW-pressSequentially-0",
+  "afterHydration": "OLD-pressSequentially-0",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-pressSequentially-0"
+ },
+ {
+  "i": 1,
+  "OLD": "OLD-pressSequentially-1",
+  "NEW": "NEW-pressSequentially-1",
+  "pre": {
+   "value": "OLD-pressSequentially-1",
+   "hydrated": false
+  },
+  "afterAction": "OLD-pressSequentially-1NEW-pressSequentially-1",
+  "afterHydration": "OLD-pressSequentially-1",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-pressSequentially-1"
+ },
+ {
+  "i": 2,
+  "OLD": "OLD-pressSequentially-2",
+  "NEW": "NEW-pressSequentially-2",
+  "pre": {
+   "value": "OLD-pressSequentially-2",
+   "hydrated": false
+  },
+  "afterAction": "OLD-pressSequentially-2NEW-pressSequentially-2",
+  "afterHydration": "OLD-pressSequentially-2",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-pressSequentially-2"
+ },
+ {
+  "i": 3,
+  "OLD": "OLD-pressSequentially-3",
+  "NEW": "NEW-pressSequentially-3",
+  "pre": {
+   "value": "OLD-pressSequentially-3",
+   "hydrated": false
+  },
+  "afterAction": "OLD-pressSequentially-3NEW-pressSequentially-3",
+  "afterHydration": "OLD-pressSequentially-3",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-pressSequentially-3"
+ },
+ {
+  "i": 4,
+  "OLD": "OLD-pressSequentially-4",
+  "NEW": "NEW-pressSequentially-4",
+  "pre": {
+   "value": "OLD-pressSequentially-4",
+   "hydrated": false
+  },
+  "afterAction": "OLD-pressSequentially-4NEW-pressSequentially-4",
+  "afterHydration": "OLD-pressSequentially-4",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-pressSequentially-4"
+ }
+]

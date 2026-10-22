@@ -1,0 +1,18 @@
+{
+ "readonly": {
+  "beforeHydration": {
+   "textarea": "OLD",
+   "input": "OLDNAME"
+  },
+  "afterHydrationPlusOneKeystrokeInInput": {
+   "textarea": "OLD",
+   "input": "!"
+  },
+  "fillRacingHydration": {
+   "fillResult": "ok",
+   "textarea": "NEW",
+   "input": "OLDNAME"
+  },
+  "forcedSplit": "NEWOLD"
+ }
+}

@@ -1,0 +1,10 @@
+[
+ {
+  "i": 0,
+  "tag": "INPUT",
+  "after": {
+   "Email address": "kept typed text"
+  },
+  "unsavedIndicator": false
+ }
+]

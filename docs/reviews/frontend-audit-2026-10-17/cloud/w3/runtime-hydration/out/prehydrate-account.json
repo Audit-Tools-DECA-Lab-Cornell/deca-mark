@@ -1,0 +1,25 @@
+[
+ {
+  "i": 0,
+  "tag": "INPUT",
+  "after": {
+   "Full name": "kept typed text"
+  },
+  "unsavedIndicator": false,
+  "submitEnabledAfterHydration": true,
+  "afterSubmit": {
+   "newPosts": [
+    {
+     "action": true,
+     "len": 486
+    }
+   ],
+   "alerts": [
+    "Full name",
+    "Observer initials",
+    "Changes apply to future observations; historical codes remain.",
+    "Email address"
+   ]
+  }
+ }
+]

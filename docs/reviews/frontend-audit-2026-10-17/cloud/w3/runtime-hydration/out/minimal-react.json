@@ -1,0 +1,43 @@
+{
+ "1 typed before hydration": {
+  "beforeHydration": "typed-before-hydration",
+  "after": {
+   "dom": "OLD",
+   "reactState": "OLD",
+   "onChangeCalls": 0
+  }
+ },
+ "2 select-all, hydrate, insertText (Playwright fill split at its two steps) x5": [
+  {
+   "dom": "NEWOLD",
+   "reactState": "NEWOLD",
+   "onChangeCalls": 1
+  },
+  {
+   "dom": "NEWOLD",
+   "reactState": "NEWOLD",
+   "onChangeCalls": 1
+  },
+  {
+   "dom": "NEWOLD",
+   "reactState": "NEWOLD",
+   "onChangeCalls": 1
+  },
+  {
+   "dom": "NEWOLD",
+   "reactState": "NEWOLD",
+   "onChangeCalls": 1
+  },
+  {
+   "dom": "NEWOLD",
+   "reactState": "NEWOLD",
+   "onChangeCalls": 1
+  }
+ ],
+ "3 control: hydrate, select-all, insertText": {
+  "dom": "NEW",
+  "reactState": "NEW",
+  "onChangeCalls": 1
+ },
+ "react": "19.3.0-canary-3f0b9e61-20260317"
+}

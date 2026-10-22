@@ -1,0 +1,164 @@
+[
+ {
+  "off": -20,
+  "rep": 0,
+  "res": "reloaded",
+  "ms": 343
+ },
+ {
+  "off": -20,
+  "rep": 1,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 57
+ },
+ {
+  "off": -20,
+  "rep": 2,
+  "res": "reloaded",
+  "ms": 394
+ },
+ {
+  "off": -10,
+  "rep": 0,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 40
+ },
+ {
+  "off": -10,
+  "rep": 1,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 48
+ },
+ {
+  "off": -10,
+  "rep": 2,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 55
+ },
+ {
+  "off": -5,
+  "rep": 0,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 39
+ },
+ {
+  "off": -5,
+  "rep": 1,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 43
+ },
+ {
+  "off": -5,
+  "rep": 2,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 62
+ },
+ {
+  "off": 0,
+  "rep": 0,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 49
+ },
+ {
+  "off": 0,
+  "rep": 1,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 65
+ },
+ {
+  "off": 0,
+  "rep": 2,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 44
+ },
+ {
+  "off": 3,
+  "rep": 0,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 66
+ },
+ {
+  "off": 3,
+  "rep": 1,
+  "res": "reloaded",
+  "ms": 301
+ },
+ {
+  "off": 3,
+  "rep": 2,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 45
+ },
+ {
+  "off": 8,
+  "rep": 0,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 47
+ },
+ {
+  "off": 8,
+  "rep": 1,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 54
+ },
+ {
+  "off": 8,
+  "rep": 2,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 57
+ },
+ {
+  "off": 15,
+  "rep": 0,
+  "res": "reloaded",
+  "ms": 283
+ },
+ {
+  "off": 15,
+  "rep": 1,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 67
+ },
+ {
+  "off": 15,
+  "rep": 2,
+  "res": "ERR_ABORTED(fast)",
+  "ms": 50
+ },
+ {
+  "off": 30,
+  "rep": 0,
+  "res": "reloaded",
+  "ms": 333
+ },
+ {
+  "off": 30,
+  "rep": 1,
+  "res": "reloaded",
+  "ms": 204
+ },
+ {
+  "off": 30,
+  "rep": 2,
+  "res": "reloaded",
+  "ms": 301
+ },
+ {
+  "off": 60,
+  "rep": 0,
+  "res": "reloaded",
+  "ms": 211
+ },
+ {
+  "off": 60,
+  "rep": 1,
+  "res": "reloaded",
+  "ms": 196
+ },
+ {
+  "off": 60,
+  "rep": 2,
+  "res": "reloaded",
+  "ms": 210
+ }
+]

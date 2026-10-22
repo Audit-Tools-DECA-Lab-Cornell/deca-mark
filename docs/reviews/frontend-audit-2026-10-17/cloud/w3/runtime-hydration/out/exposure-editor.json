@@ -1,0 +1,29 @@
+[
+ {
+  "label": "cold#1",
+  "targetInDOM": 592,
+  "targetPainted_rAF2": 862,
+  "FCP": 921,
+  "firstDefaultValueWrite(controlled-field hydrated)": 3229,
+  "targetHasReactProps": 3389,
+  "ms_paint_to_react_props": 2527
+ },
+ {
+  "label": "cold#2",
+  "targetInDOM": 588,
+  "targetPainted_rAF2": 828,
+  "FCP": 898,
+  "firstDefaultValueWrite(controlled-field hydrated)": 3118,
+  "targetHasReactProps": 3305,
+  "ms_paint_to_react_props": 2477
+ },
+ {
+  "label": "cold#3",
+  "targetInDOM": 589,
+  "targetPainted_rAF2": 809,
+  "FCP": 861,
+  "firstDefaultValueWrite(controlled-field hydrated)": 3141,
+  "targetHasReactProps": 3276,
+  "ms_paint_to_react_props": 2467
+ }
+]

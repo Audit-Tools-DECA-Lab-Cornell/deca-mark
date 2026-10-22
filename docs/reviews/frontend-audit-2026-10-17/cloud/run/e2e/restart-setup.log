@@ -1,0 +1,40 @@
+e2e-local: Docker already running
+e2e-local: starting local Supabase (pnpm db:start; running services are kept)
+
+> decamark@0.1.0 db:start /home/user/deca-mark
+> sh database/local-supabase.sh start
+
+Stopped services: [supabase_imgproxy_field-maps supabase_edge_runtime_field-maps supabase_pooler_field-maps]
+Local Supabase ready. Studio: http://127.0.0.1:54323; Mailpit: http://127.0.0.1:54324
+e2e-local: starting the API on http://127.0.0.1:8001 (log: /home/user/deca-mark/database/.local/e2e/api.log)
+e2e-local: API ready
+e2e-local: building the web app (log: /home/user/deca-mark/database/.local/e2e/web-build.log)
+e2e-local: starting the web app on http://127.0.0.1:3000 (log: /home/user/deca-mark/database/.local/e2e/web.log)
+e2e-local: web app ready
+e2e-local: running Playwright against http://127.0.0.1:3000
+
+> decamark-web@0.1.0 test:e2e /home/user/deca-mark/web
+> playwright test --project=setup --trace=off
+
+
+Running 8 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:14:3 › sign in as owner (1.3s)
+  ✓  2 [setup] › e2e/auth.setup.ts:14:3 › sign in as admin (1.2s)
+  ✓  3 [setup] › e2e/auth.setup.ts:14:3 › sign in as manager (2.2s)
+  ✓  4 [setup] › e2e/auth.setup.ts:14:3 › sign in as observer (803ms)
+  ✓  5 [setup] › e2e/auth.setup.ts:14:3 › sign in as viewer (921ms)
+  ✓  6 [setup] › e2e/auth.setup.ts:14:3 › sign in as outsider (1.5s)
+  ✓  7 [setup] › e2e/auth.setup.ts:14:3 › sign in as joiner (825ms)
+  ✓  8 [setup] › e2e/auth.setup.ts:14:3 › sign in as other-owner (867ms)
+
+  8 passed (11.4s)
+
+To open last HTML report run:
+[36m[39m
+[36m  pnpm exec playwright show-report ../database/.local/e2e/playwright-report[39m
+[36m[39m
+e2e-local: left running: Docker, local Supabase (stop: pnpm db:stop) and the API on :8001 (stop: kill -TERM -$(cat database/.local/e2e/api.pid))
+e2e-local: web app still on :3000 (stop: scripts/e2e-local.sh --stop)
+e2e-local: rerun quickly: scripts/e2e-local.sh --skip-seed [playwright args]
+e2e-local: screenshots: web/e2e/screenshots/   report: pnpm --dir web exec playwright show-report ../database/.local/e2e/playwright-report

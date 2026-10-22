@@ -1,0 +1,72 @@
+[
+ {
+  "i": 0,
+  "OLD": "OLD-click-0",
+  "NEW": "NEW-click-0",
+  "pre": {
+   "value": "OLD-click-0",
+   "hydrated": false
+  },
+  "afterAction": "OLD-click-0+xyz",
+  "afterHydration": "OLD-click-0",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-click-0"
+ },
+ {
+  "i": 1,
+  "OLD": "OLD-click-1",
+  "NEW": "NEW-click-1",
+  "pre": {
+   "value": "OLD-click-1",
+   "hydrated": false
+  },
+  "afterAction": "OLD-click-1+xyz",
+  "afterHydration": "OLD-click-1",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-click-1"
+ },
+ {
+  "i": 2,
+  "OLD": "OLD-click-2",
+  "NEW": "NEW-click-2",
+  "pre": {
+   "value": "OLD-click-2",
+   "hydrated": false
+  },
+  "afterAction": "OLD-click-2+xyz",
+  "afterHydration": "OLD-click-2",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-click-2"
+ },
+ {
+  "i": 3,
+  "OLD": "OLD-click-3",
+  "NEW": "NEW-click-3",
+  "pre": {
+   "value": "OLD-click-3",
+   "hydrated": false
+  },
+  "afterAction": "OLD-click-3+xyz",
+  "afterHydration": "OLD-click-3",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-click-3"
+ },
+ {
+  "i": 4,
+  "OLD": "OLD-click-4",
+  "NEW": "NEW-click-4",
+  "pre": {
+   "value": "OLD-click-4",
+   "hydrated": false
+  },
+  "afterAction": "OLD-click-4+xyz",
+  "afterHydration": "OLD-click-4",
+  "unsavedBadgeAfterHydration": false,
+  "sent": [],
+  "stored": "OLD-click-4"
+ }
+]

@@ -1,0 +1,46 @@
+{
+ "network-drop": {
+  "at2_5s": {
+   "heading": "Something went wrong.",
+   "textarea": null,
+   "unsaved": false,
+   "fieldsetDisabled": false,
+   "bodyStart": "",
+   "alert": []
+  },
+  "after15s": null,
+  "pageerrors": []
+ },
+ "http-500": {
+  "at2_5s": {
+   "heading": "Something went wrong.",
+   "textarea": null,
+   "unsaved": false,
+   "fieldsetDisabled": false,
+   "bodyStart": "",
+   "alert": []
+  },
+  "after15s": null,
+  "pageerrors": []
+ },
+ "never-answers-8s": {
+  "at2_5s": {
+   "heading": "Project settings",
+   "textarea": "typed text that must not be lost",
+   "unsaved": true,
+   "fieldsetDisabled": true,
+   "saveBusy": "true",
+   "bodyStart": "",
+   "alert": []
+  },
+  "after15s": {
+   "heading": "Something went wrong.",
+   "textarea": null,
+   "unsaved": false,
+   "fieldsetDisabled": false,
+   "bodyStart": "",
+   "alert": []
+  },
+  "pageerrors": []
+ }
+}

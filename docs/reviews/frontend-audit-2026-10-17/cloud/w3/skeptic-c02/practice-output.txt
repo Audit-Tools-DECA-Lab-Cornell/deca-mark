@@ -1,0 +1,5 @@
+offersRound standard true shell-v1
+offersRound reliability false shell-v1
+offersRound inventory true janet-inventory-v1
+unbound janet-inventory-v1: isShell false bound false uploadable false initialSyncState local-only
+unbound shell-v1: isShell true initialSyncState local-only

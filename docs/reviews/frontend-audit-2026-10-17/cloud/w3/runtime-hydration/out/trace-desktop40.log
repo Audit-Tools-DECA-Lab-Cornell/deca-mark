@@ -1,0 +1,111 @@
+e2e-local: Docker already running
+e2e-local: starting local Supabase (pnpm db:start; running services are kept)
+
+> decamark@0.1.0 db:start /home/user/deca-mark
+> sh database/local-supabase.sh start
+
+Stopped services: [supabase_imgproxy_field-maps supabase_edge_runtime_field-maps supabase_pooler_field-maps]
+Local Supabase ready. Studio: http://127.0.0.1:54323; Mailpit: http://127.0.0.1:54324
+e2e-local: API already answering at http://127.0.0.1:8001
+e2e-local: reusing the web app at http://127.0.0.1:3000
+e2e-local: running Playwright against http://127.0.0.1:3000
+
+> decamark-web@0.1.0 test:e2e /home/user/deca-mark/web
+> playwright test --project=desktop-1440 --repeat-each=40 --trace=retain-on-failure --timeout=30000 e2e/settings.spec.ts
+
+
+Running 48 tests using 1 worker
+
+  ✓   1 [setup] › e2e/auth.setup.ts:14:3 › sign in as owner (264ms)
+  ✓   2 [setup] › e2e/auth.setup.ts:14:3 › sign in as admin (152ms)
+  ✓   3 [setup] › e2e/auth.setup.ts:14:3 › sign in as manager (152ms)
+  ✓   4 [setup] › e2e/auth.setup.ts:14:3 › sign in as observer (167ms)
+  ✓   5 [setup] › e2e/auth.setup.ts:14:3 › sign in as viewer (162ms)
+  ✓   6 [setup] › e2e/auth.setup.ts:14:3 › sign in as outsider (160ms)
+  ✓   7 [setup] › e2e/auth.setup.ts:14:3 › sign in as joiner (197ms)
+  ✓   8 [setup] › e2e/auth.setup.ts:14:3 › sign in as other-owner (193ms)
+  ✓   9 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  10 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  11 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  12 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.4s)
+  ✓  13 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  14 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  15 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  16 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  17 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  18 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  19 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  20 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.4s)
+  ✓  21 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  22 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  23 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  24 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.4s)
+  ✓  25 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  26 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  27 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  28 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.4s)
+  ✓  29 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  30 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  31 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  32 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✘  33 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  34 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  35 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  36 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  37 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  38 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  39 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  40 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  41 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  42 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  43 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  44 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  45 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.2s)
+  ✓  46 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  47 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+  ✓  48 [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved (1.3s)
+
+
+  1) [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved 
+
+    Error: page.reload: net::ERR_ABORTED; maybe frame was detached?
+    Call log:
+    [2m  - waiting for navigation until "load"[22m
+
+
+      17 |
+      18 | 	await expect.poll(async () => (await getProject()).description, { timeout: 20_000 }).toBe(description);
+    > 19 | 	await page.reload();
+         | 	           ^
+      20 | 	await expect(page.getByLabel(/^description/i).first()).toHaveValue(description);
+      21 | });
+      22 |
+        at /home/user/deca-mark/web/e2e/settings.spec.ts:19:13
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/settings-a-manager-changes-6cfc0-description-and-it-is-saved-desktop-1440-repeat24/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/settings-a-manager-changes-6cfc0-description-and-it-is-saved-desktop-1440-repeat24/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/settings-a-manager-changes-6cfc0-description-and-it-is-saved-desktop-1440-repeat24/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/settings-a-manager-changes-6cfc0-description-and-it-is-saved-desktop-1440-repeat24/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [desktop-1440] › e2e/settings.spec.ts:11:1 › a manager changes the project description and it is saved 
+  47 passed (1.6m)
+
+To open last HTML report run:
+[36m[39m
+[36m  pnpm exec playwright show-report ../database/.local/e2e/playwright-report[39m
+[36m[39m
+ ELIFECYCLE  Command failed with exit code 1.
+e2e-local: left running: Docker, local Supabase (stop: pnpm db:stop) and the API on :8001 (stop: kill -TERM -$(cat database/.local/e2e/api.pid))
+e2e-local: web app still on :3000 (stop: scripts/e2e-local.sh --stop)
+e2e-local: rerun quickly: scripts/e2e-local.sh --skip-seed [playwright args]
+e2e-local: screenshots: web/e2e/screenshots/   report: pnpm --dir web exec playwright show-report ../database/.local/e2e/playwright-report

@@ -1,0 +1,51 @@
+{
+ "controlled": {
+  "beforeHydration": {
+   "textarea": "typed-ta",
+   "input": "typed-in"
+  },
+  "afterHydrationPlusOneKeystrokeInInput": {
+   "textarea": "OLD",
+   "input": "OLDNAME!"
+  },
+  "fillRacingHydration": {
+   "fillResult": "ok",
+   "textarea": "OLD",
+   "input": "OLDNAME"
+  },
+  "forcedSplit": "NEWOLD"
+ },
+ "uncontrolled": {
+  "beforeHydration": {
+   "textarea": "typed-ta",
+   "input": "typed-in"
+  },
+  "afterHydrationPlusOneKeystrokeInInput": {
+   "textarea": "OLD",
+   "input": "typed-in!"
+  },
+  "fillRacingHydration": {
+   "fillResult": "ok",
+   "textarea": "OLD",
+   "input": "OLDNAME"
+  },
+  "forcedSplit": "NEWOLD"
+ },
+ "disabled": {
+  "note1": "textarea not clickable/focusable pre-hydration (disabled)",
+  "beforeHydration": {
+   "textarea": "OLD",
+   "input": "OLDNAME"
+  },
+  "afterHydrationPlusOneKeystrokeInInput": {
+   "textarea": "OLD",
+   "input": "!OLDNAME"
+  },
+  "fillRacingHydration": {
+   "fillResult": "ok",
+   "textarea": "NEW",
+   "input": "OLDNAME"
+  },
+  "forcedSplit": "OLD"
+ }
+}

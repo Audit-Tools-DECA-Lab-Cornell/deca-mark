@@ -1,0 +1,1587 @@
+[
+ {
+  "i": 0,
+  "OLD": "OLD-natural-0",
+  "NEW": "NEW-natural-0",
+  "delay": null,
+  "stored": "NEW-natural-0OLD-natural-0",
+  "final": "NEW-natural-0OLD-natural-0",
+  "ok": false,
+  "kind": "NEW+OLD",
+  "log": [
+   {
+    "t": 218,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 250,
+    "op": "defaultValue=",
+    "v": "OLD-natural-0",
+    "sel": [
+     0,
+     13
+    ],
+    "cur": "OLD-natural-0"
+   },
+   {
+    "t": 250,
+    "op": "value=",
+    "v": "OLD-natural-0",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-0"
+   },
+   {
+    "t": 267,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-0",
+    "val": "OLD-natural-0",
+    "sel": [
+     0,
+     0
+    ]
+   },
+   {
+    "t": 270,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-0",
+    "val": "NEW-natural-0OLD-natural-0",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 275,
+    "op": "defaultValue=",
+    "v": "NEW-natural-0OLD-natural-0",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-0OLD-natural-0"
+   },
+   {
+    "t": 288,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 291,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 346,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 1,
+  "OLD": "OLD-natural-1",
+  "NEW": "NEW-natural-1",
+  "delay": null,
+  "stored": "NEW-natural-1",
+  "final": "NEW-natural-1",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 247,
+    "op": "defaultValue=",
+    "v": "OLD-natural-1",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": ""
+   },
+   {
+    "t": 247,
+    "op": "value=",
+    "v": "OLD-natural-1",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-1"
+   },
+   {
+    "t": 275,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 426,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 431,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-1",
+    "val": "OLD-natural-1",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 433,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-1",
+    "val": "NEW-natural-1",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 438,
+    "op": "defaultValue=",
+    "v": "NEW-natural-1",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-1"
+   },
+   {
+    "t": 493,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 2,
+  "OLD": "OLD-natural-2",
+  "NEW": "NEW-natural-2",
+  "delay": null,
+  "stored": "NEW-natural-2",
+  "final": "NEW-natural-2",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 277,
+    "op": "defaultValue=",
+    "v": "OLD-natural-2",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-2"
+   },
+   {
+    "t": 277,
+    "op": "value=",
+    "v": "OLD-natural-2",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-2"
+   },
+   {
+    "t": 287,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 298,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 309,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-2",
+    "val": "OLD-natural-2",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 310,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-2",
+    "val": "NEW-natural-2",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 315,
+    "op": "defaultValue=",
+    "v": "NEW-natural-2",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-2"
+   },
+   {
+    "t": 361,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 3,
+  "OLD": "OLD-natural-3",
+  "NEW": "NEW-natural-3",
+  "delay": null,
+  "stored": "NEW-natural-3",
+  "final": "NEW-natural-3",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 264,
+    "op": "defaultValue=",
+    "v": "OLD-natural-3",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": ""
+   },
+   {
+    "t": 264,
+    "op": "value=",
+    "v": "OLD-natural-3",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-3"
+   },
+   {
+    "t": 278,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 443,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 447,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-3",
+    "val": "OLD-natural-3",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 448,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-3",
+    "val": "NEW-natural-3",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 451,
+    "op": "defaultValue=",
+    "v": "NEW-natural-3",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-3"
+   },
+   {
+    "t": 500,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 4,
+  "OLD": "OLD-natural-4",
+  "NEW": "NEW-natural-4",
+  "delay": null,
+  "stored": "NEW-natural-4",
+  "final": "NEW-natural-4",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 247,
+    "op": "defaultValue=",
+    "v": "OLD-natural-4",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-4"
+   },
+   {
+    "t": 247,
+    "op": "value=",
+    "v": "OLD-natural-4",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-4"
+   },
+   {
+    "t": 262,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 264,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 276,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-4",
+    "val": "OLD-natural-4",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 277,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-4",
+    "val": "NEW-natural-4",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 280,
+    "op": "defaultValue=",
+    "v": "NEW-natural-4",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-4"
+   },
+   {
+    "t": 328,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 5,
+  "OLD": "OLD-natural-5",
+  "NEW": "NEW-natural-5",
+  "delay": null,
+  "stored": "NEW-natural-5",
+  "final": "NEW-natural-5",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 242,
+    "op": "defaultValue=",
+    "v": "OLD-natural-5",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": ""
+   },
+   {
+    "t": 242,
+    "op": "value=",
+    "v": "OLD-natural-5",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-5"
+   },
+   {
+    "t": 256,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 418,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 423,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-5",
+    "val": "OLD-natural-5",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 424,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-5",
+    "val": "NEW-natural-5",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 428,
+    "op": "defaultValue=",
+    "v": "NEW-natural-5",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-5"
+   },
+   {
+    "t": 488,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 6,
+  "OLD": "OLD-natural-6",
+  "NEW": "NEW-natural-6",
+  "delay": null,
+  "stored": "NEW-natural-6",
+  "final": "NEW-natural-6",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 222,
+    "op": "defaultValue=",
+    "v": "OLD-natural-6",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-6"
+   },
+   {
+    "t": 222,
+    "op": "value=",
+    "v": "OLD-natural-6",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-6"
+   },
+   {
+    "t": 232,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 235,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 240,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-6",
+    "val": "OLD-natural-6",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 241,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-6",
+    "val": "NEW-natural-6",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 244,
+    "op": "defaultValue=",
+    "v": "NEW-natural-6",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-6"
+   },
+   {
+    "t": 301,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 7,
+  "OLD": "OLD-natural-7",
+  "NEW": "NEW-natural-7",
+  "delay": null,
+  "stored": "NEW-natural-7",
+  "final": "NEW-natural-7",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 230,
+    "op": "defaultValue=",
+    "v": "OLD-natural-7",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-7"
+   },
+   {
+    "t": 230,
+    "op": "value=",
+    "v": "OLD-natural-7",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-7"
+   },
+   {
+    "t": 239,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 243,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 247,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-7",
+    "val": "OLD-natural-7",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 248,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-7",
+    "val": "NEW-natural-7",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 251,
+    "op": "defaultValue=",
+    "v": "NEW-natural-7",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-7"
+   },
+   {
+    "t": 297,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 8,
+  "OLD": "OLD-natural-8",
+  "NEW": "NEW-natural-8",
+  "delay": null,
+  "stored": "NEW-natural-8",
+  "final": "NEW-natural-8",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 241,
+    "op": "defaultValue=",
+    "v": "OLD-natural-8",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-8"
+   },
+   {
+    "t": 241,
+    "op": "value=",
+    "v": "OLD-natural-8",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-8"
+   },
+   {
+    "t": 253,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 257,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 261,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-8",
+    "val": "OLD-natural-8",
+    "sel": [
+     0,
+     13
+    ]
+   },
+   {
+    "t": 262,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-8",
+    "val": "NEW-natural-8",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 265,
+    "op": "defaultValue=",
+    "v": "NEW-natural-8",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-8"
+   },
+   {
+    "t": 315,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 9,
+  "OLD": "OLD-natural-9",
+  "NEW": "NEW-natural-9",
+  "delay": null,
+  "stored": "NEW-natural-9OLD-natural-9",
+  "final": "NEW-natural-9OLD-natural-9",
+  "ok": false,
+  "kind": "NEW+OLD",
+  "log": [
+   {
+    "t": 254,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 274,
+    "op": "defaultValue=",
+    "v": "OLD-natural-9",
+    "sel": [
+     0,
+     13
+    ],
+    "cur": "OLD-natural-9"
+   },
+   {
+    "t": 274,
+    "op": "value=",
+    "v": "OLD-natural-9",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-9"
+   },
+   {
+    "t": 289,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-9",
+    "val": "OLD-natural-9",
+    "sel": [
+     0,
+     0
+    ]
+   },
+   {
+    "t": 292,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-9",
+    "val": "NEW-natural-9OLD-natural-9",
+    "sel": [
+     13,
+     13
+    ]
+   },
+   {
+    "t": 295,
+    "op": "defaultValue=",
+    "v": "NEW-natural-9OLD-natural-9",
+    "sel": [
+     13,
+     13
+    ],
+    "cur": "NEW-natural-9OLD-natural-9"
+   },
+   {
+    "t": 300,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 304,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 359,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 10,
+  "OLD": "OLD-natural-10",
+  "NEW": "NEW-natural-10",
+  "delay": null,
+  "stored": "NEW-natural-10",
+  "final": "NEW-natural-10",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 225,
+    "op": "defaultValue=",
+    "v": "OLD-natural-10",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-10"
+   },
+   {
+    "t": 225,
+    "op": "value=",
+    "v": "OLD-natural-10",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-10"
+   },
+   {
+    "t": 235,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 240,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 244,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-10",
+    "val": "OLD-natural-10",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 245,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-10",
+    "val": "NEW-natural-10",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 248,
+    "op": "defaultValue=",
+    "v": "NEW-natural-10",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-10"
+   },
+   {
+    "t": 290,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 11,
+  "OLD": "OLD-natural-11",
+  "NEW": "NEW-natural-11",
+  "delay": null,
+  "stored": "NEW-natural-11",
+  "final": "NEW-natural-11",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 219,
+    "op": "defaultValue=",
+    "v": "OLD-natural-11",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-11"
+   },
+   {
+    "t": 219,
+    "op": "value=",
+    "v": "OLD-natural-11",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-11"
+   },
+   {
+    "t": 237,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 239,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 250,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-11",
+    "val": "OLD-natural-11",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 251,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-11",
+    "val": "NEW-natural-11",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 254,
+    "op": "defaultValue=",
+    "v": "NEW-natural-11",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-11"
+   },
+   {
+    "t": 303,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 12,
+  "OLD": "OLD-natural-12",
+  "NEW": "NEW-natural-12",
+  "delay": null,
+  "stored": "NEW-natural-12",
+  "final": "NEW-natural-12",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 268,
+    "op": "defaultValue=",
+    "v": "OLD-natural-12",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-12"
+   },
+   {
+    "t": 268,
+    "op": "value=",
+    "v": "OLD-natural-12",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-12"
+   },
+   {
+    "t": 281,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 285,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 290,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-12",
+    "val": "OLD-natural-12",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 291,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-12",
+    "val": "NEW-natural-12",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 294,
+    "op": "defaultValue=",
+    "v": "NEW-natural-12",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-12"
+   },
+   {
+    "t": 337,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 13,
+  "OLD": "OLD-natural-13",
+  "NEW": "NEW-natural-13",
+  "delay": null,
+  "stored": "NEW-natural-13OLD-natural-13",
+  "final": "NEW-natural-13OLD-natural-13",
+  "ok": false,
+  "kind": "NEW+OLD",
+  "log": [
+   {
+    "t": 263,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 272,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-13",
+    "val": "OLD-natural-13",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 308,
+    "op": "defaultValue=",
+    "v": "OLD-natural-13",
+    "sel": [
+     0,
+     14
+    ],
+    "cur": "OLD-natural-13"
+   },
+   {
+    "t": 309,
+    "op": "value=",
+    "v": "OLD-natural-13",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-13"
+   },
+   {
+    "t": 326,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-13",
+    "val": "NEW-natural-13OLD-natural-13",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 330,
+    "op": "defaultValue=",
+    "v": "NEW-natural-13OLD-natural-13",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-13OLD-natural-13"
+   },
+   {
+    "t": 340,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 351,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 393,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 14,
+  "OLD": "OLD-natural-14",
+  "NEW": "NEW-natural-14",
+  "delay": null,
+  "stored": "NEW-natural-14",
+  "final": "NEW-natural-14",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 241,
+    "op": "defaultValue=",
+    "v": "OLD-natural-14",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-14"
+   },
+   {
+    "t": 241,
+    "op": "value=",
+    "v": "OLD-natural-14",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-14"
+   },
+   {
+    "t": 255,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 257,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 264,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-14",
+    "val": "OLD-natural-14",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 266,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-14",
+    "val": "NEW-natural-14",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 270,
+    "op": "defaultValue=",
+    "v": "NEW-natural-14",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-14"
+   },
+   {
+    "t": 338,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 15,
+  "OLD": "OLD-natural-15",
+  "NEW": "NEW-natural-15",
+  "delay": null,
+  "stored": "NEW-natural-15",
+  "final": "NEW-natural-15",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 237,
+    "op": "defaultValue=",
+    "v": "OLD-natural-15",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-15"
+   },
+   {
+    "t": 237,
+    "op": "value=",
+    "v": "OLD-natural-15",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-15"
+   },
+   {
+    "t": 249,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 253,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 257,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-15",
+    "val": "OLD-natural-15",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 258,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-15",
+    "val": "NEW-natural-15",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 262,
+    "op": "defaultValue=",
+    "v": "NEW-natural-15",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-15"
+   },
+   {
+    "t": 291,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 16,
+  "OLD": "OLD-natural-16",
+  "NEW": "NEW-natural-16",
+  "delay": null,
+  "stored": "NEW-natural-16OLD-natural-16",
+  "final": "NEW-natural-16OLD-natural-16",
+  "ok": false,
+  "kind": "NEW+OLD",
+  "log": [
+   {
+    "t": 268,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 288,
+    "op": "defaultValue=",
+    "v": "OLD-natural-16",
+    "sel": [
+     0,
+     14
+    ],
+    "cur": "OLD-natural-16"
+   },
+   {
+    "t": 288,
+    "op": "value=",
+    "v": "OLD-natural-16",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-16"
+   },
+   {
+    "t": 299,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-16",
+    "val": "OLD-natural-16",
+    "sel": [
+     0,
+     0
+    ]
+   },
+   {
+    "t": 300,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-16",
+    "val": "NEW-natural-16OLD-natural-16",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 303,
+    "op": "defaultValue=",
+    "v": "NEW-natural-16OLD-natural-16",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-16OLD-natural-16"
+   },
+   {
+    "t": 305,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 309,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 362,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 17,
+  "OLD": "OLD-natural-17",
+  "NEW": "NEW-natural-17",
+  "delay": null,
+  "stored": "NEW-natural-17OLD-natural-17",
+  "final": "NEW-natural-17OLD-natural-17",
+  "ok": false,
+  "kind": "NEW+OLD",
+  "log": [
+   {
+    "t": 282,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 290,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-17",
+    "val": "OLD-natural-17",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 314,
+    "op": "defaultValue=",
+    "v": "OLD-natural-17",
+    "sel": [
+     0,
+     14
+    ],
+    "cur": "OLD-natural-17"
+   },
+   {
+    "t": 315,
+    "op": "value=",
+    "v": "OLD-natural-17",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-17"
+   },
+   {
+    "t": 325,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-17",
+    "val": "NEW-natural-17OLD-natural-17",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 328,
+    "op": "defaultValue=",
+    "v": "NEW-natural-17OLD-natural-17",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-17OLD-natural-17"
+   },
+   {
+    "t": 334,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 337,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 392,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 18,
+  "OLD": "OLD-natural-18",
+  "NEW": "NEW-natural-18",
+  "delay": null,
+  "stored": "NEW-natural-18",
+  "final": "NEW-natural-18",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 237,
+    "op": "defaultValue=",
+    "v": "OLD-natural-18",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-18"
+   },
+   {
+    "t": 237,
+    "op": "value=",
+    "v": "OLD-natural-18",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-18"
+   },
+   {
+    "t": 248,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 261,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 270,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-18",
+    "val": "OLD-natural-18",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 271,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-18",
+    "val": "NEW-natural-18",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 274,
+    "op": "defaultValue=",
+    "v": "NEW-natural-18",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-18"
+   },
+   {
+    "t": 325,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ },
+ {
+  "i": 19,
+  "OLD": "OLD-natural-19",
+  "NEW": "NEW-natural-19",
+  "delay": null,
+  "stored": "NEW-natural-19",
+  "final": "NEW-natural-19",
+  "ok": true,
+  "kind": "ok",
+  "log": [
+   {
+    "t": 284,
+    "op": "defaultValue=",
+    "v": "OLD-natural-19",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-19"
+   },
+   {
+    "t": 284,
+    "op": "value=",
+    "v": "OLD-natural-19",
+    "sel": [
+     0,
+     0
+    ],
+    "cur": "OLD-natural-19"
+   },
+   {
+    "t": 298,
+    "op": "HYDRATED(textarea has react props)"
+   },
+   {
+    "t": 307,
+    "op": "focusin",
+    "tag": "TEXTAREA"
+   },
+   {
+    "t": 314,
+    "op": "beforeinput",
+    "inputType": "insertText",
+    "data": "NEW-natural-19",
+    "val": "OLD-natural-19",
+    "sel": [
+     0,
+     14
+    ]
+   },
+   {
+    "t": 315,
+    "op": "input",
+    "inputType": "insertText",
+    "data": "NEW-natural-19",
+    "val": "NEW-natural-19",
+    "sel": [
+     14,
+     14
+    ]
+   },
+   {
+    "t": 318,
+    "op": "defaultValue=",
+    "v": "NEW-natural-19",
+    "sel": [
+     14,
+     14
+    ],
+    "cur": "NEW-natural-19"
+   },
+   {
+    "t": 367,
+    "op": "focusin",
+    "tag": "BUTTON"
+   }
+  ]
+ }
+]

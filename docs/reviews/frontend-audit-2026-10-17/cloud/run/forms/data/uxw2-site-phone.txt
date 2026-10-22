@@ -1,0 +1,62 @@
+Skip to content
+UXW2 clean project
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Sites
+Site A
+Site A
+1 zone · 0 observations
+See observations
+Zone A · Whole playground
+
+Site A · Day plan
+
+0–25 m
+Map v1 · north ↑
+Scale bar 0–25 m. Map v1. North is up.
+
+Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys to move the plan.
+
+Zones
+1 zone
+Edit zones
+Zone A · Whole playground
+
+A
+
+0 observations on v1
+
+Counts cover every map version of this site.
+Current map package
+Active
+Version
+v1
+Prepared
+Oct 21, 2026 · 12:04
+Size
+1 KB
+Form version
+uxw2-form-v1
+Inventory form
+uxw2-form-v1
+Download
+Upload a new version
+
+Observers get this version the next time they make the site ready offline in the DECA Mark app.
+
+Package history
+Details
+Site code
+site-a
+Description
+No description
+Edit details
+Device readiness is not available yet. DECA Mark does not record which phones have downloaded this map. Ask observers to open the site in the DECA Mark app before they go out.
+Deleting a site or a map package is not available yet. To replace what observers download, upload a new version of the map package.

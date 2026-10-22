@@ -1,0 +1,14 @@
+{
+ "defaultValue= only": [
+  "NEW"
+ ],
+ "value= only (same value)": [
+  "NEW"
+ ],
+ "react initTextarea order: defaultValue= then value=": [
+  "NEW"
+ ],
+ "defaultValue= then a selectionStart read": [
+  "NEW"
+ ]
+}

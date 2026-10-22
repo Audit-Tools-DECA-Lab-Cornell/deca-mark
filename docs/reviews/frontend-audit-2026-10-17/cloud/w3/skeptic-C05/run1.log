@@ -1,0 +1,43 @@
+
+ RUN  v4.1.11 /tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/w3/skeptic-C05
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > single tap: answers Q1 and advances to Q2 after 160 ms
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > single tap: answers Q1 and advances to Q2 after 160 ms
+single {"age_range":"age_3_5"} -> Primary play type
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 120 ms later on the same tile clears Q1 and stays
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 120 ms later on the same tile clears Q1 and stays
+120ms {} -> How old is the target child?
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it
+after 250ms controls: Physical | Exploratory | Imaginative | Play with Rules | Bio | Expressive | Restorative | Digital | Non-Play | Back | Continue | Review answers
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it
+250ms {"age_range":"age_3_5","play_type_1":"exploratory"} -> Exploratory play — which kind?
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > single tap: answers Q1 and advances to Q2 after 160 ms 43ms
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > second tap 120 ms later on the same tile clears Q1 and stays 16ms
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it 22ms
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype
+Q3 controls: Gross motor | Fine motor | Vestibular | Rough & tumble | Back | Continue | Review answers | label: Physical play — which kind?
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype
+Q2->Q3 {"age_range":"age_3_5","play_type_1":"physical","play_subtype_1":"vestibular"} -> A second play type, if there is one required: false
+
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype 28ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  21:16:33
+   Duration  1.02s (transform 562ms, setup 0ms, import 781ms, tests 112ms, environment 0ms)
+

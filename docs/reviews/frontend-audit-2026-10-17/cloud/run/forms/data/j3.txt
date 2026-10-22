@@ -1,0 +1,5 @@
+{"name":"start-new-draft","boundary":true,"url":"/o/web-acceptance/p/play-study/forms/versions?form=workspace-check","inlineNote":null,"dialogStillOpen":false}
+{"name":"publish","boundary":true,"url":"/o/web-acceptance/p/play-study/forms/versions/workspace-check-v5/publish","inlineNote":null,"dialogStillOpen":false}
+{"name":"retire","boundary":true,"url":"/o/web-acceptance/p/play-study/forms/versions?form=workspace-check","inlineNote":null,"dialogStillOpen":false}
+{"name":"discard","boundary":true,"url":"/o/web-acceptance/p/play-study/forms/versions?form=workspace-check","inlineNote":null,"dialogStillOpen":false}
+{"name":"start-from-published","boundary":true,"url":"/o/web-acceptance/p/play-study/forms/versions/workspace-check-v4","inlineNote":null,"dialogStillOpen":false}

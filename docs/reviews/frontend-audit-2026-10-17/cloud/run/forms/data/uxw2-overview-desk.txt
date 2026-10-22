@@ -1,0 +1,77 @@
+Skip to content
+DECA Mark
+Web acceptance lab
+/
+UXW2 clean project
+Search or jump to
+Ctrl K
+MANAGER
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+What came back from the field
+UXW2 clean project
+Open observations
+
+FIELD RETURN
+
+No observations have come back yet.
+
+The total adds up every site's own count. Records still on devices are not counted here.
+
+Last received
+Nothing received yet
+Observed today
+0
+Observed in the last 7 days
+0
+
+Days and times use the project's time zone, America/New_York.
+
+Coverage by zone
+Site A · 0 observations
+Open Site A
+Zone A · Whole playground
+
+Site A · plan
+
+Map v1
+
+0–20 m
+Map v1 · north ↑
+Scale bar 0–20 m. Map v1. North is up.
+
+Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys to move the plan.
+
+Observations by zone and round at Site A
+ZONE	STANDARD	RELIABILITY	INVENTORY	TOTAL
+Zone A · Whole playground
+No observations yet
+	0	0	0	0
+
+Counts are every observation recorded in each zone and round, on every map version. They show where records exist, not whether a round is complete.
+
+Needs attention
+
+Nothing needs attention.
+
+Every site has a ready map package, a form is published and no draft is waiting.
+
+Recent activity
+All observations
+UXW2 form v2 published
+Today 12:04
+Map package v1 prepared for Site A
+Today 12:04
+Site Site A added
+Today 12:04
+UXW2 form v1 published
+Today 12:04
+
+Built from the dates on observations, map packages, forms and sites. It does not list every change.

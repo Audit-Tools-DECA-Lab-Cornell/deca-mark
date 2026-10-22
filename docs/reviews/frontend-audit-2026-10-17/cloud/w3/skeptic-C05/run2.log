@@ -1,0 +1,69 @@
+
+ RUN  v4.1.11 /tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/w3/skeptic-C05
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > single tap: answers Q1 and advances to Q2 after 160 ms
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > single tap: answers Q1 and advances to Q2 after 160 ms
+single {"age_range":"age_3_5"} -> Primary play type
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 120 ms later on the same tile clears Q1 and stays
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 120 ms later on the same tile clears Q1 and stays
+120ms {} -> How old is the target child?
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it
+after 250ms controls: Physical | Exploratory | Imaginative | Play with Rules | Bio | Expressive | Restorative | Digital | Non-Play | Back | Continue | Review answers
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it
+250ms {"age_range":"age_3_5","play_type_1":"exploratory"} -> Exploratory play — which kind?
+
+stderr | double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype
+Q3 controls: Gross motor | Fine motor | Vestibular | Rough & tumble | Back | Continue | Review answers | label: Physical play — which kind?
+
+stdout | double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype
+Q2->Q3 {"age_range":"age_3_5","play_type_1":"physical","play_subtype_1":"vestibular"} -> A second play type, if there is one required: false
+
+stderr | double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > 120 ms re-tap keeps Q1 and still advances
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > single tap: answers Q1 and advances to Q2 after 160 ms 38ms
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > second tap 120 ms later on the same tile clears Q1 and stays 15ms
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > second tap 250 ms later lands on a live Q2 tile and answers it 20ms
+ ✓ double-tap.test.ts > C05 double tap at 0279fd3 > Q2 -> Q3 variant: a double tap on the play type silently answers the optional subtype 24ms
+stdout | double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > 120 ms re-tap keeps Q1 and still advances
+guarded 120ms {"age_range":"age_3_5"} -> Primary play type
+
+stderr | double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > 250 ms second tap on Q2 is ignored
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stdout | double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > 250 ms second tap on Q2 is ignored
+guarded 250ms {"age_range":"age_3_5"} -> Primary play type
+
+stderr | double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > a quick correction to a different option within 160 ms still wins
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > deliberate un-choose after Back still clears
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > a tap 400 ms after the advance is accepted
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ✓ double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > 120 ms re-tap keeps Q1 and still advances 10ms
+ ✓ double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > 250 ms second tap on Q2 is ignored 12ms
+ ✓ double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > a quick correction to a different option within 160 ms still wins 11ms
+ ✓ double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > deliberate un-choose after Back still clears 13ms
+ ✓ double-tap.test.ts > C05 alternative fix in dispatchStep (scratch only) > a tap 400 ms after the advance is accepted 13ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  21:18:21
+   Duration  1.13s (transform 589ms, setup 0ms, import 838ms, tests 157ms, environment 0ms)
+
