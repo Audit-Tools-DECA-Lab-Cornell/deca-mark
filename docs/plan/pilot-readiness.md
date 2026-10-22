@@ -45,7 +45,7 @@ OPS-18 goes first so every later PR runs the 393 web unit tests, `forms:parity` 
 
 Cross-lane edits that are known in advance:
 - MOB-37 changes the practice copy in `SavedStep.tsx:115-120`, which lane A owns: do that one edit after MOB-34 has merged.
-- MOB-43 (lane C) changes the observation domain that lanes A and B read: start it after MOB-34 and MOB-37 have merged, and rebase the others on it.
+- MOB-43 (lane C) changes the observation domain that lanes A and B read: start it after MOB-34, MOB-37 and MOB-41 have merged, and rebase the others on it. Once those have merged, MOB-43 may also edit the practice wording and paths in files lanes A and B own: `mobile/src/features/collect/SavedStep.tsx`, `mobile/src/features/guide/**` and `mobile/src/features/account/leaving.ts`. Its PR lists those edits, and the owning lanes rebase on it.
 - WEB-44 (lane E) adds the `loadMore` catch in `DataScreen.tsx`, which lane F owns: lane E makes that one-line change first; lane F rebases.
 
 ### Wave 2: the gate (days 3–5)
@@ -73,7 +73,7 @@ After the launch, any collector change that touches SQLite adds a forward migrat
 ## Protocol for every agent
 
 1. **Read** this guide, the plan index's conventions, the owning task in full (Context, `Read first`, `Do`, `Done when`, `Verify`) and the audit cluster it cites. Check that every `Depends:` task is `done`.
-2. **Stay in the lane's files.** If the task needs a file another lane owns, stop and say so; do not edit it.
+2. **Stay in the lane's files.** The only exceptions are the cross-lane edits listed under wave 1, once the tasks they name have merged. If a task needs any other file another lane owns, stop and say so; do not edit it.
 3. **Write the regression test first** where the task names one (the audit reproduced most defects with real modules; the reproducers are under `docs/reviews/frontend-audit-2026-10-17/cloud/`). It must fail before the fix and pass after.
 4. **Implement the smallest change that meets `Done when`.** The audit's "keep despite looking complex" list (REPORT §6) is off limits unless the task says otherwise: the single-transaction commit, frozen upload bodies and receipt matching, account fences, verified package installs, the zone save queue, ETag compare-and-set, `settle()`/LoadFailure, role checks before reads.
 5. **Run the task's `Verify` commands** and the component checks: `pnpm web:check` and `pnpm --dir web test:unit`; `pnpm mobile:check` and `pnpm mobile:test`; `pnpm backend:check` and `pnpm backend:test`; `pnpm db:test` for database changes; `pnpm forms:parity`; `pnpm tokens:check`; `pnpm plan:check`.
