@@ -242,8 +242,8 @@ The Nocturne theme cannot be deleted with the records screen, because `screen-me
 1. Catch the rejection at each call site. Start with the editor save, then Settings, `loadMore` (copy the catch at `DataMap.tsx:178`), the Sites dialogs and `ProfileForm`.
 2. Use three-way copy, because "Nothing was saved" is only true when the action never ran:
    - **Never ran** (an `unstable_isUnrecognizedActionError(e)` error, or a sign-out sentinel): "Nothing was saved …"
-   - **Unknown outcome:** "DECA Mark could not confirm the save. Your wording is still here. Save again when you are connected. If it then says the draft changed, your earlier save went through."
-   - **412 after an unknown outcome:** say that the earlier save went through, not that someone else changed the draft.
+   - **Unknown outcome:** "DECA Mark could not confirm the save. Your wording is still here. Save again when you are connected."
+   - **412 after an unknown outcome:** a 412 alone does not prove the earlier save went through, because another manager may have saved in between. Read the draft back: say "Your earlier save went through" only when its content equals the submitted wording; otherwise keep the wording and open the normal conflict choice. *(Corrected 2026-10-22 after review; the first version treated the 412 as proof.)*
 3. Never advise a reload while edits are unsaved, and keep the leave guard armed.
 4. Optional: answer `next-action` POSTs from the proxy with a 401 sentinel instead of a 307, so the copy can name the sign-out. It cannot affect the zone editor, which talks to the API directly.
 5. Fixing C06 (local sign-out) removes the most plausible "session ended" trigger.
@@ -255,7 +255,7 @@ The Nocturne theme cannot be deleted with the records screen, because `screen-me
 
 **Verification.** One Playwright spec at 1440 and 390 covering:
 - aborted POST, cleared cookies, offline and a bogus action id: the editor stays mounted, the edit is kept and the page never shows ErrorView;
-- a reply lost after the commit (`route.fetch()` then abort): the page must not say "Nothing was saved", and a second Save handles the 412 honestly;
+- a reply lost after the commit (`route.fetch()` then abort): the page must not say "Nothing was saved", and the second Save's 412 is resolved by reading the draft back; a second manager saving in between must end in the conflict choice, not "went through";
 - the leave guard is still armed afterwards;
 - "Show the next 20" on the zone-review project (520 rows).
 

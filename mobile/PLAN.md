@@ -657,7 +657,7 @@ Do:
 1. Delete both "does not upload yet" notes and the doc comment. Sign out says: "Signing out pauses their upload until {email} signs in again on this device."
 2. Delete account with unsent records offers "Upload N first" wired to `sync.retry()` (which clears `next_attempt_at`), never `wake()` (which waits out the retry delay; 0 calls in 240 s in the reproduction), and keeps the observer on the screen while the counts update; "Delete anyway" proceeds. The Alert stops saying uploading first is impossible.
 3. Count unsent from bound rows only (`onDevice + uploading + attention`). Decide practice by `!isBoundObservation`, not `isShellObservation` (that misses Practice-garden inventory rows). Until MOB-43 lands, word practice as "Practice record: stays on this device and is never uploaded".
-4. Remap `local-only` in `queue.ts STATUS_TO_STATE` away from "held" before any screen shares the map. Also correct the `bundled.ts:107,180` meta strings that say "uploads to the API".
+4. Remap `local-only` in `queue.ts STATUS_TO_STATE` away from "held" before any screen shares the map. (The `bundled.ts:107,180` meta strings that say "uploads to the API" are deleted with the file in MOB-43.)
 Done when: seeding one bound pending row with 7 attempts and a future `next_attempt_at`, one `shell-v1` practice row and one unbound `janet-inventory-v1` row: "Upload 1 first" uploads at once and the row reaches Uploaded only through a receipt; Account, Sign out and Delete account count 1 unsent and describe the two practice rows as never uploaded; a grep finds neither "does not upload yet" nor "cannot upload them first"; `account-screens.test.tsx:144` asserts the new copy.
 Verify: `pnpm mobile:check`, `pnpm mobile:test`.
 
