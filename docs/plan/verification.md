@@ -127,7 +127,7 @@ Do: on each device, portrait and landscape where it rotates:
 1. Fresh install, sign-up, code, profile, join; Training downloads from the server and its practice records upload to the Training project.
 2. Download Janet's site; airplane mode; collect 10 observations including the 4-row play-event summary (field and Continue visible while typing), deliberate double taps on single-choice answers (no unread answer recorded), a rotation mid-observation (camera and answers kept), a force quit mid-observation (Resume restores it).
 3. Reconnect after repeated failures: uploads start within seconds; Account, Sign out and Delete account say what really happens.
-4. Web: a form edit with the network cut keeps the wording; a web sign-out leaves the phone uploading; a QGIS project with a basemap is refused with the layer named; the Forms list and Overview name the version each site collects with.
+4. Web: a form edit with the network cut keeps the wording; a web sign-out leaves the phone uploading; a QGIS project with an online basemap is refused with the layer and the remedy named (or, if the owner chose warnings under BE-23, uploads with a warning that names the layer); the Forms list and Overview name the version each site collects with.
 5. Read the uploaded rows back in the web Data page and an export.
 Done when: every step passes on all four device families, recorded with device, OS, build and result per step in this task; any failure reopens its task.
 Verify: the recorded run.
