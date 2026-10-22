@@ -243,3 +243,11 @@ Do: Finish the single-path rewrite: remove the v1 envelopes and hash goldens, le
 Done when: No zone document or shared case asks for a second API version, package format, upload protocol or legacy row; the backend case-integrity tests are updated with the cases.
 Verify: `pnpm plan:check`; a grep of the zone docs and `contracts/zones` for `/v2`, `legacy`, `format 2`, `upload_protocol` and `assignment_basis` finds only the contract's removal list.
 Evidence: [CON-06 acceptance and review](../reviews/zone-boundaries-2026-10-12/con06.md). Focused artifact tests: 91 passed; two explicit production-model/fingerprint obligations remain BE-22 gates. Ruff, formatting, focused BasedPyright and the programming audit pass. Reviewed handoffs now distinguish the sole `/v1` API from map versions, use zone-aware `format: 1`, required recorded bindings and one `observation-jcs-1` fingerprint. First-upload, replay/live-current and all five validation changes are independently authored. DB-19/BE-22 implementation, generated OpenAPI and runtime compliance remain pending; CON-06 does not claim those checks.
+
+### CON-07: One form definition format and its schema-version rule
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: BE-24, DB-20
+Added 2026-10-22 (D32). Forms live only in the database; `contracts/form-definition.schema.json` is the one format; `contracts/forms/*.json` become seed and test data.
+Read first: `contracts/form-definition.schema.json`; `contracts/README.md`; `contracts/forms/` and `cases/`; `scripts/check-form-engine-parity.mjs`; the `schema_version` column of `form_versions`.
+Do: state the current form schema version and the rule every party follows: the API validates writes against it and serves only it; a client that receives a definition with a schema version it does not know refuses that site or form with "Update DECA Mark to use this form" instead of guessing; a new schema version is a forward migration of stored definitions, never a dual format (from D31 on). Mark `contracts/forms/*.json` as seed and test data in `contracts/README.md`.
+Done when: `contracts/README.md` and this file state the rule; the shared definition cases include an unknown-schema-version case that both engines refuse.
+Verify: `pnpm plan:check`, `pnpm forms:parity`, `pnpm --dir web test:unit`, `pnpm mobile:test`.

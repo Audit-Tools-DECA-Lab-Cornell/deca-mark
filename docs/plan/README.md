@@ -11,6 +11,8 @@ This is the entry point for taking DECA Mark from prototype to Janet's first fie
 
 The owner confirmed there are no real users or production-data preservation obligations yet. Breaking changes may reset incompatible local/server data and use newly prepared maps as the baseline. Do not add old-client bridges, old-schema upgrade paths or dual formats solely to retain experimental data. This applies to backend, web, mobile, database, contracts and schemas. Migration files may be consolidated when useful; their count is not a product requirement.
 
+**This policy ends when the pilot launches (D31, target the week of 2026-10-26).** After the one last sanctioned reset (OPS-19, MOB-44), collector and hosted schema changes preserve data.
+
 Within the current supported schema, normal restarts and failed downloads still retain unfinished observations, referenced packages and immutable recorded attribution. A reset is a setup/schema transition, not an authentication repair or a silent reassignment of a valid observation. Source/test changes are authorized; choose the exact target explicitly before a hosted reset or deployment.
 
 ## The goal in one paragraph
@@ -47,6 +49,7 @@ The full decision log, the running cost and the open questions are in [decisions
 | [docs/plan/sync-powersync.md](sync-powersync.md) | PowerSync design, the spike, stream definitions | `SYNC-*` |
 | [docs/plan/operations.md](operations.md) | Hosted settings, CI, deploys, monitoring, backups, releases | `OPS-*` |
 | [docs/plan/verification.md](verification.md) | Cross-cutting test suites and acceptance runs | `QA-*` |
+| [docs/plan/pilot-readiness.md](pilot-readiness.md) | The execution guide for the pilot-readiness work from the October 2026 frontend audit: waves, lanes, file ownership, the launch gate and the agent protocol | none (refers to IDs only) |
 | [docs/plan/decisions.md](decisions.md) | Decision log, open questions, running cost | none |
 | [supabase/PLAN.md](../../supabase/PLAN.md) | Data model v2, migrations, RLS, private functions (covers `supabase/` and `database/`) | `DB-*` |
 | [backend/PLAN.md](../../backend/PLAN.md) | FastAPI modules, endpoints, hardening | `BE-*` |
@@ -167,6 +170,7 @@ WEB-20 to WEB-26 and MOB-23 to MOB-27 build the Contour screens ahead of the wir
 - **Operations:** OPS-09, OPS-10, OPS-11, OPS-12, OPS-17
 - **Verification:** QA-04
 - **Zone acceptance:** QA-07
+- **Pilot readiness (frontend audit, 2026-10-22; see [pilot-readiness.md](pilot-readiness.md)):** CON-07, DB-20, BE-23, BE-24, BE-25, BE-26, MOB-34, MOB-35, MOB-36, MOB-37, MOB-38, MOB-39, MOB-40, MOB-41, MOB-42, MOB-43, MOB-44, MOB-45, MOB-46, MOB-47, MOB-48, MOB-49, WEB-44, WEB-45, WEB-46, WEB-47, WEB-48, WEB-49, WEB-50, WEB-51, WEB-52, WEB-53, WEB-54, WEB-55, WEB-56, WEB-57, WEB-58, WEB-59, OPS-18, OPS-19, OPS-20, QA-08, QA-09
 
 ### Phase 5: Pilot (week 13)
 
@@ -201,6 +205,8 @@ Cut in this order:
 - Get an ID only when scheduled: photo attachments, closed-app background upload, a visual form builder, CAPTCHA on mobile, billing and quotas, an "other observers" map layer, MapLibre on the web, multi-region hosting.
 
 ## Current navigation (reconciled 2026-10-15)
+
+**2026-10-22: the pilot launches next.** The [pilot-readiness guide](pilot-readiness.md) orders the frontend-audit tasks into waves ending at the launch gate QA-08; run it alongside MOB-29's device acceptance. The [audit report and evidence](../reviews/frontend-audit-2026-10-17/README.md) are the source.
 
 Read [current position and next work](current-state.md) for the implemented zone/web scope, remaining acceptance and the ordered return to the pilot roadmap. Component plans are the only task-status authority. Dated review results remain evidence of their exact revision and surface, not current hosted health.
 
