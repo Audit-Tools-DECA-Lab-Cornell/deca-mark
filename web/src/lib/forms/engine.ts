@@ -1,7 +1,7 @@
 // Copied from mobile/src/forms/engine.ts. Keep identical below this header;
 // `pnpm forms:parity` checks it.
 import type { Answers, AnswerValue, Condition, FormDefinition, Question } from "./definition";
-
+ 
 /**
  * The reusable part: visibility, dynamic option sets, pruning and validation. It knows nothing
  * about Janet's instrument — every rule arrives as data in a versioned definition.
