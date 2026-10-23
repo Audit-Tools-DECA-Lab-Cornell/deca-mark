@@ -40,6 +40,12 @@ jobs:
       - run: pnpm --dir web test:api-errors
       - run: pnpm --dir web test:auth
       - run: pnpm --dir web test:account
+      - run: pnpm --dir web test:unit
+      # The web's copy of the form engine must match the mobile original byte for byte.
+      - run: pnpm forms:parity
+      # Token drift and contrast. The email-template half of `pnpm tokens:check` runs in the
+      # backend job (tests/test_email.py).
+      - run: node scripts/contour-tokens.mjs --check
       - run: pnpm build
   mobile:
     runs-on: ubuntu-latest
@@ -100,7 +106,10 @@ jobs:
       - run: pnpm backend:check
       - name: Cache pinned disposable database image
         run: docker pull "$DECAMARK_REHEARSAL_IMAGE"
-      - name: Full backend suite including isolated recovery acceptance
+      - name: Full backend suite including isolated recovery and collector acceptance
+        env:
+          # Name every test in the log, so the collector acceptance drivers show as run.
+          PYTEST_ADDOPTS: -v
         run: pnpm backend:test ZONE_API_REHEARSAL=1
       - name: Forward account-deletion recovery migration
         run: sh docs/reviews/account-deletion-recovery-2026-10-17/reproduce-forward.sh -q

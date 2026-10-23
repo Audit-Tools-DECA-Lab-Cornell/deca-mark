@@ -8,8 +8,9 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from fieldmaps_api.zone_response_schemas import Draft, Publication
 from pydantic import JsonValue, TypeAdapter
+
+from fieldmaps_api.zone_response_schemas import Draft, Publication
 from tests.conftest import signer
 from tests.local_database import admin_sql, disposable_database_selected
 from tests.package_fixtures import submission
@@ -22,26 +23,20 @@ __all__ = ["live_api", "signer"]
 
 
 def test_current_mobile_package_survives_restart(live_api: LiveApi) -> None:
-    if not disposable_database_selected():
-        raise RuntimeError("MOB-28 acceptance requires the disposable API rehearsal")
+    assert disposable_database_selected(), "MOB-28 requires the isolated API rehearsal"
     pnpm = shutil.which("pnpm")
-    if pnpm is None:
-        raise RuntimeError("Node 24 and pnpm must be on PATH")
+    assert pnpm, "Node 24 and pnpm must be on PATH"
     with live_api.client() as client:
         schema = client.get("/openapi.json")
         assert schema.status_code == 200, schema.text
-        paths = TypeAdapter(dict[str, JsonValue]).validate_python(
-            document(schema.content)["paths"]
-        )
+        paths = TypeAdapter(dict[str, JsonValue]).validate_python(document(schema.content)["paths"])
         assert not any(path.startswith("/v2/") for path in paths), (
             "BE-22 and DB-19 must supply the single-contract backend before MOB-28 API acceptance"
         )
     tenant = live_api.tenant
     project = f"/v1/projects/{tenant.project}"
     definition = document(
-        (
-            Path(__file__).resolve().parents[2] / "contracts/forms/janet-test-v1.json"
-        ).read_bytes()
+        (Path(__file__).resolve().parents[2] / "contracts/forms/janet-test-v1.json").read_bytes()
     )
     definition["status"] = "published"
     form = uuid4()
@@ -60,9 +55,7 @@ def test_current_mobile_package_survives_restart(live_api: LiveApi) -> None:
         assert package.status_code == 201, package.text
         base = str(Publication.model_validate_json(package.content).package.package_id)
         url = f"{project}/sites/{tenant.site}/zone-drafts"
-        draft = manager.post(
-            url, json={"request_id": str(uuid4()), "base_package_id": base}
-        )
+        draft = manager.post(url, json={"request_id": str(uuid4()), "base_package_id": base})
         assert draft.status_code == 201, draft.text
         published = manager.post(
             f"{url}/{Draft.model_validate_json(draft.content).draft_id}/publish",
@@ -85,7 +78,7 @@ def test_current_mobile_package_survives_restart(live_api: LiveApi) -> None:
             "siteId": str(tenant.site),
         },
     }
-    result = subprocess.run(
+    result = subprocess.run(  # noqa: S603 - repository Vitest, argv only, synthetic loopback fixture
         [
             pnpm,
             "exec",
@@ -101,4 +94,4 @@ def test_current_mobile_package_survives_restart(live_api: LiveApi) -> None:
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    print(result.stdout)
+    print(result.stdout)  # noqa: T201 - actual SQLite/HTTP acceptance evidence; no tokens

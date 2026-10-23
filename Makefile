@@ -10,7 +10,7 @@ help:
 	  'pnpm dev            Start the web app on port 3000' \
 	  'pnpm mobile:simulator Start Metro for the iOS simulator' \
 	  'pnpm check          Web + mobile + backend static checks' \
-	  'pnpm test           Mobile + local API + local SQL tests (Docker required)' \
+	  'pnpm test           Web unit + mobile + local API + local SQL tests (Docker required)' \
 	  'pnpm db:start       Start local Supabase for development/testing' \
 	  'pnpm api:hosted:up   Start the local API connected to hosted Supabase' \
 	  'See docs/Workspace.md for setup, database targets, and deployment.'

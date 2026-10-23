@@ -41,7 +41,10 @@ Run long-lived services in separate terminals. There is no command that silently
 | `pnpm db:stop`                               | Stop local Supabase while preserving its volumes           |
 | `pnpm backend:test`                          | Run API tests against local Supabase |
 | `pnpm db:test`                               | Run rolled-back SQL assertions against local Supabase |
-| `pnpm test`                                  | Mobile, local API, and local SQL suites                     |
+| `pnpm test`                                  | Web unit, mobile, local API, and local SQL suites           |
+| `pnpm forms:parity`                          | Web copy of the form engine matches the mobile original     |
+| `pnpm tokens:check`                          | Contour token drift and contrast; generated email templates |
+| `pnpm plan:check`                            | Plan files: IDs, `Depends:`/`Blocks:` and the phase board   |
 | `pnpm api:hosted:up`, `pnpm api:hosted:stop` | Local API process using hosted Supabase                     |
 
 For backend checks without a database, run `cd backend && EMAIL_ENABLED=false uv run --frozen python -m pytest -m 'not integration'`. This selection needs no database credentials or startup; database fixtures require an explicit integration marker. Signed validation tests use the database-free client. The full suite still runs those integration scenarios.
@@ -64,7 +67,16 @@ Local API development uses `pnpm db:start` and, from `backend/`, `uv run --froze
 
 `pnpm db:stop` stops local Supabase while preserving volumes. `pnpm db:reset` explicitly deletes local database contents and reapplies the canonical migrations and fictional seeds. Routine checks do not reset data. Hosted migration application is separate.
 
-GitHub Actions runs the same web/mobile checks, backend checks/API tests, SQL assertions and plan checker. The local database jobs never link to hosted Supabase. CON-03 supplies the generator and the contracts drift job; CI outcomes must be checked for the exact revision rather than inferred from their presence.
+GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and every push to `master`:
+
+- `contracts`: `pnpm contracts:generate`, then `git diff --exit-code` on `contracts/openapi.json` and both generated `schema.d.ts` files, so the checked-in OpenAPI document and API types match the FastAPI routes (CON-03).
+- `web`: `pnpm web:check`, the Node suites `test:api-errors`, `test:auth`, `test:account` and `test:unit`, `pnpm forms:parity` (the web's copy of the form engine is byte-identical to the mobile original), `node scripts/contour-tokens.mjs --check` (Contour tokens match `contracts/contour.json` and pass WCAG contrast) and `pnpm build`.
+- `mobile`: `pnpm mobile:check` and `pnpm mobile:test`.
+- `database`: `pnpm db:start`, `pnpm db:test` and `pnpm db:stop` on a local Supabase.
+- `backend`: installs the collector's dependencies, then `pnpm backend:check` and `pnpm backend:test ZONE_API_REHEARSAL=1` on a pulled disposable PostGIS image, then the forward account-deletion recovery rehearsal. The suite includes the email-template drift test (the email half of `pnpm tokens:check`) and the real collector-to-API drivers `test_mobile_bound_upload_api` and `test_mobile_package_api`, which run the mobile Vitest acceptance files against a signed loopback API.
+- `plan`: `node docs/plan/check-plan.mjs` and `node --test "scripts/*.test.mjs" "database/*.test.mjs"`.
+
+CI does not run the Playwright specs in `web/e2e` (they need the local stack; run them by hand as above), `test:auth:local`, or anything on a device or simulator. `pnpm test` adds the web unit tests to the mobile, API and SQL suites, but not the three focused web suites CI also runs (`test:api-errors`, `test:auth`, `test:account`). The disposable-database acceptance tests, the two collector drivers among them, refuse to run against the shared local stack that a plain `pnpm backend:test` uses; run `pnpm backend:test ZONE_API_REHEARSAL=1`, as CI does. `sh database/mobile-package-rehearsal.sh` still runs the package driver alone. The local database jobs never link to hosted Supabase. CI outcomes must be checked for the exact revision rather than inferred from their presence.
 
 ## Web move and deployment
 
