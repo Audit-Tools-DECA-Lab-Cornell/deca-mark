@@ -67,7 +67,7 @@ Production environment variables, then redeploy. `NEXT_PUBLIC_` values are compi
 | `DECAMARK_API_URL` | `https://field-maps.onrender.com`, no trailing slash. The web server reads and writes the API with it |
 | `NEXT_PUBLIC_DECAMARK_API_URL` | the same value. The browser uploads and downloads map packages (up to 24 MiB, more than Vercel passes through) straight to the API with it |
 | `NEXT_PUBLIC_ANDROID_APP_URL` | Optional. An https link to the Android build. When it is set, the home page and the collect page show it |
-| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | A secret from `openssl rand -base64 32`, set for Production and Preview and never changed or committed. It keeps the ids of the web's save actions the same across deploys, so a page left open still saves after a deploy (D34, OPS-20) |
+| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | A secret from `openssl rand -base64 32`, set for Production and Preview and never changed or committed. It keeps the ids of the web's save actions the same across deploys, so a page left open still saves after a deploy, unless that deploy renamed or moved the action. Then the page keeps the typed work and asks the manager to copy it and reload (WEB-44, D34, OPS-20) |
 
 The free Vercel plan has no Skew Protection, so during the pilot, deploy the web outside the times managers are editing forms or settings.
 
