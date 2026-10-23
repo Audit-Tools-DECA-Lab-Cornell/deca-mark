@@ -684,7 +684,7 @@ Verify: `pnpm mobile:test`; on a simulator with a failing API, toggle offline/on
 ### MOB-40: A token refresh keeps downloads and installed packages
 Status: done (2026-10-23; provider and MeProvider tests; device check pending (owner)) · Phase 4 · Size S · Depends: none · Blocks: QA-08
 Added 2026-10-22 (audit C10). Every `TOKEN_REFRESHED` (about hourly, and on resume near expiry) gives a new session object; `api` and `PackageOperations` are rebuilt, the effect clears `downloads` and `installed`, disposal aborts the running download with a suppressed error, sites flash "Not downloaded · needs a connection" until the catalog re-hashes every retained version, and MeProvider re-fetches `/v1/me` and every project's sites.
-Read first: `src/auth/provider.tsx:160-201`; `src/packages/hosted/provider.tsx:50-104,129,134`; `src/packages/hosted/operations.ts:51-55`; `src/auth/me-provider.tsx:174`.
+Read first: `src/auth/provider.tsx:160-201`; `src/packages/hosted/provider.tsx:50-104,129,134`; `src/packages/hosted/operations.ts:51-55`; `src/data/api/me-provider.tsx:174` (the audit wrote `auth/`).
 Do: key `api`, `operations` and the MeProvider effect on `client`, `userId` and `session !== null` instead of the session object (the token getter already reads the current session per request); hold `markAccountDeleted` in a ref. Keep every generation/`current()` fence and the catalog run at start.
 Done when: a provider test replaces the session object for the same user mid-download: the download completes, `installed` is unchanged and the catalog does not run again; sign-out still disposes operations.
 Verify: `pnpm mobile:test`; on a simulator, a short local JWT expiry during a large download.
