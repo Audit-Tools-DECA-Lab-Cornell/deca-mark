@@ -2,7 +2,7 @@
 
 This guide orders the work that the [October 2026 frontend audit](../reviews/frontend-audit-2026-10-17/README.md) found between today and the pilot launch. The launch has no fixed date: it happens when the launch gate QA-08 passes (D31). It owns no task: every task is defined once in its component plan, and status lives only there. This file says **in which order, in which lane and under which rules** the tasks run, so that several agents can work at once without editing the same files.
 
-Read first: [the plan index](README.md) (conventions), decisions D31–D34 in [decisions.md](decisions.md), and the [audit report](../reviews/frontend-audit-2026-10-17/REPORT.md) §1–§2.
+Read first: [the plan index](README.md) (conventions), decisions D31–D35 in [decisions.md](decisions.md), and the [audit report](../reviews/frontend-audit-2026-10-17/REPORT.md) §1–§2.
 
 ## What the owner decided (2026-10-22)
 
@@ -12,6 +12,7 @@ Read first: [the plan index](README.md) (conventions), decisions D31–D34 in [d
 | D32 | Forms live only in the database, in one canonical format. | Fields-only forms are reset; no app compiles a form in; Training comes from the server and its practice records upload to the Training project (D4). |
 | D33 | The pilot uses iPhones, Android phones, Samsung Galaxy tablets and iPads. | Every collector layout, keyboard, rotation or touch change is checked on all four families, portrait and landscape. |
 | D34 | The web stays on Vercel's free plan, without Skew Protection. | The page handles an unrecognised Server Action (WEB-44); a fixed `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` keeps action ids stable (OPS-20). |
+| D35 (2026-10-23) | An online background map in a QGIS project asks the manager before uploading. | Confirming uploads the vector layers with a warning; cancelling uploads nothing (BE-23 in the API, WEB-60 on the web). |
 
 ## The launch gate
 
@@ -41,7 +42,7 @@ OPS-18 goes first so every later PR runs the 393 web unit tests, `forms:parity` 
 | C (collector storage and forms) | MOB-42 → MOB-43 (after DB-20) → MOB-44 | `mobile/src/storage/**` (except `use-observations.ts` and `sync-store.ts`), `mobile/src/data/legacy/**`, `mobile/src/platform/auth-storage.ts`, `mobile/src/auth/client.ts`, `mobile/src/auth/session-retention.ts`, `mobile/src/packages/package-references.ts`, `mobile/src/packages/hosted/operations.ts`, `mobile/src/features/preview/device-projects.ts`, `mobile/src/features/preview/data-source.tsx`, `mobile/src/sync/wire-body.ts`, `mobile/app.config.ts`, `mobile/src/forms/registry.ts`, `mobile/src/forms/fixtures/**`, `mobile/src/packages/bundled.ts`, `mobile/src/domain/**`, `mobile/src/session/round-forms.ts` |
 | D (server) | DB-20 → BE-24 → BE-25, then BE-23 | `supabase/**`, `database/**`, `backend/**`, `contracts/openapi.json` and both generated API type files |
 | E (web actions, auth, inputs) | WEB-45 → WEB-46 → WEB-44 | `web/src/lib/auth/**`, `web/src/features/auth/**`, `web/src/features/account/**`, `web/src/proxy.ts`, `web/src/components/contour/{TextInput,Textarea,PasswordInput,CodeInput}.tsx`, `web/src/features/forms/DraftEditorScreen.tsx` and the five Forms dialogs, `web/src/features/project-settings/**`, `web/src/features/sites/*Dialog.tsx`, `web/e2e/settings.spec.ts` |
-| F (web review surfaces) | WEB-47 → WEB-50 → WEB-51 | `web/src/features/forms/model.ts`, `ProjectFormsScreen.tsx`, `web/src/features/overview/**`, `web/src/features/packages/forms.ts`, `web/src/app/(app)/o/[org]/**/loading.tsx`, `web/src/features/data/**` (WEB-44's `loadMore` catch is lane E's; coordinate on `DataScreen.tsx`) |
+| F (web review surfaces) | WEB-47 → WEB-50 → WEB-51 → WEB-60 (after BE-23 merges) | `web/src/features/packages/{UploadStep,ProjectImport,VersionHistory}.tsx`, `project-import.ts`, `checks.ts`, `web/e2e/packages.spec.ts`, `web/src/features/forms/model.ts`, `ProjectFormsScreen.tsx`, `web/src/features/overview/**`, `web/src/features/packages/forms.ts`, `web/src/app/(app)/o/[org]/**/loading.tsx`, `web/src/features/data/**` (WEB-44's `loadMore` catch is lane E's; coordinate on `DataScreen.tsx`) |
 
 Cross-lane edits that are known in advance (each is allowed only after the tasks it names have merged, and the PR lists it):
 - MOB-37 changes the practice copy in `SavedStep.tsx:115-120`, which lane A owns: do that one edit after MOB-34 has merged.
@@ -54,7 +55,7 @@ Cross-lane edits that are known in advance (each is allowed only after the tasks
 
 | Who | Tasks |
 |---|---|
-| Owner | OPS-20 (set the Vercel variable); OPS-19 (choose the hosted target and window, authorize the reset and deploys); BE-23's "Needs user" (block or warn on online basemaps) |
+| Owner | OPS-19 (authorize the final reset and the deploys once everything else in QA-08 is ready); OPS-20's check that two deploys keep the action ids (it needs a browser signed in to Vercel) |
 | Lane G | MOB-49 (Maestro flows for the queue era), run on iOS and Android |
 | Owner with an agent | QA-08 on the four device families, recorded in its task |
 
@@ -95,9 +96,9 @@ After the launch, any collector change that touches SQLite adds a forward migrat
 Paste this into a new Claude Code session opened on this repository:
 
 ```text
-You are the lead engineer driving DECA Mark to its pilot launch. The launch happens when QA-08 passes, not on a fixed date, so do the work properly rather than fast. Work in this repository on master, or on branch pratyush-cc/amazing-tesla-phkkfe if the pilot-readiness plan PR has not been merged yet.
+You are the lead engineer driving DECA Mark to its pilot launch. The launch happens when QA-08 passes, not on a fixed date, so do the work properly rather than fast. Work in this repository from master.
 
-Read, in order: AGENTS.md, docs/plan/README.md (conventions), docs/plan/pilot-readiness.md (this is your playbook), decisions D31-D34 in docs/plan/decisions.md, and docs/reviews/frontend-audit-2026-10-17/REPORT.md sections 1-2. Each task is defined in its component plan (mobile/PLAN.md, web/PLAN.md, backend/PLAN.md, supabase/PLAN.md, docs/plan/contracts.md, operations.md, verification.md); status lives only there.
+Read, in order: AGENTS.md, docs/plan/README.md (conventions), docs/plan/pilot-readiness.md (this is your playbook), decisions D31-D35 in docs/plan/decisions.md, and docs/reviews/frontend-audit-2026-10-17/REPORT.md sections 1-2. Each task is defined in its component plan (mobile/PLAN.md, web/PLAN.md, backend/PLAN.md, supabase/PLAN.md, docs/plan/contracts.md, operations.md, verification.md); status lives only there.
 
 Goal: complete waves 0 and 1 of pilot-readiness.md, then prepare wave 2 (MOB-49 and everything the owner needs for OPS-19, OPS-20 and QA-08), then continue into wave 3 if time remains. Use workflows with one agent per lane, each in its own git worktree and branch (pilot/<lane>-<task-id>), lanes in the same wave in parallel, tasks within a lane in order. Use Sonnet agents to implement well-specified tasks, Haiku for read-only reconnaissance, and Opus for orchestration, cross-lane decisions and the adversarial review of every change. Follow the "Protocol for every agent" section exactly: regression test first, the lane's files only, the task's Verify commands, an adversarial review before each PR, honest status lines.
 

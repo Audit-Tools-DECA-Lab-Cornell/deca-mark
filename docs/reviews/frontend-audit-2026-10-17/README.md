@@ -6,14 +6,15 @@ A skeptical audit of the web (`web/`) and collector (`mobile/`) frontends, run 2
 
 ## Owner answers (2026-10-22)
 
-The report's section 9 asked eight questions. The answers became decisions D31–D34 in [decisions.md](../../plan/decisions.md):
+The report's section 9 asked eight questions. The answers became decisions D31–D35 in [decisions.md](../../plan/decisions.md):
 
 - **Schema reset:** allowed until the pilot launches. The launch has no fixed date: it happens when everything in the launch gate (QA-08) is ready; after one last sanctioned reset, collector and hosted schema changes preserve data (D31).
 - **Fields-only forms:** reset them. Forms live only in the database in one canonical format and are fetched from the backend; nothing is hard-coded in the apps (D32).
 - **Pilot devices:** iPhones, Android phones, Samsung Galaxy tablets and iPads (D33).
 - **Skew protection:** the web is on Vercel's free plan, so Skew Protection is not available. The page handles an unrecognised Server Action, and a fixed `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` keeps action ids stable (D34).
+- **Online basemaps (2026-10-23):** a QGIS project with an online background map asks the manager before uploading; confirming uploads the vector layers with a warning, cancelling uploads nothing (D35, BE-23, WEB-60).
 
-Still open (recorded as `Needs user` on the task): whether an online basemap should block a package or only warn (BE-23). Since then the owner has set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in Vercel (OPS-20); the final reset (OPS-19) runs once QA-08 is ready, with the owner's authorization.
+Since then the owner has set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in Vercel (OPS-20); the final reset (OPS-19) runs once QA-08 is ready, with the owner's authorization.
 
 ## How the audit ran
 
