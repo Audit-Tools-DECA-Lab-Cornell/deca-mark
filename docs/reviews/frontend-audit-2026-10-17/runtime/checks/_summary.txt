@@ -1,0 +1,11 @@
+01-web-check exit=0 wall=19s
+02-web-test-unit exit=0 wall=3s
+03a-web-test-api-errors exit=0 wall=1s
+03b-web-test-auth exit=0 wall=1s
+03c-web-test-account exit=0 wall=0s
+04a-forms-parity exit=0 wall=1s
+04b-plan-check exit=0 wall=2s
+05a-tokens-contour-only exit=0 wall=4s
+05b-tokens-check-full exit=2 wall=1s
+05b-tokens-check-full-unsandboxed exit=0 wall=2s
+06-node-test-scripts-database exit=0 wall=1s

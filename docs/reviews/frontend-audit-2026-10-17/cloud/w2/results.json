@@ -1,0 +1,1581 @@
+{
+ "verify:web-render": {
+  "items": [
+   {
+    "id": "MFD-5",
+    "title": "Data renders every loaded record twice (table plus CSS-hidden card list); 500 focusable SVG markers; selection re-renders everything",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/data/DataTable.tsx:54-55 (div hidden md:block) and :70 (records.map)",
+     "web/src/features/data/DataTable.tsx:103-104 (ul md:hidden, records.map again)",
+     "web/src/features/data/DataScreen.tsx:299-303 (DataTable gets all shown records; setSelectedId re-renders DataTable and DataMap, nothing memoized)",
+     "web/src/components/contour/Table.tsx Tr (useRouter per row)",
+     "web/src/components/map/SitePlan.tsx:691-731 (each marker g role=button tabIndex=0 plus hit circle, Marker circles, focus ring)"
+    ],
+    "evidence": "Reproduced: rendered the real DataTable (renderToStaticMarkup through a scratch TSX loader, next/link and next/navigation mocked) with 500 synthetic records: 12,516 elements, 1,336 KiB HTML; table 8,015 elements / 968 KiB, card list 4,501 elements / 368 KiB, so the hidden duplicate is 36% of DataTable's elements and 28% of its bytes (about 30% of the page). Add roughly 2,500 SVG marker elements (500 x 5) and you land on the measured 15,213 DOM nodes, so the node count is explained. 1000 records scale linearly (25,016 elements). Evidence files confirm Z-data: 15,213 nodes, 2,214.8 KB decoded, one long task 114 ms (median of 3; max 121). Code-derived: both trees are mounted and hydrated, CSS only hides one; each marker is a tab stop when markersInteractive. Not measured: selection re-render cost in a browser; a renderToStaticMarkup proxy (81 ms for 500 rows, 137 ms for 1000) is a weak stand-in because it includes string serialization.",
+    "correction": "The verification_scenario overstates the gain. Removing the card list takes Z-data from 15,213 to about 10.7k nodes and from about 2.2 MB to about 1.85 MB decoded, so it will not reach 'below about 10k nodes' or 'well under 1.5 MB', and 4x-throttle long tasks will shrink (roughly a third) but not vanish. The remaining weight is the 8k-element table, about 2.5k marker elements and about 420 KB of RSC props. Set the acceptance target to roughly 30% fewer nodes and bytes. Prefer one DOM restyled by CSS over a matchMedia swap, which would re-render phones after hydration.",
+    "smallest_fix": "Render one structure: a single table whose rows restyle as cards below md with CSS (keep the real OBS link, roving tab stop and data-record-id), or mount the card list only below md with useSyncExternalStore (server snapshot = table). Memoize rows on (record, selected) if interaction cost is measured to matter. No virtualization.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "WEB-R4",
+    "title": "Data table renders every loaded record twice (desktop table plus CSS-hidden phone list)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/data/DataTable.tsx:54-55,70 and :103-104",
+     "web/src/lib/api/observations.ts:75 PAGE_LIMIT = 500"
+    ],
+    "evidence": "Same defect as MFD-5 (MFD-5 is the superset: it adds the focusable markers and unmemoized selection). All line references hold at HEAD. Reproduced by SSR of the real component: cards are 36% of DataTable elements, 28% of its bytes (see MFD-5).",
+    "correction": "The 'roughly a third of the nodes' estimate is right for DataTable (36%) but about 30% of the whole page. The verification target (below about 10k nodes, under 1.5 MB, no long task at 4x) is not reachable by this fix alone; see MFD-5.",
+    "smallest_fix": "See MFD-5: one rendering restyled by CSS.",
+    "duplicate_of": "MFD-5"
+   },
+   {
+    "id": "PERF-4",
+    "title": "Z-data with 500 rows: 2.2 MB decoded HTML, 15,213 DOM nodes, one 114-121 ms long task unthrottled, 944 ms of long tasks at 4x CPU",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "medium",
+    "locations": [
+     "runtime/perf/cold.json routes.Z-data (domNodes 15213, docDecodedKB 2214.77, longTaskTotal median 114 n=3, tbt 64)",
+     "runtime/perf/throttled.json routes.Z-data (longTaskTotal median 944 over only n=2: 789 and 1099; 4-8 tasks; tbt 643; usable 1,709 ms)",
+     "web/src/features/data/DataTable.tsx:54-104"
+    ],
+    "evidence": "The numbers match the JSON exactly. Attribution is only partly the duplicate list: SSR of the real DataTable shows 12.5k of the 15.2k nodes are table+cards (cards 4.5k), about 2.5k are SVG markers, and the decoded document also carries about 420 KB of RSC props (418.6 KB on soft nav). The 4x row is two samples and CPU throttling emulates a phone-class CPU, while the managers who use this screen are on desktops/laptops. The unthrottled long task (114 ms, one task) is just over the 50 ms threshold and was not shown to hurt (LCP 840 ms is dominated by the API's 329-396 ms for 520 observations).",
+    "correction": "Do not read 944 ms as typical: n=2, 4x emulation, 500 rows. Removing the hidden card list is expected to cut about a third of it, not remove it.",
+    "smallest_fix": "Same as MFD-5. Re-measure with n>=5 at 4x before and after if the number matters.",
+    "duplicate_of": "MFD-5"
+   },
+   {
+    "id": "WEB-R5",
+    "title": "Mutations re-render the current page on the server; Save re-renders the whole editor; three flows render twice",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "medium",
+    "locations": [
+     "web/src/features/forms/actions.ts:27-44 asManager -> revalidatePath(...,'layout')",
+     "web/src/features/forms/actions.ts:109-120 saveDraftAction",
+     "web/src/features/forms/RetireDialog.tsx:38-42, DiscardDialog.tsx:44-47 (router.refresh after an action that already revalidated)",
+     "web/src/features/packages/UploadStep.tsx:455-456 and 464-465 with web/src/features/packages/actions.ts:14-18",
+     "web/src/features/forms/DraftEditorScreen.tsx:90-92 (etag/saved/raw are initial-state only)",
+     "web/src/features/forms/FormVersionsScreen.tsx:258 and web/src/features/forms/model.ts:67 (list rows carry etag and questionCount)",
+     "web/node_modules/next/dist/server/app-render/action-handler.js:121,874,901 (skipPageRendering false when a path was revalidated)",
+     "web/node_modules/next/dist/client/components/router-reducer/reducers/server-action-reducer.js:191-200 (invalidateBfCache on revalidation)",
+     "web/node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/staleTimes.md:36"
+    ],
+    "evidence": "Confirmed from installed Next 16.2.7 source: an action that calls revalidatePath has skipPageRendering=false, so the action response carries a fresh render of the current route; the client applies it, so a following router.refresh() in RetireDialog:42, DiscardDialog:47 and UploadStep:456 fetches the same page a second time. DraftEditorScreen keeps etag/saved/raw in useState seeded once and key={version.code} is stable, so the re-rendered props are discarded. Code-derived only; nothing was run (no server allowed). Not established: whether Save latency actually waits for that re-render, since the action result is the first row of a Flight stream and the page content can stream after it; the server work is certain, the user-visible wait is not.",
+    "correction": "The saveDraftAction part of smallest_fix is wrong as written. revalidatePath also evicts the client router's bfcache (invalidateBfCache), and staleTimes does not apply to back/forward (staleTimes.md:36). The versions list shows questionCount and gives DiscardDialog the list row's etag (FormVersionsScreen:258, model.ts:67). If Save stops revalidating, browser Back to the list shows the old question count and Discard sends a stale etag (conflict). Only the three redundant router.refresh calls are safe to delete.",
+    "smallest_fix": "Delete router.refresh() in RetireDialog:42 and DiscardDialog:47 (the action already refreshed the page), and in UploadStep:456 only on the success path (keep it after packageUploaded fails or in the uncertain-outcome branch, e.g. await packageUploaded(...).then(() => true, () => false) and refresh only on false). Leave saveDraftAction alone unless a measurement shows Save waits on the render; if it does, the fix needs a different way to evict the list (not a plain removal).",
+    "duplicate_of": ""
+   },
+   {
+    "id": "WEB-R6",
+    "title": "Independent reads are awaited one after another on several pages; Overview fans out one request per site",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "medium",
+    "locations": [
+     "web/src/app/(app)/o/[org]/p/[project]/forms/versions/[version]/page.tsx:43 -> :95 -> :104 -> :121 (base read :104 and plan :121 are independent but serial)",
+     "web/src/app/(app)/o/[org]/p/[project]/forms/versions/[version]/publish/page.tsx:63 -> :143 -> :146",
+     "web/src/app/(app)/o/[org]/p/[project]/data/[observation]/page.tsx:31 -> :38 (getProject and listSites do not depend on the row)",
+     "web/src/app/(app)/o/[org]/p/[project]/sites/[site]/zones/page.tsx:83 -> :97 -> :108",
+     "web/src/app/(app)/o/[org]/p/[project]/page.tsx:61-68 -> :77-85 (recentRead awaits after listProjectPackages)",
+     "web/src/features/overview/CoverageSection.tsx:30-52 (reads start only when this child renders)",
+     "web/src/lib/api/workspace.ts:204-211 listProjectPackages"
+    ],
+    "evidence": "All line references hold at HEAD. Code-derived: each page does await-in-sequence for reads whose inputs are known earlier. Overview: today/7-day summarizeObservations need only getProject's timezone but wait for the whole Promise.all including N listPackages. Measured in api-fanout.json (older API process): 10-site overview, doc 255 ms, listSites ends at 90 ms, 10 listPackages run 94-213 ms, the three summaries and archive fetch only start at 216 ms and end at 253 ms. Hosted RTT per wave not measured.",
+    "correction": "Zones: the shown version is the requested ?version= or the current one, so the archive and zones read can start from getSite alone only when no ?version= is given; with ?version=, listPackages is needed to resolve it. Hoisting is a conditional, not a pure Promise.all. Form editor: the version fetch does not need to wait for listForms/listSites except to choose the legacy screen (which WEB-R8 would delete).",
+    "smallest_fix": "Start independent promises before awaiting (Promise.all): form editor and publish: [version, forms, sites] then [base, plan]; observation: start getProject/listSites with getObservation; Overview: start the two summaries right after getProject and the coverage reads in the page, passing promises to CoverageSection. See PERF-1 for the per-site N+1.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "PERF-1",
+    "title": "Overview fans out listPackages once per site (N+1); summaries wait on all of them",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/src/lib/api/workspace.ts:204-211 listProjectPackages (await listSites, then Promise.all(sites.map(listPackages)))",
+     "web/src/app/(app)/o/[org]/p/[project]/page.tsx:64 (settle(listProjectPackages)), :77-85 (today and 7-day summaries after it), :97-103",
+     "contracts/openapi.json GET /v1/projects/{project_id}/packages (operationId listPackages): site_id is a required query parameter; no project-wide package read exists",
+     "contracts/openapi.json components.schemas.Site.package = SitePackageInfo (state const 'ready': blocked packages are visible only through history)",
+     "runtime/perf/api-fanout.json overview and Z-overview"
+    ],
+    "evidence": "Traced: the only caller of listProjectPackages is the Overview page; it issues one listPackages per site after listSites resolves (React cache de-duplicates the page's own listSites, so no extra listSites call). Contract check: no batched or project-level package list exists; listPackages requires site_id; Site.package carries only the current ready package, but Overview needs newest-blocked-per-site and package activity, which only history has. api-fanout.json: 10-site overview: listSites done at 90 ms, listPackages 94-213 (about 120 ms of a 255 ms document, the critical path), summaries then run 216-253. Durations form a staircase (49 to 119 ms for 10 calls; 34-244 ms for 28): the API handled them close to serially, about 7 ms per site. Z-overview (28 sites): listPackages end at 378 ms but listHistoricalObservations (367 ms) ends at 398, so at 28 sites the N+1 is hidden behind that call; the '4.2-4.5 s summed API time' is the sum of parallel calls, not wall time. The three summarizeHistoricalObservations are not duplicates: today, last 7 days, and the coverage site read (distinct filters).",
+    "correction": "The 4.2-4.5 s is not user-visible time. The N+1 is the critical path on a small project (about 47% of document time at 10 sites) and falls behind the observation list at 28; it would dominate again at 54 sites with a fast observation read. Fixing it needs a contract change (backend).",
+    "smallest_fix": "Without any API change: start the two summaries right after getProject (they only need the timezone), and start the coverage reads in the page, so they stop waiting for the N listPackages (saves the 216-253 ms stage). Fully removing the N+1 needs one backend addition (make site_id optional on listPackages or add a project-level package list); not worth doing before a measurement on the hosted API shows Overview latency matters.",
+    "duplicate_of": "WEB-R6"
+   },
+   {
+    "id": "WEB-R7",
+    "title": "zod (89 KB gzip) is bundled on 14 routes only because LoadFailure imports a helper; supabase-js is eager on Data, Site, Zones and QGIS",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/src/components/shell/LoadFailure.tsx:9 -> web/src/lib/workspace/result.ts:1 -> web/src/lib/api/errors.ts:1 (zod at module top level)",
+     "web/.next/static/chunks/0wstr41mffx5k.js (391,200 B raw, 89,762 B gzip measured here; a single module, zod only)",
+     "web/src/lib/api/browser.ts (statically imported by DownloadPackageButton, ProjectImport, UploadStep, ExportObservations, QgisScreen, and via web/src/lib/api/zones-browser.ts:6 by useDraftSaving, PublishReview, DiscardDraft, SaveDraftFile)",
+     "web/src/features/zones/editor/useDraftSaving.ts:14,246-257 (supabase client at mount)"
+    ],
+    "evidence": "Reproduced with the real build. (1) A static import walk (scratch tools/pages.mjs) reproduces the build's per-page client-reference manifest exactly: zod chunk on every /o and /o/[org]/p page plus join/invite, not on /account, sign-in, sign-up, verify, privacy, marketing. (2) Excluding LoadFailure from the walk removes zod from 14 routes: /o, org home, members, settings, [...missing], collect, forms, forms/versions, forms publish, reports, project settings, team, join, invite. The rest reach zod legitimately (plan.ts, observations.ts, map-palette.ts, errors.ts via feature code). (3) In a scratch copy of the repo I moved isNoAccess/isNotFound to a zod-free module (lib/workspace/failure.ts, re-exported from result.ts), pointed LoadFailure at it, and rebuilt: the zod chunk disappeared from exactly those 14 routes' manifests. Observers (collectOnly) are redirected to /o/[org]/collect, which is one of them. Cost: bytes measured (89.8 KB gzip); a Node vm harness (stops before the last few schemas) measured compile 7-9 ms and init >=19 ms median (31 ms first run) on this server CPU, so roughly 100-150 ms on a 4x-throttled phone-class CPU; in-browser throttled timing was not measured.",
+    "correction": "Browser-side callers of browser.ts are more than ExportObservations and QgisScreen (see locations): the supabase copies come from three page families (data; site/packages/publish/zones/qgis; draft editor). Everything the finding says about zod and LoadFailure holds.",
+    "smallest_fix": "Move isNoAccess and isNotFound into a zod-free module and import it from LoadFailure (about 10 lines; verified by build). For supabase see PERF-2: move AccountChangedError to its own module and reach browser.ts and the supabase client through dynamic import().",
+    "duplicate_of": ""
+   },
+   {
+    "id": "PERF-3",
+    "title": "zod 4 plus openapi-fetch is a 382 KB raw / 89 KB gzip chunk on every authenticated project and org page",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/.next/static/chunks/0wstr41mffx5k.js module 26336",
+     "web/src/components/shell/LoadFailure.tsx:9 -> web/src/lib/workspace/result.ts:1 -> web/src/lib/api/errors.ts:1",
+     "web/src/lib/api/browser.ts:3 (openapi-fetch, in the supabase chunks, not here)"
+    ],
+    "evidence": "Opened the chunk: it holds one module (26336), zod only, 391,200 B file / 364 KB module; the 'openapi-3.0' string inside is zod's JSON-schema target, not openapi-fetch. openapi-fetch (module 96960, 6.4 KB) sits in the browser.ts chunks with supabase-js. The chunk is on all /o routes, join and invite, and absent from /account (verified in the build manifests). Import path and build-verified fix: see WEB-R7.",
+    "correction": "Drop 'plus openapi-fetch': that library ships only on pages that load lib/api/browser.ts. The 'every authenticated page' wording is true except /account.",
+    "smallest_fix": "See WEB-R7 (zod-free failure helper). Optionally later: zod/mini or generated plain types where schemas only run on the server.",
+    "duplicate_of": "WEB-R7"
+   },
+   {
+    "id": "PERF-2",
+    "title": "@supabase/supabase-js is bundled three times in three route-group chunks (about 70 KB gzip each)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/.next/static/chunks/159n5qswl4qfq.js, 2d013804da0kj.js, 3-dr7pv7v6of6.js (each 271,735 B, same six modules in different order: openapi-fetch, download.ts, export/files.ts, supabase-js (231 KB), observation zod schemas, browser.ts)",
+     "web/src/lib/api/browser.ts:7 (createSupabaseClient), web/src/lib/supabase/client.ts",
+     "static importers of browser.ts: features/data/ExportObservations.tsx:10; features/packages/DownloadPackageButton.tsx:7, ProjectImport.tsx:8, UploadStep.tsx:17; features/qgis/QgisScreen.tsx:16; web/src/lib/api/zones-browser.ts:6 (used by features/zones/editor/useDraftSaving.ts, publish/PublishReview.tsx, DiscardDraft.tsx, SaveDraftFile.tsx, DraftEditor.tsx)",
+     "web/src/features/zones/editor/useDraftSaving.ts:14,246-257"
+    ],
+    "evidence": "Reproduced from the build output and confirmed with two scratch rebuilds. The three chunks are the module closure of lib/api/browser.ts, emitted once per page family: data (2d01), site/packages/publish/zones/qgis (3-dr7), zone draft editor (159n). Turbopack does not hoist a module reached statically from three families into one shared chunk, and the installed Next docs say nothing about the rule, so the cause is stated from observation, not from documentation. E1: move AccountChangedError to lib/api/account-changed.ts and call browser.ts through await import() in the five click handlers; zones-browser stays static. Result: copies 3 -> 2 (one static for zones/editor/publish, one async chunk fetched on first click and in no page's initial manifest), so Data, Site, Packages and QGIS lose about 70 KB gzip from first load. E2: also make zones-browser's five browserApi calls and useDraftSaving's mount-time supabase client dynamic: exactly one copy (1qnjcwy0g5un2.js, 257,931 B / 67,208 gzip), async only, referenced from 7 loader chunks, cached once across every route.",
+    "correction": "A single static 'shared import' does not fix it; only routing every consumer through the same dynamic import yields one cached copy. AccountChangedError must live in its own tiny module, or the instanceof checks keep the static edge. Each action then pays one chunk fetch on first use (the editor on mount).",
+    "smallest_fix": "Add lib/api/account-changed.ts, switch the three AccountChangedError importers and zones-browser to it, and replace the static browser.ts imports in the five handlers, zones-browser and useDraftSaving's effect with dynamic import(). Only worth doing with the zod change (WEB-R7), since each is small on loopback and on a warm cache.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "WEB-R8",
+    "title": "Compatibility code that contradicts the no-legacy policy (deletion candidates)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/next.config.ts:14-31,40-42 OLD_ROUTES (11 redirects)",
+     "web/e2e/support/routes.ts:89-100 REMOVED_ROUTES and web/e2e/removed-routes.spec.ts:1-21 (passes with a 404 or a redirect)",
+     "web/src/lib/pwa/service-worker.js:2-4,63-66 LEGACY_CACHE / LEGACY_PREFIX",
+     "web/src/features/forms/LegacyVersionScreen.tsx (94 lines); forms/versions/[version]/page.tsx:26-29,85-93; publish/page.tsx:36,106,129,148 isCanonical",
+     "web/src/features/forms/FormVersionsScreen.tsx:32-33,301; ProjectFormsScreen.tsx:205; forms/model.ts:31-34,75,108 (VersionRow.legacy)",
+     "web/src/lib/observations/answers.ts:179-186 (legacy `fields` reading) and web/src/lib/api/types.ts:61",
+     "unit tests that cover the legacy branch: tests/unit/forms-model, answers, data-view"
+    ],
+    "evidence": "Read each location at HEAD; all hold, and more places carry the second form format than the finding lists (the extras above). Backend creation and editing are canonical-only (FormDefinition(StoredCanonicalDefinition)), so no new data enters the legacy shape; the editor cannot remove the last question (DraftEditorScreen:360), so an empty-canonical draft that isCanonical would misroute to the legacy screen is not reachable. Reset policy makes the guarantee_to_keep ('confirm hosted pilot forms carry questions') unnecessary. The e2e removed-routes spec stays green without OLD_ROUTES because it accepts a 404.",
+    "correction": "Drop the 'confirm hosted definitions first' step: the owner policy allows a reset. Note the same legacy shape is also carried in the backend (backend/src/fieldmaps_api/domain/legacy_forms.py, definition_format 'legacy' in domain/forms.py, LegacyDefinition in observation_export_columns.py), outside this batch; deleting web alone leaves that.",
+    "smallest_fix": "Delete OLD_ROUTES (keep the spec as a plain 404 check), the legacy cache names, LegacyVersionScreen with its isCanonical branches, VersionRow.legacy and its three UI strings, and the legacy branch of readDefinition with its tests. With the legacy screen gone the form-editor page can start the version, forms and sites reads together (WEB-R6).",
+    "duplicate_of": ""
+   },
+   {
+    "id": "MFD-8",
+    "title": "Web server re-downloads and re-unzips immutable package archives on every plan view",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "high",
+    "locations": [
+     "web/src/lib/api/workspace.ts:227-255 getPackageArchive/getSitePlan (React cache, per request only)",
+     "web/src/app/(app)/o/[org]/p/[project]/sites/page.tsx:43-50 (up to 6 plans per view)",
+     "web/src/lib/sites/archive.ts:91-113 (unzipSync, JSON.parse, zod over every feature)",
+     "backend/src/fieldmaps_api/domain/packages.py:28-30 (20,000 features per layer, 16 MiB archive)",
+     "runtime/perf/api-fanout.json (Z-sites: 6 downloadPackageArchive of 13-18 ms)"
+    ],
+    "evidence": "Mechanism confirmed: nothing is shared across requests. I measured the CPU part with the real lib/sites/archive.ts and lib/plan.ts (scratch harness, Fall Creek-derived synthetic layers): unzip+parse+zod+projection per getSitePlan: 41 features 3.6 ms; 401 features 17 ms; 4,001 features 116 ms; 20,001 features (the per-layer limit) 665 ms; 60,001 features 2.65 s. Cost follows feature count, not archive bytes (synthetic repeats compress to 190-540 KiB), and the Sites page runs up to six on one Node thread, so CPU adds up (6 x 116 ms = 0.7 s at 4k features each). At a real-size site (Fall Creek: 41 features, 10 KiB) a view costs a few ms. Transfer from the API to Vercel/Render was not measurable here.",
+    "correction": "The finding frames this as transfer (multi-MB archives); the dominant cost is per-feature CPU (zod validation and projection), which a cache keyed by (packageId, archive_sha256) of the projected plan would also remove. At realistic playground-study sizes it is negligible, so it is a post-launch measurement, not a pre-launch fix. Pre-launch the added module-level cache is more code than the saved milliseconds.",
+    "smallest_fix": "Do nothing before launch. If hosted p95 for Sites/Data shows archive time, add the in-process LRU of the projected plan keyed by (packageId, archive_sha256), consulted only after the request's own authorized read returns the sha.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "S7",
+    "title": "Adding a Data filter has a runtime-only trap and a second parser on Reports",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/data/actions.ts:26-36 filtersSchema .strict(), :56 parse before try",
+     "web/src/features/data/DataScreen.tsx:186-205 loadMore try/finally, no catch",
+     "web/src/lib/api/observations.ts:82-101 ObservationFilters, filterQuery",
+     "web/src/features/data/view.ts:83-101,105-117,127,136-150",
+     "web/src/app/(app)/o/[org]/p/[project]/reports/page.tsx:24-26,57-70 firstOf/parseDayKey/dayRangeIsBackwards/inline day conversion",
+     "web/src/features/reports/model.ts:143-156",
+     "web/src/features/reports/ReportsScreen.tsx:81-86 addressWith"
+    ],
+    "evidence": "Reproduced three ways. (1) scratch filters-check.mjs copies filtersSchema verbatim from actions.ts and feeds it viewFilters output for 72 combinations of site, zones, round, observer, from, to: 0 rejected (no defect today). An extra key throws ZodError unrecognized_keys. (2) tsc in a scratch copy of the repo: adding formVersion?: string to ObservationFilters alone leaves tsc at exit 0, so the trap is real. (3) The proposed fix does not catch it: `.strict() satisfies z.ZodType<ObservationFilters>` still exits 0, because ZodType is covariant in its output and an optional key may be absent. Reports and Data do keep separate day parsers (reports/model.ts parseDayKey vs view.ts dayOrNull).",
+    "correction": "The `satisfies z.ZodType<ObservationFilters>` fix is ineffective. A fix that works (verified: TS1360 'Property formVersion is missing', clean without it): declare the shape as an object literal `satisfies Record<keyof ObservationFilters, z.ZodType>` and build `z.object(shape).strict()`. Also latent: zod 4 z.uuid() is RFC-strict and rejects ids such as 11111111-1111-1111-1111-111111111111 that view.ts's permissive UUID regex accepts; production ids come from gen_random_uuid, so only z.guid() or a test fixture would hit it. The loadMore half is a present defect, see NEW-LOADMORE.",
+    "smallest_fix": "Use the Record<keyof ObservationFilters, ZodType> shape guard in actions.ts. Optionally call parseView/viewFilters from the Reports page (zones and version unset) and delete its parseDayKey/dayRangeIsBackwards/conversion. Add the missing catch (NEW-LOADMORE).",
+    "duplicate_of": ""
+   },
+   {
+    "id": "S8",
+    "title": "Map package layer names are declared five times, two of them private duplicates inside web",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/src/lib/packages.ts:14 (exported LAYER_NAMES; SLOT_LABELS, SHAPE_WORD and EXPECTED_GEOMETRY are Record<LayerName,...>, so tsc ties them)",
+     "web/src/lib/sites/archive.ts:78 (private) and its zod layersSchema (explicit keys)",
+     "web/src/features/packages/upload-preview.ts:14 (inline list)",
+     "mobile/src/packages/hosted/archive.ts:12 and schemas.ts:30-36",
+     "backend/src/fieldmaps_api/domain/packages.py LayerName",
+     "contracts/openapi.json PackageRequest.layers.propertyNames.enum",
+     "web/src/lib/api/schema.d.ts:1888 and mobile/src/data/api/schema.d.ts:1888"
+    ],
+    "evidence": "Confirmed: three web lists, one exported and two not; a new layer added to packages.ts is silently skipped by upload-preview's inline loop (it indexes slots[layer] from a fixed list) and by archive.ts. packages.ts imports only a type, so importing it from archive.ts creates no cycle. Refuted part: both generated schema.d.ts type PackageRequest.layers as `{ [key: string]: JsonValue }`; openapi-typescript has no handling of propertyNames (0 occurrences in its dist), so the enum is not in the generated types and `keyof NonNullable<PackageSubmission['layers']>` is string.",
+    "correction": "The proposed satisfies against the generated type gives no safety, and the verification scenario ('add benches to the backend LayerName, regenerate: web and mobile tsc fail') is false: regeneration produces identical types.",
+    "smallest_fix": "In web, export LAYER_NAMES once from lib/packages.ts and import it in sites/archive.ts and upload-preview.ts (delete the two copies). To tie web and mobile to the backend, add one unit test per app that reads contracts/openapi.json and asserts LAYER_NAMES equals components.schemas.PackageRequest.properties.layers.propertyNames.enum.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "NEW-LOADMORE",
+    "title": "'Show the next 500' fails silently on a dropped connection or any thrown action error",
+    "verdict": "new",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "medium",
+    "locations": [
+     "web/src/features/data/DataScreen.tsx:186-205 loadMore (try/finally, no catch)",
+     "web/src/features/data/actions.ts:48-57 (filters/cursor parse and scope parse before the try; apiRequestError rethrows non-API errors)",
+     "web/src/features/data/DataMap.tsx:166-188 (the sibling loadSitePlanAction call does catch: 'Check the connection and try again.')",
+     "web/src/components/contour/Button.tsx:166 (onClick passed straight through)"
+    ],
+    "evidence": "Code-derived, not run. loadMore awaits a Server Action; when the request itself fails (connection drop, server crash) the call rejects, loadMore has only a finally that clears loadingMore, Button passes onClick through, so the rejection is unhandled: no moreProblem is set, no message shown, the button re-enables. The same feature's other action call (DataMap.tsx:178) handles this with a catch and a message, which shows the gap. The same path is also hit by any ZodError from the strict filter schema (see S7).",
+    "correction": "",
+    "smallest_fix": "Add `catch { setMoreProblem('Nothing more was loaded. Check the connection and try again.') }` to loadMore, mirroring DataMap.tsx:178.",
+    "duplicate_of": ""
+   }
+  ],
+  "commands_run": [
+   "node (jq-like) pulled WEB-R4..S8 entries from $E/results/all-findings.json",
+   "node static import walkers in scratchpad/w2/web-render/tools (graph.mjs, pages.mjs) over web/src, compared to .next/server/app/**/page_client-reference-manifest.js",
+   "grep/inspection of web/.next/static/chunks (module ids, sizes, gzip) in the existing build",
+   "scratch copy of web/ and contracts/ under scratchpad/w2/web-render/repo; next build x4 with dummy NEXT_PUBLIC_* env (baseline, E1 dynamic browser.ts, E3 zod-free failure helper, E2 all-dynamic) and tsc --noEmit x4 (S7 variants) in that copy only",
+   "node --experimental-strip-types tools/archive-cost.mjs (real lib/sites/archive.ts + lib/plan.ts via tests/unit/support.mjs)",
+   "node --experimental-strip-types tools/filters-check.mjs (viewFilters vs filtersSchema copied verbatim)",
+   "node --experimental-strip-types tools/datatable-dom.mjs 500 / 1000 (real DataTable via TS transpile loader, next/link and next/navigation mocked)",
+   "node tools/zodcost.mjs on the zod chunk (partial: stops before last schemas)",
+   "read Next 16.2.7 sources: server/app-render/action-handler.js, client/components/router-reducer/reducers/server-action-reducer.js, docs revalidatePath.md and staleTimes.md",
+   "contracts/openapi.json inspection for listPackages, Site, SitePackageInfo, PackageRequest.layers; grep of openapi-typescript dist for propertyNames"
+  ],
+  "notes": "All scratch work is under /tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/w2/web-render/ (notes.md, tools/, repo/ scratch copy with experimental edits, build-*.log). Nothing under /home/user/deca-mark was edited; builds ran only in the scratch copy. The existing web/.next and database/.local were being rewritten by other steps during my run (files newer than my start), but my scratch build reproduced the same chunk hashes as the evidence run (0wstr41mffx5k, 159n5qswl4qfq, 2d013804da0kj, 3-dr7pv7v6of6), so web code equals the audited code. Reproduced: zod/LoadFailure path and fix (build), supabase triplication and fix (build), DataTable double render node/byte counts (SSR of the real component), S7 tsc behaviour, MFD-8 per-view CPU. Code-derived only: WEB-R5 (Next action re-render and bfcache semantics from installed source; no server run), WEB-R6 waves (hosted RTT unmeasured), loadMore silent failure, WEB-R8, PERF-1 critical path (taken from the older-API api-fanout.json). Not established: Turbopack's internal rule for why it duplicates the browser.ts closure per page family (installed docs are silent; stated as observed). Corrections worth carrying to the report: S7's and S8's proposed fixes do not work as written (verified), WEB-R5's saveDraftAction fix would leave Back showing a stale list and a stale Discard etag, MFD-5's verification targets are unreachable by the fix alone, PERF-3's 'plus openapi-fetch' is wrong, PERF-1's 4.2 s is summed parallel time. Duplicates: WEB-R4 and PERF-4 -> MFD-5, PERF-3 -> WEB-R7, PERF-1 -> WEB-R6 (Overview bullet). Not investigated by instruction: WEB-R2 loading plateau.\""
+ },
+ "verify:web-ux": {
+  "items": [
+   {
+    "id": "WDI-4",
+    "title": "Installed app opened offline answers /o with the cached public landing page; legacy FieldMaps cache names remain",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/lib/pwa/service-worker.js:2-4,20-24,65,84-85,96-99",
+     "web/src/app/manifest.ts:10 (start_url '/o')",
+     "web/tests/auth.test.mjs:59-71 (pins legacy cache deletion), :160-170 (pins offline /o -> landing shell)"
+    ],
+    "evidence": "Reproduced by running the existing worker tests (node --test tests/auth.test.mjs, 34/34 pass): 'returns cached shell content when the installed start URL opens offline' asserts that a failed fetch of /o returns the cached landing page. Code: installStartUrl() matches only pathname '/o'; the fetch handler falls back to cache.match('/') (:97-99). Only the start URL gets this fallback: any other offline navigation (including /sign-in, which the landing page's two buttons point to) falls through to the browser's offline page, so both buttons fail. Nothing authenticated is cached (cacheable() allows only '/', /icons/, /_next/static/). Legacy names (LEGACY_CACHE 'fieldmaps-shell-v1', LEGACY_PREFIX 'fieldmaps-public-') exist only for a rename from the old product name, which the owner decisions classify as deletion material.",
+    "correction": "None to the claim. Add: the behaviour and the legacy deletion are both pinned by tests in web/tests/auth.test.mjs that must change with the fix.",
+    "smallest_fix": "Delete installStartUrl, LANDING_URL, the startUrlNavigation branch (:84-85, :96-99) and LEGACY_CACHE/LEGACY_PREFIX (activate filter keeps only key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME). Remove the two start-URL tests and 'fieldmaps-*' keys from the activate test. Keep cacheable() and safeResponse()."
+   },
+   {
+    "id": "WDI-5",
+    "title": "Account binding exists only in the zone editor: package upload/import, downloads and palette recents ignore a changed signed-in account",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/lib/api/browser.ts:50-52 (accessToken skips the user check when expectUser is undefined), :105-119 preparePackage, :121-136 importQgisProject, :149-171, :178-196, :199-214",
+     "web/src/features/packages/UploadStep.tsx:437",
+     "web/src/features/packages/ProjectImport.tsx:39",
+     "web/src/lib/api/zones-browser.ts:48-140 (the only expectUser callers)",
+     "web/src/features/shell/palette.ts:27-28,49-65",
+     "web/src/components/shell/CommandPalette.tsx:80"
+    ],
+    "evidence": "Code-derived, not run in a browser. All five browser-direct transfers call browserApi(TRANSFER_TIMEOUT_MS), a bare number, so expectUser is undefined and accessToken() uses whatever session the shared cookie holds now (B's after another tab signs in). Only zones-browser.ts passes expectUser. Palette: RECENT_KEY 'fm.palette.recent' is not keyed by user, rememberRecent stores label and meta ('Org · Manager'), and CommandPalette.tsx:80 filters recents by href only, so B sees A's recent places with A's role words when B can open the same hrefs.",
+    "correction": "Only the two writes (preparePackage, importQgisProject) matter for attribution; the three downloads read project data that B may read anyway, so binding them adds little. Scope note: most manager writes are Server Actions that carry the shared cookie and have no account binding either, so the expectUser fix covers only the browser-direct uploads, not the account-wide problem (not small to fix, and the API still authorises every request).",
+    "smallest_fix": "Pass { timeoutMs: TRANSFER_TIMEOUT_MS, expectUser: useWorkspace().account.userId } for preparePackage and importQgisProject (userId is available client-side), and map AccountChangedError to 'You are signed in as someone else. Nothing was sent.' as zones/DiscardDraft.tsx:32 does. Key the palette recents as fm.palette.recent:<userId> (or drop meta)."
+   },
+   {
+    "id": "UXW-6",
+    "title": "Observer filter is exact and case-sensitive, so lowercase initials show 'No observations match this view'",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/data/FilterBar.tsx:58-61 (commitObserver trims only), :139-141 hint",
+     "backend/src/fieldmaps_api/queries/observation_analysis.py:13 (the real predicate: o.observer_code = :observer)",
+     "backend/src/fieldmaps_api/zone_observation_schemas.py:48",
+     "supabase/migrations/20261012120000_current_baseline.sql:1961",
+     "web/src/features/data/DataScreen.tsx:276-292"
+    ],
+    "evidence": "Code-derived; not run against a stack. The SQL is an exact equality, and the client sends the trimmed text unchanged, so 'jl' never matches 'JL'. Mitigations that the finding omits: the field's hint says 'Initials, exactly as recorded.' and the empty state says 'No observations were removed.'; the client-side search box does find observers case-insensitively.",
+    "correction": "(1) The cited observation_filters.py:13 is the wrong file: the predicate is in queries/observation_analysis.py:13. (2) 'Observer codes cannot contain lowercase' is only a collector and profile convention (mobile/src/features/onboarding/identity.ts:25 uppercases, identity_schemas.py:10 pattern ^[A-Z0-9]{1,10}$). The upload payload accepts any 1-12 character observer (zone_observation_schemas.py:48) and the DB check is only length 1-12, so uppercasing in FilterBar could hide a lowercase code recorded by a direct API client.",
+    "smallest_fix": "Make the match case-insensitive on the server: upper(o.observer_code) = upper(:observer) in observation_analysis.py:13 (the export uses the same filters, so it follows). Optionally uppercase the typed text in commitObserver as well."
+   },
+   {
+    "id": "UXW-7",
+    "title": "Data -> observation -> 'Data' breadcrumb returns to an unfiltered page; loaded pages are lost",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/data/DataScreen.tsx:107-109,125 (hrefOf = base/id, no query)",
+     "web/src/features/data/DataTable.tsx:49,73",
+     "web/src/features/data/DataMap.tsx:309",
+     "web/src/features/observation/ObservationDetail.tsx:82,99",
+     "web/src/app/(app)/o/[org]/p/[project]/data/[observation]/page.tsx (no searchParams)",
+     "web/src/app/(app)/o/[org]/p/[project]/data/page.tsx:183 (key includes generated_at)"
+    ],
+    "evidence": "Code-derived, consistent with runtime step 5 (browser Back restores the filtered URL and selects). Every link to a record is the bare path, the detail page reads no query, and its breadcrumb is projectHref(...,'data'), so the breadcrumb always lands on bare /data. DataScreen seeds items, cursor and total from page props with useState, so any navigation away discards 'Show the next 500' pages, the selection and the scroll.",
+    "correction": "The smallest fix forwards the filters but does NOT recover the loaded-more pages or scroll; that loss is inherent to the component unmounting and would need the state kept elsewhere (not a small change). In the detail page, parse the query with parseView and rebuild it with viewQuery rather than echoing raw searchParams.",
+    "smallest_fix": "hrefOf = `${base}/${record.id}${viewQuery(current)}`; in data/[observation]/page.tsx read searchParams, run parseView then viewQuery, and pass the result so the breadcrumb href is `${dataHref}${query}`."
+   },
+   {
+    "id": "UXW-8",
+    "title": "Empty-project Overview aims its primary action at an empty Data page and lists upload before the form it requires",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "medium",
+    "locations": [
+     "web/src/app/(app)/o/[org]/p/[project]/page.tsx:139-146",
+     "web/src/features/overview/model.ts:92-136",
+     "web/src/app/(app)/o/[org]/p/[project]/sites/[site]/packages/page.tsx:248-265",
+     "web/src/features/forms/PublishScreen.tsx:188-194",
+     "PRODUCT.md:55",
+     "docs/plan/product.md:38-45",
+     "web/tests/unit/overview.test.mjs:39-68"
+    ],
+    "evidence": "Code-derived. Confirmed: the header primary is 'Open observations' regardless of state; the per-site 'no-package' item is pushed before 'no-form' (model.ts:92-125 then :127-136); the packages page refuses with 'No published form yet ... Publish a form first.' (a real prerequisite). With zero sites the list is no-site then no-form (test :39-48), so the package-before-form order only appears once a site exists (test :57-68 pins no-package before draft). PRODUCT.md J1 step order (upload step 3, publish step 4) and docs/plan/product.md J1 are impossible as written.",
+    "correction": "The doc order error is a confirmed inaccuracy, but the UI part is a first-run polish matter: every loop step is explained on screen and nothing is lost, so it stays a design preference. Severity low.",
+    "smallest_fix": "In attentionItems emit 'no-form' before the per-site loop (when forms !== null) and update the two unit tests; swap J1 steps 3 and 4 in PRODUCT.md and docs/plan/product.md. Optional: when total observations is 0 and attention items exist, render 'Open observations' as outline."
+   },
+   {
+    "id": "UXW-9",
+    "title": "Upload success confirmation may render off-screen at >=1280 px while the visible form resets",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "low",
+    "locations": [
+     "web/src/features/packages/UploadStep.tsx:451-456 (reset), :473 (xl grid), :759 (ServerResult first in right column), :822",
+     "web/src/app/(app)/o/[org]/p/[project]/sites/[site]/packages/page.tsx:208 (VersionHistory)",
+     "web/e2e/screenshots/desktop-1440/day/packages-upload.png"
+    ],
+    "evidence": "Code plus the committed 1440x2305 screenshot (empty state); no browser run. UploadStep has no scroll or focus code. In the screenshot the Upload button is at y~1880 and the right column top at y~365, about 1500 px apart, so the confirmation cannot share a 900 px viewport with the button; success then clears the slots. However the full-width History island sits directly below the grid (~100-250 px under the button), and router.refresh() adds the new 'Active' row there, so a confirmation is plausibly in the same viewport as the button.",
+    "correction": "'Below the fold' holds only for the right-column island, not for all confirmation. Duplicate-upload risk is limited: files must be chosen again (slots cleared), and the result is also aria-live. Still unmeasured: the actual scroll position after the reset.",
+    "smallest_fix": "If a rendered 1440x900 run confirms it: render ServerResult under the Upload button (or focus/scrollIntoView the island after success)."
+   },
+   {
+    "id": "A11Y-05",
+    "title": "Single-key shortcut layer fails WCAG 2.1.4 and the shortcuts dialog advertises keys that do nothing (a, x, and also Esc)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/shell/useShortcuts.ts:53-81",
+     "web/src/lib/shortcuts.ts:56-70,90-100",
+     "web/src/components/shell/ShortcutsDialog.tsx:41",
+     "web/src/components/contour/useRovingRows.ts:43-69",
+     "web/src/features/observation/ObservationDetail.tsx:255-259",
+     "web/PLAN.md:395,400",
+     "web/src/features/shell/palette.ts:97,109",
+     "web/src/components/shell/CommandPalette.tsx:52-54,117",
+     "web/src/features/zones/editor/ZoneEditor.tsx:379",
+     "web/tests/unit/zone-drafts.test.mjs:20",
+     "web/e2e/zones-network.spec.ts:56-62"
+    ],
+    "evidence": "Code-derived. g (chord), ? and / are window keydown handlers active whenever focus is not a text field or overlay; there is no setting to turn them off or remap them, so they are not covered by the 2.1.4 exceptions. DATA_SHORTCUTS lists a (Approve) and x (Exclude); the only row-key handler (useRovingRows) handles ArrowUp/Down, j, k, Home, End, Enter, and the observation page says reviewing is not available. New: the row 'Esc: Close the observation' is also dead: Escape is handled only in MapFrame, the zone editor and Radix components, never in features/data or useRovingRows.",
+    "correction": "Three dead rows (a, x, Esc), not two. Deleting the handlers also touches the hint chips in the palette (go-section shortcut: ['g', key] and the ['?'] chip), ZoneEditor's chordPending guard, a unit test and one e2e step that presses g then s.",
+    "smallest_fix": "Delete the g, ? and / branches of useShortcuts, PROJECT_GO_KEYS/ORG_GO_KEYS/startChord/chordPending/CHORD_TIMEOUT, the PROJECT/ORG groups and the a, x, Esc rows, the palette shortcut chips, and the two tests; fix PLAN.md:395,400. Ctrl/Cmd+K, the roving table keys, and the Keyboard shortcuts entries in the account menu and palette remain. Alternative: one persisted off switch for the single keys."
+   },
+   {
+    "id": "A11Y-06",
+    "title": "Web password Show/Hide toggle fails Label in Name in the visible state",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/components/contour/PasswordInput.tsx:11-14,59-69"
+    ],
+    "evidence": "Code-derived plus installed library check. The button keeps aria-label='Show password' and aria-pressed while its visible text flips Show/Hide; with the password visible the visible word 'Hide' is not in the name (WCAG 2.5.3, Level A). The hidden state passes ('Show' is in 'Show password'). The installed axe-core 4.12.1 rule label-content-name-mismatch carries the 'experimental' tag and enabled:false, the audit's default tagExclude drops experimental rules, and e2e/support/scan.ts:174 runs withTags wcag2a..wcag21aa, so the project's scan cannot catch it. No test asserts the button's name. Web half only; native half belongs to another batch.",
+    "correction": "None.",
+    "smallest_fix": "aria-label={visible ? 'Hide password' : 'Show password'}, remove aria-pressed (the label now states the action), and update the JSDoc at :12-13. Keep aria-controls, the mousedown preventDefault and the caret restore."
+   },
+   {
+    "id": "J-1",
+    "title": "Save after session expiry shows the generic crash page and loses the form (runtime confirmation of WDI-1)",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/proxy.ts:17,33-43",
+     "web/node_modules/next/dist/client/components/router-reducer/reducers/server-action-reducer.js:69-73,111-121",
+     "web/node_modules/next/dist/server/app-render/action-handler.js:127-206,455-466",
+     "web/node_modules/next/dist/server/app-render/manifests-singleton.js:200-213",
+     "web/src/features/project-settings/SettingsScreen.tsx:120-137",
+     "web/src/app/(app)/o/[org]/p/[project]/error.tsx:6-17",
+     "web/src/components/shell/ErrorView.tsx:54-60"
+    ],
+    "duplicate_of": "WDI-1",
+    "evidence": "Observed at runtime (0 API calls, boundary shown, typed input gone). Chain traced in the installed Next 16.2.7: (1) cookies cleared, so proxy.ts getClaims fails and, for a /o path, NextResponse.redirect (307, keeps method and body) is returned for the action POST. (2) The reducer's fetch(state.canonicalUrl, {method:'POST'}) uses default redirect:follow, so the browser re-POSTs the action (Next-Action header and body kept) to /sign-in?next=. (3) /sign-in's bundle does not contain the action, so action-handler.js:455-466 calls selectWorkerForForwarding and createForwardedActionResponse fetches the owning page's route pattern with redirect:'manual'; that internal request goes through the proxy unauthenticated and is 307'd again. A non-RSC answer ends in the '{}' JSON fallback (:206). (4) The client reducer (:111-121) sees no RSC content type and no x-action-redirect and throws 'An unexpected response was received from the server.'. (5) The throw happens inside start(async () => { await saveSettings(...) }) with no try/catch, so React rethrows the rejected transition at render and the nearest error boundary (project error.tsx -> ErrorView, 'Something went wrong. Your records remain available.') replaces the form. The action body never runs. Steps 3-4 are code-traced; the boundary and zero API calls were observed. The ErrorView text 'The page could not load its records' is also wrong for a failed save.",
+    "correction": "Fix precision: catching the rejection at the call sites (the settleAction helper from WDI-1) is what stops the crash and the loss. A proxy change cannot do it alone, because any non-RSC reply, even a 401 text/plain (reducer :111-114 throws new Error(text)), still rejects. The proxy tweak (do not 307 requests carrying a next-action header) only improves the message, and per the WDI-1 check the copy must be written as a sign-in message, not reuse UNCONFIRMED_CHANGE_COPY, whose 'reload the page' advice is bad here.",
+    "smallest_fix": "Wrap each start(async ...) action call in settleAction(promise) returning {status:'failed', message}; with a rejection, say 'Nothing was saved. You may have been signed out; sign in again in another tab, then save.' Keep the editor mounted. Optionally skip the sign-in redirect in proxy.ts for next-action requests so the typed failure path answers."
+   },
+   {
+    "id": "J-2",
+    "title": "One API outage gives a shell-less 'Couldn't load this organization' on fresh load but the 'Something went wrong' boundary on client navigation",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/app/(app)/o/[org]/layout.tsx:21-39",
+     "web/src/app/(app)/o/[org]/p/[project]/layout.tsx:22-24",
+     "web/src/lib/api/workspace.ts:99-115 (resolveOrg/resolveProject throw when the workspace is unavailable)",
+     "web/src/app/(app)/o/[org]/p/[project]/sites/page.tsx:33",
+     "web/src/app/(app)/o/[org]/p/[project]/data/page.tsx:49",
+     "web/src/app/(app)/o/[org]/p/[project]/forms/page.tsx:22",
+     "web/src/app/(app)/o/[org]/p/[project]/team/page.tsx:29",
+     "web/src/app/(app)/o/[org]/p/[project]/page.tsx:53",
+     "web/src/app/(app)/o/[org]/p/[project]/reports/page.tsx:42",
+     "web/src/app/(app)/o/[org]/p/[project]/qgis/page.tsx:34"
+    ],
+    "evidence": "Source trace matching the runtime observations. On a fresh load OrgLayout renders AppHeader plus LoadFailure(what='this organization') instead of its children, and ProjectLayout returns null, so no page runs. On client navigation the layouts are kept and only the page re-renders; the page's first call is resolveProject, which calls getWorkspace (re-fetched, fails) and throws workspaceError. 17 call sites await it unguarded, so the error reaches p/[project]/error.tsx (ErrorView, header stays). Overview, Reports and QGIS wrap it in settle(), so on client navigation they show an inline LoadFailure: three outcomes in total, which matches the runtime (Sites, Data, Team, Forms hit the boundary).",
+    "correction": "The runtime rated it Medium; I rate it low. Both outcomes are honest, recover with Try again, and lose no data. The design comment at workspace.ts:99-101 assumes a layout always shows the failure, which does not hold on client navigation. HTTP 200 on the failure page is a nit.",
+    "smallest_fix": "One page-level helper (e.g. a requireProject that settles the workspace and returns a LoadFailure element) used at the 17 sites, or accept the boundary and make the layout failure match it (keep tabs). Do not add per-page try/catch."
+   },
+   {
+    "id": "J-3",
+    "title": "Root font-size ignored by px type tokens; 320 px at 200% root overflows and clips",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "medium",
+    "locations": [
+     "web/src/styles/contour.css:157-280 (generated from contracts/contour.json by scripts/contour-tokens.mjs)",
+     "web/src/app/globals.css:95 (body 16px/24px)"
+    ],
+    "evidence": "Facts hold by code: every type-* utility sets font-size and line-height in px; body is 16px; Tailwind spacing and touch sizes are rem, so a larger root grows boxes but not text, which explains the emulated overflow at 320 px with html{font-size:200%}. Judged against WCAG: 1.4.4 Resize Text is met by browser zoom (page zoom satisfies it; text-only scaling is not required), and the layout was measured with no horizontal overflow at 320 and 390 CSS px at 100% (88 measurements), which is the 1.4.10 condition (1280 px at 400% zoom is 320 CSS px; zoom does not change root font-size). 1.4.12 spacing passed. Not re-run by me (no browser stack).",
+    "correction": "Not a failure of 1.4.4 or 1.4.10. What is real: a user's default-font-size preference (desktop Chrome/Firefox) does nothing to text, and 'large root plus 320 px' breaks layout, a contrived combination on desktop (Android Chrome text scaling scales px text anyway; iOS Safari ignores root size). Because the token contract is shared with mobile, the change goes through the generator.",
+    "smallest_fix": "If wanted: have the generator emit rem for web type size and line-height (px/16) and body 1rem, then re-run the 320 px at 200% root measurement and fix what still overflows."
+   },
+   {
+    "id": "J-4",
+    "title": "Invite dialog never returns focus to its trigger (and 12 other dialogs the same way)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/components/contour/Dialog.tsx:19-21,64-67",
+     "web/node_modules/.pnpm/@radix-ui+react-dialog@1.1.23_*/node_modules/@radix-ui/react-dialog/dist/index.mjs:154-157",
+     "web/src/features/team/TeamScreen.tsx:80-88",
+     "web/src/features/org/members/MembersScreen.tsx:97-105",
+     "web/src/features/org/settings/SettingsScreen.tsx:236",
+     "web/src/features/org/settings/TransferOwnership.tsx:119",
+     "web/src/features/data/ExportObservations.tsx:80",
+     "web/src/features/project-settings/ArchiveIsland.tsx:97",
+     "web/src/features/project-settings/SettingsScreen.tsx:246",
+     "web/src/features/zones/LeaveDialog.tsx:24",
+     "web/src/features/zones/StartDraft.tsx:93",
+     "web/src/features/zones/DiscardDraft.tsx:91",
+     "web/src/features/zones/ConflictChoice.tsx:50",
+     "web/src/features/forms/DraftEditorScreen.tsx:405",
+     "web/src/features/people/MembersTable.tsx:240",
+     "web/src/features/people/InvitationsTable.tsx:124"
+    ],
+    "evidence": "Library-derived and consistent with the runtime (Invite 6 of 6 trials lost focus; Edit site details, which passes trigger, returned it). Radix Dialog 1.1.23's modal content always runs event.preventDefault() in onCloseAutoFocus and then context.triggerRef.current?.focus(); triggerRef is set only by Dialog.Trigger. contour/Dialog.tsx renders a Trigger only when the trigger prop is given, so its docstring 'Focus returns to it on close' holds only then. 22 usages: 9 pass trigger; 13 are opened by an external button through open/onOpenChange (including Team and Members Invite, Data Export, all zone draft dialogs, project/org settings confirmations) and none sets onCloseAutoFocus. Focus ends on body. The command palette handles its own restore.",
+    "correction": "Broader than 'the Invite dialog': one shared component defect affecting 13 dialogs. Severity low, not medium: no data loss, Chrome keeps a sequential-focus start point so Tab continues near the page, and WCAG 2.4.3 failure is arguable rather than certain.",
+    "smallest_fix": "In contour/Dialog.tsx remember document.activeElement in onOpenAutoFocus (FocusScope reads it before moving focus) and in onCloseAutoFocus call event.preventDefault() and focus it if still connected (composeEventHandlers skips Radix's own handler when defaultPrevented). About 8 lines fix all 13."
+   },
+   {
+    "id": "J-5",
+    "title": "Observer direct entry to /forms runs getProject, listSites and listForms before the observer screen",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/src/app/(app)/o/[org]/p/[project]/layout.tsx:26",
+     "web/src/app/(app)/o/[org]/p/[project]/forms/page.tsx:22-31",
+     "web/src/app/(app)/o/[org]/p/[project]/page.tsx:57-58",
+     "web/src/app/(app)/o/[org]/p/[project]/reports/page.tsx:46",
+     "web/src/app/(app)/o/[org]/p/[project]/qgis/page.tsx:38-39",
+     "backend/src/fieldmaps_api/routers/forms.py:35-41",
+     "supabase/migrations/20261012120000_current_baseline.sql:2519,2529"
+    ],
+    "evidence": "Code-derived. The behaviour is real: the layout's redirect(collectPath) for collectOnly runs in parallel with the page (Next renders layouts and pages concurrently), and only the overview, reports and qgis pages repeat the collectOnly check; forms, forms/versions, sites, data and others do not, so their reads run and their output is discarded. Authorization (the question asked): listForms is allowed to any project member by design. The route is user_transaction with the caller's id, and RLS gives members published and retired versions only (policy member_reads_published_versions, project member) while drafts are manager-only (manager_reads_drafts). Observers legitimately download published forms in the app, so nothing leaks. The HTTP 500 in the runtime is the stale-DB environment issue.",
+    "correction": "Not a defect: no leak, no user-visible effect; only a few wasted reads when an observer opens a manager URL (bookmark or role change). Downgrade to design preference.",
+    "smallest_fix": "None needed. If wanted, the shared helper from J-2 could also redirect collectOnly before any read."
+   },
+   {
+    "id": "J-6",
+    "title": "Zone editor save status says 'Checking whether your last change was saved...' while nothing is checking (indefinitely in an outage) and a fast-failing PUT loops without backoff",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/zones/editor/save-queue.ts:386-387 (status text), get-ok verify branch and get-failed branch (:236-262, :296-306)",
+     "web/src/features/zones/editor/useDraftSaving.ts:134-141,208-240 (the only triggers)",
+     "web/src/lib/api/browser.ts:23 (15 s timeout)",
+     "web/tests/unit/zone-save-queue.test.mjs:268-274"
+    ],
+    "evidence": "Reproduced at reducer level with the real save-queue.ts (scratch repro/j6.mjs). Case A (API down, browser online): put-failed(network) issues a verify GET; get-failed(network) leaves reading:null, inFlight set, pause 'unconfirmed' and returns no command, yet saveStatus still returns 'Checking whether your last change was saved…' because the text derives from pause only. Nothing schedules a retry: the hook re-flushes only on an edit debounce, blur, pagehide, visibilitychange, the online event or the 429 timer. So the line stays until the manager edits or switches tab, not for 6 s as the runtime waited. Case B (only the PUT fails fast, the GET works): get-ok at the same revision calls trySend again; 1000 PUT/GET pairs in a row with no delay, cap or backoff (matches the emulated 40 s aborted PUT, which would loop at network speed). The pause behaviour is pinned by the unit test 'a failed read keeps checking'. Leave guard and disabled publish stay on, so no data is lost.",
+    "correction": "Real trigger for case B needs a PUT that fails quickly while GET works (path-specific proxy, WAF, CORS) or 15 s PUT timeouts (one pair per 15-30 s, benign), so impact is low. The runtime's '6 s' understated case A.",
+    "smallest_fix": "(1) When pause is 'unconfirmed' and reading is null, show 'Not saved yet · DECA Mark could not be reached. Your changes are kept in this tab.' (2) Add one backoff timer in useDraftSaving (for example 5, 10, 20, 30 s) that flushes while the pause still needs a read, and apply the same backoff before the resend after a verify that found 'not saved'."
+   },
+   {
+    "id": "J-7",
+    "title": "fm-place cookie survives sign-out; sb auth cookie is JS-readable with ~400-day expiry",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/shell/RememberPlace.tsx:26-33",
+     "web/src/lib/auth/actions.ts:136-146",
+     "web/src/lib/workspace/home.ts:19-45",
+     "web/src/app/(app)/o/page.tsx:34",
+     "web/node_modules/@supabase/ssr/dist/main/utils/constants.js:7-10",
+     "web/src/lib/api/browser.ts:16-20,53-77",
+     "supabase/config.toml:164-173,320-324"
+    ],
+    "evidence": "Code-derived plus installed library. (a) fm-place: signOut deletes only fm-verify-email, fm-recovery-* and fm-email-sent, so the path-only cookie (1 year) survives. It is read only by /o and passed through homeFor, which requires the SAFE_PATH regex and that the current person's own index contains that org or project, else it is ignored. Another account lands there only if it is already a member of that project, so nothing leaks. The real cross-account carry-over is the palette recents in localStorage (WDI-5). (b) @supabase/ssr 0.12.7 defaults are httpOnly:false and maxAge 400 days. JS-readability is required here: the browser calls createBrowserClient().auth.getSession() and sends the bearer token to the API directly (package upload up to 24 MiB, zone draft autosave, exports). The cookie lifetime is not session validity, which Supabase enforces server-side (jwt_expiry 3600, refresh rotation on; timebox and inactivity limits are commented out in local config and are a hosted-plan setting).",
+    "correction": "(a) is benign by construction; an optional one-line store.delete('fm-place') in signOut. (b) is refuted as a finding: standard library defaults on a design that needs them. The only related point is that no CSP is configured (see NEW-headers).",
+    "smallest_fix": "None required. Optional: delete fm-place in signOut."
+   },
+   {
+    "id": "J-8",
+    "title": "Role and org not visible in the header below 1024 px; observer sees 'MEMBER'",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/src/components/shell/AppHeader.tsx:58-96",
+     "web/src/components/shell/Switchers.tsx:228-253",
+     "DESIGN.md:225-229"
+    ],
+    "evidence": "Code-derived, consistent with the runtime measurements. RoleLabel is 'hidden lg:inline', so the role shows at 1024 and above; the org and project switchers show at 768 and above, so the org is hidden only below 768, where the merged switcher shows the project name (org in its accessible name and menu). The role stays one tap away in the account menu. The observer's 'MEMBER' comes from role = project?.role ?? org?.role: observers' pages are /o/[org]/collect, with no project in the route, so the org role 'member' is shown (true, but not the word the card uses).",
+    "correction": "'Org not visible below 1024' is wrong: the cut-off is 768. DESIGN.md documents the merged switcher but not hiding the role, so it is an undocumented space trade-off. Observers mostly use the phone app, so the 'MEMBER' header affects few people.",
+    "smallest_fix": "None needed. Optional: show the role only when a project is on screen, or label the collect page 'Observer'."
+   },
+   {
+    "id": "J-9",
+    "title": "Org no-access pages lack an h1; sign-in gives no signed-out reason; signed-in users can open /sign-in",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/org/NoAccess.tsx:7-19",
+     "web/src/components/contour/ScreenState.tsx:88",
+     "web/src/app/(app)/o/[org]/(org)/settings/page.tsx:25-29",
+     "web/src/app/(app)/o/[org]/(org)/members/page.tsx:22-25",
+     "web/src/app/(app)/o/[org]/layout.tsx:21-39",
+     "web/src/proxy.ts:33-38,52-58",
+     "web/src/app/(auth)/(signed-out)/sign-in/page.tsx:22-27",
+     "web/src/app/(auth)/(signed-out)/layout.tsx"
+    ],
+    "evidence": "Code-derived. (a) OrgNoAccess returns a bare LoadFailure; ScreenState's default heading is h3, so the page has an h3 and no h1 (the same holds for the org page failure states and the OrgLayout failure; project no-access pages render a PageHeader first, e.g. project settings/page.tsx:27-40). (b) The proxy only sets ?next=; the sign-in lead differs only for invitation paths (isInvitationPath), so a session-expiry redirect reads exactly like a first visit. (c) The proxy redirects only '/' for an authenticated request, and the sign-in page and its layout do no session check, so a signed-in person sees the form; signing in again just replaces the session.",
+    "correction": "Part (a) is wider than 'no-access': every org-level failure state lacks an h1. Impact is low on all three; none loses data.",
+    "smallest_fix": "(a) Give OrgNoAccess a title and render PageHeader above the LoadFailure, as the project pages do. (b) When ?next= is present, lead 'Sign in to continue.' (no new plumbing). (c) In proxy.ts add authenticated && (/sign-in or /sign-up) -> workspace(request); the invitation 'Not you?' flow signs out first so it is unaffected."
+   },
+   {
+    "id": "J-10",
+    "title": "Multi-word search matches any word",
+    "verdict": "refuted",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/data/view.ts:244-267",
+     "web/tests/unit/data-view.test.mjs:225-232"
+    ],
+    "evidence": "Reproduced with the real searchLoaded (scratch repro/j10.mjs). The search splits on whitespace and requires every term to be a substring of the record's search text (terms.every(...)): AND, not any-word. 'synthetic nope' returns no rows, which any-word semantics would not. The unit test pins this ('garden sandpit' returns the one record with both, 'no such words' returns none). The runtime result ('record 7' kept all 8 rows) is a seed artifact: every seeded row's label is OBS-700000 (the runtime's own note), and the search text includes the label, so '7' is a substring of every row and 'record' is in every answer.",
+    "correction": "Not a defect. The only real property is substring (not word-boundary) matching, so short numeric terms match ids, labels and dates, which is normal for this kind of box.",
+    "smallest_fix": "None."
+   },
+   {
+    "id": "J-11",
+    "title": "Success toast overlaps content",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "medium",
+    "locations": [
+     "web/src/components/contour/Toast.tsx:84-91,95-110"
+    ],
+    "evidence": "Code-derived; not reproduced by me. The viewport is fixed to the bottom (bottom-left from md up), the card is pointer-events-auto, shows for 6 s, one at a time, pauses on hover and focus, and has no close button (swipe, or Esc after the F8 hotkey). Overlapping page content during those 6 s is inherent to a toast; the runtime's hit-test found nothing covered because no toast was open then.",
+    "correction": "The claim is literally true but expected toast behaviour. The only theoretical hazard is WCAG 2.2 2.4.11 (a focused control at the bottom-left under an open toast, with no scroll-padding-bottom); not shown.",
+    "smallest_fix": "None. If a covered control is ever shown: add scroll-padding-bottom while a toast is open, or a Dismiss control."
+   },
+   {
+    "id": "NEW-headers",
+    "title": "No Content-Security-Policy, frame-ancestors or X-Content-Type-Options configured for the web app",
+    "verdict": "new",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "medium",
+    "locations": [
+     "web/next.config.ts:43-53 (headers() only for /sw.js)",
+     "web/vercel.json",
+     "vercel.json",
+     "web/src/app/layout.tsx:54",
+     "web/src/app/global-error.tsx:22",
+     "web/src/proxy.ts:47-48 (sets Referrer-Policy and Cache-Control only)"
+    ],
+    "evidence": "Code-derived: no security headers are configured anywhere in the repo. There are only two inline scripts (the constant THEME_SCRIPT). The bearer token must be JS-readable by design (J-7b), so a CSP would be the only XSS mitigation layer. Clickjacking of the signed-in state is not practical because SameSite=Lax cookies are not sent in cross-site iframes. Headers set by the Vercel project itself are unknown.",
+    "correction": "Hardening only, not a reachable defect. No user-visible effect.",
+    "smallest_fix": "Add a headers() entry in next.config.ts for /:path* with X-Content-Type-Options: nosniff, frame-ancestors 'none' (or X-Frame-Options: DENY) and a nonce-based CSP (the inline theme script needs a nonce or hash, and connect-src must allow the API and Supabase origins)."
+   }
+  ],
+  "commands_run": [
+   "git log --oneline | head -3 (read-only)",
+   "node --test web/tests/auth.test.mjs (34/34 pass; confirms WDI-4 offline start-URL behaviour is pinned by tests)",
+   "node --experimental-strip-types scratchpad/w2/web-ux/repro/j6.mjs (real save-queue.ts reducer: idle 'Checking' status after get-failed; 1000 unthrottled PUT/GET pairs)",
+   "node --experimental-strip-types scratchpad/w2/web-ux/repro/j10.mjs (real searchLoaded: AND-of-substrings semantics)",
+   "node -e require(axe-core@4.12.1 from web/node_modules/.pnpm).getRules() (label-content-name-mismatch is experimental and disabled by default)",
+   "python3 PIL: viewed web/e2e/screenshots/desktop-1440/day/packages-upload.png geometry for UXW-9",
+   "grep/sed reads of web/src, backend/src, supabase migrations, and installed next 16.2.7, @radix-ui/react-dialog 1.1.23, @supabase/ssr 0.12.7 sources"
+  ],
+  "notes": "Scratch notes, repro scripts and a screenshot thumbnail are in /tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/w2/web-ux/ (notes.md, repro/j6.mjs, repro/j10.mjs). No servers, Docker or browser were started, and nothing under /home/user/deca-mark was modified. Reproduced: WDI-4 (existing test run), J-6 (reducer-level repro of the idle 'Checking' line and the unbounded PUT/GET loop), J-10 (searchLoaded AND semantics), A11Y-06 axe rule status. Everything else is code-derived, including the installed Next 16.2.7, Radix Dialog 1.1.23 and @supabase/ssr 0.12.7 sources, and the runtime report's observations. The J-1 steps 3-4 of the chain (forwarded-action '{}' response) are code-traced only, as in the WDI-1 check. Severity changes versus the runtime and review labels: J-1 medium (not high), J-2 low (runtime said medium), J-4 low (runtime said medium; but it affects 13 dialogs, not one), J-5 low and not a defect. Corrections to cited references: UXW-6's SQL predicate lives in backend/src/fieldmaps_api/queries/observation_analysis.py:13 (observation_filters.py:13 is wrong); A11Y-05 has a third dead row (Esc: Close the observation); the J-8 org cut-off is 768 px, not 1024 px. Not covered: no browser run for UXW-9's scroll position, J-3's 320 px/200% root overflow (relied on the runtime emulation) or J-11's overlap.\""
+ },
+ "verify:mobile": {
+  "items": [
+   {
+    "id": "MOB-REC-08",
+    "title": "Rotating the device remounts the field map and the step panel",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/features/collect/CollectScreen.tsx:474-503 (tree at HEAD, line numbers unchanged)",
+     "mobile/src/features/collect/CollectMap.tsx:550-556 (Camera initialViewState placed ?? zone.centre)",
+     "mobile/src/features/collect/ReviewStep.tsx:94 (local saving state)",
+     "mobile/src/layout/use-layout.ts:25-34"
+    ],
+    "evidence": "Reproduced at reconciler level, not on a device. scratchpad w2/mobile/repro/rotate.cjs uses the real react 19.2.3 and react-test-renderer with a skeleton that has the same element types and positions as the return tree. Portrait to landscape logs: unmount status, unmount panel content, unmount CollectMap, mount CollectMap, mount status, mount panel content. The reverse switch gives the same. Cause in code: landscape is body>[View>[View(mapSlot)>CollectMap, View(status)], KAV]; portrait is body>[View(mapSlot)>CollectMap, View|null, KAV]. The first View pairs with the first View, then CollectMap meets a View and remounts. The KAV sits at index 1 in one tree and 2 in the other, so the panel remounts. The camera restarts at placed ?? zone.centre (CollectMap.tsx:550-556). The aim store lives in CollectScreen and survives, so it can be stale until the new map reports a region (not device-verified). CollectMap's hidden/filter/selected state resets, and so do useMyLocation's mount and unmount watchers. ReviewStep's saving flag is local state, but session.save() is one local SQLite transaction (observation-actions.ts:156-205), so the double-save window is milliseconds. A second save would fail on the primary key with 'Could not save'. app.config orientation is 'default', so auto-rotate is on.",
+    "correction": "None to the claim. The double-save consequence is negligible and should not carry weight. The camera and map-state loss is the real cost. The CollectScreen.tsx:64-70 doc comment ('MapLibre stays mounted') is untrue across rotation.",
+    "smallest_fix": "Render one tree with identical wrapper Views and switch flexDirection and sizes through style only. Put map, status and panel at fixed child positions, so a null status takes a slot rather than shifting siblings. Keep the 46% slot and the instant height change."
+   },
+   {
+    "id": "UXC-09",
+    "title": "Rotating the device remounts the field map and the step panel (same as MOB-REC-08)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/features/collect/CollectScreen.tsx:474-503"
+    ],
+    "evidence": "Same code and same reconciler repro as MOB-REC-08 (w2/mobile/repro/rotate.cjs).",
+    "correction": "Duplicate. Merge into MOB-REC-08.",
+    "smallest_fix": "See MOB-REC-08.",
+    "duplicate_of": "MOB-REC-08"
+   },
+   {
+    "id": "MOB-REC-09",
+    "title": "Write-only persistence nothing reads, plus a legacy transition that takes the write lock every 5 s drain",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/storage/session-store.ts (imported only by test fixture package-store.fixture.ts:7 and tests)",
+     "mobile/src/storage/package-references.ts:20-24 (counts active_sessions, nothing writes it in production)",
+     "mobile/src/packages/hosted/operations.ts:111-124 (setAvailableCurrent, one BEGIN IMMEDIATE per site per refresh)",
+     "mobile/src/packages/hosted/operations.ts:216-218 selected() (only caller recovery-queue.test.ts:41)",
+     "mobile/src/storage/package-catalog.ts:17-47,108 (writeSelection, selectPackage with no production caller)",
+     "mobile/src/storage/package-catalog-read.ts:70-85 readSelected",
+     "mobile/src/storage/available-current.ts:44 readAvailableCurrent (tests only)",
+     "mobile/src/storage/last-received-at.ts and account-removal.ts (no importer except their tests)",
+     "mobile/src/storage/sync-store.ts:42-78 and mobile/src/sync/provider.tsx:100"
+    ],
+    "evidence": "Code and grep, plus a drain repro. Confirmed with grep over src, app and scripts, non-test files only: active_sessions has no production writer. package_selections is read only inside writeSelection's no-downgrade check and by the test-only readSelected. available_current_packages is written every refresh and read only by tests. lastReceivedAt and removeAccountData have no production importer. Repro w2/mobile/repro/foreground.mts, using the real foreground.ts, gives 7 drains and 7 changed() calls with an empty queue. The finding's verification line 'grep finds no references to activateHeldObservations' is false: provider.tsx:100 calls it inside every drain. It is still legacy. It selects owner_scope=key, sync_state='local-only' and bound records. The current initialSyncState (observation-store.ts:27-31) gives every bound record for a signed-in scope 'pending', and isUploadableRecord equals isBoundObservation (forms/registry.ts:30), so this build cannot create such a row. It runs databaseTransaction (BEGIN IMMEDIATE, database-write.ts:15) on the shared serialized queue each 5 s, and it JSON-parses every local-only row of that owner (practice records) each pass. Per-site refresh transactions add one more queue hop per site. Observable cost is unmeasured and probably small.",
+    "correction": "Fix the verification: grep finds activateHeldObservations in sync/provider.tsx. The 'no schema bump' caution in MFD-9 no longer applies under the owner's decision. A SCHEMA_VERSION bump wipes dev-device SQLite, which is sanctioned, so drop the tables and the bump together. Note that removeAccountData is a privacy routine that delete-account.tsx says is 'not built yet'. Wiring it is a product decision tracked by MOB-REC-02, not deletion material.",
+    "smallest_fix": "Delete session-store, last-received-at, readAvailableCurrent/setAvailableCurrent, readSelected, selectPackage, operations.selected, activateHeldObservations and its provider call, and the three tables, with a SCHEMA_VERSION bump. Keep package_authorizations and the lease, draft and record reference counts for removal refusal. Replace the active_sessions count in package-references.ts with the in-memory lease."
+   },
+   {
+    "id": "S6",
+    "title": "Write-only and unwired mobile persistence (same set as MOB-REC-09)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/storage/session-store.ts",
+     "mobile/src/storage/package-catalog.ts:17-47,108,142",
+     "mobile/src/storage/available-current.ts:12,44",
+     "mobile/src/storage/last-received-at.ts",
+     "mobile/src/storage/account-removal.ts",
+     "mobile/src/storage/database-migrations.ts:40-50"
+    ],
+    "evidence": "Every module and function named was grepped at HEAD with the same results as MOB-REC-09. Counts such as 'about 600 lines' were not re-measured.",
+    "correction": "S6 omits activateHeldObservations, which MOB-REC-09 covers. Its 'wire removeAccountData' part belongs with MOB-REC-02 or UXC-02, because it is a privacy decision.",
+    "smallest_fix": "See MOB-REC-09.",
+    "duplicate_of": "MOB-REC-09"
+   },
+   {
+    "id": "MFD-9",
+    "title": "Deletion candidates: web legacy fields form path and write-only mobile package tables",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/packages/hosted/operations.ts:111-124,216-218",
+     "mobile/src/storage/available-current.ts",
+     "mobile/src/storage/package-catalog.ts:41",
+     "web/src/features/forms/LegacyVersionScreen.tsx (94 lines, confirmed)",
+     "web/src/app/(app)/o/[org]/p/[project]/forms/versions/[version]/page.tsx:27,85-93",
+     "web/src/app/(app)/o/[org]/p/[project]/forms/versions/[version]/publish/page.tsx:36,106",
+     "web/src/lib/observations/answers.ts:179-186 (legacy fields reader)",
+     "backend/src/fieldmaps_api/services/forms.py:35-49"
+    ],
+    "evidence": "The mobile half is the same as MOB-REC-09 and was confirmed by grep. The web half is code-confirmed only: LegacyVersionScreen exists at 94 lines, both isCanonical branches and the `fields` reader are present, and the API validates every saved definition as canonical (services/forms.py:35-49). Whether any hosted row still holds a definition without questions was not queried (no database was started).",
+    "correction": "The 'do not bump SCHEMA_VERSION' advice is overtaken by the owner's reset decision (see MOB-REC-09).",
+    "smallest_fix": "Mobile half as MOB-REC-09. Web half: after confirming with a seeded-DB query that no form_versions row lacks `questions`, delete LegacyVersionScreen, both isCanonical branches and the `fields` reader.",
+    "duplicate_of": "MOB-REC-09 (mobile half; the web half is unique to this id)"
+   },
+   {
+    "id": "MFD-6",
+    "title": "CollectMap re-serializes the whole package GeoJSON to JSON on every render",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "medium",
+    "locations": [
+     "mobile/src/features/collect/CollectMap.tsx:324-341 (plain function, not memoized)",
+     "mobile/src/features/collect/CollectMap.tsx:499-501 (mapStyle prop)",
+     "mobile/node_modules/@maplibre/maplibre-react-native/src/components/map/Map.tsx:662-675 (useMemo on [props], JSON.stringify(mapStyle) when it is an object)"
+    ],
+    "evidence": "The mechanism is confirmed in code. The library's useMemo depends on the props object, which is new every render, so a style object is stringified on every CollectMap render. CollectScreen passes inline callbacks, so it re-renders on each keystroke and on each 5 s revision change (MFD-3). Re-ran a V8 bench (w2/mobile/repro/stringify.mjs, synthetic point features): 14 KB gives 0.06 ms, 142 KB 0.72 ms, 1.4 MB 7.1 ms, 14.6 MB 83 ms per stringify, matching the earlier numbers. Real package sizes seen: 2 KB (native run, Fall Creek) and about 9 KB (pilot). Hermes is unmeasured. At these sizes the cost is negligible and no user-visible defect is shown.",
+    "correction": "Keep as MEASUREMENT NEEDED and do not fix before a package near the cap exists (server cap 16 MiB archive, 20k features per layer).",
+    "smallest_fix": "If a large package ever appears, stringify the static style once per opened package (useMemo on sitePackage and base) and pass the string."
+   },
+   {
+    "id": "MFD-7",
+    "title": "No device budget for package size: install keeps several whole-package copies; every start re-hashes, re-parses and re-validates every installed version",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "medium",
+    "locations": [
+     "mobile/src/packages/hosted/device.ts:112-127 (file.bytes() then new Uint8Array copy for the digest)",
+     "mobile/src/packages/hosted/prepare.ts:35,44 (readArchive, verifyBoundZones)",
+     "mobile/src/packages/hosted/installation.ts:116-117 (parse and validateStored again, including verifyBoundZones)",
+     "mobile/src/packages/hosted/installation.ts:121-122,131-135 (stringify, encode, stage, read back and compare full text)",
+     "mobile/src/packages/hosted/installation.ts:71-104 and mobile/src/packages/hosted/operations.ts:75-104 (catalog re-verification per version)",
+     "mobile/src/packages/hosted/operations.ts:203-215 (remove drops the DB authorization and returns contentRetained:true; no file is ever deleted)",
+     "backend/src/fieldmaps_api/domain/packages.py:28-30; zone_archive.py:38 (16 MiB archive, 5x expanded, 20k features per layer)"
+    ],
+    "evidence": "All steps are present in code: zone verification runs twice (prepare.ts:44 and installation.ts:117), whole-package zod parse runs on every install and every catalog read, and the written file is read back and compared as a full string. Removed versions leave their JSON files on disk. No heap or time was measured; Hermes and device numbers are absent. At 2-9 KB it is irrelevant.",
+    "correction": "The 'about six copies' count is an estimate from reading the code. Not measured.",
+    "smallest_fix": "Only if a large package arises: compare the written file's sha instead of reading back the text, and skip the second validation. Deleting files on remove is a separate small hygiene fix."
+   },
+   {
+    "id": "UXC-08",
+    "title": "Every 5 s while online, Account counts and the Sign out button flash to a loading state",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "medium",
+    "locations": [
+     "mobile/src/sync/provider.tsx:127-129",
+     "mobile/src/sync/foreground.ts:18-21",
+     "mobile/src/storage/use-observations.ts:18-22",
+     "mobile/src/features/preview/queue.ts:61-79 (loading passed through)",
+     "mobile/src/features/account/use-local-work.ts:11-33 (Account's actual data path)",
+     "mobile/app/(app)/(tabs)/account/index.tsx:89-90",
+     "mobile/app/(app)/(tabs)/account/sign-out.tsx:46-47,80-81,97-98",
+     "mobile/app/(app)/(tabs)/account/delete-account.tsx:130,230"
+    ],
+    "evidence": "Code plus a module repro. Account does not call useObservations directly. The chain is useLocalWork, useQueue, useQueueForMode, useObservations, and loading is passed through (queue.ts:75). Repro w2/mobile/repro/foreground.mts with the real foreground.ts and an empty queue gives 7 drains and 7 changed() calls. Each changed() bumps revision, the focused consumer calls setLoading(true) synchronously (use-observations.ts:18), and the read is queued behind the serialized DB queue (listObservations, observation-store.ts:79). Sign-out disables its button and Account swaps counts for 'Reading records from this device…' for at least one render. Duration not measured and not seen in the native run.",
+    "correction": "Duplicate of MFD-3's root cause (unconditional changed() and loading on revision refresh). Account, Sign out and Delete account are the user-facing places where it matters.",
+    "smallest_fix": "As MFD-3: drain reports whether anything changed and calls changed() only then, and useObservations sets loading only on the first read for a key.",
+    "duplicate_of": "MFD-3"
+   },
+   {
+    "id": "UXC-10",
+    "title": "Collector preferences promised by PRODUCT and DESIGN (hand, haptics, larger text, Dusk) can only be set in dev builds",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/ui/preferences.tsx:30-33,75-88",
+     "mobile/app/(dev)/gallery.tsx:257,855,861,881",
+     "mobile/app/(dev)/states.tsx:232",
+     "mobile/src/features/preview/data-source.tsx:30 (PREVIEW_ALLOWED = __DEV__ || EXPO_PUBLIC_PREVIEW_TOOLS=1)",
+     "mobile/app/(dev)/_layout.tsx:12-13",
+     "mobile/app/(app)/(tabs)/account/index.tsx:140-160",
+     "PRODUCT.md:160,166",
+     "DESIGN.md:232",
+     "mobile/src/features/collect/CollectScreen.tsx:489"
+    ],
+    "evidence": "Code. The only callers of preferences.set are in the (dev) group, which redirects to / unless PREVIEW_ALLOWED. Account offers orientation only. The map palette is reachable through the map's own base menu, so PRODUCT.md:166 is missing three of four promises (haptics switch, preferred hand, screen theme) and :160 ('Larger question text is a preference'). Haptics default to on, hand to right, theme to day.",
+    "correction": "None. The finding is correct and is a product decision, not a defect.",
+    "smallest_fix": "Owner picks one. Either delete the unreachable prefs (hand, haptics, largerText, dusk), their dev setters and the doc promises, or add a one-row Segmented 'Panel side' to Account. For the pilot tablets, hand only matters in landscape."
+   },
+   {
+    "id": "A11Y-04",
+    "title": "The native map camera ignores Reduce Motion although PRODUCT promises map moves jump",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/features/collect/CollectMap.tsx:363,378,408,417,769,778",
+     "mobile/src/ui/tokens.ts:55-66",
+     "PRODUCT.md:165",
+     "mobile/node_modules/@maplibre/maplibre-react-native/src/components/camera/Camera.tsx:313-316 (jumpTo = duration 0)",
+     "mobile/node_modules/@maplibre/maplibre-react-native/ios/components/camera/CameraStop.m:62-66"
+    ],
+    "evidence": "Code only; not run on a device. CollectMap never calls useReducedMotion. easeTo/fitBounds/zoomTo all pass duration: motion.camera. Reanimated animations (pin lift) default to honouring the system setting, so only the native MapLibre camera is affected. The library accepts duration 0 and passes it to native, so the proposed fix works. The unit-test hook the finding names exists: native.fixture.tsx mocks useReducedMotion as true.",
+    "correction": "None.",
+    "smallest_fix": "Call useReducedMotion() once in CollectMap and use duration reduceMotion ? 0 : motion.camera at the six call sites."
+   },
+   {
+    "id": "A11Y-06",
+    "title": "Password Show/Hide toggle fails Label in Name (native half)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/ui/PasswordInput.tsx:28-41"
+    ],
+    "evidence": "Code plus the earlier simulator run. The Pressable has role switch, constant accessibilityLabel 'Show password', checked={shown}, and visible text that flips Show/Hide. When the password is visible the name lacks 'Hide'. The simulator run's XCUITest tree exposed it as the 'Show password' switch (PROGRESS 01:05Z). The iOS Voice Control behaviour itself was not reproduced; the claim rests on WCAG 2.5.3 reading of the code. A speech user can still say 'Show password', which is the stable name. The same run showed the switch frame abutting the text field (a tap on the field by ref toggled the switch); that is a tooling note, not verified as a target overlap.",
+    "correction": "None for the native half. Web half not checked here.",
+    "smallest_fix": "accessibilityLabel={shown ? 'Hide password' : 'Show password'} with role button (or keep the constant label and make the visible text constant)."
+   },
+   {
+    "id": "A11Y-07",
+    "title": "Cluster marker on the collect map is a 36 pt target with no hitSlop",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "medium",
+    "locations": [
+     "mobile/src/features/collect/CollectMap.tsx:295-303,671-691",
+     "mobile/src/features/collect/CollectMap.tsx:894 (the only hitSlop in the file)",
+     "mobile/node_modules/@maplibre/maplibre-react-native/src/components/annotations/marker/Marker.tsx (iOS: MLNPointAnnotation view sized to its content)"
+    ],
+    "evidence": "Code only. The cluster pill is minWidth 36, height 36 and the Pressable has no hitSlop (confirmed). The caveat is new: the Pressable is the child of a MapLibre Marker, which on iOS is a point-annotation view sized to its content, and on Android a native view placed on the map. UIKit hit-testing normally rejects touches outside the parent's bounds, so a hitSlop that extends past the Marker's own box may not receive touches. The proposed hitSlop={6} is therefore unverified.",
+    "correction": "The size problem stands. The one-line fix is not proven to work inside a Marker.",
+    "smallest_fix": "Make the Pressable itself at least 44 pt (minWidth/height 44) and draw the 36 pt pill inside it, so no slop is needed. Check with Accessibility Inspector on a device."
+   },
+   {
+    "id": "A11Y-08",
+    "title": "Disabled-button reasons are exposed only as accessibilityHint, which RN 0.86.3 maps to Android tooltipText",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "low",
+    "locations": [
+     "mobile/src/ui/Button.tsx:183-186,229-233",
+     "mobile/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/uimanager/ReactAccessibilityDelegate.kt:82-89"
+    ],
+    "evidence": "Code only. Button passes the disabled reason as accessibilityHint and hides the visible duplicate with accessibilityElementsHidden and no-hide-descendants. In the installed RN the hint sets info.tooltipText and nothing else on Android. Whether TalkBack speaks tooltipText is not established here. iOS VoiceOver speaks hints.",
+    "correction": "None. Needs a TalkBack run.",
+    "smallest_fix": "Test on the pilot Android tablet first. If silent, drop the hidden wrapper at Button.tsx:229 and the hint so the reason is its own readable element."
+   },
+   {
+    "id": "S5",
+    "title": "Rename-era compatibility code with no users contradicts the no-legacy policy",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/next.config.ts:14-31,39-42 (11 redirects)",
+     "web/e2e/removed-routes.spec.ts:10-20; web/e2e/support/routes.ts:92-100",
+     "web/src/lib/pwa/service-worker.js:2-4,65",
+     "mobile/app.config.ts:17-18",
+     "mobile/src/features/onboarding/pending-invitation.ts:67 (comment)",
+     "mobile/src/platform/auth-storage.ts:9,79-95",
+     "mobile/src/auth/client.ts:11-15"
+    ],
+    "evidence": "Code. Web half confirmed: the 11 redirects, the legacy cache names swept in the activate handler, and the spec that passes on 404 or redirect. Mobile: nothing in the repo generates a fieldmaps:// link (docs and web use decamark://). Corrections from reading the code: (1) migrateLegacySession is not rename-era. It moves an older SecureStore copy of the auth session into the encrypted-file store. Its legacyStorageKey ('fieldmaps-auth-<hosted host>') equals the current storageKey name for the hosted host (client.ts:11). It only reads SecureStore when the host is the hosted Supabase and the bundle suffix is .dev. staging.json and production.json both have suffix .dev, and development.json (127.0.0.1) returns at auth-storage.ts:79-80 before any SecureStore call. (2) The proposed check `grep -rn fieldmaps mobile/src/platform is empty` would still match keyName 'fieldmaps-auth-key' (auth-storage.ts:8), the SecureStore key for the AES key, and the 'fieldmaps-auth-' storage-key prefix in client.ts. Those are live identities. Renaming them only signs developers out, which is allowed but not needed.",
+    "correction": "Treat it as old-install legacy (delete under the policy) rather than rename legacy, and drop the grep verification.",
+    "smallest_fix": "Delete OLD_ROUTES and redirects(), LEGACY_CACHE/LEGACY_PREFIX, migrateLegacySession with legacyStorageKey, its call and test, and 'fieldmaps' from the scheme list. Keep the live key names."
+   },
+   {
+    "id": "S9",
+    "title": "Mobile dependency surface: icon barrel is a quarter of the JS bundle; three native or peer dependencies unused or undeclared",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "medium",
+    "locations": [
+     "mobile/src/ui/Icon.tsx:1-86 (83 named imports, counted)",
+     "evidence mobile-checks/bundle-attribution.txt (production iOS export, rc=0): lucide-react-native 1543.9 KB = 25.2% of 6.26 MB (barrel 615.9 KB + 1877 icon modules 922.4 KB)",
+     "mobile/node_modules/lucide-react-native/package.json (installed 1.55.0; exports './icons/*')",
+     "mobile/package.json:45,50",
+     "mobile/app/_layout.tsx:1",
+     "mobile/metro.config.cjs"
+    ],
+    "evidence": "The bundle share is from the earlier production export, not re-run here. Code checks: per-icon modules import only createLucideIcon, so the proposed per-icon import is valid. Corrections: (a) four of the 83 names are aliases whose files are named differently (Building2 -> icons/building-complex, CircleHelp -> icons/circle-question-mark, History -> icons/rotate-ccw-clock, Trash2 -> icons/trash), so a mechanical kebab-case rewrite breaks, and file names can change between lucide minors (range is ^1.51). (b) 'no metro.config' is wrong: metro.config.cjs exists (adds the contracts watch folder) but has no tree-shaking. (c) expo-font is a direct dependency of expo 57.0.27 and a required peer of @expo/router-server, so it is not a hoisting accident; it is only undeclared. (d) expo-updates is not clearly dead: PLAN.md:438 lists 'eas update rules' in the release checklist and eas.json defines channels. It is unconfigured (no updates.url or runtimeVersion) but planned infrastructure. (e) react-dom is an optional peer, absent from the bundle attribution; hygiene only. Startup effect of the 1.4 MB is unmeasured.",
+    "correction": "Keep the lucide change (the only part with a demonstrated cost). Downgrade the other three to hygiene, and do not remove expo-updates unless the owner drops OTA.",
+    "smallest_fix": "In Icon.tsx import each icon from lucide-react-native/icons/<file> using the real file names, and pin lucide-react-native exactly. Add expo-font to package.json via expo install. Leave expo-updates until the OTA decision."
+   },
+   {
+    "id": "N-1",
+    "title": "Answer step on a portrait iPhone: the answer input is clipped to a sliver at rest; the scroll viewport is only about 150 pt",
+    "verdict": "new",
+    "severity": "medium",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/features/collect/QuestionStep.tsx:48-51,141-145,241-259 (ScrollView flex:1 between a fixed acts bar above and a fixed Back/Continue row plus links row below)",
+     "mobile/src/features/collect/CollectScreen.tsx:499 (map slot fixed at 46% of the body in portrait)",
+     "mobile/src/features/collect/CollectScreen.tsx:476-483 (panel block)",
+     "screenshots runtime/native/14-answer-q1.png, 15-answer-q1-after-swipe.png, 20-q3.png"
+    ],
+    "evidence": "Screenshots (14 and 20 viewed) plus code. The input is not overlapped by a floating footer. It is the last item inside a ScrollView whose viewport is short, so the ScrollView's bottom edge clips it; the footer is a sibling below. On the 402x874 pt iPhone 17 Pro the map slot takes 46% of the body (about 296 pt), then the status row, so the panel is about 300 pt. The step root subtracts the acts bar and the footer rows (about 130 pt), leaving about 150 pt for the scroll content, which is about 217 pt (label row, heading, hint, 54 pt input, padding). That is the 67 pt maximum scroll the run measured. Q1 (single-line text) and Q3 (multi-line textarea, screenshot 20) both show only the top border of the input above the footer. The question label scrolls under the fixed acts bar when you scroll, as any scroll does. Choice questions on the real forms are code-derived: heading plus hint is about 110 pt of a 150 pt viewport, so one tile row at most is visible without scrolling. Not seen in a screenshot. Same root cause as UXC-01 (fixed map share); the keyboard-only fix proposed there does not cure the at-rest case.",
+    "correction": "The report says 'overlapped by the sticky footer'. More exactly it is clipped by the ScrollView's bottom edge, with the footer as a sibling.",
+    "smallest_fix": "Give the Answer and Review steps more of the screen in the stacked layout: map slot about 30% (or collapsible) when step is answer or review, set through style so the map stays mounted. Combine with the UXC-01 keyboard change (map slot to 0 while the keyboard is up)."
+   },
+   {
+    "id": "N-2",
+    "title": "Keyboard up on Answer: the input and Continue are both behind the keyboard and tapping elsewhere does not dismiss it",
+    "verdict": "confirmed",
+    "severity": "high",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/features/collect/CollectScreen.tsx:476-483,499",
+     "mobile/src/features/collect/QuestionStep.tsx:141-145,241-259",
+     "screenshot runtime/native/16d-keyboard-covers-answer-field.png (viewed)"
+    ],
+    "evidence": "Screenshot and code. The map slot keeps 46% regardless of the keyboard. The panel's KeyboardAvoidingView (behavior padding on iOS) pads by the keyboard overlap of its own frame: keyboard top at 539 pt, KAV bottom at about 840 pt, so about 301 pt of padding against a panel of about 300 pt. The content box is about 0, the ScrollView shrinks to 0, and the fixed Back/Continue and link rows overflow under the keyboard (the run's a11y tree put the field at y=529-579 and Back/Continue at 592-648, below the keyboard top). The screenshot shows only the map, the status line and the keyboard. There is no Keyboard.dismiss, tap-away or keyboardDismissMode anywhere in features/collect (grep); keyboardDismissMode='interactive' exists only in ui/Screen.tsx:83. The return key 'next' calls onAdvance, which dismisses the keyboard by moving to Q2. The numeric pad (Q2) has an app-supplied Next accessory. Android is not shown: the behavior is undefined there and relies on window resize (MFD-1). Landscape and tablet side-by-side give the panel the full body height, so they are likely fine (code-derived).",
+    "correction": "Same cause and the same numbers as UXC-01 (299 pt panel, 302 pt overlap).",
+    "smallest_fix": "As UXC-01: while the keyboard is up (Keyboard will-show/hide, or the existing useKeyboardVisible in features/auth), set the map slot to height 0 and hide the status line; add keyboardDismissMode='on-drag' to the QuestionStep ScrollView.",
+    "duplicate_of": "UXC-01"
+   },
+   {
+    "id": "N-3",
+    "title": "Site download whose map archive succeeded but getFormVersion failed shows 'Map v49 did not finish downloading. Nothing was kept'",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/features/projects/versions.ts:100-107,142-148",
+     "mobile/src/packages/hosted/download-failure.ts:6-24",
+     "mobile/src/packages/hosted/prepare.ts:36-59 (archive first, formVersion afterwards)",
+     "mobile/app/(app)/(tabs)/(projects)/[project]/[site].tsx:332-336",
+     "screenshot runtime/native/10-site-after-download.png (viewed)"
+    ],
+    "evidence": "Screenshot and code. The wording does not wrongly blame the map: the screen's unit is 'Map package v49', which holds the map, zones and both forms (the site screen says a site is collectable only once map, zones, form and guide are on the device), and 'Nothing was kept' is true because install is atomic. The real defect is different: downloadFailure() classifies only BoundPackageError, InstallationError and PrepareError as 'verify_failed'. Every other error (a 500 from getFormVersion, a dropped connection, a full disk) becomes state 'failed', and versions.ts:142-148 then shows the same fixed title and body and discards failed.message. The user cannot tell a server fault from no signal, and the copy never says which step failed. The trigger in the run (stale local schema) is an environment fault, not a product case.",
+    "correction": "Do not reword 'Map' to 'form'. Keep the copy but let it carry the cause.",
+    "smallest_fix": "In versions.ts show failed.message for the failed state too (api errors already have messages), or add a short cause line: 'The server could not send the form' vs 'No connection'."
+   },
+   {
+    "id": "N-4",
+    "title": "Bottom tab bar absent from the XCUITest accessibility tree on project screens",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "MEASUREMENT NEEDED",
+    "confidence": "low",
+    "locations": [
+     "mobile/src/ui/TabDock.tsx:78-181",
+     "mobile/app/(app)/(tabs)/_layout.tsx:12-33",
+     "mobile/node_modules/expo-router/build/react-navigation/bottom-tabs/views/BottomTabView.js:165-205",
+     "mobile/node_modules/react-native/React/Views/RCTViewManager.m:105-108"
+    ],
+    "evidence": "Code only. The dock is a custom tabBar rendered by expo-router's bottom-tabs fork as a sibling after the screens container. Its container is a plain View with accessibilityRole 'tablist' inside an absolute, pointerEvents='box-none' anchor, with three Pressables (accessible by default) carrying role 'tab', a baked label '<name>, tab, i of 3' and selected state. I found nothing in the navigator wrapper or the dock that hides it from accessibility (no accessibilityElementsHidden or importantForAccessibility in bottom-tabs). On iOS RN maps both 'tab' and 'tablist' to UIAccessibilityTraitNone (RCTViewManager.m:105-108; only role 'tabbar' gets the TabBar trait), so VoiceOver has no native tab-bar semantics, and the position text is baked into the label. On Android, role TAB sets roleDescription 'tab' (ReactAccessibilityDelegate.kt:704) so the baked ', tab,' may be spoken twice (unverified). Why the XCUITest list omitted the dock cannot be derived from source. Candidates are the tool's element filtering and the box-none anchor. Needs an Accessibility Inspector or WDA tree dump on a simulator. The dock is visible in the screenshots.",
+    "correction": "Absence from the tree is an observation I cannot confirm or explain from code; it is not shown to be a VoiceOver defect.",
+    "smallest_fix": "Dump the tree with Accessibility Inspector on the project screen. If the tabs are absent, test removing accessibilityRole 'tablist' from the container and setting accessible={false} on the anchor. Otherwise no change."
+   },
+   {
+    "id": "N-5",
+    "title": "expo-linking warns that app.config.ts declares three URI schemes and ignores two",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "mobile/app.config.ts:17-18",
+     "mobile/node_modules/expo-linking/src/Schemes.ts:175-189"
+    ],
+    "evidence": "Code plus the run's Metro log ('Using DECAMark. Ignoring: decamark, fieldmaps, com.fieldmaps.collector.dev'). resolveScheme warns whenever the config has more than one scheme (extraSchemes.length); the native bundle id is always appended to the message but never triggers it on its own. So a single scheme string silences the warning. 'DECAMark' appears only in app.config.ts. iOS URL schemes are case-insensitive, so DECAMark and decamark are one scheme on iOS; Android intent-filter schemes are case-sensitive lower case (platform knowledge, not run). Nothing generates fieldmaps:// links. Only 'fieldmaps' is rename-era, and it is the S5 item.",
+    "correction": "The warning is dev-time noise, not a runtime defect.",
+    "smallest_fix": "scheme: 'decamark' (single string); delete the fieldmaps entry (S5) and the duplicate-case 'DECAMark'. Update the mobile docs and the comment at app.config.ts:17."
+   },
+   {
+    "id": "N-6",
+    "title": "Training practice records can never upload; Account, Sign out, Saved and the guide describe them as held for the project",
+    "verdict": "confirmed",
+    "severity": "high",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/storage/observation-store.ts:27-31",
+     "mobile/src/forms/registry.ts:30-32",
+     "mobile/src/storage/sync-store.ts:20-40,42-78",
+     "mobile/src/session/observation-actions.ts:202",
+     "mobile/src/features/collect/SavedStep.tsx:115-120",
+     "mobile/src/features/account/leaving.ts:33-41",
+     "mobile/src/features/preview/queue.ts:15-17,63-79",
+     "mobile/app/(app)/(tabs)/account/index.tsx:135-138",
+     "mobile/app/(app)/(tabs)/account/sign-out.tsx:125-131",
+     "mobile/src/features/guide/content.ts:84",
+     "mobile/app/records.tsx:34-39,128-134"
+    ],
+    "evidence": "Code only; not seen in the native run. Practice records (formVersion 'shell-v1') are unbound, so initialSyncState gives 'local-only' and pendingObservations selects only 'pending'. activateHeldObservations skips unbound records. No path turns a practice record into an upload. What the screens say: Saved shows 'Upload: Held on this device: form shell-v1 is not published to the server yet'. The guide says Held means the project has not published the form version. Account counts practice records under 'Held' and shows 'This version does not upload yet… until an update of DECA Mark connects uploading'. Because queue.unsent counts every non-uploaded record, a trainee who only practiced gets 'Your unsent work needs a clear owner. N observations have not been uploaded… held for the project' on sign-out. Only the legacy Observations tab (records.tsx) says it correctly: practice records chip 'On device only', and its footer says records that only exist on this device are practice records or an unaccepted form version. Account and Observations also name the same states differently (pending = 'On device' vs 'Held'; local-only = 'Held' vs 'On device only').",
+    "correction": "The answer to the owner's question is no: they can never upload. The screens are wrong in saying they wait for a project.",
+    "smallest_fix": "Per MOB-REC-02: delete both 'does not upload yet' notes. When isShellObservation, say 'Practice record: stays on this device and is never uploaded' in SavedStep, the guide and leaving.ts, and exclude practice records from the sign-out 'not been uploaded' count. Use one state mapping on Account and Observations.",
+    "duplicate_of": "UXC-02 (and MOB-REC-02)"
+   }
+  ],
+  "commands_run": [
+   "node (Node 24) scratchpad w2/mobile/repro/rotate.cjs - real react 19.2.3 + react-test-renderer skeleton of CollectScreen's return tree (MOB-REC-08 / UXC-09)",
+   "node w2/mobile/repro/foreground.mts - imports real mobile/src/sync/foreground.ts; 7 wakes with empty queue = 7 drains + 7 changed() (UXC-08, MOB-REC-09)",
+   "node w2/mobile/repro/stringify.mjs - V8 JSON.stringify timing for 14 KB to 14.6 MB GeoJSON style (MFD-6)",
+   "node scripts reading all-findings.json for the 15 ids plus UXC-01/UXC-02/MFD-1/MFD-3/MOB-REC-02",
+   "node check of Icon.tsx's 83 lucide imports against installed lucide-react-native 1.55.0 per-icon files (found 4 aliases with different file names)",
+   "node check of config/*.json hostnames and bundleIdSuffix only (no secrets printed)",
+   "grep/sed over mobile/src, mobile/app, web/src, backend/src for dead-code callers, preference setters, scheme and legacy strings",
+   "read of node_modules sources: maplibre-react-native Map.tsx/Camera.tsx/Marker.tsx/CameraStop.m, expo-linking Schemes.ts, react-native RCTViewManager.m/RCTViewComponentView.mm/ReactAccessibilityDelegate.kt, expo-router bottom-tabs fork, lucide-react-native package",
+   "viewed native screenshots 10, 14, 16d, 20 from the earlier iOS simulator run"
+  ],
+  "notes": "Native runtime was not available. These claims rest on the earlier simulator screenshots plus code: N-1, N-2 (screenshots 14, 16d, 20 viewed; layout numbers are consistent with the code), N-3 (screenshot 10). Everything else rests on code or on scratch scripts that import real modules or the real React reconciler: no device run for MOB-REC-08/UXC-09 (the reconciler repro uses a skeleton with the same element types, not the real CollectScreen), A11Y-04/06/07/08 (no VoiceOver, Voice Control or TalkBack run), N-4 (tree absence not explained), N-5 and N-6. Duplicates: UXC-09 = MOB-REC-08; S6 = MOB-REC-09 (MFD-9's mobile half also); UXC-08 = MFD-3; N-2 = UXC-01; N-6 = UXC-02/MOB-REC-02. Material corrections to earlier findings: MOB-REC-09's verification step is wrong (activateHeldObservations is called every drain); S5 mislabels migrateLegacySession as rename-era and its grep check would still match live key names; S9 overstates expo-font and expo-updates and misses that four lucide aliases have different file names; A11Y-07's hitSlop fix is unproven inside a MapLibre Marker; N-3's wording is not a misattribution (the downloaded unit is the whole map package), the real gap is that every non-verification error shows the same copy and discards the cause. Highest-impact new item is N-1: the Answer step gives the scroll content about 150 pt on a 874 pt iPhone because the map keeps 46%, so inputs are clipped at rest, not just under the keyboard. Fix N-1 together with UXC-01. Not run: Android behaviour for N-1/N-2, the web halves of S5, MFD-9 and A11Y-06 (code-read only), any DB query for legacy `fields` form rows. Side observations not turned into items: the production bundle ships (dev)/* routes (29.8 KB), zod's 64 locales (268.6 KB) and reanimated layout animations (227 KB) per bundle-attribution.txt. Scratch notes are in /tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/w2/mobile/notes.md and repros in .../w2/mobile/repro/. Nothing tracked or untracked under /home/user/deca-mark was modified.\""
+ },
+ "verify:tests": {
+  "items": [
+   {
+    "id": "TEST-01",
+    "title": "CI runs 84 of 477 web node tests; the 393-test unit suite, forms:parity and the Contour-token check never run in CI",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     ".github/workflows/ci.yml:26-43 (web job: install, web:check, test:api-errors L40, test:auth L41, test:account L42, build L43; no test:unit)",
+     ".github/workflows/ci.yml:100-108 (plan job runs only check-plan.mjs and scripts/*.test.mjs database/*.test.mjs)",
+     "web/package.json:31 test:unit; package.json scripts test (mobile+backend+db) and check (web:check+mobile:check+backend:check) contain no web unit tests",
+     "scripts/check-form-engine-parity.mjs; scripts/contour-tokens.mjs --check",
+     "docs/Workspace.md:67 ('GitHub Actions runs the same web/mobile checks'); web/AGENTS.md:7 lists pnpm test:unit as a check; docs/handoff/web-workspace/plan.md:147 promised it",
+     "backend/tests/test_email.py:68-71 (generate(check=True) is the email-template drift check, already in CI via backend job)"
+    ],
+    "evidence": "RAN at HEAD 0279fd3 with Node 24.22.1, pnpm 10.17.1; git status clean afterwards. (1) pnpm --dir web test:unit: 45 files, 393 pass / 0 fail, 4.2 s node, 4.55 s wall; also 393/393 under TZ=UTC. (2) pnpm forms:parity: pass, 0.44 s. (3) pnpm tokens:check: pass, 1.0 s wall: contour.css matches contracts/contour.json and every contrast pair passes, and make -C backend email-templates-check ran with the existing backend venv (uv run --frozen --no-sync --offline); no error, only the UV_NATIVE_TLS deprecation warning. (4) pnpm mobile:test: 96 files passed + 5 skipped, 836 passed + 5 skipped (841 tests; +2 vs the earlier 839 are the two new outbox tests), 13.5 s vitest, 14.6 s wall. For comparison, the CI-run web tests: api-errors 38, auth 34, account 12 = 84 tests, each command under 1 s; scripts+database node tests 10 pass. 393+84=477, so CI runs 17.6% of web node tests. ci.yml at HEAD is unchanged in the web, mobile and plan jobs (only the backend job gained 'pnpm --dir mobile install'); a grep of .github finds no test:unit, forms:parity, tokens:check or emails:check. Code-derived: web tsconfig excludes .mjs so these tests are not type-checked either; web never runs contracts/forms/cases/*.cases.json on its own engine copy, so forms:parity is the only link tying web/src/lib/forms/{definition,engine}.ts to the tested mobile originals.",
+    "correction": "Severity high is generous: all suites are green today and the cost is a missing guard, not a present failure; medium fits a pre-pilot repo whose own docs say CI covers these checks. Refinement: the emails half of tokens:check is already guarded in CI by backend/tests/test_email.py::test_contour_generated_templates_match_contract; only 'node scripts/contour-tokens.mjs --check' (web contour.css drift and contrast pairs) is unguarded. Nothing needs Docker or a stack, so adding the steps carries no flakiness risk (suite passes under TZ=UTC, offline).",
+    "smallest_fix": "In the web job add '- run: pnpm --dir web test:unit' and '- run: pnpm forms:parity' (about 5 s total) and in the existing contracts or web job '- run: node scripts/contour-tokens.mjs --check' (1 s, no uv needed). Optionally fold the three into a root script so Workspace.md:67 becomes true.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "TEST-06",
+    "title": "Browser suite: the 'honesty' scan is a copy/layout lint over seeded states, and default runs spend executions on screenshot assets",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/e2e/support/scan.ts:204-205 (NOT_THE_PAGE), :171-181 axeFindings (private, not exported), :192-196 settle swallows networkidle timeout, :248-302 scanRoute soft assertions",
+     "web/e2e/support/routes.ts:25-84 (SCAN_ROUTES: 41 entries)",
+     "web/playwright.config.ts:64-99 (desktop-1440 and phone-390 use testMatch /\\.spec\\.ts$/, so screenshots.spec.ts runs in 5 projects; tablets match honesty|screenshots)",
+     "web/e2e/screenshots.spec.ts:38-65 (3 dialog targets screenshot only), :139-146 (asserts status 200, data-theme, main visible)",
+     "scripts/screenshots-web.sh:13-17 (already names projects and screenshots.spec explicitly)",
+     "web/e2e/removed-routes.spec.ts"
+    ],
+    "evidence": "Reproduced (scratch w2/tests/ntp.mjs, the real regex): NOT_THE_PAGE is false for 'Only project managers can open the team.', 'You do not have access to this page.' (LoadFailure default) and 'Only project managers and viewers can see a site's zones.'; true for 'Couldn't load ...' and 'This page is not on the map'. So a manager route that renders only its no-access state passes the scan (no-access ScreenState has no primary action; maxPrimary allows 0). Code-derived: playwright.config projects as listed; dialogs in screenshots.spec are never axe-scanned and axeFindings is not exported; screenshots.spec writes to gitignored assets/screenshots/web/raw (assets/screenshots/.gitignore:2), honesty PNGs to gitignored web/e2e/screenshots. Playwright was NOT run (another step owns it); the earlier timings (about 2.7 s/route) are artifact-mtime derived, not mine.",
+    "correction": "Overstated parts: (a) 'all seeded success states' is wrong: the 41 routes include designed empty and limited states (site-empty, zones-empty-site, no-project, invite-without-link, viewer and observer views) and three designed 404s. True gap: no failed-read, stale, offline or partial state, and no-access text is not detected. (b) The proposed fix 'drop the tablet projects from the default config and keep them in screenshots-web.sh' cannot work: screenshots-web.sh selects projects by name from this same config, so the tablet projects must stay defined. Tag-based selection works instead (screenshots tests already carry '@screenshots' in their title). (c) 'Overwrites design-review assets' touches gitignored raw captures only. The cost itself (about 2 min per project) is modest; this is cleanup, not risk.",
+    "smallest_fix": "Rename the describe/test to 'copy and layout scan'; add the no-access sentences to the loadFailure check only if a scan route is meant to be reachable (or leave it and keep the per-page specs); export axeFindings and call it after each dialog opens in screenshots.spec; make default 'pnpm test:e2e' pass --grep-invert @screenshots (or testIgnore screenshots.spec in desktop-1440 and phone-390) while screenshots-web.sh adds --grep @screenshots; delete removed-routes.spec.ts together with NEW-LEGACY-REDIRECTS.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "TEST-07",
+    "title": "Tests pin compatibility branches the boundary cannot reach (null round type, legacy auth session key, legacy SW cache names, removed-route redirects, five-version reset loop)",
+    "verdict": "confirmed",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/src/lib/labels.ts:28-40 roundOf/roundLabel/roundName accept null|undefined ('Records made before rounds existed'); tests web/tests/unit/summary.test.mjs:74-86 (round_type: null at :77) and :172, web/tests/unit/labels.test.mjs:23-26",
+     "mobile/src/platform/auth-storage.ts:9 (legacyStorageKey: a hard-coded hosted-project key) and :81-95 migrateLegacySession; sole caller mobile/src/auth/client.ts:12-15; tests mobile/src/platform/auth-storage.test.ts:98,108 (it.each, 2 cases),117,126",
+     "web/src/lib/pwa/service-worker.js:3-4,65 LEGACY_CACHE 'fieldmaps-shell-v1' and LEGACY_PREFIX 'fieldmaps-public-'; web/tests/auth.test.mjs:58,69",
+     "web/e2e/removed-routes.spec.ts; web/e2e/support/routes.ts:85-93",
+     "mobile/src/storage/database-migrations.test.ts:17 (loop [1,2,3,4,99]) against database-migrations.ts:61"
+    ],
+    "evidence": "Code-derived, each trigger traced. Null round type is unreachable: supabase baseline observations.round_type is 'text NOT NULL' with a 3-value CHECK; backend observation_analysis_schemas.py:110,145 declare RoundType (the '| None' at :35 and schema.d.ts '| null' at :6817+ are query filters); web zod observations.ts:27,61 is z.enum and rejects null. migrateLegacySession runs only when bundleIdSuffix === '.dev' and the storage key equals the hard-coded legacy key: a data-preserving move for already-installed dev builds. SW test: the activate cleanup of the CURRENT CACHE_PREFIX ('decamark-public-old') is real build versioning; only the two 'fieldmaps-' names are old-product-name compatibility. Reset loop: database-migrations.ts:61 is one '=== SCHEMA_VERSION' early return, so versions 1,2,3,4 and 99 all take the same branch.",
+    "correction": "Counts: 3 tests carry null rounds (not 'about 10 cases'); 4 it-blocks / 5 executions for migrateLegacySession; 4 of 5 loop iterations are redundant by branch. Fix caveats: (1) other tests in auth-storage.test.ts (lines 68-152) use legacyStorageKey merely as a key name and file path, so they need a local constant after deletion. (2) The rest of the reset test is real and must stay (hostile table name quoting, sqlite_sequence, package_files_need_reset, user_version, rollback test at :62). (3) Excluded on purpose, as before: fields-only reader tests (owner instruction in b93a2b2). TEST-04 stays consistent with policy: it pins the sanctioned wipe, so it is not a finding; only the loop can shrink.",
+    "smallest_fix": "Narrow roundOf/roundLabel/roundName to RoundType (or drop roundOf) and delete the 3 null cases; delete migrateLegacySession, legacyStorageKey and its call in auth/client.ts with the 4 tests (rename the key constant in the surviving tests); delete LEGACY_CACHE/LEGACY_PREFIX from service-worker.js and the two names from auth.test.mjs:58,69; delete removed-routes.spec.ts with the redirects (NEW-LEGACY-REDIRECTS); change the loop to [SCHEMA_VERSION - 1, 99] or one table-driven case.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "TEST-08",
+    "title": "Mirror and duplicate tests: partly real duplication, partly protecting something; the conflict triple-assertion claim does not hold",
+    "verdict": "partially_confirmed",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "mobile/src/ui/brand-artwork.test.ts:1-153 (10 tests)",
+     "web/tests/unit/labels.test.mjs:9-19",
+     "scripts/contour-tokens.mjs:47-52; web/tests/unit/zone-editor-chrome.test.mjs:102-111; web/e2e/specimen/zone-editor.specimen.ts:427-439; mobile/src/maps/palette.test.ts:58-70",
+     "web/e2e/overview.spec.ts:23 vs web/e2e/overview-sql.spec.ts:41",
+     "web/e2e/zones-draft.spec.ts:80,118; zones-conflict.spec.ts:48,77; zones-publish.spec.ts:150-175",
+     "web/tests/auth-local.test.mjs; web/src/lib/auth/actions.ts:54-68"
+    ],
+    "evidence": "Code-derived. brand-artwork.test.ts regex-parses mobile/assets/icon-source/icon.svg and web/public/icons/icon.svg against BRAND_ARTWORK (used by Logo.tsx): it keeps in-app logo, installed icon and web mark identical, and fails only when one of the three is edited. labels.test.mjs asserts source text of mobile/src/domain/labels.ts and rounds.ts (confirmed). Four WCAG luminance functions confirmed at the lines above, about 10 lines each; the specimen copy runs inside page.evaluate, so it cannot import a shared module. overview.spec's coverage test duplicates overview-sql's 'coverage by zone and round equal the database's counts'; its first test compares the API sum, a different source, and is not a duplicate. Conflict dialogs: zones-conflict is two managers on one revision; zones-draft exercises the Replace choice (:80) and Discard choice (:118); zones-publish covers the note-only difference with Save-as-file (:150-175) and the published-elsewhere refusal. These are different branches, not one assertion three times. auth-local.test.mjs is skipped unless DECAMARK_AUTH_LOCAL_TEST=1 and needs a :3002 dev server plus Next private internals, and grep shows 'fm-recovery' is asserted nowhere else (auth-flows.spec.ts has only the happy path).",
+    "correction": "Refuted: 'same conflict asserted three times'; dropping those steps would remove coverage of the Discard, note-only and save-as-file branches. Corrected: 'put contrast in one scripts/wcag.mjs imported by three tests' covers two of four copies at most. Important reversal for auth-local: deleting it first would remove the only check of the recovery-cookie binding (see NEW-AUTH-RECOVERY-UNRUN); port, then delete. brand-artwork is a cosmetic consistency guard: keeping or deleting is taste.",
+    "smallest_fix": "Delete brand-artwork.test.ts or cut it to the colour-set equality (2 tests); fold overview.spec's coverage test into overview-sql; leave the conflict steps; replace the labels source regex with a two-line shared cases file only if labels.ts changes again; port auth-local's three mismatch cases to Playwright (context.addCookies on fm-recovery-user, fm-recovery-email) before deleting it.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "NEW-LEGACY-REDIRECTS",
+    "title": "web/next.config.ts keeps 11 redirects for removed Nocturne/sample/old-flow addresses, pinned only by removed-routes.spec",
+    "verdict": "new",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "high",
+    "locations": [
+     "web/next.config.ts:15-31 (OLD_ROUTES: /overview, /observations, /places, /basemaps, /instrument, /qgis, /onboarding, /onboarding/:path*, /o/:org/library, .../reports/views, .../settings/rounds) and :40-42 redirects()",
+     "web/e2e/support/routes.ts:85-93 (REMOVED_ROUTES, 7 of the 11)",
+     "web/e2e/removed-routes.spec.ts"
+    ],
+    "evidence": "Code-derived. The comment says the addresses belong to the old 'Nocturne workspace', the set-up flow and sample-data pages that no longer exist. Owner policy (pre-launch, dev devices only, no legacy code, old product name is deletion material) makes redirects for those addresses compatibility code. removed-routes.spec accepts either a 404 or a redirect, so it passes with or without them. Not run.",
+    "correction": "Not a defect; it is deletion material under the owner's policy, small in size.",
+    "smallest_fix": "Delete OLD_ROUTES and the redirects() function in next.config.ts, removed-routes.spec.ts and REMOVED_ROUTES. The unmatched addresses fall to the app's designed 404, which the scan already checks for /o/deca and project-missing-page.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "NEW-AUTH-RECOVERY-UNRUN",
+    "title": "The recovery-cookie binding that lets a password reset skip OTP re-verification is tested only by a hand-run script",
+    "verdict": "new",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "medium",
+    "locations": [
+     "web/src/lib/auth/actions.ts:54-68 (recoveryVerified: fm-recovery-user must equal '<user.id>:<session_id>' and user.email must equal fm-recovery-email, else verifyOtp runs)",
+     "web/tests/auth-local.test.mjs:90-125 (only assertions of the mismatch refusals; skipped unless DECAMARK_AUTH_LOCAL_TEST=1)",
+     "web/e2e/auth-flows.spec.ts:28 (happy path only)"
+    ],
+    "evidence": "Code-derived plus grep: 'fm-recovery' appears in no unit test and no Playwright spec; only auth-local.test.mjs asserts that a mismatched user, session or email cookie is refused with 'invalid or expired'. That test is not in any script run by CI or the documented checks except the opt-in test:auth:local. Not run (needs dev server and mailbox).",
+    "correction": "The branch is a shortcut that skips the one-time-code check on retry; a regression in the comparison would not fail any automatic check. Impact needs a signed-in recovery session in the same browser, hence low.",
+    "smallest_fix": "Add three Playwright cases to auth-flows.spec.ts that tamper each of fm-recovery-user (user part, session part) and fm-recovery-email with context.addCookies and expect the refusal; then delete auth-local.test.mjs and its test:auth:local script.",
+    "duplicate_of": ""
+   },
+   {
+    "id": "NEW-TEST02-CI",
+    "title": "TEST-02 must be corrected at HEAD: the real TS transport already meets the real API in CI for two scenarios; only the bound-upload acceptance driver is orphaned",
+    "verdict": "new",
+    "severity": "low",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     ".github/workflows/ci.yml backend job (pnpm --dir mobile install; pnpm backend:test ZONE_API_REHEARSAL=1)",
+     "backend/tests/test_fields_only_history.py:156 and backend/tests/test_published_form_compatibility.py:297 (spawn mobile vitest with a loopback API fixture)",
+     "mobile/src/sync/fields-only-outbox.test.ts:16-120 and published-form-outbox.test.ts (dual mode: 'if (supplied)' sends via createBoundUpload, replays, acknowledges)",
+     "database/tests/test_mobile_bound_upload_api.py and mobile/src/sync/bound-upload-api.acceptance.test.ts:22 (it.skipIf(!MOB29_BOUND_API_FIXTURE))"
+    ],
+    "evidence": "Code-derived plus the mobile run above (both outbox tests pass in plain mode, which is why mobile has 841 tests instead of 839). grep at HEAD still finds test_mobile_bound_upload_api.py and MOB29_BOUND_API_FIXTURE referenced only by the two files themselves (docs excluded); backend pyproject testpaths=['tests'] so database/tests/*.py never runs. CI on the final commit could not be checked (HEAD message says the database job was broken).",
+    "correction": "TEST-02's claim that client/server wire drift passes CI is refuted for hand-placed standard and zone-point observations: the production createBoundUpload and wire-body serializer run against the real API in CI. Still uncovered: install, offline save, restart, v2 publication, drain, and the observer export 403 (the acceptance file), plus the inventory body. Also note the 'if (supplied)' pattern means the API half is silently absent in 'pnpm mobile:test'; the Python driver is what gives it teeth.",
+    "smallest_fix": "Move test_mobile_bound_upload_api.py and test_mobile_package_api.py into backend/tests (same pattern CI already runs) instead of adding a Makefile target; no new framework.",
+    "duplicate_of": "TEST-02"
+   }
+  ],
+  "commands_run": [
+   "git rev-parse HEAD; git status --short (clean before and after)",
+   "pnpm --dir web test:unit (393 pass, 4.55s wall); repeated with TZ=UTC (393 pass)",
+   "pnpm forms:parity (pass 0.44s)",
+   "pnpm tokens:check (pass 1.0s; includes make -C backend email-templates-check)",
+   "pnpm mobile:test (836 pass, 5 skipped, 14.6s wall)",
+   "pnpm --dir web test:api-errors / test:auth / test:account (38 / 34 / 12 pass)",
+   "node --test scripts/*.test.mjs database/*.test.mjs (10 pass)",
+   "node w2/tests/ntp.mjs (NOT_THE_PAGE regex against no-access sentences)",
+   "grep/sed over ci.yml, playwright.config.ts, scan.ts, routes.ts, screenshots.spec.ts, next.config.ts, auth-storage*, database-migrations*, lib/auth/actions.ts, backend/tests spawning vitest",
+   "Playwright, Docker, Supabase and the API were not started"
+  ],
+  "test_groups": [
+   {
+    "group": "CI-gated web tests (web/tests/api-errors, auth, profile-answer, data-export; 84 tests)",
+    "files": "web/tests/*.test.mjs",
+    "verdict": "KEEP",
+    "protected_risk": "open-redirect safeNext, identity schema, service-worker private-URL exclusion, API error copy, export columns",
+    "justification": "Run today in CI (about 2 s total). Only edit: drop the two 'fieldmaps-' cache names at auth.test.mjs:58,69 with the SW constants (TEST-07)."
+   },
+   {
+    "group": "Web unit suite: zone editor logic (zone-save-queue, zone-drafts, zone-editor-state, zone-drawing, zone-geometry, zone-plan, zone-hints, zone-identity, zone-publish, zones-page, zone-editor-chrome)",
+    "files": "web/tests/unit/zone-*.test.mjs, zones-page.test.mjs",
+    "verdict": "KEEP",
+    "protected_risk": "lost or duplicated zone saves; 401/403/412/409/428/429/offline/echo mismatch; shared geometry cases",
+    "justification": "Best state coverage in the repo and 0.2 s per file. Currently NOT in CI: add pnpm --dir web test:unit (TEST-01). zone-editor-chrome gate 5 (no hex literals in editor source) is a source lint in test clothing but cheap; keep, and let its luminance helper stay (a shared helper is optional).",
+    "remaining_coverage": "n/a"
+   },
+   {
+    "group": "Web unit suite: manager data truth (data-view, data-map, summary, reports, overview, export-files, api-shapes, answers, time, labels, site-view, site-code)",
+    "files": "web/tests/unit/*.test.mjs",
+    "verdict": "REWRITE",
+    "protected_risk": "counts vs the 500-row cap, project-timezone days across DST, unread sources not reported as fine, answers labelled by form version",
+    "justification": "Mostly KEEP and add to CI. Small rewrites only: labels.test.mjs lines 9-19 assert the text of mobile source files (replace with shared cases or delete); remove the three round_type: null cases (summary.test.mjs:74-86, :172; labels.test.mjs:23-26). Fields-only reader fixtures in answers/forms-model stay (owner instruction b93a2b2).",
+    "replacement": "Two-line shared cases file or drop the regex; narrow roundOf to RoundType."
+   },
+   {
+    "group": "Web unit suite: access, identity, org, team (access, home, workspace-index, org, team-rules, invitation, invitations, project-settings-rules, account-deletion, ids, errors)",
+    "files": "web/tests/unit/*.test.mjs",
+    "verdict": "KEEP",
+    "protected_risk": "role gating, home routing, invitation links, deletion states, settle() failure shapes",
+    "justification": "Real modules, milliseconds each; only the CI wiring is missing (TEST-01)."
+   },
+   {
+    "group": "Web unit suite: forms (forms-model, forms-start, form-definition-cases, forms-concurrency)",
+    "files": "web/tests/unit/forms-*.test.mjs, form-definition-cases.test.mjs",
+    "verdict": "KEEP",
+    "protected_risk": "ETag compare-and-set: no silent overwrite, explicit re-review, stale editor keeps edits; shared definition cases",
+    "justification": "Only coverage of form conflicts; the registerHooks harness is also the template for the missing page-failure test. Needs forms:parity in CI because web never runs the answer-behaviour cases on its engine copy."
+   },
+   {
+    "group": "Web unit suite: packages and archives (package-checks, package-history, project-import, qgis, site-archive)",
+    "files": "web/tests/unit/*.test.mjs",
+    "verdict": "KEEP",
+    "protected_risk": "upload preview checks, archive reading against real Fall Creek files",
+    "justification": "Real fflate fixtures, no stack, fast."
+   },
+   {
+    "group": "auth-local.test.mjs",
+    "files": "web/tests/auth-local.test.mjs; package.json test:auth:local",
+    "verdict": "REWRITE",
+    "protected_risk": "recovery-cookie mismatch refusals (lib/auth/actions.ts:54-68) and email never in a URL",
+    "justification": "Hand-run, skipped by default, needs a :3002 dev server and Next private React Flight internals. Its mismatch assertions are the only ones in the repo, so port before deleting.",
+    "replacement": "Three context.addCookies tamper cases in e2e/auth-flows.spec.ts, then delete the file and script."
+   },
+   {
+    "group": "E2E single-actor journeys",
+    "files": "web/e2e: sign-in, org, team, settings, sites, packages, packages-identity, qgis-reports, data, data-history, overview-sql, forms, join-observer, invite-viewer, account-deletion, auth-flows",
+    "verdict": "KEEP",
+    "protected_risk": "manager and observer journeys, zone identity across uploads, stale upload refused, export equals records, overview equals SQL",
+    "justification": "Assertions compare against independent sources (SQL, API). Run nightly, not per PR (stack required). The phone-390 project repeats all of them; restricting phone to honesty and zones-editor is optional cost trimming."
+   },
+   {
+    "group": "E2E overview.spec.ts",
+    "files": "web/e2e/overview.spec.ts",
+    "verdict": "MERGE",
+    "protected_risk": "overview counts",
+    "justification": "Coverage test duplicates overview-sql.spec.ts:41.",
+    "remaining_coverage": "overview-sql.spec.ts (total plus coverage by zone and round against SQL); the first overview.spec test compares the API sum, keep it or move it into overview-sql",
+    "replacement": "Move or delete the coverage test; no new code."
+   },
+   {
+    "group": "E2E zone multi-actor and interrupted work",
+    "files": "web/e2e: zones-conflict, zones-account, zones-network, zones-publish, zones-draft, zones-access, zones-editor",
+    "verdict": "KEEP",
+    "protected_risk": "two managers, sign-out in another tab, account swap sends nothing, offline save and leave guard, lost answer replay publishes once, each conflict-dialog choice",
+    "justification": "The earlier proposal to merge the conflict steps into zones-conflict is refuted: zones-draft covers Replace and Discard, zones-publish covers note-only difference, save-as-file and published-elsewhere. Nightly, not per PR."
+   },
+   {
+    "group": "Copy and layout scan ('honesty')",
+    "files": "web/e2e/honesty.spec.ts, zones-honesty.spec.ts, support/scan.ts, support/routes.ts",
+    "verdict": "KEEP",
+    "protected_risk": "banned words, sample strings, one primary action, sideways scroll, axe in Day and Dusk, designed 404 and empty states",
+    "justification": "Keep as a lint, rename it honestly, add dialogs to axe. It does not detect no-access text, failed, stale or offline states (TEST-06)."
+   },
+   {
+    "group": "screenshots.spec in the default run",
+    "files": "web/e2e/screenshots.spec.ts, playwright.config.ts projects",
+    "verdict": "REWRITE",
+    "protected_risk": "design-review assets only (asserts 200, data-theme, main visible)",
+    "justification": "Asset generator that runs in 5 projects on the default run. Keep the file and the screenshots-web.sh path; select by '@screenshots' tag instead of removing tablet projects, which that script still names.",
+    "replacement": "--grep-invert @screenshots in the default test:e2e script; screenshots-web.sh adds --grep @screenshots."
+   },
+   {
+    "group": "removed-routes.spec",
+    "files": "web/e2e/removed-routes.spec.ts; routes.ts REMOVED_ROUTES; next.config.ts OLD_ROUTES",
+    "verdict": "DELETE",
+    "protected_risk": "old addresses (Nocturne, sample workspace, set-up flow) redirect or 404",
+    "justification": "Policy: compatibility for old addresses.",
+    "remaining_coverage": "SCAN_ROUTES sample-workspace-gone (/o/deca expects 404), project-missing-page, org-missing; the unmatched old addresses become the designed 404",
+    "replacement": "Delete the spec, REMOVED_ROUTES and the redirects in next.config.ts (NEW-LEGACY-REDIRECTS)."
+   },
+   {
+    "group": "Specimen suite",
+    "files": "web/e2e/specimen/zone-editor, zone-drawing, contour-gallery",
+    "verdict": "KEEP",
+    "protected_risk": "lossless serialise, keyboard/mouse/touch edits, no tile requests, axe while drawing; gallery sections non-empty",
+    "justification": "zone-editor and zone-drawing are unique and stack-free (nightly on a build). contour-gallery could become one scan route with axe; optional."
+   },
+   {
+    "group": "Mobile stores and outbox (storage 18 files, sync 6, auth/session retention)",
+    "files": "mobile/src/storage, sync, auth",
+    "verdict": "KEEP",
+    "protected_risk": "exactly-once, restart, account fence, frozen records, atomic reset",
+    "justification": "Highest value and real node:sqlite. node:sqlite is not expo-sqlite and 'restart' is reopen, not process kill (device gap, see missing tests). database-migrations.test.ts pins the sanctioned wipe (consistent with TEST-04 policy); shrink its loop to [SCHEMA_VERSION - 1, 99]."
+   },
+   {
+    "group": "Mobile outbox dual-mode tests (fields-only-outbox, published-form-outbox) with backend driver",
+    "files": "mobile/src/sync/*-outbox.test.ts; backend/tests/test_fields_only_history.py, test_published_form_compatibility.py",
+    "verdict": "KEEP",
+    "protected_risk": "production createBoundUpload transport against the real API, replay of a lost response, rejected body retained across restart",
+    "justification": "The only CI-run join between the real TS client and the real API (backend job installs mobile deps for it). Weakness: the API half is silently absent in 'pnpm mobile:test' unless the Python driver supplies the fixture."
+   },
+   {
+    "group": "Mobile session provider",
+    "files": "mobile/src/session (7 files)",
+    "verdict": "KEEP",
+    "protected_risk": "A to B to A isolation, stale callbacks ignored, draft persisted before next render, package pinned for a visit",
+    "justification": "Strong logic-level account-switch coverage on real SQLite. Rename the 'legacy-shell-map' fixture ids on next touch (naming only)."
+   },
+   {
+    "group": "Mobile packages and hosted",
+    "files": "mobile/src/packages (3 + 11 hosted files)",
+    "verdict": "KEEP",
+    "protected_risk": "verified install, retained versions, missing-map recovery",
+    "justification": "Recovery states covered with fs-backed fakes and real SQLite."
+   },
+   {
+    "group": "Mobile forms engine and contracts",
+    "files": "mobile/src/forms (5 files)",
+    "verdict": "KEEP",
+    "protected_risk": "language-neutral answer behaviour shared with backend",
+    "justification": "Cheapest cross-language guard; also the only test of the engine that web copies, hence forms:parity in CI."
+   },
+   {
+    "group": "Mobile maps and geometry",
+    "files": "mobile/src/maps (6 files)",
+    "verdict": "KEEP",
+    "protected_risk": "boundaries, coverage, clustering, palette 3:1 and 4.5:1 contrast",
+    "justification": "Pure plus shared JSON. The fourth WCAG helper (palette.test.ts:58-70) may stay; sharing across packages is optional."
+   },
+   {
+    "group": "Mobile auth, onboarding, API client, platform",
+    "files": "mobile/src/auth, features/auth, features/onboarding, data/api, platform",
+    "verdict": "REWRITE",
+    "protected_risk": "sign-up and reset, invitations, API errors, encrypted session storage",
+    "justification": "Keep, but delete the four migrateLegacySession tests with the function (auth-storage.test.ts:98,108,117,126) and rename legacyStorageKey in the remaining tests.",
+    "replacement": "Local test key constant."
+   },
+   {
+    "group": "Mobile screen render tests",
+    "files": "9 files via screen.fixture (UnfinishedCard, account-screens, device-screens, auth-screens, ResetPasswordScreen, ResumeUploadsNote, HostedPackageIsland, ReviewStep, PlaceStep)",
+    "verdict": "KEEP",
+    "protected_risk": "state to controls mapping, disabled states, alerts, navigation",
+    "justification": "74 says() assertions and 10-22 vi.mock per file; a hand-written fake react-native computes no layout or keyboard behaviour, so it is no substitute for a device (UXC-01 and MFD-1 are exactly what it cannot see). On the next edit pin states or key phrases, not full sentences."
+   },
+   {
+    "group": "Mobile acceptance files (5 env-gated)",
+    "files": "mobile/src/sync/bound-upload-api.acceptance.test.ts, packages/hosted/bound-install-api.acceptance.test.ts, auth-calls, join, deletion",
+    "verdict": "REWRITE",
+    "protected_risk": "real round trips: install, offline save, restart, v2 publication, drain, observer export 403",
+    "justification": "They skip silently (5 skipped in vitest) and bound-upload's driver is referenced by nothing at HEAD; backend CI already proves the pattern with the two outbox tests.",
+    "replacement": "Move database/tests/test_mobile_bound_upload_api.py and test_mobile_package_api.py into backend/tests; remaining env-gated files stay manual or are given the same driver."
+   },
+   {
+    "group": "brand-artwork.test.ts",
+    "files": "mobile/src/ui/brand-artwork.test.ts (10 tests)",
+    "verdict": "DELETE",
+    "protected_risk": "cosmetic equality of in-app logo, installed icon and web mark",
+    "justification": "Design preference; fails only when someone edits one of three files and protects nothing a researcher does.",
+    "remaining_coverage": "none needed; optionally keep the colour-set test and the web-mark colour test (2 tests)",
+    "replacement": "Optional 2-test colour equality."
+   },
+   {
+    "group": "Orientation policy and field guide content",
+    "files": "mobile/src/layout, features/guide",
+    "verdict": "KEEP",
+    "protected_risk": "orientation lock mapping, guide structure",
+    "justification": "Pure and cheap."
+   },
+   {
+    "group": "Seed guards and tooling",
+    "files": "scripts/*.test.mjs, database/*.test.mjs (10 tests)",
+    "verdict": "KEEP",
+    "protected_risk": "seed refuses hosted or credentialed targets; role-password verifier",
+    "justification": "Already in CI (plan job), guards catastrophic misuse."
+   },
+   {
+    "group": "CI workflow",
+    "files": ".github/workflows/ci.yml",
+    "verdict": "REWRITE",
+    "protected_risk": "everything above",
+    "justification": "Add test:unit, forms:parity and the contour-tokens check to the web job (about 6 s, TEST-01); move the orphaned acceptance driver under backend/tests. Do not add Playwright to PR CI; a nightly or manual job suffices.",
+    "replacement": "Three added run lines; one file move."
+   }
+  ],
+  "notes": "TEST-01 re-run (HEAD 0279fd3, Node 24.22.1, pnpm 10.17.1, tree clean before and after): web test:unit 393/393 in 4.55 s wall (TZ=UTC also green); forms:parity pass 0.44 s; tokens:check pass 1.0 s (the email half ran offline against the existing venv, no error); mobile:test 836 pass + 5 skipped (841) in 14.6 s; CI-run web tests 38+34+12=84 in under 2 s; scripts+database node tests 10 pass. ci.yml web/mobile/plan jobs are unchanged from the finding; docs/Workspace.md:67 still claims parity with local checks. Not run (per instructions): Playwright, Docker, Supabase, API; TEST-06 timings are the earlier run's artifact times. TEST-04 is consistent with the owner policy (sanctioned wipe); only its 5-version loop is redundant. TEST-05 re-checked at HEAD: publish/page.tsx:143-155 still collapses failed formList/siteList reads into 'No other version of this form is published.' (confirmed live).\\n\\nMISSING COVERAGE, the 6 tests that protect the most, in priority order:\\n1. Draft survives a real process kill (native runner, Maestro or equivalent, closes MOB-21): bundled Training site, offline, place a point, answer two questions, kill the app, relaunch; Unfinished card shows the progress, Resume restores both answers. Same flow asserts the answer field and Continue stay visible with the software keyboard up on a small iPhone and an Android edge-to-edge emulator (this is exactly UXC-01 and MFD-1, which the fake react-native cannot see; the native run confirmed both defects).\\n2. Collector upload round trip against the real API as one named CI-run test: move database/tests/test_mobile_bound_upload_api.py into backend/tests (install, save offline, reopen SQLite, publish v2, drain, lost-response retry, manager export shows one record, observer export 403), plus one inventory-body upload through createBoundUpload. The point-observation join already runs in CI via the two outbox tests.\\n3. Failed read is not an empty list, per page: tests/unit/page-failures.test.mjs reusing the registerHooks harness of forms-concurrency.test.mjs; render Sites, Data, Team, Forms, Packages, Overview and the form PublishPage with listForms/listSites rejecting (timeout, 503, 401); assert LoadFailure is present and 'No sites yet', 'No observations' and 'No other version of this form is published.' are absent. It fails today on the publish page (TEST-05).\\n4. Session expiry during a Server Action: Playwright, sign in, open the create-site (and invite, and settings save) dialog, expire the session server-side (revoke the refresh token and remove the access cookie) in another context, submit; assert the dialog keeps its input, shows 'Nothing was created. You were signed out. Sign in again.', nothing is created, and signing in again returns to the page. Only the zone editor path is covered today (zones-account.spec.ts:87,142); lib/api/mutations.ts actions are covered only for copy (api-errors.test.mjs).\\n5. Account switch with an unsent record on one phone: account A saves offline and signs out (warning names the count), account B signs in and sees an empty list, a drain sends nothing for B, A signs back in and the record uploads once. Logic is covered on node:sqlite in session/provider.test.tsx and coordinator.test.ts; this adds real SecureStore, auth and expo-sqlite. Second Maestro flow.\\n6. Recovery-cookie tamper plus axe on dialogs in Playwright: three addCookies cases on fm-recovery-user and fm-recovery-email (NEW-AUTH-RECOVERY-UNRUN), and the invite, export, create-site, leave-guard and conflict dialogs run through axeFindings in Day and Dusk with focus returning to the trigger.\\n\\nWhat I reproduced vs code-derived: reproduced = the TEST-01 command results, the NOT_THE_PAGE regex result, unit-suite pass under TZ=UTC; everything else (TEST-06 config analysis, TEST-07 reachability, TEST-08 duplication, NEW items) is code-derived from the files at HEAD. Caveat: the HEAD commit message says the database CI job was broken, so CI status at HEAD is unverified; the corrected TEST-02 relies on ci.yml and the backend tests as written, not on a green run."
+ },
+ "runtime:forms": {
+  "summary": "With a healthy schema, Forms works end to end. Create draft, edit, save, reload (edit kept) and publish all succeeded. UXW-2 is confirmed live in both of its halves. WDI-1 is reproduced for cookie-clear, aborted POST and offline, and at all 5 Forms action sites that were run; the session-ended chain is now run, not just code-traced. axe found 0 violations on the four Forms routes at 1440 and 390 in Day. The Data banner is absent, and Overview has no forms card in HEAD. Cold timings were taken for all four routes (lab, 4-CPU container).",
+  "report_markdown": "# Forms journeys and Server Action failure handling (healthy schema)\n\nRevision 0279fd3. Production build on :3000, API on :8001, local Supabase. The Playwright suites had finished before I started (DONE file present, no `playwright test` process).\n\nEvidence directory: /tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/. It holds PROGRESS.md, scripts/, data/ (JSON and page-text dumps) and shots/ (screenshots).\n\n## Environment notes\n- The e2e suite had already left the web-acceptance project dirty. Form `workspace-check` had v1 published (bound by Fall Creek's package v13), v2 a draft, v3 and v4 published, and 2 extra sites with no package. This made the UXW-2 Forms-list condition exist before I touched anything.\n- The saved storage states in web/e2e/.auth expire at 16:05 UTC. I signed in again through the real sign-in form, using the public seed password constant read from web/e2e/support/auth.ts and never printed. I used my own storage state files in the evidence directory: wa-manager and zr-manager (zone-manager@fieldmaps.test).\n- For the Overview 'Nothing needs attention' case I created one extra synthetic project, `uxw2-clean`, in the seeded org (/o/web-acceptance/p/uxw2-clean). I used the API with in-memory sessions of the seeded owner and manager. It has form uxw2-form v1 published, Site A with a ready package bound to v1, then v2 published. This is a write to the synthetic org only (script scripts/setup-uxw2.mjs). Nothing tracked or untracked in the repo changed (git status clean).\n- I published once in the web-acceptance project: workspace-check-v5. That project's state is now v1, v3, v4 and v5 published, with v2 still a draft.\n- The prior measure.cjs was not in the evidence copy. I re-implemented the method from SUMMARY.md: fresh context per sample, empty cache, PerformanceObservers, CDP encoded bytes, usable as the first rAF where the route predicate holds. Numbers are a 4-CPU cloud container, not field data, and not comparable 1:1 with the M1 Pro numbers.\n- Accident: an unset-variable typo created an empty file at /PROGRESS.md at the filesystem root. The safety check refused my rm. It is empty and outside the repo; the owner can delete it.\n\n## (1) Forms list, versions, detail, editor\nReproduced:\n- Create draft: Versions, then Start new draft, opened workspace-check-v5 (a copy of v4).\n- Change a question label, Save draft: the toast 'Draft saved' appeared. After a reload the edit was kept.\n- Publish: the Publish page shows the change review ('1 question changed'). It also says 'Using another version of this form now: Fall Creek test site.' and 'Go to Sites to prepare a map package'. After the checkbox and Publish, v5 was published.\n\nWhat the pages say about versions and sites:\n- The draft editor says only 'Nothing reaches observers until you publish it'. It says nothing about which version observers collect with or which sites use which version.\n- Its collector preview header reads 'Fall Creek test site ... MAP v13 workspace-check-v5 draft', although Fall Creek's current package binds v1.\n- The Forms list gives no per-site version.\n- The Versions list is correct per version: v5, v4 and v3 'No site', v1 'Fall Creek test site'.\n- The Site page is correct: 'Form version workspace-check-v1'.\n\n### UXW-2: confirmed, severity medium kept\nRun in the clean project, uxw2-clean:\n- Forms row: 'PUBLISHED uxw2-form-v2 ... USED BY Site A' (no version).\n- Versions: v2 'No site', v1 'Site A'.\n- Site page: 'Form version uxw2-form-v1'.\n- Overview: 'Needs attention: Nothing needs attention. Every site has a ready map package, a form is published and no draft is waiting.' (shots/uxw2-overview-desk.png).\n- The upload step defaults Form version to uxw2-form-v1, the older version. v2 is listed first but not selected, and there is no 'newer version exists' cue. This confirms the prior check's point (d).\n\nIn the web-acceptance project the Overview lists 4 other items, so it does not say 'Nothing needs attention' there. It also has no item for v5 against Fall Creek's v1.\n\nThe prior corrections stand: the Publish page and the Site and Versions pages do tell the truth, and the gap is the Forms row and the Overview.\n\n## (2) WDI-1 / J-1: reproduced at 1440, with unsaved label edit then Save draft\n- **cookie-clear** (`ctx.clearCookies()`):\n  - The action POST gets a 307, then POST /sign-in returns 200, then the console shows 'An unexpected response was received from the server.'\n  - The project error boundary renders: 'REQUEST INTERRUPTED / Something went wrong. Your records remain available.'\n  - The editor is unmounted and the edit is gone. 'Try again' leads to the sign-in redirect.\n  - This is the session-ended chain that was only code-traced before. It is now run.\n- **aborted action POST** (`route.abort`): 'TypeError: Failed to fetch', then the same error boundary. The editor unmounts. Try again remounts the editor with the previously saved wording; the edit is lost. No beforeunload dialog appears.\n- **offline** (`setOffline`, the finding's own scenario): same boundary. Try again cannot recover.\n- 390 spot-check of the aborted POST: identical.\n\nThe boundary page says 'What failed: The page could not load its records'. That is false here: the page had loaded and the save failed. There is no 'Nothing was saved' copy and no hint that the edits were lost.\n\nOther Forms actions, aborted POST (j3): Start new draft, Publish, Retire, Discard and 'Start a new draft from this version' all reach the same boundary. The dialog is gone and there is no inline 'Nothing was X.' note. Only the editor loses unsaved data, but all five give a wrong message and an unclear outcome.\n\nVerdict: the finding holds for the three cases I ran. The prior check's severity of medium is reasonable. Its correction on the fix copy stands, since a bare proxy tweak would produce the generic UNCONFIRMED copy rather than a sign-in message.\n\nSmaller new note (low, DESIGN PREFERENCE): ErrorView's 'Reference REQ-939D-68' was identical across runs and viewports. ErrorView.tsx:17-28 says a client error has no digest, so a hash of its message stands in. It cannot be matched to a server log, although the card says 'send the reference to your organization owner'.\n\n## (3) Data and Overview with healthy forms\n- 'Some questions could not be loaded.' is absent on /data in both projects (web-acceptance 8 rows, zone-review 520 rows). The string exists only at DataScreen.tsx:369.\n- Overview has no forms card in HEAD. Forms feed only the Attention list ('No form is published' and draft items). The draft item renders: 'Workspace check has an unpublished draft, v2.'\n\n## (4) Cold timings\nSetup: web-acceptance project, 1440x900, production build, 4 CPUs, stack idle. One discarded warm-up per route, then 3 samples each in a fresh context with an empty cache. Values are median (min-max) in ms; CLS was 0 on every sample and there were no external hosts and no browser-to-API calls.\n\n| Route | TTFB | FCP | LCP | usable | load | long tasks (n / ms) | requests / KB | doc KB wire / decoded | DOM nodes |\n|---|---|---|---|---|---|---|---|---|---|\n| /forms | 34 (34-37) | 128 (116-168) | 304 (284-328) | 288 (265-309) | 207 (187-214) | 0-1 / 0-69 | 29 / 444 | 15.1 / 57.5 | 210 |\n| /forms/versions | 39 (37-40) | 148 (128-168) | 352 (336-364) | 328 (319-343) | 221 (207-231) | 1-2 / 52-113 | 29 / 442 | 15.6 / 81.1 | 353 |\n| /forms/versions/workspace-check-v1 (published, read-only) | 38 (35-41) | 168 (148-180) | 432 (404-436) | 403 (372-412) | 223 (215-232) | 1-2 / 100-167 | 31 / 469 | 18.7 / 77.9 | 332 |\n| editor, draft v2 | 36 (32-40) | 132 (124-184) | 420 (408-500) | 393 (375-460) | 214 (210-273) | 2 / 163-169 | 31 / 469 | 18.9 / 79.6 | 337 |\n\nUsable predicates:\n- /forms: main h1 visible, the Workspace check link present and 'Forms in this project' text.\n- /forms/versions: main h1 and the first table row visible.\n- Detail and editor: main h1, an input visible, and the collector view taller than 200 px.\n\nCompared with the earlier stale-schema error-screen numbers, these now measure real pages. The editor and detail pages ship about 2 more scripts and about 27 KB more than the list pages. The 50-170 ms long tasks are absent in the earlier M1 data (0 long tasks on 29 of 30 routes); that is plausibly the slower CPU here. It is not diagnosed.\n\n## (5) axe\naxe-core via @axe-core/playwright 4.13.0, tags wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa. Day theme: `data-theme=day`, colorScheme light.\n\nRoutes tested: /forms, /forms/versions, version detail (published v1), editor (draft v2, also with an unsaved edit), plus the publish page as an extra.\n\nResult: 0 violations at 1440 and 390 on all of them, with no horizontal overflow (scrollWidth equals the viewport width).\n\nThe only 'incomplete' items are color-contrast on detail and editor, in the collector preview, where the background cannot be determined because of overlap with the map. Those need manual review; they are not violations.\n\n## Not reproduced or not done\nSee not_done.",
+  "items": [
+   {
+    "id": "WDI-1",
+    "title": "A failed Server Action in the form editor reaches the project error boundary and drops unsaved edits (cookie-clear, aborted POST, offline); the 5 other Forms action sites that were run do the same",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/forms/DraftEditorScreen.tsx:145-183",
+     "web/src/features/forms/DraftEditorScreen.tsx:196-208",
+     "web/src/features/forms/PublishScreen.tsx:79",
+     "web/src/features/forms/RetireDialog.tsx:37",
+     "web/src/features/forms/DiscardDialog.tsx:41",
+     "web/src/features/forms/FormVersionsScreen.tsx:100",
+     "web/src/proxy.ts:17,33-43",
+     "web/src/components/shell/ErrorView.tsx:57-60"
+    ],
+    "evidence": "Reproduced in a production build as the seeded manager on workspace-check-v5 at 1440, with a 390 spot-check of the aborted POST. After an unsaved label edit and Save draft: (a) ctx.clearCookies gave POST 307, POST /sign-in 200, console 'An unexpected response was received from the server.', then the error boundary 'Something went wrong. Your records remain available.' with the editor unmounted and the edit gone; Try again then redirects to sign-in. (b) route.abort of the next-action POST gave 'TypeError: Failed to fetch' and the same boundary; Try again remounts the editor with the saved wording, so the edit is lost. (c) setOffline gave the same boundary. No beforeunload dialog. The boundary card says 'What failed: The page could not load its records', which is false. With aborted POSTs, Start new draft, Publish, Retire, Discard and 'Start a new draft from this version' all end in the same boundary with no inline 'Nothing was X.' note. Files: data/j2-desk.json, data/j2-phone.json, data/j3.txt, shots/j2-*.png, shots/j3-*.png. The session-ended chain is now run, not only code-traced.",
+    "correction": "The prior check's severity of medium stands (loss limited to edits since the last Save, transient triggers, nothing corrupted server-side). The session-ended path is confirmed by run. The prior check's correction on the fix copy also stands: the sign-in message needs its own wording, and 'Reload the page' is bad advice because a document GET redirects to sign-in and drops the edits. New: the boundary's 'What failed: The page could not load its records' is factually wrong for a failed save.",
+    "smallest_fix": "Add a settleAction(promise, nothing) helper that turns a rejection into {status:'failed', message: UNCONFIRMED_CHANGE_COPY}, use it at the Forms call sites (the editor save first), and let proxy.ts skip the sign-in redirect for non-GET/HEAD or next-action requests, with its own 'Sign in again in another tab, then come back to save' copy. Keep the leave guard and the editor's in-memory state."
+   },
+   {
+    "id": "UXW-2",
+    "title": "Forms list pairs the newest published version with sites that use an older one; Overview says 'Nothing needs attention'",
+    "verdict": "confirmed",
+    "severity": "medium",
+    "category": "CONFIRMED DEFECT",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/forms/model.ts:49-51,78-91",
+     "web/src/features/forms/ProjectFormsScreen.tsx:103-121,146-173",
+     "web/src/features/overview/model.ts:127-147",
+     "web/src/features/overview/AttentionIsland.tsx:54-59",
+     "web/src/features/packages/forms.ts:49-60"
+    ],
+    "evidence": "Web-acceptance project (left by the e2e suite): Forms row 'PUBLISHED workspace-check-v4 ... USED BY Fall Creek test site'; after I published v5 it reads v5 while the Versions list shows Fall Creek only on v1 and v3/v4/v5 'No site', and the Site page says 'Form version workspace-check-v1'. That project's Overview has 4 other attention items and none for the version gap. In the clean project uxw2-clean (v2 published, Site A bound to v1) the Overview says 'Nothing needs attention. Every site has a ready map package, a form is published and no draft is waiting.' and the Forms row says 'PUBLISHED uxw2-form-v2 ... USED BY Site A'. The upload step defaults Form version to v1 with no 'newer version exists' cue. Shots: explore-wa-forms.png, j4-04-forms-list-after-publish.png, uxw2-forms-desk.png, uxw2-overview-desk.png, uxw2-site-desk.png. Data: data/j4.txt, data/j5.txt.",
+    "correction": "The prior partial confirmation holds. The Publish page ('Using another version of this form now: ...' plus a delivery warning behind a checkbox), the Versions screen and the Site page do show the true binding, so the gap is the Forms row and the Overview. The Overview sentence is literally true as written; it omits version binding.",
+    "smallest_fix": "Render 'Used by' on the Forms row as site plus its version, from versions[].sites, or show only the sites for the version displayed. Add an Overview 'waiting' item: '<form> vN is published; no site's current map names it - observers still get vM'."
+   },
+   {
+    "id": "FORMS-EDIT-SAVE",
+    "title": "Create draft, change a question, Save and reload keep the edit; publish works",
+    "verdict": "new",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/forms/DraftEditorScreen.tsx:145-183",
+     "web/src/features/forms/actions.ts"
+    ],
+    "evidence": "Start new draft opened workspace-check-v5; the edited label was saved with the 'Draft saved' toast and survived a reload (data/j1-state.json). Publish via the review page published v5 once. No defect here; this records the happy path with a healthy schema.",
+    "correction": "None. The earlier runs could not exercise this because every Forms endpoint returned 500.",
+    "smallest_fix": "None needed."
+   },
+   {
+    "id": "FORMS-DATA-OVERVIEW",
+    "title": "Data 'Some questions could not be loaded' banner is gone; Overview has no forms card",
+    "verdict": "new",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/data/DataScreen.tsx:369",
+     "web/src/features/overview/model.ts:127-147"
+    ],
+    "evidence": "On /data in web-acceptance (8 rows) and zone-review (520 rows) the banner does not render. Overview text contains no forms card; forms feed only attentionItems ('No form is published', draft items). The draft item renders: 'Workspace check has an unpublished draft, v2.'",
+    "correction": "The task's assumption that Overview renders a forms card does not match HEAD.",
+    "smallest_fix": "None needed."
+   },
+   {
+    "id": "FORMS-PERF",
+    "title": "Cold timings for the four Forms routes",
+    "verdict": "new",
+    "severity": "low",
+    "category": "DEMONSTRATED COMPLEXITY",
+    "confidence": "medium",
+    "locations": [
+     "web/src/app/(app)/o/[org]/p/[project]/forms"
+    ],
+    "evidence": "3 samples per route (after one warm-up), fresh context, empty cache, production build, 4-CPU container, 1440x900. usable ms median: forms 288, versions 328, detail 403, editor 393. LCP 304, 352, 432, 420. CLS 0 on all. Requests 29 to 31, 442 to 469 KB, no external hosts, no browser-to-API calls. Long tasks of 52 to 169 ms appear on every route (earlier M1 data had none on 29 of 30 routes). Lab only; see data/perf-desk.json.",
+    "correction": "These replace the earlier stale-schema error-screen numbers. They are not comparable 1:1 with M1 Pro numbers.",
+    "smallest_fix": "None; no user-visible defect shown."
+   },
+   {
+    "id": "FORMS-AXE",
+    "title": "axe on Forms routes: 0 violations at 1440 and 390 in Day",
+    "verdict": "new",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "high",
+    "locations": [
+     "web/src/features/forms"
+    ],
+    "evidence": "axe-core via @axe-core/playwright 4.13.0 with wcag2a, wcag2aa, wcag21a, wcag21aa and wcag22aa found 0 violations on forms, versions, version detail, the editor (also with an unsaved edit) and the publish page, at both widths. The only 'incomplete' items are color-contrast in the collector preview, where overlap with the map prevents a background check. No horizontal overflow. Day theme only; Dusk was not run. See data/axe.json.",
+    "correction": "None.",
+    "smallest_fix": "None needed."
+   },
+   {
+    "id": "FORMS-REQREF",
+    "title": "Error boundary 'Reference REQ-xxxx' is a hash of the client error message, not a request id",
+    "verdict": "new",
+    "severity": "low",
+    "category": "DESIGN PREFERENCE",
+    "confidence": "medium",
+    "locations": [
+     "web/src/components/shell/ErrorView.tsx:17-28"
+    ],
+    "evidence": "The same reference REQ-939D-68 appeared for different runs and viewports with the same 'Failed to fetch' error. The source comment says a client error has no digest, so its message stands in, although the card says to send the reference to the organization owner.",
+    "correction": "The card's wording implies the owner can use it to find the request. For client-side failures it identifies only the message.",
+    "smallest_fix": "For errors without a digest, say what failed in words instead of showing a reference, or omit the reference row."
+   }
+  ],
+  "evidence_files": [
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/PROGRESS.md",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/data/j2-desk.json",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/data/j2-phone.json",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/data/j3.txt",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/data/j4.txt",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/data/j5.txt",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/data/perf-desk.json",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/data/axe.json",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/explore-wa-forms.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/explore-wa-versions.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/j1-04-editor-saved.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/j2-cookie-clear-desk.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/j2-abort-post-desk.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/j2-offline-desk.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/j4-04-forms-list-after-publish.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/uxw2-forms-desk.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/uxw2-overview-desk.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/shots/axe-forms-versions-phone.png",
+   "/tmp/claude-0/-home-user/9dff5b0d-8911-5ffb-ab1c-009ec22eb4bb/scratchpad/run/forms/scripts/lib.cjs"
+  ],
+  "not_done": [
+   "Did not run the task's separate 'stop the API' scenario, per its own instruction to use only the cookie-clear and aborted-POST cases (I added offline as the finding's own scenario).",
+   "Did not test a response-lost-after-commit case (a save that landed but whose reply was dropped), so 'may have saved' honesty is not exercised.",
+   "Did not test the New form dialog action with an aborted POST (code-derived only); the other 5 Forms action sites were run.",
+   "Cold timings were taken at 1440x900 only, not 390, and the detail and editor routes were measured on a published v1 and a draft v2. The two-route split is mine.",
+   "axe ran in Day only; Dusk was not requested or run. The 'incomplete' color-contrast items in the collector preview were not reviewed manually.",
+   "The Overview 'Nothing needs attention' case needed an extra synthetic project (uxw2-clean) created via the API in the seeded org; this is a write beyond the single publish in the web-acceptance project. The web-acceptance project now also has v5 published.",
+   "The accidental empty file /PROGRESS.md at the filesystem root could not be removed (safety check refused rm); the owner may delete it.",
+   "Zone-review project: only read-only page loads (Forms, Versions, Overview, Data) were done there; no edits or publish.",
+   "No library source re-verification beyond the observed runtime behaviour; the React and Next internals cited by the prior WDI-1 check were not re-read."
+  ]
+ }
+}

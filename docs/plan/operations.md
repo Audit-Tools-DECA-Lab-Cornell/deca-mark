@@ -246,3 +246,29 @@ Do: the same procedure as OPS-14, for GIS-03 and DB-13.
 - Before GIS-03, confirm that nothing still reads the sample view.
 
 Done when: staging's ledger lists every migration in `supabase/migrations/`, and `verify.sql` passes. Production (OPS-09) is created only from a migration set proven here.
+
+### OPS-18: CI runs every guard the docs promise
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08, QA-09
+Added 2026-10-22 (frontend audit C13). CI's web job runs 84 of 477 web node tests: the 393-test unit suite (4.55 s), `forms:parity` (0.44 s, the only check tying the web's copy of the form engine to the shared cases) and the token drift/contrast check (1.0 s) never run, while `docs/Workspace.md:67` says CI runs the same checks. The real collector-to-API acceptance drivers `database/tests/test_mobile_bound_upload_api.py` and `test_mobile_package_api.py` sit outside every runner.
+Read first: `.github/workflows/ci.yml`; root `package.json` scripts; `docs/Workspace.md:67`; `backend/pyproject.toml` test paths.
+Do: add `pnpm --dir web test:unit`, `pnpm forms:parity` and `node scripts/contour-tokens.mjs --check` to the web job; move the two Python drivers under `backend/tests` (pre-pull their Docker image as the backend job already does); add `test:unit` to the root `pnpm test` or correct `Workspace.md`. Playwright stays out of PR CI (nightly or by hand).
+Done when: a branch that flips one web unit assertion fails CI; editing the web engine copy without the mobile source fails parity; the backend job lists `test_mobile_bound_upload_api`.
+Verify: a CI run on the PR.
+
+### OPS-19: The final pre-launch reset of hosted data
+Status: todo · Phase 4 · Size S · Depends: BE-24, DB-20 · Blocks: QA-08
+Added 2026-10-22 (D31, D32). The last sanctioned hosted reset: it removes the fields-only form versions and their observations, applies the current migrations, and rebuilds Janet's organization with canonical forms and the Training seed. From the pilot launch on, hosted migrations preserve data.
+Read first: D31, D32; [the October 14 hosted diagnosis](../reviews/ci-and-hosted-data-2026-10-14.md); `database/hosted/verify.sql`; `scripts/bootstrap-study.mjs`; OPS-04, OPS-05.
+Do: once QA-08 is otherwise ready, agree the hosted target and window with the owner; export what Janet wants to keep for reference (CSV/GeoJSON) before the reset; reset, migrate, verify with `verify.sql`, bootstrap the organization, publish the forms and the first maps; deploy the API and web builds that match.
+Needs user: authorization for the reset and the deploys. The owner times the reset to readiness, not to a date.
+Done when: the hosted API answers `/ready`, every hosted `form_versions` row validates against the canonical schema, Training has its site, and a fresh account can join and download on a device.
+Verify: `verify.sql` on the target; a sign-up, join and download on one phone.
+
+### OPS-20: Stable Server Action ids across Vercel deploys
+Status: doing · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Added 2026-10-22 (D34). The web runs on Vercel's free plan, which has no Skew Protection. In Next 16.2.7 every build salts Server Action ids with an encryption key (`build/webpack-config.js` `serverReferenceHashSalt: encryptionKey`; the Turbopack build passes the same key); without `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` it is a random key cached for 14 days in `.next/cache`, so ids change on rotation or an uncached build, and an open tab's next save then calls an id the server no longer knows (audit C03).
+Read first: D34; `web/vercel.json`; OPS-05.
+Do: generate a key (`openssl rand -base64 32`) and set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` for Production and Preview in the Vercel project (never in a tracked file); note the rule "deploy outside manager editing sessions during the pilot" in `docs/Launch-Runbook.md`.
+Progress 2026-10-23: the owner set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in Vercel; the runbook has the variable and the deploy rule. Open: the header comparison. Preview deployments sit behind Vercel login, so it needs a signed-in browser or the production domain.
+Done when: two consecutive deploys of the same commit produce the same action ids (compare the `Next-Action` header of one save before and after), and the runbook has the rule.
+Verify: the header comparison, recorded here.

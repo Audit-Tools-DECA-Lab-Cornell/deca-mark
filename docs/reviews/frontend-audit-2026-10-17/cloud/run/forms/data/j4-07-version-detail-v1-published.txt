@@ -1,0 +1,74 @@
+Skip to content
+DECA Mark
+Web acceptance lab
+/
+Play study acceptance
+Search or jump to
+Ctrl K
+MANAGER
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Forms
+Workspace check
+workspace-check-v1
+Workspace check
+Published
+workspace-check-v1 is published. Its wording and rules are fixed.
+A published version cannot change. Start a new draft to edit.
+Start a new draft from this version
+Questions
+1 question
+01
+Test note
+Required · Always visible
+Question settings
+01 · Note
+Question label
+Question ID
+Stays the same when you reword the question. Records store answers under it.
+Guidance
+Answer format
+Fixed, so every answer keeps its meaning across versions.
+
+Answer
+
+Written answer
+
+Required when visible
+AS OBSERVERS SEE IT · PHONE
+Phone
+Tablet
+
+Fall Creek test site
+
+Zone A · Whole playground · Standard round
+
+MAP v13
+
+workspace-check-v1 published
+
+1 · Place
+Step 1 of 3, Place
+2 · Answer
+Step 2 of 3, Answer
+3 · Review
+Step 3 of 3, Review
+Zone A · Whole playground
+
+QUESTION 1 OF 1
+
+REQUIRED
+
+Test note
+Back
+
+1 required remaining
+
+Review

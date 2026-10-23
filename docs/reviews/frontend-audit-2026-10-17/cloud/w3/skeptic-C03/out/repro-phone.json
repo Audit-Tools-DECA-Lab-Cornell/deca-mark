@@ -1,0 +1,22 @@
+{
+ "offline": {
+  "url": "/o/web-acceptance/p/play-study/forms/versions/workspace-check-v2",
+  "editorMounted": false,
+  "value": null,
+  "editKept": false,
+  "boundary": true,
+  "whatFailed": "The page could not load its records Your data",
+  "inlineNothingSaved": false,
+  "events": [
+   "POST failed /o/web-acceptance/p/play-study/forms/versions/workspace-check-v2: net::ERR_INTERNET_DISCONNECTED",
+   "console.error: Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+   "console.error: TypeError: Failed to fetch\n    at j (http://127.0.0.1:3000/_next/static/chunks/10uv514i7spsv.js:1:137759)"
+  ],
+  "afterTryAgain": {
+   "url": "/o/web-acceptance/p/play-study/forms/versions/workspace-check-v2",
+   "mounted": true,
+   "value": "Test note",
+   "equalsSavedOriginal": true
+  }
+ }
+}

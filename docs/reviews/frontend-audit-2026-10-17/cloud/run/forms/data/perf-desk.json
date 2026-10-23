@@ -1,0 +1,590 @@
+[
+ {
+  "id": "forms",
+  "vp": "desk",
+  "finalPath": "<proj>/forms",
+  "ttfb": 34,
+  "fcp": 116,
+  "lcp": 284,
+  "lcpEl": "DIV",
+  "usable": 265,
+  "docEnd": 92,
+  "load": 187,
+  "cls": 0,
+  "longTasks": 0,
+  "longTaskMs": 0,
+  "reqN": 29,
+  "reqKB": 444,
+  "docKB": 15.1,
+  "docDecodedKB": 57.5,
+  "dom": 210,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 16337
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 23,
+    "b": 360219
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 1
+ },
+ {
+  "id": "forms",
+  "vp": "desk",
+  "finalPath": "<proj>/forms",
+  "ttfb": 37,
+  "fcp": 128,
+  "lcp": 328,
+  "lcpEl": "DIV",
+  "usable": 309,
+  "docEnd": 87,
+  "load": 214,
+  "cls": 0,
+  "longTasks": 1,
+  "longTaskMs": 69,
+  "reqN": 29,
+  "reqKB": 444,
+  "docKB": 15.1,
+  "docDecodedKB": 57.5,
+  "dom": 210,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 16337
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 23,
+    "b": 360219
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 2
+ },
+ {
+  "id": "forms",
+  "vp": "desk",
+  "finalPath": "<proj>/forms",
+  "ttfb": 34,
+  "fcp": 168,
+  "lcp": 304,
+  "lcpEl": "DIV",
+  "usable": 288,
+  "docEnd": 81,
+  "load": 207,
+  "cls": 0,
+  "longTasks": 1,
+  "longTaskMs": 55,
+  "reqN": 29,
+  "reqKB": 444,
+  "docKB": 15.1,
+  "docDecodedKB": 57.5,
+  "dom": 210,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 16337
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 23,
+    "b": 360219
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 3
+ },
+ {
+  "id": "forms-versions",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions",
+  "ttfb": 39,
+  "fcp": 128,
+  "lcp": 336,
+  "lcpEl": "DIV",
+  "usable": 319,
+  "docEnd": 135,
+  "load": 231,
+  "cls": 0,
+  "longTasks": 1,
+  "longTaskMs": 52,
+  "reqN": 29,
+  "reqKB": 442.3,
+  "docKB": 15.6,
+  "docDecodedKB": 81.1,
+  "dom": 353,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 16833
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 23,
+    "b": 357936
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 1
+ },
+ {
+  "id": "forms-versions",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions",
+  "ttfb": 40,
+  "fcp": 148,
+  "lcp": 364,
+  "lcpEl": "DIV",
+  "usable": 343,
+  "docEnd": 106,
+  "load": 221,
+  "cls": 0,
+  "longTasks": 2,
+  "longTaskMs": 113,
+  "reqN": 29,
+  "reqKB": 442.3,
+  "docKB": 15.6,
+  "docDecodedKB": 81.1,
+  "dom": 353,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 16833
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 23,
+    "b": 357936
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 2
+ },
+ {
+  "id": "forms-versions",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions",
+  "ttfb": 37,
+  "fcp": 168,
+  "lcp": 352,
+  "lcpEl": "DIV",
+  "usable": 328,
+  "docEnd": 81,
+  "load": 207,
+  "cls": 0,
+  "longTasks": 1,
+  "longTaskMs": 58,
+  "reqN": 29,
+  "reqKB": 442.3,
+  "docKB": 15.6,
+  "docDecodedKB": 81.1,
+  "dom": 353,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 16833
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 23,
+    "b": 357936
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 3
+ },
+ {
+  "id": "forms-version-detail-published-v1",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions/workspace-check-v1",
+  "ttfb": 41,
+  "fcp": 180,
+  "lcp": 404,
+  "lcpEl": "DIV",
+  "usable": 372,
+  "docEnd": 133,
+  "load": 215,
+  "cls": 0,
+  "longTasks": 2,
+  "longTaskMs": 151,
+  "reqN": 31,
+  "reqKB": 468.8,
+  "docKB": 18.7,
+  "docDecodedKB": 77.9,
+  "dom": 332,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 20016
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 25,
+    "b": 381890
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 1
+ },
+ {
+  "id": "forms-version-detail-published-v1",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions/workspace-check-v1",
+  "ttfb": 35,
+  "fcp": 148,
+  "lcp": 432,
+  "lcpEl": "DIV",
+  "usable": 403,
+  "docEnd": 139,
+  "load": 223,
+  "cls": 0,
+  "longTasks": 2,
+  "longTaskMs": 167,
+  "reqN": 31,
+  "reqKB": 468.8,
+  "docKB": 18.7,
+  "docDecodedKB": 77.9,
+  "dom": 332,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 20016
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 25,
+    "b": 381890
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 2
+ },
+ {
+  "id": "forms-version-detail-published-v1",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions/workspace-check-v1",
+  "ttfb": 38,
+  "fcp": 168,
+  "lcp": 436,
+  "lcpEl": "DIV",
+  "usable": 412,
+  "docEnd": 94,
+  "load": 232,
+  "cls": 0,
+  "longTasks": 1,
+  "longTaskMs": 100,
+  "reqN": 31,
+  "reqKB": 468.8,
+  "docKB": 18.7,
+  "docDecodedKB": 77.9,
+  "dom": 332,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 20016
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 25,
+    "b": 381890
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 3
+ },
+ {
+  "id": "forms-editor-draft-v2",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions/workspace-check-v2",
+  "ttfb": 36,
+  "fcp": 184,
+  "lcp": 500,
+  "lcpEl": "DIV",
+  "usable": 460,
+  "docEnd": 158,
+  "load": 273,
+  "cls": 0,
+  "longTasks": 2,
+  "longTaskMs": 169,
+  "reqN": 31,
+  "reqKB": 469,
+  "docKB": 18.9,
+  "docDecodedKB": 79.6,
+  "dom": 337,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 20202
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 25,
+    "b": 381890
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 1
+ },
+ {
+  "id": "forms-editor-draft-v2",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions/workspace-check-v2",
+  "ttfb": 40,
+  "fcp": 124,
+  "lcp": 420,
+  "lcpEl": "DIV",
+  "usable": 393,
+  "docEnd": 127,
+  "load": 214,
+  "cls": 0,
+  "longTasks": 2,
+  "longTaskMs": 163,
+  "reqN": 31,
+  "reqKB": 469,
+  "docKB": 18.9,
+  "docDecodedKB": 79.6,
+  "dom": 337,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 20202
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 25,
+    "b": 381890
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 2
+ },
+ {
+  "id": "forms-editor-draft-v2",
+  "vp": "desk",
+  "finalPath": "<proj>/forms/versions/workspace-check-v2",
+  "ttfb": 32,
+  "fcp": 132,
+  "lcp": 408,
+  "lcpEl": "DIV",
+  "usable": 375,
+  "docEnd": 128,
+  "load": 210,
+  "cls": 0,
+  "longTasks": 2,
+  "longTaskMs": 168,
+  "reqN": 31,
+  "reqKB": 469,
+  "docKB": 18.9,
+  "docDecodedKB": 79.6,
+  "dom": 337,
+  "byType": {
+   "Document": {
+    "n": 1,
+    "b": 20202
+   },
+   "Font": {
+    "n": 2,
+    "b": 62092
+   },
+   "Stylesheet": {
+    "n": 1,
+    "b": 13551
+   },
+   "Script": {
+    "n": 25,
+    "b": 381890
+   },
+   "Image": {
+    "n": 1,
+    "b": 882
+   },
+   "Other": {
+    "n": 1,
+    "b": 1603
+   }
+  },
+  "browserToApi": 0,
+  "externalHosts": [],
+  "sample": 3
+ }
+]

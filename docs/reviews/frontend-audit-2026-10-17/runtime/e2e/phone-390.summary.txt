@@ -1,0 +1,60 @@
+stats {"startTime":"2026-10-18T22:40:40.325Z","duration":529124.2279999999,"expected":120,"skipped":0,"unexpected":14,"flaky":0}
+by status {"expected":120,"unexpected":14} total 134
+by project {"setup":{"expected":8},"phone-390":{"expected":112,"unexpected":14}}
+honesty attachments present on 41 tests
+--- slowest 10 (spec tests, all projects incl. setup)
+31.0s  [phone-390] packages.spec.ts:55 packages.spec.ts > uploading a new package from QGIS layers makes it the current one  (unexpected)
+30.6s  [phone-390] packages.spec.ts:116 packages.spec.ts > a self-contained QGIS project becomes the site's current map without separate GeoJSON files  (unexpected)
+30.6s  [phone-390] packages.spec.ts:150 packages.spec.ts > a project with missing sources names them and accepts optional GeoJSON exports  (unexpected)
+30.6s  [phone-390] packages-identity.spec.ts:139 packages-identity.spec.ts > an upload checked against a map that changed meanwhile is refused, and nothing is replaced  (unexpected)
+30.5s  [phone-390] packages-identity.spec.ts:76 packages-identity.spec.ts > a later upload keeps one zone, adds one and leaves one out, and the records stay with their zone  (unexpected)
+23.3s  [phone-390] zones-editor.spec.ts:53 zones-editor.spec.ts > a manager draws, edits, checks, fixes, reloads and publishes zones  (expected)
+20.1s  [phone-390] zones-account.spec.ts:145 zones-account.spec.ts > another account signing in replaces the editor, and sends nothing of the previous account's  (expected)
+19.7s  [phone-390] zones-publish.spec.ts:15 zones-publish.spec.ts > a draft is reviewed and published once, a conflict keeps it, and Discard asks first  (expected)
+16.5s  [phone-390] zones-honesty.spec.ts:40 zones-honesty.spec.ts > the zone routes read honestly as the manager  (expected)
+9.9s  [phone-390] screenshots.spec.ts:207 screenshots as public > @screenshots privacy  (expected)
+--- non-expected
+[unexpected] forms.spec.ts:21 forms.spec.ts > a manager starts a new draft, saves a change and publishes it (0.2s) :: Error: GET /v1/projects/7b96280e-dd69-41ae-aefc-6fdc898d13bc/forms: HTTP 500
+[unexpected] honesty.spec.ts:22 as manager > project-overview reads honestly (3.7s) :: Error: the page shows not found, signed out or a load failure |  | expect(received).toEqual(expected) // deep equality | 
+[unexpected] honesty.spec.ts:22 as manager > packages-upload reads honestly (7.2s) :: Error: the page shows not found, signed out or a load failure |  | expect(received).toEqual(expected) // deep equality | 
+[unexpected] honesty.spec.ts:22 as manager > forms reads honestly (2.2s) :: Error: the page shows not found, signed out or a load failure |  | expect(received).toEqual(expected) // deep equality | 
+[unexpected] honesty.spec.ts:22 as manager > form-versions reads honestly (2.3s) :: Error: the page shows not found, signed out or a load failure |  | expect(received).toEqual(expected) // deep equality | 
+[unexpected] honesty.spec.ts:22 as manager > form-published reads honestly (2.5s) :: Error: the page shows not found, signed out or a load failure |  | expect(received).toEqual(expected) // deep equality | 
+[unexpected] honesty.spec.ts:22 as manager > form-draft reads honestly (0.2s) :: Error: GET /v1/projects/7b96280e-dd69-41ae-aefc-6fdc898d13bc/forms: HTTP 500
+[unexpected] honesty.spec.ts:22 as manager > form-publish reads honestly (0.2s) :: Error: GET /v1/projects/7b96280e-dd69-41ae-aefc-6fdc898d13bc/forms: HTTP 500
+[unexpected] honesty.spec.ts:22 as viewer > viewer-overview reads honestly (3.8s) :: Error: the page shows not found, signed out or a load failure |  | expect(received).toEqual(expected) // deep equality | 
+[unexpected] packages-identity.spec.ts:76 packages-identity.spec.ts > a later upload keeps one zone, adds one and leaves one out, and the records stay with their zone (30.5s) :: Error: locator.setInputFiles: Timeout 15000ms exceeded. | Call log: |   - waiting for getByLabel('Choose files from the QGIS export', { exact: true }) | 
+[unexpected] packages-identity.spec.ts:139 packages-identity.spec.ts > an upload checked against a map that changed meanwhile is refused, and nothing is replaced (30.6s) :: Error: locator.setInputFiles: Timeout 15000ms exceeded. | Call log: |   - waiting for getByLabel('Choose files from the QGIS export', { exact: true }) | 
+[unexpected] packages.spec.ts:55 packages.spec.ts > uploading a new package from QGIS layers makes it the current one (31.0s) :: Error: locator.setInputFiles: Timeout 15000ms exceeded. | Call log: |   - waiting for getByLabel('Choose files from the QGIS export', { exact: true }) | 
+[unexpected] packages.spec.ts:116 packages.spec.ts > a self-contained QGIS project becomes the site's current map without separate GeoJSON files (30.6s) :: Error: locator.setInputFiles: Timeout 15000ms exceeded. | Call log: |   - waiting for getByLabel('QGIS project and source files', { exact: true }) | 
+[unexpected] packages.spec.ts:150 packages.spec.ts > a project with missing sources names them and accepts optional GeoJSON exports (30.6s) :: Error: locator.setInputFiles: Timeout 15000ms exceeded. | Call log: |   - waiting for getByLabel('QGIS project and source files', { exact: true }) | 
+--- per spec file totals
+account-deletion.spec.ts: 1 tests, 4.4s, 0 failed
+auth-flows.spec.ts: 1 tests, 3.0s, 0 failed
+data-history.spec.ts: 2 tests, 12.8s, 0 failed
+data.spec.ts: 3 tests, 3.3s, 0 failed
+forms.spec.ts: 1 tests, 0.2s, 1 failed
+honesty.spec.ts: 41 tests, 115.1s, 8 failed
+invite-viewer.spec.ts: 1 tests, 0.7s, 0 failed
+join-observer.spec.ts: 1 tests, 0.7s, 0 failed
+org.spec.ts: 4 tests, 2.4s, 0 failed
+overview-sql.spec.ts: 1 tests, 1.2s, 0 failed
+overview.spec.ts: 2 tests, 1.0s, 0 failed
+packages-identity.spec.ts: 2 tests, 61.1s, 2 failed
+packages.spec.ts: 3 tests, 92.2s, 3 failed
+qgis-reports.spec.ts: 3 tests, 2.5s, 0 failed
+removed-routes.spec.ts: 7 tests, 2.9s, 0 failed
+screenshots.spec.ts: 27 tests, 62.7s, 0 failed
+settings.spec.ts: 1 tests, 0.9s, 0 failed
+sign-in.spec.ts: 6 tests, 2.5s, 0 failed
+sites.spec.ts: 2 tests, 1.6s, 0 failed
+team.spec.ts: 1 tests, 1.6s, 0 failed
+zones-access.spec.ts: 3 tests, 8.8s, 0 failed
+zones-account.spec.ts: 2 tests, 27.3s, 0 failed
+zones-conflict.spec.ts: 4 tests, 24.8s, 0 failed
+zones-draft.spec.ts: 2 tests, 10.0s, 0 failed
+zones-editor.spec.ts: 1 tests, 23.3s, 0 failed
+zones-honesty.spec.ts: 2 tests, 22.4s, 0 failed
+zones-network.spec.ts: 1 tests, 4.9s, 0 failed
+zones-publish.spec.ts: 1 tests, 19.7s, 0 failed
+--- duration from reporter 529124.2279999999

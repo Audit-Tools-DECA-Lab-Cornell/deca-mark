@@ -1,0 +1,17 @@
+
+> decamark@0.1.0 tokens:check /home/user/deca-mark
+> node scripts/contour-tokens.mjs --check && pnpm emails:check
+
+tokens:check: contour.css matches contracts/contour.json and every contrast pair passes.
+
+> decamark@0.1.0 emails:check /home/user/deca-mark
+> make -C backend email-templates-check
+
+make: Entering directory '/home/user/deca-mark/backend'
+uv run --frozen --no-sync --offline --directory . -- python -m fieldmaps_api.email.generate --check
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+make: Leaving directory '/home/user/deca-mark/backend'
+
+real	0m1.010s
+user	0m0.859s
+sys	0m0.172s

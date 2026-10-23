@@ -1,0 +1,54 @@
+
+> decamark-web@0.1.0 test:api-errors /home/user/deca-mark/web
+> node --experimental-strip-types --test tests/api-errors.test.mjs
+
+✔ maps bad_request to safe copy (3.784315ms)
+✔ maps unauthenticated to safe copy (0.194022ms)
+✔ maps token_invalid to safe copy (0.17861ms)
+✔ maps account_deleted to safe copy (0.123104ms)
+✔ maps membership_required to safe copy (0.15192ms)
+✔ maps role_required to safe copy (0.137001ms)
+✔ maps limit_reached to safe copy (0.128777ms)
+✔ maps not_found to safe copy (0.102776ms)
+✔ maps method_not_allowed to safe copy (0.257587ms)
+✔ maps invitation_invalid to safe copy (0.279651ms)
+✔ maps conflict to safe copy (0.188722ms)
+✔ maps publication_conflict to safe copy (0.171703ms)
+✔ maps idempotency_conflict to safe copy (0.083632ms)
+✔ maps revision_conflict to safe copy (0.186414ms)
+✔ maps precondition_required to safe copy (0.088095ms)
+✔ maps payload_too_large to safe copy (0.077418ms)
+✔ maps sole_owner to safe copy (0.054679ms)
+✔ maps invitation_expired to safe copy (0.050918ms)
+✔ maps archive_unavailable to safe copy (0.048113ms)
+✔ maps validation_failed to safe copy (0.046238ms)
+✔ maps unsupported_operation to safe copy (0.046216ms)
+✔ maps rate_limited to safe copy (0.05607ms)
+✔ maps internal to safe copy (0.062467ms)
+✔ maps storage_unavailable to safe copy (0.050202ms)
+✔ classifies role_required from the envelope (0.101634ms)
+✔ classifies conflict from the envelope (0.04222ms)
+✔ classifies rate_limited from the envelope (1.163606ms)
+✔ classifies unauthenticated from the envelope (0.102451ms)
+✔ handles malformed envelope null (0.163893ms)
+✔ handles malformed envelope [] (0.054448ms)
+✔ handles malformed envelope {"detail":"legacy error"} (0.05769ms)
+✔ handles malformed envelope {"error":{"code":"future_code","message":"private","details":{}}} (0.261771ms)
+✔ handles malformed envelope {"error":{"code":"conflict","message":3,"details":{}}} (0.113426ms)
+✔ keeps authentication and server failures actionable without JSON (28.079178ms)
+✔ retains recognized codes on auth and server responses (0.229573ms)
+✔ maps an HTML 200 body to a retry error instead of leaking a JSON parse exception (1.016693ms)
+✔ a refused change says nothing changed, then why (2.247422ms)
+✔ a change DECA Mark failed on, or did not answer, is not reported as not made (1.081992ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 239.632319
+
+real	0m0.648s
+user	0m0.646s
+sys	0m0.143s

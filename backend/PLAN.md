@@ -396,3 +396,45 @@ Do: Move the `/v2` behaviour onto the `/v1` paths and delete the old `/v1` site-
 Done when: OpenAPI has no `/v2` path; the live local workflow (upload v1, edit, publish v2, bound upload, filtered read and export) passes against the DB-19 baseline; `pnpm contracts:generate` is stable on a second run.
 Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm db:test`, and the coordinator's regeneration.
 Verified: The runtime and OpenAPI expose only the current `/v1` zone API; the local suite covers package import, draft edit/publication, bound upload, historical reads and exports. OpenAPI and both generated client declarations stayed byte-identical after a second regeneration. Backend checks passed; the disposable full backend suite passed 600 tests before final review fixes, and the post-fix focused API/OpenAPI suite passed 58 tests. The disposable PostgreSQL 17/PostGIS baseline rehearsal passed its SQL, geometry and publication-race acceptance. Web and mobile typechecks still identify consumer updates in their dependent tasks. No hosted deployment or client-device acceptance was performed.
+
+## Pilot readiness from the frontend audit (added 2026-10-22)
+
+From the [frontend audit](../docs/reviews/frontend-audit-2026-10-17/REPORT.md) and decisions D31–D32. Ordering is in [docs/plan/pilot-readiness.md](../docs/plan/pilot-readiness.md).
+
+### BE-23: A refused map package says why
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C04, ranked second). Reproduced in the browser: a `.qgz` with an "ESRI World Imagery" XYZ layer passes Read project (the slot is badged Ready), then Upload returns `422 validation_failed {issues:[{code:"invalid_structure", zone_ids:[]}]}` and the web says a zone's rings are malformed. The imagery check's exact detail (layer and host) is dropped at four points. Every worker-side `PackageError` (publication extent, the 16 MB archive limit, project parse errors) gets the same ring message. The lab's own `qgis/fall-creek/qgis_project.py` turns on ESRI World Imagery, and `docs/QGIS-Base-Map-Testing.md` tells managers to add an XYZ basemap.
+Read first: `src/fieldmaps_api/domain/zone_archive.py:229-231` (`prepare_import_base`); `domain/zone_archive_worker.py:48-49`; `services/zone_archives.py:24,48-50`; `domain/zone_publication.py:224-226`; `domain/packages.py:237-296` (`_check_imagery_licence`); `domain/project_worker.py:46-56`; web `src/features/packages/UploadStep.tsx:147-181` (its final branch already shows `failure.detail`); `cloud/w3/skeptic-C04/` in the audit evidence.
+Do:
+1. `prepare_import_base` raises the blocked checks' detail, not the generic sentence.
+2. The worker writes `str(e)` of a `PackageError` to `error.txt` before `exit(2)`; `zone_archives.py` re-raises with that text.
+3. `zone_publication.py` answers `validation_failed` with that message and no issues; real ring errors keep `invalid_structure` with zone ids from SQL validation.
+4. Rewrite the imagery remedy: "<layer> (<host>) is an online basemap. DECA Mark packages vector layers only. Remove it from the project in QGIS, or remove the QGIS project file from this upload." Emit the same sentence at Read project time from `project_worker.py`.
+5. Correct `docs/QGIS-Project-Import.md:5` and `docs/QGIS-Base-Map-Testing.md`, which say a blocked package keeps its reasons (none is stored).
+Needs user: whether an online basemap should block a package at all (the archive never contains imagery) or only warn.
+Done when: every worker-side refusal (extent, archive size, project parse) reaches the web with its own message, never the ring copy; an unclosed ring still shows the ring copy; and, for an online basemap, the owner's choice holds. If it blocks: `test_site_packages.py::test_an_unlicensed_source_is_rejected_without_publishing` and `test_workspace_lifecycle.py::test_invalid_new_source_does_not_replace_a_sites_ready_package` assert the code and that the message names the layer, and `web/e2e/packages.spec.ts`'s `qgisUpload()` gains an XYZ layer whose alert names it and never mentions rings. If it warns: those tests assert the package publishes with a warning check naming the layer, and the e2e upload succeeds and shows that warning.
+Verify: `pnpm backend:check`, `pnpm backend:test`, the packages spec through `scripts/e2e-local.sh`.
+
+### BE-24: Forms exist only in the current canonical format
+Status: todo · Phase 4 · Size M · Depends: CON-07 · Blocks: OPS-19, WEB-56
+Added 2026-10-22 (D32). Commit `b93a2b2` restored `domain/legacy_forms.py` and the fields-only branches to preserve hosted rows; D32 resets those rows instead.
+Read first: `src/fieldmaps_api/domain/forms.py` (the `legacy` discriminator and `validate_legacy_answers`), `legacy_forms.py`, `form_definition.py`, `observation_export_columns.py`; CON-07.
+Do: delete `legacy_forms.py` and every fields-only branch; validate every form write and every served definition against `contracts/form-definition.schema.json` at CON-07's current schema version; refuse other versions with a typed error; regenerate OpenAPI and both clients' types.
+Done when: no backend module or test references the fields-only format; the canonical form cases in `contracts/forms/cases` pass; `pnpm contracts:generate` leaves no diff.
+Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm contracts:generate`, `pnpm forms:parity`.
+
+### BE-25: Form templates come from the database
+Status: todo · Phase 4 · Size S · Depends: DB-20 · Blocks: WEB-56
+Added 2026-10-22 (D32). The web's "start from" templates are compiled from `contracts/forms/*.json`.
+Read first: DB-20; `web/src/features/forms/templates.ts`; the forms routes in `src/fieldmaps_api`.
+Do: add `GET /v1/form-templates` (signed-in managers; returns title, summary and canonical definition from DB-20's table); regenerate OpenAPI and types.
+Done when: an API test returns the seeded templates and refuses an anonymous caller; the web can start a draft from a template read from the API.
+Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm contracts:generate`.
+
+### BE-26: Publish a site's next map from its retained archive with a newer form
+Status: todo · Phase 4 · Size L · Depends: none · Blocks: WEB-48
+Added 2026-10-22 (audit C11, UXW-4). A published form correction reaches observers only through a full QGIS re-upload with zone-by-zone confirmation, and `zone_publication.py` (~194-206) discards the per-zone `validation.zones[].change` it computes, so an older zones layer replaces web-edited boundaries without a note.
+Read first: `domain/zone_publication.py`; `services/zone_archives.py`; the package import route; [zone contract](../docs/plan/zone-boundaries/contract.md); the D27 binding rules (records keep their package, zone and form versions).
+Do: an endpoint that publishes map vN+1 for a site from vN's retained archive and zones with a newer published form version (and the same inventory form unless one is named), using the existing request id and `expected_current_package_id` rules; return the per-zone change summary from imports instead of discarding it.
+Done when: API tests: rebind publishes vN+1 naming the new form; records bound to vN keep vN; a stale `expected_current_package_id` is refused; an import that changes a web-edited boundary reports it.
+Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm db:test`, `pnpm contracts:generate`.

@@ -1,0 +1,49 @@
+Skip to content
+DECA Mark
+Web acceptance lab
+/
+Play study acceptance
+Search or jump to
+Ctrl K
+MANAGER
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Forms
+Workspace check
+workspace-check-v5
+Publish
+Review before publishing
+Publishing freezes workspace-check-v5 with its 1 question. It cannot be edited afterwards.
+Back to the editor
+Changes since workspace-check-v4
+1 question changed · 0 unchanged
+note
+Question label
+WAS
+Test note 1021-151355
+NOW
+Test note edited 1792598215729
+
+Required: yes · Free text
+
+What happens for observers
+
+Observers collect with workspace-check-v5 only through a map package that names it. A site keeps the version its current map package names until you prepare a new package with workspace-check-v5 and observers download the site again in the app.
+
+Using another version of this form now: Fall Creek test site.
+
+Publishing does not retire older versions. workspace-check-v4, workspace-check-v3, workspace-check-v1 stay published until you retire them.
+
+Go to Sites to prepare a map package
+
+Publish
+I understand that workspace-check-v5 cannot be edited once it is published, and that observers get it only through a new map package.
+Publish workspace-check-v5
+Tick the box above to publish.

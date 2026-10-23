@@ -1,0 +1,32 @@
+# verify-web-data-identity notes (HEAD 9928f536)
+
+## WDI-3 -- DONE (verdict: refuted as stated; latent sanitizer defect only)
+- safeNext (web/src/lib/auth/navigation.ts:4-17) one-pass DOES return '//evil.com' for '/a/..//evil.com', '/.//evil.com', '/%2e%2e//evil.com', '/o/..//evil.com/x' (ran real TS via node --experimental-strip-types, repro/v/sn2.mjs).
+- BUT every sink applies safeNext TWICE: pages (sign-in/page.tsx:19, sign-up:19, verify:23, forgot-password:25, reset-password:53) compute safeNext(raw) -> hidden input `name="next"` (SignInForm.tsx:59 etc.) -> authenticate (lib/auth/actions.ts:41) does `safeNext(form.get("next"))` AGAIN before redirect(next) (:93,:133). Second pass of '//evil.com' -> startsWith('//') -> '/o'.
+- Simulated chain (repro/v/sn3.mjs): all 4 attack strings -> page '//evil.com' -> action '/o'. Fuzz 500k random inputs (repro/v/sn4.mjs): one-pass external 2141, TWO-PASS external 0.
+- Other redirect sinks: switchAccount (features/auth/actions.ts:125-132) redirects to `/sign-in?next=<encoded>` (always internal); AccountChip hidden next = isInvitationPath(pathname)?pathname:'/o'; authenticate forgot/sign-up redirect to /reset-password|/verify?next=encoded. No other consumer of ?next.
+- Only attacker-forged direct POST to the Server Action would hit single pass; Next enforces Origin==Host on Server Actions and the victim's credentials are needed anyway -> not an ordinary-user path.
+- Finding's own manual verification ('open /sign-in?next=/a/..//example.com, sign in, land on /o') already passes today.
+- Result: refuted; if kept at all it is a low-severity hardening note (make safeNext idempotent/origin-checked), DESIGN PREFERENCE.
+
+## WDI-2 -- DONE (verdict: partially_confirmed -> core confirmed; severity medium; wording fix)
+- Confirmed: web/src/lib/auth/actions.ts:136-146 signOut -> `supabase.auth.signOut()` (:138) no scope; features/auth/actions.ts:124-133 switchAccount :127 same. supabase-js 2.117.2 GoTrueClient.js:3417 `signOut(options = { scope: 'global' })`, :3384-3398 doc warning 'signs the user out of every device'. @supabase/ssr 0.12.7 does not override scope. Only features/account/actions.ts:103 (account deletion) uses scope 'local'.
+- Copy contradiction confirmed: SecurityIsland.tsx:23 'Signing out here does not affect the app...'. Callers: SecurityIsland.tsx:50, AccountMenu.tsx:47,120, DeleteAccount.tsx:150 (deletion-finishing state, harmless there).
+- Mobile: provider.tsx:89,129 use scope 'local' (mobile/PLAN.md:242,264 say so deliberately); PLAN.md:126 lists 'global sign-out' as a cause of supabase-js deleting session; session-retention.ts:19-24 (unexpected SIGNED_OUT keeps account, session null); gate.tsx decideGate: signedIn = session||cachedAccount, authOpen = !session -> app stays usable, SessionBanner/ResumeUploadsNote show 'Sign in to resume uploads'. Backend validates JWT locally via JWKS (backend/src/fieldmaps_api/auth.py JwksVerifier) so phone works until access token expiry (~1h) then refresh fails.
+- Correction: finding says 'Collection in the field is blocked'; actually collection continues (cached account keeps gate 'app'); UPLOADS pause with an in-app 'Sign in to resume uploads' banner; records kept. Recoverable by re-entering password. So medium not high. Reachable by ordinary user with one account on web and phone.
+
+## WDI-1 -- IN PROGRESS (core confirmed so far)
+- All cited call sites open and match (DraftEditorScreen save :143-183 / startFromThis :196-209; PublishScreen :79; RetireDialog :37; DiscardDialog :41; NewFormDialog :79; FormVersionsScreen :100; org SettingsScreen :98; TransferOwnership :58; CreateProjectDialog :104; project-settings SettingsScreen :120): all `start(async () => { await xAction(...)` with NO try/catch, from useTransition.
+- sites/EditSiteDialog :74-87, CreateSiteDialog :92-116, data/DataScreen loadMore :186-206: `try { await action } finally { setBusy(false) }` no catch -> unhandled rejection from async event handler, no message (confirmed).
+- React 19.2.4 verified in source (react-dom-client.development.js:5873 chainThenableValue, :9022 updateTransition -> useThenable) AND empirically: repro/v/transition-reject.cjs with react-test-renderer@19.2.4 -> async start(async()=>{reject}) => nearest error boundary renders; with try/catch it stays. 
+- Network reject: next 16.2.7 server-action-reducer.js:69-73 fetch POST; :302-305 `reject(e)`; :111-121 non-RSC no redirect -> throws 'An unexpected response was received from the server.'.
+- Boundary: only error.tsx at app/(app)/o/[org]/p/[project]/ (+ [org], global); no ErrorBoundary elsewhere; ErrorView 'Something went wrong.' + 'Your records remain available.'; Try again = unstable_retry remounts from server props. No localStorage/draft persistence in forms feature. SW (lib/pwa/service-worker.js:82) ignores non-GET, so offline POST really rejects.
+- Correct pattern confirmed: zones/StartDraft.tsx:64-75 try/catch with 'could not confirm' copy.
+- Session-ended path: proxy.ts:17,33-43 redirect 307 for all methods (matcher /o/:path*); action-handler.js:456-466 selectWorkerForForwarding -> createForwardedActionResponse (:127-206, redirect:'manual', non-RSC -> '{}' JSON) -> client throws unexpected response. (code-traced; not run)
+- CORRECTION to smallest_fix: if proxy simply stops redirecting non-GET, a signed-out action would reach resolveProject -> getWorkspace 'unauthenticated' -> workspaceError -> ApiError WITHOUT status -> failedChange -> failedWrite: wasRefused(status undefined)=false -> UNCONFIRMED_CHANGE_COPY ('DECA Mark could not confirm the change. Reload the page to check before you try again.'), NOT 'Nothing was saved. Sign in to continue.' (that copy only appears on a real API 401 with status). Also 'Reload the page' would lose the edits (document GET redirects to sign-in). So the copy needs a rewrite as the finding half-suggests.
+- Severity thought: loss bounded to unsaved edits; transient trigger -> medium-high; keep honest.
+
+## FINAL VERDICTS (ready to submit via StructuredOutput)
+- WDI-1: partially_confirmed, severity medium (loss bounded to unsaved edits; transient trigger), CONFIRMED DEFECT. Core confirmed in source + React repro; session-ended variant code-traced only. Fix-copy correction above.
+- WDI-2: partially_confirmed, severity medium, CONFIRMED DEFECT. Overstated: 'collection blocked' -> uploads pause, collection continues.
+- WDI-3: refuted (double safeNext), severity low, DESIGN PREFERENCE (latent sanitizer hardening).

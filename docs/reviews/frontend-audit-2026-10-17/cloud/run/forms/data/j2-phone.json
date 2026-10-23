@@ -1,0 +1,26 @@
+{
+ "scenario": "abort-post",
+ "url": "/o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+ "editorMounted": false,
+ "fieldValueStillEdit": false,
+ "fieldValue": null,
+ "errorBoundary": true,
+ "saveButtonPresent": false,
+ "unsavedMeta": false,
+ "events": [
+  "requestfailed POST /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5: net::ERR_FAILED",
+  "console.error: Failed to load resource: net::ERR_FAILED",
+  "console.error: TypeError: Failed to fetch\n    at j (http://127.0.0.1:3000/_next/static/chunks/10uv514i7spsv.js:1:137759)",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "requestfailed GET /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5: net::ERR_ABORTED"
+ ],
+ "dialogs": [],
+ "bodyExcerpt": "Skip to content | Play study acceptance | QA | Overview | Data | Sites | Forms | Team | QGIS | Reports | Settings | REQUEST INTERRUPTED | Something went wrong. | Your records remain available. Try again or return to the workspace. | Try again | Return to projects | What we know | Page | Forms | When | Oct 21, 2026 · 12:00 | What failed | The page could not load its records | Your data | Records remain available | Reference | REQ-939D-68 | If it keeps happening, send the reference to your organization owner. Records on devices are not affected by a web error.",
+ "afterTryAgain": {
+  "editorMounted": true,
+  "value": "Test note edited 1792598215729",
+  "editSurvived": false
+ }
+}

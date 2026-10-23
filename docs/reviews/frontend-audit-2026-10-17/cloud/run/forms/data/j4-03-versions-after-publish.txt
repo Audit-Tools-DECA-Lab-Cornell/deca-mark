@@ -1,0 +1,53 @@
+Skip to content
+DECA Mark
+Web acceptance lab
+/
+Play study acceptance
+Search or jump to
+Ctrl K
+MANAGER
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Forms
+Workspace check
+Workspace check
+workspace-check · A draft can change. A published version never does.
+Start new draft
+Workspace check
+workspace-check · 5 versions
+Versions of Workspace check
+VERSION	STATE	QUESTIONS	WHEN	USED BY	
+ACTIONS
+
+workspace-check-v5	
+Published · v5
+	1 question	Published Oct 21, 2026	No site	
+Retire
+workspace-check-v4	
+Published · v4
+	1 question	Published Oct 21, 2026	No site	
+Retire
+workspace-check-v3	
+Published · v3
+	1 question	Published Oct 21, 2026	No site	
+Retire
+workspace-check-v2	
+Draft · v2
+	1 question	Started Oct 21, 2026	No site	
+Edit draft
+Discard
+
+workspace-check-v1	
+Published · v1
+	1 question	Published Oct 21, 2026	Fall Creek test site	
+Retire
+workspace-check-v5 is published
+Older versions stay published until you retire them.
+Notification workspace-check-v5 is publishedOlder versions stay published until you retire them.

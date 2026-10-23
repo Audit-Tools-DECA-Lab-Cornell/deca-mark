@@ -86,7 +86,7 @@ Do: make sure the Maestro (MOB-21) and Playwright (WEB-15) suites together cover
 Done when: coverage is listed in this task's notes, and both suites pass.
 
 ### QA-05: Device acceptance and pilot walkthrough
-Status: todo · Phase 5 · Size M · Depends: GIS-01, MOB-15, MOB-17, OPS-09, OPS-11, QA-03, QA-04 · Blocks: none
+Status: todo · Phase 5 · Size M · Depends: GIS-01, MOB-15, MOB-17, OPS-09, OPS-11, QA-03, QA-04, QA-08 · Blocks: none
 Needs user: the devices, and Janet's time.
 Do: on a real iPad and a real Android tablet, using production internal builds:
 1. Fresh install, sign-up, code, profile, join.
@@ -118,3 +118,24 @@ Read first: [Master plan](zone-boundaries/README.md) and [component specificatio
 Do: Run geometry/security/migration/concurrency/offline/readback matrix with two managers, old queue, physical device and more than 500 rows.
 Done when: Actual evidence supports historical binding and data survival; unresolved browser/device/security/migration checks block completion.
 Verify: Component checks plus live local HTTP/browser/device/GIS story; spec review then quality review.
+
+### QA-08: Pilot launch gate on the four device families
+Status: todo · Phase 4 · Size M · Depends: BE-23, MOB-34, MOB-35, MOB-36, MOB-37, MOB-38, MOB-39, MOB-40, MOB-41, MOB-44, OPS-18, OPS-19, OPS-20, WEB-44, WEB-45, WEB-46, WEB-47 · Blocks: QA-05
+Added 2026-10-22 (D31, D33, frontend audit). The pilot starts on the current upload queue (D27) when this gate passes, not on a fixed date; QA-05 stays the full walkthrough. This gate repeats the audit's failing scenarios on physical devices with the build the pilot ships.
+Needs user: the devices (an iPhone, an Android phone, a Samsung Galaxy tablet, an iPad), installable builds (MOB-20 or an internal-distribution build), and the hosted target from OPS-19.
+Do: on each device, portrait and landscape where it rotates:
+1. Fresh install, sign-up, code, profile, join; Training downloads from the server and its practice records upload to the Training project.
+2. Download Janet's site; airplane mode; collect 10 observations including the 4-row play-event summary (field and Continue visible while typing), deliberate double taps on single-choice answers (no unread answer recorded), a rotation mid-observation (camera and answers kept), a force quit mid-observation (Resume restores it).
+3. Reconnect after repeated failures: uploads start within seconds; Account, Sign out and Delete account say what really happens.
+4. Web: a form edit with the network cut keeps the wording; a web sign-out leaves the phone uploading; a QGIS project with an online basemap is refused with the layer and the remedy named (or, if the owner chose warnings under BE-23, uploads with a warning that names the layer); the Forms list and Overview name the version each site collects with.
+5. Read the uploaded rows back in the web Data page and an export.
+Done when: every step passes on all four device families, recorded with device, OS, build and result per step in this task; any failure reopens its task.
+Verify: the recorded run.
+
+### QA-09: Test-suite hygiene from the frontend audit
+Status: todo · Phase 4 · Size S · Depends: OPS-18 · Blocks: none
+Added 2026-10-22 (audit §7). Keep the suites honest and cheap.
+Read first: `docs/reviews/frontend-audit-2026-10-17/REPORT.md` §7; `web/playwright.config.ts`; `web/e2e/overview.spec.ts`, `overview-sql.spec.ts:41`; `web/tests/auth-local.test.mjs:90-125`; `mobile/src/ui/brand-artwork.test.ts`; `web/e2e/support/scan.ts`.
+Do: tag `screenshots.spec` `@screenshots` and exclude it from the default `test:e2e` (`scripts/screenshots-web.sh` passes `--grep @screenshots`); merge the overview coverage test into `overview-sql.spec.ts`; port `auth-local`'s three recovery-cookie tamper cases to `auth-flows.spec.ts` with `context.addCookies`, then delete `auth-local.test.mjs` and `test:auth:local`; delete `brand-artwork.test.ts` (keep at most two colour-set checks); rename the honesty scan to what it is (a copy and layout lint) in its file header and README; shrink `database-migrations.test.ts`'s version loop.
+Done when: the default e2e run no longer produces screenshots; the recovery-cookie refusals run in the e2e suite; the suites pass.
+Verify: `pnpm --dir web test:unit`, `pnpm mobile:test`, the e2e suite through `scripts/e2e-local.sh`.

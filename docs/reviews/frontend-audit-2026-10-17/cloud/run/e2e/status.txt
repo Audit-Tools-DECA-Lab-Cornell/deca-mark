@@ -1,0 +1,2 @@
+desktop-1440 rc=0
+phone-390 rc=1

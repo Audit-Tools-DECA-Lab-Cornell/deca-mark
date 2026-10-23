@@ -1,0 +1,70 @@
+Skip to content
+DECA Mark
+Web acceptance lab
+/
+Play study acceptance
+Search or jump to
+Ctrl K
+MANAGER
+QA
+Overview
+Data
+Sites
+Forms
+Team
+QGIS
+Reports
+Settings
+Sites
+Fall Creek test site
+Fall Creek test site
+1 zone · 8 observations
+See observations
+Zone A · Whole playground
+
+Fall Creek test site · Day plan
+
+Map v13
+
+0–10 m
+Map v13 · north ↑
+Scale bar 0–10 m. Map v13. North is up.
+
+Zoom with plus and minus, or Control and the mouse wheel. Once zoomed in, drag or use the arrow keys to move the plan.
+
+Zones
+1 zone
+Edit zones
+Zone A · Whole playground
+
+A
+
+0 observations on v13 · 8 on earlier versions
+
+Counts cover every map version of this site.
+Current map package
+Active
+Version
+v13
+Prepared
+Oct 21, 2026 · 11:16
+Size
+2 KB
+Form version
+workspace-check-v1
+Inventory form
+workspace-check-v1
+Download
+Upload a new version
+
+Observers get this version the next time they make the site ready offline in the DECA Mark app.
+
+Package history
+Details
+Site code
+fall-creek
+Description
+No description
+Edit details
+Device readiness is not available yet. DECA Mark does not record which phones have downloaded this map. Ask observers to open the site in the DECA Mark app before they go out.
+Deleting a site or a map package is not available yet. To replace what observers download, upload a new version of the map package.

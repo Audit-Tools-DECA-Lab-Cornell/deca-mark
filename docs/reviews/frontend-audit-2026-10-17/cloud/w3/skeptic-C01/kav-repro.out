@@ -1,0 +1,14 @@
+== iPhone 17 Pro portrait (402x874), measured ==
+current (map 46%, parent-relative frame): padding 118 pt; content box ends at 722; Back/Continue y 593-649; keyboard top 539 -> BEHIND keyboard
+  observed in 16d: Back/Continue 592-648 (shift 119 pt) -> matches parent-relative, not the 301 pt window overlap
+C01 fix as written (map 0, status hidden, no offset): padding 118 pt; content box ends at 722; Back/Continue y 593-649; keyboard top 539 -> BEHIND keyboard
+C01 fix + keyboardVerticalOffset = body window y: padding 301 pt; content box ends at 539; Back/Continue y 410-466; keyboard top 539 -> ABOVE keyboard
+offset only, map still 46%: padding 301 pt leaves a 0 pt content box; the fixed rows (~128 pt) overflow and nothing is usable
+
+== Phone landscape, iPhone 17 Pro 874x402 (estimate: insets top 0 / bottom 21; header ~63 + strip ~56; keyboard ~220 with predictive) ==
+side-by-side panel visible above keyboard with a CORRECT offset: 63 pt; fixed rows need 128 pt -> Continue/field still hidden unless header/strip/links hide too
+  without offset: padding 80 (needs 199)
+
+== Tablet landscape, pilot hardware (estimate: body top ~140, bottom ~800 of 820; keyboard ~380) ==
+iOS today / Android with behavior=padding: padding 220 vs window overlap 360; content box ends 580 vs keyboard top 440: bottom 140 pt (footer rows ~128 pt incl. padding) behind keyboard
+with keyboardVerticalOffset=140: padding 360, content box ends 440

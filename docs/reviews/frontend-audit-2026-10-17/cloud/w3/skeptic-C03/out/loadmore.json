@@ -1,0 +1,28 @@
+{
+ "abort": {
+  "status": 200,
+  "url": "/o/zone-review-acceptance/p/zone-review/data",
+  "boundary": false,
+  "buttonStillThere": true,
+  "buttonEnabled": true,
+  "nothingMoreMsg": false,
+  "sameText": true,
+  "events": [
+   "console.error: Failed to load resource: net::ERR_FAILED",
+   "pageerror: Failed to fetch"
+  ]
+ },
+ "offline": {
+  "status": 200,
+  "url": "/o/zone-review-acceptance/p/zone-review/data",
+  "boundary": false,
+  "buttonStillThere": true,
+  "buttonEnabled": true,
+  "nothingMoreMsg": false,
+  "sameText": true,
+  "events": [
+   "console.error: Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+   "pageerror: Failed to fetch"
+  ]
+ }
+}

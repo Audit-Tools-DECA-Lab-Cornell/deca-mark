@@ -1,0 +1,50 @@
+
+> decamark-web@0.1.0 test:auth /home/user/deca-mark/web
+> node --experimental-strip-types --test tests/auth.test.mjs
+
+✔ redirects safely when next is https://evil.example (1.413633ms)
+✔ redirects safely when next is //evil.example (0.193146ms)
+✔ redirects safely when next is /\evil.example (0.168156ms)
+✔ redirects safely when next is /%2f%2fevil.example (0.153122ms)
+✔ redirects safely when next is /%5cevil.example (0.094097ms)
+✔ redirects safely when next is /sign-in (0.140427ms)
+✔ redirects safely when next is /verify?email=private (0.149527ms)
+✔ redirects safely when next is null (0.07026ms)
+✔ preserves an internal destination when it is valid (0.202168ms)
+✔ rejects malformed identity data when the server response is incomplete (2.94299ms)
+✔ preserves unrelated caches when a new worker activates (2.990686ms)
+✔ does not store unsafe shell response {"Cache-Control":"private"} (2.800343ms)
+✔ does not store unsafe shell response {"Cache-Control":"no-store"} (1.425103ms)
+✔ does not store unsafe shell response {"Content-Type":"text/x-component"} (1.260951ms)
+✔ never caches private URLs when the worker receives prewarm URLs (2.304874ms)
+✔ does not intercept excluded request /account (1.13273ms)
+✔ does not intercept excluded request /o (0.920707ms)
+✔ does not intercept excluded request /o/example (0.925743ms)
+✔ does not intercept excluded request /verify (1.038103ms)
+✔ does not intercept excluded request /api/me (0.975348ms)
+✔ does not intercept excluded request /_next/data/build/page.json (0.961736ms)
+✔ does not intercept excluded request /?_rsc=private (0.88357ms)
+✔ does not intercept excluded request /icons/icon.png?private=1 (2.099905ms)
+✔ does not intercept excluded request https://other.test/icons/icon.png (1.027786ms)
+✔ does not intercept protected request headers {"RSC":"1"} (0.91189ms)
+✔ does not intercept protected request headers {"Authorization":"Bearer private"} (7.656437ms)
+✔ returns fresh shell content when a cached shell exists (3.798851ms)
+✔ returns cached shell content when the network fails (2.454853ms)
+✔ returns cached shell content when the installed start URL opens offline (2.389405ms)
+✔ does not store installed start URL responses (1.440506ms)
+✔ does not prewarm HTTP response 500 (2.802343ms)
+✔ does not prewarm HTTP response 302 (1.002397ms)
+✔ does not prewarm HTTP response 200 (0.885335ms)
+✔ the proxy refreshes the sign-in on invitation pages without protecting them (0.445652ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 306.522788
+
+real	0m0.738s
+user	0m0.700s
+sys	0m0.113s

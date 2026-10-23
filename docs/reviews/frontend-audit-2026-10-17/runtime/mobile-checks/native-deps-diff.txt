@@ -1,0 +1,33 @@
+== git diff --stat 4e40cc0..HEAD and 6a9028e..HEAD for mobile/package.json ==
+(empty above = no change)
+
+== app.config.ts diff 6a9028e..HEAD ==
+diff --git a/mobile/app.config.ts b/mobile/app.config.ts
+index 49f474d..7c1675a 100644
+--- a/mobile/app.config.ts
++++ b/mobile/app.config.ts
+@@ -13,15 +13,15 @@ const connection = publicConfigSchema.parse(
+ const base = {
+   name: "DECA Mark",
+   slug: "fieldmaps-mobile",
+-  version: "0.2.0",
++  version: "0.2.1",
+   // DECA Mark links first; fieldmaps:// links from before the rename still open the app.
+-  scheme: ["decamark", "fieldmaps"],
++  scheme: ["DECAMark", "decamark", "fieldmaps"],
+   orientation: "default",
+   userInterfaceStyle: "automatic",
+   icon: "./assets/icon.png",
+   ios: {
+     supportsTablet: true,
+-    bundleIdentifier: "com.decalab.fieldmaps",
++    bundleIdentifier: "com.fieldmaps.collector.dev",
+     requireFullScreen: true,
+     infoPlist: {
+       ITSAppUsesNonExemptEncryption: false,
+
+== plugins/ and ios (tracked) diff 4e40cc0..HEAD ==
+(empty = none)
+
+== lockfile 4e40cc0 vs 6a9028e ==
+(empty = none)

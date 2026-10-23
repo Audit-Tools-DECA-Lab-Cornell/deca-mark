@@ -268,6 +268,8 @@ Progress 2026-10-15 (UI owner):
 
 Data verification (2026-10-15, this session on `master` after PR #28 merged): `removeAccountData(db, issuer, userId): Promise<RemovedAccountData>` removes only that issuer/account from all seven current owner-scoped tables, across API/project scopes. Three real SQLite tests cover other accounts/issuers/practice, shared content, no-op repeat and transaction rollback. `lastReceivedAt(db, scope): Promise<string | null>` reads only that exact scope's synced receipts; four tests cover no acknowledgment, timestamp order versus record order/UTC offset, other-scope and unsynced exclusion, and server microsecond precision. A separate Node 24 SQLite driver acknowledged A, removed A, reopened the file and verified B's record and shared content survived. No MOB-11 ledger is invented before its transition exists; file garbage collection is deferred to a reference/lease-checked retention pass. Checks under Node 24.18.0 / pnpm 10.17.1: `pnpm mobile:check` passes (TypeScript clean; Biome **23 infos**, all in files unchanged from `HEAD`, zero added; the prior 12-info note predates merged MOB-29); `pnpm mobile:test` **782 passed, 5 skipped**; `EXPO_NO_DOTENV=1 pnpm --dir mobile exec expo export --platform all` exports Android (4156 modules) and iOS (4159 modules). `pnpm plan:check` passes (158 tasks); the TypeScript no-excuse audit reports no violations in the six changed code/test files. UI wiring, simulator and physical-device checks remain pending (user). Verification covers local behavior; no deployment or hosted acceptance claimed.
 
+Moved 2026-10-22 (frontend audit C02): the stale "does not upload yet" copy and the "Upload N records first" wiring (it must call `sync.retry()`, not `wake()`) are MOB-37's scope; the remaining cleanup routine and simulator flows stay here.
+
 ### MOB-08: Never hide records on session loss
 Status: done · Phase 1 · Size S · Depends: MOB-02, MOB-04 · Blocks: none
 Read first: `src/auth/provider.tsx:48-58`; `src/storage/use-observations.ts:49`.
@@ -351,6 +353,8 @@ Remaining work:
 
 Done when: brief, collect, review and recovery render exact bound forms from the selected synced/retained sources; shared cases pass; PowerSync preserves existing current-schema answers and bindings without substituting a form. MOB-29 independently owns the present foreground bound-upload integration.
 
+Superseded in part 2026-10-22 (D32): steps 3–4 (explicit local practice, practice kept held) are replaced by MOB-43, which brings Training and every form from the server. Step 1 (PowerSync form streams) and step 2 remain.
+
 ### MOB-14: Hosted site packages
 Status: doing (2026-10-15 reconciliation: current package discovery, verified installs, references and recovery accepted locally under MOB-28/MOB-33; Storage-backed delivery, cellular policy and PowerSync integration remain) · Phase 2 · Size L · Depends: BE-13, MOB-09 · Blocks: MOB-15
 Read first: `src/packages/site-package.ts`, `src/packages/bundled.ts`, `src/maps/field-map.tsx`; the manifest format in `backend/src/fieldmaps_api/domain/packages.py` (moved there by BE-03).
@@ -379,6 +383,8 @@ Do:
 3. Show protocol notes for Janet only to managers.
 
 Done when: `grep -rn "fixture\|stub\|not built\|sample-garden\|Protocol question" mobile/app mobile/src` finds no hits outside tests.
+
+Moved 2026-10-22 (D32): deleting the bundled `sample-garden` practice package and its form fixtures is MOB-43's scope; the developer-copy and protocol-note steps stay here.
 
 ### MOB-16: Navigation and information architecture overhaul
 Status: todo · Phase 4 · Size L · Depends: MOB-03, MOB-15 · Blocks: MOB-17, MOB-18
@@ -418,6 +424,8 @@ Do:
 
 Done when: a VoiceOver pass through J2 is recorded in the task notes.
 
+Moved 2026-10-22 (frontend audit C22): the collect-map announcements, Reduce Motion on the camera, the cluster target, password label-in-name and disabled reasons are MOB-45's scope, because the pilot cannot wait for MOB-16. The VoiceOver J2 pass and the remaining items stay here.
+
 ### MOB-19: Design-system cleanup (Nocturne), together with web
 Status: dropped (superseded by MOB-23) · Phase 4 · Size M · Depends: none · Blocks: none
 Do:
@@ -452,6 +460,8 @@ Do: create `mobile/maestro/` with the flows below.
 - delete account
 
 Done when: every flow passes on the iOS simulator, and the run command is in `mobile/README.md`.
+
+Added 2026-10-22: the current-queue flows the pilot needs (keyboard layout, kill and resume, account isolation, double tap) are MOB-49; this task keeps the PowerSync-era collect-and-upload flow.
 
 ### MOB-22: Map palettes on the field map (Day, Night, Aerial)
 Status: doing (code and tests in place 2026-10-01; not yet run on a device) · Phase 1 · Size S · Depends: none · Blocks: none
@@ -541,6 +551,8 @@ Done when: no hex literal remains outside `src/ui/tokens.ts`; all tests pass.
 
 Verify: `pnpm --dir mobile typecheck && pnpm --dir mobile lint && pnpm --dir mobile test`, `pnpm tokens:check`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`, plus the simulator checklist in the PR (airplane mode shows the offline states, haptics only when the switch is on, the gallery in both themes).
 
+Moved 2026-10-22 (frontend audit C02, C24): step 1 and the `records` route of step 7 are MOB-38; step 4 (Preferences) is MOB-46; step 6's copy is MOB-37. The Nocturne theme stays only where `screen-message.tsx` and the auth splash use it until they move.
+
 ### MOB-28: Retain exact offline package versions safely
 Status: done (2026-10-13: actual current /v1 package installation and SQLite/filesystem restart pass; current mobile checks and retention tests pass; [evidence](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md)) · Phase 3 · Size L · Depends: CON-05 · Blocks: MOB-33
 Owner: Mobile data agent.
@@ -602,3 +614,153 @@ Verify: `pnpm mobile:check`, `pnpm mobile:test` with site-list failure, parking 
 Data follow-up (2026-10-14): `Recovered.formVersion` now names the retained draft's exact form in all bound recovery states; `isStored(site)` counts any account-authorized verified install independently of the current published pointer. Exact `zoneCovers` uses a filtered orientation with BigInt fallback and winding coverage, including a subnormal-bound guard. Decisions and UI-owner follow-ups are recorded in [MOB-33-HANDOFF.md](MOB-33-HANDOFF.md). With explicit user approval, the three UI-owned typed fixtures now include the required form field; `pnpm mobile:check` passes with clean TypeScript and Biome's 12-info baseline. Card text and other UI fixes remain with the UI owner. The user chose local commits only; no push or hosted change.
 
 Follow-up verification (2026-10-15): `dbbc92e` and current `src/features/projects/recovery.ts` confirm the form-missing card already uses `Recovered.formVersion`; the handoff marks that request done. The hosted provider flake was reproduced by advancing only Date four seconds between site metadata and archive generation: expected verified v8, received `[]`. `boundFixture` generated different ZIP timestamps/digests from the same inputs. Its ZIP mtime is now fixed; the same clock-crossing regression and 11 adjacent package tests pass (13 total), as does the full mobile suite recorded under MOB-07 above. No timeout increase or production download change. Simulator recovery and physical-device checks remain pending (user).
+
+## Pilot readiness from the frontend audit (added 2026-10-22)
+
+These tasks come from the [frontend audit](../docs/reviews/frontend-audit-2026-10-17/REPORT.md) (C-numbers are its clusters) and the owner decisions D31–D34. They run on the current upload queue (D27) and do not wait for PowerSync. [docs/plan/pilot-readiness.md](../docs/plan/pilot-readiness.md) orders them into waves and lanes. Every collector layout check uses the D33 device matrix: an iPhone SE-size and a large iPhone, an Android phone emulator (edge-to-edge), a Samsung or 10–11" Android tablet, and an iPad, in portrait and landscape.
+
+### MOB-34: Keep the answer field and Continue above the keyboard on every pilot device
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C01, the highest-ranked finding). On an iPhone 17 Pro simulator the keyboard top sat at 539 pt while the answer field (529–579) and Back/Continue (592–648) were behind it; at rest the field is clipped to a sliver under the sticky footer. The panel `KeyboardAvoidingView` pads about 119 pt where 301 pt is needed, because RN 0.86.3 compares its parent-relative frame with the keyboard's window coordinate. Android has no avoidance at all (`behavior` is `undefined`; edge-to-edge is mandatory in Expo 57).
+Read first: `src/features/collect/CollectScreen.tsx:476-499` (panel KAV, `Platform` branch at :479, map slot 46% at :499); `QuestionStep.tsx:141-145,198-207,241-257`; `SavedStep.tsx:145-152`; `CollectMap.tsx:247-253,762-809`; both `useKeyboardVisible` copies (`features/auth/use-keyboard.ts`, `features/onboarding/use-keyboard-visible.ts`); `node_modules/react-native/Libraries/Components/Keyboard/KeyboardAvoidingView.js:97-130`; the C01 evidence (`docs/reviews/frontend-audit-2026-10-17/runtime/native/PROGRESS.md` step 16d, `cloud/w3/skeptic-C01/kav-repro.mjs`; the screenshot `runtime/native/16d-keyboard-covers-answer-field.png` is in the audit's asset bundle, outside git).
+Do:
+1. Move one `useKeyboardVisible` into `src/ui/` and delete the other copy.
+2. Measure the body's window y with `onLayout` and pass `keyboardVerticalOffset={bodyY}` with `behavior="padding"` on both platforms; delete the `Platform` branch.
+3. On phones while the keyboard is up: give the map slot height 0 by style (keep it mounted; never `display:none`, which unmounts on Fabric) and hide the status row. In phone landscape also hide the header, the mode strip and the links row.
+4. Add `keyboardDismissMode="on-drag"` to the QuestionStep ScrollView (it already has `keyboardShouldPersistTaps`).
+5. Check two frames as the keyboard rises: if the KAV's `LayoutAnimation` animates the map slot (DESIGN forbids it), replace the panel KAV with `paddingBottom = max(0, keyboardHeight - insets.bottom)`.
+6. Pin SavedStep's "Place the next observation" outside its ScrollView, like Place, Question and Review. Lay the map controls in two columns when the map frame is under about 340 pt.
+Done when: on every D33 device in portrait and landscape, while typing the 4-row `play_event_summary` of `janet-test-v1`, the field and Continue frames end above the keyboard frame (`maxY ≤ keyboard.minY`, read from frames, not a visibility assertion); a drag dismisses the keyboard and the camera is unchanged; Saved's forward action is visible without scrolling; the map is never remounted.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, and the frame check on the simulators/emulators of D33 (Accessibility Inspector, `uiautomator dump` or a MOB-49 flow), screenshots in the PR.
+
+### MOB-35: Rotation keeps the field map and the step mounted
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C21). Rotating swaps between two layout trees in `CollectScreen.tsx`, so MapLibre and the step panel remount: the camera and the aim go back to the zone centre, which breaks the screen's own "map stays mounted" rule. Tablets rotate constantly in the field (D33).
+Read first: `src/features/collect/CollectScreen.tsx` (the portrait and landscape branches); `src/layout/use-layout.ts`.
+Do: render one tree and switch the arrangement (column or row, slot sizes) by style only, keeping the map and panel element identities stable. Do this in the same lane as MOB-34 (same file).
+Done when: on the iPad and Samsung-tablet simulators, rotating during Place and during Answer keeps the camera, the aim and the typed answer; a unit or render test asserts the map component is not unmounted on a layout change.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, simulator rotation on two tablets.
+
+### MOB-36: A second tap cannot answer an unread question
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C05). Single-choice questions auto-advance after `AUTO_ADVANCE_MS = 160`. Reproduced with the real `QuestionStep`, `reduceSession` and `janet-test-v1`: a second tap 250 ms later answers the next question (Q1 → Q2 gives `play_type_1: exploratory`), and on Q2 it answers the optional subtype and lands on "A second play type, if there is one", which looks natural and which Review never flags. A re-tap at 120 ms clears the answer; that un-choose is intended and stays.
+Read first: `src/features/collect/CollectScreen.tsx:42,98-105,205-218,352`; `src/forms/session.ts:83-89` and its un-choose test; `cloud/w3/skeptic-C05/double-tap.test.ts`.
+Do: in `dispatchStep` (not QuestionStep, which is not keyed per question): (a) a `choose` of the option whose advance is pending returns early without cancelling the advance; (b) stamp `advancedAt` when the timeout fires and ignore `choose`/`toggle` for about 350 ms after it. Extract the timer and guard into `useAutoAdvance(dispatch)` so it can be tested without MapLibre.
+Done when: a hook test with fake timers proves: re-tap at 120 ms keeps Q1 and still advances; a tap 250 ms later on Q2 leaves Q2 unanswered; a different option within 160 ms still replaces the first; un-choose after Back still clears.
+Verify: `pnpm mobile:test`; a manual double-tap check on one phone and one tablet.
+
+### MOB-37: Say what the uploader really does at sign-out, deletion and Saved
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: MOB-38, QA-08
+Added 2026-10-22 (audit C02). Takes over the copy and "Upload N records first" wiring that MOB-07's progress note lists as remaining, and step 6 of MOB-27. The uploader is live (MOB-29), yet Account (`account/index.tsx:135-138`, comment :36-41) and Sign out (`sign-out.tsx:125-131`) say "This version does not upload yet", Delete account (`delete-account.tsx:186-191`) says "This version cannot upload them first … can never upload", and practice records are called "held for the project" (`leaving.ts:35-40`, `SavedStep.tsx:115-120`, `guide/content.ts:84`), which is the contract word for "waiting on the project".
+Read first: the files above; `src/features/account/leaving.ts:83` (`uploadFirstLabel`, unused); `src/sync/provider.tsx` (`retry`, `wake`); `src/features/preview/queue.ts:9-14`; `account-screens.test.tsx:144` (pins the false copy); [MOB-07-HANDOFF.md](MOB-07-HANDOFF.md).
+Do:
+1. Delete both "does not upload yet" notes and the doc comment. Sign out says: "Signing out pauses their upload until {email} signs in again on this device."
+2. Delete account with unsent records offers "Upload N first" wired to `sync.retry()` (which clears `next_attempt_at`), never `wake()` (which waits out the retry delay; 0 calls in 240 s in the reproduction), and keeps the observer on the screen while the counts update; "Delete anyway" proceeds. The Alert stops saying uploading first is impossible.
+3. Count unsent from bound rows only (`onDevice + uploading + attention`). Decide practice by `!isBoundObservation`, not `isShellObservation` (that misses Practice-garden inventory rows). Until MOB-43 lands, word practice as "Practice record: stays on this device and is never uploaded".
+4. Remap `local-only` in `queue.ts STATUS_TO_STATE` away from "held" before any screen shares the map. (The `bundled.ts:107,180` meta strings that say "uploads to the API" are deleted with the file in MOB-43.)
+Done when: seeding one bound pending row with 7 attempts and a future `next_attempt_at`, one `shell-v1` practice row and one unbound `janet-inventory-v1` row: "Upload 1 first" uploads at once and the row reaches Uploaded only through a receipt; Account, Sign out and Delete account count 1 unsent and describe the two practice rows as never uploaded; a grep finds neither "does not upload yet" nor "cannot upload them first"; `account-screens.test.tsx:144` asserts the new copy.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`.
+
+### MOB-38: Observations: one Contour list inside the app shell
+Status: todo · Phase 4 · Size M · Depends: MOB-37 · Blocks: QA-08
+Added 2026-10-22 (audit C02, A11Y-01). Takes over MOB-27 step 1 and the `records` route of step 7. The Observations tab is `<Redirect href="/records">` to a root-stack sibling, so it replaces the whole `(app)` group: the dock disappears and the dark Nocturne screen shows "Held" for pending and "Synced" for uploaded, with an 11.5 pt text-only state chip, no heading and five screen-reader stops per record.
+Read first: `app/(app)/(tabs)/observations/index.tsx`; `app/records.tsx:31-153`; `app/_layout.tsx:212-213`; `src/components/screen.tsx`; MOB-27 step 1; `src/ui/` ListRow and StateBadge.
+Do: build the Observations list inside the tab stack with Contour primitives (`FlatList`, one row = one accessibility element with state glyph + word + colour from MOB-37's map, a header role, zone chips); keep "Retry these uploads" for needs-attention rows calling `sync.retry()`, with copy that says retrying sends the same record again and does not change it; delete `app/records.tsx` and `PageScreen`. Keep the Nocturne theme only where `screen-message.tsx` and the auth splash still use it, and record that remainder in MOB-27.
+Done when: tapping Observations keeps the dock (a router-level test with expo-router's `renderRouter`); the list uses On device, Uploading, Uploaded, Needs attention; VoiceOver reads one stop per record on the iPad simulator.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, `pnpm tokens:check`, simulator check in Day and Dusk.
+
+### MOB-39: Uploads resume as soon as the observer is back online, and idle ticks do nothing
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C09, C15). Reproduced with the real coordinator: retry delays (5, 10, 20, 40, 80, 160, 300 s) never reset, so ten seconds after the 7th failure a reconnect plus foreground wake made 0 upload calls and the upload went out about 305 s later. Separately, every 5 s drain calls `changed()` even when nothing changed, so every focused `useObservations` re-reads and zod-parses all rows, Account and Sign out flash "Reading records from this device…", Sign out ignores taps for a moment, and the collect map rebuilds its sources.
+Read first: `src/sync/coordinator.ts:65-82`; `src/sync/bound-upload.ts:45-56`; `src/storage/sync-store.ts:31-40,108-130`; `src/sync/provider.tsx:50,100,117-129`; `src/sync/foreground.ts:18-21`; `src/storage/use-observations.ts:18-47`.
+Do:
+1. On connectivity regained and on foreground, one UPDATE sets `next_attempt_at = 0` for pending rows (not needs-attention), then wake.
+2. The coordinator (and `activateHeldObservations` until MOB-42 deletes it) reports whether a row changed; call `changed()` only then.
+3. `useObservations` sets `loading` only on the first read for a key and keeps the previous rows during re-reads.
+4. Replace the fixed 5 s interval with one timeout to the earliest `next_attempt_at`.
+Done when: coordinator tests: after 7 failures a connectivity wake uploads at once; an empty drain calls no `changed()`; a screen test shows Account without the loading text on a no-change bump; retries still fire without any user action.
+Verify: `pnpm mobile:test`; on a simulator with a failing API, toggle offline/online and see the upload within seconds.
+
+### MOB-40: A token refresh keeps downloads and installed packages
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C10). Every `TOKEN_REFRESHED` (about hourly, and on resume near expiry) gives a new session object; `api` and `PackageOperations` are rebuilt, the effect clears `downloads` and `installed`, disposal aborts the running download with a suppressed error, sites flash "Not downloaded · needs a connection" until the catalog re-hashes every retained version, and MeProvider re-fetches `/v1/me` and every project's sites.
+Read first: `src/auth/provider.tsx:160-201`; `src/packages/hosted/provider.tsx:50-104,129,134`; `src/packages/hosted/operations.ts:51-55`; `src/auth/me-provider.tsx:174`.
+Do: key `api`, `operations` and the MeProvider effect on `client`, `userId` and `session !== null` instead of the session object (the token getter already reads the current session per request); hold `markAccountDeleted` in a ref. Keep every generation/`current()` fence and the catalog run at start.
+Done when: a provider test replaces the session object for the same user mid-download: the download completes, `installed` is unchanged and the catalog does not run again; sign-out still disposes operations.
+Verify: `pnpm mobile:test`; on a simulator, a short local JWT expiry during a large download.
+
+### MOB-41: Draft writes are honest, and an unreadable draft can be discarded
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C08). Reproduced with the real stores: a Review-row tap while "Saving on this device…" re-inserts a draft carrying the committed id, so the next observation's `saveDraft` throws `DraftConflictError` (that observation then lives only in memory) and recovery fails with a UNIQUE error. Any draft-write failure only sets `session.status`, which no Collect screen shows, while `CollectScreen.tsx:423-437` keeps saying "Draft kept on this device as you answer". An unreadable draft blocks every "Set up this session" with no card to discard it.
+Read first: `src/features/collect/CollectScreen.tsx:423-437`; `ReviewStep.tsx:171-177,229-232`; `src/session/draft-persistence.ts:29-38,88-95`; `src/session/observation-actions.ts:82-85,128-138,191,221`; `src/session/recovered-drafts.ts:63`; `src/features/projects/UnfinishedCard.tsx:63-101`.
+Do: drive the Collect status line from the last draft-write result ("Not kept: this observation is only in memory. Save it now." on failure); disable Review rows and the "Keep answering"/"Discard observation" links while saving; add an UnfinishedCard variant for an unreadable draft with a confirmed Discard through the existing `discardRecovered`.
+Done when: unit tests show no ghost draft when a commit and a queued save race; a forced `saveDraft` failure renders the "Not kept" line; a screen test shows an unreadable draft's card with Discard, after which "Set up this session" works.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`.
+
+### MOB-42: Delete pre-launch compatibility and write-only persistence
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: MOB-44
+Added 2026-10-22 (audit C19, D31). The pre-launch policy makes these plain deletions, and they must land before the last sanctioned reset (MOB-44).
+Read first: `src/data/legacy/scope.ts` (a constant API URL `127.0.0.1:8000`, the hosted issuer and a fixed project id); `src/auth/session-retention.ts:27-31`; `src/storage/session-store.ts`; `src/storage/database-migrations.ts:48-50`; `src/packages/package-references.ts:20-24`; `package-catalog-read.ts:70`; `packages/hosted/operations.ts:216` (`operations.selected`); `src/sync/provider.tsx:100` (`activateHeldObservations` every drain); `src/platform/auth-storage.ts:9,81-95` (`legacyStorageKey`, `migrateLegacySession`); `app.config.ts:18` (three URI schemes; expo-linking ignores two).
+Do: replace the frozen legacy owner scope with one built from the configured connection and the user id; delete `session-store`, `active_sessions`, `package_selections`, `readSelected`, `selectPackage`, `operations.selected`, `activateHeldObservations`, `migrateLegacySession`, `legacyStorageKey` and the `DECAMark`/`fieldmaps` schemes (keep `decamark`); delete the tests that pin them (the four `migrateLegacySession` tests; rename other uses of the key to a local test constant). Do not bump `SCHEMA_VERSION` here; MOB-44 bumps it once.
+Done when: account-isolation and outbox tests pass with the new scope; `grep -rn "legacy" mobile/src mobile/app` finds only test names that describe removed behaviour, or nothing; the bundle still exports for iOS and Android.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, `EXPO_NO_DOTENV=1 npx expo export --platform ios` and `--platform android` from `mobile/`.
+
+### MOB-43: Training and every form come from the server
+Status: todo · Phase 4 · Size L · Depends: DB-20 · Blocks: MOB-44
+Added 2026-10-22 (D32, D4). Supersedes MOB-13 steps 3–4 ("explicit local practice", "keep local practice held") and the `sample-garden` part of MOB-15 step 1. Hosted sites already download their forms with the package (D27); only the bundled practice and Fall Creek packages and their compiled forms remain hard-coded.
+Read first: `src/forms/registry.ts` and `src/forms/fixtures/*` (compiled from `contracts/forms`); `src/packages/bundled.ts` (Practice garden, bundled Fall Creek); `src/session/round-forms.ts`; `src/domain/observation.ts:33-143` (`shellObservationSchema`, `isShellObservation`) and `build-observation.ts:51`; `src/storage/observation-store.ts:27-31` (local-only); the device-projects mapping of `is_training`; DB-20's Training seed.
+Do: the Training project's practice site downloads like any hosted site with its package and forms; practice records are ordinary bound observations of the Training project and upload to it (exports and analysis exclude `is_training`); delete the bundled packages, the form fixtures and registry entries, the `shell-v1` record shape and the `local-only` state; `formForRound` reads only package forms; the field guide and Saved stop describing practice as never uploaded (MOB-37's interim copy goes). Keep the form engine (code) byte-identical with the web copy (`pnpm forms:parity`).
+Done when: a fresh account on the local stack joins Training, downloads Practice garden, collects in Standard, Reliability and Inventory rounds and uploads to the Training project; `grep -rn "contracts/forms" mobile/src` finds only tests; no screen shows "held" for practice.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, `pnpm forms:parity`, a simulator run on the local stack.
+
+### MOB-44: The last sanctioned reset, then forward-only collector migrations
+Status: todo · Phase 4 · Size M · Depends: MOB-42, MOB-43 · Blocks: QA-08
+Added 2026-10-22 (D31, audit C20). Today any `SCHEMA_VERSION` mismatch drops every table, unsent observations and drafts included (`database-migrations.ts:61-80`); that is allowed only until the pilot starts.
+Read first: `src/storage/database-migrations.ts`; `src/storage/initialize-collector.ts` (`package_files_need_reset`); `database-migrations.test.ts`; D31.
+Do:
+1. Bump `SCHEMA_VERSION` once, after MOB-42 and MOB-43, as the last sanctioned reset; this is the schema the pilot build ships with.
+2. Replace drop-all with an ordered list of forward migrations (`user_version` N → N+1 steps, each in a transaction), starting empty at the pilot schema.
+3. From now on, a version the app cannot migrate refuses to start collection and says why ("This version cannot read the records on this device. Update DECA Mark; nothing was deleted."); it never drops a table that holds unsent observations or drafts.
+4. Rewrite the reset test: it now asserts the guard and a sample migration, not the wipe (audit TEST-04).
+Done when: tests prove a forward migration keeps pending rows and drafts byte-identical, an unknown future version refuses without deleting, and the pilot schema is created fresh on install; `mobile/README.md` states the rule.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`; a simulator install over the previous build.
+
+### MOB-45: Collect map and controls work with VoiceOver, TalkBack and Reduce Motion
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C22, the native half of C23, A11Y-08). Moves the pilot-relevant parts of MOB-18 ahead of MOB-16. Three live regions are Android-only (`accessibilityLiveRegion`), so VoiceOver hears nothing when the cross leaves its zone; two messages are announced twice; the map camera ignores Reduce Motion although PRODUCT promises map moves jump; the cluster marker is a 36 pt target with no hitSlop; the password Show/Hide control fails label-in-name; disabled reasons exist only as `accessibilityHint`, which RN 0.86.3 maps to an Android tooltip.
+Read first: `src/ui/Note.tsx`, `StatusLine.tsx` (the iOS announce helper), `src/features/collect/CollectMap.tsx` (camera moves, cluster marker), `src/ui/PasswordInput.tsx`, `src/ui/Button.tsx:183-233`; MOB-18.
+Do: announce placement and zone changes on iOS through the existing helper, once per change; pass `animationDuration: 0` (or the jump equivalent) to every camera move when Reduce Motion is on; give the cluster marker at least a 44 pt target; make the password control's accessible name contain its visible label; expose disabled reasons as visible text or in the accessibility label.
+Done when: unit tests cover single announcements and the reduce-motion camera path; a VoiceOver pass on the iPad simulator and a TalkBack pass on the Android emulator through Place → Answer → Review are recorded in this task.
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, the two screen-reader passes.
+
+### MOB-46: Collector preferences in release builds
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C24). Takes over MOB-27 step 4. PRODUCT.md:166 and DESIGN.md promise preferred hand, haptics, larger question text, Dusk and the map palette; today they can be set only in `app/(dev)/` screens.
+Read first: `src/ui/preferences.tsx`; `app/(dev)/gallery.tsx`, `states.tsx`; `app/(app)/(tabs)/account/`; PRODUCT.md:166; D19.
+Do: a Preferences screen under Account with the five settings, stored per device as today, applied immediately, readable offline; keep the dev gallery for design review only.
+Done when: each preference changes the collect screen on the simulator in a release-mode build; tests cover persistence and defaults (Day, haptics on, standard text, palette Day).
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, `pnpm tokens:check`.
+
+### MOB-47: A failed site download names the step that failed
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: none
+Added 2026-10-22 (audit C25). On the simulator the map archive downloaded, `getFormVersion` failed, and the site said "Map v49 did not finish downloading. Nothing was kept; you can try again." Only package and verify errors are classified.
+Read first: `src/packages/hosted/prepare.ts`; `operations.ts`; `src/features/projects/HostedPackageIsland.tsx`; `src/data/api/errors.ts`.
+Do: classify the failing step (archive, form version, zones, verify, storage) and name it in the message, keeping "Nothing was kept; you can try again."; map no-access and not-found to their existing copy.
+Done when: a unit test per failing step shows its own message.
+Verify: `pnpm mobile:test`.
+
+### MOB-48: Measure and bound the collector's runtime and bundle cost on pilot devices
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C35, C37). Unmeasured on Hermes: the Observations list and collect map load every record ever kept; the map re-serializes its style on every render; installs keep several whole-package copies and re-verify every version at start. Measured: the lucide icon barrel is about a quarter of the 6.7 MiB iOS Hermes bundle; `expo-font` is used but not declared.
+Read first: `src/storage/use-observations.ts`; `src/features/collect/CollectMap.tsx`; `src/packages/hosted/package-catalog.ts`; `src/ui/Icon.tsx:1-86`; `docs/reviews/frontend-audit-2026-10-17/runtime/mobile-checks/bundle-attribution.txt`.
+Do: switch `Icon` to per-icon imports (pin the exact lucide version) and declare `expo-font`; then, on a release build on the pilot Android tablet and an iPhone, time `listObservations`, the catalog run and a collect-map render with 50 / 500 / 2,000 records and 1 / 5 / 20 retained versions; bound or page only what the numbers show is slow (for example a `WHERE` and `LIMIT` for the collect map's prior records, pre-stringified style).
+Done when: the bundle report shows the icon saving; a dated table of device timings is recorded here with the changes it justified (or "none needed").
+Verify: `pnpm mobile:check`, `pnpm mobile:test`, an iOS export bundle report.
+
+### MOB-49: Native flows on the current upload queue (Maestro)
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C14). MOB-21's flows wait for PowerSync (MOB-10); the pilot runs on the current queue (D27), and the audit's highest collector defects (C01, C05, C02) were found only by hand. This task covers the queue-era flows; MOB-21 keeps the PowerSync-era ones.
+Read first: MOB-21; `mobile/README.md` (simulator and local stack); `docs/qa/device-checklist-2026-10.md`; `scripts/e2e-local.sh` (local stack).
+Do: create `mobile/maestro/` with flows against the local stack: (1) Training → place → answer two questions with the keyboard up (assert the field and Continue sit above the keyboard by frame, MOB-34) → kill → relaunch → Unfinished card → Resume restores the answers; (2) account A saves offline and signs out (the warning names the pause), B signs in and sees none of A's records, A signs back in and the record uploads exactly once; (3) a double tap on a single-choice answer leaves the next question unanswered. Run them on the iOS and Android simulators/emulators of D33.
+Done when: the three flows pass on iOS and Android and fail when MOB-34 or MOB-36 is reverted; the run command is in `mobile/README.md`.
+Verify: the flows on both platforms, output in the PR.

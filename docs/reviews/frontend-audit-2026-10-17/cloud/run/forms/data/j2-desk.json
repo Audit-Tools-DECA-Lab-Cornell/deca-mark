@@ -1,0 +1,80 @@
+{
+ "scenario": "cookie-clear",
+ "url": "/o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+ "editorMounted": false,
+ "fieldValueStillEdit": false,
+ "fieldValue": null,
+ "errorBoundary": true,
+ "saveButtonPresent": false,
+ "unsavedMeta": false,
+ "events": [
+  "POST /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5 -> 307",
+  "POST /sign-in -> 200",
+  "console.error: Error: An unexpected response was received from the server.\n    at j (http://127.0.0.1:3000/_next/static/chunks/10uv514i7spsv.js:2:743)",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "nav /sign-in?next=%2Fo%2Fweb-acceptance%2Fp%2Fplay-study%2Fforms%2Fversions%2Fworkspace-check-v5"
+ ],
+ "dialogs": [],
+ "bodyExcerpt": "Skip to content | DECA Mark | Web acceptance lab | / | Play study acceptance | Search or jump to | Ctrl K | MANAGER | QA | Overview | Data | Sites | Forms | Team | QGIS | Reports | Settings | REQUEST INTERRUPTED | Something went wrong. | Your records remain available. Try again or return to the workspace. | Try again | Return to projects | What we know | Page | Forms | When | Oct 21, 2026 · 11:57 | What failed | The page could not load its records | Your data | Records remain available | Reference | REQ-987D-13 | If it keeps happening, send the reference to your organization owner. Records on devices are not affected by a web error.",
+ "afterTryAgain": {
+  "editorMounted": false,
+  "value": null,
+  "editSurvived": false
+ }
+}
+{
+ "scenario": "abort-post",
+ "url": "/o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+ "editorMounted": false,
+ "fieldValueStillEdit": false,
+ "fieldValue": null,
+ "errorBoundary": true,
+ "saveButtonPresent": false,
+ "unsavedMeta": false,
+ "events": [
+  "requestfailed POST /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5: net::ERR_FAILED",
+  "console.error: Failed to load resource: net::ERR_FAILED",
+  "console.error: TypeError: Failed to fetch\n    at j (http://127.0.0.1:3000/_next/static/chunks/10uv514i7spsv.js:1:137759)",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "requestfailed GET /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5: net::ERR_ABORTED"
+ ],
+ "dialogs": [],
+ "bodyExcerpt": "Skip to content | DECA Mark | Web acceptance lab | / | Play study acceptance | Search or jump to | Ctrl K | MANAGER | QA | Overview | Data | Sites | Forms | Team | QGIS | Reports | Settings | REQUEST INTERRUPTED | Something went wrong. | Your records remain available. Try again or return to the workspace. | Try again | Return to projects | What we know | Page | Forms | When | Oct 21, 2026 · 11:58 | What failed | The page could not load its records | Your data | Records remain available | Reference | REQ-939D-68 | If it keeps happening, send the reference to your organization owner. Records on devices are not affected by a web error.",
+ "afterTryAgain": {
+  "editorMounted": true,
+  "value": "Test note edited 1792598215729",
+  "editSurvived": false
+ }
+}
+{
+ "scenario": "offline",
+ "url": "/o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+ "editorMounted": false,
+ "fieldValueStillEdit": false,
+ "fieldValue": null,
+ "errorBoundary": true,
+ "saveButtonPresent": false,
+ "unsavedMeta": false,
+ "events": [
+  "requestfailed POST /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5: net::ERR_INTERNET_DISCONNECTED",
+  "console.error: Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "console.error: TypeError: Failed to fetch\n    at j (http://127.0.0.1:3000/_next/static/chunks/10uv514i7spsv.js:1:137759)",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "nav /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5",
+  "requestfailed GET /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5: net::ERR_INTERNET_DISCONNECTED",
+  "console.error: Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+  "console.error: Failed to fetch RSC payload for http://127.0.0.1:3000/o/web-acceptance/p/play-study/forms/versions/workspace-check-v5. Falling back to browser navigation. TypeError: Failed to fetch\n    at T (http://1",
+  "requestfailed GET /o/web-acceptance/p/play-study/forms/versions/workspace-check-v5: net::ERR_INTERNET_DISCONNECTED",
+  "nav /"
+ ],
+ "dialogs": [],
+ "bodyExcerpt": "Skip to content | DECA Mark | Web acceptance lab | / | Play study acceptance | Search or jump to | Ctrl K | MANAGER | QA | Overview | Data | Sites | Forms | Team | QGIS | Reports | Settings | REQUEST INTERRUPTED | Something went wrong. | Your records remain available. Try again or return to the workspace. | Try again | Return to projects | What we know | Page | Forms | When | Oct 21, 2026 · 11:58 | What failed | The page could not load its records | Your data | Records remain available | Reference | REQ-939D-68 | If it keeps happening, send the reference to your organization owner. Records on devices are not affected by a web error.",
+ "afterTryAgain": {
+  "editorMounted": false,
+  "value": null,
+  "editSurvived": false
+ }
+}

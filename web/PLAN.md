@@ -240,6 +240,8 @@ Progress 2026-10-14, local stack, production build, Chromium with touch emulatio
 - **Fixed:** small outline and danger buttons reached only 40 px, because a `::before` inset starts inside the 2 px edge; the sm `Button`, the sm `IconButton` and the package-upload label now centre a 44 px box (69 findings to 0). A `TextLink` with a glyph ("All observations", "Package history", "Open the draft") is a 44 px target on touch screens (`pointer-coarse:`), without moving its words. QGIS's wrapped download row keeps 16 px between lines so the link below does not take the buttons' targets; QGIS now has no target under 44 px (`qgis-reports.spec.ts`, 14 of 14 with setup, after the change).
 - **Open:** links without a glyph used as row titles or standalone actions are 20 to 24 px (site names on Sites and the organization's Projects, "Show vN" in package history, "Edit zones", "Draft · v2", "Organization members"); Data plan markers are 27 px (37 px selected), deliberately short of 44 so close markers stay separable, with each row in the table as the 44 px way to the same observation. Do step 1 names files that WEB-27 replaced (`RailNav.tsx`, `chrome.tsx`, `ObservationsWorkspace.tsx`, `PackageUpload.tsx`): the Data screen stacks the table and plan until `xl`. Whether two panes from `md` still apply is the lead's call.
 
+Related 2026-10-22: the Data page's plan-after-table layout below 1280 px (frontend audit C12) is fixed in WEB-51.
+
 ### WEB-14: Legal pages for public sign-up
 Status: done (2026-10-14; two facts stay "to be confirmed": the email provider and the Training retention) · Phase 1 · Size S · Depends: WEB-06 · Blocks: OPS-11
 WEB-27 (2026-10-09, D30): not changed. The legal layout only takes the new header mark (D29).
@@ -722,3 +724,138 @@ Do: send the first map as every web upload does: `site_id`, a `request_id` per r
 Done when: on the local stack, a fresh run publishes map v1 and the set-up opens on the web.
 Verify: a run against the local stack with a synthetic account.
 Verified 2026-10-14 on the local stack with a new synthetic account and organization: the first run creates the organization, the project, both forms (published), Fall Creek and map v1 ("Published map v1"); the set-up opens on the web, where the site page shows map v1 as current, its forms and its one zone, "Zone A · Whole playground", on the plan. Two later runs keep everything ("Fall Creek Elementary playground already has map v1"). Not run against a hosted API.
+
+## Pilot readiness from the frontend audit (added 2026-10-22)
+
+These tasks come from the [frontend audit](../docs/reviews/frontend-audit-2026-10-17/REPORT.md) (C-numbers are its clusters) and the owner decisions D31–D34. [docs/plan/pilot-readiness.md](../docs/plan/pilot-readiness.md) orders them into waves and lanes. Browser checks run on the local stack (`sh scripts/e2e-local.sh --prod --zones`) at 1440 and 390, plus 1024 and 768 where a task names a tablet.
+
+### WEB-44: A failed Server Action never loses typed work
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C03). Reproduced in the browser at 1440 and 390 with an aborted action POST, cleared cookies (the proxy answers the POST with a 307 to `/sign-in`), offline, a bogus `Next-Action` id (deploy skew, D34) and a 401: the draft editor unmounts into ErrorView ("What failed: The page could not load its records"), the unsaved edit is gone, and "Try again" shows the old wording with no unsaved marker. Settings, the five Forms dialogs, the Sites dialogs and ProfileForm have the same path; "Show the next 500" fails silently.
+Read first: `src/features/forms/DraftEditorScreen.tsx:145-208`; `project-settings/SettingsScreen.tsx:120-133`; `data/DataScreen.tsx:186-205` and the catch precedent at `data/DataMap.tsx:178`; `forms/PublishScreen.tsx:79`, `RetireDialog.tsx:37`, `DiscardDialog.tsx:41`, `NewFormDialog.tsx:79`, `FormVersionsScreen.tsx:100`; `sites/CreateSiteDialog.tsx`, `EditSiteDialog.tsx`; `account/ProfileForm.tsx`; `lib/api/errors.ts` (`UNCONFIRMED_CHANGE_COPY`, `wasRefused`); `zones/StartDraft.tsx` ("could not confirm whether"); `src/proxy.ts:33-43`; `next/dist/client/components/router-reducer/reducers/server-action-reducer.js:69-121`.
+Do:
+1. Catch the rejection at every Server Action call site (editor save first, then Settings, `loadMore`, the Forms, Sites, org and people dialogs, ProfileForm), keeping the screen mounted and the leave guard armed.
+2. Three-way copy, because "Nothing was saved" is true only when the action never ran: never ran (`unstable_isUnrecognizedActionError(e)` from `next/navigation`, or a sign-out sentinel) → "Nothing was saved. …"; unknown outcome → "DECA Mark could not confirm the save. Your wording is still here. Save again when you are connected."; a 412 after an unknown outcome proves nothing by itself (another manager may have saved in between), so read the draft back: only when its content equals the wording this page submitted does the page say "Your earlier save went through." and clear the unsaved state; otherwise it keeps the wording and opens the normal conflict choice. Dialogs with nothing typed keep `UNCONFIRMED_CHANGE_COPY`. For deploy skew: "DECA Mark was updated while this page was open. Nothing was saved. Copy your wording, reload, then paste and save."
+3. Optional: answer `next-action` POSTs from the proxy with a fixed 401 sentinel instead of a 307, so the copy can name the sign-out. It cannot affect the zone editor, which calls the API directly.
+Done when: a Playwright spec at 1440 and 390 covers aborted POST, cleared cookies, offline, a bogus action id and a reply lost after commit (`route.fetch()` then abort): the editor and Settings stay mounted, the edit stays in the field, ErrorView never shows, the reply-lost case never claims "Nothing was saved", and its second Save (412) reads the draft back and reports the earlier save only because the content matches; a case where a second manager saves between the lost reply and the retry ends in the conflict choice with this page's wording kept; the leave guard is still armed; "Show the next 20" on the zone-review project shows a failure note.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the new spec through `scripts/e2e-local.sh`.
+
+### WEB-45: Web sign-out signs out only this browser
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C06). `lib/auth/actions.ts:138` (`signOut`) and `features/auth/actions.ts:127` ("Not you?" on invite and join) call `supabase.auth.signOut()` with no scope; auth-js 2.117.2 defaults to `global` (`GoTrueClient.js:3417`), which revokes the phone collector's session too, while `account/SecurityIsland.tsx:23` promises "Signing out here does not affect the app". `features/account/actions.ts:103` and the collector (MOB-07) already use `local`.
+Read first: the three call sites; `SecurityIsland.tsx:23`.
+Do: pass `{ scope: "local" }` at both call sites; clear the `fm-place` cookie at the same moment (audit J-7). If "sign out everywhere" is ever wanted, it becomes a separate, explicitly worded control.
+Done when: signed in with one account on the web and the iOS simulator, a web sign-out followed by a forced token refresh on the phone leaves the collector uploading; a second browser stays signed in; `fm-place` is gone after sign-out.
+Verify: `pnpm web:check`; the manual two-device check recorded here.
+
+### WEB-46: Text fields are inert until the page is interactive
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C07). React 19.3 (the canary Next 16.2.7 runs) overwrites a controlled `<textarea>` at hydration with no `onChange`; a select-all that races hydration saves NEW+OLD; inputs keep typed text on screen but not in state (sign-in then rejects filled fields; the settings name is wiped by the next render); Save before hydration does a native GET. The window is 0.1–0.2 s in the lab and 1.3–2.5 s cold on a throttled profile. It is why `e2e/settings.spec.ts` fails 5 in 20.
+Read first: `src/components/contour/{TextInput,Textarea,PasswordInput,CodeInput}.tsx`; `features/project-settings/SettingsScreen.tsx`; `features/auth/SignInForm.tsx:55-108`; `e2e/settings.spec.ts`; `cloud/w3/runtime-hydration/` in the audit evidence.
+Do: add one `useHydrated()` (`useSyncExternalStore(noop, () => true, () => false)`) in `components/contour`; apply `readOnly={readOnly || !hydrated}` in the four primitives (keep the read-only style tied to the caller's prop) and `disabled={!hydrated}` on form submit Buttons; in `settings.spec.ts`, wait for the "Project settings saved." toast before the API poll and the reload. Do not switch to `defaultValue`: the textarea is still overwritten.
+Done when: a Playwright check that holds `/_next/static` cannot type before release and a fill after release saves exactly NEW (20 runs); sign-in submits what is shown; `settings.spec` passes 40/40 on desktop-1440 and phone-390; autofocus still works and CLS stays 0.
+Verify: `pnpm web:check`, the specs through `scripts/e2e-local.sh`.
+
+### WEB-47: Managers see which form version each site collects with
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: QA-08
+Added 2026-10-22 (audit C11, UXW-2). Reproduced in the browser: with v1 bound by Site A's map and v2 published, the Forms row says "PUBLISHED v2 · USED BY Site A", Overview says "Nothing needs attention. Every site has a ready map package, a form is published and no draft is waiting.", and the upload step preselects v1 with no hint that v2 exists. The Site, Versions and Publish pages are already correct.
+Read first: `src/features/forms/model.ts:49,78-91,285-296`; `ProjectFormsScreen.tsx`; `features/overview/model.ts:86-147`; `features/packages/forms.ts:49-60`; `PublishScreen.tsx:175-194`.
+Do: the Forms row's "Used by" names site and version ("Site A · v1"); Overview gets a waiting item ("<form> v2 is published; no site's map names it, so observers still get v1 at Site A") with a link to the site's upload step; the upload step preselects the newest published version and says when an older one is selected.
+Done when: in a synthetic project with v1 bound and v2 published, the three surfaces read as above; unit tests cover `formRows` and `attentionItems` for that state.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, a browser check.
+
+### WEB-48: Publish a newer form to a site's observers without a QGIS re-upload
+Status: todo · Phase 4 · Size M · Depends: BE-26 · Blocks: none
+Added 2026-10-22 (audit C11, UXW-4). Today a corrected form reaches observers only by re-uploading the whole QGIS export and confirming every zone, and an older zones layer can silently replace boundaries edited on the web.
+Read first: BE-26; `features/forms/PublishScreen.tsx`; `features/packages/UploadStep.tsx`; WEB-47.
+Do: after publishing, the publish result and the site page offer "Use v2 at Site A", which calls BE-26 and publishes the site's next map version from its current archive with the new form; show the zone changes BE-26 reports when an import would change web-edited boundaries ("Boundary changed since v3: …").
+Done when: a browser test publishes v2, uses it at a site, and the site page and an observer's next download name v2, with records of v1 unchanged.
+Verify: `pnpm web:check`, the spec through `scripts/e2e-local.sh`.
+
+### WEB-49: Failed reads look the same everywhere and never read as empty
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C16). The publish review turns failed form and site reads into "No other version of this form is published." (`forms/versions/[version]/publish/page.tsx:143-155`); one API outage shows a shell-less "Couldn't load this organization" on a fresh load but "Something went wrong" on client navigation; org no-access pages have no h1; ErrorView's "Reference" is a hash of a client message no log can match.
+Read first: the publish page; `app/(app)/o/[org]/layout.tsx:21-39`; `p/[project]/layout.tsx:22-26`; `lib/api/workspace.ts:99-115` (17 unguarded call sites); `features/org/NoAccess.tsx`; `components/contour/ScreenState.tsx:88`; `components/shell/ErrorView.tsx:17-28`; `src/proxy.ts:33-58`.
+Do: settle the publish page's reads and show "Couldn't check other versions; try again before publishing"; one `requireProject()` page helper that settles the workspace, applies the observer redirect and returns a LoadFailure element, used at the 17 call sites; PageHeader on org no-access and failure states; ErrorView omits the reference when there is no digest; the sign-in page leads with "Sign in to continue." when `?next=` is present.
+Done when: `web/tests/unit/page-failures.test.mjs` (a 503 stub over sites, data, team, forms, packages, overview and publish) fails before and passes after; with the API stopped, a fresh load and a client navigation show the same LoadFailure with the tabs kept.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`.
+
+### WEB-50: Tab switches keep one loading boundary
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: none
+Added 2026-10-22 (audit C17, measured). The project and org `loading.tsx` wrap each child segment in a Suspense keyed by that child, so every tab switch mounts a new boundary and React 19.3's 300 ms fallback reveal throttle holds ready pages: warm tab switches took 327–360 ms against 79–205 ms with the boundary moved up (7 production builds, 5 samples per cell; `cloud/w2/boundary-summary.md`). Cold loads keep the skeleton either way.
+Read first: `app/(app)/o/[org]/p/[project]/loading.tsx`; `app/(app)/o/[org]/(org)/loading.tsx`; the experiment summary and `cloud/run/boundary/run.cjs`.
+Do: move `p/[project]/loading.tsx` up to `p/loading.tsx` (or wrap `{children}` in one Suspense with the same skeleton in the project layout) and treat the org one the same way; add `useLinkStatus` pending feedback on the project tabs so a slow hosted response still shows progress. Prefetch stays off.
+Done when: the boundary harness shows warm overview→data, data→sites and site→forms usable within about 220 ms (lab) with no skeleton flash; a hard load still shows the skeleton.
+Verify: `pnpm web:check`, `pnpm build`, the harness on the local stack.
+
+### WEB-51: Data review: one rendering, map first on tablets, forgiving filters, a breadcrumb that keeps the view
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C18, C12, C28, C29). Data renders every loaded record twice (a table plus a CSS-hidden card list: 15.2k nodes and 2.2 MB of HTML at 500 rows, 4.5k of them cards); below 1280 px (every iPad) the site plan comes after up to 500 rows and selecting a marker scrolls away from the map; the observer filter is exact and case-sensitive; the "Data" breadcrumb on an observation drops the filters.
+Read first: `src/features/data/DataTable.tsx:55-131`; `DataScreen.tsx:210-214,375-401`; `features/data/view.ts`; `components/contour/Table.tsx:82-83`; the observation detail breadcrumb; WEB-13.
+Do: render records once (a table whose rows restyle as cards below md, keeping the real link, the roving tab stop and `data-record-id`); below `xl` put the plan first at a compact height and keep it sticky at `xl`; compare observer initials case-insensitively (uppercase on input); carry the current view into the breadcrumb link.
+Done when: SSR node count at 500 rows drops by about 4.5k; at 1024×768 and 768×1024 the top of the plan is above the first row; lowercase initials match; the breadcrumb returns to the filtered URL; phone-390 still shows cards.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the data specs through `scripts/e2e-local.sh`.
+
+### WEB-52: Browser-direct transfers and recents belong to the page's account; offline install says it needs a connection
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: none
+Added 2026-10-22 (audit C30, C31). Only the zone editor and account deletion check that the signed-in account is the page's; browser-direct package uploads, QGIS import, exports and downloads use whoever is signed in now (another tab may have switched), and the palette's recents keep another account's labels. The installed web app opened offline shows the public landing page instead of saying it needs a connection.
+Read first: the zone editor's `expectUser` fence (`lib/api/zones-browser.ts`); `features/packages/UploadStep.tsx`, `ProjectImport.tsx`, the export and download helpers; `fm.palette.recent`; `lib/pwa/service-worker.js`.
+Do: reuse the account fence on every browser-direct transfer (refuse and say which account the page belongs to); key palette recents by user id; serve an offline page for navigations instead of `/`, and delete the legacy `fieldmaps-*` cache names (audit C19).
+Done when: a Playwright test signs in as B in a second tab and an upload from A's page is refused with that message; recents of A never show for B; the service-worker vm test covers the offline navigation.
+Verify: `pnpm web:check`, `pnpm --dir web test:auth`, the spec.
+
+### WEB-53: Dialog focus, password toggle and keyboard shortcuts meet WCAG 2.2 AA
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C23, C32). 13 of 22 dialogs never return focus to what opened them (the Invite dialog failed 6 of 6 in the browser); the password Show/Hide control fails label-in-name; the single-key shortcuts (`g` chords, `?`, `/`) fail 2.1.4, and the shortcuts dialog documents Approve, Exclude and Esc keys that do nothing.
+Read first: `components/contour/Dialog*`; `PasswordInput.tsx`; `features/shell/useShortcuts.ts:53-84`; `lib/shortcuts.ts:56-102`; `ShortcutsDialog.tsx`; the zone editor's `chordPending` guard.
+Do: return focus to the trigger in the shared dialog primitive (or the 13 call sites that override it); make the password control's accessible name contain its visible text; delete the single-key layer and the dead rows (Ctrl/Cmd+K and the palette own keyboard navigation), updating the zone editor guard, one unit test and one e2e step.
+Done when: a Playwright check opens and closes every dialog by keyboard and finds focus on its trigger; axe stays at 0 violations on the scanned routes.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the honesty and keyboard specs.
+
+### WEB-54: The zone editor's save status says what is actually happening
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: none
+Added 2026-10-22 (audit C26). In an outage the editor shows "Checking whether your last change was saved…" indefinitely (6 s observed; 40 s on an aborted PUT) while nothing is checking, and a fast-failing PUT is resent without backoff. The save queue itself is sound and stays.
+Read first: `features/zones/editor/save-queue.ts`, `useDraftSaving.ts`, `failure.ts`.
+Do: after a transport failure, show "Not saved yet: DECA Mark can't be reached. Your changes are kept in this tab and will be saved when it can." with a retry countdown; back off exponentially (cap about 30 s); keep one PUT in flight, If-Match and the account fence.
+Done when: the existing zones-network spec passes and a new case asserts the status text and the backoff during an aborted PUT.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the zones specs.
+
+### WEB-55: Delete web compatibility code and duplicated rules
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C19 web, C33, C36, part of C34). Under D31 these are deletions before the pilot.
+Read first: `next.config.ts:19-42` (`OLD_ROUTES`, `redirects()`); `e2e/removed-routes.spec.ts`; `e2e/support/routes.ts:85-100`; `features/forms/RetireDialog.tsx:42`, `DiscardDialog.tsx:47`, `features/packages/UploadStep.tsx:456`; `lib/workspace/result.ts` and `components/shell/LoadFailure.tsx:9`; `lib/packages.ts:14-47`, `lib/sites/archive.ts:69-78`, `features/packages/upload-preview.ts:14`; the Reports date parser; `lib/labels.ts:29-40`; `overview/model.ts:103-115` and `packages/page.tsx:99-107`.
+Do: delete the old-route redirects and `removed-routes.spec`; delete the three redundant `router.refresh()` calls (keep the one after an uncertain upload outcome and `saveDraftAction`'s revalidate, which also evicts the bfcache the versions list relies on); move `isNoAccess`/`isNotFound` out of the zod module so zod leaves every page bundle; one `LAYER_NAMES` export tied to `contracts/openapi.json` by a test; Reports reuses `parseView`; narrow `roundOf`/`roundLabel`/`roundName` to `RoundType`; import supabase-js from one shared lazy module so it is bundled once; delete the unreachable "blocked package" display paths after a SQL count on the hosted database shows no blocked rows.
+Done when: `pnpm build` shows zod absent from project-page chunks and one supabase chunk; unit tests pass; the e2e suite passes.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `pnpm build`, the e2e suite.
+
+### WEB-56: Forms in one canonical format, templates from the API
+Status: todo · Phase 4 · Size S · Depends: BE-24, BE-25 · Blocks: none
+Added 2026-10-22 (D32). The web still carries the fields-only form path and compiles its "start from" templates from `contracts/forms/*.json`.
+Read first: `features/forms/LegacyVersionScreen.tsx`; `forms/versions/[version]/page.tsx:25-29,85-93`; `publish/page.tsx:36`; `features/forms/answers.ts` and the fields reader; `features/forms/templates.ts`; BE-24, BE-25.
+Do: delete `LegacyVersionScreen`, both `isCanonical` branches, `VersionRow.legacy` and its strings, the fields reader and its fixtures; load templates from BE-25's endpoint.
+Done when: `grep -rn "contracts/forms\|LegacyVersion\|isCanonical" web/src` finds nothing; the forms specs pass.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the forms specs.
+
+### WEB-57: Measure and cut server fan-out on hosted latency
+Status: todo · Phase 4 · Size M · Depends: none · Blocks: none
+Added 2026-10-22 (audit C34). In the lab, Overview calls `listPackages` once per site (10 calls at 10 sites; 4.2–4.5 s of summed API time at 28 sites inside a 478–507 ms document), and several pages await independent reads in series. Loopback hides the cost; hosted latency will not.
+Read first: `docs/reviews/frontend-audit-2026-10-17/runtime/perf/SUMMARY.md` §5; `app/(app)/o/[org]/p/[project]/page.tsx`; the form editor and publish pages; `contracts/openapi.json` (is there a batched package read?).
+Do: measure Overview, Data and the form editor against the hosted preview (3+ samples, recorded here); start independent reads together (`Promise.all`, earlier promise starts); replace the per-site N+1 with one batched read (add the endpoint as a BE task if none exists); remeasure.
+Done when: the before/after table is recorded here, and Overview makes a constant number of API calls whatever the site count.
+Verify: `pnpm web:check`, the measurement script.
+
+### WEB-58: Manager polish: invitations, upload confirmation, empty projects, header orientation
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: none
+Added 2026-10-22 (audit C27, C40, C41, C42). The one-time invitation code and link are lost on Esc or an outside tap, and the email delivery outcome is never shown; the upload success confirmation may render off-screen at ≥1280 px while the form resets; an empty project's Overview points its primary action at an empty Data page and lists "upload a map" before "publish a form"; below 1024 px the header hides role and org, and an observer's header says "MEMBER".
+Read first: `features/team/InviteDialog.tsx:57,74-78,162`, `InvitationCreated.tsx:75-90`; `features/packages/UploadStep.tsx` (success state); `features/overview/model.ts`; `components/shell/AppHeader.tsx:72-92`.
+Do: after creation the invite dialog closes only through "Done" (Esc asks first) and shows queued / unavailable / not requested; scroll the upload confirmation into view and announce it; on an empty project point the primary action at the next setup step in dependency order (form, then map); show role and org in the switcher's visible text below 1024 px, and the project role for observers.
+Done when: browser checks at 1440, 1024 and 390 show each state.
+Verify: `pnpm web:check`, the team, packages and overview specs.
+
+### WEB-59: Web text scales with the browser's font size
+Status: todo · Phase 4 · Size S · Depends: none · Blocks: none
+Added 2026-10-22 (audit C43). Type tokens are emitted in px, so a larger browser default font size does not grow text (browser zoom works and meets 1.4.4/1.4.10); at 320 px with a 200% root, two pages overflow sideways.
+Read first: `scripts/contour-tokens.mjs`; `src/styles/contour.css` (generated); `contracts/contour.json`.
+Do: emit the web's type and spacing tokens in rem from the generator (the collector keeps reading points from the contract); regenerate; fix the two overflowing islands found at 320 px with a 200% root.
+Done when: `pnpm tokens:check` passes; at 320×640 with a 200% root, overview and site detail have no sideways scroll and no clipped values; screenshots at 100% are unchanged.
+Verify: `pnpm tokens`, `pnpm tokens:check`, `pnpm web:check`, the reflow check from the audit's `j7c` script.
