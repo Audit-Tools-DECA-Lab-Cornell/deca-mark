@@ -50,7 +50,8 @@ def test_schema_version_case_holds_a_valid_definition(case: DefinitionCase) -> N
     # BE-24's refusal of an unknown version cannot be mistaken for a malformed definition.
     raw = SUITE.definition | {"questions": [SUITE.question | case.patch]}
     assert len(FormDefinition.model_validate(raw).questions) == 1
-    current = type(case.schema_version) is int and case.schema_version == SUITE.current_schema_version
+    version = case.schema_version
+    current = type(version) is int and version == SUITE.current_schema_version
     assert current is case.valid
 
 
