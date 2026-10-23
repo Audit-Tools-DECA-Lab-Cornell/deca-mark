@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, JsonValue, ValidationError
+from pydantic import BaseModel, Field, JsonValue, ValidationError
 
 from fieldmaps_api.domain.forms import FormDefinition
 
@@ -10,9 +10,13 @@ class DefinitionCase(BaseModel):
     id: str
     patch: dict[str, JsonValue]
     valid: bool
+    # A schema version is served beside a definition. BE-24 enforces it; today it only has to be
+    # the sole reason a case is refused, so these cases are told apart by the key being present.
+    schema_version: JsonValue = Field(default=None, alias="schemaVersion")
 
 
 class DefinitionCases(BaseModel):
+    current_schema_version: int = Field(alias="currentSchemaVersion")
     definition: dict[str, JsonValue]
     question: dict[str, JsonValue]
     cases: list[DefinitionCase]
@@ -23,7 +27,11 @@ SUITE = DefinitionCases.model_validate_json(
 )
 
 
-@pytest.mark.parametrize("case", SUITE.cases, ids=[case.id for case in SUITE.cases])
+SHAPE_CASES = [case for case in SUITE.cases if "schema_version" not in case.model_fields_set]
+VERSION_CASES = [case for case in SUITE.cases if "schema_version" in case.model_fields_set]
+
+
+@pytest.mark.parametrize("case", SHAPE_CASES, ids=[case.id for case in SHAPE_CASES])
 def test_shared_definition_case(case: DefinitionCase) -> None:
     # Given a synthetic question with an explicitly authored validity expectation.
     raw = SUITE.definition | {"questions": [SUITE.question | case.patch]}
@@ -34,6 +42,15 @@ def test_shared_definition_case(case: DefinitionCase) -> None:
     else:
         with pytest.raises(ValidationError):
             FormDefinition.model_validate(raw)
+
+
+@pytest.mark.parametrize("case", VERSION_CASES, ids=[case.id for case in VERSION_CASES])
+def test_schema_version_case_holds_a_valid_definition(case: DefinitionCase) -> None:
+    # Given a case about the schema version alone, the definition itself must be valid, so that
+    # BE-24's refusal of an unknown version cannot be mistaken for a malformed definition.
+    raw = SUITE.definition | {"questions": [SUITE.question | case.patch]}
+    assert len(FormDefinition.model_validate(raw).questions) == 1
+    assert (case.schema_version == SUITE.current_schema_version) is case.valid
 
 
 @pytest.mark.parametrize("bound", ["min", "max"])

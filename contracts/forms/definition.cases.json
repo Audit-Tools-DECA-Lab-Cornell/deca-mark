@@ -1,4 +1,5 @@
 {
+  "currentSchemaVersion": 1,
   "definition": {
     "version": "synthetic-validation-v1",
     "title": "Synthetic validation checks",
@@ -50,6 +51,11 @@
     { "id": "answer-id-zone", "patch": { "id": "zone" }, "valid": true },
     { "id": "answer-id-round_type", "patch": { "id": "round_type" }, "valid": true },
     { "id": "answer-id-first_round", "patch": { "id": "first_round" }, "valid": true },
-    { "id": "answer-id-placement", "patch": { "id": "placement" }, "valid": true }
+    { "id": "answer-id-placement", "patch": { "id": "placement" }, "valid": true },
+    { "id": "schema-version-current", "schemaVersion": 1, "patch": {}, "valid": true },
+    { "id": "unknown-schema-version-next", "schemaVersion": 2, "patch": {}, "valid": false, "refusal": "unknown_schema_version" },
+    { "id": "unknown-schema-version-zero", "schemaVersion": 0, "patch": {}, "valid": false, "refusal": "unknown_schema_version" },
+    { "id": "unknown-schema-version-text", "schemaVersion": "1", "patch": {}, "valid": false, "refusal": "unknown_schema_version" },
+    { "id": "unknown-schema-version-null", "schemaVersion": null, "patch": {}, "valid": false, "refusal": "unknown_schema_version" }
   ]
 }

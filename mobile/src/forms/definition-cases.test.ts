@@ -4,10 +4,25 @@ import { z } from "zod";
 import { buildObservation, type ObservationInput } from "../domain/build-observation";
 import { packageBindingSchema } from "../domain/package-binding";
 import { serializeBoundObservation, wireBodySchema } from "../sync/wire-body";
-import { parseFormDefinition } from "./definition";
+import {
+  FORM_SCHEMA_VERSION,
+  isUnknownSchemaVersion,
+  parseFormDefinition,
+  parseServedDefinition,
+} from "./definition";
+
+function thrown(run: () => unknown): unknown {
+  try {
+    run();
+  } catch (error) {
+    return error;
+  }
+  return undefined;
+}
 
 const suite = z
   .object({
+    currentSchemaVersion: z.number(),
     definition: z.record(z.string(), z.unknown()),
     question: z.record(z.string(), z.unknown()),
     cases: z.array(
@@ -15,6 +30,9 @@ const suite = z
         id: z.string(),
         patch: z.record(z.string(), z.unknown()),
         valid: z.boolean(),
+        // A schema version is served beside the definition, never inside it.
+        schemaVersion: z.unknown().optional(),
+        refusal: z.literal("unknown_schema_version").optional(),
       }),
     ),
   })
@@ -35,11 +53,34 @@ describe("shared canonical definition cases", () => {
         ...suite.definition,
         questions: [{ ...suite.question, ...scenario.patch }],
       };
+      if ("schemaVersion" in scenario) {
+        // When the parser reads the definition with the version the API served beside it.
+        if (scenario.valid)
+          expect(parseServedDefinition(scenario.schemaVersion, input).questions).toHaveLength(1);
+        else {
+          // Then an unknown version is refused with the stable code, not parsed on a guess.
+          const refusal = thrown(() => parseServedDefinition(scenario.schemaVersion, input));
+          expect(isUnknownSchemaVersion(refusal)).toBe(true);
+          expect(refusal).toMatchObject({ code: scenario.refusal });
+        }
+        return;
+      }
       // When the production parser reads it, then it agrees with the contract.
       if (scenario.valid) expect(parseFormDefinition(input).questions).toHaveLength(1);
       else expect(() => parseFormDefinition(input)).toThrow();
     });
   }
+
+  it("reads the schema version the contract names as current", () => {
+    expect(FORM_SCHEMA_VERSION).toBe(suite.currentSchemaVersion);
+  });
+
+  it("refuses a definition served with no schema version", () => {
+    const input = { ...suite.definition, questions: [suite.question] };
+    expect(isUnknownSchemaVersion(thrown(() => parseServedDefinition(undefined, input)))).toBe(
+      true,
+    );
+  });
 
   for (const bound of ["min", "max"]) {
     for (const value of [Infinity, -Infinity, NaN]) {
