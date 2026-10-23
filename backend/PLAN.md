@@ -415,11 +415,11 @@ Done when: every worker-side refusal (extent, archive size, project parse) reach
 Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm contracts:generate` leaves no diff after the commit. WEB-60 covers the browser.
 
 ### BE-24: Forms exist only in the current canonical format
-Status: todo · Phase 4 · Size M · Depends: CON-07 · Blocks: OPS-19, WEB-56
+Status: todo · Phase 4 · Size M · Depends: CON-07 · Blocks: MOB-43, OPS-19, WEB-56
 Added 2026-10-22 (D32). Commit `b93a2b2` restored `domain/legacy_forms.py` and the fields-only branches to preserve hosted rows; D32 resets those rows instead.
 Read first: `src/fieldmaps_api/domain/forms.py` (the `legacy` discriminator and `validate_legacy_answers`), `legacy_forms.py`, `form_definition.py`, `observation_export_columns.py`; CON-07.
-Do: delete `legacy_forms.py` and every fields-only branch; validate every form write and every served definition against `contracts/form-definition.schema.json` at CON-07's current schema version; refuse other versions with a typed error; regenerate OpenAPI and both clients' types.
-Done when: no backend module or test references the fields-only format; the canonical form cases in `contracts/forms/cases` pass; `pnpm contracts:generate` leaves no diff.
+Do: delete `legacy_forms.py` and every fields-only branch; validate every form write and every served definition against `contracts/form-definition.schema.json` at CON-07's current schema version; serve `schema_version` beside `definition` on every payload that carries a definition (form version detail, package forms, historical observation detail, templates), never inside it; refuse a write that names another version with the typed code `unknown_schema_version` (add its row to the error table in docs/plan/contracts.md and its copy to both clients' `errors.ts`, per CON-04); regenerate OpenAPI and both clients' types.
+Done when: no backend module or test references the fields-only format; the canonical form cases in `contracts/forms/cases` pass; the API refuses every schema-version case in `contracts/forms/definition.cases.json` that is not current, and `backend/tests/test_form_definition_cases.py` checks that real refusal instead of comparing numbers; every OpenAPI schema with a `definition` has a sibling `schema_version`; `pnpm contracts:generate` leaves no diff.
 Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm contracts:generate`, `pnpm forms:parity`.
 
 ### BE-25: Form templates come from the database

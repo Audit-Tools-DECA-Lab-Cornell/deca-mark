@@ -831,9 +831,9 @@ Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `pnpm build`, the e2e suit
 ### WEB-56: Forms in one canonical format, templates from the API
 Status: todo · Phase 4 · Size S · Depends: BE-24, BE-25 · Blocks: none
 Added 2026-10-22 (D32). The web still carries the fields-only form path and compiles its "start from" templates from `contracts/forms/*.json`.
-Read first: `features/forms/LegacyVersionScreen.tsx`; `forms/versions/[version]/page.tsx:25-29,85-93`; `publish/page.tsx:36`; `features/forms/answers.ts` and the fields reader; `features/forms/templates.ts`; BE-24, BE-25.
-Do: delete `LegacyVersionScreen`, both `isCanonical` branches, `VersionRow.legacy` and its strings, the fields reader and its fixtures; load templates from BE-25's endpoint.
-Done when: `grep -rn "contracts/forms\|LegacyVersion\|isCanonical" web/src` finds nothing; the forms specs pass.
+Read first: CON-07 (`contracts/README.md` "Form schema version"); `features/forms/LegacyVersionScreen.tsx`; `forms/versions/[version]/page.tsx:25-29,85-93`; `publish/page.tsx:36`; `features/forms/answers.ts` and the fields reader; `features/forms/templates.ts`; BE-24, BE-25.
+Do: delete `LegacyVersionScreen`, both `isCanonical` branches, `VersionRow.legacy` and its strings, the fields reader and its fixtures; load templates from BE-25's endpoint; read every served definition (versions, drafts, templates) through `parseServedDefinition(schema_version, definition)`, and where the number is unknown show "Update DECA Mark to use this form" instead of the editor or reader.
+Done when: `grep -rn "contracts/forms\|LegacyVersion\|isCanonical" web/src` finds nothing; a unit test shows a version served with schema version 2 renders the update sentence; the forms specs pass.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the forms specs.
 
 ### WEB-57: Measure and cut server fan-out on hosted latency
