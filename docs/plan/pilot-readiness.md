@@ -1,6 +1,6 @@
 # Pilot readiness: execution guide (2026-10-22)
 
-This guide orders the work that the [October 2026 frontend audit](../reviews/frontend-audit-2026-10-17/README.md) found between today and the pilot launch (target: the week of 2026-10-26). It owns no task: every task is defined once in its component plan, and status lives only there. This file says **in which order, in which lane and under which rules** the tasks run, so that several agents can work at once without editing the same files.
+This guide orders the work that the [October 2026 frontend audit](../reviews/frontend-audit-2026-10-17/README.md) found between today and the pilot launch. The launch has no fixed date: it happens when the launch gate QA-08 passes (D31). It owns no task: every task is defined once in its component plan, and status lives only there. This file says **in which order, in which lane and under which rules** the tasks run, so that several agents can work at once without editing the same files.
 
 Read first: [the plan index](README.md) (conventions), decisions D31–D34 in [decisions.md](decisions.md), and the [audit report](../reviews/frontend-audit-2026-10-17/REPORT.md) §1–§2.
 
@@ -95,7 +95,7 @@ After the launch, any collector change that touches SQLite adds a forward migrat
 Paste this into a new Claude Code session opened on this repository:
 
 ```text
-You are the lead engineer driving DECA Mark to its pilot launch (target: the week of 2026-10-26). Work in this repository on master, or on branch pratyush-cc/amazing-tesla-phkkfe if the pilot-readiness plan PR has not been merged yet.
+You are the lead engineer driving DECA Mark to its pilot launch. The launch happens when QA-08 passes, not on a fixed date, so do the work properly rather than fast. Work in this repository on master, or on branch pratyush-cc/amazing-tesla-phkkfe if the pilot-readiness plan PR has not been merged yet.
 
 Read, in order: AGENTS.md, docs/plan/README.md (conventions), docs/plan/pilot-readiness.md (this is your playbook), decisions D31-D34 in docs/plan/decisions.md, and docs/reviews/frontend-audit-2026-10-17/REPORT.md sections 1-2. Each task is defined in its component plan (mobile/PLAN.md, web/PLAN.md, backend/PLAN.md, supabase/PLAN.md, docs/plan/contracts.md, operations.md, verification.md); status lives only there.
 

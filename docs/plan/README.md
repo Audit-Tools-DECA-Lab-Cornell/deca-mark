@@ -11,7 +11,7 @@ This is the entry point for taking DECA Mark from prototype to Janet's first fie
 
 The owner confirmed there are no real users or production-data preservation obligations yet. Breaking changes may reset incompatible local/server data and use newly prepared maps as the baseline. Do not add old-client bridges, old-schema upgrade paths or dual formats solely to retain experimental data. This applies to backend, web, mobile, database, contracts and schemas. Migration files may be consolidated when useful; their count is not a product requirement.
 
-**This policy ends when the pilot launches (D31, target the week of 2026-10-26).** After the one last sanctioned reset (OPS-19, MOB-44), collector and hosted schema changes preserve data.
+**This policy ends when the pilot launches (D31): when QA-08 passes, not on a fixed date.** After the one last sanctioned reset (OPS-19, MOB-44), collector and hosted schema changes preserve data.
 
 Within the current supported schema, normal restarts and failed downloads still retain unfinished observations, referenced packages and immutable recorded attribution. A reset is a setup/schema transition, not an authentication repair or a silent reassignment of a valid observation. Source/test changes are authorized; choose the exact target explicitly before a hosted reset or deployment.
 
@@ -206,7 +206,7 @@ Cut in this order:
 
 ## Current navigation (reconciled 2026-10-15)
 
-**2026-10-22: the pilot launches next.** The [pilot-readiness guide](pilot-readiness.md) orders the frontend-audit tasks into waves ending at the launch gate QA-08; run it alongside MOB-29's device acceptance. The [audit report and evidence](../reviews/frontend-audit-2026-10-17/README.md) are the source.
+**2026-10-22: the pilot launches next, once QA-08 passes.** The [pilot-readiness guide](pilot-readiness.md) orders the frontend-audit tasks into waves ending at the launch gate QA-08; run it alongside MOB-29's device acceptance. The [audit report and evidence](../reviews/frontend-audit-2026-10-17/README.md) are the source.
 
 Read [current position and next work](current-state.md) for the implemented zone/web scope, remaining acceptance and the ordered return to the pilot roadmap. Component plans are the only task-status authority. Dated review results remain evidence of their exact revision and surface, not current hosted health.
 

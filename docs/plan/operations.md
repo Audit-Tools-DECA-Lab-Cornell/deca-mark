@@ -259,16 +259,16 @@ Verify: a CI run on the PR.
 Status: todo · Phase 4 · Size S · Depends: BE-24, DB-20 · Blocks: QA-08
 Added 2026-10-22 (D31, D32). The last sanctioned hosted reset: it removes the fields-only form versions and their observations, applies the current migrations, and rebuilds Janet's organization with canonical forms and the Training seed. From the pilot launch on, hosted migrations preserve data.
 Read first: D31, D32; [the October 14 hosted diagnosis](../reviews/ci-and-hosted-data-2026-10-14.md); `database/hosted/verify.sql`; `scripts/bootstrap-study.mjs`; OPS-04, OPS-05.
-Do: with the owner, choose the exact hosted target and window; export what Janet wants to keep for reference (CSV/GeoJSON) before the reset; reset, migrate, verify with `verify.sql`, bootstrap the organization, publish the forms and the first maps; deploy the API and web builds that match.
-Needs user: the exact target and window, and authorization for the reset and the deploys.
+Do: once QA-08 is otherwise ready, agree the hosted target and window with the owner; export what Janet wants to keep for reference (CSV/GeoJSON) before the reset; reset, migrate, verify with `verify.sql`, bootstrap the organization, publish the forms and the first maps; deploy the API and web builds that match.
+Needs user: authorization for the reset and the deploys. The owner times the reset to readiness, not to a date.
 Done when: the hosted API answers `/ready`, every hosted `form_versions` row validates against the canonical schema, Training has its site, and a fresh account can join and download on a device.
 Verify: `verify.sql` on the target; a sign-up, join and download on one phone.
 
 ### OPS-20: Stable Server Action ids across Vercel deploys
-Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Status: doing · Phase 4 · Size S · Depends: none · Blocks: QA-08
 Added 2026-10-22 (D34). The web runs on Vercel's free plan, which has no Skew Protection. In Next 16.2.7 every build salts Server Action ids with an encryption key (`build/webpack-config.js` `serverReferenceHashSalt: encryptionKey`; the Turbopack build passes the same key); without `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` it is a random key cached for 14 days in `.next/cache`, so ids change on rotation or an uncached build, and an open tab's next save then calls an id the server no longer knows (audit C03).
 Read first: D34; `web/vercel.json`; OPS-05.
 Do: generate a key (`openssl rand -base64 32`) and set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` for Production and Preview in the Vercel project (never in a tracked file); note the rule "deploy outside manager editing sessions during the pilot" in `docs/Launch-Runbook.md`.
-Needs user: setting the variable in Vercel.
+Progress 2026-10-23: the owner set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in Vercel; the runbook has the variable and the deploy rule. Open: the header comparison. Preview deployments sit behind Vercel login, so it needs a signed-in browser or the production domain.
 Done when: two consecutive deploys of the same commit produce the same action ids (compare the `Next-Action` header of one save before and after), and the runbook has the rule.
 Verify: the header comparison, recorded here.

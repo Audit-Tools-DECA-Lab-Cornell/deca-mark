@@ -121,7 +121,7 @@ Verify: Component checks plus live local HTTP/browser/device/GIS story; spec rev
 
 ### QA-08: Pilot launch gate on the four device families
 Status: todo · Phase 4 · Size M · Depends: BE-23, MOB-34, MOB-35, MOB-36, MOB-37, MOB-38, MOB-39, MOB-40, MOB-41, MOB-44, OPS-18, OPS-19, OPS-20, WEB-44, WEB-45, WEB-46, WEB-47 · Blocks: QA-05
-Added 2026-10-22 (D31, D33, frontend audit). The pilot starts on the current upload queue (D27) next week; QA-05 stays the full walkthrough. This gate repeats the audit's failing scenarios on physical devices with the build the pilot ships.
+Added 2026-10-22 (D31, D33, frontend audit). The pilot starts on the current upload queue (D27) when this gate passes, not on a fixed date; QA-05 stays the full walkthrough. This gate repeats the audit's failing scenarios on physical devices with the build the pilot ships.
 Needs user: the devices (an iPhone, an Android phone, a Samsung Galaxy tablet, an iPad), installable builds (MOB-20 or an internal-distribution build), and the hosted target from OPS-19.
 Do: on each device, portrait and landscape where it rotates:
 1. Fresh install, sign-up, code, profile, join; Training downloads from the server and its practice records upload to the Training project.
