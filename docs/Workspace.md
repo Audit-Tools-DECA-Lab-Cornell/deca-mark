@@ -49,7 +49,7 @@ Run long-lived services in separate terminals. There is no command that silently
 
 For backend checks without a database, run `cd backend && EMAIL_ENABLED=false uv run --frozen python -m pytest -m 'not integration'`. This selection needs no database credentials or startup; database fixtures require an explicit integration marker. Signed validation tests use the database-free client. The full suite still runs those integration scenarios.
 
-For the full integration suite, first run `pnpm db:start`, then `pnpm test`. These operations create/migrate the local test databases. They do not apply hosted migrations or change deployed Supabase settings.
+For the full integration suite, first run `pnpm db:start`, then `pnpm test`; its plain `pnpm backend:test` refuses the disposable-database acceptance tests, so run `pnpm backend:test ZONE_API_REHEARSAL=1` for the whole API suite, as CI does. These operations create/migrate the local test databases. They do not apply hosted migrations or change deployed Supabase settings.
 
 ### Web browser tests
 
@@ -70,13 +70,13 @@ Local API development uses `pnpm db:start` and, from `backend/`, `uv run --froze
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and every push to `master`:
 
 - `contracts`: `pnpm contracts:generate`, then `git diff --exit-code` on `contracts/openapi.json` and both generated `schema.d.ts` files, so the checked-in OpenAPI document and API types match the FastAPI routes (CON-03).
-- `web`: `pnpm web:check`, the Node suites `test:api-errors`, `test:auth`, `test:account` and `test:unit`, `pnpm forms:parity` (the web's copy of the form engine is byte-identical to the mobile original), `node scripts/contour-tokens.mjs --check` (Contour tokens match `contracts/contour.json` and pass WCAG contrast) and `pnpm build`.
+- `web`: `pnpm web:check`, the Node suites `test:api-errors`, `test:auth`, `test:account` and `test:unit`, `pnpm forms:parity` (the web's copy of the form engine matches the mobile original below its header comment), `node scripts/contour-tokens.mjs --check` (Contour tokens match `contracts/contour.json` and pass WCAG contrast) and `pnpm build`.
 - `mobile`: `pnpm mobile:check` and `pnpm mobile:test`.
 - `database`: `pnpm db:start`, `pnpm db:test` and `pnpm db:stop` on a local Supabase.
 - `backend`: installs the collector's dependencies, then `pnpm backend:check` and `pnpm backend:test ZONE_API_REHEARSAL=1` on a pulled disposable PostGIS image, then the forward account-deletion recovery rehearsal. The suite includes the email-template drift test (the email half of `pnpm tokens:check`) and the real collector-to-API drivers `test_mobile_bound_upload_api` and `test_mobile_package_api`, which run the mobile Vitest acceptance files against a signed loopback API.
 - `plan`: `node docs/plan/check-plan.mjs` and `node --test "scripts/*.test.mjs" "database/*.test.mjs"`.
 
-CI does not run the Playwright specs in `web/e2e` (they need the local stack; run them by hand as above), `test:auth:local`, or anything on a device or simulator. `pnpm test` adds the web unit tests to the mobile, API and SQL suites, but not the three focused web suites CI also runs (`test:api-errors`, `test:auth`, `test:account`). The disposable-database acceptance tests, the two collector drivers among them, refuse to run against the shared local stack that a plain `pnpm backend:test` uses; run `pnpm backend:test ZONE_API_REHEARSAL=1`, as CI does. `sh database/mobile-package-rehearsal.sh` still runs the package driver alone. The local database jobs never link to hosted Supabase. CI outcomes must be checked for the exact revision rather than inferred from their presence.
+CI does not run the Playwright specs in `web/e2e` (they need the local stack; run them by hand as above), `test:auth:local`, the baseline rehearsal `pnpm db:test ZONE_REHEARSAL=1` (with `zone-numbers.mjs` and `zone-concurrency.mjs`), `database/gis09-api-rehearsal.sh` (`test_gis09_api.py`), `database/tests/test_audit_forward_api.py`, or anything on a device or simulator. `pnpm test` adds the web unit tests to the mobile, API and SQL suites, but not the three focused web suites CI also runs (`test:api-errors`, `test:auth`, `test:account`). The disposable-database acceptance tests, the two collector drivers among them, refuse to run against the shared local stack that a plain `pnpm backend:test` uses; run `pnpm backend:test ZONE_API_REHEARSAL=1`, as CI does. `sh database/mobile-package-rehearsal.sh` still runs the package driver alone. The local database jobs never link to hosted Supabase. CI outcomes must be checked for the exact revision rather than inferred from their presence.
 
 ## Web move and deployment
 
@@ -94,7 +94,7 @@ Keep web UI in `web/`, native collection and local persistence in `mobile/`, aut
 
 When changing a payload or form version, coordinate the mobile contract, server validation, database representation, and GIS columns in one review. Preserve old form versions and pending uploads. [Shared contracts](../contracts/README.md) hold JSON schemas, form definitions and cross-language cases without a shared runtime package. Run `pnpm --dir mobile contracts:forms` to regenerate the input schema. Mobile consumes these definitions now; backend form parity is BE-10.
 
-There are no new nested Git repositories, submodules, branches, commits, or deployment projects. CI and release automation remain separate follow-up work; the root checks provide their eventual entry points.
+There are no new nested Git repositories, submodules, branches, commits, or deployment projects. Release automation remains separate follow-up work; CI is described above.
 
 ## Relocation verification
 
