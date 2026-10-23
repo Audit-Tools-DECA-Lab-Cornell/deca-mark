@@ -859,3 +859,15 @@ Read first: `scripts/contour-tokens.mjs`; `src/styles/contour.css` (generated); 
 Do: emit the web's type and spacing tokens in rem from the generator (the collector keeps reading points from the contract); regenerate; fix the two overflowing islands found at 320 px with a 200% root.
 Done when: `pnpm tokens:check` passes; at 320×640 with a 200% root, overview and site detail have no sideways scroll and no clipped values; screenshots at 100% are unchanged.
 Verify: `pnpm tokens`, `pnpm tokens:check`, `pnpm web:check`, the reflow check from the audit's `j7c` script.
+
+### WEB-60: Upload asks before leaving an online background map out
+Status: todo · Phase 4 · Size S · Depends: BE-23 · Blocks: QA-08
+Added 2026-10-23 (D35, audit C04). After BE-23 the API refuses a package whose QGIS project has an online background map unless the request names those layers in `leave_out_online_basemaps`, and Read project marks them. Today the web shows that refusal as a broken zone ring; it must ask the manager instead.
+Read first: D35; BE-23; `src/features/packages/UploadStep.tsx` (`uploadProblem` and the submit path); `ProjectImport.tsx` and `project-import.ts` (the Read project result and the slot's Ready badge); `checks.ts` and `VersionHistory.tsx`; `forms/DiscardDialog.tsx` (the confirm dialog pattern); `web/e2e/packages.spec.ts` (`qgisUpload()`).
+Do:
+1. When Read project marks online background maps, the slot stays Ready and lists each one: "<layer> (<host>) is an online background map. It will not be uploaded."
+2. On Upload with such layers, open a confirmation before sending. Title "Upload without the background map?"; the body names each layer and host and says observers see the vector layers only; actions "Upload without it" and "Cancel". Confirming sends the request with `leave_out_online_basemaps` set to those layer names. Cancel sends nothing, keeps the chosen files and says: "Not uploaded. Remove the background map from the project in QGIS, or upload without it."
+3. If the API still answers `online_basemap_unconfirmed` (the project file changed after Read project, or Read project was skipped), open the same confirmation with the layers from the answer. Never show the ring copy for it.
+4. The version history shows the warning check that names each layer left out.
+Done when: `qgisUpload()` gains an XYZ layer and the packages spec covers three paths at 1440 and 390: Cancel uploads nothing and keeps the files; confirming publishes, and the new version shows the warning naming the layer; and an upload whose Read project result carried no mark (the test removes it with `page.route`) receives `online_basemap_unconfirmed`, opens the same dialog with the layers from that answer, and its confirmed retry publishes. No message mentions rings; the dialog passes axe and returns focus to Upload on Cancel.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the packages spec through `scripts/e2e-local.sh`.

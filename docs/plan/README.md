@@ -170,7 +170,7 @@ WEB-20 to WEB-26 and MOB-23 to MOB-27 build the Contour screens ahead of the wir
 - **Operations:** OPS-09, OPS-10, OPS-11, OPS-12, OPS-17
 - **Verification:** QA-04
 - **Zone acceptance:** QA-07
-- **Pilot readiness (frontend audit, 2026-10-22; see [pilot-readiness.md](pilot-readiness.md)):** CON-07, DB-20, BE-23, BE-24, BE-25, BE-26, MOB-34, MOB-35, MOB-36, MOB-37, MOB-38, MOB-39, MOB-40, MOB-41, MOB-42, MOB-43, MOB-44, MOB-45, MOB-46, MOB-47, MOB-48, MOB-49, WEB-44, WEB-45, WEB-46, WEB-47, WEB-48, WEB-49, WEB-50, WEB-51, WEB-52, WEB-53, WEB-54, WEB-55, WEB-56, WEB-57, WEB-58, WEB-59, OPS-18, OPS-19, OPS-20, QA-08, QA-09
+- **Pilot readiness (frontend audit, 2026-10-22; see [pilot-readiness.md](pilot-readiness.md)):** CON-07, DB-20, BE-23, BE-24, BE-25, BE-26, MOB-34, MOB-35, MOB-36, MOB-37, MOB-38, MOB-39, MOB-40, MOB-41, MOB-42, MOB-43, MOB-44, MOB-45, MOB-46, MOB-47, MOB-48, MOB-49, WEB-44, WEB-45, WEB-46, WEB-47, WEB-48, WEB-49, WEB-50, WEB-51, WEB-52, WEB-53, WEB-54, WEB-55, WEB-56, WEB-57, WEB-58, WEB-59, WEB-60, OPS-18, OPS-19, OPS-20, QA-08, QA-09
 
 ### Phase 5: Pilot (week 13)
 
