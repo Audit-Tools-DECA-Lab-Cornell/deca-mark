@@ -1,5 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, findNodeHandle, ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  findNodeHandle,
+  type LayoutChangeEvent,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import type { Act, FormDefinition } from "../../forms/definition";
 import type { ResolvedQuestion } from "../../forms/engine";
@@ -34,7 +41,14 @@ type Props = {
   readonly onReview: () => void;
   /** "Adjust point" for a play event; absent for a zone inventory, which has no point. */
   readonly onAdjust?: (() => void) | undefined;
+  /** The software keyboard is up: a typed answer scrolls to keep its field above it (MOB-34). */
+  readonly keyboardUp?: boolean | undefined;
+  /** False when the keyboard leaves no room for the "Review answers" and "Adjust point" links. */
+  readonly showLinks?: boolean | undefined;
 };
+
+/** The gap kept between the typed field and the foot of the scrolling area. */
+const FIELD_MARGIN = 8;
 
 /** The acts a form actually asks, in order: Child · Social · Play · Setting, or Climate · Inventory. */
 export function formActs(form: FormDefinition): readonly Act[] {
@@ -85,6 +99,8 @@ export function QuestionStep({
   onAdvance,
   onReview,
   onAdjust,
+  keyboardUp = false,
+  showLinks = true,
 }: Props) {
   const s = useStyles(stepStyles);
   const haptics = useHaptics();
@@ -102,6 +118,21 @@ export function QuestionStep({
     setShown(question.id);
     setText(inputText);
   }
+
+  // While the keyboard is up, a text or number answer keeps its field at the foot of the scrolling
+  // area, above the footer: the area is short, and a four-row field starts below its fold.
+  const scroller = useRef<ScrollView>(null);
+  const viewport = useRef(0);
+  const fieldBottom = useRef(0);
+  const typing = question.kind === "text" || question.kind === "number";
+  const showField = useCallback(() => {
+    if (!keyboardUp || !typing || viewport.current === 0) return;
+    scroller.current?.scrollTo({
+      y: Math.max(0, fieldBottom.current + FIELD_MARGIN - viewport.current),
+      animated: false,
+    });
+  }, [keyboardUp, typing]);
+  useEffect(showField, [showField]);
 
   const answered =
     question.kind === "many"
@@ -139,9 +170,15 @@ export function QuestionStep({
       </View>
 
       <ScrollView
+        ref={scroller}
         style={s.scroll}
         contentContainerStyle={s.body}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onLayout={(event: LayoutChangeEvent) => {
+          viewport.current = event.nativeEvent.layout.height;
+          showField();
+        }}
       >
         <Animated.View
           key={question.id}
@@ -195,29 +232,39 @@ export function QuestionStep({
           </Note>
         ) : null}
 
-        {question.kind === "text" && (question.rows ?? 1) > 1 ? (
-          <Textarea
-            accessibilityLabel={question.label}
-            value={text}
-            onChangeText={type}
-            rows={question.rows ?? 4}
-            maxLength={question.maxLength}
-            placeholder={question.placeholder}
-          />
-        ) : null}
-        {(question.kind === "text" && (question.rows ?? 1) <= 1) || question.kind === "number" ? (
-          <TextInput
-            accessibilityLabel={question.label}
-            value={text}
-            onChangeText={type}
-            keyboardType={question.kind === "number" ? "number-pad" : "default"}
-            autoCapitalize={question.exportColumn === "observer" ? "characters" : "sentences"}
-            autoCorrect={question.kind === "text" && question.exportColumn !== "observer"}
-            maxLength={question.maxLength}
-            placeholder={question.placeholder}
-            returnKeyType="next"
-            onSubmitEditing={onAdvance}
-          />
+        {typing ? (
+          <View
+            testID="collect-field"
+            onLayout={(event: LayoutChangeEvent) => {
+              const { y, height } = event.nativeEvent.layout;
+              fieldBottom.current = y + height;
+              showField();
+            }}
+          >
+            {question.kind === "text" && (question.rows ?? 1) > 1 ? (
+              <Textarea
+                accessibilityLabel={question.label}
+                value={text}
+                onChangeText={type}
+                rows={question.rows ?? 4}
+                maxLength={question.maxLength}
+                placeholder={question.placeholder}
+              />
+            ) : (
+              <TextInput
+                accessibilityLabel={question.label}
+                value={text}
+                onChangeText={type}
+                keyboardType={question.kind === "number" ? "number-pad" : "default"}
+                autoCapitalize={question.exportColumn === "observer" ? "characters" : "sentences"}
+                autoCorrect={question.kind === "text" && question.exportColumn !== "observer"}
+                maxLength={question.maxLength}
+                placeholder={question.placeholder}
+                returnKeyType="next"
+                onSubmitEditing={onAdvance}
+              />
+            )}
+          </View>
         ) : null}
 
         {question.protocolFlag ? (
@@ -251,10 +298,12 @@ export function QuestionStep({
           style={s.grow}
         />
       </View>
-      <View style={[s.links, { paddingTop: 12 }]}>
-        <TextLink label="Review answers" icon="list" onPress={onReview} />
-        {onAdjust ? <TextLink label="Adjust point" icon="map-pin" onPress={onAdjust} /> : null}
-      </View>
+      {showLinks ? (
+        <View testID="collect-links" style={[s.links, { paddingTop: 12 }]}>
+          <TextLink label="Review answers" icon="list" onPress={onReview} />
+          {onAdjust ? <TextLink label="Adjust point" icon="map-pin" onPress={onAdjust} /> : null}
+        </View>
+      ) : null}
     </View>
   );
 }
