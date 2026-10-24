@@ -11,6 +11,7 @@ import { NotAvailable } from "@/components/shell/NotAvailable";
 import {
 	chooseFormVersion,
 	chooseInventoryForm,
+	formVersionIndex,
 	isInventoryDefinition,
 	newerPublished,
 	publishedVersions
@@ -247,6 +248,7 @@ async function UploadSection({
 	if (!forms.ok) return <LoadFailure failure={forms.failure} what="the forms" />;
 
 	const published = publishedVersions(forms.data);
+	const index = formVersionIndex(forms.data);
 	if (published.length === 0)
 		return (
 			<Island flush title="Upload from QGIS">
@@ -282,7 +284,7 @@ async function UploadSection({
 	// asks only about a zone too, so observers are not left on the older one.
 	const inventoryForms = published.filter(version => inventory.has(version.code));
 	const newerInventory = currentInventoryFormVersion
-		? newerPublished(inventoryForms, currentInventoryFormVersion)
+		? newerPublished(inventoryForms, currentInventoryFormVersion, index)
 		: null;
 
 	return (
@@ -297,7 +299,9 @@ async function UploadSection({
 			currentInventoryFormVersion={currentInventoryFormVersion}
 			forms={published}
 			inventoryForms={inventoryForms}
-			defaultFormVersion={chooseFormVersion(published, currentFormVersion, inventory) ?? published[0]!.code}
+			defaultFormVersion={
+				chooseFormVersion(published, currentFormVersion, inventory, index) ?? published[0]!.code
+			}
 			defaultInventoryFormVersion={
 				currentPackageId ? (newerInventory?.code ?? null) : chooseInventoryForm(published, inventory)
 			}
