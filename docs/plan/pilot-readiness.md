@@ -2,7 +2,7 @@
 
 This guide orders the work that the [October 2026 frontend audit](../reviews/frontend-audit-2026-10-17/README.md) found between today and the pilot launch. The launch has no fixed date: it happens when the launch gate QA-08 passes (D31). It owns no task: every task is defined once in its component plan, and status lives only there. This file says **in which order, in which lane and under which rules** the tasks run, so that several agents can work at once without editing the same files.
 
-Read first: [the plan index](README.md) (conventions), decisions D31–D35 in [decisions.md](decisions.md), and the [audit report](../reviews/frontend-audit-2026-10-17/REPORT.md) §1–§2.
+Read first: [the plan index](README.md) (conventions), decisions D31–D36 in [decisions.md](decisions.md), and the [audit report](../reviews/frontend-audit-2026-10-17/REPORT.md) §1–§2.
 
 ## What the owner decided (2026-10-22)
 
@@ -13,6 +13,7 @@ Read first: [the plan index](README.md) (conventions), decisions D31–D35 in [d
 | D33 | The pilot uses iPhones, Android phones, Samsung Galaxy tablets and iPads. | Every collector layout, keyboard, rotation or touch change is checked on all four families, portrait and landscape. |
 | D34 | The web stays on Vercel's free plan, without Skew Protection. | The page handles an unrecognised Server Action (WEB-44); a fixed `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` keeps action ids stable (OPS-20). |
 | D35 (2026-10-23) | An online background map in a QGIS project asks the manager before uploading. | Confirming uploads the vector layers with a warning; cancelling uploads nothing (BE-23 in the API, WEB-60 on the web). |
+| D36 (2026-10-24) | Until OPS-19 the hosted API stays on the code from before BE-24; the web keeps following master. | From BE-24's own commit until OPS-19, every commit to master carries `[skip render]` and nobody deploys the API by hand ("Deploys before OPS-19" below). |
 
 ## The launch gate
 
@@ -51,7 +52,7 @@ Cross-lane edits that are known in advance (each is allowed only after the tasks
 - A file that no lane lists belongs to the lane whose task first needs it; a later task in another lane waits for that change to merge, rebases, and lists its own edit in its PR.
 - WEB-44 (lane E) adds the `loadMore` catch in `DataScreen.tsx`, which lane F owns: lane E makes that one-line change first; lane F rebases.
 
-**Deploys before OPS-19.** Render deploys the API from master's head on every commit whose message lacks `[skip render]`, and Vercel deploys the web on every master commit. From BE-24's merge until OPS-19 deploys, every squash merge to master carries `[skip render]`. That way the hosted API keeps the code from before BE-24, and keeps serving the hosted fields-only forms, until the reset removes them. In that window the hosted web may run ahead of the hosted API; the owner accepted this on 2026-10-24. A merge that forgets the tag deploys BE-24 early: tell the owner at once.
+**Deploys before OPS-19.** Render builds the API from master's head on every commit that reaches master without `[skip render]` in its message, and on every manual deploy. Vercel deploys the web on every master commit. From BE-24's own squash commit until OPS-19 deploys, two rules hold. (1) Every commit that reaches master carries `[skip render]` in its first line: a squash merge (the only merge style allowed in that window) or a direct push, the owner's included. (2) Nobody deploys the API by hand: no "Deploy latest commit", and an environment-variable or Secret File change is saved without deploying. Any of these would build master's head, which includes BE-24. A config change that needs a redeploy waits for OPS-19. That way the hosted API keeps the code from before BE-24, and keeps serving the hosted fields-only forms, until the reset removes them. In that window the hosted web may run ahead of the hosted API (D36). For example, WEB-60's confirmation relies on BE-23, which the hosted API lacks until OPS-19. A commit that reaches master without the tag deploys BE-24 early: tell the owner at once, so they can roll Render back to the previous deploy.
 
 ### Wave 2: the gate (days 3–5)
 
@@ -104,7 +105,7 @@ Read, in order: AGENTS.md, docs/plan/README.md (conventions), docs/plan/pilot-re
 
 Goal: complete waves 0 and 1 of pilot-readiness.md, then prepare wave 2 (MOB-49 and everything the owner needs for OPS-19, OPS-20 and QA-08), then continue into wave 3 if time remains. Use workflows with one agent per lane, each in its own git worktree and branch (pilot/<lane>-<task-id>), lanes in the same wave in parallel, tasks within a lane in order. Use Sonnet agents to implement well-specified tasks, Haiku for read-only reconnaissance, and Opus for orchestration, cross-lane decisions and the adversarial review of every change. Follow the "Protocol for every agent" section exactly: regression test first, the lane's files only, the task's Verify commands, an adversarial review before each PR, honest status lines.
 
-Authorization for this session: you may create branches, commit, push and open pull requests, one PR per task. Merge a PR into master only when CI is green on it and its adversarial review passed, then rebase the other lanes. Do not run hosted resets or migrations, change Vercel or Supabase settings, deploy, or read .env or secret files: list those steps for me instead. When a task says "Needs user", ask me, keep going with the other lanes meanwhile.
+Authorization for this session: you may create branches, commit, push and open pull requests, one PR per task. Merge a PR into master (by squash) only when CI is green on it and its adversarial review passed, then rebase the other lanes. Do not run hosted resets or migrations, change Vercel or Supabase settings, deploy, or read .env or secret files: list those steps for me instead. When a task says "Needs user", ask me, keep going with the other lanes meanwhile.
 
 Report after each wave: tasks done (with the verification each got), PRs, anything blocked and why, and the exact device steps I must run for QA-08.
 ```
