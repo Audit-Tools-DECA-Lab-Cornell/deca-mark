@@ -1,6 +1,9 @@
-/** One foreground drain; wakeups arriving during a send get one follow-up pass. */
+/**
+ * One foreground drain; wakeups arriving during a send get one follow-up pass. A drain says whether
+ * it changed anything a screen shows, and `changed` is called only then.
+ */
 export function createForegroundDrain(options: {
-  readonly drain: () => Promise<void>;
+  readonly drain: () => Promise<boolean>;
   readonly changed: () => void;
   readonly failed: (error: Error) => void;
   readonly current: () => boolean;
@@ -17,8 +20,8 @@ export function createForegroundDrain(options: {
       try {
         while (requested && online && active && options.current()) {
           requested = false;
-          await options.drain();
-          if (options.current()) options.changed();
+          const updated = await options.drain();
+          if (updated && options.current()) options.changed();
         }
       } catch (error) {
         if (!(error instanceof Error)) throw error;

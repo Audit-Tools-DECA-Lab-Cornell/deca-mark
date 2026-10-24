@@ -96,7 +96,7 @@ both, and its content spans the full window width — a deliberate departure fro
 - **Real sync, relabelled.** Records show the existing queue states — held, on device only,
   synced, needs attention — with no send button. Records are immutable and there is no
   bidirectional edit sync or contested-record workflow; API receipt revisions do not imply one.
-- Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
+- Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. A reconnect or a resume also makes records waiting out a retry delay due at once (never more often than every 5 s, and never before a server's `Retry-After`), and the drain sleeps otherwise: one timer waits for the earliest remaining delay, an empty queue does nothing, and a screen re-reads records only when one changed (MOB-39). Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
 
 ### What is deliberately not done
 

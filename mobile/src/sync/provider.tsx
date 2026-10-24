@@ -11,12 +11,15 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import { useAccount } from "../auth/provider";
-import { activateHeldObservations, retryAttention } from "../storage/sync-store";
+import { activateHeldObservations, earliestRetry, retryAttention } from "../storage/sync-store";
 import { createBoundUpload } from "./bound-upload";
 import { connection } from "./config";
 import { type SyncScope, scopeKey } from "./contracts";
 import { createSyncCoordinator } from "./coordinator";
 import { createForegroundDrain } from "./foreground";
+
+/** After a pass that threw (a locked database, say), try again once this many milliseconds have passed. */
+const FAILED_PASS_RETRY = 5000;
 
 const SyncContext = createContext({
   revision: 0,
@@ -25,7 +28,12 @@ const SyncContext = createContext({
   retry: async () => {},
 });
 
-/** Foreground only: reconnect, save, explicit retry and resume wake the same fenced uploader. */
+/**
+ * Foreground only: reconnect, save, explicit retry and resume wake the same fenced uploader. A
+ * reconnect or a resume also makes records waiting out a retry delay due again (the coordinator
+ * keeps that from becoming a hot loop and keeps any `Retry-After`), and the only other wake-up is
+ * one timer set for the earliest delay that is still running: an idle queue does nothing.
+ */
 export function SyncProvider({ children }: PropsWithChildren) {
   const database = useSQLiteContext();
   const { key, scope, session, client, accountDeleted, ready, markAccountDeleted } = useAccount();
@@ -45,6 +53,8 @@ export function SyncProvider({ children }: PropsWithChildren) {
   scopeNow.current = scope;
   const deleted = useRef(markAccountDeleted);
   deleted.current = markAccountDeleted;
+  // What a server asked to wait for, per account: it outlives the coordinator a token refresh rebuilds.
+  const holds = useRef(new Map<string, number>());
   const run = useRef(async () => {});
   const retryNow = useRef(async () => {});
   const changed = useCallback(() => setRevision((value) => value + 1), []);
@@ -86,21 +96,49 @@ export function SyncProvider({ children }: PropsWithChildren) {
           : null;
       },
       upload: createBoundUpload(connection.apiUrl, currentScope),
+      hold: {
+        get: () => holds.current.get(key) ?? 0,
+        set: (until) => holds.current.set(key, until),
+      },
       outcome: (result) => {
         if (!current()) return;
         setFailure({ owner: key, message: result.kind === "accepted" ? "" : result.message });
         if (result.kind !== "accepted" && result.code === "account_deleted") deleted.current();
       },
     });
+    // One timer, for the earliest moment a waiting record may be tried (or a failed pass tried again).
+    let timer: { readonly handle: ReturnType<typeof setTimeout>; readonly at: number } | undefined;
+    const wakeAt = (at: number) => {
+      if (!current() || (timer !== undefined && timer.at <= at)) return;
+      if (timer) clearTimeout(timer.handle);
+      const handle = setTimeout(
+        () => {
+          timer = undefined;
+          void queue.wake();
+        },
+        Math.max(0, at - Date.now()),
+      );
+      timer = { handle, at };
+    };
+    const waitForNext = async () => {
+      const next = await earliestRetry(database, key, Date.now());
+      if (next !== null) wakeAt(next);
+    };
     const queue = createForegroundDrain({
       current,
       changed,
-      failed: (error) => setFailure({ owner: key, message: error.message }),
+      failed: (error) => {
+        setFailure({ owner: key, message: error.message });
+        wakeAt(Date.now() + FAILED_PASS_RETRY);
+      },
       drain: async () => {
-        await activateHeldObservations(database, key, currentScope, current);
-        if (canSend()) {
-          request = new AbortController();
-          await drain(request.signal);
+        const activated = await activateHeldObservations(database, key, currentScope, current);
+        if (!canSend()) return activated;
+        request = new AbortController();
+        try {
+          return (await drain(request.signal)) || activated;
+        } finally {
+          await waitForNext();
         }
       },
     });
@@ -115,22 +153,23 @@ export function SyncProvider({ children }: PropsWithChildren) {
     };
     queue.foreground(foregroundActive);
     const foreground = AppState.addEventListener("change", (value) => {
+      const resumed = value === "active" && !foregroundActive;
       foregroundActive = value === "active";
       if (!foregroundActive) request.abort();
+      if (resumed) drain.regain();
       queue.foreground(foregroundActive);
     });
     const network = NetInfo.addEventListener((value) => {
+      const reconnected = !online;
       online = value.isConnected === true && value.isInternetReachable !== false;
       if (!online) request.abort();
+      if (online && reconnected) drain.regain();
       queue.connectivity(online);
     });
-    const timer = setInterval(() => {
-      void queue.wake();
-    }, 5000);
     return () => {
       controller.abort();
       request.abort();
-      clearInterval(timer);
+      if (timer) clearTimeout(timer.handle);
       foreground.remove();
       network();
       run.current = async () => {};

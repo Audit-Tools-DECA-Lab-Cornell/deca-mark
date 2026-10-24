@@ -39,13 +39,16 @@ export function pendingObservations(db: LocalDatabase, scope: string, now: numbe
   );
 }
 
-/** Existing schema-six records were held by MOB-28. Freeze their own saved body once, atomically. */
+/**
+ * Existing schema-six records were held by MOB-28. Freeze their own saved body once, atomically.
+ * True when a held record became pending, so the screens that list records read them again.
+ */
 export function activateHeldObservations(
   db: LocalDatabase,
   owner: string,
   scope: SyncScope,
   current: () => boolean = () => true,
-): Promise<void> {
+): Promise<boolean> {
   const storedOwner = readOwnerScope(owner);
   if (
     !storedOwner ||
@@ -53,8 +56,9 @@ export function activateHeldObservations(
     storedOwner.userId !== scope.userId ||
     storedOwner.projectId !== scope.projectId
   )
-    return Promise.resolve();
+    return Promise.resolve(false);
   return databaseTransaction(db, async () => {
+    let activated = false;
     const rows = z
       .array(z.object({ payload: z.string() }))
       .parse(
@@ -64,7 +68,7 @@ export function activateHeldObservations(
         ),
       );
     for (const row of rows) {
-      if (!current()) return;
+      if (!current()) return activated;
       const { record, body } = readUploadPayload(row.payload);
       if (!isBoundObservation(record) || record.binding.issuer !== scope.issuer) continue;
       await db.runAsync(
@@ -73,17 +77,20 @@ export function activateHeldObservations(
         owner,
         record.id,
       );
+      activated = true;
     }
+    return activated;
   });
 }
 
+/** True when the receipt moved the record to synced; false when it matched nothing and changed nothing. */
 export function acknowledge(
   db: LocalDatabase,
   owner: string,
   value: unknown,
   expectedId?: string,
   current: () => boolean = () => true,
-): Promise<void> {
+): Promise<boolean> {
   return databaseWrite(db, async () => {
     const parsed = receiptSchema.safeParse(value);
     const scope = readOwnerScope(owner);
@@ -93,18 +100,23 @@ export function acknowledge(
       !current() ||
       (expectedId !== undefined && expectedId !== parsed.data.observation_id)
     )
-      return;
+      return false;
     const item = await eligiblePending(db, owner, parsed.data.observation_id);
-    if (!item || !receiptMatches(parsed.data, item.record, scope) || !current()) return;
+    if (!item || !receiptMatches(parsed.data, item.record, scope) || !current()) return false;
     await db.runAsync(
       "UPDATE observations SET sync_state = 'synced', sync_error = '', server_receipt = ? WHERE id = ? AND owner_scope = ? AND sync_state = 'pending'",
       JSON.stringify(parsed.data),
       item.record.id,
       owner,
     );
+    return true;
   });
 }
 
+/**
+ * Records a failed attempt and when the next one may start. True when what a screen shows about the
+ * record changed (its state or its message); a repeat of the same failure only moves the delay.
+ */
 export function deferObservation(
   db: LocalDatabase,
   owner: string,
@@ -115,17 +127,69 @@ export function deferObservation(
   code?: string,
   current: () => boolean = () => true,
   issueCodes: readonly string[] = [],
-): Promise<void> {
+): Promise<boolean> {
   return databaseWrite(db, async () => {
-    if (!current() || !(await eligiblePending(db, owner, id)) || !current()) return;
+    if (!current() || !(await eligiblePending(db, owner, id)) || !current()) return false;
+    const state = rejected ? "needs-attention" : "pending";
+    const error = code ? JSON.stringify({ message, code, issueCodes }) : message;
+    const shown = z
+      .array(z.object({ sync_state: z.string(), sync_error: z.string() }))
+      .parse(
+        await db.getAllAsync(
+          "SELECT sync_state, sync_error FROM observations WHERE id = ? AND owner_scope = ?",
+          id,
+          owner,
+        ),
+      )[0];
     await db.runAsync(
       "UPDATE observations SET sync_state = ?, sync_error = ?, attempts = attempts + 1, next_attempt_at = ? WHERE id = ? AND owner_scope = ? AND sync_state = 'pending'",
-      rejected ? "needs-attention" : "pending",
-      code ? JSON.stringify({ message, code, issueCodes }) : message,
+      state,
+      error,
       nextAttempt,
       id,
       owner,
     );
+    return shown?.sync_state !== state || shown.sync_error !== error;
+  });
+}
+
+/**
+ * Connectivity or the foreground came back: pending records still waiting out a retry delay become
+ * due at `at` (now, or a later time the caller must still respect). Never moves a record later, never
+ * touches a record that needs attention, and changes nothing a screen shows.
+ */
+export function releaseBackoff(
+  db: LocalDatabase,
+  scope: string,
+  now: number,
+  at: number,
+  current: () => boolean = () => true,
+): Promise<void> {
+  return databaseWrite(db, async () => {
+    if (!current()) return;
+    const later = at > now;
+    await db.runAsync(
+      "UPDATE observations SET next_attempt_at = ? WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at > ?",
+      later ? at : 0,
+      scope,
+      later ? at : now,
+    );
+  });
+}
+
+/** When the next waiting pending record may be tried, if that is still ahead; null when none waits. */
+export function earliestRetry(db: LocalDatabase, scope: string, now: number) {
+  return databaseWrite(db, async () => {
+    const [row] = z
+      .array(z.object({ at: z.number().int().nullable() }))
+      .parse(
+        await db.getAllAsync(
+          "SELECT MIN(next_attempt_at) AS at FROM observations WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at > ?",
+          scope,
+          now,
+        ),
+      );
+    return row?.at ?? null;
   });
 }
 export function retryAttention(

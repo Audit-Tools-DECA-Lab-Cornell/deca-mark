@@ -245,3 +245,315 @@ describe("Actual foreground SyncProvider", () => {
     }
   });
 });
+
+describe("Retry timing in the SyncProvider (MOB-39)", () => {
+  const online = { isConnected: true, isInternetReachable: true } as const;
+  const offline = { isConnected: false, isInternetReachable: false } as const;
+  const rateLimited = (seconds: number) =>
+    new Response(
+      JSON.stringify({ error: { code: "rate_limited", message: "Slow down", details: {} } }),
+      { status: 429, headers: { "Retry-After": String(seconds) } },
+    );
+
+  /** Many microtask turns: a drain, its write and the next timer all settle inside one act. */
+  async function settle() {
+    await act(async () => {
+      for (let i = 0; i < 80; i++) await Promise.resolve();
+    });
+  }
+  async function pass(ms: number) {
+    await settle();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+    await settle();
+  }
+  /** The server answers as `respond` says and every request's clock is recorded. */
+  function serve(respond: (index: number) => Response) {
+    const sent: number[] = [];
+    vi.stubGlobal("fetch", async () => {
+      sent.push(Date.now());
+      return respond(sent.length);
+    });
+    return sent;
+  }
+  async function mountOnline() {
+    const { db, sqlite } = await memoryDatabase();
+    mocks.database = db;
+    await installPackage(db, owner, entry);
+    await saveObservation(db, boundRecord, owner);
+    return { db, sqlite };
+  }
+  async function start() {
+    await act(async () => {
+      view = create(<Tree />);
+    });
+    await act(async () => mocks.network(online));
+    await settle();
+  }
+  const state = (sqlite: Awaited<ReturnType<typeof memoryDatabase>>["sqlite"]) =>
+    sqlite
+      .prepare("SELECT sync_state AS state, attempts, next_attempt_at AS at FROM observations")
+      .get() as {
+      state: string;
+      attempts: number;
+      at: number;
+    };
+
+  it.each([
+    "reconnect",
+    "resume",
+  ])("after seven failures a %s uploads at once instead of 300 s later (C09)", async (wake) => {
+    const { sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : new Response("", { status: 503 })));
+    try {
+      await start();
+      expect(sent).toHaveLength(1);
+      sqlite.exec(`UPDATE observations SET attempts = 7, next_attempt_at = ${Date.now() + 300000}`);
+      await pass(10000);
+      expect(sent).toHaveLength(1);
+      const before = sync.revision;
+      healthy = true;
+      if (wake === "reconnect") {
+        await act(async () => {
+          mocks.network(offline);
+          mocks.network(online);
+        });
+      } else {
+        mocks.app = "background";
+        await act(async () => mocks.foreground("background"));
+        mocks.app = "active";
+        await act(async () => mocks.foreground("active"));
+      }
+      await settle();
+      expect(sent).toHaveLength(2);
+      expect(state(sqlite).state).toBe("synced");
+      expect(sync.revision).toBeGreaterThan(before);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("does nothing while idle: no re-read signal and no upload for a minute (C15)", async () => {
+    const { sqlite } = await mountOnline();
+    sqlite.exec("DELETE FROM observations");
+    const sent = serve(() => answer());
+    try {
+      await start();
+      expect(sync.revision).toBe(0);
+      await pass(60000);
+      expect(sync.revision).toBe(0);
+      expect(sent).toHaveLength(0);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("does nothing while a record waits out its delay, then retries without any user action", async () => {
+    const { sqlite } = await mountOnline();
+    const sent = serve((index) => (index < 3 ? new Response("", { status: 503 }) : answer()));
+    try {
+      await start();
+      const first = sent[0] ?? 0;
+      const revision = sync.revision;
+      await pass(4999);
+      expect(sent).toHaveLength(1);
+      await pass(1);
+      expect(sent).toHaveLength(2);
+      expect(sync.revision).toBe(revision);
+      await pass(9999);
+      expect(sent).toHaveLength(2);
+      await pass(1);
+      expect(sent.map((at) => at - first)).toEqual([0, 5000, 15000]);
+      expect(state(sqlite).state).toBe("synced");
+      const done = sync.revision;
+      await pass(60000);
+      expect(sync.revision).toBe(done);
+      expect(sent).toHaveLength(3);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("never retries a record more than once per 5 s however often the network flaps", async () => {
+    const { sqlite } = await mountOnline();
+    const sent = serve(() => new Response("", { status: 503 }));
+    try {
+      await start();
+      for (let second = 0; second < 60; second++) {
+        await act(async () => {
+          mocks.network(offline);
+          mocks.network(online);
+        });
+        await pass(1000);
+      }
+      const gaps = sent.slice(1).map((at, index) => at - (sent[index] ?? 0));
+      expect(sent.length).toBeGreaterThan(3);
+      expect(Math.min(...gaps)).toBeGreaterThanOrEqual(5000);
+      expect(sent.length).toBeLessThanOrEqual(13);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a flap right after a failed retry still gets its retry within 5 s", async () => {
+    const { sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : new Response("", { status: 503 })));
+    try {
+      await start();
+      sqlite.exec(`UPDATE observations SET attempts = 7, next_attempt_at = ${Date.now() + 300000}`);
+      await pass(20000);
+      await act(async () => {
+        mocks.network(offline);
+        mocks.network(online);
+      });
+      await settle();
+      expect(sent).toHaveLength(2);
+      await act(async () => {
+        mocks.network(offline);
+        mocks.network(online);
+      });
+      await settle();
+      expect(sent).toHaveLength(2);
+      healthy = true;
+      await pass(5000);
+      expect(sent).toHaveLength(3);
+      expect(state(sqlite).state).toBe("synced");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a reconnect leaves a record the server told to wait until the server's time", async () => {
+    const { sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : rateLimited(120)));
+    try {
+      await start();
+      const first = sent[0] ?? 0;
+      expect(sent).toHaveLength(1);
+      await pass(10000);
+      await act(async () => {
+        mocks.network(offline);
+        mocks.network(online);
+      });
+      await pass(60000);
+      expect(sent).toHaveLength(1);
+      mocks.app = "background";
+      await act(async () => mocks.foreground("background"));
+      mocks.app = "active";
+      await act(async () => mocks.foreground("active"));
+      await pass(48000);
+      expect(sent).toHaveLength(1);
+      healthy = true;
+      await pass(2000);
+      expect(sent).toHaveLength(2);
+      expect((sent[1] ?? 0) - first).toBe(120000);
+      expect(state(sqlite).state).toBe("synced");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a token refresh inside a Retry-After window does not release the record early", async () => {
+    const { sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : rateLimited(120)));
+    try {
+      await start();
+      const first = sent[0] ?? 0;
+      await pass(10000);
+      mocks.token = "refreshed-token";
+      await act(async () => view?.update(<Tree />));
+      await act(async () => mocks.network(online));
+      await settle();
+      expect(sent).toHaveLength(1);
+      healthy = true;
+      await pass(109999);
+      expect(sent).toHaveLength(1);
+      await pass(1);
+      expect(sent).toHaveLength(2);
+      expect((sent[1] ?? 0) - first).toBe(120000);
+      expect(state(sqlite).state).toBe("synced");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a network flap while signing out does not delay the first upload after the next sign-in", async () => {
+    const { sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : new Response("", { status: 503 })));
+    try {
+      await start();
+      sqlite.exec(`UPDATE observations SET attempts = 7, next_attempt_at = ${Date.now() + 300000}`);
+      await pass(10000);
+      await act(async () => {
+        mocks.network(offline);
+        mocks.network(online);
+      });
+      await settle();
+      expect(sent).toHaveLength(2);
+      mocks.signedIn = false;
+      await act(async () => view?.update(<Tree />));
+      await act(async () => {
+        mocks.network(offline);
+        mocks.network(online);
+      });
+      await pass(1000);
+      expect(sent).toHaveLength(2);
+      healthy = true;
+      mocks.signedIn = true;
+      await act(async () => view?.update(<Tree />));
+      await act(async () => mocks.network(online));
+      await settle();
+      expect(sent).toHaveLength(3);
+      expect(state(sqlite).state).toBe("synced");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("tries a pass that threw again after 5 s, and keeps the record", async () => {
+    const { sqlite } = await mountOnline();
+    const times: number[] = [];
+    vi.stubGlobal("fetch", async (request: Request) => {
+      times.push(Date.now());
+      if (times.length < 3) throw new Error("storage is busy");
+      return answer(request.url.split("/").at(-1));
+    });
+    try {
+      await start();
+      expect(times).toHaveLength(1);
+      expect(sync.error).toBe("storage is busy");
+      await pass(4999);
+      expect(times).toHaveLength(1);
+      await pass(1);
+      expect(times).toHaveLength(2);
+      await pass(5000);
+      expect(times.map((at) => at - (times[0] ?? 0))).toEqual([0, 5000, 10000]);
+      expect(state(sqlite).state).toBe("synced");
+      await pass(60000);
+      expect(times).toHaveLength(3);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("stops uploading and waiting on sign-out", async () => {
+    const { sqlite } = await mountOnline();
+    const sent = serve(() => new Response("", { status: 503 }));
+    try {
+      await start();
+      expect(sent).toHaveLength(1);
+      mocks.signedIn = false;
+      await act(async () => view?.update(<Tree />));
+      await pass(60000);
+      expect(sent).toHaveLength(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+});
