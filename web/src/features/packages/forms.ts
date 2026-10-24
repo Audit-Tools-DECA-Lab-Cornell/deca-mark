@@ -9,6 +9,8 @@ import { readDefinition } from "@/lib/observations/answers";
 export type PublishedVersion = {
 	/** "workspace-check-v1". */
 	code: string;
+	/** The form this is a version of: "workspace-check". */
+	formCode: string;
 	formName: string;
 	version: number;
 	publishedAt: string | null;
@@ -22,6 +24,7 @@ export function publishedVersions(forms: readonly FormSummary[]): PublishedVersi
 				.filter(version => version.state === "published")
 				.map(version => ({
 					code: version.code,
+					formCode: form.code,
 					formName: form.name,
 					version: version.version,
 					publishedAt: version.published_at ?? null
@@ -49,17 +52,38 @@ export function isInventoryDefinition(definition: RawDefinition | unknown): bool
 }
 
 /**
- * The form version the upload starts on: the site's current package's, while it is still published;
- * otherwise the newest published one that is not an inventory form (or the newest published, when every
- * one is). `inventory` holds the codes known to be inventory forms. Null when nothing is published.
+ * The newest published version of the same form as `code`, when it is newer than `code`; otherwise null:
+ * `code` is the newest one, or it is not among the published versions. "Newest" is the highest version
+ * number, whichever was published last.
+ */
+export function newerPublished(published: readonly PublishedVersion[], code: string): PublishedVersion | null {
+	const at = published.find(version => version.code === code);
+	if (!at) return null;
+	return published
+		.filter(version => version.formCode === at.formCode && version.version > at.version)
+		.reduce<PublishedVersion | null>(
+			(best, version) => (best === null || version.version > best.version ? version : best),
+			null
+		);
+}
+
+/**
+ * The form version the upload starts on: the newest published version of the form the site's current
+ * package names (a map names its form exactly, so the version it names is rarely the one to repeat);
+ * when that form has no published version, the newest published form that is not an inventory form (or the
+ * newest published, when every one is). `inventory` holds the codes known to be inventory forms. Null when
+ * nothing is published.
  */
 export function chooseFormVersion(
 	published: readonly PublishedVersion[],
 	currentFormVersion: string | null,
 	inventory: ReadonlySet<string> = new Set()
 ): string | null {
-	if (currentFormVersion && published.some(version => version.code === currentFormVersion)) return currentFormVersion;
-	return (published.find(version => !inventory.has(version.code)) ?? published[0])?.code ?? null;
+	const start =
+		published.find(version => version.code === currentFormVersion) ??
+		published.find(version => !inventory.has(version.code)) ??
+		published[0];
+	return start ? (newerPublished(published, start.code) ?? start).code : null;
 }
 
 /**

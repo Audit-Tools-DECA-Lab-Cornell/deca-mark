@@ -12,6 +12,7 @@ import {
 	chooseFormVersion,
 	chooseInventoryForm,
 	isInventoryDefinition,
+	newerPublished,
 	publishedVersions
 } from "@/features/packages/forms";
 import { blockedToExplain, firstBlockedDetail, historyRows } from "@/features/packages/history";
@@ -277,6 +278,13 @@ async function UploadSection({
 			.filter(code => definitions[code] !== undefined && isInventoryDefinition(definitions[code]))
 	);
 
+	// A later upload keeps the current inventory form unless a newer version of that form is published and
+	// asks only about a zone too, so observers are not left on the older one.
+	const inventoryForms = published.filter(version => inventory.has(version.code));
+	const newerInventory = currentInventoryFormVersion
+		? newerPublished(inventoryForms, currentInventoryFormVersion)
+		: null;
+
 	return (
 		<UploadStep
 			org={org}
@@ -288,9 +296,11 @@ async function UploadSection({
 			currentZones={currentZones}
 			currentInventoryFormVersion={currentInventoryFormVersion}
 			forms={published}
-			inventoryForms={published.filter(version => inventory.has(version.code))}
+			inventoryForms={inventoryForms}
 			defaultFormVersion={chooseFormVersion(published, currentFormVersion, inventory) ?? published[0]!.code}
-			defaultInventoryFormVersion={currentPackageId ? null : chooseInventoryForm(published, inventory)}
+			defaultInventoryFormVersion={
+				currentPackageId ? (newerInventory?.code ?? null) : chooseInventoryForm(published, inventory)
+			}
 			packagesHref={packagesHref}
 		/>
 	);
