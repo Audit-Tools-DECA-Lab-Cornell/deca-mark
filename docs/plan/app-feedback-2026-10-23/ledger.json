@@ -1,0 +1,50 @@
+{
+  "formatVersion": 1,
+  "kind": "execution-packet-ledger",
+  "branch": "docs/app-feedback-2026-10-23-plan",
+  "planningBaseCommit": "bc52cac658af280c0a97d6ab22422f5d90f55cd2",
+  "executionState": "not_started",
+  "currentWave": 0,
+  "currentMarker": "CURRENT.md",
+  "lastRuntimeCheckpoint": null,
+  "runtimeRecoveryVerified": false,
+  "inScopeRequirements": [
+    "R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "R09", "R10",
+    "R11", "R12", "R13", "R14", "R15", "R16", "R17", "R18", "R19", "R20",
+    "R21", "R22", "R23", "R24", "R25", "R26", "R28", "R30"
+  ],
+  "deferredRequirements": ["R27", "R29"],
+  "limits": {
+    "maxConcurrentWorkers": 3,
+    "remainingQuotaStopPercent": 20,
+    "remainingContextStopPercent": 20,
+    "checkpointAfterEditedFiles": 2,
+    "checkpointIntervalMinutes": 5,
+    "maxPacketMinutesBeforeCheckpoint": 15,
+    "maxPacketToolCallsBeforeCheckpoint": 20,
+    "allowAutomaticPaidOverage": false
+  },
+  "modelRouting": {
+    "coordinator": "sonnet",
+    "mechanicalAndEvidence": "haiku",
+    "implementation": "sonnet",
+    "uxContractAndAdversarialReview": "opus"
+  },
+  "usage": {"state": "unknown", "observedAt": null, "remainingPercent": null},
+  "activeWorkers": [],
+  "packets": [],
+  "evidence": [],
+  "productTaskStatusAuthority": "owning component PLAN.md files",
+  "packetSpecification": "work-packages.md",
+  "nextAction": "Verify current branch/diff; review specification; initialize and prove recovery on a synthetic interruption before application edits.",
+  "authorization": {
+    "planningBranchCommitAndPush": "authorized for the documentation delivery only",
+    "implementationGitWrites": "requires direct authorization for that execution session",
+    "secretAccess": false,
+    "databaseMigrationApplication": false,
+    "databaseReset": false,
+    "hostedChanges": false,
+    "realInvitations": false,
+    "deploymentsAndReleases": false
+  }
+}

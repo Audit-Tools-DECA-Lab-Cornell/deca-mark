@@ -50,6 +50,7 @@ The full decision log, the running cost and the open questions are in [decisions
 | [docs/plan/operations.md](operations.md) | Hosted settings, CI, deploys, monitoring, backups, releases | `OPS-*` |
 | [docs/plan/verification.md](verification.md) | Cross-cutting test suites and acceptance runs | `QA-*` |
 | [docs/plan/pilot-readiness.md](pilot-readiness.md) | The execution guide for the pilot-readiness work from the October 2026 frontend audit: waves, lanes, file ownership, the launch gate and the agent protocol | none (refers to IDs only) |
+| [docs/plan/app-feedback-2026-10-23/README.md](app-feedback-2026-10-23/README.md) | Approved reviewer-feedback scope, parallel implementation handoff, model routing and usage-limit recovery; templates and variable library deferred | none (execution packets map to owning component tasks when scheduled) |
 | [docs/plan/decisions.md](decisions.md) | Decision log, open questions, running cost | none |
 | [supabase/PLAN.md](../../supabase/PLAN.md) | Data model v2, migrations, RLS, private functions (covers `supabase/` and `database/`) | `DB-*` |
 | [backend/PLAN.md](../../backend/PLAN.md) | FastAPI modules, endpoints, hardening | `BE-*` |
