@@ -47,15 +47,19 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
   const [revision, setRevision] = useState(0);
   const downloadAttempts = useRef(new Map<string, number>());
   const downloadSequence = useRef(0);
+  // Keyed on whether there is a session, never on the session object: a token refresh replaces that
+  // object about hourly, and `api`, `operations` and the running download must outlive it. The getter
+  // reads the current session for every request, so the new access token is used without a rebuild.
+  const signedIn = session !== null;
   const api = useMemo<ApiClient | null>(
     () =>
-      client && session && userId
+      client && signedIn && userId
         ? createApiClient(connection.apiUrl, async () => {
             const { data } = await client.auth.getSession();
             return data.session?.user.id === userId ? data.session.access_token : null;
           })
         : null,
-    [client, session, userId],
+    [client, signedIn, userId],
   );
   const generation = useRef(0);
   const operations = useMemo(() => {

@@ -52,6 +52,11 @@ function asApiError(error: unknown): ApiError {
 export function MeProvider({ children }: PropsWithChildren) {
   const { account, client, session, restored, markAccountDeleted } = useAccount();
   const userId = account?.id;
+  // The effect below is keyed on whether there is a session, not on the session object (replaced by
+  // every token refresh) or on `markAccountDeleted` (rebuilt with it): neither may re-read /v1/me.
+  const signedIn = session !== null;
+  const deleted = useRef(markAccountDeleted);
+  deleted.current = markAccountDeleted;
   const [state, setState] = useState(initial);
   const current = useRef<string | undefined>(userId);
   current.current = userId;
@@ -85,7 +90,7 @@ export function MeProvider({ children }: PropsWithChildren) {
       setState({ owner: id, snapshot: next, error: null, ready: true });
     };
     const api =
-      client && session
+      client && signedIn
         ? createApiClient(connection.apiUrl, async () => {
             const { data } = await client.auth.getSession();
             return data.session?.user.id === id ? data.session.access_token : null;
@@ -121,7 +126,7 @@ export function MeProvider({ children }: PropsWithChildren) {
           });
           return false;
         }
-        if (error.code === "account_deleted") markAccountDeleted();
+        if (error.code === "account_deleted") deleted.current();
         setState({ owner: id, snapshot, error: error.message, ready: true });
         return false;
       } finally {
@@ -155,7 +160,7 @@ export function MeProvider({ children }: PropsWithChildren) {
         return { ok: true };
       } catch (error) {
         const failure = asApiError(error);
-        if (failure.code === "account_deleted" && isCurrent()) markAccountDeleted();
+        if (failure.code === "account_deleted" && isCurrent()) deleted.current();
         return { ok: false, error: failure };
       }
     };
@@ -171,7 +176,7 @@ export function MeProvider({ children }: PropsWithChildren) {
       refreshNow.current = async () => false;
       update.current = async () => notSignedIn;
     };
-  }, [userId, client, session, restored, markAccountDeleted]);
+  }, [userId, client, signedIn, restored]);
   const own = state.owner === (userId ?? null);
   return (
     <MeContext
