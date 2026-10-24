@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { readAvailableCurrent } from "../../storage/available-current";
-import { readCatalog, readSelected } from "../../storage/package-catalog";
-import { clearSession, saveSession } from "../../storage/session-store";
+import { readCatalog } from "../../storage/package-catalog";
+import { installedFor } from "../../storage/package-store.fixture";
 import { hasStoredPackage, setActivePackage, setPackageAccessOwner } from "./access";
 import { boundFixture, ids } from "./bound-fixture";
 import { packageIdentity, readInstalledPackage } from "./installation";
@@ -22,7 +22,7 @@ it("retains an active foreground package before its first draft is written", asy
   try {
     setPackageAccessOwner(owner);
     await h.operations.download(ids.project, boundFixture().site, () => {});
-    const installed = await readSelected(h.database, owner, ids.project, ids.site);
+    const installed = await installedFor(h.database, owner, ids.project, ids.site);
     if (!installed) throw new Error("Installation missing");
     setActivePackage(owner, installed.identity);
     expect(await h.operations.remove(installed.identity)).toMatchObject({
@@ -41,7 +41,7 @@ it("retains an active foreground package before its first draft is written", asy
   }
 });
 
-it("refreshes available v8 while keeping the verified v7 selection and offline cache", async () => {
+it("refreshes available v8 while keeping the verified v7 and its offline cache", async () => {
   const h = await harness();
   try {
     setPackageAccessOwner(owner);
@@ -59,7 +59,7 @@ it("refreshes available v8 while keeping the verified v7 selection and offline c
       packageVersion: 8,
     });
     expect(
-      (await readSelected(h.database, owner, ids.project, ids.site))?.identity.packageVersion,
+      (await installedFor(h.database, owner, ids.project, ids.site))?.identity.packageVersion,
     ).toBe(7);
     expect(hasStoredPackage(ids.package)).toBe(true);
   } finally {
@@ -92,7 +92,7 @@ it("cancels an in-flight v8 download without changing installed v7", async () =>
     archive.resolve(v8.bytes);
     expect(await pending).toBe(false);
     expect(
-      (await readSelected(h.database, owner, ids.project, ids.site))?.identity.packageVersion,
+      (await installedFor(h.database, owner, ids.project, ids.site))?.identity.packageVersion,
     ).toBe(7);
     expect(
       await readCatalog(h.database, owner, {
@@ -138,8 +138,8 @@ it("rejects the old A request after A to B to A even when its archive ignores ca
     setPackageAccessOwner(owner);
     archive.resolve(f.bytes);
     expect(await pending).toBe(false);
-    expect(await readSelected(h.database, owner, ids.project, ids.site)).toBeNull();
-    expect(await readSelected(h.database, otherOwner, ids.project, ids.site)).toBeNull();
+    expect(await installedFor(h.database, owner, ids.project, ids.site)).toBeNull();
+    expect(await installedFor(h.database, otherOwner, ids.project, ids.site)).toBeNull();
     expect(hasStoredPackage(ids.package)).toBe(false);
   } finally {
     setPackageAccessOwner(null);
@@ -147,36 +147,17 @@ it("rejects the old A request after A to B to A even when its archive ignores ca
   }
 });
 
-it("repairs an exact corrupt package while retaining a durable session reference", async () => {
+it("repairs an exact corrupt package while an open collection holds it", async () => {
   const h = await harness();
   try {
     setPackageAccessOwner(owner);
     const f = boundFixture();
     await h.operations.download(ids.project, f.site, () => {});
-    const old = await readSelected(h.database, owner, ids.project, ids.site);
+    const old = await installedFor(h.database, owner, ids.project, ids.site);
     if (!old) throw new Error("Installation missing");
-    await saveSession(h.database, owner, {
-      identity: old.identity,
-      zoneCode: "A",
-      zoneId: ids.zone,
-      roundType: "standard",
-      freshPeriod: false,
-      playFormVersion: "play-v7",
-      inventoryFormVersion: null,
-      context: {
-        packageId: ids.package,
-        packageVersion: "v7",
-        zoneId: "A",
-        zoneLabel: "Old meadow",
-        roundType: "standard",
-        freshPeriod: false,
-        inheritedFrom: "",
-      },
-    });
+    setActivePackage(owner, old.identity);
     h.files.stage(old.contentPath, "corrupt");
-    expect(await h.operations.catalog()).toMatchObject([
-      { status: "needs_redownload", references: { sessions: 1 } },
-    ]);
+    expect(await h.operations.catalog()).toMatchObject([{ status: "needs_redownload" }]);
     expect(hasStoredPackage(ids.package)).toBe(false);
     expect(await h.operations.remove(old.identity)).toMatchObject({
       removed: false,
@@ -190,10 +171,8 @@ it("repairs an exact corrupt package while retaining a durable session reference
     const loaded = await readInstalledPackage(h.database, owner, old.identity, h.files, hash);
     if (!loaded) throw new Error("Repaired installation missing");
     expect(packageIdentity(issuer, loaded)).toEqual(old.identity);
-    expect(await h.operations.catalog()).toMatchObject([
-      { status: "verified", references: { sessions: 1 } },
-    ]);
-    await clearSession(h.database, owner);
+    expect(await h.operations.catalog()).toMatchObject([{ status: "verified" }]);
+    setActivePackage(owner, null);
     expect(await h.operations.remove(old.identity)).toMatchObject({
       removed: true,
       contentRetained: true,

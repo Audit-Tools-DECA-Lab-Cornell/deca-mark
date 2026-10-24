@@ -149,7 +149,6 @@ export async function installVerifiedPackage(
           siteName: content.siteName,
         },
       },
-      true,
       current,
     );
     return content;

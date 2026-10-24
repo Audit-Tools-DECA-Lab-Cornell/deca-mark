@@ -11,7 +11,7 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import { useAccount } from "../auth/provider";
-import { activateHeldObservations, earliestRetry, retryAttention } from "../storage/sync-store";
+import { earliestRetry, retryAttention } from "../storage/sync-store";
 import { createBoundUpload } from "./bound-upload";
 import { connection } from "./config";
 import { type SyncScope, scopeKey } from "./contracts";
@@ -132,11 +132,10 @@ export function SyncProvider({ children }: PropsWithChildren) {
         wakeAt(Date.now() + FAILED_PASS_RETRY);
       },
       drain: async () => {
-        const activated = await activateHeldObservations(database, key, currentScope, current);
-        if (!canSend()) return activated;
+        if (!canSend()) return false;
         request = new AbortController();
         try {
-          return (await drain(request.signal)) || activated;
+          return await drain(request.signal);
         } finally {
           await waitForNext();
         }

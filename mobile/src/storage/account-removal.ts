@@ -6,8 +6,6 @@ const ownedTables = [
   "observations",
   "observation_drafts",
   "parked_observation_drafts",
-  "active_sessions",
-  "package_selections",
   "package_authorizations",
   "available_current_packages",
 ] as const;
@@ -29,8 +27,6 @@ export function removeAccountData(
       observations: 0,
       observation_drafts: 0,
       parked_observation_drafts: 0,
-      active_sessions: 0,
-      package_selections: 0,
       package_authorizations: 0,
       available_current_packages: 0,
     };

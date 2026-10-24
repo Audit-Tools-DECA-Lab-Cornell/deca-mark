@@ -1,6 +1,5 @@
 import type { AuthChangeEvent } from "@supabase/supabase-js";
-import { legacyScope } from "../data/legacy/scope";
-import { scopeKey } from "../sync/contracts";
+import { scopeKey, syncScopeSchema } from "../sync/contracts";
 import { type CachedAccount, sessionIdentity } from "./cached-account";
 
 export function sessionChange<T extends { readonly user: CachedAccount }>(
@@ -24,8 +23,30 @@ export function sessionChange<T extends { readonly user: CachedAccount }>(
   };
 }
 
-export function accountWorkspace(account: CachedAccount | null) {
-  const parsed = account ? legacyScope(account.id) : null;
+/**
+ * `SyncScope` still carries a project in its key, but nothing reads it as a destination: the
+ * package binding names the project an observation uploads to. One fixed value keeps a single
+ * owner key per account and backend.
+ */
+const workspaceProjectId = "00000000-0000-4000-8000-000000000000";
+
+/**
+ * The storage namespace of one account on the backend this build is configured for: records,
+ * drafts and installed packages are keyed by it, and a build pointed at another backend sees none
+ * of them. `connection` is the public build configuration.
+ */
+export function accountWorkspace(
+  account: CachedAccount | null,
+  connection: { readonly apiUrl: string; readonly supabaseUrl: string },
+) {
+  const parsed = account
+    ? syncScopeSchema.safeParse({
+        apiUrl: connection.apiUrl,
+        issuer: connection.supabaseUrl,
+        userId: account.id,
+        projectId: workspaceProjectId,
+      })
+    : null;
   const scope = parsed?.success ? parsed.data : null;
   return { scope, key: scope ? scopeKey(scope) : "local" };
 }

@@ -3,8 +3,7 @@ import { instrumentObservationSchema } from "../domain/observation";
 import { packageBindingSchema, packageIdentitySchema } from "../domain/package-binding";
 import { observationDraftSchema } from "./draft-store";
 import { initializeDatabase, type LocalDatabase } from "./observation-store";
-import { catalogEntrySchema } from "./package-catalog";
-import { durableSessionSchema } from "./session-store";
+import { catalogEntrySchema, listCatalog } from "./package-catalog";
 
 export const identity = packageIdentitySchema.parse({
   issuer: "https://synthetic.invalid/auth/v1",
@@ -75,16 +74,25 @@ export const boundDraft = observationDraftSchema.parse({
   startedAt: boundRecord.createdAt,
   updatedAt: boundRecord.createdAt,
 });
-export const session = durableSessionSchema.parse({
-  identity,
-  zoneCode: "A",
-  zoneId: binding.zoneId,
-  roundType: "standard",
-  freshPeriod: false,
-  playFormVersion: boundRecord.formVersion,
-  inventoryFormVersion: null,
-  context,
-});
+
+/** What the owner has installed for a site: its newest installed version, or null. */
+export async function installedFor(
+  db: LocalDatabase,
+  forOwner: string,
+  projectId: string,
+  siteId: string,
+) {
+  const versions = (await listCatalog(db, forOwner, projectId)).filter(
+    (value) => value.identity.siteId === siteId,
+  );
+  return versions.reduce<(typeof versions)[number] | null>(
+    (newest, value) =>
+      newest === null || value.identity.packageVersion > newest.identity.packageVersion
+        ? value
+        : newest,
+    null,
+  );
+}
 
 export function adapter(sqlite: DatabaseSync): LocalDatabase {
   return {
