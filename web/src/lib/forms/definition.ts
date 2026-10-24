@@ -285,6 +285,38 @@ function cycles(form: FormDefinition, byId: ReadonlyMap<string, Question>): read
   return found;
 }
 
+/**
+ * The form schema version this build reads. It travels beside a definition (the `schema_version`
+ * the API serves with it), never inside it. A new version is a forward migration of every stored
+ * definition and a new number here, so a build reads one version and never two.
+ */
+export const FORM_SCHEMA_VERSION = 1;
+
+/** The stable code of that refusal, for a screen to map to "Update DECA Mark to use this form". */
+export const UNKNOWN_SCHEMA_VERSION = "unknown_schema_version";
+
+/** A form arrived in a schema version this build does not read. It is refused, never guessed at. */
+export class UnknownSchemaVersionError extends Error {
+  readonly code = UNKNOWN_SCHEMA_VERSION;
+  readonly schemaVersion: unknown;
+
+  constructor(schemaVersion: unknown) {
+    super(`This build reads form schema version ${FORM_SCHEMA_VERSION} only.`);
+    this.name = "UnknownSchemaVersionError";
+    this.schemaVersion = schemaVersion;
+  }
+}
+
+/** Matches on the stable code rather than the class, which a bundler's transpiled classes can break. */
+export function isUnknownSchemaVersion(error: unknown): error is UnknownSchemaVersionError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === UNKNOWN_SCHEMA_VERSION
+  );
+}
+
 /** Parses and validates a definition, refusing to return an unusable one. */
 export function parseFormDefinition(input: unknown): FormDefinition {
   const form = formDefinitionSchema.parse(input);
@@ -292,4 +324,13 @@ export function parseFormDefinition(input: unknown): FormDefinition {
   if (problems.length > 0)
     throw new Error(`Form "${form.version}" cannot be used: ${problems.join(" ")}`);
   return form;
+}
+
+/**
+ * Parses a definition together with the `schema_version` the API served beside it. A version this
+ * build does not read, or none at all, is refused before the definition is looked at.
+ */
+export function parseServedDefinition(schemaVersion: unknown, input: unknown): FormDefinition {
+  if (schemaVersion !== FORM_SCHEMA_VERSION) throw new UnknownSchemaVersionError(schemaVersion);
+  return parseFormDefinition(input);
 }
