@@ -40,7 +40,7 @@ pnpm dev
 | `pnpm mobile:ios` / `pnpm mobile:android`     | Build and run the native development app                            |
 | `pnpm api:hosted:up` / `pnpm api:hosted:stop` | Start/stop the local API connected to hosted Supabase               |
 | `pnpm check`                                  | Web and mobile type/lint checks, then Python Ruff/BasedPyright      |
-| `pnpm test`                                   | Mobile tests, local API integration tests, and local SQL assertions |
+| `pnpm test`                                   | Web unit and mobile tests, local API integration tests, and local SQL assertions |
 
 Run `pnpm run help` for the command overview. Integration tests need the local databases started with `pnpm db:start`; they do not run against Supabase. The hosted API needs the already provisioned local credential volume. See [workspace operations](docs/Workspace.md) for prerequisites, individual checks, and deployment instructions.
 

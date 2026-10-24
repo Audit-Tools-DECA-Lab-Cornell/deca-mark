@@ -248,12 +248,13 @@ Do: the same procedure as OPS-14, for GIS-03 and DB-13.
 Done when: staging's ledger lists every migration in `supabase/migrations/`, and `verify.sql` passes. Production (OPS-09) is created only from a migration set proven here.
 
 ### OPS-18: CI runs every guard the docs promise
-Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08, QA-09
+Status: done · Phase 4 · Size S · Depends: none · Blocks: QA-08, QA-09
 Added 2026-10-22 (frontend audit C13). CI's web job runs 84 of 477 web node tests: the 393-test unit suite (4.55 s), `forms:parity` (0.44 s, the only check tying the web's copy of the form engine to the shared cases) and the token drift/contrast check (1.0 s) never run, while `docs/Workspace.md:67` says CI runs the same checks. The real collector-to-API acceptance drivers `database/tests/test_mobile_bound_upload_api.py` and `test_mobile_package_api.py` sit outside every runner.
 Read first: `.github/workflows/ci.yml`; root `package.json` scripts; `docs/Workspace.md:67`; `backend/pyproject.toml` test paths.
 Do: add `pnpm --dir web test:unit`, `pnpm forms:parity` and `node scripts/contour-tokens.mjs --check` to the web job; move the two Python drivers under `backend/tests` (pre-pull their Docker image as the backend job already does); add `test:unit` to the root `pnpm test` or correct `Workspace.md`. Playwright stays out of PR CI (nightly or by hand).
 Done when: a branch that flips one web unit assertion fails CI; editing the web engine copy without the mobile source fails parity; the backend job lists `test_mobile_bound_upload_api`.
 Verify: a CI run on the PR.
+Verified 2026-10-23 on PR #35's CI: the web job runs `pnpm --dir web test:unit`, `pnpm forms:parity` and `node scripts/contour-tokens.mjs --check` before the build; one flipped web unit assertion failed the web job at `test:unit` (run 39970335186), one changed byte in `web/src/lib/forms/engine.ts` failed it at `forms:parity` (run 39887970586), and both probes were reverted before merge; the backend job (`pnpm backend:test ZONE_API_REHEARSAL=1`, `-v`) lists `test_mobile_bound_upload_api` and `test_mobile_package_api` as PASSED, 866 passed (run 39970577639). The two drivers live in `backend/tests`; root `pnpm test` runs the web unit tests and the API suite on the disposable database as CI does; `docs/Workspace.md` lists what CI runs and leaves out.
 
 ### OPS-19: The final pre-launch reset of hosted data
 Status: todo · Phase 4 · Size S · Depends: BE-24, DB-20 · Blocks: QA-08

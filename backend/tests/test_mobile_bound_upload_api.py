@@ -9,6 +9,7 @@ from uuid import uuid4
 from zipfile import ZipFile
 
 import pytest
+
 from fieldmaps_api.observation_analysis_schemas import HistoricalObservationDetail
 from fieldmaps_api.zone_response_schemas import HistoricalZones, Publication
 from tests.local_database import disposable_database_selected
@@ -29,7 +30,8 @@ def signer() -> Signer:
 
 
 def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
-    live_api: LiveApi, tmp_path: Path,
+    live_api: LiveApi,
+    tmp_path: Path,
 ) -> None:
     # Given: a real current package with play and inventory bindings on an isolated API.
     assert disposable_database_selected(), "MOB-29 requires the isolated API rehearsal"
@@ -92,7 +94,7 @@ def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
         "inventoryId": inventory_id,
     }
     # When: the actual TypeScript collector installs, saves, restarts and uploads old-map work.
-    result = subprocess.run(
+    result = subprocess.run(  # noqa: S603 - repository Vitest, argv only, synthetic loopback fixture
         [
             node,
             str(ROOT / "mobile/node_modules/vitest/vitest.mjs"),
@@ -107,7 +109,7 @@ def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    print(result.stdout)
+    print(result.stdout)  # noqa: T201 - actual SQLite/HTTP acceptance evidence; no tokens
     # Then: independent HTTP readback and export retain v1 and whole-zone Inventory.
     with live_api.client("observer") as observer:
         point = observer.get(f"{project}/observations/{point_id}")
@@ -132,7 +134,7 @@ def test_mobile_bound_outbox_restart_publication_replay_and_inventory(
                 "metadata.json",
             ):
                 (artifact / name).write_bytes(archive.read(name))
-    print(
+    print(  # noqa: T201 - acceptance summary; generated tokens are never printed
         "PASS live HTTP: exact old-map point and Inventory readback/export; "
         "generated tokens not saved"
     )

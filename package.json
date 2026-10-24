@@ -38,7 +38,7 @@
     "api:hosted:up": "make api-hosted-up",
     "api:hosted:stop": "make api-hosted-stop",
     "check": "pnpm web:check && pnpm mobile:check && pnpm backend:check",
-    "test": "pnpm mobile:test && pnpm backend:test && pnpm db:test",
+    "test": "pnpm --dir web test:unit && pnpm mobile:test && pnpm backend:test ZONE_API_REHEARSAL=1 && pnpm db:test",
     "help": "make help",
     "plan:check": "node docs/plan/check-plan.mjs",
     "forms:parity": "node scripts/check-form-engine-parity.mjs",
