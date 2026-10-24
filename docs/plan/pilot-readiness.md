@@ -29,7 +29,7 @@ A **lane** is one agent working through its tasks in order on its own branch (or
 | Lane | Tasks | Owns |
 |---|---|---|
 | G (CI) | OPS-18 | `.github/workflows/ci.yml`, `docs/Workspace.md`, the moved Python acceptance files |
-| D (contracts) | CON-07 | `contracts/README.md`, `contracts/forms/cases`, `docs/plan/contracts.md` |
+| D (contracts) | CON-07 | `contracts/README.md`, `contracts/forms/cases`, `contracts/forms/definition.cases.json`, `docs/plan/contracts.md` |
 
 OPS-18 goes first so every later PR runs the 393 web unit tests, `forms:parity` and the token check.
 
