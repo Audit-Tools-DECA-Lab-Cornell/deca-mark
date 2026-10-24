@@ -51,6 +51,8 @@ Cross-lane edits that are known in advance (each is allowed only after the tasks
 - A file that no lane lists belongs to the lane whose task first needs it; a later task in another lane waits for that change to merge, rebases, and lists its own edit in its PR.
 - WEB-44 (lane E) adds the `loadMore` catch in `DataScreen.tsx`, which lane F owns: lane E makes that one-line change first; lane F rebases.
 
+**Deploys before OPS-19.** Render deploys the API from master's head on every commit whose message lacks `[skip render]`, and Vercel deploys the web on every master commit. From BE-24's merge until OPS-19 deploys, every squash merge to master carries `[skip render]`. That way the hosted API keeps the code from before BE-24, and keeps serving the hosted fields-only forms, until the reset removes them. In that window the hosted web may run ahead of the hosted API; the owner accepted this on 2026-10-24. A merge that forgets the tag deploys BE-24 early: tell the owner at once.
+
 ### Wave 2: the gate (days 3–5)
 
 | Who | Tasks |
