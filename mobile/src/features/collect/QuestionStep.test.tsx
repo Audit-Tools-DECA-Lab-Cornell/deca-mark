@@ -43,7 +43,10 @@ const hostProps = (node: ReactTestInstance) =>
     keyboardShouldPersistTaps?: string;
   };
 
-function mount(id: string, extra: { keyboardUp?: boolean; showLinks?: boolean } = {}) {
+function mount(
+  id: string,
+  extra: { keyboardUp?: boolean; showLinks?: boolean; compactField?: boolean } = {},
+) {
   const scrollTo = vi.fn();
   const element: ReactElement = (
     <PreferencesProvider>
@@ -90,6 +93,22 @@ function mount(id: string, extra: { keyboardUp?: boolean; showLinks?: boolean } 
     scroll,
     field,
     layout,
+    /** The minimum height the answer field is drawn at, and whether it carries a character counter. */
+    drawn: () => {
+      const input = hosts("TextInput")[0];
+      const flat = (style: unknown): { minHeight?: number } =>
+        !style
+          ? {}
+          : Array.isArray(style)
+            ? Object.assign({}, ...style.map(flat))
+            : (style as { minHeight?: number });
+      return {
+        minHeight: input ? flat((input.props as { style?: unknown }).style).minHeight : undefined,
+        counter: root.findAll(
+          (node) => (node.type as unknown) === "Text" && /\d+ \/ \d+/.test(String(node.children)),
+        ).length,
+      };
+    },
     labels: () =>
       hosts("Pressable").map(
         (node) => (node.props as { accessibilityLabel?: string }).accessibilityLabel,
@@ -150,5 +169,32 @@ describe("the question step on a keyboard (MOB-34)", () => {
     expect(bare).not.toContain("Review answers");
     expect(bare).not.toContain("Adjust point");
     expect(bare).toEqual(expect.arrayContaining(["Back"]));
+  });
+
+  it("keeps the first line inside an area shorter than the field (a phone in landscape)", () => {
+    // The 4-row field is 120 pt (16 + 16 padding, 4 x 22) plus a 26 pt counter; the area is 89 pt tall.
+    const full = mount("play_event_summary", { keyboardUp: true });
+    expect(full.drawn().minHeight).toBe(120);
+    expect(full.drawn().counter).toBe(1);
+    full.layout(full.scroll, 0, 89);
+    full.layout(full.field, 80, 146);
+    // Empty and taller than the area: the top of the field, where the first line is typed, is kept.
+    expect(full.scrollTo).toHaveBeenLastCalledWith({ y: 80, animated: false });
+
+    const compact = mount("play_event_summary", { keyboardUp: true, compactField: true });
+    expect(compact.drawn().minHeight).toBe(76);
+    expect(compact.drawn().counter).toBe(0);
+    compact.layout(compact.scroll, 0, 89);
+    compact.layout(compact.field, 80, 76);
+    // The two-row field fits: its foot sits 8 pt above the foot of the area, and the whole field shows.
+    const [{ y }] = compact.scrollTo.mock.calls.at(-1) as [{ y: number }];
+    expect(y).toBe(80 + 76 + 8 - 89);
+    expect(80).toBeGreaterThanOrEqual(y);
+    expect(80 + 76).toBeLessThanOrEqual(y + 89);
+  });
+
+  it("shows two rows of the question's four when compact, and all four otherwise", () => {
+    expect(mount("play_event_summary", { compactField: true }).drawn().minHeight).toBe(76);
+    expect(mount("play_event_summary").drawn().minHeight).toBe(120);
   });
 });

@@ -111,9 +111,12 @@ export function CollectScreen() {
   // header, mode strip and links row go too: the answer and Continue are what it needs.
   const side = layout.wide;
   const keyboardUp = lift > 0;
-  const shut = keyboardUp && !side && !expanded;
-  const hideStatus = shut || (keyboardUp && !layout.tablet);
-  const hideChrome = keyboardUp && !layout.tablet && side;
+  // Only the Answer step has a field to type in, and only a map that has been laid out can be kept at
+  // its size inside a shut slot: arriving with the keyboard up leaves the slot open until it is measured.
+  const shut = keyboardUp && !side && !expanded && step === "answer" && mapHeight > 0;
+  const typing = keyboardUp && step === "answer";
+  const hideStatus = shut || (typing && !layout.tablet);
+  const hideChrome = typing && !layout.tablet && side;
   const [aim] = useState(() =>
     createAimStore({
       centre: placed ?? zone?.centre ?? [0, 0],
@@ -395,6 +398,7 @@ export function CollectScreen() {
           onAdjust={placementSource === "hand" ? adjustPoint : undefined}
           keyboardUp={keyboardUp}
           showLinks={!hideChrome}
+          compactField={hideChrome}
         />
       ) : null}
       {step === "review" ? (

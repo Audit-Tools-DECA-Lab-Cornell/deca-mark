@@ -65,7 +65,7 @@ import {
   useTheme,
 } from "../../ui";
 import { type AimStore, useAim } from "./aim-store";
-import { controlColumns } from "./map-controls";
+import { controlColumns, MAP_CONTROL } from "./map-controls";
 import { AimReticle, markColours, PLACED_BOX, PlacedMark } from "./pin";
 import { nearEdgeHint, type PlacementState, placementState, zoneTap } from "./placement";
 
@@ -258,7 +258,7 @@ function mapStyles(t: Theme) {
     menu: {
       position: "absolute",
       top: t.space.s3,
-      right: 44 + t.space.s3 + t.space.s3,
+      right: MAP_CONTROL + t.space.s3 + t.space.s3,
       width: 248,
       maxHeight: 340,
       borderRadius: t.radius.panel,
@@ -849,7 +849,7 @@ export function CollectMap({
             s.menu,
             {
               // Beside the controls, whatever the number of columns, and no taller than the frame.
-              right: columns * 44 + (columns - 1) * t.space.s2 + t.space.s3 * 2,
+              right: columns * MAP_CONTROL + (columns - 1) * t.space.s2 + t.space.s3 * 2,
               ...(frameHeight > 0
                 ? { maxHeight: Math.min(340, frameHeight - t.space.s3 * 2) }
                 : {}),

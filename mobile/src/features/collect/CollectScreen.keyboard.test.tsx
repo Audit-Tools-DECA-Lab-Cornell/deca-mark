@@ -205,7 +205,31 @@ function open(): Screen {
   act(() => {
     (field.props as { onChangeText: (text: string) => void }).onChangeText("Two children dig.");
   });
+  measureMap(screen);
   return screen;
+}
+
+/** The stacked layout reports the map frame's height once it is laid out; side by side has no frame. */
+function measureMap(screen: Screen, height = 292) {
+  const [frame] = screen.renderer.root.findAll(
+    (node) => isHost(node) && (node.props as { testID?: string }).testID === "collect-map-frame",
+  );
+  if (!frame) return;
+  act(() => {
+    (frame.props as { onLayout: (event: unknown) => void }).onLayout({
+      nativeEvent: { layout: { x: 0, y: 0, width: 378, height } },
+    });
+  });
+}
+
+/** Collect with the keyboard already up when it mounts, before the map has been laid out. */
+function openWithKeyboardUp(session: FieldSessionValue = sessionAtSummary()): Screen {
+  device.keyboardHeight = device.keyboardSize;
+  return render(
+    <FieldSessionContext.Provider value={session}>
+      <CollectScreen />
+    </FieldSessionContext.Provider>,
+  );
 }
 
 /** The style properties these tests read. */
@@ -444,6 +468,82 @@ describe("the map stays mounted and its slot changes size instantly, never by an
     await keyboard(true);
     expect(styleOf(byTestID(screen, "collect-map-slot")).height).toBeUndefined();
     expect(device.mapMounts).toBe(1);
+  });
+});
+
+describe("arriving with the keyboard already up", () => {
+  it("leaves the slot open until the map has been measured, so the GL view never mounts at height 0", async () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const screen = openWithKeyboardUp();
+    expect(styleOf(byTestID(screen, "collect-map-slot")).height).toBe("46%");
+    expect(styleOf(byTestID(screen, "collect-map-frame")).position).not.toBe("absolute");
+    expect(styleOf(byTestID(screen, "collect-map-frame")).height).toBeUndefined();
+    measureMap(screen);
+    expect(styleOf(byTestID(screen, "collect-map-slot")).height).toBe(0);
+    expect(styleOf(byTestID(screen, "collect-map-frame")).height).toBe(292);
+    expect(device.mapMounts).toBe(1);
+    expect(device.mapUnmounts).toBe(0);
+  });
+
+  it("does not shut the map on the Place step, which has no field to type in", () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const screen = openWithKeyboardUp({ ...sessionAtSummary(), placed: null, inProgress: null });
+    measureMap(screen);
+    expect(styleOf(byTestID(screen, "collect-map-slot")).height).toBe("46%");
+    expect(screen.says("on device")).toBe(true);
+  });
+
+  it("keeps the header on the Place step of a phone in landscape", () => {
+    use(PILOT_DEVICES[2] as Pilot);
+    const screen = openWithKeyboardUp({ ...sessionAtSummary(), placed: null, inProgress: null });
+    expect(screen.controls()).toContain("Leave collecting");
+  });
+});
+
+describe("the text field in a short scrolling area (audit C01, review round 1)", () => {
+  /** The minimum height the answer field is drawn at: its padding and its rows. */
+  const fieldHeight = (screen: Screen) => {
+    const field = screen.renderer.root.find(
+      (node) =>
+        isHostNamed(node, "TextInput") &&
+        (node.props as { accessibilityLabel?: string }).accessibilityLabel ===
+          "Describe the play event",
+    );
+    const { minHeight } = styleOf(field) as { minHeight?: number };
+    return minHeight;
+  };
+  const counter = (screen: Screen) => screen.texts().some((text) => /\d+ \/ 1000/.test(text));
+
+  it("shows four rows and the counter at rest, and on a phone in portrait with the keyboard up", async () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const screen = open();
+    expect(fieldHeight(screen)).toBe(120);
+    expect(counter(screen)).toBe(true);
+    await keyboard(true);
+    expect(fieldHeight(screen)).toBe(120);
+    expect(counter(screen)).toBe(true);
+  });
+
+  it("shows two rows and no counter on a phone in landscape with the keyboard up, so the first line has room", async () => {
+    for (const pilot of [PILOT_DEVICES[2], PILOT_DEVICES[4]] as Pilot[]) {
+      use(pilot);
+      const screen = open();
+      expect(fieldHeight(screen)).toBe(120);
+      await keyboard(true);
+      // 16 + 16 padding and two 22 pt lines: 76 pt, which fits the 81 to 89 pt a landscape phone leaves.
+      expect(fieldHeight(screen)).toBe(76);
+      expect(counter(screen)).toBe(false);
+      await keyboard(false);
+      expect(fieldHeight(screen)).toBe(120);
+      expect(counter(screen)).toBe(true);
+    }
+  });
+
+  it("keeps four rows on a tablet in landscape, which has room", async () => {
+    use(PILOT_DEVICES[6] as Pilot);
+    const screen = open();
+    await keyboard(true);
+    expect(fieldHeight(screen)).toBe(120);
   });
 });
 

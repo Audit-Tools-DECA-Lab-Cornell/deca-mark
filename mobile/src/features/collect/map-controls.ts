@@ -10,3 +10,6 @@ export const CONTROLS_FIT = 340;
 export function controlColumns(frameHeight: number): 1 | 2 {
   return frameHeight > 0 && frameHeight < CONTROLS_FIT ? 2 : 1;
 }
+
+/** The width of one map control (`IconButton`'s "map" variant), which the Layers menu clears. */
+export const MAP_CONTROL = 44;
