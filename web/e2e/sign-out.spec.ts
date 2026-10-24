@@ -13,6 +13,12 @@ import { loopbackOrigin, manifest, workspacePaths } from "./support/manifest";
  * session's refresh token. The refresh token of a revoked session is refused; this one must still work.
  * Each run signs up a new synthetic address against local Supabase Auth and Mailpit, so no seeded
  * account's saved sign-in is touched.
+ *
+ * Only the refresh-token assertions tell the fix from the base. The access token is a JWT the API and the
+ * web server verify locally, so the second browser still reaches /account after a global sign-out until
+ * that token expires; only the refresh grant sees the revoked session (400 on the base, 200 after).
+ * A fresh account is a member of nothing, so the last place is written the way RememberPlace writes it
+ * rather than by opening a project page.
  */
 
 test.use({ storageState: { cookies: [], origins: [] } });
