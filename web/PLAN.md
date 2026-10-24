@@ -741,12 +741,13 @@ Done when: a Playwright spec at 1440 and 390 covers aborted POST, cleared cookie
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the new spec through `scripts/e2e-local.sh`.
 
 ### WEB-45: Web sign-out signs out only this browser
-Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Status: done (2026-10-24; unit and local-stack e2e; device check pending (owner)) · Phase 4 · Size S · Depends: none · Blocks: QA-08
 Added 2026-10-22 (audit C06). `lib/auth/actions.ts:138` (`signOut`) and `features/auth/actions.ts:127` ("Not you?" on invite and join) call `supabase.auth.signOut()` with no scope; auth-js 2.117.2 defaults to `global` (`GoTrueClient.js:3417`), which revokes the phone collector's session too, while `account/SecurityIsland.tsx:23` promises "Signing out here does not affect the app". `features/account/actions.ts:103` and the collector (MOB-07) already use `local`.
 Read first: the three call sites; `SecurityIsland.tsx:23`.
 Do: pass `{ scope: "local" }` at both call sites; clear the `fm-place` cookie at the same moment (audit J-7). If "sign out everywhere" is ever wanted, it becomes a separate, explicitly worded control.
 Done when: signed in with one account on the web and the iOS simulator, a web sign-out followed by a forced token refresh on the phone leaves the collector uploading; a second browser stays signed in; `fm-place` is gone after sign-out.
 Verify: `pnpm web:check`; the manual two-device check recorded here.
+Verified 2026-10-24: Sign out (one action behind the Account page and the account menu), "Not you?" on the invitation and join pages, and a finished account deletion each end this browser's session with `{ scope: "local" }` and delete `fm-place`. Unit `sign-out.test.mjs` runs the three real Server Actions with only Next's request context and Auth's client replaced (4 of 5 fail on the base: scope `global`, `fm-place` kept; 5 of 5 pass after) and scans `src` for any `.signOut(` without the local scope. Local stack at desktop-1440 and phone-390: `sign-out.spec.ts` signs one synthetic account in on two browsers, signs out on the first from the Account page and again through "Not you?", and sends the second browser's refresh token to local Auth, which is what the collector's token refresh sends: refused with 400 on the base, 200 after, and the second browser stays on `/account`; `fm-place` is gone after both. `auth-flows` and `account-deletion` still pass. Not run: the iOS simulator collector with a forced token refresh (device check pending (owner)).
 
 ### WEB-46: Text fields are inert until the page is interactive
 Status: todo · Phase 4 · Size S · Depends: none · Blocks: QA-08
