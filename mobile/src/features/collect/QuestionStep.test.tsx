@@ -196,13 +196,51 @@ describe("the question step on a keyboard (MOB-34)", () => {
     expect(compact.drawn().minHeight).toBe(76);
     expect(compact.drawn().counter).toBe(0);
     compact.layout(compact.scroll, 0, 89);
-    // The two-row field is 80 pt: the 76 pt input and the 2 pt border above and below it.
+    // Typed text of two rows: the 76 pt input and its 2 pt border above and below make an 80 pt field.
+    compact.typeText("Two children dig.");
     compact.layout(compact.field, 80, 80);
+    compact.layout(compact.input, 2, 76);
     // It fits: its foot sits 8 pt above the foot of the area, and the whole field shows.
     const [{ y }] = compact.scrollTo.mock.calls.at(-1) as [{ y: number }];
     expect(y).toBe(80 + 80 + 8 - 89);
     expect(80).toBeGreaterThanOrEqual(y);
     expect(80 + 80).toBeLessThanOrEqual(y + 89);
+  });
+
+  // MOB-34 review round 4: an empty input is measured by its placeholder, which wraps past the rows.
+  describe("an empty field whose placeholder wraps past the rows", () => {
+    it("keeps the top of a two-row field laid out at its placeholder height (a phone in landscape)", () => {
+      // The placeholder wraps to 4 lines at the 242 pt text width: the empty input is 120 pt, not the
+      // 76 pt of two rows, so the empty field is 124 pt with its border, in an 89 pt area.
+      const m = mount("play_event_summary", { keyboardUp: true, compactField: true });
+      m.layout(m.scroll, 0, 89);
+      m.layout(m.field, 80, 124);
+      m.layout(m.input, 2, 120);
+      const [{ y }] = m.scrollTo.mock.calls.at(-1) as [{ y: number }];
+      // The caret and the first line, 18 pt below the field's top, are inside the area.
+      expect(y).toBeLessThanOrEqual(80);
+      expect(80 + 18).toBeGreaterThanOrEqual(y);
+      expect(80 + 18 + 22).toBeLessThanOrEqual(y + 89);
+    });
+
+    it("keeps the top of a four-row field at larger text (an iPhone SE in portrait at 1.24x)", () => {
+      // The placeholder box is 141 pt against the unscaled 120 pt minimum; the field is 172 pt in 114 pt.
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.layout(m.scroll, 0, 114);
+      m.layout(m.field, 80, 172);
+      m.layout(m.input, 2, 141);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({ y: 80, animated: false });
+    });
+
+    it("follows the foot only once text has been typed into the grown box", () => {
+      const m = mount("play_event_summary", { keyboardUp: true, compactField: true });
+      m.layout(m.scroll, 0, 89);
+      m.layout(m.field, 80, 124);
+      m.layout(m.input, 2, 120);
+      m.typeText("One.\nTwo.\nThree.\nFour.");
+      m.layout(m.input, 2, 120);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({ y: 80 + 124 + 8 - 89, animated: false });
+    });
   });
 
   it("shows two rows of the question's four when compact, and all four otherwise", () => {

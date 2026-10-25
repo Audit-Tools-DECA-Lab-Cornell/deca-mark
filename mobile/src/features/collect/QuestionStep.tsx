@@ -132,9 +132,11 @@ export function QuestionStep({
 
   // While the keyboard is up, a text or number answer is kept in view above the footer, and the
   // area can be shorter than the field (an iPhone SE: about 114 pt against a 4-row field of 151). The
-  // field grows with what is typed and the caret sits at its end, so once the text has outgrown the
-  // rows the foot of the field is kept; while the field is at its minimum height, whether empty or
-  // answered, its top is kept, so the first line is never scrolled out above the area.
+  // field grows with what is typed and the caret sits at its end, so once typed text has outgrown the
+  // rows the foot of the field is kept. An empty field always keeps its top, however tall its box:
+  // React Native measures an empty input by its placeholder, which can wrap past the rows, so the
+  // box height says nothing about the caret. An answered field at its minimum height keeps its top
+  // too, so the first line is never scrolled out above the area.
   const rows = compactField ? Math.min(question.rows ?? 4, COMPACT_ROWS) : (question.rows ?? 4);
   const rowsMinHeight = theme.space.s4 * 2 + rows * (theme.type.answer.lineHeight ?? 0);
   const scroller = useRef<ScrollView>(null);
@@ -145,16 +147,21 @@ export function QuestionStep({
   const boxHeight = useRef(0);
   const typing = question.kind === "text" || question.kind === "number";
   const multiline = question.kind === "text" && (question.rows ?? 1) > 1;
-  const grown = useRef(false);
-  grown.current = multiline && boxHeight.current > rowsMinHeight + 0.5;
+  /** The current text, so `showField` reads it as of the latest render, not the one it was made in. */
+  const typed = useRef(text);
+  typed.current = text;
+  const rowsHeight = useRef(rowsMinHeight);
+  rowsHeight.current = rowsMinHeight;
   const showField = useCallback(() => {
     if (!keyboardUp || !typing || viewport.current === 0) return;
     const foot = Math.max(0, fieldBottom.current + FIELD_MARGIN - viewport.current);
+    // Only typed text can outgrow the rows; an empty box measured by its placeholder is not grown.
+    const grown = multiline && typed.current !== "" && boxHeight.current > rowsHeight.current + 0.5;
     scroller.current?.scrollTo({
-      y: grown.current ? foot : Math.min(foot, fieldTop.current),
+      y: grown ? foot : Math.min(foot, fieldTop.current),
       animated: false,
     });
-  }, [keyboardUp, typing]);
+  }, [keyboardUp, typing, multiline]);
   useEffect(showField, [showField]);
 
   const answered =
@@ -273,7 +280,6 @@ export function QuestionStep({
                 rows={rows}
                 onLayout={(event: LayoutChangeEvent) => {
                   boxHeight.current = event.nativeEvent.layout.height;
-                  grown.current = boxHeight.current > rowsMinHeight + 0.5;
                   showField();
                 }}
                 disableFullscreenUI
