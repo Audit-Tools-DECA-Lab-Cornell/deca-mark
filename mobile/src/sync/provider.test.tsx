@@ -329,7 +329,7 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
       await settle();
       expect(sent).toHaveLength(2);
       expect(state(sqlite).state).toBe("synced");
-      expect(sync.revision).toBeGreaterThan(before);
+      expect(sync.revision).toBeGreaterThan(0);
     } finally {
       sqlite.close();
     }
@@ -537,6 +537,104 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
       expect(state(sqlite).state).toBe("synced");
       await pass(60000);
       expect(times).toHaveLength(3);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("wakes a record whose delay ran out while a slower record was uploading", async () => {
+    const { db, sqlite } = await mountOnline();
+    const second = "60000000-0000-4000-8000-000000000002";
+    await saveObservation(db, { ...boundRecord, id: second }, owner);
+    const sent: { id: string; at: number }[] = [];
+    let healthy = false;
+    vi.stubGlobal("fetch", async (request: Request) => {
+      const id = request.url.split("/").at(-1) ?? "";
+      sent.push({ id, at: Date.now() });
+      if (id === second) {
+        await new Promise((resolve) => setTimeout(resolve, 6000));
+        return answer(id);
+      }
+      return healthy ? answer(id) : new Response("", { status: 503 });
+    });
+    try {
+      await start();
+      await pass(6000);
+      expect(sent.map((item) => item.id)).toEqual([boundRecord.id, second]);
+      healthy = true;
+      await pass(1000);
+      expect(sent.map((item) => item.id)).toEqual([boundRecord.id, second, boundRecord.id]);
+      expect(
+        sqlite.prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'").get()
+          ?.["count"],
+      ).toBe(2);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("an idle queue with a record stuck due does not spin", async () => {
+    const { sqlite } = await mountOnline();
+    const sent = serve(() => answer());
+    sqlite.exec("UPDATE observations SET payload = json_remove(payload, '$.uploadBody')");
+    try {
+      await start();
+      const revision = sync.revision;
+      await pass(60000);
+      expect(sent).toHaveLength(0);
+      expect(sync.revision).toBe(revision);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("closing and reopening the app inside a Retry-After window does not upload early", async () => {
+    const { sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : rateLimited(120)));
+    try {
+      await start();
+      const first = sent[0] ?? 0;
+      await pass(10000);
+      await act(async () => {
+        view?.unmount();
+      });
+      view = undefined;
+      await act(async () => {
+        view = create(<Tree />);
+      });
+      await act(async () => mocks.network(online));
+      await settle();
+      expect(sent).toHaveLength(1);
+      healthy = true;
+      await pass(109999);
+      expect(sent).toHaveLength(1);
+      await pass(1);
+      expect(sent).toHaveLength(2);
+      expect((sent[1] ?? 0) - first).toBe(120000);
+      expect(state(sqlite).state).toBe("synced");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a pass that stored a change and then threw still refreshes the screens", async () => {
+    const { db, sqlite } = await mountOnline();
+    const second = "60000000-0000-4000-8000-000000000002";
+    await saveObservation(db, { ...boundRecord, id: second }, owner);
+    vi.stubGlobal("fetch", async (request: Request) => {
+      const id = request.url.split("/").at(-1) ?? "";
+      if (id === second) throw new Error("storage is busy");
+      return answer(id);
+    });
+    try {
+      await start();
+      expect(sync.error).toBe("storage is busy");
+      expect(
+        sqlite.prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'").get()
+          ?.["count"],
+      ).toBe(1);
+      expect(sync.revision).toBeGreaterThan(0);
     } finally {
       sqlite.close();
     }

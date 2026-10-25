@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createForegroundDrain } from "./foreground";
+import { createForegroundDrain, FailedAfterChange } from "./foreground";
 
 function setup(drain: () => Promise<boolean>) {
   const calls = { drains: 0, changed: 0, failed: [] as string[] };
@@ -68,5 +68,31 @@ describe("Foreground drain (MOB-39)", () => {
     expect(calls.failed).toEqual(["database is locked"]);
     await queue.wake();
     expect(calls.changed).toBe(1);
+  });
+
+  it("a pass that changed records before it threw still tells the screens, once", async () => {
+    let pass = 0;
+    const { queue, calls } = setup(async () => {
+      if (++pass === 1) throw new FailedAfterChange(new Error("database is locked"));
+      return false;
+    });
+    queue.connectivity(true);
+    queue.foreground(true);
+    await queue.wake();
+    expect(calls.failed).toEqual(["database is locked"]);
+    expect(calls.changed).toBe(1);
+    await queue.wake();
+    expect(calls.changed).toBe(1);
+  });
+
+  it("a pass that threw without changing anything tells no screen", async () => {
+    const { queue, calls } = setup(async () => {
+      throw new Error("database is locked");
+    });
+    queue.connectivity(true);
+    queue.foreground(true);
+    await queue.wake();
+    expect(calls.failed).toEqual(["database is locked"]);
+    expect(calls.changed).toBe(0);
   });
 });

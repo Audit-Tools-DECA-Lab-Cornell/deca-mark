@@ -12,6 +12,7 @@ import {
 import { retryAttention } from "../storage/sync-store";
 import { syncScopeSchema, type UploadResult } from "./contracts";
 import { createSyncCoordinator } from "./coordinator";
+import { FailedAfterChange } from "./foreground";
 import { serializeBoundObservation } from "./wire-body";
 
 const scope = syncScopeSchema.parse({
@@ -308,7 +309,7 @@ describe("Retry delays and reconnects (MOB-39)", () => {
     }
   });
 
-  it("a shorter Retry-After than the retry delay releases the record at the server's time", async () => {
+  it("a shorter Retry-After than the retry delay releases the record 5 s after the attempt", async () => {
     const h = await harness();
     try {
       await failSevenTimes(h);
@@ -322,6 +323,10 @@ describe("Retry delays and reconnects (MOB-39)", () => {
       await h.drain(signal());
       expect(h.state.calls).toHaveLength(8);
       h.state.clock = rateLimitedAt + 2000;
+      h.drain.regain();
+      await h.drain(signal());
+      expect(h.state.calls).toHaveLength(8);
+      h.state.clock = rateLimitedAt + 5000;
       h.drain.regain();
       h.state.answer = () => accepted;
       await h.drain(signal());
@@ -357,16 +362,16 @@ describe("Retry delays and reconnects (MOB-39)", () => {
       h.state.clock = start + 1000;
       h.drain.regain();
       await h.drain(signal());
-      expect(h.state.calls).toHaveLength(8);
-      expect(h.row().at - h.state.clock).toBe(300000);
+      expect(h.state.calls).toHaveLength(7);
+      expect(h.row().at).toBe(start + 5000);
       h.state.clock = start + 2000;
       h.drain.regain();
       await h.drain(signal());
-      expect(h.state.calls).toHaveLength(8);
-      h.state.clock = start + 1000 + 5000;
+      expect(h.state.calls).toHaveLength(7);
+      h.state.clock = start + 5000;
       h.state.answer = () => accepted;
       await h.drain(signal());
-      expect(h.state.calls).toHaveLength(9);
+      expect(h.state.calls).toHaveLength(8);
       expect(h.row().state).toBe("synced");
     } finally {
       h.sqlite.close();
@@ -377,7 +382,7 @@ describe("Retry delays and reconnects (MOB-39)", () => {
     const h = await harness();
     try {
       await failSevenTimes(h);
-      h.state.clock += 1000;
+      h.state.clock += 10_000;
       h.drain.regain();
       await h.drain(signal());
       expect(h.state.calls).toHaveLength(8);
@@ -392,9 +397,7 @@ describe("Retry delays and reconnects (MOB-39)", () => {
     }
   });
 
-  it("a coordinator built with the same hold keeps what the server asked for", async () => {
-    let until = 0;
-    const hold = { get: () => until, set: (value: number) => (until = value) };
+  it("a coordinator built later on the same database keeps what the server asked for", async () => {
     const { db, sqlite } = await memoryDatabase();
     try {
       await installPackage(db, owner, entry);
@@ -408,7 +411,6 @@ describe("Retry delays and reconnects (MOB-39)", () => {
           isCurrent: () => true,
           getToken: async () => "token",
           now: () => clock,
-          hold,
           upload: async () => {
             calls.push(clock);
             return calls.length === 1
@@ -423,6 +425,64 @@ describe("Retry delays and reconnects (MOB-39)", () => {
       clock += 50_000;
       await make()(signal());
       expect(calls).toEqual([1_000_000, 1_060_000]);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a reconnect right after a timed retry waits 5 s from that retry, not from the last release", async () => {
+    const h = await harness();
+    try {
+      const start = h.state.clock;
+      await h.drain(signal());
+      h.state.clock = start + 5000;
+      await h.drain(signal());
+      expect(h.state.calls).toEqual([start, start + 5000]);
+      h.state.clock = start + 5100;
+      h.drain.regain();
+      await h.drain(signal());
+      expect(h.state.calls).toHaveLength(2);
+      expect(h.row().at).toBe(start + 10_000);
+      h.state.clock = start + 9999;
+      await h.drain(signal());
+      expect(h.state.calls).toHaveLength(2);
+      h.state.answer = () => accepted;
+      h.state.clock = start + 10_000;
+      await h.drain(signal());
+      expect(h.state.calls).toEqual([start, start + 5000, start + 10_000]);
+      expect(h.row().state).toBe("synced");
+    } finally {
+      h.sqlite.close();
+    }
+  });
+
+  it("a pass that stores a change and then throws says so, with the original error", async () => {
+    const { db, sqlite } = await memoryDatabase();
+    try {
+      await installPackage(db, owner, entry);
+      await saveObservation(db, boundRecord, owner);
+      await saveObservation(
+        db,
+        { ...boundRecord, id: "60000000-0000-4000-8000-000000000002" },
+        owner,
+      );
+      const drain = createSyncCoordinator({
+        database: db,
+        scope,
+        isCurrent: () => true,
+        getToken: async () => "token",
+        upload: async (record) => {
+          if (record.id !== boundRecord.id) throw new Error("storage is busy");
+          return { kind: "accepted", receipt: { ...receipt, observation_id: record.id } };
+        },
+      });
+      const failure = await drain(signal()).then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+      expect(failure).toBeInstanceOf(FailedAfterChange);
+      expect((failure as FailedAfterChange).message).toBe("storage is busy");
+      expect((failure as FailedAfterChange).original).toBeInstanceOf(Error);
     } finally {
       sqlite.close();
     }

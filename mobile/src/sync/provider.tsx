@@ -16,7 +16,7 @@ import { createBoundUpload } from "./bound-upload";
 import { connection } from "./config";
 import { type SyncScope, scopeKey } from "./contracts";
 import { createSyncCoordinator } from "./coordinator";
-import { createForegroundDrain } from "./foreground";
+import { createForegroundDrain, FailedAfterChange } from "./foreground";
 
 /** After a pass that threw (a locked database, say), try again once this many milliseconds have passed. */
 const FAILED_PASS_RETRY = 5000;
@@ -53,8 +53,6 @@ export function SyncProvider({ children }: PropsWithChildren) {
   scopeNow.current = scope;
   const deleted = useRef(markAccountDeleted);
   deleted.current = markAccountDeleted;
-  // What a server asked to wait for, per account: it outlives the coordinator a token refresh rebuilds.
-  const holds = useRef(new Map<string, number>());
   const run = useRef(async () => {});
   const retryNow = useRef(async () => {});
   const changed = useCallback(() => setRevision((value) => value + 1), []);
@@ -96,10 +94,6 @@ export function SyncProvider({ children }: PropsWithChildren) {
           : null;
       },
       upload: createBoundUpload(connection.apiUrl, currentScope),
-      hold: {
-        get: () => holds.current.get(key) ?? 0,
-        set: (until) => holds.current.set(key, until),
-      },
       outcome: (result) => {
         if (!current()) return;
         setFailure({ owner: key, message: result.kind === "accepted" ? "" : result.message });
@@ -107,6 +101,10 @@ export function SyncProvider({ children }: PropsWithChildren) {
       },
     });
     // One timer, for the earliest moment a waiting record may be tried (or a failed pass tried again).
+    // A record that is already due when a pass ends (its delay ran out during a slower upload) is
+    // woken at once. If the same record is still the earliest after that wake, nothing could send
+    // it, and it is looked at again only after `FAILED_PASS_RETRY`.
+    let lastDue: number | null = null;
     let timer: { readonly handle: ReturnType<typeof setTimeout>; readonly at: number } | undefined;
     const wakeAt = (at: number) => {
       if (!current() || (timer !== undefined && timer.at <= at)) return;
@@ -120,9 +118,20 @@ export function SyncProvider({ children }: PropsWithChildren) {
       );
       timer = { handle, at };
     };
-    const waitForNext = async () => {
-      const next = await earliestRetry(database, key, Date.now());
-      if (next !== null) wakeAt(next);
+    const waitForNext = async (afterFailure: boolean) => {
+      const next = await earliestRetry(database, key);
+      if (next === null) return;
+      const at = Date.now();
+      // A pass that threw is tried again by `failed`, not at once.
+      if (next <= at && afterFailure) return;
+      if (next > at) {
+        lastDue = null;
+        wakeAt(next);
+      } else if (lastDue === next) wakeAt(at + FAILED_PASS_RETRY);
+      else {
+        lastDue = next;
+        wakeAt(at);
+      }
     };
     const queue = createForegroundDrain({
       current,
@@ -135,11 +144,23 @@ export function SyncProvider({ children }: PropsWithChildren) {
         const activated = await activateHeldObservations(database, key, currentScope, current);
         if (!canSend()) return activated;
         request = new AbortController();
+        let updated = activated;
+        let failure: unknown;
         try {
-          return (await drain(request.signal)) || activated;
-        } finally {
-          await waitForNext();
+          updated = (await drain(request.signal)) || activated;
+        } catch (error) {
+          failure = error;
         }
+        try {
+          await waitForNext(failure !== undefined);
+        } catch (error) {
+          failure ??= error;
+        }
+        if (failure === undefined) return updated;
+        // The screens still read a change this pass stored before it failed.
+        throw updated && failure instanceof Error && !(failure instanceof FailedAfterChange)
+          ? new FailedAfterChange(failure)
+          : failure;
       },
     });
     run.current = queue.wake;

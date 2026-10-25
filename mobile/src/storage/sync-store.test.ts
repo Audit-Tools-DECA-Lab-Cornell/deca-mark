@@ -193,15 +193,30 @@ describe("Retry timing in the store (MOB-39)", () => {
     }
   });
 
-  it("names the earliest retry still in the future, for this account's pending records", async () => {
+  it("names the earliest time a pending record may be tried, even when that has passed", async () => {
     const { db, sqlite } = await waiting();
     try {
-      expect(await earliestRetry(db, owner, NOW)).toBe(NOW + 2000);
-      expect(await earliestRetry(db, owner, NOW + 2000)).toBe(NOW + 300000);
-      expect(await earliestRetry(db, owner, NOW + 300000)).toBeNull();
-      expect(await earliestRetry(db, "nobody", NOW)).toBeNull();
+      expect(await earliestRetry(db, owner)).toBe(0);
+      sqlite.exec(`UPDATE observations SET next_attempt_at = ${NOW + 1000} WHERE id = '${second(2)}'`);
+      expect(await earliestRetry(db, owner)).toBe(NOW + 1000);
+      expect(await earliestRetry(db, "nobody")).toBeNull();
       sqlite.exec(`UPDATE observations SET sync_state = 'synced' WHERE owner_scope = '${owner}'`);
-      expect(await earliestRetry(db, owner, NOW)).toBeNull();
+      expect(await earliestRetry(db, owner)).toBeNull();
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("keeps a server's deadline per account, never moves it closer, and honours the fence", async () => {
+    const { db, sqlite } = await waiting();
+    try {
+      expect(await readRetryHold(db, owner)).toBe(0);
+      await raiseRetryHold(db, owner, NOW + 120_000);
+      await raiseRetryHold(db, owner, NOW + 5000);
+      expect(await readRetryHold(db, owner)).toBe(NOW + 120_000);
+      await raiseRetryHold(db, owner, NOW + 240_000, () => false);
+      expect(await readRetryHold(db, owner)).toBe(NOW + 120_000);
+      expect(await readRetryHold(db, otherOwner)).toBe(0);
     } finally {
       sqlite.close();
     }

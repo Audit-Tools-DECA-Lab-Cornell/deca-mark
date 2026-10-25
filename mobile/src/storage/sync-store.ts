@@ -177,19 +177,60 @@ export function releaseBackoff(
   });
 }
 
-/** When the next waiting pending record may be tried, if that is still ahead; null when none waits. */
-export function earliestRetry(db: LocalDatabase, scope: string, now: number) {
+/**
+ * When the first pending record may be tried: a time ahead of `now` while it waits out a delay, a
+ * time at or before `now` when it is already due (a pass can leave one behind when another record
+ * took longer than its delay), and null when no record is pending.
+ */
+export function earliestRetry(db: LocalDatabase, scope: string) {
   return databaseWrite(db, async () => {
     const [row] = z
       .array(z.object({ at: z.number().int().nullable() }))
       .parse(
         await db.getAllAsync(
-          "SELECT MIN(next_attempt_at) AS at FROM observations WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at > ?",
+          "SELECT MIN(next_attempt_at) AS at FROM observations WHERE owner_scope = ? AND sync_state = 'pending'",
           scope,
-          now,
         ),
       );
     return row?.at ?? null;
+  });
+}
+
+const retryHoldKey = (scope: string) => `retry_after:${scope}`;
+
+/**
+ * The latest time (ms) a server asked this account to wait until, or 0. It is kept on this device,
+ * so closing and reopening the app does not forget it.
+ */
+export function readRetryHold(db: LocalDatabase, scope: string): Promise<number> {
+  return databaseWrite(db, async () => {
+    const [row] = z
+      .array(z.object({ value: z.string() }))
+      .parse(
+        await db.getAllAsync(
+          "SELECT value FROM local_metadata WHERE key = ?",
+          retryHoldKey(scope),
+        ),
+      );
+    const until = Number(row?.value);
+    return Number.isFinite(until) ? until : 0;
+  });
+}
+
+/** Keeps the later of the stored deadline and `until`; never moves a server's deadline closer. */
+export function raiseRetryHold(
+  db: LocalDatabase,
+  scope: string,
+  until: number,
+  current: () => boolean = () => true,
+): Promise<void> {
+  return databaseWrite(db, async () => {
+    if (!current()) return;
+    await db.runAsync(
+      "INSERT INTO local_metadata (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = CAST(MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+      retryHoldKey(scope),
+      String(Math.trunc(until)),
+    );
   });
 }
 export function retryAttention(

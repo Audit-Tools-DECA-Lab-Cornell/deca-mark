@@ -4,9 +4,12 @@ import {
   acknowledge,
   deferObservation,
   pendingObservations,
+  raiseRetryHold,
+  readRetryHold,
   releaseBackoff,
 } from "../storage/sync-store";
 import { type SyncScope, scopeKey, type Upload, type UploadResult } from "./contracts";
+import { FailedAfterChange } from "./foreground";
 import { readOwnerScope, receiptMatches } from "./receipt";
 
 type Options = {
@@ -18,25 +21,21 @@ type Options = {
   readonly upload: Upload;
   readonly now?: () => number;
   readonly outcome?: (result: UploadResult) => void;
-  /**
-   * Where a server's `Retry-After` is kept (a time in ms). Give the same one to the next coordinator
-   * of the same account, so a token refresh that rebuilds this one does not forget what the server asked.
-   */
-  readonly hold?: { readonly get: () => number; readonly set: (until: number) => void };
 };
 
 function assertNever(value: never): never {
   throw new TypeError(`Unexpected synchronization outcome: ${String(value)}`);
 }
 
-/** The first retry delay: a reconnect never brings a record's next try closer than this to the last one. */
+/** The first retry delay: a reconnect never brings a record's next try closer than this to the last attempt. */
 const RELEASE_SPACING = 5000;
 
 /**
  * One fenced drain of this account's pending records. The drain resolves to whether any stored record
  * changed in a way a screen shows, and `regain()` asks the next drain to retry waiting records at once
  * (connectivity or the foreground came back) instead of after the delay they were given while offline.
- * A new coordinator, made at every sign-in, starts by doing that.
+ * A new coordinator, made at every sign-in, starts by doing that. A pass that stores a change and then
+ * throws rejects with `FailedAfterChange`, so the screens still read what it stored.
  */
 export type SyncCoordinator = ((signal: AbortSignal) => Promise<boolean>) & {
   readonly regain: () => void;
@@ -46,17 +45,11 @@ export function createSyncCoordinator(options: Options): SyncCoordinator {
   let running = false;
   let signInRequired = false;
   let regainRequested = true;
-  // When records were last made due: with the server's `Retry-After` below, it keeps a flapping
-  // connection from retrying more often than the delays did. It belongs to this sign-in and dies
-  // with the coordinator, so the first drain after the next sign-in is never held back by it.
-  let releasedAt = Number.NEGATIVE_INFINITY;
-  let local = 0;
-  const hold = options.hold ?? {
-    get: () => local,
-    set: (until: number) => {
-      local = until;
-    },
-  };
+  // When an upload last came back: with the server's `Retry-After` (kept on the device, so a rebuilt
+  // coordinator or a restarted app still respects it), it keeps a flapping connection from retrying
+  // more often than the delays did. It belongs to this sign-in and dies with the coordinator, so the
+  // first drain after the next sign-in is never held back by it.
+  let lastAttemptAt = Number.NEGATIVE_INFINITY;
   const now = options.now ?? Date.now;
   const key = options.ownerKey ?? scopeKey(options.scope);
   const owner = readOwnerScope(key);
@@ -73,12 +66,12 @@ export function createSyncCoordinator(options: Options): SyncCoordinator {
       if (regainRequested) {
         regainRequested = false;
         const at = now();
-        // A release already ahead is reused, so a run of reconnects cannot push it further away.
+        // The same inputs give the same time, so a run of reconnects cannot push a release further away.
         const due = Math.max(
-          releasedAt > at ? releasedAt : Math.max(at, releasedAt + RELEASE_SPACING),
-          hold.get(),
+          at,
+          lastAttemptAt + RELEASE_SPACING,
+          await readRetryHold(options.database, key),
         );
-        releasedAt = due;
         await releaseBackoff(options.database, key, at, due, options.isCurrent);
       }
       for (;;) {
@@ -89,6 +82,7 @@ export function createSyncCoordinator(options: Options): SyncCoordinator {
           const token = await options.getToken();
           if (!token || signal.aborted || !options.isCurrent()) return changed;
           const attempted = await options.upload(item.record, token, signal, item.body);
+          lastAttemptAt = now();
           const result: UploadResult =
             attempted.kind === "accepted" &&
             !receiptMatches(attempted.receipt, item.record, options.scope)
@@ -117,7 +111,12 @@ export function createSyncCoordinator(options: Options): SyncCoordinator {
               const failedAt = now();
               const asked = (result.retryAfter ?? 0) * 1000;
               if (result.kind === "retry" && asked > 0)
-                hold.set(Math.max(hold.get(), failedAt + asked));
+                await raiseRetryHold(
+                  options.database,
+                  key,
+                  failedAt + asked,
+                  () => !signal.aborted && options.isCurrent(),
+                );
               changed =
                 (await deferObservation(
                   options.database,
@@ -144,6 +143,10 @@ export function createSyncCoordinator(options: Options): SyncCoordinator {
         }
         if (pending.length < 25) return changed;
       }
+    } catch (error) {
+      if (changed && error instanceof Error && !(error instanceof FailedAfterChange))
+        throw new FailedAfterChange(error);
+      throw error;
     } finally {
       running = false;
     }
