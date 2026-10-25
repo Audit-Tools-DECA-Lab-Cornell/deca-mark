@@ -178,11 +178,6 @@ export function releaseBackoff(
 }
 
 /**
- * When the first pending record may be tried: a time ahead of `now` while it waits out a delay, a
- * time at or before `now` when it is already due (a pass can leave one behind when another record
- * took longer than its delay), and null when no record is pending.
- */
-/**
  * The earliest moment a pending record may be tried, or null when none waits. With `after`, only
  * records whose moment is later than that count, so one that is already due and cannot be sent does
  * not hide the retry of another.
