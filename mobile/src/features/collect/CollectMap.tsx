@@ -65,7 +65,7 @@ import {
   useTheme,
 } from "../../ui";
 import { type AimStore, useAim } from "./aim-store";
-import { controlColumns, MAP_CONTROL } from "./map-controls";
+import { controlColumns, LAYERS_MENU_WIDTH, layersMenuBox, MAP_CONTROL } from "./map-controls";
 import { AimReticle, markColours, PLACED_BOX, PlacedMark } from "./pin";
 import { nearEdgeHint, type PlacementState, placementState, zoneTap } from "./placement";
 
@@ -259,7 +259,7 @@ function mapStyles(t: Theme) {
       position: "absolute",
       top: t.space.s3,
       right: MAP_CONTROL + t.space.s3 + t.space.s3,
-      width: 248,
+      width: LAYERS_MENU_WIDTH,
       maxHeight: 340,
       borderRadius: t.radius.panel,
       backgroundColor: t.c.island,
@@ -359,6 +359,7 @@ export function CollectMap({
   const [zoom, setZoom] = useState(home);
   const [menuOpen, setMenuOpen] = useState(false);
   const [frameHeight, setFrameHeight] = useState(0);
+  const [frameWidth, setFrameWidth] = useState(0);
   const [hidden, setHidden] = useState<readonly string[]>([]);
   const [filter, setFilter] = useState<ObservationFilter>("all");
   const [selected, setSelected] = useState<string | null>(null);
@@ -563,7 +564,10 @@ export function CollectMap({
   return (
     <View
       style={[s.frame, aiming ? s.armed : s.rest, { backgroundColor: palette.background }]}
-      onLayout={(event) => setFrameHeight(event.nativeEvent.layout.height)}
+      onLayout={(event) => {
+        setFrameHeight(event.nativeEvent.layout.height);
+        setFrameWidth(event.nativeEvent.layout.width);
+      }}
     >
       <NativeMap
         ref={native}
@@ -848,8 +852,8 @@ export function CollectMap({
           style={[
             s.menu,
             {
-              // Beside the controls, whatever the number of columns, and no taller than the frame.
-              right: columns * MAP_CONTROL + (columns - 1) * t.space.s2 + t.space.s3 * 2,
+              // Beside the controls, whatever the number of columns, and no wider or taller than the frame.
+              ...layersMenuBox(columns, frameWidth, t.space.s2, t.space.s3),
               ...(frameHeight > 0
                 ? { maxHeight: Math.min(340, frameHeight - t.space.s3 * 2) }
                 : {}),

@@ -13,3 +13,21 @@ export function controlColumns(frameHeight: number): 1 | 2 {
 
 /** The width of one map control (`IconButton`'s "map" variant), which the Layers menu clears. */
 export const MAP_CONTROL = 44;
+
+/** The Layers menu's width when the frame has room for it. */
+export const LAYERS_MENU_WIDTH = 248;
+
+/**
+ * Where the Layers menu sits beside the controls (`right`, from the frame's right edge) and how wide it
+ * may be, so its left edge stays inside a frame `frameWidth` wide: beside two columns an iPhone SE frame
+ * leaves it about 219 pt, and the frame hides what overflows. `gap` is the space between the controls,
+ * `inset` the frame's own inset. Full width until the frame has been measured.
+ */
+export function layersMenuBox(columns: 1 | 2, frameWidth: number, gap: number, inset: number) {
+  const right = columns * MAP_CONTROL + (columns - 1) * gap + inset * 2;
+  const width =
+    frameWidth > 0
+      ? Math.max(0, Math.min(LAYERS_MENU_WIDTH, frameWidth - right - inset))
+      : LAYERS_MENU_WIDTH;
+  return { right, width };
+}
