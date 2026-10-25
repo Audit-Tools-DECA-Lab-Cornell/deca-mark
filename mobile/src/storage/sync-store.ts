@@ -7,16 +7,17 @@ import { databaseTransaction, databaseWrite } from "./database-write";
 import type { LocalDatabase } from "./observation-store";
 import { encodeUploadPayload, readUploadPayload } from "./upload-payload";
 
-async function eligibleRows(db: LocalDatabase, sql: string, ...parameters: (string | number)[]) {
-  const rows = z
-    .array(z.object({ payload: z.string(), attempts: z.number().int() }))
-    .parse(await db.getAllAsync(sql, ...parameters));
+const storedRows = z.array(z.object({ payload: z.string(), attempts: z.number().int() }));
+function sendable(rows: z.infer<typeof storedRows>) {
   return rows.flatMap((row) => {
     const item = readUploadPayload(row.payload);
     return isUploadableRecord(item.record) && item.body !== undefined
       ? [{ record: item.record, body: item.body, attempts: row.attempts }]
       : [];
   });
+}
+async function eligibleRows(db: LocalDatabase, sql: string, ...parameters: (string | number)[]) {
+  return sendable(storedRows.parse(await db.getAllAsync(sql, ...parameters)));
 }
 async function eligiblePending(db: LocalDatabase, scope: string, id: string) {
   return (
@@ -28,15 +29,43 @@ async function eligiblePending(db: LocalDatabase, scope: string, id: string) {
     )
   )[0];
 }
+const PAGE = 25;
+const cursorRows = z.array(
+  z.object({
+    payload: z.string(),
+    attempts: z.number().int(),
+    created_at: z.string(),
+    id: z.string(),
+  }),
+);
+
+/**
+ * The oldest due pending records that can be sent, at most one page of them. A pending record that
+ * cannot be sent (no frozen body, or not uploadable) is skipped here and never counts toward the page,
+ * so a page shorter than a full one really means that no other sendable record is due: the drain
+ * stops on that, and a stuck record cannot keep the sendable ones behind it from being sent.
+ */
 export function pendingObservations(db: LocalDatabase, scope: string, now: number) {
-  return databaseWrite(db, () =>
-    eligibleRows(
-      db,
-      "SELECT payload, attempts FROM observations WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at <= ? ORDER BY created_at, id LIMIT 25",
-      scope,
-      now,
-    ),
-  );
+  return databaseWrite(db, async () => {
+    const found: ReturnType<typeof sendable> = [];
+    let after: { createdAt: string; id: string } | undefined;
+    for (;;) {
+      const rows = cursorRows.parse(
+        await db.getAllAsync(
+          `SELECT payload, attempts, created_at, id FROM observations WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at <= ?${
+            after ? " AND (created_at, id) > (?, ?)" : ""
+          } ORDER BY created_at, id LIMIT ${PAGE}`,
+          scope,
+          now,
+          ...(after ? [after.createdAt, after.id] : []),
+        ),
+      );
+      found.push(...sendable(rows));
+      const last = rows.at(-1);
+      if (found.length >= PAGE || rows.length < PAGE || !last) return found.slice(0, PAGE);
+      after = { createdAt: last.created_at, id: last.id };
+    }
+  });
 }
 
 /**

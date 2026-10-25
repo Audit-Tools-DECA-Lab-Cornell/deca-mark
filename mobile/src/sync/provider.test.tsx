@@ -685,6 +685,42 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
     }
   });
 
+  it("a stuck record does not keep the sendable records behind a full page from uploading", async () => {
+    const { db, sqlite } = await mountOnline();
+    // The earliest record can never be sent; 49 sendable ones follow it, more than two pages of 25.
+    sqlite
+      .prepare(
+        "UPDATE observations SET payload = json_remove(payload, '$.uploadBody') WHERE id = ?",
+      )
+      .run(boundRecord.id);
+    for (let index = 2; index <= 50; index++) {
+      const id = `60000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+      await saveObservation(db, { ...boundRecord, id }, owner);
+    }
+    const sent: string[] = [];
+    vi.stubGlobal("fetch", async (request: Request) => {
+      const id = request.url.split("/").at(-1) ?? "";
+      sent.push(id);
+      return answer(id);
+    });
+    try {
+      await start();
+      await pass(120000);
+      expect(new Set(sent).size).toBe(49);
+      expect(sent).toHaveLength(49);
+      expect(
+        sqlite
+          .prepare("SELECT sync_state AS state, COUNT(*) AS count FROM observations GROUP BY 1")
+          .all(),
+      ).toEqual([
+        { state: "pending", count: 1 },
+        { state: "synced", count: 49 },
+      ]);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("after a 401 nothing wakes the queue until the token changes (no timers, no queries)", async () => {
     const { db, sqlite } = await mountOnline();
     let healthy = false;

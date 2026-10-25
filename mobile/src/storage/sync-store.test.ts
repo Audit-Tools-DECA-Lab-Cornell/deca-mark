@@ -57,6 +57,31 @@ const record = shellObservationSchema.parse({
 });
 
 describe("Account-scoped local work", () => {
+  it("a full page counts only sendable records, so unsendable ones in front never shorten it", async () => {
+    const { sqlite, db } = await memoryDatabase();
+    try {
+      await installPackage(db, owner, entry);
+      const ids = Array.from(
+        { length: 60 },
+        (_, index) => `60000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      );
+      for (const id of ids) await saveObservation(db, { ...boundRecord, id }, owner);
+      // The first five lose their frozen body: they come first and can never be sent.
+      for (const id of ids.slice(0, 5))
+        sqlite
+          .prepare(
+            "UPDATE observations SET payload = json_remove(payload, '$.uploadBody') WHERE id = ?",
+          )
+          .run(id);
+      const page = await pendingObservations(db, owner, Date.now());
+      expect(page.map((item) => item.record.id)).toEqual(ids.slice(5, 30));
+      sqlite.exec("UPDATE observations SET sync_state = 'synced' WHERE rowid > 5");
+      expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("queues bound records while refusing incomplete receipts at the persistence boundary", async () => {
     const { sqlite, db } = await memoryDatabase();
     try {
