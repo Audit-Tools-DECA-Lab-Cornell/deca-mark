@@ -203,6 +203,9 @@ describe("Retry timing in the store (MOB-39)", () => {
         `UPDATE observations SET next_attempt_at = ${NOW + 1000} WHERE id = '${second(2)}'`,
       );
       expect(await earliestRetry(db, owner)).toBe(NOW + 1000);
+      expect(await earliestRetry(db, owner, 0)).toBe(NOW + 1000);
+      expect(await earliestRetry(db, owner, NOW + 1000)).toBe(NOW + 2000);
+      expect(await earliestRetry(db, owner, NOW + 300000)).toBeNull();
       expect(await earliestRetry(db, "nobody")).toBeNull();
       sqlite.exec(`UPDATE observations SET sync_state = 'synced' WHERE owner_scope = '${owner}'`);
       expect(await earliestRetry(db, owner)).toBeNull();

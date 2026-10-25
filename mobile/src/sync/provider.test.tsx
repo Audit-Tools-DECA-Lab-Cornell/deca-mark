@@ -284,6 +284,20 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
     await saveObservation(db, boundRecord, owner);
     return { db, sqlite };
   }
+  /** Every statement the provider runs on the database from now on (reads, writes and transactions). */
+  function watchQueries(db: LocalDatabase) {
+    const spies = [
+      vi.spyOn(db, "getAllAsync"),
+      vi.spyOn(db, "runAsync"),
+      vi.spyOn(db, "execAsync"),
+    ];
+    return {
+      reset: () => {
+        for (const spy of spies) spy.mockClear();
+      },
+      count: () => spies.reduce((total, spy) => total + spy.mock.calls.length, 0),
+    };
+  }
   async function start() {
     await act(async () => {
       view = create(<Tree />);
@@ -376,7 +390,7 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
     }
   });
 
-  it("never retries a record more than once per 5 s however often the network flaps", async () => {
+  it("never retries a failed record more than once per 5 s however often the network flaps", async () => {
     const { sqlite } = await mountOnline();
     const sent = serve(() => new Response("", { status: 503 }));
     try {
@@ -575,15 +589,97 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
   });
 
   it("an idle queue with a record stuck due does not spin", async () => {
-    const { sqlite } = await mountOnline();
+    const { db, sqlite } = await mountOnline();
     const sent = serve(() => answer());
     sqlite.exec("UPDATE observations SET payload = json_remove(payload, '$.uploadBody')");
+    const queries = watchQueries(db);
     try {
       await start();
+      // The one look after the immediate wake settles; nothing may touch the database after it.
+      await pass(1);
       const revision = sync.revision;
+      queries.reset();
       await pass(60000);
+      expect(queries.count()).toBe(0);
       expect(sent).toHaveLength(0);
       expect(sync.revision).toBe(revision);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a record stuck due does not hide the retry of another record", async () => {
+    const { db, sqlite } = await mountOnline();
+    const second = "60000000-0000-4000-8000-000000000002";
+    await saveObservation(db, { ...boundRecord, id: second }, owner);
+    sqlite
+      .prepare(
+        "UPDATE observations SET payload = json_remove(payload, '$.uploadBody') WHERE id = ?",
+      )
+      .run(boundRecord.id);
+    const sent: number[] = [];
+    vi.stubGlobal("fetch", async (request: Request) => {
+      const id = request.url.split("/").at(-1) ?? "";
+      sent.push(Date.now());
+      return sent.length === 1 ? new Response("", { status: 503 }) : answer(id);
+    });
+    try {
+      await start();
+      await pass(1);
+      expect(sent).toHaveLength(1);
+      await pass(5000);
+      expect(sent).toHaveLength(2);
+      expect(
+        sqlite.prepare("SELECT sync_state AS state FROM observations WHERE id = ?").get(second),
+      ).toEqual({ state: "synced" });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("after a 401 nothing wakes the queue until the token changes (no timers, no queries)", async () => {
+    const { db, sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : new Response("", { status: 401 })));
+    const queries = watchQueries(db);
+    try {
+      await start();
+      expect(sent).toHaveLength(1);
+      expect(sync.error).toContain("Sign in");
+      queries.reset();
+      await pass(60000);
+      expect(queries.count()).toBe(0);
+      expect(sent).toHaveLength(1);
+      healthy = true;
+      mocks.token = "refreshed-token";
+      await act(async () => view?.update(<Tree />));
+      await act(async () => mocks.network(online));
+      await settle();
+      expect(sent).toHaveLength(2);
+      expect(state(sqlite).state).toBe("synced");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("a Retry-After longer than a timer can hold waits for the server's time, not at once", async () => {
+    const { db, sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : rateLimited(2500000)));
+    const queries = watchQueries(db);
+    try {
+      await start();
+      expect(sent).toHaveLength(1);
+      queries.reset();
+      await pass(1000);
+      expect(sent).toHaveLength(1);
+      expect(queries.count()).toBeLessThan(10);
+      healthy = true;
+      await pass(2499998999);
+      expect(sent).toHaveLength(1);
+      await pass(1);
+      expect(sent).toHaveLength(2);
+      expect(state(sqlite).state).toBe("synced");
     } finally {
       sqlite.close();
     }

@@ -21,6 +21,9 @@ import { createForegroundDrain, FailedAfterChange } from "./foreground";
 /** After a pass that threw (a locked database, say), try again once this many milliseconds have passed. */
 const FAILED_PASS_RETRY = 5000;
 
+/** The longest delay `setTimeout` takes; a longer one fires at once. A timer this long wakes early and sets the rest. */
+const LONGEST_TIMER = 2 ** 31 - 1;
+
 const SyncContext = createContext({
   revision: 0,
   error: "",
@@ -103,22 +106,25 @@ export function SyncProvider({ children }: PropsWithChildren) {
     // One timer, for the earliest moment a waiting record may be tried (or a failed pass tried again).
     // A record that is already due when a pass ends (its delay ran out during a slower upload) is
     // woken at once. If the same record is still the earliest after that wake, nothing could send
-    // it, and it is looked at again only after `FAILED_PASS_RETRY`.
+    // it: it is left alone (a save, reconnect, resume or new token wakes it again) and only a record
+    // with a later moment is waited for. After a 401 nothing is sent until the token changes, so
+    // no timer is set at all.
     let lastDue: number | null = null;
     let timer: { readonly handle: ReturnType<typeof setTimeout>; readonly at: number } | undefined;
     const wakeAt = (at: number) => {
-      if (!current() || (timer !== undefined && timer.at <= at)) return;
+      if (!current() || drain.signInRequired() || (timer !== undefined && timer.at <= at)) return;
       if (timer) clearTimeout(timer.handle);
       const handle = setTimeout(
         () => {
           timer = undefined;
           void queue.wake();
         },
-        Math.max(0, at - Date.now()),
+        Math.min(LONGEST_TIMER, Math.max(0, at - Date.now())),
       );
       timer = { handle, at };
     };
     const waitForNext = async (afterFailure: boolean) => {
+      if (drain.signInRequired()) return;
       const next = await earliestRetry(database, key);
       if (next === null) return;
       const at = Date.now();
@@ -127,8 +133,10 @@ export function SyncProvider({ children }: PropsWithChildren) {
       if (next > at) {
         lastDue = null;
         wakeAt(next);
-      } else if (lastDue === next) wakeAt(at + FAILED_PASS_RETRY);
-      else {
+      } else if (lastDue === next) {
+        const later = await earliestRetry(database, key, at);
+        if (later !== null) wakeAt(later);
+      } else {
         lastDue = next;
         wakeAt(at);
       }

@@ -39,6 +39,8 @@ const RELEASE_SPACING = 5000;
  */
 export type SyncCoordinator = ((signal: AbortSignal) => Promise<boolean>) & {
   readonly regain: () => void;
+  /** True after a 401: nothing is sent until the sign-in changes and a new coordinator is made. */
+  readonly signInRequired: () => boolean;
 };
 
 export function createSyncCoordinator(options: Options): SyncCoordinator {
@@ -155,5 +157,6 @@ export function createSyncCoordinator(options: Options): SyncCoordinator {
     regain: () => {
       regainRequested = true;
     },
+    signInRequired: () => signInRequired,
   });
 }
