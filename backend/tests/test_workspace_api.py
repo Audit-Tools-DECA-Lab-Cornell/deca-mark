@@ -233,10 +233,10 @@ def test_question_ids_are_independent_of_record_metadata(
     for saved, submitted in zip(stored_questions, definition["questions"], strict=True):
         assert isinstance(saved, dict)
         assert isinstance(submitted, dict)
-        assert saved["exportColumn"] == saved["id"]
-        assert {key: value for key, value in saved.items() if key != "exportColumn"} == {
-            key: value for key, value in submitted.items() if key != "exportColumn"
-        }
+        expected = {**submitted, "exportColumn": submitted["id"]}
+        if submitted.get("kind") == "text" and submitted.get("exportColumn") == "observer":
+            expected["role"] = "observer"
+        assert saved == expected
 
 
 @pytest.mark.parametrize("number", [1, 2])
