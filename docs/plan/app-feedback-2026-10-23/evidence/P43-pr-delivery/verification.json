@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-10-25T06:07:06.139120+00:00",
+  "pullRequest": "https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/pull/42",
+  "draft": true,
+  "author": "pratyush1712",
+  "commitAuthorEmail": "pratyushsudhakar03@gmail.com",
+  "sourceCommit": "b74eb883cd894dc6fde7e632ae72d41cf4a4f5ed",
+  "integrationCommit": "3dc6ec59e9254e828d9cec2e5e1e853e6845fae3",
+  "integratedMaster": "747a0a2c1c298e08852b99ab071f981dc837745b",
+  "web": {
+    "passed": 460,
+    "failed": 0,
+    "skipped": 0,
+    "typecheck": "passed",
+    "lint": "passed"
+  },
+  "mergeable": true,
+  "ci": "Original web run failed alias import; fix verified locally; fresh CI follows cleanup push.",
+  "hostedMigrationApplied": false,
+  "standaloneWebTests": {
+    "apiErrors": 40,
+    "auth": 34,
+    "account": 12
+  },
+  "snapshotCleanup": "Generated snapshots removed from final PR diff; Git history is recovery authority.",
+  "cleanupVerifiedAt": "2026-10-25T06:13:58.315071+00:00",
+  "ciFixInputsSha256": {
+    "web/src/lib/api/errors.ts": "f3b1ee371de98c2177e7574ca84b508c57e1c93e5b6e38e5f7354c863e27e7ad",
+    "web/tests/api-errors.test.mjs": "9dc435345d59ab18c71c10f017d0680af88f6161aedcb0001f7eb0aa2817d277"
+  }
+}

@@ -88,7 +88,9 @@ tests, failed attempts, decisions and exact next action in its own journal.
 Checkpoint after at most 2 edited files, after tests, before handoff or
 compaction, and at least every 5 minutes while active. Bound a packet to
 15 minutes or 20 tool calls before checkpointing.
-Use atomic writes, allowlisted snapshots and immutable checkpoint folders;
+Generated snapshots are local-only, ignored by Git, and unnecessary after the
+work is committed. Use Git history plus CURRENT/ledger to resume completed packets.
+For optional unfinished-work snapshots, use atomic writes and allowlisted folders;
 write the manifest last. Never collect secrets, unrelated work, dependency
 trees, raw reviewer screenshots or the original deck automatically.
 Include intended untracked source files and deletion markers.
@@ -106,7 +108,8 @@ packets without fabricating a percentage.
 On confirmed provider usage exhaustion stop dispatch: no retry loop,
 automatic paid overage, account switching or provider switching.
 
-On resume, compare actual hashes with the last complete manifest and
+On resume, inspect Git HEAD/status and the recorded source identities; compare
+optional local snapshot hashes only when unfinished work requires them, and
 inspect unfinished edits/processes before reclaiming leases. Preserve newer
 work. Do not blindly restore, reset or discard. Reuse evidence whose full
 relevant input hashes still match. Interrupted tests/reviews remain unverified.

@@ -12,8 +12,8 @@ bindings. Do not use the local Docker helper against production.
 ## 1. Clear release gates
 
 Use one approved, committed release containing the migration, backend, web, mobile
-and generated contracts. Record its Git revision and migration SHA256. Current
-implementation is uncommitted, and real web/API browser and physical-device
+and generated contracts. Record its Git revision and migration SHA256. Implementation is committed in
+[PR42](https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/pull/42); real web/API browser and physical-device
 acceptance remain pending: **this release is not ready for production yet**.
 
 Rehearse the procedure below on an authorized staging copy first. Verify the

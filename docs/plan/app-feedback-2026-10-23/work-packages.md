@@ -52,4 +52,4 @@ Every worker receives the relevant requirement text, settled decisions, exact pa
 4. Owner fixes concrete findings; reviewer verifies the changed inputs and evidence.
 5. Coordinator updates owning component status and execution pointers. After three failed fix attempts, stop editing that issue, record the attempts/doubtful assumption and ask one precise diagnostic question; continue independent packets.
 
-Reviewers are read-only. Do not create automatic PRs or use Git commits as a substitute for the documented checkpoint system.
+Reviewers are read-only. Do not create automatic PRs or commits without direct approval. Use Git history and concise execution records for committed work; generated source snapshots remain local-only during unfinished work.

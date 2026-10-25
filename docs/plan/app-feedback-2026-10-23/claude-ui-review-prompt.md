@@ -11,7 +11,7 @@ branch docs/app-feedback-2026-10-23-plan. Start with
 and the owning component PLAN.md entries WEB-61–64, MOB-50, CON-08, BE-27,
 DB-21 and QA-10. Verify the branch and current diff; changes may be uncommitted.
 
-This is a review task. Preserve the implementation and existing checkpoints.
+This is a review task. Preserve the implementation and concise execution records. Git history preserves completed work; do not generate duplicate source snapshots.
 Do not reimplement, commit, push, reset, apply migrations, deploy, change roles
 or send invitations. A pending authorization remains pending until the human
 answers. No environment or secret-file inspection.

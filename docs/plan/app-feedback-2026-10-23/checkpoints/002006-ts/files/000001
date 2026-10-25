@@ -1,5 +1,0 @@
-# P20 TS engine journal
-
-Active: schema2 definition/engine and temporal helper, mirrored exactly in web. Own focused TS tests and generated form-definition schema. Other workers share checkout; no secret reads/Git writes/deployments.
-
-Read contract decisions and component instructions. Planned helpers in temporal.ts: DateTimeConfig, isCanonicalTemporalValue, captureTimeValue, resolveLocalDateTime, formatTemporalValue. No heavyweight date dependency. Current checkpoint: none; tests not yet run.

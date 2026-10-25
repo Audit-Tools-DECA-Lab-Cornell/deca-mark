@@ -1,50 +1,40 @@
 # Current execution marker
 
-Step 4/5 source implementation and automated verification complete. Step 5 local
-schema-2 migration passed after explicit user approval on October 25, 2026; real
-web/API browser and physical-device acceptance remain pending. Branch:
-`docs/app-feedback-2026-10-23-plan`. Source is local and uncommitted; planning
-commit `4cc5df6` was pushed earlier. No reset, hosted change, real invitation or
-deployment occurred.
+Feedback source is committed in b74eb88; current master was integrated in 3dc6ec5.
+Draft PR: https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/pull/42.
+Use Git HEAD for the latest cleanup/delivery revision. The user authorized committing
+all feedback changes and creating this PR. No production migration was applied.
 
-## Verified
+## Verified and pending
 
-- Web 441 passed; mobile 924 passed / 5 skipped; backend 977 passed on isolated
-  PostgreSQL/PostGIS. Type/lint, ten recovery tests, parity and contrast checks pass.
-- Synthetic source preview widths 390/768/1024/1440 in Day/Dusk inspected. This is
-  rendering/selected-interaction evidence, not real auth/API/save acceptance.
-- Approved existing-local migration `20261024090000` passed: two forms at schema 2,
-  default 2, immutability trigger enabled, exact source recorded in Supabase history.
-  Fingerprints of all 18 application tables match before/after except the intended
-  form schema-version metadata. See `evidence/P42-local-migration/verification.json`.
+Web: 460 unit tests, 40 API-error tests, 34 auth tests and 12 account tests pass;
+type/lint pass. CI found the API-error module importing a bundler alias unsupported
+by its native Node test; that dependency was removed and the direct-run regression
+passes. Mobile: 924 pass / 5 skipped. Backend: 977 pass on isolated PostGIS. Local
+schema-2 application passed: two forms, default 2, trigger enabled, and all 18
+application-table fingerprints preserved except intended version metadata.
 
-## Recovery and authorization
+Real browser/API, physical-device, screen-reader and hosted acceptance remain
+pending. Synthetic Day/Dusk source previews are rendering evidence only. The PR
+triggered CI and an automatic Vercel preview; production deployment is not claimed.
 
-Whole-source checkpoint: `checkpoints/004007-local-schema2/manifest.json`. It
-supersedes `004006-verified-source`, including documentation and local evidence.
-Verify/compare with Node 24 `scripts/feedback-checkpoint.mjs`. Final automated
-results: `evidence/P40-integration/verification.json`; green backend log:
-`backend-unit-integration.log`. Earlier failed attempts remain in worker journals.
+## Recovery and scope
 
-Local migration approval is fulfilled. Do not rerun `apply-local` or schema-1
-preflight on this upgraded database; they intentionally refuse an already upgraded
-population. Production instructions are in
-`database/hosted/form-schema2-rollout.md`, but no hosted application is authorized
-or verified. Secret access, reset, deployment and implementation Git writes remain
-outside current authorization.
+The user requested removal of generated checkpoint files from the PR. They are
+removed and ignored. Git commits plus this marker and ledger are the recovery
+record; do not recreate completed-work snapshots. Earlier journals mention deleted
+snapshots as historical execution evidence, not required resume inputs.
 
-Quota on October 25: 19% weekly remaining; the 20% reserve is reached. No new
-worker dispatch or acceptance packet. Preserve checkpoints and released ownership.
+Last observed quota was 19% weekly remaining; no new worker dispatch at the 20%
+reserve. Resume pending acceptance when quota permits, preserving device drafts,
+queue bodies, unrelated work and existing runtimes. No secret inspection, reset,
+real invitation, hosted migration or production deployment is authorized.
 
-## Next bounded action
+## Next action
 
-When quota permits, resume real browser/API checks from this source using the
-email-disabled local API and a fresh web runtime. Preserve the stale existing
-port-3000 server and avoid manually reading credentials. Run forms-feedback/forms,
-invite-viewer/team and reports-feedback acceptance, then record native/screen-reader,
-QGIS and hosted gates separately. Do not repeat already green source suites without
-new changes or failures. The source-only preview in `/private/tmp/deca-feedback-preview`
-at port 3101 / browser handoff tab 2 is not the real API runtime.
-
-Later independent review: `claude-ui-review-prompt.md`. Resume completed packets
-from their evidence, not from scratch. Product task status stays in component plans.
+Check PR42's refreshed CI after the cleanup push. Then resume pending real browser
+acceptance using the email-disabled local API when quota permits. Do not rerun the
+already completed local schema migration. Production instructions are in
+`database/hosted/form-schema2-rollout.md`; acceptance and a coordinated approved
+release must precede production application. Later review uses
+`claude-ui-review-prompt.md` and the owning component PLAN.md task statuses.

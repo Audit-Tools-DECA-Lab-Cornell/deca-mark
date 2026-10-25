@@ -6,7 +6,7 @@
   "executionState": "awaiting_runtime_acceptance",
   "currentWave": 4,
   "currentMarker": "CURRENT.md",
-  "lastRuntimeCheckpoint": "checkpoints/004007-local-schema2/manifest.json",
+  "lastRuntimeCheckpoint": null,
   "runtimeRecoveryVerified": true,
   "inScopeRequirements": [
     "R01",
@@ -59,7 +59,7 @@
     "uxContractAndAdversarialReview": "opus"
   },
   "usage": {
-    "state": "fresh",
+    "state": "last_observed; no new feature dispatch",
     "observedAt": "2026-10-25T05:58:31.639630+00:00",
     "remainingPercent": 19,
     "window": "weekly",
@@ -147,6 +147,11 @@
       "id": "P42-local-migration",
       "state": "verified",
       "evidence": "evidence/P42-local-migration/verification.json; workers/P42-local-migration.md"
+    },
+    {
+      "id": "P43-pr-delivery",
+      "state": "verified",
+      "evidence": "evidence/P43-pr-delivery/verification.json; workers/P43-pr-delivery.md"
     }
   ],
   "evidence": [
@@ -155,14 +160,15 @@
     "workers/P32-editor-tests.md",
     "workers/P32-preview.md",
     "evidence/P40-integration/",
-    "evidence/P42-local-migration/verification.json"
+    "evidence/P42-local-migration/verification.json",
+    "evidence/P43-pr-delivery/verification.json"
   ],
   "productTaskStatusAuthority": "owning component PLAN.md files",
   "packetSpecification": "work-packages.md",
-  "nextAction": "Resume real web/API acceptance when quota permits. Local schema2 is applied and verified. Production requires pending acceptance, committed matching release, fresh target preflight, and separate approval; use database/hosted/form-schema2-rollout.md.",
+  "nextAction": "Review PR42 after refreshed CI; pending real browser/API and device acceptance remain. Use Git HEAD and CURRENT.md to resume; do not create or commit completed-work snapshots.",
   "authorization": {
     "planningBranchCommitAndPush": "authorized for the documentation delivery only",
-    "implementationGitWrites": "requires direct authorization for that execution session",
+    "implementationGitWrites": "User explicitly authorized commit all and create PR on 2026-10-25; source and master integration committed/pushed; PR42 opened as draft.",
     "secretAccess": false,
     "databaseMigrationApplication": "existing local Supabase schema2 only; completed 2026-10-25",
     "databaseReset": false,
@@ -183,10 +189,16 @@
   "newDispatchAllowed": false,
   "verification": {
     "web": {
-      "passed": 441,
+      "passed": 460,
       "skipped": 0,
       "typecheck": "passed",
-      "lint": "passed"
+      "lint": "passed",
+      "evidenceAfterMasterIntegration": "evidence/P43-pr-delivery/",
+      "standaloneCiSelections": {
+        "apiErrors": 40,
+        "auth": 34,
+        "account": 12
+      }
     },
     "mobile": {
       "passed": 924,
@@ -226,7 +238,7 @@
       "hosted deployment",
       "QGIS Desktop"
     ],
-    "sourceGitWrites": false,
+    "sourceGitWrites": true,
     "localMigrationApproval": "explicitly approved by user on 2026-10-25",
     "localMigration": {
       "state": "applied_and_verified",
@@ -234,6 +246,41 @@
       "applicationTablesPreserved": 18,
       "evidence": "evidence/P42-local-migration/verification.json",
       "hostedChanged": false
-    }
+    },
+    "pullRequest": "https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/pull/42"
+  },
+  "delivery": {
+    "recordedAt": "2026-10-25T06:07:06.139120+00:00",
+    "pullRequest": "https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/pull/42",
+    "draft": true,
+    "author": "pratyush1712",
+    "commitAuthorEmail": "pratyushsudhakar03@gmail.com",
+    "sourceCommit": "b74eb883cd894dc6fde7e632ae72d41cf4a4f5ed",
+    "integrationCommit": "3dc6ec59e9254e828d9cec2e5e1e853e6845fae3",
+    "integratedMaster": "747a0a2c1c298e08852b99ab071f981dc837745b",
+    "web": {
+      "passed": 460,
+      "failed": 0,
+      "skipped": 0,
+      "typecheck": "passed",
+      "lint": "passed"
+    },
+    "mergeable": true,
+    "ci": "Previous head failed web alias import; local CI test selections now pass; refreshed remote run pending push.",
+    "hostedMigrationApplied": false,
+    "snapshotCleanup": "All generated checkpoint files removed from PR diff at user request; no history rewrite.",
+    "standaloneWebTests": {
+      "apiErrors": 40,
+      "auth": 34,
+      "account": 12
+    },
+    "webCiFix": "Native Node test could not resolve @/lib alias imported by API errors; removed the dependency and added direct-run regression coverage."
+  },
+  "recovery": {
+    "authority": "Git branch history plus CURRENT.md and ledger.json",
+    "sourceCommit": "b74eb88",
+    "integratedMasterCommit": "3dc6ec5",
+    "generatedSnapshots": "removed at user request; ignored if created locally during future unfinished work",
+    "snapshotFilesCommitted": false
   }
 }

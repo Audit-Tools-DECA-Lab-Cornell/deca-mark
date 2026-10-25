@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-import { isUnknownSchemaVersion } from "@/lib/forms/definition";
-
 import type { components } from "./schema";
 
 type ApiErrorCode = components["schemas"]["ErrorCode"];
@@ -287,7 +285,8 @@ export async function readApiError(response: Response): Promise<ApiError> {
  */
 export function apiRequestError(error: unknown): ApiError {
 	if (error instanceof ApiError) return error;
-	if (isUnknownSchemaVersion(error)) return new ApiError("unknown_schema_version", "rejected");
+	if (typeof error === "object" && error !== null && "code" in error && error.code === "unknown_schema_version")
+		return new ApiError("unknown_schema_version", "rejected");
 	if (error instanceof SyntaxError) return new ApiError("unknown", "retry");
 	if (error instanceof TypeError || error instanceof DOMException)
 		return new ApiError("storage_unavailable", "retry");

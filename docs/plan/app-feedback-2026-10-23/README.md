@@ -12,8 +12,8 @@ ledger records work-packet ownership, evidence and recovery pointers.
 
 ## Start or resume
 
-1. Read [CURRENT.md](CURRENT.md), [ledger.json](ledger.json), and the latest completed checkpoint if one exists. Reconcile actual disk contents before changing anything.
-2. Read the root/component instructions and owning READMEs; use [work-packages.md](work-packages.md) for lanes and [recovery.md](recovery.md) for checkpoint rules.
+1. Read [CURRENT.md](CURRENT.md), [ledger.json](ledger.json), and the recorded Git revision. Reconcile actual disk contents before changing anything.
+2. Read the root/component instructions and owning READMEs; use [work-packages.md](work-packages.md) for lanes and [recovery.md](recovery.md) for recovery rules. Generated completed-work snapshots are excluded from Git.
 3. Resume only the pending acceptance packet; do not restart completed waves. Use
    [claude-ui-review-prompt.md](claude-ui-review-prompt.md) for a later independent review.
 
@@ -91,8 +91,9 @@ local Supabase database and requested production instructions; that local applic
 is verified. Production application remains separately authorized through the
 [rollout procedure](../../../database/hosted/form-schema2-rollout.md). Secrets access,
 resets, volume deletion, hosted changes, real invitations, deployments and releases
-remain outside this authorization. Future Git writes need direct authorization for
-that execution session; the prior Git approval covered planning documentation only.
+remain outside this authorization. On October 25 the user additionally authorized
+committing all feedback changes and creating a PR. Source and master integration
+are pushed; [PR42](https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/pull/42) remains a draft pending acceptance.
 
 Node 24 and pnpm 10.17.1; each application retains its own dependency installation. Apply relevant installed skills, but do not import COPA/Playspace architecture or paths from generic examples into DECA Mark.
 
