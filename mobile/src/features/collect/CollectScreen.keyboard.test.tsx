@@ -8,10 +8,15 @@ import { startSession } from "../../forms/session";
 import { siteZones } from "../../maps/sample-site";
 import type { SitePackage } from "../../packages/site-package";
 import { FieldSessionContext, type FieldSessionValue } from "../../session/context";
+import { PreferencesProvider } from "../../ui/preferences";
 import { render, type Screen } from "../../ui/screen.fixture";
+import { ThemeProvider } from "../../ui/theme";
 import { CollectScreen } from "./CollectScreen";
 
 /**
+ * MOB-35 (audit C21) shares this harness: rotating the device re-arranges one tree and never remounts
+ * the map or the step panel. See the last describe block.
+ *
  * MOB-34 (audit C01): while the observer types, the answer field and Continue stay above the keyboard
  * on every pilot device (D33), the map stays mounted, and nothing animates the map's height.
  *
@@ -620,5 +625,122 @@ describe("the numbers this relies on come from the installed React Native (0.86.
     // and it compares a parent-relative frame with a window coordinate (audit C01).
     expect(source).toContain("return Math.max(frame.y + frame.height - keyboardY, 0);");
     expect(source).toContain("this._frame = event.nativeEvent.layout;");
+  });
+});
+
+/** Turns the device: the window changes size and the screen renders again, as a rotation does. */
+function rotate(screen: Screen, session: FieldSessionValue) {
+  const { width, height } = device.window;
+  device.window = { width: height, height: width };
+  act(() => {
+    screen.renderer.update(
+      <PreferencesProvider>
+        <ThemeProvider>
+          <FieldSessionContext.Provider value={session}>
+            <CollectScreen />
+          </FieldSessionContext.Provider>
+        </ThemeProvider>
+      </PreferencesProvider>,
+    );
+  });
+}
+
+/**
+ * The rendered instance behind a host node: the same object for as long as the node stays mounted, a
+ * new one when React unmounts and mounts it again. The test renderer keeps it on the fiber, which is
+ * how a component test sees "mounted again" without a layout engine.
+ */
+function instanceOf(node: ReactTestInstance): object {
+  const { stateNode } = (node as unknown as { _fiber: { stateNode: object | null } })._fiber;
+  if (!stateNode) throw new Error("The node has no rendered instance.");
+  return stateNode;
+}
+
+const answerField = (screen: Screen) =>
+  screen.renderer.root.find(
+    (node) =>
+      isHostNamed(node, "TextInput") &&
+      (node.props as { accessibilityLabel?: string }).accessibilityLabel ===
+        "Describe the play event",
+  );
+
+describe("rotating keeps the field map and the step mounted (audit C21)", () => {
+  const TABLETS = [PILOT_DEVICES[5], PILOT_DEVICES[7]] as Pilot[];
+  const PHONES = [PILOT_DEVICES[0], PILOT_DEVICES[4]] as Pilot[];
+
+  for (const pilot of [...TABLETS, ...PHONES]) {
+    it(`${pilot.name}: Answer keeps the map, the panel and the typed answer through a rotation and back`, () => {
+      use(pilot);
+      const session = sessionAtSummary();
+      const screen = open();
+      const map = instanceOf(byTestID(screen, "collect-map"));
+      const panel = instanceOf(byTestID(screen, "collect-panel"));
+      const field = instanceOf(answerField(screen));
+      expect(device.mapMounts).toBe(1);
+
+      rotate(screen, session);
+      expect(device.mapMounts).toBe(1);
+      expect(device.mapUnmounts).toBe(0);
+      expect(instanceOf(byTestID(screen, "collect-map")) === map).toBe(true);
+      expect(instanceOf(byTestID(screen, "collect-panel")) === panel).toBe(true);
+      expect(instanceOf(answerField(screen)) === field).toBe(true);
+      expect((answerField(screen).props as { value?: string }).value).toBe("Two children dig.");
+
+      rotate(screen, session);
+      expect(device.mapMounts).toBe(1);
+      expect(device.mapUnmounts).toBe(0);
+      expect(instanceOf(byTestID(screen, "collect-map")) === map).toBe(true);
+      expect(instanceOf(answerField(screen)) === field).toBe(true);
+      expect((answerField(screen).props as { value?: string }).value).toBe("Two children dig.");
+    });
+
+    it(`${pilot.name}: Place keeps the map and the panel through a rotation`, () => {
+      use(pilot);
+      const session = { ...sessionAtSummary(), placed: null, inProgress: null };
+      const screen = render(
+        <FieldSessionContext.Provider value={session}>
+          <CollectScreen />
+        </FieldSessionContext.Provider>,
+      );
+      const map = instanceOf(byTestID(screen, "collect-map"));
+      const panel = instanceOf(byTestID(screen, "collect-panel"));
+      expect(screen.controls()).toContain("Place point here");
+
+      rotate(screen, session);
+      expect(device.mapMounts).toBe(1);
+      expect(device.mapUnmounts).toBe(0);
+      expect(instanceOf(byTestID(screen, "collect-map")) === map).toBe(true);
+      expect(instanceOf(byTestID(screen, "collect-panel")) === panel).toBe(true);
+      expect(screen.controls()).toContain("Place point here");
+    });
+  }
+
+  it("arranges the same tree by style: side by side in landscape, stacked in portrait", () => {
+    use(PILOT_DEVICES[5] as Pilot);
+    const session = sessionAtSummary();
+    const screen = open();
+    const slot = () => styleOf(byTestID(screen, "collect-map-slot"));
+    const panelStyle = () => styleOf(byTestID(screen, "collect-panel"));
+    expect(slot().height).toBe("46%");
+    expect(panelStyle().width).toBeUndefined();
+    rotate(screen, session);
+    expect(slot().height).toBeUndefined();
+    expect(panelStyle().width).toBeGreaterThan(0);
+    rotate(screen, session);
+    expect(slot().height).toBe("46%");
+    expect(panelStyle().width).toBeUndefined();
+  });
+
+  it("a rotation with the keyboard up shuts or opens the slot without remounting the map", async () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const session = sessionAtSummary();
+    const screen = open();
+    await keyboard(true);
+    expect(styleOf(byTestID(screen, "collect-map-slot")).height).toBe(0);
+    rotate(screen, session);
+    expect(styleOf(byTestID(screen, "collect-map-slot")).height).toBeUndefined();
+    rotate(screen, session);
+    expect(device.mapMounts).toBe(1);
+    expect(device.mapUnmounts).toBe(0);
   });
 });
