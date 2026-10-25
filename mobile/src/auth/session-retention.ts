@@ -33,7 +33,9 @@ const workspaceProjectId = "00000000-0000-4000-8000-000000000000";
 /**
  * The storage namespace of one account on the backend this build is configured for: records,
  * drafts and installed packages are keyed by it, and a build pointed at another backend sees none
- * of them. `connection` is the public build configuration.
+ * of them. `connection` is the public build configuration. The URLs are used exactly as
+ * configured: `https://x` and `https://x/` are different workspaces, so a build must not change a
+ * configured URL by a trailing slash (MOB-44 freezes this format at the last sanctioned reset).
  */
 export function accountWorkspace(
   account: CachedAccount | null,
