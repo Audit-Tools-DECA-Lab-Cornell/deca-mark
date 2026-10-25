@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, BackHandler, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, BackHandler, StyleSheet, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { shortLabel } from "../../domain/labels";
 import { placesPoints, roundLabel } from "../../domain/rounds";
 import { visibleQuestions } from "../../forms/engine";
@@ -25,6 +25,7 @@ import {
   usePreferences,
   useStyles,
 } from "../../ui";
+import { keyboardLift, useKeyboardHeight } from "../../ui/use-keyboard-visible";
 import { createAimStore } from "./aim-store";
 import { CollectMap, type CollectMapHandle, type CollectMapMode } from "./CollectMap";
 import { NUDGE_METRES, PlaceStep } from "./PlaceStep";
@@ -58,6 +59,12 @@ function collectStyles(t: Theme) {
     strip: { paddingHorizontal: t.space.s4, paddingBottom: t.space.s2 },
     body: { flex: 1, minHeight: 0 },
     mapSlot: { padding: t.space.s3, paddingTop: 0 },
+    // The slot while the keyboard is up: no height and no padding, by style. It stays mounted, and its
+    // height changes at once, never by animation (DESIGN §8).
+    mapSlotShut: { height: 0, padding: 0, overflow: "hidden" },
+    mapOpen: { flex: 1 },
+    // Inside a shut slot the map keeps the height it had, clipped, so the GL view is never resized.
+    mapKept: { position: "absolute", top: 0, left: t.space.s3, right: t.space.s3 },
     panel: { minHeight: 0, paddingHorizontal: t.space.s4, paddingBottom: t.space.s3 },
     status: { paddingHorizontal: t.space.s4, paddingBottom: t.space.s2 },
   });
@@ -69,6 +76,12 @@ function collectStyles(t: Theme) {
  * an Inventory round. The dock is hidden here. X and Android back ask before leaving; back also steps
  * back through the steps. Phones stack the map over the panel; tablets and landscape put them side by
  * side, with the panel on the observer's preferred hand.
+ *
+ * The keyboard (MOB-34): the panel's bottom edge is lifted to the keyboard's top edge by padding, from
+ * the keyboard's reported height (`keyboardLift`). Stacked over the map there is no room for both, so
+ * the map slot shuts to zero height by style while the keyboard is up, with the status row. A phone in
+ * landscape also drops the header, the mode strip and the links row. Nothing here animates, and the
+ * map is never unmounted.
  */
 export function CollectScreen() {
   const s = useStyles(collectStyles);
@@ -78,7 +91,11 @@ export function CollectScreen() {
   const session = useFieldSession();
   const { records } = useObservations();
   const base = useMapBase();
+  const insets = useSafeAreaInsets();
+  const lift = keyboardLift(useKeyboardHeight(), insets.bottom);
   const mapRef = useRef<CollectMapHandle>(null);
+  /** The map's height while the slot is open: a shut slot keeps the map at this size, clipped. */
+  const [mapHeight, setMapHeight] = useState(0);
   const advance = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { sitePackage, form, zone, roundType, placed, placementSource, state, saves } = session;
   const inventory = !placesPoints(roundType);
@@ -89,6 +106,17 @@ export function CollectScreen() {
   const [expanded, setExpanded] = useState(false);
   /** A map tap on an edge between zones while choosing an inventory's zone (MUI-9). */
   const [zoneNote, setZoneNote] = useState<string | null>(null);
+  // The keyboard (MOB-34). Stacked, the map and the panel cannot both fit above it, on a tablet any
+  // more than a phone, so the slot shuts. A phone's status row goes either way, and in landscape its
+  // header, mode strip and links row go too: the answer and Continue are what it needs.
+  const side = layout.wide;
+  const keyboardUp = lift > 0;
+  // Only the Answer step has a field to type in, and only a map that has been laid out can be kept at
+  // its size inside a shut slot: arriving with the keyboard up leaves the slot open until it is measured.
+  const shut = keyboardUp && !side && !expanded && step === "answer" && mapHeight > 0;
+  const typing = keyboardUp && step === "answer";
+  const hideStatus = shut || (typing && !layout.tablet);
+  const hideChrome = typing && !layout.tablet && side;
   const [aim] = useState(() =>
     createAimStore({
       centre: placed ?? zone?.centre ?? [0, 0],
@@ -368,6 +396,9 @@ export function CollectScreen() {
             setStep("review");
           }}
           onAdjust={placementSource === "hand" ? adjustPoint : undefined}
+          keyboardUp={keyboardUp}
+          showLinks={!hideChrome}
+          compactField={hideChrome}
         />
       ) : null}
       {step === "review" ? (
@@ -471,33 +502,52 @@ export function CollectScreen() {
     </>
   );
 
-  const side = layout.wide;
   const panelWidth = layout.tablet ? Math.round(layout.width * 0.42) : layout.panelWidth;
   const panelBlock = expanded ? null : (
-    <KeyboardAvoidingView
-      style={side ? { width: panelWidth, minHeight: 0 } : { flex: 1, minHeight: 0 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <View
+      testID="collect-panel"
+      style={[
+        side ? { width: panelWidth, minHeight: 0 } : { flex: 1, minHeight: 0 },
+        { paddingBottom: lift },
+      ]}
     >
       <View style={[s.panel, { flex: 1 }]}>{panel}</View>
-    </KeyboardAvoidingView>
+    </View>
   );
 
   return (
     <SafeAreaView style={s.root} edges={["top", "bottom", "left", "right"]}>
-      {header}
+      {hideChrome ? null : header}
       {side ? (
         <View style={[s.body, { flexDirection: hand === "left" ? "row-reverse" : "row" }]}>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <View style={[s.mapSlot, { flex: 1 }]}>{map}</View>
-            <View style={s.status}>{status}</View>
+            <View testID="collect-map-slot" style={[s.mapSlot, { flex: 1 }]}>
+              {map}
+            </View>
+            {hideStatus ? null : <View style={s.status}>{status}</View>}
           </View>
           {panelBlock}
         </View>
       ) : (
         <View style={s.body}>
           {/* The GL view's height changes instantly, never by animation (DESIGN §8). */}
-          <View style={[s.mapSlot, { height: expanded ? "100%" : "46%" }]}>{map}</View>
-          {expanded ? null : <View style={s.status}>{status}</View>}
+          <View
+            testID="collect-map-slot"
+            style={[s.mapSlot, shut ? s.mapSlotShut : { height: expanded ? "100%" : "46%" }]}
+            accessibilityElementsHidden={shut}
+            importantForAccessibility={shut ? "no-hide-descendants" : "auto"}
+          >
+            <View
+              testID="collect-map-frame"
+              style={shut ? [s.mapKept, { height: mapHeight }] : s.mapOpen}
+              onLayout={(event) => {
+                if (!shut) setMapHeight(event.nativeEvent.layout.height);
+              }}
+            >
+              {map}
+            </View>
+          </View>
+          {expanded || hideStatus ? null : <View style={s.status}>{status}</View>}
           {panelBlock}
         </View>
       )}
