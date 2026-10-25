@@ -7,8 +7,14 @@ import { load } from "./support.mjs";
 const { blockedToExplain, currentPackage, firstBlockedDetail, historyRows } =
 	await load("features/packages/history.ts");
 const { readManifest } = await load("features/packages/manifest.ts");
-const { chooseFormVersion, chooseInventoryForm, isInventoryDefinition, publishedVersions } =
-	await load("features/packages/forms.ts");
+const {
+	chooseFormVersion,
+	chooseInventoryForm,
+	formVersionIndex,
+	isInventoryDefinition,
+	newerPublished,
+	publishedVersions
+} = await load("features/packages/forms.ts");
 const { clock } = await load("lib/time.ts");
 
 const ny = clock("America/New_York");
@@ -167,6 +173,85 @@ test("the upload starts on the current package's form while it is still publishe
 	// Only inventory forms are published: still offer one rather than none.
 	assert.equal(chooseFormVersion(published.slice(0, 1), null, new Set(["inventory-v1"])), "inventory-v1");
 	assert.equal(chooseFormVersion([], null), null);
+});
+
+test("the upload starts on the newest published version of the current package's form, not the one the map names", () => {
+	const published = publishedVersions([
+		form("behaviour", "Behaviour", [
+			[1, "published", "2026-09-01T00:00:00Z"],
+			[2, "published", "2026-09-20T00:00:00Z"]
+		]),
+		form("inventory", "Inventory", [[1, "published", "2026-10-01T00:00:00Z"]])
+	]);
+	// The map names v1, v2 is published: the upload starts on v2, so the correction reaches observers.
+	assert.equal(chooseFormVersion(published, "behaviour-v1", new Set(["inventory-v1"])), "behaviour-v2");
+	assert.equal(chooseFormVersion(published, "behaviour-v2", new Set(["inventory-v1"])), "behaviour-v2");
+	// Another form published more recently does not take the place of the map's own.
+	assert.equal(chooseFormVersion(published, "behaviour-v1"), "behaviour-v2");
+	// "Newest" is the highest version number, not the one published last (v3 went out before v2 was published).
+	const outOfOrder = publishedVersions([
+		form("check", "Check", [
+			[1, "published", "2026-09-01T00:00:00Z"],
+			[2, "published", "2026-10-02T00:00:00Z"],
+			[3, "published", "2026-10-01T00:00:00Z"]
+		])
+	]);
+	assert.equal(chooseFormVersion(outOfOrder, "check-v1"), "check-v3");
+});
+
+test("a published version says which newer version of its own form is published", () => {
+	const published = publishedVersions([
+		form("behaviour", "Behaviour", [
+			[1, "published", "2026-09-01T00:00:00Z"],
+			[2, "published", "2026-09-20T00:00:00Z"],
+			[3, "published", "2026-09-25T00:00:00Z"]
+		]),
+		form("inventory", "Inventory", [[1, "published", "2026-10-01T00:00:00Z"]])
+	]);
+	assert.equal(newerPublished(published, "behaviour-v1").code, "behaviour-v3");
+	assert.equal(newerPublished(published, "behaviour-v2").code, "behaviour-v3");
+	assert.equal(newerPublished(published, "behaviour-v3"), null);
+	// A form with one published version has no newer one, and a version that is not offered says nothing.
+	assert.equal(newerPublished(published, "inventory-v1"), null);
+	assert.equal(newerPublished(published, "behaviour-v9"), null);
+	assert.equal(newerPublished([], "behaviour-v1"), null);
+	assert.equal(published.find(version => version.code === "behaviour-v2").formCode, "behaviour");
+});
+
+test("a map on a retired version moves to its own form's newest published version, never to another form", () => {
+	const catalogue = [
+		form("behaviour", "Behaviour", [
+			[1, "retired", "2026-09-01T00:00:00Z"],
+			[2, "published", "2026-09-20T00:00:00Z"]
+		]),
+		form("other", "Other form", [[1, "published", "2026-10-05T00:00:00Z"]]),
+		form("inventory", "Inventory", [
+			[1, "retired", "2026-09-01T00:00:00Z"],
+			[2, "published", "2026-10-01T00:00:00Z"]
+		]),
+		form("check", "Check", [
+			[2, "published", "2026-09-10T00:00:00Z"],
+			[3, "retired", "2026-09-15T00:00:00Z"]
+		])
+	];
+	const published = publishedVersions(catalogue);
+	const index = formVersionIndex(catalogue);
+	// The map names retired behaviour-v1: the upload starts on behaviour-v2, not on "other", published later.
+	assert.equal(chooseFormVersion(published, "behaviour-v1", new Set(["inventory-v2"]), index), "behaviour-v2");
+	// A retired inventory form says which newer version of it is published.
+	assert.equal(
+		newerPublished(
+			published.filter(v => v.formCode === "inventory"),
+			"inventory-v1",
+			index
+		).code,
+		"inventory-v2"
+	);
+	// Its form's newest published version is older than the retired one: still that form.
+	assert.equal(chooseFormVersion(published, "check-v3", new Set(["inventory-v2"]), index), "check-v2");
+	assert.equal(newerPublished(published, "check-v3", index), null);
+	// A version no form knows still falls back to the newest published form that is not an inventory form.
+	assert.equal(chooseFormVersion(published, "gone-v1", new Set(["inventory-v2"]), index), "other-v1");
 });
 
 test("a first upload starts Inventory on the most recently published zone-only form, or off", () => {

@@ -16,8 +16,8 @@ export type AttentionIslandProps = {
 
 /**
  * What needs attention before or during collection: no site, a site without a ready map package, a blocked
- * package, no published form, an unpublished draft. Each item with a link takes a manager to the page
- * that fixes it; viewers see the same list without links.
+ * package, no published form, a published form version that no map names yet, an unpublished draft. Each
+ * item with a link takes a manager to the page that fixes it; viewers see the same list without links.
  */
 export function AttentionIsland({ items, unchecked }: AttentionIslandProps) {
 	return (
@@ -57,7 +57,8 @@ export function AttentionIsland({ items, unchecked }: AttentionIslandProps) {
 					<div className="min-w-0">
 						<p className="font-semibold text-ink">Nothing needs attention.</p>
 						<p className="type-small text-ink-2">
-							Every site has a ready map package, a form is published and no draft is waiting.
+							Every site has a ready map package that names the newest published version of its forms, a
+							form is published and no draft is waiting.
 						</p>
 					</div>
 				</div>
