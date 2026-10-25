@@ -14,8 +14,8 @@ import {
   type Theme,
   useStyles,
 } from "../../ui";
+import { useKeyboardVisible } from "../../ui/use-keyboard-visible";
 import { confirmCheck, lengthCheck, MAX_PASSWORD_LENGTH } from "./rules";
-import { useKeyboardVisible } from "./use-keyboard";
 
 /** What every email field on these screens asks the keyboard and the password manager for. */
 export const EMAIL_INPUT = {
