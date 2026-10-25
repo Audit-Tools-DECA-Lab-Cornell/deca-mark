@@ -178,23 +178,20 @@ export function releaseBackoff(
 }
 
 /**
- * The earliest moment a pending record may be tried, or null when none waits. With `after`, only
- * records whose moment is later than that count, so one that is already due and cannot be sent does
- * not hide the retry of another.
+ * Every pending record of an account with the moment it may be tried, earliest first (a moment that
+ * has passed is still named). The caller decides which of them it has already woken in vain.
  */
-export function earliestRetry(db: LocalDatabase, scope: string, after = -1) {
-  return databaseWrite(db, async () => {
-    const [row] = z
-      .array(z.object({ at: z.number().int().nullable() }))
+export function pendingRetries(db: LocalDatabase, scope: string) {
+  return databaseWrite(db, async () =>
+    z
+      .array(z.object({ id: z.string(), at: z.number().int() }))
       .parse(
         await db.getAllAsync(
-          "SELECT MIN(next_attempt_at) AS at FROM observations WHERE owner_scope = ? AND sync_state = 'pending' AND next_attempt_at > ?",
+          "SELECT id, next_attempt_at AS at FROM observations WHERE owner_scope = ? AND sync_state = 'pending' ORDER BY next_attempt_at, id",
           scope,
-          after,
         ),
-      );
-    return row?.at ?? null;
-  });
+      ),
+  );
 }
 
 const retryHoldKey = (scope: string) => `retry_after:${scope}`;

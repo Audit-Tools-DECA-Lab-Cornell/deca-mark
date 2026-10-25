@@ -11,7 +11,7 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import { useAccount } from "../auth/provider";
-import { activateHeldObservations, earliestRetry, retryAttention } from "../storage/sync-store";
+import { activateHeldObservations, pendingRetries, retryAttention } from "../storage/sync-store";
 import { createBoundUpload } from "./bound-upload";
 import { connection } from "./config";
 import { type SyncScope, scopeKey } from "./contracts";
@@ -105,11 +105,13 @@ export function SyncProvider({ children }: PropsWithChildren) {
     });
     // One timer, for the earliest moment a waiting record may be tried (or a failed pass tried again).
     // A record that is already due when a pass ends (its delay ran out during a slower upload) is
-    // woken at once. If the same record is still the earliest after that wake, nothing could send
-    // it: it is left alone (a save, reconnect, resume or new token wakes it again) and only a record
-    // with a later moment is waited for. After a 401 nothing is sent until the token changes, so
-    // no timer is set at all.
-    let lastDue: number | null = null;
+    // woken at once. If the same record is still due, at the same moment, after that wake, nothing
+    // could send it: it is "stuck", left alone (a save, reconnect, resume or new token wakes it
+    // again), and never hides another record's retry. Only that record is skipped; a different
+    // moment, or another record, is woken as usual. After a 401 nothing is sent until the token
+    // changes, so no timer is set at all.
+    const woken = new Map<string, number>();
+    const stuck = new Map<string, number>();
     let timer: { readonly handle: ReturnType<typeof setTimeout>; readonly at: number } | undefined;
     const wakeAt = (at: number) => {
       if (!current() || drain.signInRequired() || (timer !== undefined && timer.at <= at)) return;
@@ -125,19 +127,29 @@ export function SyncProvider({ children }: PropsWithChildren) {
     };
     const waitForNext = async (afterFailure: boolean) => {
       if (drain.signInRequired()) return;
-      const next = await earliestRetry(database, key);
-      if (next === null) return;
+      const pending = await pendingRetries(database, key);
+      if (pending.length === 0) {
+        woken.clear();
+        stuck.clear();
+        return;
+      }
       const at = Date.now();
-      // A pass that threw is tried again by `failed`, not at once.
-      if (next <= at && afterFailure) return;
-      if (next > at) {
-        lastDue = null;
-        wakeAt(next);
-      } else if (lastDue === next) {
-        const later = await earliestRetry(database, key, at);
-        if (later !== null) wakeAt(later);
-      } else {
-        lastDue = next;
+      const moments = new Map(pending.map((row) => [row.id, row.at]));
+      for (const known of [woken, stuck]) {
+        for (const [id, moment] of known) if (moments.get(id) !== moment) known.delete(id);
+      }
+      // A pass that threw is tried again by `failed`, not at once, and proves nothing about a record.
+      if (!afterFailure) {
+        for (const [id, moment] of woken) stuck.set(id, moment);
+        woken.clear();
+      }
+      const waiting = pending.filter((row) => stuck.get(row.id) !== row.at);
+      const due = waiting.filter((row) => row.at <= at);
+      if (due.length === 0) {
+        const [next] = waiting;
+        if (next) wakeAt(next.at);
+      } else if (!afterFailure) {
+        for (const row of due) woken.set(row.id, row.at);
         wakeAt(at);
       }
     };

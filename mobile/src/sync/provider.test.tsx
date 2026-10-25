@@ -637,6 +637,54 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
     }
   });
 
+  it("a stuck record does not hide an overdue failed record after a slow upload", async () => {
+    const { db, sqlite } = await mountOnline();
+    const failing = "60000000-0000-4000-8000-000000000002";
+    const slow = "60000000-0000-4000-8000-000000000003";
+    // The record saved first can never be sent (its upload body is gone) and stays the earliest.
+    sqlite
+      .prepare(
+        "UPDATE observations SET payload = json_remove(payload, '$.uploadBody') WHERE id = ?",
+      )
+      .run(boundRecord.id);
+    const sent: { id: string; at: number }[] = [];
+    let healthy = false;
+    vi.stubGlobal("fetch", async (request: Request) => {
+      const id = request.url.split("/").at(-1) ?? "";
+      sent.push({ id, at: Date.now() });
+      if (id === slow) {
+        await new Promise((resolve) => setTimeout(resolve, 6000));
+        return answer(id);
+      }
+      return healthy ? answer(id) : new Response("", { status: 503 });
+    });
+    try {
+      await start();
+      await pass(1);
+      expect(sent).toHaveLength(0);
+      await saveObservation(db, { ...boundRecord, id: failing }, owner);
+      await saveObservation(db, { ...boundRecord, id: slow }, owner);
+      await act(async () => sync.wake());
+      await pass(6000);
+      // One failure, then a 6 s upload that outlasts the failed record's delay.
+      expect(sent.map((item) => item.id)).toEqual([failing, slow]);
+      healthy = true;
+      await pass(1000);
+      expect(sent.map((item) => item.id)).toEqual([failing, slow, failing]);
+      expect(
+        sqlite
+          .prepare("SELECT id, sync_state AS state FROM observations ORDER BY id")
+          .all()
+          .map((row) => row["state"]),
+      ).toEqual(["pending", "synced", "synced"]);
+      // The stuck record is left alone: nothing more is sent however long the queue then waits.
+      await pass(120000);
+      expect(sent).toHaveLength(3);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("after a 401 nothing wakes the queue until the token changes (no timers, no queries)", async () => {
     const { db, sqlite } = await mountOnline();
     let healthy = false;

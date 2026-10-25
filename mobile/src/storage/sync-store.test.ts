@@ -22,8 +22,8 @@ import {
   acknowledge,
   activateHeldObservations,
   deferObservation,
-  earliestRetry,
   pendingObservations,
+  pendingRetries,
   raiseRetryHold,
   readRetryHold,
   releaseBackoff,
@@ -195,20 +195,25 @@ describe("Retry timing in the store (MOB-39)", () => {
     }
   });
 
-  it("names the earliest time a pending record may be tried, even when that has passed", async () => {
+  it("names every pending record with the time it may be tried, earliest first, even when that has passed", async () => {
     const { db, sqlite } = await waiting();
     try {
-      expect(await earliestRetry(db, owner)).toBe(0);
+      expect(await pendingRetries(db, owner)).toEqual([
+        { id: second(2), at: 0 },
+        { id: second(4), at: NOW + 2000 },
+        { id: second(1), at: NOW + 300000 },
+      ]);
       sqlite.exec(
         `UPDATE observations SET next_attempt_at = ${NOW + 1000} WHERE id = '${second(2)}'`,
       );
-      expect(await earliestRetry(db, owner)).toBe(NOW + 1000);
-      expect(await earliestRetry(db, owner, 0)).toBe(NOW + 1000);
-      expect(await earliestRetry(db, owner, NOW + 1000)).toBe(NOW + 2000);
-      expect(await earliestRetry(db, owner, NOW + 300000)).toBeNull();
-      expect(await earliestRetry(db, "nobody")).toBeNull();
+      expect((await pendingRetries(db, owner)).map((row) => row.at)).toEqual([
+        NOW + 1000,
+        NOW + 2000,
+        NOW + 300000,
+      ]);
+      expect(await pendingRetries(db, "nobody")).toEqual([]);
       sqlite.exec(`UPDATE observations SET sync_state = 'synced' WHERE owner_scope = '${owner}'`);
-      expect(await earliestRetry(db, owner)).toBeNull();
+      expect(await pendingRetries(db, owner)).toEqual([]);
     } finally {
       sqlite.close();
     }
