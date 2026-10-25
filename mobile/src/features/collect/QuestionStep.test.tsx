@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { act, create, type ReactTestInstance } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
+import { type FormDefinition, parseFormDefinition } from "../../forms/definition";
 import { type ResolvedQuestion, visibleQuestions } from "../../forms/engine";
 import { janetTestV1 } from "../../forms/fixtures/janet-test-v1";
 import { startSession } from "../../forms/session";
@@ -29,8 +30,8 @@ vi.mock("expo-router", async () => (await import("../../ui/native.fixture")).rou
 
 /** MOB-34: what the question step does for the keyboard. */
 
-function question(id: string): ResolvedQuestion {
-  const found = visibleQuestions(janetTestV1, {}).find((entry) => entry.id === id);
+function question(id: string, form: FormDefinition = janetTestV1): ResolvedQuestion {
+  const found = visibleQuestions(form, {}).find((entry) => entry.id === id);
   if (!found) throw new Error(`No question ${id} is visible on an empty form.`);
   return found;
 }
@@ -43,26 +44,29 @@ const hostProps = (node: ReactTestInstance) =>
     disableFullscreenUI?: boolean;
     keyboardDismissMode?: string;
     keyboardShouldPersistTaps?: string;
+    value?: string;
   };
 
 function mount(
   id: string,
   extra: { keyboardUp?: boolean; showLinks?: boolean; compactField?: boolean } = {},
+  form: FormDefinition = janetTestV1,
 ) {
   const scrollTo = vi.fn();
+  const write = vi.fn();
   const element: ReactElement = (
     <PreferencesProvider>
       <ThemeProvider>
         <QuestionStep
-          form={janetTestV1}
+          form={form}
           state={startSession()}
-          question={question(id)}
+          question={question(id, form)}
           position={1}
           total={12}
           columns={2}
           onChoose={() => {}}
           onToggle={() => {}}
-          onWrite={() => {}}
+          onWrite={write}
           onBack={() => {}}
           onAdvance={() => {}}
           onReview={() => {}}
@@ -92,6 +96,7 @@ function mount(
     });
   const input = hosts("TextInput")[0];
   return {
+    write,
     scrollTo,
     scroll,
     field,
@@ -124,6 +129,35 @@ function mount(
 }
 
 describe("the question step on a keyboard (MOB-34)", () => {
+  it("updates Continue immediately before the durable answer arrives", () => {
+    const m = mount("play_event_summary");
+    expect(m.labels()).toContain("Skip for now");
+    m.typeText("Children digging");
+    expect(m.labels()).toContain("Continue");
+    m.typeText("");
+    expect(m.labels()).toContain("Skip for now");
+    expect(m.write.mock.calls.map(([value]) => value)).toEqual(["Children digging", ""]);
+  });
+
+  it("cleans semantic observer initials while preserving an unrelated observer ID", () => {
+    const observer = question("observer_initials");
+    const form = parseFormDefinition({
+      ...janetTestV1,
+      columnNaming: "questionId",
+      questions: [
+        { ...observer, id: "recorded_by", exportColumn: "recorded_by", role: "observer" },
+        { ...observer, id: "observer", exportColumn: "observer" },
+      ],
+    });
+    const initials = mount("recorded_by", {}, form);
+    initials.typeText("a b\t");
+    expect(initials.write).toHaveBeenLastCalledWith("AB");
+    expect(hostProps(initials.input as ReactTestInstance).value).toBe("AB");
+    const unrelated = mount("observer", {}, form);
+    unrelated.typeText("a b\t");
+    expect(unrelated.write).toHaveBeenLastCalledWith("a b\t");
+  });
+
   it("a drag on the scrolling area dismisses the keyboard, and a tap on a control still lands", () => {
     const { scroll } = mount("play_event_summary");
     expect(hostProps(scroll).keyboardDismissMode).toBe("on-drag");

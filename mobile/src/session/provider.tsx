@@ -4,6 +4,7 @@ import { useAccount } from "../auth/provider";
 import { useMe } from "../data/api/me-provider";
 import type { Coordinate, RoundContext } from "../domain/observation";
 import { useProfile } from "../features/auth/profile-store";
+import { capturedAnswers } from "../forms/capture";
 import type { SessionState } from "../forms/session";
 import { setActivePackage } from "../packages/hosted/access";
 import { useHostedSites } from "../packages/hosted/provider";
@@ -38,7 +39,7 @@ const OPEN_INVENTORY_BLOCK =
 
 export function FieldSessionProvider({ children }: PropsWithChildren) {
   const database = useSQLiteContext();
-  const { key, ready } = useAccount();
+  const { key, ready, account } = useAccount();
   const { wake } = useSync();
   const hosted = useHostedSites();
   const accessNow = useRef(hosted);
@@ -173,8 +174,16 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
           packageId: opened.id,
           packageName: opened.name,
           ...(draft.binding ? { binding: draft.binding } : {}),
+          ...(draft.capture ? { capture: draft.capture } : {}),
         });
-        apply({ index: draft.questionIndex, answers: draft.answers, notice: null });
+        const recoveredForm = formForRound(opened, savedContext.roundType);
+        apply({
+          index: draft.questionIndex,
+          answers: recoveredForm
+            ? capturedAnswers(recoveredForm, draft.answers, draft.capture)
+            : draft.answers,
+          notice: null,
+        });
       }
     },
   });
@@ -191,6 +200,7 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
     unreadableDraft,
     placed,
     initials,
+    accountId: account?.id ?? key,
     identity,
     stateRef,
     placementRef,

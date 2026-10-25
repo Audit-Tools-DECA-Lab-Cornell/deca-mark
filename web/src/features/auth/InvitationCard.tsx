@@ -10,16 +10,22 @@ import { Note } from "@/components/contour/Note";
 import { StateBadge } from "@/components/contour/StateBadge";
 import { stateOf } from "@/lib/contour";
 import { clock } from "@/lib/time";
+import type { AccountSummary } from "@/lib/workspace/types";
 
+import { AccountChip } from "./AccountChip";
 import { redeemInvite } from "./actions";
 import { leaveFlash } from "./flash";
 import {
+	forgetCode,
 	forgetToken,
 	type InvitationDetails,
 	type InviteCredential,
 	type InviteProblem,
 	type JoinOutcome,
 	problemText,
+	rememberCode,
+	rememberToken,
+	UNKEPT_COPY,
 	UNREACHABLE_COPY
 } from "./invitation";
 import { withQuery } from "./params";
@@ -27,6 +33,7 @@ import { formatCountdown, useCooldown } from "./useCooldown";
 
 export type InvitationCardProps = {
 	invitation: InvitationDetails;
+	account: AccountSummary;
 	/** What the person opened: joined with exactly this. */
 	credential: InviteCredential;
 	/** The page that brought the person here, which sign in returns to. */
@@ -58,7 +65,7 @@ function roleLabel(role: InvitationDetails["role"]): string {
  * failed join keeps this page and says why: expired, no longer valid, already a member, too many tries
  * (with the wait), or DECA Mark unreachable.
  */
-export function InvitationCard({ invitation, credential, next, back }: InvitationCardProps) {
+export function InvitationCard({ invitation, account, credential, next, back }: InvitationCardProps) {
 	const router = useRouter();
 	const [pending, setPending] = useState(false);
 	const [problem, setProblem] = useState<InviteProblem | null>(null);
@@ -88,14 +95,17 @@ export function InvitationCard({ invitation, credential, next, back }: Invitatio
 		}
 		if (outcome.status === "joined") {
 			forgetToken();
+			forgetCode();
 			leaveFlash({ title: `You joined ${place}.`, description: `Your role is ${roleLabel(outcome.role)}.` });
 			// The button stays busy until the next page replaces this one.
 			router.push(outcome.path);
 			return;
 		}
 		const failure = outcome.problem;
-		if (failure.kind === "expired" || failure.kind === "invalid" || failure.kind === "already-member")
+		if (failure.kind === "expired" || failure.kind === "already-member") {
 			forgetToken();
+			forgetCode();
+		}
 		if (failure.kind === "wait") cooldown.start(failure.retryAfter ?? 60);
 		setProblem(failure);
 		setPending(false);
@@ -162,6 +172,18 @@ export function InvitationCard({ invitation, credential, next, back }: Invitatio
 				</div>
 			)}
 			<div className="flex flex-col gap-3">
+				<AccountChip
+					account={account}
+					disabled={pending}
+					next={next}
+					onSwitch={() => {
+						const kept =
+							"token" in credential ? rememberToken(credential.token) : rememberCode(credential.code);
+						if (!kept) setProblem({ kind: "refused", message: UNKEPT_COPY });
+						return kept;
+					}}
+				/>
+				<p className="type-small text-ink-2">Use the email address your manager invited.</p>
 				{action}
 				{back.href ? (
 					<ButtonLink variant="outline" size="lg" fullWidth href={back.href}>

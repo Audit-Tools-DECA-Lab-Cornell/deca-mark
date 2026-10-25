@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { failedChange } from "@/features/people/result";
 import type { InviteRequest, InviteResult, PeopleActionResult } from "@/features/people/types";
-import { apiRequestError } from "@/lib/api/errors";
+import { apiRequestError, wasRefused } from "@/lib/api/errors";
 import {
 	createProjectInvitation,
 	removeProjectMember,
@@ -72,10 +72,15 @@ export async function removeMember(
 export async function createInvitation(context: TeamContext, request: InviteRequest<TeamRole>): Promise<InviteResult> {
 	const nothing = "No invitation was created.";
 	const where = teamContextSchema.safeParse(context);
-	if (!where.success) return stale(nothing);
+	if (!where.success) return { ...stale(nothing), definite: true };
 	const checked = checkInvitation(request);
 	if (!checked.ok)
-		return { status: "failed", message: `${nothing} Check the fields marked below.`, fields: checked.fields };
+		return {
+			status: "failed",
+			message: `${nothing} Check the fields marked below.`,
+			definite: true,
+			fields: checked.fields
+		};
 	const { role, email, maxUses, expiresInDays } = checked.values;
 	let created;
 	try {
@@ -86,7 +91,7 @@ export async function createInvitation(context: TeamContext, request: InviteRequ
 			expires_in_days: expiresInDays
 		});
 	} catch (error) {
-		const failed = failedChange(nothing, error);
+		const failed = { ...failedChange(nothing, error), definite: wasRefused(error) };
 		const fields = apiRequestError(error).fields;
 		return Object.keys(fields).length > 0 ? { ...failed, fields: { ...fields } } : failed;
 	}

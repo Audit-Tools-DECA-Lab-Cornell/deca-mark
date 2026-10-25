@@ -131,7 +131,7 @@ export function NewFormDialog({
 						onChange={event => changeName(event.target.value)}
 					/>
 				</Field>
-				<Field label="Code" htmlFor="new-form-code" error={errors.code} hint={FORM_CODE_HINT}>
+				<Field label="Form Code" htmlFor="new-form-code" error={errors.code} hint={FORM_CODE_HINT}>
 					<TextInput
 						ref={codeRef}
 						value={code}
