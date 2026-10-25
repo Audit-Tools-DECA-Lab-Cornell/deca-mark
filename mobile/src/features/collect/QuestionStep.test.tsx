@@ -39,6 +39,8 @@ const hostProps = (node: ReactTestInstance) =>
   node.props as {
     testID?: string;
     onLayout?: (event: unknown) => void;
+    onChangeText?: (text: string) => void;
+    disableFullscreenUI?: boolean;
     keyboardDismissMode?: string;
     keyboardShouldPersistTaps?: string;
   };
@@ -88,11 +90,16 @@ function mount(
         nativeEvent: { layout: { x: 0, y, width: 300, height } },
       });
     });
+  const input = hosts("TextInput")[0];
   return {
     scrollTo,
     scroll,
     field,
     layout,
+    input,
+    /** Types into the answer field the way the observer does. */
+    typeText: (text: string) =>
+      act(() => hostProps(input as ReactTestInstance).onChangeText?.(text)),
     /** The minimum height the answer field is drawn at, and whether it carries a character counter. */
     drawn: () => {
       const input = hosts("TextInput")[0];
@@ -133,9 +140,13 @@ describe("the question step on a keyboard (MOB-34)", () => {
   });
 
   it("follows the field as it grows with what is typed", () => {
-    const { scrollTo, scroll, field, layout } = mount("play_event_summary", { keyboardUp: true });
+    const { scrollTo, scroll, field, input, layout } = mount("play_event_summary", {
+      keyboardUp: true,
+    });
     layout(scroll, 0, 216);
     layout(field, 170, 140);
+    // The text has outgrown the four rows: the input is 148 pt, past its 120 pt minimum.
+    layout(input, 2, 148);
     layout(field, 170, 168);
     expect(scrollTo).toHaveBeenLastCalledWith({ y: 170 + 168 + 8 - 216, animated: false });
   });
@@ -172,7 +183,7 @@ describe("the question step on a keyboard (MOB-34)", () => {
   });
 
   it("keeps the first line inside an area shorter than the field (a phone in landscape)", () => {
-    // The 4-row field is 120 pt (16 + 16 padding, 4 x 22) plus a 26 pt counter; the area is 89 pt tall.
+    // The 4-row input is 120 pt (16 + 16 padding, 4 x 22) in a 2 pt border, plus a counter; the area is 89 pt tall.
     const full = mount("play_event_summary", { keyboardUp: true });
     expect(full.drawn().minHeight).toBe(120);
     expect(full.drawn().counter).toBe(1);
@@ -185,16 +196,68 @@ describe("the question step on a keyboard (MOB-34)", () => {
     expect(compact.drawn().minHeight).toBe(76);
     expect(compact.drawn().counter).toBe(0);
     compact.layout(compact.scroll, 0, 89);
-    compact.layout(compact.field, 80, 76);
-    // The two-row field fits: its foot sits 8 pt above the foot of the area, and the whole field shows.
+    // The two-row field is 80 pt: the 76 pt input and the 2 pt border above and below it.
+    compact.layout(compact.field, 80, 80);
+    // It fits: its foot sits 8 pt above the foot of the area, and the whole field shows.
     const [{ y }] = compact.scrollTo.mock.calls.at(-1) as [{ y: number }];
-    expect(y).toBe(80 + 76 + 8 - 89);
+    expect(y).toBe(80 + 80 + 8 - 89);
     expect(80).toBeGreaterThanOrEqual(y);
-    expect(80 + 76).toBeLessThanOrEqual(y + 89);
+    expect(80 + 80).toBeLessThanOrEqual(y + 89);
   });
 
   it("shows two rows of the question's four when compact, and all four otherwise", () => {
     expect(mount("play_event_summary", { compactField: true }).drawn().minHeight).toBe(76);
     expect(mount("play_event_summary").drawn().minHeight).toBe(120);
+  });
+
+  // MOB-34 review round 3: the rule follows the field's height, not whether it is empty.
+  describe("an answered field taller than the scrolling area (an iPhone SE in portrait)", () => {
+    // 114 pt of scrolling area; the 4-row field is 124 pt (120 input and its border) plus an 8 pt gap
+    // and a counter: 151 pt, so it cannot show whole. Its top is at 80.
+    const VIEW = 114;
+    const TOP = 80;
+    const lay = (m: ReturnType<typeof mount>, input: number, field: number) => {
+      m.layout(m.scroll, 0, VIEW);
+      m.layout(m.field, TOP, field);
+      m.layout(m.input, 2, input);
+    };
+
+    it("keeps the first typed line inside the area while the field is at its minimum height", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText("Two children dig.");
+      lay(m, 120, 151);
+      const [{ y }] = m.scrollTo.mock.calls.at(-1) as [{ y: number }];
+      // The first line sits 2 pt border and 16 pt padding below the field's top, 22 pt tall.
+      const lineTop = TOP + 18;
+      expect(lineTop).toBeGreaterThanOrEqual(y);
+      expect(lineTop + 22).toBeLessThanOrEqual(y + VIEW);
+    });
+
+    it("follows the newest line once the typed text has outgrown the rows", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText("One.\nTwo.\nThree.\nFour.\nFive.\nSix.");
+      lay(m, 164, 195);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP + 195 + 8 - VIEW, animated: false });
+    });
+
+    it("keeps the top again when the text is deleted back to the rows", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText("One.\nTwo.\nThree.\nFour.\nFive.");
+      lay(m, 142, 173);
+      m.typeText("One.");
+      m.layout(m.input, 2, 120);
+      m.layout(m.field, TOP, 151);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP, animated: false });
+    });
+  });
+
+  it("asks Android for no fullscreen extract editor on the answer field", () => {
+    expect(
+      hostProps(mount("play_event_summary", { compactField: true }).input as ReactTestInstance)
+        .disableFullscreenUI,
+    ).toBe(true);
+    expect(
+      hostProps(mount("observer_initials").input as ReactTestInstance)?.disableFullscreenUI,
+    ).toBe(true);
   });
 });

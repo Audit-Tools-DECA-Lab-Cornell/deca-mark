@@ -24,6 +24,7 @@ import {
   type Theme,
   useHaptics,
   useStyles,
+  useTheme,
 } from "../../ui";
 
 type Props = {
@@ -112,6 +113,7 @@ export function QuestionStep({
   compactField = false,
 }: Props) {
   const s = useStyles(stepStyles);
+  const theme = useTheme();
   const haptics = useHaptics();
   const reduceMotion = useReducedMotion();
   const value = state.answers[question.id];
@@ -128,21 +130,28 @@ export function QuestionStep({
     setText(inputText);
   }
 
-  // While the keyboard is up, a text or number answer keeps its field at the foot of the scrolling
-  // area, above the footer: the area is short, and a four-row field starts below its fold. An empty
-  // field that is taller than the area keeps its top instead, where the first line is typed.
+  // While the keyboard is up, a text or number answer is kept in view above the footer, and the
+  // area can be shorter than the field (an iPhone SE: about 114 pt against a 4-row field of 151). The
+  // field grows with what is typed and the caret sits at its end, so once the text has outgrown the
+  // rows the foot of the field is kept; while the field is at its minimum height, whether empty or
+  // answered, its top is kept, so the first line is never scrolled out above the area.
+  const rows = compactField ? Math.min(question.rows ?? 4, COMPACT_ROWS) : (question.rows ?? 4);
+  const rowsMinHeight = theme.space.s4 * 2 + rows * (theme.type.answer.lineHeight ?? 0);
   const scroller = useRef<ScrollView>(null);
   const viewport = useRef(0);
   const fieldTop = useRef(0);
   const fieldBottom = useRef(0);
+  /** The height of the text box itself; it is the rows' minimum height until the text outgrows them. */
+  const boxHeight = useRef(0);
   const typing = question.kind === "text" || question.kind === "number";
-  const empty = useRef(text === "");
-  empty.current = text === "";
+  const multiline = question.kind === "text" && (question.rows ?? 1) > 1;
+  const grown = useRef(false);
+  grown.current = multiline && boxHeight.current > rowsMinHeight + 0.5;
   const showField = useCallback(() => {
     if (!keyboardUp || !typing || viewport.current === 0) return;
     const foot = Math.max(0, fieldBottom.current + FIELD_MARGIN - viewport.current);
     scroller.current?.scrollTo({
-      y: empty.current ? Math.min(foot, fieldTop.current) : foot,
+      y: grown.current ? foot : Math.min(foot, fieldTop.current),
       animated: false,
     });
   }, [keyboardUp, typing]);
@@ -256,14 +265,18 @@ export function QuestionStep({
               showField();
             }}
           >
-            {question.kind === "text" && (question.rows ?? 1) > 1 ? (
+            {multiline ? (
               <Textarea
                 accessibilityLabel={question.label}
                 value={text}
                 onChangeText={type}
-                rows={
-                  compactField ? Math.min(question.rows ?? 4, COMPACT_ROWS) : (question.rows ?? 4)
-                }
+                rows={rows}
+                onLayout={(event: LayoutChangeEvent) => {
+                  boxHeight.current = event.nativeEvent.layout.height;
+                  grown.current = boxHeight.current > rowsMinHeight + 0.5;
+                  showField();
+                }}
+                disableFullscreenUI
                 showCount={!compactField}
                 maxLength={question.maxLength}
                 placeholder={question.placeholder}
@@ -278,6 +291,7 @@ export function QuestionStep({
                 autoCorrect={question.kind === "text" && question.exportColumn !== "observer"}
                 maxLength={question.maxLength}
                 placeholder={question.placeholder}
+                disableFullscreenUI
                 returnKeyType="next"
                 onSubmitEditing={onAdvance}
               />
