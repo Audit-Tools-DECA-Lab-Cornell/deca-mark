@@ -15,6 +15,13 @@ import type { RawDefinition, RawQuestion } from "./raw";
 /** A site, as the Forms screens name it. */
 export type SiteRef = { readonly code: string; readonly name: string };
 
+/** A site whose current map package names a version of a form, with the version it names. */
+export type SiteUse = SiteRef & {
+	/** The version number the map names: 1 for "v1". */
+	readonly version: number;
+	readonly versionCode: string;
+};
+
 export type VersionRow = {
 	readonly code: string;
 	readonly etag: string;
@@ -46,8 +53,11 @@ export type FormRow = {
 	readonly drafts: readonly VersionRow[];
 	/** The newest version in any state: the one "Start new draft" copies. */
 	readonly newest: VersionRow | null;
-	/** Every site whose current package uses any version of this form. */
-	readonly sites: readonly SiteRef[];
+	/**
+	 * Every site whose current package names any version of this form, with the version it names, newest
+	 * version first. It can be older than `published`: a new version reaches a site only through a new map.
+	 */
+	readonly uses: readonly SiteUse[];
 };
 
 /** The sites whose current map package binds this form version, as its play form or its inventory form. */
@@ -75,14 +85,6 @@ export function formRows(forms: readonly FormSummary[], sites: readonly Site[]):
 					legacy: version.question_count === 0
 				})
 			);
-		const seen = new Set<string>();
-		const used: SiteRef[] = [];
-		for (const version of versions)
-			for (const site of version.sites)
-				if (!seen.has(site.code)) {
-					seen.add(site.code);
-					used.push(site);
-				}
 		return {
 			code: form.code,
 			name: form.name,
@@ -91,7 +93,9 @@ export function formRows(forms: readonly FormSummary[], sites: readonly Site[]):
 			published: versions.find(version => version.state === "published") ?? null,
 			drafts: versions.filter(version => version.state === "draft"),
 			newest: versions[0] ?? null,
-			sites: used
+			uses: versions.flatMap(version =>
+				version.sites.map((site): SiteUse => ({ ...site, version: version.version, versionCode: version.code }))
+			)
 		};
 	});
 }

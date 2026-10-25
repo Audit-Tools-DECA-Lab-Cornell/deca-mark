@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { PLACE_COOKIE } from "@/features/shell/navigation";
 import { apiRequestError } from "@/lib/api/errors";
 import { previewInvitation, redeemInvitation } from "@/lib/api/mutations";
 import { getWorkspace } from "@/lib/api/workspace";
@@ -124,10 +125,11 @@ export async function redeemInvite(
 export async function switchAccount(form: FormData): Promise<void> {
 	const next = safeNext(form.get("next"));
 	const supabase = await createClient();
-	const { error } = await supabase.auth.signOut();
+	// This browser only: the same account's session on the phone collector stays signed in.
+	const { error } = await supabase.auth.signOut({ scope: "local" });
 	if (error) throw error;
 	const store = await cookies();
-	for (const name of ["fm-verify-email", "fm-recovery-email", "fm-recovery-user", "fm-email-sent"])
+	for (const name of ["fm-verify-email", "fm-recovery-email", "fm-recovery-user", "fm-email-sent", PLACE_COOKIE])
 		store.delete(name);
 	redirect(`/sign-in?next=${encodeURIComponent(next)}`);
 }

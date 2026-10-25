@@ -21,7 +21,8 @@ const LINK = "text-ink underline decoration-1 underline-offset-4 hover:decoratio
 
 /**
  * Forms: every form in the project with its published version, its draft, how many questions it asks and
- * which sites' current map packages use it. Managers also see drafts and can start a new form.
+ * which sites' current map packages use it, each with the version its map names (which can be older than
+ * the published one). Managers also see drafts and can start a new form.
  */
 export function ProjectFormsScreen({
 	org,
@@ -146,7 +147,7 @@ export function ProjectFormsScreen({
 									<Fact label="Used by">
 										{sitesProblem ? (
 											"Not checked"
-										) : form.sites.length === 0 ? (
+										) : form.uses.length === 0 ? (
 											form.published ? (
 												"No site's current map package"
 											) : (
@@ -154,18 +155,21 @@ export function ProjectFormsScreen({
 											)
 										) : (
 											<ul className="flex flex-col gap-1">
-												{form.sites.map(site => (
-													<li key={site.code}>
+												{form.uses.map(use => (
+													<li key={`${use.code}/${use.versionCode}`}>
 														<Link
 															prefetch={false}
 															href={projectHref(
 																org,
 																project,
-																`sites/${encodeURIComponent(site.code)}`
+																`sites/${encodeURIComponent(use.code)}`
 															)}
 															className={LINK}>
-															{site.name}
-														</Link>
+															{use.name}
+														</Link>{" "}
+														<span className="text-ink-2">
+															· <Mono>v{use.version}</Mono>
+														</span>
 													</li>
 												))}
 											</ul>

@@ -44,7 +44,7 @@ import { issueText } from "@/lib/zones/issues";
 
 import { packageUploaded } from "./actions";
 import { CheckBadge } from "./CheckBadge";
-import type { PublishedVersion } from "./forms";
+import { newerPublished, type PublishedVersion } from "./forms";
 import {
 	choose,
 	type CurrentZone,
@@ -221,7 +221,10 @@ export function UploadStep({
 	/** The published versions that ask only about a zone: the only ones a map can take as its inventory form. */
 	inventoryForms: PublishedVersion[];
 	defaultFormVersion: string;
-	/** On a site's first upload, the inventory form to start on; null starts with Inventory off. */
+	/**
+	 * The inventory form to start on. On a site's first upload: null starts with Inventory off. On a later
+	 * one: a newer version of the form the current map names, or null to keep the current choice.
+	 */
 	defaultInventoryFormVersion: string | null;
 	/** The packages page, for the link to the version just prepared. */
 	packagesHref: string;
@@ -246,8 +249,14 @@ export function UploadStep({
 	const [result, setResult] = useState<Publication | null>(null);
 	const [changeNote, setChangeNote] = useState("");
 	const [inventory, setInventory] = useState(
-		currentPackageId ? KEEP_INVENTORY : (defaultInventoryFormVersion ?? NO_INVENTORY)
+		defaultInventoryFormVersion ?? (currentPackageId ? KEEP_INVENTORY : NO_INVENTORY)
 	);
+	// A map names its forms exactly, so a version older than the newest published one reaches observers
+	// as the older one: say so beside the choice.
+	const newerForm = newerPublished(forms, formVersion);
+	const chosenInventory =
+		inventory === KEEP_INVENTORY ? currentInventoryFormVersion : inventory === NO_INVENTORY ? null : inventory;
+	const newerInventory = chosenInventory ? newerPublished(inventoryForms, chosenInventory) : null;
 
 	// The last request sent, kept while its answer is unknown: sending again sends it unchanged (same request
 	// ID, same expected current map, same identities), so if it did arrive DECA Mark answers with the version
@@ -485,7 +494,18 @@ export function UploadStep({
 					<Field
 						label="Form version"
 						htmlFor={`${fieldId}-form`}
-						hint="The published form observers use with this map."
+						hint={
+							newerForm ? (
+								<>
+									<strong className="font-semibold text-ink">
+										A newer version is published: {newerForm.code}.
+									</strong>{" "}
+									Observers collect with the version this map names.
+								</>
+							) : (
+								"The published form observers use with this map."
+							)
+						}
 						error={formVersionProblem}>
 						<Select value={formVersion} onChange={event => setFormVersion(event.target.value)}>
 							{forms.map(version => (
@@ -500,9 +520,18 @@ export function UploadStep({
 						htmlFor={`${fieldId}-inventory`}
 						className="mt-4"
 						hint={
-							inventoryForms.length > 0
-								? "The published form observers use for a whole-zone inventory. Only forms that ask about a zone alone are offered. Without one, Inventory is off on this map."
-								: "No published form asks about a zone alone, so Inventory stays as it is or is off on this map."
+							newerInventory ? (
+								<>
+									<strong className="font-semibold text-ink">
+										A newer version is published: {newerInventory.code}.
+									</strong>{" "}
+									Observers collect with the version this map names.
+								</>
+							) : inventoryForms.length > 0 ? (
+								"The published form observers use for a whole-zone inventory. Only forms that ask about a zone alone are offered. Without one, Inventory is off on this map."
+							) : (
+								"No published form asks about a zone alone, so Inventory stays as it is or is off on this map."
+							)
 						}>
 						<Select
 							id={`${fieldId}-inventory`}
