@@ -6,7 +6,6 @@ import hashlib
 import http.client
 import json
 import os
-from pathlib import Path
 import secrets
 import signal
 import socket
@@ -14,7 +13,10 @@ import subprocess
 import sys
 import threading
 import time
+from collections.abc import Callable
+from functools import partial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from uuid import uuid4
 
 import jwt
@@ -587,16 +589,35 @@ def run():
             flush=True,
         )
     finally:
-        stop(kill=True)
+        cleanup_errors: list[OSError | RuntimeError | subprocess.SubprocessError] = []
+
+        def cleanup(
+            action: Callable[[], str | None], *, absent: str | None = None
+        ) -> None:
+            try:
+                action()
+            except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+                if absent is None or absent not in str(error):
+                    cleanup_errors.append(error)
+
+        cleanup(partial(stop, kill=True))
         if gateway:
-            gateway.shutdown()
+            cleanup(gateway.shutdown)
         for container in reversed(owned):
-            command("docker", "stop", container)
+            cleanup(
+                partial(command, "docker", "stop", container),
+                absent="No such container:",
+            )
         if network:
-            command("docker", "network", "rm", network)
-        report["task_resources_removed"] = True
+            cleanup(partial(command, "docker", "network", "rm", network))
+        report["task_resources_removed"] = not cleanup_errors
+        report["cleanup_errors"] = [str(error) for error in cleanup_errors]
+        if sys.exception() is not None or cleanup_errors:
+            report["status"] = "failed"
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, indent=2) + "\n")
+        if cleanup_errors and sys.exception() is None:
+            raise ExceptionGroup("isolated resource cleanup failed", cleanup_errors)
 
 
 if __name__ == "__main__":

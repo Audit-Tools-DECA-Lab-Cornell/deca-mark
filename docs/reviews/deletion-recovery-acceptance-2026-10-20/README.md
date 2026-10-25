@@ -93,18 +93,47 @@ for the unchanged full backend/forward/contract/client regressions and earlier
 disposable lease-expiry, stale-worker, concurrency, permission/configuration and
 creator-history cases. Those suites were **not rerun or relabeled as new hosted tests**.
 
-To repeat locally after inspecting the script, use repository Python tooling and
-Docker with the cached `decamark-cleanup-tests:local` image (PostGIS 17 + pg_cron):
+To repeat locally after inspecting the script, run from the repository root on a
+**Linux Docker Engine host where the Python process can directly reach container
+bridge IPs** on ports 5432 (database) and 9999 (Auth), including this internal
+network. For a remote Docker daemon, run Python on that Linux host too. Ordinary
+[Docker Desktop on macOS/Windows](https://docs.docker.com/desktop/features/networking/networking-how-tos/#per-container-ip-addressing-is-not-possible) does not route these unpublished container IPs to
+the host; run the reproduction inside the Linux Docker host/VM instead. Enabling
+Docker Desktop host networking alone does not expose these bridge addresses. The
+script intentionally publishes no database/Auth ports.
+
+Install the repository Python tooling and build the required local image first.
+The build below assumes the Linux host's trusted PEM CA bundle is at
+`/etc/ssl/certs/ca-certificates.crt`; replace only the `src=` path with the approved
+trust bundle for your build network if different. The Dockerfile requires the
+[BuildKit secret](https://docs.docker.com/build/building/secrets/) named `ca` for HTTPS package installation, even though its contents
+are public trust certificates, not application credentials.
 
 ```sh
+uv sync --project backend --frozen
+docker build \
+  --secret id=ca,src=/etc/ssl/certs/ca-certificates.crt \
+  --file docs/reviews/form-revisions-2026-10-16/Dockerfile.tests \
+  --tag decamark-cleanup-tests:local .
 docker pull supabase/gotrue:v2.197.0
 backend/.venv/bin/python docs/reviews/deletion-recovery-acceptance-2026-10-20/isolated_auth_http.py \
   --output work/isolated-auth-http.json
 ```
 
-The alternate DB build is documented in the [earlier image definition](../form-revisions-2026-10-16/Dockerfile.tests).
-The CA mount there is the build trust bundle, not application credentials. The
-reproduction never resets/reuses an existing database or calls production Auth.
+Both images must exist in that Docker daemon before running the script, which uses
+`--pull never`. The alternate DB build uses the [earlier image definition](../form-revisions-2026-10-16/Dockerfile.tests).
+The reproduction never resets/reuses an existing database or calls production Auth.
+Cleanup attempts each owned resource independently, tolerates containers already
+removed by `--rm`, and writes the report even if cleanup fails. Inspect `status`,
+`task_resources_removed` and `cleanup_errors` in that report before treating a run
+as complete.
+
+**Maintenance verification — October 25, 2026:** the cleanup/prerequisite fixes
+pass nine Docker-free startup/cleanup regressions. A real CLI run on Docker Desktop
+with the database image absent wrote a failed report and removed its new network.
+The full Auth scenarios and hosted acceptance above were not rerun; their machine
+evidence remains the October 20 record. Run the cleanup regressions with
+`backend/.venv/bin/python -m pytest docs/reviews/deletion-recovery-acceptance-2026-10-20/test_isolated_auth_http.py`.
 
 ## Preview setting and remaining assignments
 
