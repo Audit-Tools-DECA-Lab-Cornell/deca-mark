@@ -1,13 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { type ComponentPropsWithRef, type MouseEvent, type ReactNode, useId } from "react";
 
 import { cx } from "@/lib/cx";
 
-import { CONTROL_TRANSITION } from "./classes";
+import { buttonClasses,type ButtonSize, type ButtonVariant } from "./buttonClasses";
 import { Icon, type IconName } from "./Icon";
+import { useHydrated } from "./useHydrated";
 
-export type ButtonVariant = "primary" | "ink" | "outline" | "soft" | "danger" | "danger-solid" | "ghost";
-export type ButtonSize = "md" | "sm" | "lg";
+export type { ButtonSize, ButtonVariant };
 
 /** The look a Button and a ButtonLink share. */
 export type ButtonLook = {
@@ -26,57 +28,7 @@ export type ButtonLook = {
 	fullWidth?: boolean;
 };
 
-/* sm draws at 36 px but keeps a 44 px target: a 44 px ::before box centred on the button. It is sized
-   rather than inset, because insets start inside the edge and a 2 px edge would cut it to 40 px. */
-const SIZE: Record<ButtonSize, string> = {
-	sm: "relative min-h-control-sm px-4 py-1.5 text-sm before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2",
-	md: "min-h-control px-5 py-2 text-base",
-	lg: "min-h-14 px-6 py-3 text-lg"
-};
-
 const ICON_SIZE: Record<ButtonSize, number> = { sm: 16, md: 18, lg: 20 };
-
-/* Hover changes the fill only. A disabled button takes the designed disabled look (well fill, secondary
-   ink, no edge) whatever its variant, so it never reads as a lighter copy of the live action. */
-const VARIANT: Record<ButtonVariant, string> = {
-	primary: "bg-accent text-on-accent not-disabled:hover:bg-accent/90",
-	ink: "bg-ink text-on-ink not-disabled:hover:bg-ink/85",
-	outline: "border-2 border-ink bg-island text-ink not-disabled:hover:bg-well",
-	soft: "bg-well text-ink not-disabled:hover:bg-ledge",
-	danger: "border-2 border-attention bg-island text-attention not-disabled:hover:bg-attention-soft",
-	"danger-solid": "bg-attention text-on-attention not-disabled:hover:bg-attention/90",
-	ghost: "text-ink not-disabled:hover:bg-well"
-};
-
-const DISABLED: Record<ButtonVariant, string> = {
-	primary: "disabled:bg-well disabled:text-ink-2",
-	ink: "disabled:bg-well disabled:text-ink-2",
-	outline: "disabled:border-transparent disabled:bg-well disabled:text-ink-2",
-	soft: "disabled:text-ink-2",
-	danger: "disabled:border-transparent disabled:bg-well disabled:text-ink-2",
-	"danger-solid": "disabled:bg-well disabled:text-ink-2",
-	ghost: "disabled:text-ink-2"
-};
-
-/**
- * The classes of a Contour button, for an element that must carry the look itself (a Radix trigger
- * rendered `asChild`, a file input's label). Prefer Button and ButtonLink.
- */
-export function buttonClasses({
-	variant = "primary",
-	size = "md",
-	fullWidth = false
-}: Pick<ButtonLook, "variant" | "size" | "fullWidth"> = {}): string {
-	return cx(
-		"inline-flex items-center justify-center gap-2 rounded-pill text-center font-semibold",
-		"not-disabled:active:opacity-90 disabled:cursor-not-allowed",
-		CONTROL_TRANSITION,
-		SIZE[size],
-		VARIANT[variant],
-		DISABLED[variant],
-		fullWidth && "w-full"
-	);
-}
 
 /** While busy, the label swaps in place. Both labels share one grid cell, so the button keeps the wider width. */
 function ButtonLabel({ busy, busyLabel, children }: { busy: boolean; busyLabel?: string; children: ReactNode }) {
@@ -132,7 +84,8 @@ export type ButtonProps = ButtonLook & {
 
 /**
  * The Contour button: a pill with a verb + object label ("Save on this device"). Defaults to
- * `type="button"`; pass `type="submit"` inside a form.
+ * `type="button"`; pass `type="submit"` inside a form. A submit button is disabled until the page has
+ * hydrated (see useHydrated), with no reason shown for it.
  */
 export function Button({
 	variant = "primary",
@@ -153,13 +106,17 @@ export function Button({
 }: ButtonProps) {
 	const reasonId = useId();
 	const showReason = Boolean(disabled && disabledReason);
+	// A submit press before the page is interactive would post the form natively (a GET with the server's
+	// values), so a submit button is off until then. The caller's own `disabled` still decides the reason.
+	const hydrated = useHydrated();
+	const awaitingHydration = type === "submit" && !hydrated;
 
 	const button = (
 		<button
 			{...rest}
 			type={type}
 			data-variant={variant}
-			disabled={disabled}
+			disabled={disabled || awaitingHydration}
 			aria-busy={busy || undefined}
 			aria-disabled={busy || undefined}
 			aria-describedby={cx(describedBy, showReason && reasonId) || undefined}
