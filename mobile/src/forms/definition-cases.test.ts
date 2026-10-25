@@ -29,6 +29,7 @@ const suite = z
       z.object({
         id: z.string(),
         patch: z.record(z.string(), z.unknown()),
+        definitionPatch: z.record(z.string(), z.unknown()).optional(),
         valid: z.boolean(),
         // A schema version is served beside the definition, never inside it.
         schemaVersion: z.unknown().optional(),
@@ -51,6 +52,7 @@ describe("shared canonical definition cases", () => {
       // Given the same authored input as Python.
       const input = {
         ...suite.definition,
+        ...scenario.definitionPatch,
         questions: [{ ...suite.question, ...scenario.patch }],
       };
       if ("schemaVersion" in scenario) {

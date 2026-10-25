@@ -203,11 +203,12 @@ def test_signed_canonical_dynamic_export_when_historical_form_is_published(
             f"/v1/projects/{site.tenant.project}/observations/export",
             params={"package_id": package_id},
         )
-    # Then aliases and omitted fields survive with the dynamic named column.
+    # Then the authored ID column and exact historical definition survive the signed pipeline.
     assert exported.status_code == 200, exported.text
     assets = files(exported.content)
     row = next(csv.DictReader(StringIO(assets["observations.csv"].decode("utf-8-sig"))))
-    assert row["named"] == "x"
+    assert row["child"] == "x"
+    assert "named" not in row
     forms = document(assets["forms.json"])
     assert forms[code] == recorded
     frozen = forms[code]

@@ -11,15 +11,18 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import { useAccount } from "../auth/provider";
-import { earliestRetry, retryAttention } from "../storage/sync-store";
+import { pendingRetries, retryAttention } from "../storage/sync-store";
 import { createBoundUpload } from "./bound-upload";
 import { connection } from "./config";
 import { type SyncScope, scopeKey } from "./contracts";
 import { createSyncCoordinator } from "./coordinator";
-import { createForegroundDrain } from "./foreground";
+import { createForegroundDrain, FailedAfterChange } from "./foreground";
 
 /** After a pass that threw (a locked database, say), try again once this many milliseconds have passed. */
 const FAILED_PASS_RETRY = 5000;
+
+/** The longest delay `setTimeout` takes; a longer one fires at once. A timer this long wakes early and sets the rest. */
+const LONGEST_TIMER = 2 ** 31 - 1;
 
 const SyncContext = createContext({
   revision: 0,
@@ -53,8 +56,6 @@ export function SyncProvider({ children }: PropsWithChildren) {
   scopeNow.current = scope;
   const deleted = useRef(markAccountDeleted);
   deleted.current = markAccountDeleted;
-  // What a server asked to wait for, per account: it outlives the coordinator a token refresh rebuilds.
-  const holds = useRef(new Map<string, number>());
   const run = useRef(async () => {});
   const retryNow = useRef(async () => {});
   const changed = useCallback(() => setRevision((value) => value + 1), []);
@@ -96,10 +97,6 @@ export function SyncProvider({ children }: PropsWithChildren) {
           : null;
       },
       upload: createBoundUpload(connection.apiUrl, currentScope),
-      hold: {
-        get: () => holds.current.get(key) ?? 0,
-        set: (until) => holds.current.set(key, until),
-      },
       outcome: (result) => {
         if (!current()) return;
         setFailure({ owner: key, message: result.kind === "accepted" ? "" : result.message });
@@ -107,22 +104,54 @@ export function SyncProvider({ children }: PropsWithChildren) {
       },
     });
     // One timer, for the earliest moment a waiting record may be tried (or a failed pass tried again).
+    // A record that is already due when a pass ends (its delay ran out during a slower upload) is
+    // woken at once. If the same record is still due, at the same moment, after that wake, nothing
+    // could send it: it is "stuck", left alone (a save, reconnect, resume or new token wakes it
+    // again), and never hides another record's retry. Only that record is skipped; a different
+    // moment, or another record, is woken as usual. After a 401 nothing is sent until the token
+    // changes, so no timer is set at all.
+    const woken = new Map<string, number>();
+    const stuck = new Map<string, number>();
     let timer: { readonly handle: ReturnType<typeof setTimeout>; readonly at: number } | undefined;
     const wakeAt = (at: number) => {
-      if (!current() || (timer !== undefined && timer.at <= at)) return;
+      if (!current() || drain.signInRequired() || (timer !== undefined && timer.at <= at)) return;
       if (timer) clearTimeout(timer.handle);
       const handle = setTimeout(
         () => {
           timer = undefined;
           void queue.wake();
         },
-        Math.max(0, at - Date.now()),
+        Math.min(LONGEST_TIMER, Math.max(0, at - Date.now())),
       );
       timer = { handle, at };
     };
-    const waitForNext = async () => {
-      const next = await earliestRetry(database, key, Date.now());
-      if (next !== null) wakeAt(next);
+    const waitForNext = async (afterFailure: boolean) => {
+      if (drain.signInRequired()) return;
+      const pending = await pendingRetries(database, key);
+      if (pending.length === 0) {
+        woken.clear();
+        stuck.clear();
+        return;
+      }
+      const at = Date.now();
+      const moments = new Map(pending.map((row) => [row.id, row.at]));
+      for (const known of [woken, stuck]) {
+        for (const [id, moment] of known) if (moments.get(id) !== moment) known.delete(id);
+      }
+      // A pass that threw is tried again by `failed`, not at once, and proves nothing about a record.
+      if (!afterFailure) {
+        for (const [id, moment] of woken) stuck.set(id, moment);
+        woken.clear();
+      }
+      const waiting = pending.filter((row) => stuck.get(row.id) !== row.at);
+      const due = waiting.filter((row) => row.at <= at);
+      if (due.length === 0) {
+        const [next] = waiting;
+        if (next) wakeAt(next.at);
+      } else if (!afterFailure) {
+        for (const row of due) woken.set(row.id, row.at);
+        wakeAt(at);
+      }
     };
     const queue = createForegroundDrain({
       current,
@@ -134,11 +163,23 @@ export function SyncProvider({ children }: PropsWithChildren) {
       drain: async () => {
         if (!canSend()) return false;
         request = new AbortController();
+        let updated = false;
+        let failure: unknown;
         try {
-          return await drain(request.signal);
-        } finally {
-          await waitForNext();
+          updated = await drain(request.signal);
+        } catch (error) {
+          failure = error;
         }
+        try {
+          await waitForNext(failure !== undefined);
+        } catch (error) {
+          failure ??= error;
+        }
+        if (failure === undefined) return updated;
+        // The screens still read a change this pass stored before it failed.
+        throw updated && failure instanceof Error && !(failure instanceof FailedAfterChange)
+          ? new FailedAfterChange(failure)
+          : failure;
       },
     });
     run.current = queue.wake;

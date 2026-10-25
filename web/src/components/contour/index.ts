@@ -9,7 +9,6 @@ export { Avatar, type AvatarProps } from "./Avatar";
 export { Breadcrumbs, type BreadcrumbsProps, type Crumb } from "./Breadcrumbs";
 export {
 	Button,
-	buttonClasses,
 	ButtonLink,
 	type ButtonLinkProps,
 	type ButtonLook,
@@ -17,6 +16,7 @@ export {
 	type ButtonSize,
 	type ButtonVariant
 } from "./Button";
+export { buttonClasses } from "./buttonClasses";
 export { Checkbox, type CheckboxProps } from "./Checkbox";
 export { CONTROL_TRANSITION, controlFrame, MENU_SURFACE, OVERLAY_MOTION } from "./classes";
 export { cleanCode, codeCounter, type CodeKind } from "./code";
@@ -79,4 +79,5 @@ export {
 export { type Tone, TONE_BORDER, TONE_SOFT, TONE_TEXT } from "./tone";
 export { Tooltip, type TooltipProps, TooltipProvider } from "./Tooltip";
 export { type TypeBarRow, TypeBars, type TypeBarsProps } from "./TypeBars";
+export { useHydrated } from "./useHydrated";
 export { type RovingRowProps, type RovingRowsOptions, useRovingRows } from "./useRovingRows";

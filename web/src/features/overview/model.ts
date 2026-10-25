@@ -42,7 +42,14 @@ export type AttentionItem = {
 type AttentionSite = {
 	readonly code: string;
 	readonly name: string;
-	readonly package: { readonly package_version: number } | null;
+	readonly package: {
+		readonly package_version: number;
+		/** The form versions the map names: its play form, and its inventory form or none. */
+		readonly forms: {
+			readonly play: { readonly form_version: string };
+			readonly inventory: { readonly form_version: string } | null;
+		};
+	} | null;
 };
 
 type AttentionPackage = {
@@ -62,10 +69,47 @@ type AttentionForm = {
 	}[];
 };
 
+/** "Site A", "Site A and Site B", "A, B and C": names inside a sentence. */
+function names(items: readonly string[]): string {
+	if (items.length < 2) return items.join("");
+	return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
+/** How many sites an attention item names before it says "and 4 more". */
+const SITES_NAMED = 3;
+
+/**
+ * Where a published form has moved on without the sites. A map package names its forms exactly, so
+ * publishing a newer version of a form changes nothing for a site until a package that names it is
+ * uploaded. Null when no site's map names an older version than the newest published one; otherwise that
+ * version, the sites that name it, and each older version a site's map still names.
+ */
+function formBehind(form: AttentionForm, sites: readonly AttentionSite[]) {
+	let newest: AttentionForm["versions"][number] | null = null;
+	for (const version of form.versions)
+		if (version.state === "published" && (newest === null || version.version > newest.version)) newest = version;
+	if (newest === null) return null;
+	const versionOf = new Map(form.versions.map(version => [version.code, version.version] as const));
+	const named: AttentionSite[] = [];
+	const behind: { site: AttentionSite; version: number }[] = [];
+	for (const site of sites) {
+		if (site.package === null) continue;
+		const { play, inventory } = site.package.forms;
+		for (const code of new Set([play.form_version, inventory?.form_version])) {
+			const version = code === undefined ? undefined : versionOf.get(code);
+			if (version === undefined) continue;
+			if (version === newest.version) named.push(site);
+			else if (version < newest.version) behind.push({ site, version });
+		}
+	}
+	return behind.length === 0 ? null : { newest, named, behind };
+}
+
 /**
  * What stands between the project and a working field setup, most basic first: no site; a site without a
  * ready map package; a newest map package that was blocked (with its first blocked check); no published
- * form; a draft that observers cannot see yet.
+ * form; for each form, a published version that no map names yet while a map still names an older one,
+ * then its drafts, which observers cannot see yet.
  *
  * `packages` and `forms` are null when they could not be read; the item they would raise is then left
  * out and the page says the check did not run. `blocked` maps a package id to the detail of its first
@@ -134,7 +178,26 @@ export function attentionItems(input: {
 				detail: "Observers need a published form to record observations.",
 				...link("Open forms", `${base}/forms`)
 			});
-		for (const form of forms)
+		for (const form of forms) {
+			const lagging = formBehind(form, sites);
+			if (lagging) {
+				const { newest, named, behind } = lagging;
+				const only = new Set(behind.map(entry => entry.site.code)).size === 1 ? behind[0]!.site : null;
+				const where = behind.map(entry => `v${entry.version} at ${entry.site.name}`);
+				const shown =
+					where.length > SITES_NAMED
+						? [...where.slice(0, SITES_NAMED), `${where.length - SITES_NAMED} more`]
+						: where;
+				items.push({
+					id: `form-behind-${form.code}`,
+					tone: "waiting",
+					title: `${form.name} v${newest.version} is published, but ${named.length === 0 ? "no site's map names it" : "not every site's map names it"}.`,
+					detail: `Observers still get ${names(shown)}. A site changes forms only when you upload a map package that names v${newest.version}.`,
+					...(only
+						? link("Upload a map package", `${base}/sites/${only.code}/packages?step=upload`)
+						: link("Open sites", `${base}/sites`))
+				});
+			}
 			for (const version of form.versions)
 				if (version.state === "draft")
 					items.push({
@@ -144,6 +207,7 @@ export function attentionItems(input: {
 						detail: "Observers do not see it until it is published.",
 						...link("Open the draft", `${base}/forms/versions/${version.code}`)
 					});
+		}
 	}
 
 	return items;

@@ -1,6 +1,11 @@
 import { strToU8 } from "fflate";
 import { z } from "zod";
 import { identityKey, type PackageIdentity } from "../../domain/package-binding";
+import {
+  FORM_SCHEMA_VERSION,
+  isUnknownSchemaVersion,
+  UnknownSchemaVersionError,
+} from "../../forms/definition";
 import type { LocalDatabase } from "../../storage/observation-store";
 import { installPackage, readCatalog } from "../../storage/package-catalog";
 import { packageCamera } from "./package-camera";
@@ -54,6 +59,7 @@ export async function validateStored(stored: StoredPackage, sha256: PackageHash)
         version_id: binding.form_version_id,
         state: "published",
         form_code: "retained",
+        schema_version: FORM_SCHEMA_VERSION,
         definition,
       },
       binding,
@@ -88,7 +94,9 @@ export async function readInstalledPackage(
   if (!text || !metadata.success || (await sha256(strToU8(text))) !== metadata.data.contentSha256)
     return null;
   try {
-    const stored = storedPackageSchema.parse(JSON.parse(text));
+    const parsed = storedPackageSchema.safeParse(JSON.parse(text));
+    if (!parsed.success) throw new UnknownSchemaVersionError("unsupported cached package layout");
+    const stored = parsed.data;
     if (
       identityKey(packageIdentity(identity.issuer, stored)) !== identityKey(identity) ||
       stored.siteId !== identity.siteId ||
@@ -98,6 +106,7 @@ export async function readInstalledPackage(
     await validateStored(stored, sha256);
     return stored;
   } catch (error) {
+    if (isUnknownSchemaVersion(error)) throw error;
     if (error instanceof Error) return null;
     throw error;
   }

@@ -23,7 +23,7 @@ class InvitationOptions(Input):
         | None
     ) = None
     max_uses: Annotated[int, Field(strict=True, ge=1, le=10000)] = 1
-    expires_in_days: Annotated[int, Field(strict=True, ge=1, le=365)] = 7
+    expires_in_days: Annotated[int, Field(strict=True, ge=1, le=365)] = 14
 
     @field_validator("email")
     @classmethod

@@ -1,5 +1,6 @@
 import type { ApiClient } from "../../data/api/client";
 import type { PackageIdentity } from "../../domain/package-binding";
+import { isUnknownSchemaVersion } from "../../forms/definition";
 import { setAvailableCurrent } from "../../storage/available-current";
 import type { LocalDatabase } from "../../storage/observation-store";
 import { listCatalog, removePackage } from "../../storage/package-catalog";
@@ -16,11 +17,11 @@ import {
   readInstalledPackage,
 } from "./installation";
 import { type PackageSource, type PreparePart, preparePackage } from "./prepare";
-import type { HostedSite } from "./schemas";
+import type { HostedSite, StoredPackage } from "./schemas";
 
 export type InstalledVersion = {
   readonly identity: PackageIdentity;
-  readonly status: "verified" | "needs_redownload";
+  readonly status: "verified" | "needs_redownload" | "update_required";
   readonly installedAt: string | null;
   readonly bytes: number;
   readonly counts: VersionReferences;
@@ -76,19 +77,20 @@ export class PackageOperations {
     const entries = await listCatalog(r.database, r.owner);
     const versions: InstalledVersion[] = [];
     for (const entry of entries) {
-      const stored = await readInstalledPackage(
-        r.database,
-        r.owner,
-        entry.identity,
-        r.files,
-        r.hash,
-      );
+      let stored: StoredPackage | null = null;
+      let unsupported = false;
+      try {
+        stored = await readInstalledPackage(r.database, r.owner, entry.identity, r.files, r.hash);
+      } catch (error) {
+        if (!isUnknownSchemaVersion(error)) throw error;
+        unsupported = true;
+      }
       if (!r.current()) return [];
       if (stored) rememberVerifiedPackage(r.owner, stored, entry.identity);
       else forgetVerifiedPackage(r.owner, entry.identity.packageId);
       versions.push({
         identity: entry.identity,
-        status: stored ? "verified" : "needs_redownload",
+        status: stored ? "verified" : unsupported ? "update_required" : "needs_redownload",
         installedAt:
           stored?.savedAt ??
           (typeof entry.metadata["savedAt"] === "string" ? entry.metadata["savedAt"] : null),

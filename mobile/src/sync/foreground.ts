@@ -1,4 +1,17 @@
 /**
+ * A pass that stored a change and then failed. The screens still read the change, and the failure is
+ * reported as `original`; its message is kept so the error is shown unchanged.
+ */
+export class FailedAfterChange extends Error {
+  readonly original: Error;
+  constructor(original: Error) {
+    super(original.message, { cause: original });
+    this.name = "FailedAfterChange";
+    this.original = original;
+  }
+}
+
+/**
  * One foreground drain; wakeups arriving during a send get one follow-up pass. A drain says whether
  * it changed anything a screen shows, and `changed` is called only then.
  */
@@ -25,7 +38,10 @@ export function createForegroundDrain(options: {
         }
       } catch (error) {
         if (!(error instanceof Error)) throw error;
-        if (options.current()) options.failed(error);
+        if (options.current()) {
+          if (error instanceof FailedAfterChange) options.changed();
+          options.failed(error instanceof FailedAfterChange ? error.original : error);
+        }
       } finally {
         running = null;
       }

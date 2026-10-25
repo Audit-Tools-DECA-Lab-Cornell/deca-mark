@@ -8,6 +8,7 @@ import { controlFrame } from "@/components/contour/classes";
 import { Icon } from "@/components/contour/Icon";
 import { ModeStrip, type ModeStripIndex } from "@/components/contour/ModeStrip";
 import { Note } from "@/components/contour/Note";
+import { TextInput } from "@/components/contour/TextInput";
 import { SitePlan } from "@/components/map/SitePlan";
 import { cx } from "@/lib/cx";
 import {
@@ -17,8 +18,8 @@ import {
 	exportAnswers,
 	type FormDefinition,
 	isAnswered,
+	isObserverQuestion,
 	missingRequired,
-	pruneAnswers,
 	type ResolvedQuestion,
 	type ReviewProblem,
 	reviewProblems,
@@ -26,6 +27,10 @@ import {
 } from "@/lib/forms";
 import { MAP_PALETTES } from "@/lib/map-palette";
 import { type ProjectedSite, zoneBounds } from "@/lib/plan";
+
+import { previewAnswers, type PreviewCapture } from "./preview-answers";
+import { PreviewNumberInput } from "./PreviewNumberInput";
+import { PreviewTemporalInput } from "./PreviewTemporalInput";
 
 /**
  * The collector as an observer would see this form, driven by the engine the device runs:
@@ -41,7 +46,6 @@ export type PreviewDevice = "phone" | "tablet";
 
 type Screen = "place" | "asking" | "review" | "finished";
 
-const OBSERVER_QUESTION_ID = "observer_initials";
 /** The collector's auto-advance after a single choice: the `base` motion duration. */
 const AUTO_ADVANCE_MS = 160;
 
@@ -63,6 +67,8 @@ export type CollectorPreviewProps = {
 	mapVersion: string | null;
 	/** The question selected in the editor. The preview jumps to it when it is currently asked. */
 	focusQuestionId?: string | null;
+	observer?: { userId: string; code: string };
+	captureInstant?: string;
 };
 
 export function CollectorPreview({
@@ -75,9 +81,15 @@ export function CollectorPreview({
 	zoneName,
 	round,
 	mapVersion,
-	focusQuestionId = null
+	focusQuestionId = null,
+	observer,
+	captureInstant
 }: CollectorPreviewProps) {
-	const [answers, setAnswers] = useState<Answers>({});
+	const [capture, setCapture] = useState<PreviewCapture>(() => ({
+		instant: captureInstant ?? new Date().toISOString(),
+		observer
+	}));
+	const [answers, setAnswers] = useState<Answers>(() => previewAnswers(form, {}, capture));
 	const [index, setIndex] = useState(0);
 	const [screen, setScreen] = useState<Screen>("asking");
 	const [finishedAnswers, setFinishedAnswers] = useState<Answers>({});
@@ -102,12 +114,12 @@ export function CollectorPreview({
 	useEffect(() => {
 		if (formRef.current === form) return;
 		formRef.current = form;
-		const { answers: pruned } = pruneAnswers(form, answersRef.current);
+		const pruned = previewAnswers(form, answersRef.current, capture);
 		const next = visibleQuestions(form, pruned);
 		setAnswers(pruned);
 		setIndex(value => Math.min(value, Math.max(next.length - 1, 0)));
 		if (next.length === 0) setScreen("asking");
-	}, [form]);
+	}, [form, capture]);
 
 	// A question chosen in the editor: show it, when the answers so far ask it.
 	const focusRef = useRef<string | null>(null);
@@ -134,7 +146,7 @@ export function CollectorPreview({
 		const draft: Record<string, AnswerValue> = { ...answersRef.current };
 		if (value === undefined) delete draft[question.id];
 		else draft[question.id] = value;
-		const { answers: pruned } = pruneAnswers(form, draft);
+		const pruned = previewAnswers(form, draft, capture);
 		const list = visibleQuestions(form, pruned);
 		const found = list.findIndex(item => item.id === question.id);
 		const at = found === -1 ? Math.min(safeIndex, Math.max(list.length - 1, 0)) : found;
@@ -165,10 +177,7 @@ export function CollectorPreview({
 	}
 
 	function write(question: ResolvedQuestion, raw: string) {
-		const cleaned = question.kind === "number" ? raw.replace(/[^0-9]/g, "") : raw;
-		const value: AnswerValue | undefined =
-			cleaned.trim() === "" ? undefined : question.kind === "number" ? Number(cleaned) : cleaned;
-		commit(question, value);
+		commit(question, raw.trim() === "" ? undefined : raw);
 	}
 
 	function jumpTo(target: number) {
@@ -186,11 +195,14 @@ export function CollectorPreview({
 	}
 
 	function startNext() {
-		const observer = answersRef.current[OBSERVER_QUESTION_ID];
 		const carried: Record<string, AnswerValue> = {};
-		if (observer !== undefined && form.questions.some(question => question.id === OBSERVER_QUESTION_ID))
-			carried[OBSERVER_QUESTION_ID] = observer;
-		const { answers: pruned } = pruneAnswers(form, carried);
+		for (const question of form.questions.filter(question => isObserverQuestion(question, form.columnNaming))) {
+			const answer = answersRef.current[question.id];
+			if (answer !== undefined) carried[question.id] = answer;
+		}
+		const nextCapture = { instant: new Date().toISOString(), observer };
+		setCapture(nextCapture);
+		const pruned = previewAnswers(form, carried, nextCapture);
 		setAnswers(pruned);
 		setIndex(0);
 		setScreen("asking");
@@ -266,6 +278,8 @@ export function CollectorPreview({
 									onChoose={option => choose(current, option)}
 									onToggle={option => toggle(current, option)}
 									onWrite={value => write(current, value)}
+									onNumber={value => commit(current, value)}
+									onTemporal={value => commit(current, value)}
 									onBack={() =>
 										safeIndex === 0 ? setScreen("place") : setIndex(value => Math.max(0, value - 1))
 									}
@@ -398,6 +412,8 @@ function AskingPanel({
 	onChoose,
 	onToggle,
 	onWrite,
+	onNumber,
+	onTemporal,
 	onBack,
 	onNext
 }: {
@@ -410,6 +426,8 @@ function AskingPanel({
 	onChoose: (option: string) => void;
 	onToggle: (option: string) => void;
 	onWrite: (value: string) => void;
+	onNumber: (value: number | string | undefined) => void;
+	onTemporal: (value: string | undefined) => void;
 	onBack: () => void;
 	onNext: () => void;
 }) {
@@ -474,7 +492,7 @@ function AskingPanel({
 					</Note>
 				)}
 
-				{question.kind === "text" && (
+				{question.kind === "text" && (!question.valueSource || question.valueSource === "manual") && (
 					<div className="mt-4">
 						<textarea
 							aria-label={question.label}
@@ -494,15 +512,41 @@ function AskingPanel({
 				)}
 
 				{question.kind === "number" && (
-					<input
-						type="text"
-						inputMode="numeric"
-						aria-label={question.label}
-						value={text}
-						placeholder={question.placeholder}
-						onChange={event => onWrite(event.target.value)}
-						className={cx(controlFrame({}), "mt-4 h-12 px-3 type-body")}
+					<PreviewNumberInput
+						value={typeof value === "number" || typeof value === "string" ? value : undefined}
+						decimal={question.numberMode === "decimal"}
+						label={question.label}
+						onChange={onNumber}
 					/>
+				)}
+				{question.kind === "dateTime" &&
+					question.dateTime &&
+					(!question.valueSource || question.valueSource === "manual") && (
+						<PreviewTemporalInput
+							key={JSON.stringify(question.dateTime)}
+							config={question.dateTime}
+							value={typeof value === "string" ? value : undefined}
+							onChange={onTemporal}
+						/>
+					)}
+				{question.valueSource && question.valueSource !== "manual" && (
+					<div className="mt-4 flex flex-col gap-2">
+						<TextInput aria-label={question.label} readOnly value={answerSummary(question, value)} />
+						<p className="type-small text-ink-2">
+							Recorded automatically:{" "}
+							{question.valueSource === "accountId"
+								? "signed-in observer account ID"
+								: question.valueSource === "observerCode"
+									? "observer initials/code at placement"
+									: "observation capture time"}
+							.
+						</p>
+						{!isAnswered(value) && (
+							<p className="type-small text-attention">
+								The automatic value is unavailable in this preview.
+							</p>
+						)}
+					</div>
 				)}
 
 				{question.protocolFlag && (

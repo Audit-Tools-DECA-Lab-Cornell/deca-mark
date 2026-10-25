@@ -22,8 +22,10 @@ import {
   acknowledge,
   activateHeldObservations,
   deferObservation,
-  earliestRetry,
   pendingObservations,
+  pendingRetries,
+  raiseRetryHold,
+  readRetryHold,
   releaseBackoff,
   retryAttention,
 } from "./sync-store";
@@ -55,6 +57,31 @@ const record = shellObservationSchema.parse({
 });
 
 describe("Account-scoped local work", () => {
+  it("a full page counts only sendable records, so unsendable ones in front never shorten it", async () => {
+    const { sqlite, db } = await memoryDatabase();
+    try {
+      await installPackage(db, owner, entry);
+      const ids = Array.from(
+        { length: 60 },
+        (_, index) => `60000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+      );
+      for (const id of ids) await saveObservation(db, { ...boundRecord, id }, owner);
+      // The first five lose their frozen body: they come first and can never be sent.
+      for (const id of ids.slice(0, 5))
+        sqlite
+          .prepare(
+            "UPDATE observations SET payload = json_remove(payload, '$.uploadBody') WHERE id = ?",
+          )
+          .run(id);
+      const page = await pendingObservations(db, owner, Date.now());
+      expect(page.map((item) => item.record.id)).toEqual(ids.slice(5, 30));
+      sqlite.exec("UPDATE observations SET sync_state = 'synced' WHERE rowid > 5");
+      expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("queues bound records while refusing incomplete receipts at the persistence boundary", async () => {
     const { sqlite, db } = await memoryDatabase();
     try {
@@ -193,15 +220,40 @@ describe("Retry timing in the store (MOB-39)", () => {
     }
   });
 
-  it("names the earliest retry still in the future, for this account's pending records", async () => {
+  it("names every pending record with the time it may be tried, earliest first, even when that has passed", async () => {
     const { db, sqlite } = await waiting();
     try {
-      expect(await earliestRetry(db, owner, NOW)).toBe(NOW + 2000);
-      expect(await earliestRetry(db, owner, NOW + 2000)).toBe(NOW + 300000);
-      expect(await earliestRetry(db, owner, NOW + 300000)).toBeNull();
-      expect(await earliestRetry(db, "nobody", NOW)).toBeNull();
+      expect(await pendingRetries(db, owner)).toEqual([
+        { id: second(2), at: 0 },
+        { id: second(4), at: NOW + 2000 },
+        { id: second(1), at: NOW + 300000 },
+      ]);
+      sqlite.exec(
+        `UPDATE observations SET next_attempt_at = ${NOW + 1000} WHERE id = '${second(2)}'`,
+      );
+      expect((await pendingRetries(db, owner)).map((row) => row.at)).toEqual([
+        NOW + 1000,
+        NOW + 2000,
+        NOW + 300000,
+      ]);
+      expect(await pendingRetries(db, "nobody")).toEqual([]);
       sqlite.exec(`UPDATE observations SET sync_state = 'synced' WHERE owner_scope = '${owner}'`);
-      expect(await earliestRetry(db, owner, NOW)).toBeNull();
+      expect(await pendingRetries(db, owner)).toEqual([]);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("keeps a server's deadline per account, never moves it closer, and honours the fence", async () => {
+    const { db, sqlite } = await waiting();
+    try {
+      expect(await readRetryHold(db, owner)).toBe(0);
+      await raiseRetryHold(db, owner, NOW + 120_000);
+      await raiseRetryHold(db, owner, NOW + 5000);
+      expect(await readRetryHold(db, owner)).toBe(NOW + 120_000);
+      await raiseRetryHold(db, owner, NOW + 240_000, () => false);
+      expect(await readRetryHold(db, owner)).toBe(NOW + 120_000);
+      expect(await readRetryHold(db, otherOwner)).toBe(0);
     } finally {
       sqlite.close();
     }
