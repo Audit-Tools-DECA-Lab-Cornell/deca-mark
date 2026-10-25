@@ -1,10 +1,5 @@
 # Form schema 2: production rollout
 
-Prepared October 25, 2026. This is an operator procedure, not hosted application
-evidence or permission to change production. The local transition succeeded with
-two forms; fingerprints of all 18 application tables were unchanged apart from
-`form_versions.schema_version`. See [local evidence](../../docs/plan/app-feedback-2026-10-23/evidence/P42-local-migration/verification.json).
-
 The migration changes the existing version values/default to 2. It adds no table
 or column and preserves definitions, question IDs, revisions, answers and package
 bindings. Do not use the local Docker helper against production.
@@ -12,9 +7,8 @@ bindings. Do not use the local Docker helper against production.
 ## 1. Clear release gates
 
 Use one approved, committed release containing the migration, backend, web, mobile
-and generated contracts. Record its Git revision and migration SHA256. Implementation is committed in
-[PR42](https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/pull/42); real web/API browser and physical-device
-acceptance remain pending: **this release is not ready for production yet**.
+and generated contracts. Record its Git revision and migration SHA256. Complete
+real web/API browser and physical-device acceptance before production application.
 
 Rehearse the procedure below on an authorized staging copy first. Verify the
 production project identity and compare `supabase_migrations.schema_migrations`

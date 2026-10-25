@@ -284,9 +284,3 @@ All other populated tables require a fresh explicit report. The local helper nev
 historical provenance. Executing the persistent local apply requires explicit approval;
 the helper cannot target hosted databases. The [production rollout procedure](hosted/form-schema2-rollout.md)
 uses a fresh production snapshot and the same reviewed transaction builder.
-
-October 25, 2026: the user approved the existing local Supabase application. Both
-stored forms moved to schema 2; default 2, the enabled immutability trigger and exact
-history source were verified. Fingerprints of all 18 application tables were unchanged
-apart from the form version metadata. See [local evidence](../docs/plan/app-feedback-2026-10-23/evidence/P42-local-migration/verification.json).
-This does not establish production or browser acceptance.

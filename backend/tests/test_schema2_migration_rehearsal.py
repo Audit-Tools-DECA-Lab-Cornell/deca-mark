@@ -54,7 +54,7 @@ def schema2_container() -> Iterator[str]:
         "/tmp",  # noqa: S108 - socket inside a new, isolated test container
         "--entrypoint",
         "sh",
-        "public.ecr.aws/supabase/postgres:17.6.1.171",
+        os.getenv("DECAMARK_REHEARSAL_IMAGE", "public.ecr.aws/supabase/postgres:17.6.1.171"),
         "-c",
         "initdb -D /tmp/schema2-db -A trust >/tmp/init.log && "
         "exec postgres -D /tmp/schema2-db -c shared_preload_libraries=pg_cron "

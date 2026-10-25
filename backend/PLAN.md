@@ -437,10 +437,3 @@ Read first: `domain/zone_publication.py`; `services/zone_archives.py`; the packa
 Do: an endpoint that publishes map vN+1 for a site from vN's retained archive and zones with a newer published form version (and the same inventory form unless one is named), using the existing request id and `expected_current_package_id` rules; return the per-zone change summary from imports instead of discarding it.
 Done when: API tests: rebind publishes vN+1 naming the new form; records bound to vN keep vN; a stale `expected_current_package_id` is refused; an import that changes a web-edited boundary reports it.
 Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm db:test`, `pnpm contracts:generate`.
-
-### BE-27: Feedback form schema2 validation and historical preservation
-Status: doing · Phase 4 · Size L · Depends: CON-07 · Blocks: QA-10
-Read first: CON-08; reviewed feedback contract decisions; bound upload and export planners.
-Do: validate finite decimal/date/time and automatic attribution, serve stored schema metadata and write current version explicitly, preserve exact replay and historical export meaning. This takes the necessary schema-version wiring from BE-24; templates stay with BE-25.
-Done when: TS/Python shared cases, wrong-account/missing automatic values, exact retries and historical observer/export regressions pass; generated OpenAPI/client declarations match.
-Verify: focused Python suites, lint/type checks and serialized contract generation.
