@@ -329,7 +329,7 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
       await settle();
       expect(sent).toHaveLength(2);
       expect(state(sqlite).state).toBe("synced");
-      expect(sync.revision).toBeGreaterThan(0);
+      expect(sync.revision).toBeGreaterThan(before);
     } finally {
       sqlite.close();
     }
@@ -565,8 +565,9 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
       await pass(1000);
       expect(sent.map((item) => item.id)).toEqual([boundRecord.id, second, boundRecord.id]);
       expect(
-        sqlite.prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'").get()
-          ?.["count"],
+        sqlite
+          .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+          .get()?.["count"],
       ).toBe(2);
     } finally {
       sqlite.close();
@@ -631,8 +632,9 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
       await start();
       expect(sync.error).toBe("storage is busy");
       expect(
-        sqlite.prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'").get()
-          ?.["count"],
+        sqlite
+          .prepare("SELECT COUNT(*) AS count FROM observations WHERE sync_state = 'synced'")
+          .get()?.["count"],
       ).toBe(1);
       expect(sync.revision).toBeGreaterThan(0);
     } finally {

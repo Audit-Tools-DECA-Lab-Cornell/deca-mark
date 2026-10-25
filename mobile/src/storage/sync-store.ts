@@ -207,10 +207,7 @@ export function readRetryHold(db: LocalDatabase, scope: string): Promise<number>
     const [row] = z
       .array(z.object({ value: z.string() }))
       .parse(
-        await db.getAllAsync(
-          "SELECT value FROM local_metadata WHERE key = ?",
-          retryHoldKey(scope),
-        ),
+        await db.getAllAsync("SELECT value FROM local_metadata WHERE key = ?", retryHoldKey(scope)),
       );
     const until = Number(row?.value);
     return Number.isFinite(until) ? until : 0;

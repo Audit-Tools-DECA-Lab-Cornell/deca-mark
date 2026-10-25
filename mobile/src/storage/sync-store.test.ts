@@ -24,6 +24,8 @@ import {
   deferObservation,
   earliestRetry,
   pendingObservations,
+  raiseRetryHold,
+  readRetryHold,
   releaseBackoff,
   retryAttention,
 } from "./sync-store";
@@ -197,7 +199,9 @@ describe("Retry timing in the store (MOB-39)", () => {
     const { db, sqlite } = await waiting();
     try {
       expect(await earliestRetry(db, owner)).toBe(0);
-      sqlite.exec(`UPDATE observations SET next_attempt_at = ${NOW + 1000} WHERE id = '${second(2)}'`);
+      sqlite.exec(
+        `UPDATE observations SET next_attempt_at = ${NOW + 1000} WHERE id = '${second(2)}'`,
+      );
       expect(await earliestRetry(db, owner)).toBe(NOW + 1000);
       expect(await earliestRetry(db, "nobody")).toBeNull();
       sqlite.exec(`UPDATE observations SET sync_state = 'synced' WHERE owner_scope = '${owner}'`);
