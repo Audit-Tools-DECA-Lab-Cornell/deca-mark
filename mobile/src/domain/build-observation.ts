@@ -1,5 +1,5 @@
 import { type Answers, type FormDefinition, isObserverQuestion } from "../forms/definition";
-import { pruneAnswers, reviewProblems } from "../forms/engine";
+import { pruneAnswers, reviewProblems, visibleQuestions } from "../forms/engine";
 import {
   boundShellObservationSchema,
   type Coordinate,
@@ -72,12 +72,11 @@ export function buildObservation(input: ObservationInput): BuildResult {
       : { ok: false, message: parsed.error.issues[0]?.message ?? "Check the answers." };
   }
   {
-    const observerQuestion = input.form.questions.find((question) =>
+    const active = visibleQuestions(input.form, answers);
+    const observerQuestion = active.find((question) =>
       isObserverQuestion(question, input.form.columnNaming),
     );
-    const automaticObserver = input.form.questions.some(
-      (question) => question.valueSource === "observerCode",
-    );
+    const automaticObserver = active.some((question) => question.valueSource === "observerCode");
     const observer = automaticObserver
       ? (input.observer ?? "")
       : observerQuestion

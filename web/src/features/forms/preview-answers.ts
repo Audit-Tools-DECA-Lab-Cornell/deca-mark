@@ -19,5 +19,5 @@ export function previewAnswers(form: FormDefinition, answers: Answers, capture: 
 		if (value) next[question.id] = value;
 		else delete next[question.id];
 	}
-	return pruneAnswers(form, next).answers;
+	return pruneAnswers(form, next, { retainDraftNumberText: true }).answers;
 }

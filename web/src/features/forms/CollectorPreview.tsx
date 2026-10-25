@@ -426,7 +426,7 @@ function AskingPanel({
 	onChoose: (option: string) => void;
 	onToggle: (option: string) => void;
 	onWrite: (value: string) => void;
-	onNumber: (value: number | undefined) => void;
+	onNumber: (value: number | string | undefined) => void;
 	onTemporal: (value: string | undefined) => void;
 	onBack: () => void;
 	onNext: () => void;
@@ -513,7 +513,7 @@ function AskingPanel({
 
 				{question.kind === "number" && (
 					<PreviewNumberInput
-						value={typeof value === "number" ? value : undefined}
+						value={typeof value === "number" || typeof value === "string" ? value : undefined}
 						decimal={question.numberMode === "decimal"}
 						label={question.label}
 						onChange={onNumber}

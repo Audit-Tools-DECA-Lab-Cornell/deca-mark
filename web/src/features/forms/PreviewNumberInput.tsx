@@ -12,14 +12,14 @@ export function PreviewNumberInput({
 	label,
 	onChange
 }: {
-	value: number | undefined;
+	value: number | string | undefined;
 	decimal: boolean;
 	label: string;
-	onChange: (value: number | undefined) => void;
+	onChange: (value: number | string | undefined) => void;
 }) {
 	const [buffer, setBuffer] = useState({ text: value?.toString() ?? "", value });
 	if (!Object.is(value, buffer.value)) setBuffer({ text: value?.toString() ?? "", value });
-	const invalid = Number.isNaN(value);
+	const invalid = typeof value === "string" || Number.isNaN(value);
 	return (
 		<div className="mt-4 flex flex-col gap-2">
 			<TextInput
@@ -28,7 +28,8 @@ export function PreviewNumberInput({
 				value={buffer.text}
 				invalid={invalid}
 				onChange={event => {
-					const next = numericInput(event.target.value, decimal);
+					const parsed = numericInput(event.target.value, decimal);
+					const next = Number.isNaN(parsed) ? event.target.value : parsed;
 					setBuffer({ text: event.target.value, value: next });
 					onChange(next);
 				}}

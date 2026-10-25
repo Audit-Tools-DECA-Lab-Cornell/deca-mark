@@ -147,3 +147,101 @@ describe("Manual observer role", () => {
     expect(carriedQuestionIds(unrelated)).toEqual([]);
   });
 });
+
+describe("Active observer fields", () => {
+  const observerQuestion = janetTestV1.questions.find(
+    (question) => question.id === "observer_initials",
+  );
+  const form = parseFormDefinition({
+    ...janetTestV1,
+    version: "conditional-observer-v2",
+    columnNaming: "questionId",
+    questions: [
+      {
+        id: "mode",
+        code: "mode",
+        exportColumn: "mode",
+        act: "Record",
+        label: "Mode",
+        kind: "one",
+        source: "Test",
+        options: [
+          { code: "manual", label: "Manual" },
+          { code: "automatic", label: "Automatic" },
+          { code: "none", label: "Account" },
+        ],
+      },
+      {
+        ...observerQuestion,
+        id: "manual",
+        exportColumn: "manual",
+        role: "observer",
+        dependsOn: { kind: "notEquals", question: "mode", option: "none" },
+      },
+      {
+        ...observerQuestion,
+        id: "automatic",
+        exportColumn: "automatic",
+        valueSource: "observerCode",
+        dependsOn: { kind: "equals", question: "mode", option: "automatic" },
+      },
+    ],
+  });
+  const input = {
+    id: "83f254b5-8a7b-4b71-9591-a7ff880f4ad7",
+    form,
+    coordinates: [-76.485, 42.448],
+    placement: { source: "hand", gpsAccuracyMetres: null },
+    context,
+    siteId: "sample-garden",
+    createdAt: "2026-10-25T10:00:00.000Z",
+  } satisfies Omit<ObservationInput, "answers" | "observer">;
+
+  it.each([
+    undefined,
+    "",
+    "AC",
+  ])("uses the active manual answer when account initials are %s", (observer) => {
+    const result = buildObservation({
+      ...input,
+      observer,
+      answers: { mode: "manual", manual: "JL", automatic: "STALE" },
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      record: { observer: "JL", answers: { manual: "JL" } },
+    });
+    expect(result).not.toHaveProperty("record.answers.automatic");
+  });
+
+  it("keeps automatic attribution when its field is active", () => {
+    expect(
+      buildObservation({
+        ...input,
+        observer: "AC",
+        answers: { mode: "automatic", manual: "JL", automatic: "AC" },
+      }),
+    ).toMatchObject({ ok: true, record: { observer: "AC" } });
+  });
+
+  it("uses account initials when both observer fields are hidden", () => {
+    const result = buildObservation({
+      ...input,
+      observer: "AC",
+      answers: { mode: "none", manual: "STALE", automatic: "STALE" },
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      record: { observer: "AC", answers: { mode: "none" } },
+    });
+    expect(result).not.toHaveProperty("record.answers.manual");
+    expect(result).not.toHaveProperty("record.answers.automatic");
+  });
+
+  it("still requires account initials when there is no active observer field", () => {
+    expect(buildObservation({ ...input, answers: { mode: "none" }, observer: "" })).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("Add your initials"),
+    });
+  });
+});
