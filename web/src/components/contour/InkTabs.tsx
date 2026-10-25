@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
@@ -52,6 +52,25 @@ function currentTab(items: InkTab[], pathname: string): number {
 		}
 	});
 	return found;
+}
+
+/**
+ * Inside a tab's Link: a still bar under the label while that tab's page is on its way. The page on screen
+ * stays put until the new one is ready, so a slow response (the hosted API) would otherwise show nothing.
+ * It appears only after the skeleton delay, so a fast switch shows nothing, and it never moves (DESIGN §7).
+ */
+function TabPending() {
+	const { pending } = useLinkStatus();
+	if (!pending) return null;
+	return (
+		<>
+			<span
+				aria-hidden="true"
+				className="pointer-events-none absolute inset-x-5 bottom-1.5 h-0.5 animate-fade-in rounded-pill bg-current [animation-delay:var(--ct-duration-skeleton-delay)]"
+			/>
+			<span className="sr-only">, loading…</span>
+		</>
+	);
 }
 
 function attentionPhrase(count: number): string {
@@ -177,6 +196,7 @@ export function InkTabs({ items, label, current, className }: InkTabsProps) {
 												: "text-on-nav hover:bg-on-nav/12 active:bg-on-nav/20"
 										)}>
 										{item.label}
+										<TabPending />
 										{badge > 0 && (
 											<>
 												<span

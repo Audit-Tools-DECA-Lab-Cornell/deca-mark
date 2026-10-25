@@ -654,6 +654,7 @@ Generated from the `states` block of `contracts/contour.json`. Every state is a 
 
 - **Every data area has every state:** loading, empty after filtering, empty with nothing made yet, error, offline and no access. On the web, the state replaces the island's content and keeps the page header and navigation in place. On the phone, the screen title stays.
 - **Loading** uses still placeholders: `well` pill bars laid out like the content they replace. Nothing shimmers or pulses. Placeholders appear only after `skeletonDelay` (400 ms), so a fast load shows nothing in between. A line under them names what is loading, and the region is `aria-busy`.
+  - On the web the one loading boundary lives in the layout that holds the tabs (never a `loading.tsx`, which remounts on every tab switch), so a warm tab switch is not held by React's 300 ms fallback throttle. While a tab's page is on its way, that tab shows a still bar under its label, after the same 400 ms delay.
 - **Anatomy of a `ScreenState`:**
   - a round icon disc, about 48 px;
   - a title in `island` 19/600;
