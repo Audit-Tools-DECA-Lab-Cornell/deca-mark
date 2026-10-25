@@ -29,6 +29,7 @@ import {
 	type DataView,
 	daysBackwards,
 	hasFilters,
+	observationHref,
 	type Option,
 	prepareRecords,
 	searchLoaded,
@@ -71,6 +72,9 @@ export type DataScreenProps = {
 	/** Why there is no plan, when a plan was expected. */
 	planNote: string | null;
 };
+
+/** The width (Tailwind's `xl`) from which the plan sits beside the table. Below it the plan comes first. */
+const SIDE_BY_SIDE = "(min-width: 80rem)";
 
 /** How long typing in the search waits before the address follows it. */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -122,8 +126,9 @@ export function DataScreen({
 	const selected = shown.find(record => record.id === selectedId) ?? null;
 
 	const base = projectHref(org, project, "data");
-	const hrefOf = (record: DataRecord) => `${base}/${record.id}`;
 	const current = { ...view, q };
+	// A record opens with the view it was opened from, so the breadcrumb there returns to these filters.
+	const hrefOf = (record: DataRecord) => observationHref(base, record.id, current);
 	const canClear = hasFilters(current);
 	const noneYet = total === 0 && !hasFilters(view) && items.length === 0;
 
@@ -209,8 +214,10 @@ export function DataScreen({
 
 	function selectMarker(id: string) {
 		setSelectedId(id);
-		const nodes = listRef.current?.querySelectorAll<HTMLElement>(`[data-record-id="${id}"]`) ?? [];
-		[...nodes].find(node => node.offsetParent !== null)?.scrollIntoView({ block: "nearest" });
+		// From xl the plan sits beside the table and its row scrolls into view there. Below xl the plan is on
+		// top, and the page stays on it: the plan's own line says which observation it is.
+		if (!window.matchMedia(SIDE_BY_SIDE).matches) return;
+		listRef.current?.querySelector<HTMLElement>(`[data-record-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
 	}
 
 	/* ── What the list says about itself ───────────────────────────────── */
@@ -372,8 +379,15 @@ export function DataScreen({
 			)}
 			{planNote && <Note tone="neutral">{planNote}</Note>}
 
+			{/* Below xl the plan comes first, at a compact height, so a marker and its facts stay in view above
+			    the rows; from xl it sits beside the table and stays in view as the table scrolls. The table is
+			    first in the page's order, so the keyboard reaches it before the plan's markers. */}
 			<div
-				className={plan ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] xl:items-start" : undefined}>
+				className={
+					plan
+						? "flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] xl:items-start"
+						: undefined
+				}>
 				<Island
 					flush
 					divided={false}
@@ -397,6 +411,7 @@ export function DataScreen({
 						selected={selected}
 						onSelectObservation={selectMarker}
 						hrefOf={hrefOf}
+						className="max-xl:order-first xl:sticky xl:top-4 xl:-m-1 xl:max-h-[calc(100dvh-2rem)] xl:overflow-y-auto xl:p-1"
 					/>
 				)}
 			</div>

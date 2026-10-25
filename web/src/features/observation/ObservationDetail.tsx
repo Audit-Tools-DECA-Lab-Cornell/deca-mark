@@ -36,6 +36,8 @@ export type ObservationDetailProps = {
 	planProblem: "failed" | "unreadable" | null;
 	/** The site's current map version, when it could be read. */
 	currentVersion: number | null;
+	/** Where the "Data" breadcrumb goes: Data with the filters this record was opened from. Plain Data without. */
+	backHref?: string;
 };
 
 function firstRound(observation: Observation): string {
@@ -69,7 +71,8 @@ export function ObservationDetail({
 	definition,
 	plan,
 	planProblem,
-	currentVersion
+	currentVersion,
+	backHref
 }: ObservationDetailProps) {
 	const clock = makeClock(timeZone);
 	const label = shortLabel(observation.observation_id);
@@ -96,7 +99,7 @@ export function ObservationDetail({
 	return (
 		<div className="flex flex-col gap-6">
 			<PageHeader
-				breadcrumbs={[{ label: "Data", href: dataHref }, { label }]}
+				breadcrumbs={[{ label: "Data", href: backHref ?? dataHref }, { label }]}
 				title={label}
 				titleMono
 				titleAddon={

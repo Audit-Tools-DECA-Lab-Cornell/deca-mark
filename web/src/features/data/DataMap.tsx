@@ -13,6 +13,7 @@ import { useRovingRows } from "@/components/contour/useRovingRows";
 import { MapFrame } from "@/components/map/MapFrame";
 import type { PlanObservation, ZonePlanStyle } from "@/components/map/SitePlan";
 import { useWorkspace } from "@/features/shell/WorkspaceProvider";
+import { cx } from "@/lib/cx";
 import { formatCount, plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
 
@@ -62,6 +63,8 @@ export type DataMapProps = {
 	selected: DataRecord | null;
 	onSelectObservation: (id: string) => void;
 	hrefOf: (record: DataRecord) => string;
+	/** Where the plan sits on the page; the screen decides, since the plan comes before the table below xl. */
+	className?: string;
 };
 
 type Drawn = { packageId: string; version: number; site: ProjectedSite };
@@ -102,7 +105,8 @@ export function DataMap({
 	filterZones,
 	selected,
 	onSelectObservation,
-	hrefOf
+	hrefOf,
+	className
 }: DataMapProps) {
 	const { account } = useWorkspace();
 	const [drawn, setDrawn] = useState<Drawn>({ packageId: plan.packageId, version: plan.version, site: plan.site });
@@ -236,7 +240,7 @@ export function DataMap({
 	});
 
 	return (
-		<div className="flex min-w-0 flex-col gap-6">
+		<div className={cx("flex min-w-0 flex-col gap-6", className)}>
 			<Island
 				title="Site plan"
 				meta={`${plan.siteName} · Map v${drawn.version}${drawn.packageId === plan.currentPackageId ? " (current)" : ""}`}>
@@ -294,6 +298,8 @@ export function DataMap({
 						subtitle={`${plural(onDrawn, "point")} on v${drawn.version}${
 							markers.length > onDrawn ? ` · ${plural(markers.length - onDrawn, "dimmed point")}` : ""
 						}`}
+						// Compact where the plan sits above the rows; its own proportions from xl.
+						className="max-xl:h-64 md:max-xl:h-80"
 						observations={markers}
 						zones={zoneStyles}
 						selectedId={selected && markers.some(marker => marker.id === selected.id) ? selected.id : null}

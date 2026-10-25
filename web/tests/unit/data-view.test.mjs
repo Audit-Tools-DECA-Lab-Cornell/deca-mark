@@ -6,10 +6,13 @@ import { observation, uuid } from "./fixtures.mjs";
 import { load } from "./support.mjs";
 
 const {
+	backToDataHref,
 	clip,
 	countLine,
 	daysBackwards,
 	hasFilters,
+	observationHref,
+	observerInitials,
 	paramsReader,
 	parseView,
 	planSiteCode,
@@ -315,4 +318,42 @@ test("one map version is offered only where every chosen zone is", () => {
 	assert.deepEqual(zoneVersions(groups, [A, OLD], current), [1]);
 	assert.deepEqual(zoneVersions(groups, [B], current), [3]);
 	assert.deepEqual(zoneVersions(groups, [], current), []);
+});
+
+test("observer initials match whatever the case they are typed or addressed in (audit C28)", () => {
+	// Observer codes are recorded in capitals; "ob" must find OB instead of "No observations match this view".
+	assert.equal(parseView(params("observer=ob")).observer, "OB");
+	assert.equal(parseView(params("observer=%20oB%20")).observer, "OB");
+	assert.equal(observerInitials("  ob "), "OB");
+	assert.equal(observerInitials("a1b2"), "A1B2");
+	assert.equal(observerInitials("   "), null);
+	// The filter sent to the API is the capitalised one, so the list, the counts and the export agree.
+	const lowered = parseView(params("site=fall-creek&observer=ob"));
+	assert.equal(viewFilters(lowered, { siteId: uuid(1), packageId: null }, ny).observer, "OB");
+	assert.equal(viewQuery(lowered), "?site=fall-creek&observer=OB");
+});
+
+test("a record opened from Data carries the view, and the breadcrumb returns to it (audit C29)", () => {
+	const base = "/o/deca/p/play-study/data";
+	const id = "7a0b01c2-0000-4000-8000-000000000000";
+	const full = view({
+		site: "fall-creek",
+		zones: [A],
+		version: 2,
+		round: "reliability",
+		observer: "OB",
+		from: "2026-10-01",
+		to: "2026-10-07",
+		q: "swings"
+	});
+	const href = observationHref(base, id, full);
+	assert.equal(href, `${base}/${id}${viewQuery(full)}`);
+	// The detail page reads the same address and links back to exactly this view.
+	const back = backToDataHref(base, params(href.slice(href.indexOf("?") + 1)));
+	assert.equal(back, `${base}${viewQuery(full)}`);
+	assert.deepEqual(parseView(params(back.slice(back.indexOf("?") + 1))), full);
+	// An unfiltered view, and an address with nothing usable in it, go back to the plain page.
+	assert.equal(observationHref(base, id, view()), `${base}/${id}`);
+	assert.equal(backToDataHref(base, params("")), base);
+	assert.equal(backToDataHref(base, params("round=weekly&zone=nope")), base);
 });

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/contour/Table";
 import { useRovingRows } from "@/components/contour/useRovingRows";
-import { cx } from "@/lib/cx";
 
 import type { DataRecord } from "./view";
 
@@ -30,9 +29,39 @@ function Answer({ record }: { record: DataRecord }) {
 	);
 }
 
+/*
+ * Below md each row is a card: the label on a line of its own, then the facts in a wrapping line (day and time,
+ * zone, site, map, round, observer), then the answer. The same cells serve both layouts, and the card is
+ * styled once from the table, not per cell, so 500 rows stay light. `!` beats the rule, padding and height the
+ * table's own cells set with variants of their own. The column labels stay for assistive technology
+ * (`sr-only` on the header), and the explicit roles keep it a table where it is no longer laid out as one.
+ */
+const AS_CARDS = [
+	"max-md:block",
+	"max-md:[&_thead]:sr-only",
+	"max-md:[&_tbody]:block",
+	"max-md:[&_tbody>tr]:flex max-md:[&_tbody>tr]:flex-wrap max-md:[&_tbody>tr]:items-baseline",
+	"max-md:[&_tbody>tr]:gap-x-4 max-md:[&_tbody>tr]:gap-y-1 max-md:[&_tbody>tr]:px-island-pad max-md:[&_tbody>tr]:py-4",
+	"max-md:[&_tbody>tr]:border-t max-md:[&_tbody>tr]:border-rule",
+	"max-md:[&_tbody_td]:block max-md:[&_tbody_td]:h-auto! max-md:[&_tbody_td]:border-0! max-md:[&_tbody_td]:p-0!",
+	"max-md:[&_tbody_td]:shadow-none!",
+	// Observation: a line of its own. Then day and time, zone, site, map, round, observer, and the answer.
+	"max-md:[&_td:nth-child(1)]:order-1 max-md:[&_td:nth-child(1)]:basis-full",
+	"max-md:[&_td:nth-child(2)]:order-2 max-md:[&_td:nth-child(2)_span]:inline",
+	"max-md:[&_td:nth-child(4)]:order-3 max-md:[&_td:nth-child(4)_span]:inline",
+	"max-md:[&_td:nth-child(3)]:order-4",
+	"max-md:[&_td:nth-child(5)]:order-5 max-md:[&_td:nth-child(5)]:before:type-small",
+	"max-md:[&_td:nth-child(5)]:before:text-ink-2 max-md:[&_td:nth-child(5)]:before:content-['Map_']",
+	"max-md:[&_td:nth-child(6)]:order-6",
+	"max-md:[&_td:nth-child(7)]:order-7 max-md:[&_td:nth-child(7)]:before:type-small",
+	"max-md:[&_td:nth-child(7)]:before:text-ink-2 max-md:[&_td:nth-child(7)]:before:content-['Observer_']",
+	"max-md:[&_td:nth-child(8)]:order-8 max-md:[&_td:nth-child(8)]:basis-full max-md:[&_td:nth-child(8)]:min-w-0!"
+].join(" ");
+
 /**
- * The observations in view: a table from 768 px up, with one tab stop and arrow-key movement, and a list of
- * row cards below it. Each row carries a real link on its OBS label; a click elsewhere in the row selects it.
+ * The observations in view: one table. From 768 px up it has columns, one tab stop and arrow-key movement;
+ * below it each row restyles as a card, the same elements and no second list. Each row carries a real
+ * link on its OBS label; a click elsewhere in the row selects it.
  */
 export function DataTable({ records, hrefOf, selectedId, onSelect }: DataTableProps) {
 	const router = useRouter();
@@ -51,84 +80,54 @@ export function DataTable({ records, hrefOf, selectedId, onSelect }: DataTablePr
 	});
 
 	return (
-		<>
-			<div className="hidden md:block">
-				<Table caption="Observations in this view. Arrow keys move the selection and Enter opens the observation.">
-					<THead>
-						<tr>
-							<Th>Observation</Th>
-							<Th>Observed</Th>
-							<Th>Site</Th>
-							<Th>Zone</Th>
-							<Th>Map</Th>
-							<Th>Round</Th>
-							<Th>Observer</Th>
-							<Th>Answer</Th>
-						</tr>
-					</THead>
-					<TBody {...bodyProps}>
-						{records.map((record, index) => (
-							<Tr key={record.id} {...rowProps(index)} data-record-id={record.id}>
-								<Td mono nowrap>
-									<Link prefetch={false} href={hrefOf(record)} tabIndex={-1} className={LINK}>
-										{record.label}
-									</Link>
-								</Td>
-								<Td nowrap>
-									<span className="block">{record.day}</span>
-									<span className="block type-small text-ink-2">{record.time}</span>
-								</Td>
-								<Td>{record.siteName}</Td>
-								<Td>
-									<span className="block">{record.zoneLabel}</span>
-									<span className="block type-mono-data text-ink-2">
-										{record.wholeZone ? `Whole zone · ${record.zoneCode}` : record.zoneCode}
-									</span>
-								</Td>
-								<Td mono nowrap>
-									{record.mapVersion}
-								</Td>
-								<Td>{record.roundName}</Td>
-								<Td mono>{record.observer}</Td>
-								<Td className="min-w-48">
-									<Answer record={record} />
-								</Td>
-							</Tr>
-						))}
-					</TBody>
-				</Table>
-			</div>
-
-			{/* Below 768 px each row is a card: the label and round on top, then where and when, then the answer. */}
-			<ul className="divide-y divide-rule border-t border-rule md:hidden" aria-label="Observations in this view">
-				{records.map(record => (
-					<li
-						key={record.id}
-						data-record-id={record.id}
-						className={cx("flex flex-col gap-1 px-island-pad py-4", record.id === selectedId && "bg-well")}>
-						<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-							<Link prefetch={false} href={hrefOf(record)} className={cx("type-mono-data", LINK)}>
+		<Table
+			role="table"
+			className={AS_CARDS}
+			caption="Observations in this view. Arrow keys move the selection and Enter opens the observation.">
+			<THead role="rowgroup">
+				<tr role="row">
+					<Th role="columnheader">Observation</Th>
+					<Th role="columnheader">Observed</Th>
+					<Th role="columnheader">Site</Th>
+					<Th role="columnheader">Zone</Th>
+					<Th role="columnheader">Map</Th>
+					<Th role="columnheader">Round</Th>
+					<Th role="columnheader">Observer</Th>
+					<Th role="columnheader">Answer</Th>
+				</tr>
+			</THead>
+			<TBody role="rowgroup" {...bodyProps}>
+				{records.map((record, index) => (
+					<Tr key={record.id} role="row" {...rowProps(index)} data-record-id={record.id}>
+						<Td role="cell" mono nowrap>
+							<Link prefetch={false} href={hrefOf(record)} tabIndex={-1} className={LINK}>
 								{record.label}
 							</Link>
-							<span className="type-small text-ink-2">{record.roundName}</span>
-						</div>
-						<p className="type-body">
-							{record.when} · {record.zoneLabel}
-							{record.wholeZone ? " · whole zone" : ""}
-						</p>
-						<p className="type-small text-ink-2">
-							{record.siteName} · Map {record.mapVersion} · Observer{" "}
-							<span className="type-mono-data">{record.observer}</span>
-						</p>
-						{record.summary && (
-							<p className="type-body wrap-anywhere">
-								<span className="type-small text-ink-2">{record.summary.label}: </span>
-								{record.summary.value}
-							</p>
-						)}
-					</li>
+						</Td>
+						<Td role="cell" nowrap>
+							<span className="block">{record.day}</span>{" "}
+							<span className="block type-small text-ink-2">{record.time}</span>
+						</Td>
+						<Td role="cell">{record.siteName}</Td>
+						<Td role="cell">
+							<span className="block">{record.zoneLabel}</span>{" "}
+							<span className="block type-mono-data text-ink-2">
+								{record.wholeZone ? `Whole zone · ${record.zoneCode}` : record.zoneCode}
+							</span>
+						</Td>
+						<Td role="cell" mono nowrap>
+							{record.mapVersion}
+						</Td>
+						<Td role="cell">{record.roundName}</Td>
+						<Td role="cell" mono>
+							{record.observer}
+						</Td>
+						<Td role="cell" className="min-w-48">
+							<Answer record={record} />
+						</Td>
+					</Tr>
 				))}
-			</ul>
-		</>
+			</TBody>
+		</Table>
 	);
 }

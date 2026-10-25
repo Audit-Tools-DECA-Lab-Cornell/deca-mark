@@ -9,7 +9,7 @@ import { TextInput } from "@/components/contour/TextInput";
 import { ROUND_TYPES, roundName } from "@/lib/labels";
 import type { RoundType } from "@/lib/workspace/types";
 
-import type { DataView, Option } from "./view";
+import { type DataView, observerInitials, type Option } from "./view";
 
 export type FilterBarProps = {
 	view: DataView;
@@ -56,7 +56,7 @@ export function FilterBar({
 		setObserver(view.observer ?? "");
 	}
 	const commitObserver = () => {
-		const next = observer.trim() || null;
+		const next = observerInitials(observer);
 		if (next !== view.observer) onViewChange({ observer: next });
 	};
 
@@ -136,14 +136,14 @@ export function FilterBar({
 						))}
 					</Select>
 				</Field>
-				<Field label="Observer" htmlFor="data-observer" hint="Initials, exactly as recorded.">
+				<Field label="Observer" htmlFor="data-observer" hint="Initials. Capitals are added as you type.">
 					<TextInput
 						id="data-observer"
 						value={observer}
 						maxLength={12}
 						autoComplete="off"
 						spellCheck={false}
-						onChange={event => setObserver(event.target.value)}
+						onChange={event => setObserver(event.target.value.toUpperCase())}
 						onBlur={commitObserver}
 						onKeyDown={event => {
 							if (event.key === "Enter") {

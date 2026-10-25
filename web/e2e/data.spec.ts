@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 
 import { authFile } from "./support/auth";
 import { manifest, projectPath, SEED } from "./support/manifest";
@@ -31,6 +31,102 @@ test("opening a record shows its answers labelled from its form", async ({ page 
 	await expect(main).toContainText(SEED.question.answerPrefix);
 	await expect(main).toContainText(SEED.form.published);
 	await expect(main).toContainText(/OBS-[0-9A-F]{6}/);
+});
+
+test("lowercase observer initials match, and the Data breadcrumb returns to the filtered view", async ({ page }) => {
+	const { baseline } = manifest();
+	await page.goto(projectPath("data"));
+	const main = page.getByRole("main");
+	await chooseFilter(main, /round/i, /reliability/i);
+	await expect(page).toHaveURL(/round=reliability/);
+
+	// "ob" is typed in lowercase; observer codes are recorded in capitals.
+	const observer = main.getByLabel("Observer", { exact: true });
+	await observer.fill("ob");
+	await observer.press("Enter");
+	await expect(page).toHaveURL(/observer=OB/);
+	await expect(observer).toHaveValue("OB");
+	await expect(await recordRows(main)).toHaveCount(baseline.reliability);
+
+	await (await recordRows(main)).first().getByRole("link").first().click();
+	await expect(page).toHaveURL(/\/data\/[0-9a-f-]{36}\?/);
+	await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Data", exact: true }).click();
+	await expect(page).toHaveURL(url => url.pathname === projectPath("data"));
+	await expect(page).toHaveURL(/round=reliability/);
+	await expect(page).toHaveURL(/observer=OB/);
+	await expect(main.getByLabel("Observer", { exact: true })).toHaveValue("OB");
+	await expect(await recordRows(main)).toHaveCount(baseline.reliability);
+});
+
+test("Data is one list that is a table from 768 px and cards below, with the plan first below 1280 px", async ({
+	page
+}, info) => {
+	test.skip(info.project.name !== "desktop-1440", "Sets its own widths; run once.");
+	const { baseline } = manifest();
+	const main = page.getByRole("main");
+	const plan = main.getByRole("region", { name: "Site plan" });
+	const top = async (target: Locator) => (await target.boundingBox())!.y;
+
+	await test.step("each record is in the page once at every width", async () => {
+		for (const [width, height] of [
+			[390, 844],
+			[768, 1024],
+			[1024, 768],
+			[1440, 900]
+		] as const) {
+			await page.setViewportSize({ width, height });
+			await page.goto(projectPath("data"));
+			await expect(await recordRows(main)).toHaveCount(baseline.total);
+			expect(await main.locator("[data-record-id]").count(), `${width} px`).toBe(baseline.total);
+			expect(await main.getByRole("list", { name: "Observations in this view" }).count()).toBe(0);
+		}
+	});
+
+	await test.step("phone: a row is a card with its link, round and answer", async () => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto(projectPath("data"));
+		const card = (await recordRows(main)).first();
+		expect(await card.evaluate(row => getComputedStyle(row).display)).toBe("flex");
+		await expect(card.getByRole("link", { name: /^OBS-[0-9A-F]{6}$/ })).toBeVisible();
+		await expect(card).toContainText("Observer OB");
+		await expect(card).toContainText(SEED.question.answerPrefix);
+		// The cards have no sideways scroll.
+		expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+	});
+
+	await test.step("tablet: the plan is above the first row, and a marker does not scroll away from it", async () => {
+		for (const [width, height] of [
+			[1024, 768],
+			[768, 1024]
+		] as const) {
+			await page.setViewportSize({ width, height });
+			await page.goto(projectPath("data"));
+			const rows = await recordRows(main);
+			await expect(plan).toBeVisible();
+			expect(await top(plan), `${width}x${height}: the plan starts above the rows`).toBeLessThan(
+				await top(rows.first())
+			);
+			const before = await page.evaluate(() => window.scrollY);
+			await plan
+				.getByRole("button", { name: /^OBS-[0-9A-F]{6},/ })
+				.first()
+				.click();
+			await expect(plan).toContainText("Open observation");
+			expect(await page.evaluate(() => window.scrollY), `${width}x${height}: the page stays on the plan`).toBe(
+				before
+			);
+		}
+	});
+
+	await test.step("desktop: the plan sits beside the table and stays in view", async () => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto(projectPath("data"));
+		const rows = await recordRows(main);
+		const table = (await rows.first().boundingBox())!;
+		const drawn = (await plan.boundingBox())!;
+		expect(drawn.x).toBeGreaterThan(table.x + table.width - 1);
+		expect(await plan.locator("xpath=..").evaluate(element => getComputedStyle(element).position)).toBe("sticky");
+	});
 });
 
 test("exporting downloads every matching record as DECA Mark writes it, with its codebook", async ({ page }) => {

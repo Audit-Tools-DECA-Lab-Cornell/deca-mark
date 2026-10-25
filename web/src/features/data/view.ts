@@ -17,7 +17,7 @@ import type { RoundType } from "../../lib/workspace/types";
  * | `zone=<id>` (repeatable)       | `zone_id` (any of them; needs a site)   |
  * | `version=<n>` with zones       | `package_id` (one map version)          |
  * | `round=<type>`                 | `round_type`                            |
- * | `observer=<initials>` (exact)  | `observer`                              |
+ * | `observer=<initials>`          | `observer` (capitals, as recorded)      |
  * | `from=` and `to=` (days)       | `observed_from`, `observed_before`      |
  *
  * `q` searches the observations that have loaded, and says so.
@@ -34,7 +34,7 @@ export type DataView = {
 	/** One map version of those zones; null matches every version. Only with zones. */
 	readonly version: number | null;
 	readonly round: RoundType | null;
-	/** Observer initials, exactly as recorded. */
+	/** Observer initials in capitals, as recorded. */
 	readonly observer: string | null;
 	/** First day, "2026-10-07", in the project's timezone. */
 	readonly from: string | null;
@@ -77,6 +77,14 @@ const text = (value: string | null | undefined): string | null => {
 };
 
 /**
+ * Observer initials as the filter takes them. Observer codes are recorded in capitals, and the API compares
+ * them exactly, so "ob" would show no observations at all: initials are capitalised on the way in.
+ */
+export function observerInitials(value: string | null | undefined): string | null {
+	return text(value)?.toUpperCase() ?? null;
+}
+
+/**
  * The view in the address. Anything malformed is left out: a zone that is not an identity, zones without a
  * site, a version without zones, a round type DECA Mark does not know, an observer too long to be one.
  */
@@ -88,7 +96,7 @@ export function parseView(params: ParamsReader): DataView {
 	const rawVersion = Number(params.get("version"));
 	const version = zones.length > 0 && Number.isInteger(rawVersion) && rawVersion >= 1 ? rawVersion : null;
 	const round = params.get("round");
-	const observer = text(params.get("observer"));
+	const observer = observerInitials(params.get("observer"));
 	return {
 		site,
 		zones,
@@ -114,6 +122,19 @@ export function viewQuery(view: Partial<DataView>): string {
 	if (view.q?.trim()) params.set("q", view.q.trim());
 	const query = params.toString();
 	return query ? `?${query}` : "";
+}
+
+/**
+ * The address of one observation opened from Data. It carries the view it was opened from, so the "Data"
+ * breadcrumb on the observation returns to the same filters (Back already does).
+ */
+export function observationHref(base: string, id: string, view: Partial<DataView>): string {
+	return `${base}/${id}${viewQuery(view)}`;
+}
+
+/** Where the "Data" breadcrumb on an observation goes: the Data page with the view in this address. */
+export function backToDataHref(base: string, params: ParamsReader): string {
+	return `${base}${viewQuery(parseView(params))}`;
 }
 
 /** Whether any filter narrows the observations (the search included). */
