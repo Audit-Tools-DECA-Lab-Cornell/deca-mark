@@ -98,12 +98,13 @@ def test_automatic_identity_uses_owner_and_immutable_envelope() -> None:
 
 def test_historical_schema1_does_not_activate_formerly_ignored_properties() -> None:
     # Given a schema1 instrument carrying properties that its parser ignored.
-    raw = canonical([question("value", "value") | {"valueSource": "accountId"}])
+    raw = canonical([question("value", "value") | {"valueSource": "accountId", "role": "observer"}])
     raw["columnNaming"] = "questionId"
     # When historical interpretation reads it, then identity requirements remain inactive.
     definition = historical_definition(raw, 1)
     assert isinstance(definition, StoredCanonicalDefinition)
     assert definition.questions[0].value_source is None
+    assert definition.questions[0].role is None
     assert definition.column_naming is None
 
 
@@ -156,3 +157,10 @@ def test_time_zone_matches_case_insensitive_iana_identifiers(zone: str) -> None:
     # When parsing, then semantic identity is accepted without rewriting authored spelling.
     assert definition.questions[0].date_time is not None
     assert definition.questions[0].date_time.time_zone == zone
+
+
+def test_duplicate_observer_roles_are_refused() -> None:
+    first = question("first", "first") | {"role": "observer"}
+    second = question("second", "second") | {"role": "observer"}
+    with pytest.raises(ValidationError, match="Only one question"):
+        FormDefinition.model_validate(canonical([first, second]))

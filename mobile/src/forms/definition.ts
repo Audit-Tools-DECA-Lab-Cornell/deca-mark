@@ -86,6 +86,7 @@ export const questionSchema = z.object({
   label: z.string().min(1),
   hint: z.string().min(1).optional(),
   kind: z.enum(["one", "many", "text", "number", "dateTime"]),
+  role: z.literal("observer").optional(),
   numberMode: z.enum(["integer", "decimal"]).optional(),
   valueSource: z.enum(["manual", "accountId", "observerCode", "captureTime"]).optional(),
   dateTime: z
@@ -121,6 +122,19 @@ export const questionSchema = z.object({
   optionsPending: z.string().min(1).optional(),
 });
 export type Question = Readonly<z.infer<typeof questionSchema>>;
+
+/** Observer identity is independent of the answer's dataset column. */
+export function isObserverQuestion(
+  question: Pick<Question, "kind" | "role" | "exportColumn" | "valueSource">,
+  columnNaming: FormDefinition["columnNaming"],
+): boolean {
+  return (
+    question.kind === "text" &&
+    (question.valueSource === undefined || question.valueSource === "manual") &&
+    (question.role === "observer" ||
+      (columnNaming !== "questionId" && question.exportColumn === "observer"))
+  );
+}
 
 export const protocolNoteSchema = z.object({
   id: z.string().min(1),
@@ -224,6 +238,9 @@ export function validateFormDefinition(form: FormDefinition): readonly string[] 
     byId.set(question.id, question);
   }
 
+  if (form.questions.filter((question) => question.role === "observer").length > 1)
+    problems.push("Only one question can have the observer role.");
+
   const columns = new Map<string, string>();
   const allowed = new Set(form.knownExportCollisions);
   for (const question of form.questions) {
@@ -245,6 +262,8 @@ export function validateFormDefinition(form: FormDefinition): readonly string[] 
         ))
     )
       problems.push(`"${question.id}" requires question-ID export columns.`);
+    if (question.role === "observer" && question.kind !== "text")
+      problems.push(`"${question.id}" requires text for the observer role.`);
     if (question.numberMode !== undefined && question.kind !== "number")
       problems.push(`"${question.id}" has numberMode but is not a number question.`);
     if (

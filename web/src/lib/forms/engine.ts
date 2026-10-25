@@ -68,8 +68,15 @@ export function visibleQuestions(
   return visible;
 }
 
-function retainValue(question: ResolvedQuestion, value: AnswerValue): AnswerValue | null {
-  if (question.kind === "number") return typeof value === "number" ? value : null;
+function retainValue(
+  question: ResolvedQuestion,
+  value: AnswerValue,
+  retainDraftNumberText: boolean,
+): AnswerValue | null {
+  if (question.kind === "number") {
+    if (typeof value === "number") return value;
+    return retainDraftNumberText && typeof value === "string" && value.trim() !== "" ? value : null;
+  }
   if (question.kind === "text" || question.kind === "dateTime")
     return typeof value === "string" && value.trim() !== "" ? value : null;
   const codes = new Set(question.options.map((option) => option.code));
@@ -85,12 +92,21 @@ export type Pruned = {
   readonly dropped: readonly ResolvedQuestion[];
 };
 
+export type PruneOptions = {
+  /** Drafts only: retain numeric text during every pruning pass to preserve its dependents. */
+  readonly retainDraftNumberText?: boolean;
+};
+
 /**
  * Removes answers to questions that are no longer asked, and answers whose option no longer
  * exists after a parent changed. Repeats until stable, because dropping one answer can hide
  * the question that held the next. Data integrity: hidden answers are never saved silently.
  */
-export function pruneAnswers(form: FormDefinition, answers: Answers): Pruned {
+export function pruneAnswers(
+  form: FormDefinition,
+  answers: Answers,
+  options: PruneOptions = {},
+): Pruned {
   const dropped: ResolvedQuestion[] = [];
   let current: Answers = answers;
   for (;;) {
@@ -101,7 +117,9 @@ export function pruneAnswers(form: FormDefinition, answers: Answers): Pruned {
     let changed = false;
     for (const [id, value] of Object.entries(current)) {
       const question = visible.get(id);
-      const kept = question ? retainValue(question, value) : null;
+      const kept = question
+        ? retainValue(question, value, options.retainDraftNumberText === true)
+        : null;
       if (kept === null) {
         changed = true;
         const authored = form.questions.find((candidate) => candidate.id === id);

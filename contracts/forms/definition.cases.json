@@ -405,6 +405,64 @@
         }
       },
       "valid": false
+    },
+    {
+      "id": "observer-role-is-independent-of-column",
+      "patch": {
+        "kind": "text",
+        "role": "observer",
+        "exportColumn": "recorded_by"
+      },
+      "valid": true
+    },
+    {
+      "id": "observer-role-manual-source",
+      "patch": {
+        "kind": "text",
+        "role": "observer",
+        "valueSource": "manual"
+      },
+      "valid": true
+    },
+    {
+      "id": "observer-role-survives-automatic-source-selection",
+      "patch": {
+        "kind": "text",
+        "role": "observer",
+        "valueSource": "observerCode"
+      },
+      "valid": true
+    },
+    {
+      "id": "observer-role-requires-text",
+      "patch": {
+        "role": "observer"
+      },
+      "valid": false
+    },
+    {
+      "id": "observer-role-rejects-null",
+      "patch": {
+        "kind": "text",
+        "role": null
+      },
+      "valid": false
+    },
+    {
+      "id": "observer-role-rejects-unknown-role",
+      "patch": {
+        "kind": "text",
+        "role": "other"
+      },
+      "valid": false
+    },
+    {
+      "id": "observer-role-rejects-boolean",
+      "patch": {
+        "kind": "text",
+        "role": true
+      },
+      "valid": false
     }
   ]
 }

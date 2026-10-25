@@ -1,4 +1,4 @@
-import type { Answers, FormDefinition } from "../forms/definition";
+import { type Answers, type FormDefinition, isObserverQuestion } from "../forms/definition";
 import { pruneAnswers, reviewProblems } from "../forms/engine";
 import {
   boundShellObservationSchema,
@@ -72,8 +72,8 @@ export function buildObservation(input: ObservationInput): BuildResult {
       : { ok: false, message: parsed.error.issues[0]?.message ?? "Check the answers." };
   }
   {
-    const observerQuestion = input.form.questions.find(
-      (question) => question.exportColumn === "observer" && question.kind === "text",
+    const observerQuestion = input.form.questions.find((question) =>
+      isObserverQuestion(question, input.form.columnNaming),
     );
     const automaticObserver = input.form.questions.some(
       (question) => question.valueSource === "observerCode",

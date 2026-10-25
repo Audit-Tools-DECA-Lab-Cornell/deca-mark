@@ -87,7 +87,7 @@ test("renamed base questions retain restrictions and ambiguous codes are not fal
 	assert.equal(removedQuestions({ questions: [{ id: "new", code: "same" }] }, ambiguous).length, 2);
 });
 
-test("rule and dynamic-parent choices include fallback and dependent options", async () => {
+test("condition choices include fallback and dependent options", async () => {
 	const { availableOptions } = await load("features/forms/available-options.ts");
 	const question = {
 		options: [{ code: "fallback", label: "Fallback" }],

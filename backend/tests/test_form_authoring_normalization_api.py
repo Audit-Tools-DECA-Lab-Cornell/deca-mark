@@ -1,10 +1,12 @@
 """Current draft write normalization through the real API on an isolated rehearsal DB."""
 
 import json
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import JsonValue, TypeAdapter
 
 from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.form_schemas import FormVersionDetail
@@ -100,3 +102,44 @@ def test_create_and_revision_checked_update_normalize_at_write_boundary(
     stale = api_client.put(url, headers={"If-Match": draft.etag}, json={"definition": source})
     assert stale.status_code == 412, stale.text
     assert FormVersionDetail.model_validate_json(api_client.get(url).content) == current
+
+
+@pytest.mark.parametrize("name", ["janet-test-v1", "janet-inventory-v1"])
+def test_created_and_copied_templates_preserve_observer_role(
+    api_client: TestClient, tenant: Tenant, name: str
+) -> None:
+    path = Path(__file__).resolve().parents[2] / "contracts/forms" / f"{name}.json"
+    definition = TypeAdapter(dict[str, JsonValue]).validate_json(path.read_bytes())
+    base = f"/v1/projects/{tenant.project}"
+    created = api_client.post(
+        base + "/forms",
+        json={"code": "observer-study", "name": "Observer study", "definition": definition},
+    )
+    assert created.status_code == 201, created.text
+    detail = FormVersionDetail.model_validate_json(created.content)
+    observer = next(
+        item
+        for item in FormDefinition.model_validate(detail.definition).questions
+        if item.id == "observer_initials"
+    )
+    assert observer.role == "observer"
+    assert observer.export_column == "observer_initials"
+    published = api_client.post(
+        base + f"/form-versions/{detail.code}/publish", headers={"If-Match": detail.etag}
+    )
+    assert published.status_code == 200, published.text
+    copied = api_client.post(base + "/forms/observer-study/versions", json={})
+    assert copied.status_code == 201, copied.text
+    copy = FormVersionDetail.model_validate_json(copied.content)
+    copied_observer = next(
+        item
+        for item in FormDefinition.model_validate(copy.definition).questions
+        if item.id == "observer_initials"
+    )
+    assert copied_observer == observer
+    assert (
+        FormVersionDetail.model_validate_json(
+            api_client.get(base + f"/form-versions/{copy.code}").content
+        )
+        == copy
+    )

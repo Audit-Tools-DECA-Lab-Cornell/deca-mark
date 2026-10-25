@@ -19,7 +19,7 @@ from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
 from fieldmaps_api.domain.form_definition import FORM_SCHEMA_VERSION
 from fieldmaps_api.domain.forms import FormDefinition
 
-NEW_PROPERTIES: Final = frozenset({"numberMode", "valueSource", "dateTime", "columnNaming"})
+NEW_PROPERTIES: Final = frozenset({"numberMode", "valueSource", "dateTime", "columnNaming", "role"})
 
 
 class PreflightRow(BaseModel):

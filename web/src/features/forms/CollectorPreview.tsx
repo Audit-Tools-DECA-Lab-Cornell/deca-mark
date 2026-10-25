@@ -18,6 +18,7 @@ import {
 	exportAnswers,
 	type FormDefinition,
 	isAnswered,
+	isObserverQuestion,
 	missingRequired,
 	type ResolvedQuestion,
 	type ReviewProblem,
@@ -45,7 +46,6 @@ export type PreviewDevice = "phone" | "tablet";
 
 type Screen = "place" | "asking" | "review" | "finished";
 
-const OBSERVER_QUESTION_ID = "observer_initials";
 /** The collector's auto-advance after a single choice: the `base` motion duration. */
 const AUTO_ADVANCE_MS = 160;
 
@@ -195,10 +195,11 @@ export function CollectorPreview({
 	}
 
 	function startNext() {
-		const carriedObserver = answersRef.current[OBSERVER_QUESTION_ID];
 		const carried: Record<string, AnswerValue> = {};
-		if (carriedObserver !== undefined && form.questions.some(question => question.id === OBSERVER_QUESTION_ID))
-			carried[OBSERVER_QUESTION_ID] = carriedObserver;
+		for (const question of form.questions.filter(question => isObserverQuestion(question, form.columnNaming))) {
+			const answer = answersRef.current[question.id];
+			if (answer !== undefined) carried[question.id] = answer;
+		}
 		const nextCapture = { instant: new Date().toISOString(), observer };
 		setCapture(nextCapture);
 		const pruned = previewAnswers(form, carried, nextCapture);

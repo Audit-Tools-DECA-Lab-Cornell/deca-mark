@@ -79,6 +79,8 @@ The input schema accepts omitted defaults and unknown properties. Parsing fills 
 
 Question IDs and option codes identify answers; labels may change without changing those identifiers. Export columns are only for analysis. Preserve unresolved protocol notes, empty export names and pending option lists. Do not infer new research fields or choices from test fixtures. `janet-test-v1` remains a draft and is not enabled for upload by this work. Published versions require a new version for changes.
 
+A text question may declare `role: "observer"` independently of its dataset column. Manual observer answers supply the record observer code and carry into the next observation; legacy forms retain their original `observer` column lookup. Draft normalization preserves this role before assigning Question ID columns. Renaming a Question ID preserves the role.
+
 Canonical number questions reject `min > max`, including optional questions. Whole numbers are the default and retain safe-integer values/bounds. `numberMode: "decimal"` accepts any finite JSON number and finite bounds without rounding or a fractional-place limit. Equal bounds, negative values, zero and omitted one-sided bounds are valid. This is a local constraint check, not a conditional-form satisfiability solver.
 
 Question IDs use the nested `answers` namespace. Names such as `round_type`, `site_id` and `placement` are allowed independently of envelope metadata. Duplicate IDs, reference checks and export-column checks still apply. Exports allocate separate answer columns when a column name conflicts with record metadata.

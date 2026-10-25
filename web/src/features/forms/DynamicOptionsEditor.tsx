@@ -8,7 +8,6 @@ import { Note } from "@/components/contour/Note";
 import { Select } from "@/components/contour/Select";
 import { TextInput } from "@/components/contour/TextInput";
 
-import { availableOptions } from "./available-options";
 import { optionListProblem, OptionsEditor } from "./OptionsEditor";
 import type { QuestionPatch } from "./QuestionSettings";
 import type { RawQuestion } from "./raw";
@@ -28,14 +27,14 @@ export function DynamicOptionsEditor({
 }) {
 	const id = useId();
 	const dynamic = question.dynamicFrom;
-	const parents = earlier.filter(candidate => candidate.kind === "one" && availableOptions(candidate).length > 0);
+	const parents = earlier.filter(candidate => candidate.kind === "one" && (candidate.options?.length ?? 0) > 0);
 	const parent = earlier.find(candidate => candidate.id === dynamic?.question);
-	const parentOptions = availableOptions(parent);
+	const parentOptions = parent?.options ?? [];
 	function chooseParent(parentId: string) {
 		const selected = parents.find(candidate => candidate.id === parentId);
 		if (!selected) return;
 		const sets = { ...dynamic?.sets };
-		for (const option of availableOptions(selected)) {
+		for (const option of selected.options ?? []) {
 			sets[option.code] ??= {
 				code: `${question.code}_${option.code}`,
 				exportColumn: "",
@@ -93,6 +92,12 @@ export function DynamicOptionsEditor({
 							</Select>
 						)}
 					</Field>
+					{parent && parentOptions.length === 0 && (
+						<Note tone="waiting" icon="flag">
+							This saved controlling question has no fixed answer options. Choose a single-choice question
+							with fixed answers.
+						</Note>
+					)}
 					{Object.entries(dynamic.sets).map(([code, set]) => {
 						const answer = parentOptions.find(option => option.code === code);
 						return (

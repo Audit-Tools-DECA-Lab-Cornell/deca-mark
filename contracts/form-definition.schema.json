@@ -118,6 +118,10 @@
               "dateTime"
             ]
           },
+          "role": {
+            "type": "string",
+            "const": "observer"
+          },
           "numberMode": {
             "type": "string",
             "enum": [

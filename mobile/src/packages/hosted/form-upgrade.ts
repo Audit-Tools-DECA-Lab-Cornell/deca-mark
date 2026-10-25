@@ -18,7 +18,7 @@ export function cachedForm(
     return parseServedDefinition(schemaVersion, definition);
   if (schemaVersion !== undefined && schemaVersion !== 1)
     throw new UnknownSchemaVersionError(schemaVersion);
-  const extensions = new Set(["numberMode", "valueSource", "dateTime", "columnNaming"]);
+  const extensions = new Set(["numberMode", "valueSource", "dateTime", "columnNaming", "role"]);
   const hasExtension = (value: unknown): boolean => {
     if (Array.isArray(value)) return value.some(hasExtension);
     if (typeof value !== "object" || value === null) return false;

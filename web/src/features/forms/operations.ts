@@ -1,4 +1,4 @@
-import type { Condition } from "@/lib/forms";
+import { type Condition, isObserverQuestion } from "@/lib/forms";
 
 import type { RawDefinition, RawQuestion } from "./raw";
 
@@ -45,6 +45,7 @@ export function questionIdColumns(raw: RawDefinition): RawDefinition {
 		columnNaming: "questionId",
 		questions: raw.questions.map(question => ({
 			...question,
+			...(isObserverQuestion(question, raw.columnNaming) ? { role: "observer" as const } : {}),
 			exportColumn: question.id,
 			...(question.dynamicFrom
 				? {

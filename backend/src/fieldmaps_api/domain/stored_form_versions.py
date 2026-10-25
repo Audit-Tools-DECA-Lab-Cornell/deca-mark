@@ -8,7 +8,7 @@ from fieldmaps_api.domain.forms import StoredFormDefinition
 from fieldmaps_api.form_schema_version import require_current_schema
 
 ADAPTER: Final[TypeAdapter[StoredFormDefinition]] = TypeAdapter(StoredFormDefinition)
-NEW_QUESTION_PROPERTIES: Final = frozenset({"numberMode", "valueSource", "dateTime"})
+NEW_QUESTION_PROPERTIES: Final = frozenset({"numberMode", "valueSource", "dateTime", "role"})
 
 
 def historical_definition(raw: JsonValue, schema_version: int) -> StoredFormDefinition:

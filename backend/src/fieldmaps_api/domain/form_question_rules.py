@@ -5,6 +5,8 @@ from fieldmaps_api.domain.form_definition import MAX_SAFE_INTEGER, CanonicalDefi
 
 def extended_question_problems(question: Question, form: CanonicalDefinition) -> list[str]:
     problems: list[str] = []
+    if question.role == "observer" and question.kind != "text":
+        problems.append(f'"{question.id}" requires text for the observer role.')
     if question.number_mode is not None and question.kind != "number":
         problems.append(f'"{question.id}" carries numberMode on a non-number question.')
     if question.number_mode != "decimal":

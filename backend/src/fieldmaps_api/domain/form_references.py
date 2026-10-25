@@ -93,6 +93,8 @@ def definition_problems(form: CanonicalDefinition) -> list[str]:
 
 def structural_problems(form: CanonicalDefinition) -> list[str]:
     problems: list[str] = []
+    if sum(question.role == "observer" for question in form.questions) > 1:
+        problems.append("Only one question can have the observer role.")
     by_id: dict[str, Question] = {}
     for question in form.questions:
         if question.id in by_id:

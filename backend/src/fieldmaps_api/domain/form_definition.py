@@ -89,6 +89,7 @@ class Question(ContractModel):
     label: NonEmpty
     hint: NonEmpty | None = None
     kind: Literal["one", "many", "text", "number", "dateTime"]
+    role: Literal["observer"] | None = None
     number_mode: Literal["integer", "decimal"] | None = None
     value_source: Literal["manual", "accountId", "observerCode", "captureTime"] | None = None
     date_time: DateTimeConfig | None = None

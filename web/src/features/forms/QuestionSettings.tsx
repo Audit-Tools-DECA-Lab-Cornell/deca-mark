@@ -24,7 +24,12 @@ export const MIN_CHOICE_OPTIONS = 2;
 const KINDS = ["one", "many", "text", "number", "dateTime"] as const;
 
 export function formatPatch(question: RawQuestion, kind: QuestionKind, timeZone = "UTC"): QuestionPatch {
-	const reset = { numberMode: undefined, valueSource: undefined, dateTime: undefined };
+	const reset = {
+		numberMode: undefined,
+		valueSource: undefined,
+		dateTime: undefined,
+		role: kind === "text" ? question.role : undefined
+	};
 	if (kind === "one" || kind === "many") {
 		const options = question.options?.length ? question.options : [...STARTER_OPTIONS];
 		return {

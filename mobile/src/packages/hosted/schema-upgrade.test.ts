@@ -34,4 +34,18 @@ describe("Retained package schema transition", () => {
       }),
     ).rejects.toThrow();
   });
+  it("does not activate a previously ignored observer role during a legacy upgrade", () => {
+    const definition = {
+      ...playDefinition,
+      questions: playDefinition.questions.map((question) => ({
+        ...question,
+        ...(question.id === "observer_initials" ? { role: "observer" } : {}),
+      })),
+    };
+    for (const version of [undefined, 1]) expect(() => cachedForm(version, definition)).toThrow();
+    expect(
+      cachedForm(2, definition).questions.find((question) => question.id === "observer_initials")
+        ?.role,
+    ).toBe("observer");
+  });
 });
