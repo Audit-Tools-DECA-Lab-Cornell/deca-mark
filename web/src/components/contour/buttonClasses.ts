@@ -3,7 +3,7 @@ import { cx } from "@/lib/cx";
 import { CONTROL_TRANSITION } from "./classes";
 
 /*
- * The look of a Contour button, as a plain module and not a "use client" one, so a server component that
+ * The look of a Contour button, as a plain module with no client directive, so a server component that
  * imports buttonClasses gets the function itself rather than a client reference. Button holds the
  * hydration gate for submit buttons and is a client component; this file holds nothing else.
  */

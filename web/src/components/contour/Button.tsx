@@ -5,7 +5,7 @@ import { type ComponentPropsWithRef, type MouseEvent, type ReactNode, useId } fr
 
 import { cx } from "@/lib/cx";
 
-import { buttonClasses,type ButtonSize, type ButtonVariant } from "./buttonClasses";
+import { buttonClasses, type ButtonSize, type ButtonVariant } from "./buttonClasses";
 import { Icon, type IconName } from "./Icon";
 import { useHydrated } from "./useHydrated";
 
