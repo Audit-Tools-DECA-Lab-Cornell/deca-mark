@@ -32,7 +32,7 @@ import { contourFonts } from "../src/ui/fonts";
 import { PreferencesProvider } from "../src/ui/preferences";
 import { ThemeProvider } from "../src/ui/theme";
 
-/** Inter stays until the last legacy Nocturne screen is replaced; Contour screens use Geologica. */
+/** Inter stays until the last old Nocturne screen is replaced; Contour screens use Geologica. */
 const FONTS = { ...interFonts, ...contourFonts };
 
 /**
@@ -209,7 +209,7 @@ function GuardedRoutes({
       <Stack.Protected guard={signedIn && !needsOnboarding}>
         {/* The tabs (Projects, Observations, Account), collect and the Explain sheet. */}
         <Stack.Screen name="(app)" />
-        {/* The legacy Nocturne records screen, until the Observations tab (phase 8) replaces it. */}
+        {/* The old Nocturne records screen, until the Observations tab (phase 8) replaces it. */}
         <Stack.Screen name="records" />
       </Stack.Protected>
       <Stack.Protected guard={signedIn && needsOnboarding}>
