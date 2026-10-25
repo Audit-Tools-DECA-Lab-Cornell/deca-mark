@@ -5,12 +5,20 @@ import { load } from "./support.mjs";
 
 const { activityTone, attentionItems, pickCoverageSite } = await load("features/overview/model.ts");
 
-const pkg = version => ({ package_id: `pkg-${version}`, package_version: version });
-const site = (code, count, version = null) => ({
+const bound = (play, inventory = null) => ({
+	play: { form_version: play },
+	inventory: inventory === null ? null : { form_version: inventory }
+});
+const pkg = (version, forms = bound("play-v1")) => ({
+	package_id: `pkg-${version}`,
+	package_version: version,
+	forms
+});
+const site = (code, count, version = null, forms = bound("play-v1")) => ({
 	code,
 	name: `Site ${code}`,
 	observation_count: count,
-	package: version === null ? null : pkg(version)
+	package: version === null ? null : pkg(version, forms)
 });
 const base = "/o/lab/p/study";
 
@@ -128,6 +136,197 @@ test("unreadable packages or forms are not reported as problems or as fine", () 
 		manage: true
 	});
 	assert.deepEqual(items, []);
+});
+
+const form = (code, name, versions) => ({
+	code,
+	name,
+	versions: versions.map(([version, state]) => ({ code: `${code}-v${version}`, version, state }))
+});
+const ready = (...sites) => ({ sites, packages: [], blocked: {}, base, manage: true });
+
+test("v1 bound by Site A's map and v2 published is not 'nothing needs attention'", () => {
+	const items = attentionItems({
+		...ready(site("a", 4, 1)),
+		forms: [
+			form("play", "Play form", [
+				[2, "published"],
+				[1, "published"]
+			])
+		]
+	});
+	assert.deepEqual(
+		items.map(item => item.id),
+		["form-behind-play"]
+	);
+	const [item] = items;
+	assert.equal(item.tone, "waiting");
+	assert.equal(item.title, "Play form v2 is published, but no site's map names it.");
+	assert.equal(
+		item.detail,
+		"Observers still get v1 at Site a. A site changes forms only when you upload a map package that names v2."
+	);
+	assert.deepEqual(item.action, { label: "Upload a map package", href: `${base}/sites/a/packages?step=upload` });
+});
+
+test("sites on the newest version are not behind, whatever else is published", () => {
+	const published = [
+		[2, "published"],
+		[1, "published"]
+	];
+	const upToDate = attentionItems({
+		...ready(site("a", 0, 1, bound("play-v2"))),
+		forms: [form("play", "Play form", published)]
+	});
+	assert.deepEqual(upToDate, []);
+	// A draft or a retired newest version is not something observers could be given.
+	const draftOnly = attentionItems({
+		...ready(site("a", 0, 1)),
+		forms: [
+			form("play", "Play form", [
+				[2, "draft"],
+				[1, "published"]
+			])
+		]
+	});
+	assert.deepEqual(
+		draftOnly.map(item => item.id),
+		["draft-play-v2"]
+	);
+	const retired = attentionItems({
+		...ready(site("a", 0, 1)),
+		forms: [
+			form("play", "Play form", [
+				[2, "retired"],
+				[1, "published"]
+			])
+		]
+	});
+	assert.deepEqual(retired, []);
+	// A map on a version newer than the newest published one (it was retired since) is not behind.
+	const ahead = attentionItems({
+		...ready(site("a", 0, 1, bound("play-v3"))),
+		forms: [
+			form("play", "Play form", [
+				[3, "retired"],
+				[2, "published"]
+			])
+		]
+	});
+	assert.deepEqual(ahead, []);
+});
+
+test("sites that name the newest version are said to, and sites with other forms are left alone", () => {
+	const items = attentionItems({
+		...ready(
+			site("a", 0, 1, bound("play-v2")),
+			site("b", 0, 2, bound("play-v1")),
+			site("c", 0, 3, bound("other-v1"))
+		),
+		forms: [
+			form("play", "Play form", [
+				[2, "published"],
+				[1, "published"]
+			]),
+			form("other", "Other form", [[1, "published"]])
+		]
+	});
+	assert.equal(items.length, 1);
+	assert.equal(items[0].title, "Play form v2 is published, but not every site's map names it.");
+	assert.match(items[0].detail, /^Observers still get v1 at Site b\. /);
+	assert.equal(items[0].action.href, `${base}/sites/b/packages?step=upload`);
+});
+
+test("several sites behind on one form are one item that lists each site's version and links to the sites", () => {
+	const items = attentionItems({
+		...ready(
+			site("a", 0, 1, bound("play-v1")),
+			site("b", 0, 2, bound("play-v2")),
+			site("c", 0, 3, bound("play-v1"))
+		),
+		forms: [
+			form("play", "Play form", [
+				[3, "published"],
+				[2, "published"],
+				[1, "published"]
+			])
+		]
+	});
+	assert.equal(items.length, 1);
+	assert.equal(items[0].title, "Play form v3 is published, but no site's map names it.");
+	assert.match(items[0].detail, /^Observers still get v1 at Site a, v2 at Site b and v1 at Site c\. /);
+	assert.deepEqual(items[0].action, { label: "Open sites", href: `${base}/sites` });
+});
+
+test("a long list of sites behind is cut after three", () => {
+	const sites = ["a", "b", "c", "d", "e", "f"].map((code, index) => site(code, 0, index + 1));
+	const [item] = attentionItems({
+		...ready(...sites),
+		forms: [
+			form("play", "Play form", [
+				[2, "published"],
+				[1, "published"]
+			])
+		]
+	});
+	assert.match(item.detail, /^Observers still get v1 at Site a, v1 at Site b, v1 at Site c and 3 more\. /);
+	assert.deepEqual(item.action, { label: "Open sites", href: `${base}/sites` });
+});
+
+test("an inventory form that a map binds is checked like the play form", () => {
+	const items = attentionItems({
+		...ready(site("a", 0, 1, bound("play-v1", "zones-v1"))),
+		forms: [
+			form("play", "Play form", [[1, "published"]]),
+			form("zones", "Zone inventory", [
+				[2, "published"],
+				[1, "retired"]
+			])
+		]
+	});
+	assert.deepEqual(
+		items.map(item => item.id),
+		["form-behind-zones"]
+	);
+	assert.equal(items[0].title, "Zone inventory v2 is published, but no site's map names it.");
+	assert.match(items[0].detail, /^Observers still get v1 at Site a\. /);
+});
+
+test("the item waits in the order of the forms, before that form's draft, and viewers get no link", () => {
+	const input = {
+		...ready(site("a", 0, 1)),
+		forms: [
+			form("play", "Play form", [
+				[3, "draft"],
+				[2, "published"],
+				[1, "published"]
+			])
+		]
+	};
+	assert.deepEqual(
+		attentionItems(input).map(item => item.id),
+		["form-behind-play", "draft-play-v3"]
+	);
+	assert.ok(attentionItems({ ...input, manage: false }).every(item => item.action === undefined));
+});
+
+test("a bound version the forms do not list, or a map with no recorded forms, is not reported as behind", () => {
+	const forms = [
+		form("play", "Play form", [
+			[2, "published"],
+			[1, "published"]
+		])
+	];
+	assert.deepEqual(attentionItems({ ...ready(site("a", 0, 1, bound("gone-v1"))), forms }), []);
+	assert.deepEqual(attentionItems({ ...ready(site("b", 0)), forms }), [
+		{
+			id: "no-package-b",
+			tone: "attention",
+			title: "Site b has no ready map package.",
+			detail: "Observers have no map to download for this site.",
+			action: { label: "Upload a map package", href: `${base}/sites/b/packages?step=upload` }
+		}
+	]);
 });
 
 test("activity rings are colours that never carry the meaning alone", () => {

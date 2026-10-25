@@ -2,7 +2,7 @@
 
 import { type ReactNode, useId } from "react";
 
-import { buttonClasses } from "@/components/contour/Button";
+import { buttonClasses } from "@/components/contour/buttonClasses";
 import { Icon, type IconName } from "@/components/contour/Icon";
 import { Switch } from "@/components/contour/Switch";
 import { cx } from "@/lib/cx";

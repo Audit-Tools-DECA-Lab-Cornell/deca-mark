@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { PLACE_COOKIE } from "@/features/shell/navigation";
 import { type AccountDeletion, deleteAccount, session, updateProfile } from "@/lib/api/client";
 import { ApiError, errorCopy, failedWrite } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -62,8 +63,8 @@ export type DeletionState = {
 	readonly otherAccount?: boolean;
 };
 
-/** The cookies the auth flows keep beside the Supabase session (src/lib/auth/actions.ts). */
-const AUTH_FLOW_COOKIES = ["fm-verify-email", "fm-recovery-email", "fm-recovery-user", "fm-email-sent"];
+/** The cookies the auth flows keep beside the Supabase session (src/lib/auth/actions.ts), and the last place. */
+const AUTH_FLOW_COOKIES = ["fm-verify-email", "fm-recovery-email", "fm-recovery-user", "fm-email-sent", PLACE_COOKIE];
 
 /**
  * Delete account: DELETE /v1/me, after the person typed DELETE, and only for the account the dialog was
