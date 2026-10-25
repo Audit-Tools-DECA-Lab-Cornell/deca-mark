@@ -528,6 +528,11 @@ export function CollectScreen() {
     </View>
   );
 
+  // Beside the panel the slot takes the width that is left; stacked it is a share of the height, none
+  // while the keyboard is up, the whole body when the map is expanded.
+  const stackedStyle = shut ? s.mapSlotShut : expanded ? s.mapStackedFull : s.mapStacked;
+  const slotStyle = side ? s.mapColumn : stackedStyle;
+
   return (
     <SafeAreaView style={s.root} edges={["top", "bottom", "left", "right"]}>
       {hideChrome ? null : header}
@@ -535,15 +540,7 @@ export function CollectScreen() {
         {/* The GL view's height changes instantly, never by animation (DESIGN §8). */}
         <View
           testID="collect-map-slot"
-          style={
-            side
-              ? s.mapColumn
-              : shut
-                ? s.mapSlotShut
-                : expanded
-                  ? s.mapStackedFull
-                  : s.mapStacked
-          }
+          style={slotStyle}
           accessibilityElementsHidden={shut}
           importantForAccessibility={shut ? "no-hide-descendants" : "auto"}
         >

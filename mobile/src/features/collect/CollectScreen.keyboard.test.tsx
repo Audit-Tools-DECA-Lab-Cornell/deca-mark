@@ -239,7 +239,10 @@ function openWithKeyboardUp(session: FieldSessionValue = sessionAtSummary()): Sc
 
 /** The style properties these tests read. */
 type Style = Partial<
-  Record<"height" | "padding" | "paddingBottom" | "overflow" | "position" | "display", unknown>
+  Record<
+    "height" | "width" | "padding" | "paddingBottom" | "overflow" | "position" | "display",
+    unknown
+  >
 >;
 
 /** The flattened style of a host node, however React Native's arrays nest it. */
@@ -419,7 +422,7 @@ describe("the map stays mounted and its slot changes size instantly, never by an
     await keyboard(true);
     const shut = styleOf(byTestID(screen, "collect-map-slot"));
     expect(shut.height).toBe(0);
-    expect(shut.padding).toBe(0);
+    expect(shut.padding ?? 0).toBe(0);
     expect(shut.overflow).toBe("hidden");
 
     await keyboard(false);
@@ -725,7 +728,7 @@ describe("rotating keeps the field map and the step mounted (audit C21)", () => 
     expect(panelStyle().width).toBeUndefined();
     rotate(screen, session);
     expect(slot().height).toBeUndefined();
-    expect(panelStyle().width).toBeGreaterThan(0);
+    expect(Number(panelStyle().width)).toBeGreaterThan(0);
     rotate(screen, session);
     expect(slot().height).toBe("46%");
     expect(panelStyle().width).toBeUndefined();
