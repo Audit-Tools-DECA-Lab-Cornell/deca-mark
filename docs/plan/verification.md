@@ -139,3 +139,10 @@ Read first: `docs/reviews/frontend-audit-2026-10-17/REPORT.md` §7; `web/playwri
 Do: tag `screenshots.spec` `@screenshots` and exclude it from the default `test:e2e` (`scripts/screenshots-web.sh` passes `--grep @screenshots`); merge the overview coverage test into `overview-sql.spec.ts`; port `auth-local`'s three recovery-cookie tamper cases to `auth-flows.spec.ts` with `context.addCookies`, then delete `auth-local.test.mjs` and `test:auth:local`; delete `brand-artwork.test.ts` (keep at most two colour-set checks); rename the honesty scan to what it is (a copy and layout lint) in its file header and README; shrink `database-migrations.test.ts`'s version loop.
 Done when: the default e2e run no longer produces screenshots; the recovery-cookie refusals run in the e2e suite; the suites pass.
 Verify: `pnpm --dir web test:unit`, `pnpm mobile:test`, the e2e suite through `scripts/e2e-local.sh`.
+
+### QA-10: Reviewer feedback integration and UI acceptance
+Status: todo · Phase 4 · Size L · Depends: CON-08, DB-21, BE-27, WEB-61, WEB-62, WEB-63, WEB-64, MOB-50 · Blocks: none
+Read first: feedback inventory and execution packet P40/P41; component evidence journals.
+Do: review specification before quality; inspect Contour Day/Dusk and 390/768/1024/1440 layouts, keyboard/pointer/touch, invite account recovery, report URL/print, collection/export/capture/restart and historical preservation. Record exact local/native/hosted boundaries.
+Done when: no unresolved required source/runtime defects; residual physical-device/deployment authorization gates listed honestly and recoverable checkpoint verified.
+Verify: focused suites followed by integrated local browser/API acceptance; native device and QGIS Desktop checks only where actually performed.

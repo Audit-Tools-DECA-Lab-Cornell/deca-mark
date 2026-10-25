@@ -1,0 +1,14 @@
+# P11 invitations — Wave 1
+
+## Intention
+
+Implement R16–R22 within the invitation creation and acceptance surfaces: 14-day defaults, precise role descriptions, signed-in identity beside Join with account switching and credential retention, at most 25 validated unique recipients with three concurrent requests, confirmed/definite-failure/not-confirmed results and safe retries, explicit email/code modes, and no promotional join panel. Permissions and database schema remain unchanged. No provider mail sending, secrets, Git mutation, deployments, or server startup.
+
+## Verification plan
+
+Add behavioral unit regressions for recipients, request concurrency, unknown outcome handling and credential retention; add focused component/action regressions and backend omitted-default tests. Extend existing local browser scenarios for actual invitations. Root will serialize browser/full-stack acceptance. Each checkpoint contains only this worker's exact source/test allowlist.
+
+## Progress
+
+1. Source inspection complete. Existing generic invalid join response is relabeled as already-member based only on names; token is discarded on invalid. Backend preview supplies no recipient identity, so use explicit signed-in identity and safe recovery without a schema change.
+2. Implementation and focused verification pending.

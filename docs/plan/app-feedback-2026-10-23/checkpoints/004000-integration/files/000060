@@ -1,0 +1,90 @@
+# P21 Python schema2 boundaries
+
+Step 5 of 5 source/local verification done. Requested model Sonnet; actual inherited parent-model routing, with no exact model ID surfaced (the requested model is unavailable in this execution). Ownership released after final checkpoint. No in-flight command remains.
+
+## Delivered boundaries
+
+1. Schema2 finite decimal numbers, safe-integer default values/bounds, date/time/dateTime canonical strings and valid IANA configuration; kind/source compatibility and explicit questionId export provenance. Visible automatic fields require captured values even if optional; accountId compares authenticated owner and observerCode compares immutable envelope. Capture time receives canonical validation without equality to the later save timestamp. Hidden automatic answers retain pruning semantics.
+2. Form detail and historical observation detail require the actual stored schema_version and refuse noncurrent versions with unknown_schema_version. Form writes default current2, preserve explicit null/boolean/string/unknown values for typed refusal, explicitly store2 and check the installed DB default before authoring. No old row is synthesized as2. Managed package manifests contain only immutable form references; definitions continue through the guarded form-detail endpoint.
+3. Exact receipt replay still precedes target resolution and validation. Uncommitted schema1-bound uploads use historical parsing that strips formerly ignored schema2 properties. Legacy fields-only parsing remains. Export snapshots read explicit version maps, interpret schema1 historically, retain exact forms.json and expose the map in metadata.json; validated schema2 columnNaming keeps observer answer columns independently of envelope metadata. Decimal transport admits finite IEEE754 values beyond the safe-integer domain and normalizes newly allowed large Python integer values before JCS, leaving prior safe payload canonicalization unchanged.
+4. Migration SOURCE ONLY: `supabase/migrations/20261024090000_form_schema2.sql`. It requires an all-row report from `fieldmaps_api.form_schema_preflight` (explicit for general populated databases; embedded exact proofs for untouched baseline and empty table), locks the table, requires every stored schema1 row to pass actual schema2 FormDefinition validation, rejects legacy/unknown formats and recursively rejects formerly ignored semantic keys. SQL checks exact IDs/count/SHA256 against the report while locked; the documented SQL subset does not pretend to equal the Python parser. Only immutable_form_version is disabled/re-enabled; definitions, revisions, IDs, answers and package bindings stay unchanged. A stale/incomplete report or modified baseline without an external report aborts atomically; default changes to2 only after successful checks. No template table is introduced.
+
+## Evidence
+
+- Focused command: `backend/.venv/bin/pytest backend/tests/test_schema2_forms.py backend/tests/test_schema2_boundaries.py backend/tests/test_form_definition_cases.py backend/tests/test_form_contracts.py backend/tests/test_stored_form_compatibility.py backend/tests/test_published_form_compatibility.py backend/tests/test_observation_analysis_domain.py backend/tests/test_form_namespace_exports.py backend/tests/test_zone_upload_fingerprint.py -q -m 'not integration'`: 180 passed, 3 deselected, 0.37 seconds. One existing Starlette/AnyIO deprecation warning.
+- Full backend typecheck from backend/: `.venv/bin/basedpyright`: 0 errors, 0 warnings, 0 notes.
+- Ruff check for all owned Python source/tests passes. `git diff --check` passes. Existing immutable JCS fingerprint regressions pass.
+- Early broad selection included three explicitly marked integration scenarios; their setup refused missing disposable selection before DB work. They remain unrun and were intentionally deselected in the authorized local-only rerun.
+- Checkpoints 002100-python through 002131-python preserve bounded work; 002199-python captures the complete owned source/test/journal set; 002201-python captures the finalized timezone correction and journal. Explicit checkpoints only; no automatic hook guard is claimed.
+
+## Remaining release/acceptance boundaries
+
+No environment/secret file was read; no persistent database state, persistent migration/reset, deployment or Git write was performed. Review fixes below use only newly created disposable test databases. Root owns OpenAPI/declaration generation and owning plans. Runtime DB upgrade, service/DB integration, native collection and hosted acceptance remain unverified and required before enabling schema2 collection. `supabase/README.md` does not exist; database/README.md documents migration ownership. The offline preflight deliberately blocks any installed legacy/unknown row until separately adjudicated; it does not silently rewrite it.
+
+Timezone case parity settled by coordinator: after direct ZoneInfo lookup fails, use a cached casefold map of installed IANA names. UTC/utc, America/New_York/america/new_york and Etc/UTC/etc/utc are covered; authored spelling is retained. No dependency was added.
+
+Next action under two minutes: inspect the migration's required preflight-report gate and the schema2 boundary test names, then include this packet in serialized integration/spec review.
+
+
+## Review fixes 1 and 3 (002300-pyfix onward)
+
+Timezone validation now requires membership in the installed IANA name set before ZoneInfo
+opens a key; case-insensitive known IANA names remain supported, while the special
+`posixrules` filesystem entry is rejected. Added an independent shared negative definition case.
+
+Read backend-migration-safety skill. Its YEE/Playspace Alembic-specific commands do not apply to
+this separate product; preserved forward-only source, no-secret and no-persistent-apply rules.
+Added `database/form-schema2.sh` / `fieldmaps_api.form_schema_upgrade`: known local Docker
+container allowlist, PostgreSQL socket access without passwords/config reads, actual all-row
+Python validation, same-session transaction for report/source/Supabase history. Baseline and
+zone API disposable loops route schema2 through it and initialize their own test history.
+The helper never converts legacy rows. Ordinary fresh setup uses only an embedded report for
+the exact two baseline IDs/SHA256 values, or a vacuously valid empty snapshot. Tests recompute
+the embedded proof with the real Python parser; all existing under-lock guards remain.
+
+An initial assumption that the baseline contained legacy fields-only data was wrong. The
+actual baseline's two definitions are canonical. No baseline definition/fixture conversion was
+implemented. Negative cases intentionally alter only newly created disposable database rows.
+
+Actual isolated PostgreSQL/PostGIS rehearsal passed initially for six cases (27.23 seconds),
+then again after operational cleanup (25.72 seconds). Full canonical baseline/seed rehearsal
+`sh database/baseline-rehearsal.sh --reset-only` passed, and zone API rehearsal bootstrap plus
+24 focused tests passed. Later raw-source/no-GUC baseline/empty and altered-row refusal tests
+are recorded by the final verification update below. No existing database was changed; no secret was read and no persistent migration was applied. New containers self-cleaned.
+
+
+Final review-fix verification: the full isolated migration suite passed 9 tests in35.92seconds,
+including genuine embedded-report parity and ordinary raw-source/no-GUC baseline/empty
+application; altered canonical/no-report, legacy, new semantic property, stale report and
+Supabase history conflict all rolled back protected rows/default/triggers/history. A later
+bounded guard additionally refuses any non1 schema default, even on an empty table, so a
+future empty database cannot be downgraded to2. The raw-source success and future-default
+refusal scenarios were rerun after that guard:3passed,7deselected in12.87seconds. Focused pure Python suite:185passed,
+3 integration scenarios deselected. Final full-backend basedpyright:0errors,0warnings;
+owned Ruff and git diff --check pass.
+
+Reviewed local operation commands: `sh database/form-schema2.sh preflight` (read-only) and,
+only after separate persistent-migration approval, `sh database/form-schema2.sh apply-local`.
+`backend/tests/test_schema2_migration_rehearsal.py` is an explicit, isolated test command,
+never a default fixture targeting existing local Supabase. All new-container IDs are cleaned
+up by their owning process. Ownership is released at final002399-pyfix checkpoint; no running
+command remains at handoff. Existing live API fixture paths and lack of a keep-alive option
+were sent to coordinator; no additional API/realAuth adapter was built.
+
+## Shared transport expectation follow-up (002400-pytransport)
+
+Root's complete pure suite exposed one genuine stale authored expectation:
+`contracts/zones/upload.cases.json` case `answer_unsafe_integer` still marked a finite
+9007199254740992 envelope structurally invalid. Updated only its `valid` flag to true.
+The existing zone-contract README explicitly defines envelope validity as request structure,
+not form eligibility. Schema2 decimal questions can accept finite JSON numbers beyond safe
+integer magnitude, so the transport cannot globally reject that domain. The known shell
+integer question still refuses this answer during actual form validation; no form permission
+or research constraint was relaxed.
+
+Retained `test_default_integer_answer_refuses_non_safe_integers` (includes exactly that
+unsafe integer) and strengthened the finite1e100 transport regression to serialize to JSON,
+parse again, and produce identical production JCS canonical bytes for replay. Focused artifact,
+envelope, fingerprint and schema2 suite:114passed in0.25seconds. Full backend basedpyright:
+0errors/0warnings; focused Ruff passes. No API shape, runtime validator or database changed.
+Final transport checkpoint002401-pytransport; source ownership released again.

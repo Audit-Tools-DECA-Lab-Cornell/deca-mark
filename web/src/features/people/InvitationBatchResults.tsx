@@ -1,0 +1,69 @@
+"use client";
+
+import { useState } from "react";
+
+import { Button } from "@/components/contour/Button";
+import { Note } from "@/components/contour/Note";
+
+import type { RecipientResult } from "./invitation-batch";
+import { InvitationCreated } from "./InvitationCreated";
+
+/** Keep each recipient's outcome and once-only sharing details available through partial failures. */
+export function InvitationBatchResults({
+	results,
+	timeZone,
+	pending,
+	total
+}: {
+	results: readonly RecipientResult[];
+	timeZone: string;
+	pending: boolean;
+	total: number;
+}) {
+	const [showing, setShowing] = useState<string | null>(null);
+	return (
+		<div className="flex flex-col gap-4">
+			<p role="status" className="type-body text-ink">
+				{pending
+					? `Creating invitations: ${results.length} of ${total} checked…`
+					: `${results.length} invitations checked.`}
+			</p>
+			<ul className="divide-y divide-rule">
+				{results.map(result => {
+					const label = result.email ?? "Shared join code";
+					return (
+						<li key={label} className="flex flex-col gap-2 py-3 first:pt-0">
+							<strong className="type-body wrap-anywhere text-ink">{label}</strong>
+							{result.status === "created" ? (
+								<>
+									<p className="type-small text-ink-2">
+										Invitation created.{" "}
+										{result.invitation.email_delivery === "queued"
+											? "Email queued."
+											: "Share the link or code."}
+									</p>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => setShowing(showing === label ? null : label)}
+										aria-expanded={showing === label}>
+										{showing === label ? "Hide sharing details" : "Show sharing details"}
+									</Button>
+									{showing === label && (
+										<InvitationCreated invitation={result.invitation} timeZone={timeZone} />
+									)}
+								</>
+							) : (
+								<Note
+									tone="attention"
+									title={result.status === "failed" ? "Not created" : "Not confirmed"}>
+									{result.message}
+								</Note>
+							)}
+						</li>
+					);
+				})}
+			</ul>
+		</div>
+	);
+}

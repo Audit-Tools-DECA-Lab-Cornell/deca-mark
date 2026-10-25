@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002504-pydraft",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/tests/test_form_authoring_normalization.py",
+      "state": "present",
+      "sha256": "8845703948351da87e26432201dcac572534b8c1af9581a69674a22c49a91cf6",
+      "blob": "files/000000",
+      "bytes": 4266
+    }
+  ]
+}

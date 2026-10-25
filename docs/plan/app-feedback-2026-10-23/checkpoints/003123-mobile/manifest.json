@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003123-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "mobile/src/session/package-actions.ts",
+      "state": "present",
+      "sha256": "fa780ec5bc53f38a5ba8548df25876f662e793d27a5da3b503a499def85e40c5",
+      "blob": "files/000000",
+      "bytes": 7423
+    }
+  ]
+}

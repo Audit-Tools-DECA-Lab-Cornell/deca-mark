@@ -27,7 +27,7 @@ describe("Retained draft replacement safety", () => {
             "INSERT INTO observation_drafts (owner_scope,id,updated_at,payload) VALUES (?,?,?,?)",
           )
           .run(owner, boundDraft.id, boundDraft.updatedAt, raw);
-        expect(await readDraft(db, owner)).toBeNull();
+        await expect(readDraft(db, owner)).rejects.toThrow(/retained/);
         expect(await hasDraft(db, owner)).toBe(true);
         expect(await hasDraft(db, otherOwner)).toBe(false);
         const next = { ...boundDraft, id: "60000000-0000-4000-8000-000000000002" };

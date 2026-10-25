@@ -1,6 +1,16 @@
-// Copied from mobile/src/forms/definition.ts. Keep identical below this header;
-// `pnpm forms:parity` checks it.
 import { z } from "zod";
+
+// Kept self-contained because the schema generator imports this file directly in Node.
+function isTimeZone(value: string): boolean {
+  if (/^[+-]/.test(value)) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format(0);
+    return true;
+  } catch (error) {
+    if (error instanceof RangeError) return false;
+    throw error;
+  }
+}
 
 /**
  * A versioned form definition: stable identifiers, labels, constraints and a restricted
@@ -75,7 +85,17 @@ export const questionSchema = z.object({
   act: z.enum(ACTS),
   label: z.string().min(1),
   hint: z.string().min(1).optional(),
-  kind: z.enum(["one", "many", "text", "number"]),
+  kind: z.enum(["one", "many", "text", "number", "dateTime"]),
+  numberMode: z.enum(["integer", "decimal"]).optional(),
+  valueSource: z.enum(["manual", "accountId", "observerCode", "captureTime"]).optional(),
+  dateTime: z
+    .object({
+      mode: z.enum(["date", "time", "dateTime"]),
+      dateFormat: z.enum(["iso", "monthFirst", "dayFirst"]).default("iso"),
+      timeFormat: z.enum(["12h", "24h"]).default("24h"),
+      timeZone: z.string().min(1),
+    })
+    .optional(),
   options: z.array(optionSchema).default([]),
   /** Preferred option columns on a wide panel. Narrow layouts reduce this. */
   columns: z.number().int().min(1).max(4).default(1),
@@ -90,9 +110,9 @@ export const questionSchema = z.object({
   placeholder: z.string().min(1).optional(),
   rows: z.number().int().min(1).max(8).optional(),
   maxLength: z.number().int().min(1).optional(),
-  /** Whole-number bounds, for a `number` question. */
-  min: z.number().int().optional(),
-  max: z.number().int().optional(),
+  /** Finite bounds; omitted numberMode retains safe-integer semantics. */
+  min: z.number().optional(),
+  max: z.number().optional(),
   /** Where this field comes from in the source workbook. */
   source: z.string().min(1),
   /** An unresolved protocol decision. Surfaced in the UI; never silently shipped. */
@@ -111,6 +131,7 @@ export const protocolNoteSchema = z.object({
 export type ProtocolNote = Readonly<z.infer<typeof protocolNoteSchema>>;
 
 export const formDefinitionSchema = z.object({
+  columnNaming: z.literal("questionId").optional(),
   version: z.string().min(1),
   title: z.string().min(1),
   summary: z.string().min(1),
@@ -217,6 +238,36 @@ export function validateFormDefinition(form: FormDefinition): readonly string[] 
 
   for (const question of form.questions) {
     if (
+      form.columnNaming === "questionId" &&
+      (question.exportColumn !== question.id ||
+        Object.values(question.dynamicFrom?.sets ?? {}).some(
+          (set) => set.exportColumn !== question.id,
+        ))
+    )
+      problems.push(`"${question.id}" requires question-ID export columns.`);
+    if (question.numberMode !== undefined && question.kind !== "number")
+      problems.push(`"${question.id}" has numberMode but is not a number question.`);
+    if (
+      (question.valueSource === "accountId" || question.valueSource === "observerCode") &&
+      question.kind !== "text"
+    )
+      problems.push(`"${question.id}" requires text for its automatic source.`);
+    if (question.valueSource === "captureTime" && question.kind !== "dateTime")
+      problems.push(`"${question.id}" requires dateTime for captureTime.`);
+    if (question.kind === "dateTime" && question.dateTime === undefined)
+      problems.push(`"${question.id}" requires dateTime configuration.`);
+    if (question.kind !== "dateTime" && question.dateTime !== undefined)
+      problems.push(`"${question.id}" carries dateTime configuration on another kind.`);
+    if (question.dateTime !== undefined && !isTimeZone(question.dateTime.timeZone))
+      problems.push(`"${question.id}" has an invalid IANA time zone.`);
+    for (const bound of [question.min, question.max])
+      if (
+        bound !== undefined &&
+        (!Number.isFinite(bound) ||
+          (question.numberMode !== "decimal" && !Number.isSafeInteger(bound)))
+      )
+        problems.push(`"${question.id}" has an invalid number bound.`);
+    if (
       question.kind === "number" &&
       question.min !== undefined &&
       question.max !== undefined &&
@@ -290,7 +341,7 @@ function cycles(form: FormDefinition, byId: ReadonlyMap<string, Question>): read
  * the API serves with it), never inside it. A new version is a forward migration of every stored
  * definition and a new number here, so a build reads one version and never two.
  */
-export const FORM_SCHEMA_VERSION = 1;
+export const FORM_SCHEMA_VERSION = 2;
 
 /** The stable code of that refusal, for a screen to map to "Update DECA Mark to use this form". */
 export const UNKNOWN_SCHEMA_VERSION = "unknown_schema_version";

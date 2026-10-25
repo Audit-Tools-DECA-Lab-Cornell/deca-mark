@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002112-python",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/src/fieldmaps_api/domain/form_automatic.py",
+      "state": "present",
+      "sha256": "c34237f1c9557c12fe8243899ac138b6d8ad789b240ebc334e8308bcff942695",
+      "blob": "files/000000",
+      "bytes": 804
+    },
+    {
+      "path": "backend/src/fieldmaps_api/services/bound_uploads.py",
+      "state": "present",
+      "sha256": "0758df9d26a4dbc5003c0cc50f180a6ec64d5cab77eb921c4e62bcb429634011",
+      "blob": "files/000001",
+      "bytes": 3743
+    }
+  ]
+}

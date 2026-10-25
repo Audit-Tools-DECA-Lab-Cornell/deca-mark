@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003100-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "mobile/src/forms/capture.ts",
+      "state": "present",
+      "sha256": "34de032ace8e60e67086617ef8ce5e5a73b1aafe2c75faf18a609db0b2a54b92",
+      "blob": "files/000000",
+      "bytes": 2623
+    },
+    {
+      "path": "mobile/src/session/ownership.ts",
+      "state": "present",
+      "sha256": "4892330a11b41b740507efd876807e369ecfadb1c369aef4516c74699726149f",
+      "blob": "files/000001",
+      "bytes": 3789
+    },
+    {
+      "path": "mobile/src/storage/draft-store.ts",
+      "state": "present",
+      "sha256": "44f391ba301b10a32e0c42d172ebd2efadf7a5eae62eb1657e31e19559837503",
+      "blob": "files/000002",
+      "bytes": 5588
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+import type { RawOption, RawQuestion } from "./raw";
+
+export function availableOptions(question: RawQuestion | undefined): readonly RawOption[] {
+	if (!question) return [];
+	const options = [...(question.options ?? []), ...Object.values(question.dynamicFrom?.sets ?? {}).flatMap(set => set.options)];
+	return [...new Map(options.map(option => [option.code, option])).values()];
+}

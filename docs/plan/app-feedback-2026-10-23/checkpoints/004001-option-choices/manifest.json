@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "004001-option-choices",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "web/src/features/forms/ConditionRuleEditor.tsx",
+      "state": "present",
+      "sha256": "fc3e6da39e536a72d96d77f6fb4f2189e53d0a1ab376d4b92b2b21da8e899e04",
+      "blob": "files/000000",
+      "bytes": 4001
+    },
+    {
+      "path": "web/src/features/forms/DynamicOptionsEditor.tsx",
+      "state": "present",
+      "sha256": "3548c499bd53df00bc52b6c0e91bb216afaf953b99e0b1baab2734303c03b874",
+      "blob": "files/000001",
+      "bytes": 5585
+    },
+    {
+      "path": "web/src/features/forms/available-options.ts",
+      "state": "present",
+      "sha256": "41a0022b1ec11b45266a269864538baf97fdb3ee84670ccaf55ee975a7de4cc8",
+      "blob": "files/000002",
+      "bytes": 380
+    },
+    {
+      "path": "web/src/features/forms/condition-summary.ts",
+      "state": "present",
+      "sha256": "96389dd88076a7520c3fe1a099602c4c2d8ffbd425624804b24e31f00ff69db2",
+      "blob": "files/000003",
+      "bytes": 936
+    },
+    {
+      "path": "web/tests/unit/form-feedback-preview.test.mjs",
+      "state": "present",
+      "sha256": "ff41dd574bee48e1cc766b3fff94a922cbf1c98f87e1a394923891d469889c08",
+      "blob": "files/000004",
+      "bytes": 3850
+    }
+  ]
+}

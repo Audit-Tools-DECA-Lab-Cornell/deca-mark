@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003106-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "mobile/src/packages/hosted/bound-fixture.ts",
+      "state": "present",
+      "sha256": "c6ef1087b7bcdbbdac90cfc6f0727c9d3bd475ddb6f835360a2753942a095ebf",
+      "blob": "files/000000",
+      "bytes": 3544
+    },
+    {
+      "path": "mobile/src/packages/hosted/bound-prepare.test.ts",
+      "state": "present",
+      "sha256": "8500a6fe5eeb22ffb1eee63f3e034449940b31a3b1a37e2944eff472d265189a",
+      "blob": "files/000001",
+      "bytes": 5678
+    }
+  ]
+}

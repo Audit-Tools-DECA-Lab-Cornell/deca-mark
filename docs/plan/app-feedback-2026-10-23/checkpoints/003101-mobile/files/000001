@@ -1,0 +1,251 @@
+import { randomUUID } from "expo-crypto";
+import type { Dispatch, RefObject, SetStateAction } from "react";
+import { buildObservation } from "../domain/build-observation";
+import { shortLabel } from "../domain/labels";
+import type { Coordinate, Placement, RoundContext } from "../domain/observation";
+import { capturedAnswers, captureProblem } from "../forms/capture";
+import type { Answers, FormDefinition } from "../forms/definition";
+import { reviewProblems } from "../forms/engine";
+import { carriedQuestionIds, isUploadableRecord } from "../forms/registry";
+import {
+  reduceSession,
+  type SessionAction,
+  type SessionState,
+  type SessionStep,
+  startSession,
+} from "../forms/session";
+import type { SiteZone } from "../maps/sample-site";
+import { zoneCovers } from "../maps/zone-boundaries";
+import type { SitePackage } from "../packages/site-package";
+import { clearDraft, type ObservationDraft } from "../storage/draft-store";
+import { commitObservation, type LocalDatabase } from "../storage/observation-store";
+import { sessionBinding } from "./bound-context";
+import type { SaveOutcome, SessionSave } from "./context";
+import { type ObservationIdentity, ownershipProblem } from "./ownership";
+
+type ActionInput = {
+  readonly database: LocalDatabase;
+  readonly key: string;
+  readonly packageOwner: string;
+  readonly sitePackage: SitePackage | null;
+  readonly zone: SiteZone | null;
+  readonly context: RoundContext | null;
+  readonly form: FormDefinition | null;
+  readonly unreadableDraft: boolean;
+  readonly recovered: ObservationDraft | null;
+  readonly placed: Coordinate | null;
+  readonly initials: string;
+  readonly accountId: string;
+  readonly identity: RefObject<ObservationIdentity | null>;
+  readonly stateRef: RefObject<SessionState>;
+  readonly placementRef: RefObject<Placement["source"]>;
+  readonly holdIdentity: (identity: ObservationIdentity | null) => void;
+  readonly setPlaced: (coordinate: Coordinate | null) => void;
+  readonly setPlacementSource: (source: Placement["source"]) => void;
+  readonly setArmed: (armed: boolean) => void;
+  readonly setRecovered: (draft: ObservationDraft | null) => void;
+  readonly setStatus: (status: string) => void;
+  readonly setSaves: Dispatch<SetStateAction<readonly SessionSave[]>>;
+  readonly apply: (state: SessionState) => void;
+  readonly persist: (state: SessionState, coordinate: Coordinate | null) => void;
+  readonly wake: () => void;
+  readonly current: () => boolean;
+};
+export function useObservationActions(input: ActionInput) {
+  const {
+    database,
+    key,
+    packageOwner,
+    sitePackage,
+    zone,
+    context,
+    form,
+    recovered,
+    unreadableDraft,
+    placed,
+    initials,
+    accountId,
+    identity,
+    stateRef,
+    placementRef,
+    holdIdentity,
+    setPlaced,
+    setPlacementSource,
+    setArmed,
+    setRecovered,
+    setStatus,
+    setSaves,
+    apply,
+    persist,
+    wake,
+    current,
+  } = input;
+  const begin = (coordinate: Coordinate, source: Placement["source"]) => {
+    if (!current() || !sitePackage || !zone || packageOwner !== key) return;
+    if (recovered || unreadableDraft) {
+      setStatus("Resume or discard the unfinished observation first.");
+      return;
+    }
+    const fresh = identity.current === null;
+    const binding = sessionBinding(sitePackage, zone);
+    identity.current ??= {
+      id: randomUUID(),
+      startedAt: new Date().toISOString(),
+      owner: key,
+      capture: { accountId, observerCode: initials, capturedAt: new Date().toISOString() },
+      packageId: sitePackage.id,
+      packageName: sitePackage.name,
+      ...(binding ? { binding } : {}),
+    };
+    // startedAt and capture use exactly the same first-placement instant.
+    if (fresh && identity.current.capture)
+      identity.current = { ...identity.current, capture: { ...identity.current.capture, capturedAt: identity.current.startedAt } };
+    holdIdentity(identity.current);
+    setPlaced(coordinate);
+    setPlacementSource(source);
+    setArmed(false);
+    setRecovered(null);
+    // Adjusting a point keeps the question the observer was on; a new observation starts at the top.
+    const next = fresh
+      ? startSession(stateRef.current.answers)
+      : { ...stateRef.current, notice: null };
+    const captured = form ? { ...next, answers: capturedAnswers(form, next.answers, identity.current.capture) } : next;
+    apply(captured);
+    persist(captured, coordinate);
+    setStatus(
+      source === "zone"
+        ? "Zone inventory open. It is stored at the zone's centre; no point is placed."
+        : "Point placed by hand. This build records no device location, so no GPS accuracy is stored beside it.",
+    );
+  };
+
+  const place = (coordinate: Coordinate) => begin(coordinate, "hand");
+
+  const startZoneRecord = () => {
+    if (!zone) return;
+    if (identity.current !== null && placed !== null) return;
+    begin(zone.displayAnchor, "zone");
+  };
+
+  const nudgeTo = (coordinate: Coordinate) => {
+    if (!current()) return;
+    setPlaced(coordinate);
+    persist(stateRef.current, coordinate);
+  };
+
+  const dispatch = (action: SessionAction): SessionStep => {
+    if (!current()) return { state: startSession(), destination: "stay", autoAdvance: false };
+    if (!form) return { state: stateRef.current, destination: "stay", autoAdvance: false };
+    const reduced = reduceSession(form, stateRef.current, action);
+    const step = { ...reduced, state: { ...reduced.state, answers: capturedAnswers(form, reduced.state.answers, identity.current?.capture) } };
+    apply(step.state);
+    // Stepping back past the first question releases the point but not the observation: the
+    // answers stay, and the draft keeps them without coordinates so a force quit still recovers.
+    // A zone inventory has no point to release: stepping back past its first question keeps it open.
+    const release = step.destination === "map" && placementRef.current === "hand";
+    if (release) setPlaced(null);
+    persist(step.state, release ? null : placed);
+    if (step.state.notice)
+      setStatus(
+        `${step.state.notice.count} ${
+          step.state.notice.count === 1 ? "answer" : "answers"
+        } dropped — the questions that held them are no longer asked.`,
+      );
+    return step;
+  };
+
+  const reset = (keep: Answers) => {
+    holdIdentity(null);
+    setPlaced(null);
+    setPlacementSource("hand");
+    setArmed(false);
+    apply(startSession(keep));
+  };
+
+  const save = async (): Promise<SaveOutcome> => {
+    if (!current())
+      return { ok: false, problems: [], message: "The account changed. Local work is retained." };
+    const owner = identity.current;
+    if (!form || !sitePackage || !context || !placed || !owner)
+      return { ok: false, problems: [], message: "Place a point before saving." };
+    const mismatch = ownershipProblem(owner, key, sitePackage.id);
+    if (mismatch !== null) return { ok: false, problems: [], message: mismatch };
+    if (owner.binding && placementRef.current === "hand" && (!zone || !zoneCovers(placed, zone)))
+      return {
+        ok: false,
+        problems: [],
+        message:
+          "This point is outside the chosen zone on the pinned map. The unfinished observation is kept; move the point or choose a covering zone.",
+      };
+    const sourceProblem = captureProblem(form, stateRef.current.answers, owner.capture, accountId);
+    if (sourceProblem) return { ok: false, problems: [], message: sourceProblem };
+    const found = reviewProblems(form, stateRef.current.answers);
+    if (found.length > 0) return { ok: false, problems: found };
+    const placement: Placement = { source: placementRef.current, gpsAccuracyMetres: null };
+    const built = buildObservation({
+      id: owner.id,
+      form,
+      answers: stateRef.current.answers,
+      coordinates: placed,
+      placement,
+      context,
+      siteId: sitePackage.siteId,
+      projectId: sitePackage.projectId,
+      observer: owner.capture?.observerCode ?? initials,
+      createdAt: new Date().toISOString(),
+      ...(owner.binding ? { binding: owner.binding } : {}),
+    });
+    if (!built.ok) return { ok: false, problems: [], message: built.message };
+    try {
+      // One transaction: a record can never be stored while its draft survives to be offered
+      // back under an identifier the observations table already holds.
+      await commitObservation(database, built.record, key);
+    } catch (cause) {
+      return {
+        ok: false,
+        problems: [],
+        message:
+          cause instanceof Error
+            ? `Could not save: ${cause.message}`
+            : "Could not save. Your answers are still here; try again.",
+      };
+    }
+    const heldOnly = key === "local" || !isUploadableRecord(built.record);
+    if (!current()) return { ok: true, heldOnly };
+    const carried: Record<string, Answers[string]> = {};
+    for (const id of carriedQuestionIds(form)) {
+      const value = stateRef.current.answers[id];
+      if (value !== undefined) carried[id] = value;
+    }
+    setSaves((current) => [
+      {
+        id: built.record.id,
+        zoneId: context.zoneId,
+        zoneLabel: context.zoneLabel,
+        roundType: context.roundType,
+        savedAt: built.record.createdAt,
+        heldOnly,
+      },
+      ...current,
+    ]);
+    setStatus(`${shortLabel(built.record.id)} written to device storage.`);
+    reset(carried);
+    wake();
+    return { ok: true, heldOnly };
+  };
+
+  const discard = () => {
+    if (!current()) return;
+    void clearDraft(database, key)
+      .then(() => {
+        if (!current()) return;
+        reset({});
+        setStatus("Observation discarded. Nothing was written to the record list.");
+      })
+      .catch(() => {
+        if (current()) setStatus("The draft could not be discarded. Answers stay on this device.");
+      });
+  };
+
+  return { place, startZoneRecord, nudgeTo, dispatch, save, discard };
+}

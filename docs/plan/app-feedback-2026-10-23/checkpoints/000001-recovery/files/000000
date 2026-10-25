@@ -1,0 +1,7 @@
+# Current execution marker
+
+Implementation run started under Codex on the existing feedback branch. Wave 0: specification review passed; recovery tooling/drill pending. No application change yet.
+
+Read ledger.json and workers/P00-coordinator.md first. Current worker: recovery_tooling (scripts only). Source review risks are saved in workers/P00-spec-review.md.
+
+Next bounded action: run the checkpoint CLI synthetic drill, then start forms/invitations/reports with exclusive file ownership. Last runtime checkpoint: none yet. Weekly usage snapshot: 73% remaining; context reading unavailable. No new Git, deployment, database reset/migration or secrets authority.

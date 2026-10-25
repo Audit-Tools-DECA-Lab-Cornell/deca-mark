@@ -871,3 +871,36 @@ Do:
 4. The version history shows the warning check that names each layer left out.
 Done when: `qgisUpload()` gains an XYZ layer and the packages spec covers three paths at 1440 and 390: Cancel uploads nothing and keeps the files; confirming publishes, and the new version shows the warning naming the layer; and an upload whose Read project result carried no mark (the test removes it with `page.route`) receives `online_basemap_unconfirmed`, opens the same dialog with the layers from that answer, and its confirmed retry publishes. No message mentions rings; the dialog passes axe and returns focus to Upload on Cancel.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the packages spec through `scripts/e2e-local.sh`.
+
+## Reviewer feedback (October 23, 2026)
+
+### WEB-61: Draft question editing and descriptive form copy
+Status: doing · Phase 4 · Size L · Depends: none · Blocks: QA-10
+Read first: `docs/reviews/app-feedback-2026-10-23/README.md` R01–R10, R12–R15, R28, R30; `docs/plan/app-feedback-2026-10-23/contract-decisions.md`.
+Do: reorder questions with pointer and keyboard controls, edit IDs atomically with dependent references, expose static/dynamic options and conditions, expose optional bounds, use requested copy/defaults and ID dataset mappings in new drafts. Preserve published definitions.
+Done when: save/reload, dependency refusal, required visibility, changed-parent pruning and protected export-column behavior pass local integration; Day/Dusk at 390, 768, 1024, 1440 widths inspected.
+Evidence: execution packet P10-forms; focused operation/model tests pass; rendered acceptance pending.
+Verify: focused web tests, TypeScript/lint, form browser specs.
+
+### WEB-62: Invitation defaults, batches and account recovery
+Status: doing · Phase 4 · Size M · Depends: none · Blocks: QA-10
+Read first: feedback R16–R22; execution worker journal P11-invites.
+Do: use 14-day expiry and shared role descriptions, email batches with per-recipient outcomes, explicit email/code modes, preserve invitation when switching accounts, remove irrelevant join-page promotion.
+Done when: local two-account acceptance/recovery, partial batch failure, retry and narrow screen checks pass with email delivery off.
+Evidence: 63 focused web tests and 11 backend tests passed; local browser acceptance pending.
+Verify: invitation unit tests and invite-viewer/team browser specs.
+
+### WEB-63: Clear report date filters
+Status: doing · Phase 4 · Size S · Depends: none · Blocks: QA-10
+Read first: feedback R23–R24; execution worker journal P12-reports.
+Do: expose All/Custom Date Range, From/To, and Round Type; clear dates while preserving other URL filters.
+Done when: real local URL, scope and printed report checks pass at desktop and phone widths.
+Evidence: report model tests and source checks passed; browser acceptance pending.
+Verify: reports-feedback browser spec and report unit tests.
+
+### WEB-64: Schema2 field authoring, preview and version boundaries
+Status: doing · Phase 4 · Size L · Depends: CON-07 · Blocks: QA-10
+Read first: feedback R11, R25–R26; reviewed contract decisions; CON-08 and BE-27.
+Do: author integer/decimal and date/time configuration, automatic capture sources and visible source descriptions; preview canonical values and manual DST choices; require served schema metadata at editor/publish boundaries. This takes the needed version-boundary portion of WEB-56; database-backed templates and variable library remain deferred.
+Done when: core parity, preview, source/dataset review and unsupported-version refusal pass; no fabricated account data or silent number rounding.
+Verify: web tests, type/lint, full form parity and local extended-form acceptance.

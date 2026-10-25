@@ -1,0 +1,380 @@
+{
+  "currentSchemaVersion": 2,
+  "definition": {
+    "version": "synthetic-validation-v1",
+    "title": "Synthetic validation checks",
+    "summary": "Authored parser regressions, not a research instrument.",
+    "source": "Synthetic regression",
+    "status": "draft",
+    "inclusion": "Synthetic only"
+  },
+  "question": {
+    "id": "count",
+    "code": "Count",
+    "exportColumn": "Count",
+    "act": "Play",
+    "label": "Synthetic count",
+    "kind": "number",
+    "required": true,
+    "source": "Synthetic regression"
+  },
+  "cases": [
+    {
+      "id": "inverted-positive-bounds",
+      "patch": {
+        "min": 10,
+        "max": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "inverted-negative-bounds",
+      "patch": {
+        "min": -1,
+        "max": -10
+      },
+      "valid": false
+    },
+    {
+      "id": "inverted-zero-bound",
+      "patch": {
+        "min": 0,
+        "max": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "inverted-optional-number",
+      "patch": {
+        "required": false,
+        "min": 10,
+        "max": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "equal-positive-bounds",
+      "patch": {
+        "min": 10,
+        "max": 10
+      },
+      "valid": true
+    },
+    {
+      "id": "equal-negative-bounds",
+      "patch": {
+        "min": -10,
+        "max": -10
+      },
+      "valid": true
+    },
+    {
+      "id": "equal-zero-bounds",
+      "patch": {
+        "min": 0,
+        "max": 0
+      },
+      "valid": true
+    },
+    {
+      "id": "ordered-negative-bounds",
+      "patch": {
+        "min": -10,
+        "max": -1
+      },
+      "valid": true
+    },
+    {
+      "id": "ordered-cross-zero-bounds",
+      "patch": {
+        "min": -10,
+        "max": 10
+      },
+      "valid": true
+    },
+    {
+      "id": "minimum-only",
+      "patch": {
+        "min": 10
+      },
+      "valid": true
+    },
+    {
+      "id": "maximum-only",
+      "patch": {
+        "max": -1
+      },
+      "valid": true
+    },
+    {
+      "id": "zero-minimum-only",
+      "patch": {
+        "min": 0
+      },
+      "valid": true
+    },
+    {
+      "id": "zero-maximum-only",
+      "patch": {
+        "max": 0
+      },
+      "valid": true
+    },
+    {
+      "id": "omitted-bounds",
+      "patch": {},
+      "valid": true
+    },
+    {
+      "id": "safe-integer-limits",
+      "patch": {
+        "min": -9007199254740991,
+        "max": 9007199254740991
+      },
+      "valid": true
+    },
+    {
+      "id": "unsafe-minimum",
+      "patch": {
+        "min": -9007199254740992
+      },
+      "valid": false
+    },
+    {
+      "id": "unsafe-maximum",
+      "patch": {
+        "max": 9007199254740992
+      },
+      "valid": false
+    },
+    {
+      "id": "fractional-minimum",
+      "patch": {
+        "min": 0.5
+      },
+      "valid": false
+    },
+    {
+      "id": "fractional-maximum",
+      "patch": {
+        "max": 0.5
+      },
+      "valid": false
+    },
+    {
+      "id": "boolean-minimum",
+      "patch": {
+        "min": false
+      },
+      "valid": false
+    },
+    {
+      "id": "boolean-maximum",
+      "patch": {
+        "max": true
+      },
+      "valid": false
+    },
+    {
+      "id": "string-minimum",
+      "patch": {
+        "min": "0"
+      },
+      "valid": false
+    },
+    {
+      "id": "string-maximum",
+      "patch": {
+        "max": "10"
+      },
+      "valid": false
+    },
+    {
+      "id": "null-minimum",
+      "patch": {
+        "min": null
+      },
+      "valid": false
+    },
+    {
+      "id": "null-maximum",
+      "patch": {
+        "max": null
+      },
+      "valid": false
+    },
+    {
+      "id": "answer-id-site_id",
+      "patch": {
+        "id": "site_id"
+      },
+      "valid": true
+    },
+    {
+      "id": "answer-id-form_version",
+      "patch": {
+        "id": "form_version"
+      },
+      "valid": true
+    },
+    {
+      "id": "answer-id-coordinates",
+      "patch": {
+        "id": "coordinates"
+      },
+      "valid": true
+    },
+    {
+      "id": "answer-id-observed_at",
+      "patch": {
+        "id": "observed_at"
+      },
+      "valid": true
+    },
+    {
+      "id": "answer-id-zone",
+      "patch": {
+        "id": "zone"
+      },
+      "valid": true
+    },
+    {
+      "id": "answer-id-round_type",
+      "patch": {
+        "id": "round_type"
+      },
+      "valid": true
+    },
+    {
+      "id": "answer-id-first_round",
+      "patch": {
+        "id": "first_round"
+      },
+      "valid": true
+    },
+    {
+      "id": "answer-id-placement",
+      "patch": {
+        "id": "placement"
+      },
+      "valid": true
+    },
+    {
+      "id": "schema-version-current",
+      "schemaVersion": 2,
+      "patch": {},
+      "valid": true
+    },
+    {
+      "id": "unknown-schema-version-next",
+      "schemaVersion": 3,
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-zero",
+      "schemaVersion": 0,
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-text",
+      "schemaVersion": "1",
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-null",
+      "schemaVersion": null,
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-boolean",
+      "schemaVersion": true,
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "decimal-negative-fractional-bounds",
+      "patch": {
+        "numberMode": "decimal",
+        "min": -1.5,
+        "max": 2.25
+      },
+      "valid": true
+    },
+    {
+      "id": "integer-fractional-bound-rejected",
+      "patch": {
+        "numberMode": "integer",
+        "min": -1.5
+      },
+      "valid": false
+    },
+    {
+      "id": "account-source-only-text",
+      "patch": {
+        "valueSource": "accountId"
+      },
+      "valid": false
+    },
+    {
+      "id": "observer-source-text-valid",
+      "patch": {
+        "kind": "text",
+        "valueSource": "observerCode"
+      },
+      "valid": true
+    },
+    {
+      "id": "capture-source-only-date-time",
+      "patch": {
+        "kind": "dateTime",
+        "dateTime": {
+          "mode": "dateTime",
+          "timeZone": "UTC"
+        },
+        "valueSource": "captureTime"
+      },
+      "valid": true
+    },
+    {
+      "id": "date-time-config-not-text",
+      "patch": {
+        "dateTime": {
+          "mode": "date",
+          "timeZone": "UTC"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "date-time-timezone-must-be-valid",
+      "patch": {
+        "kind": "dateTime",
+        "dateTime": {
+          "mode": "date",
+          "timeZone": "Not/AZone"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "date-time-timezone-refuses-posixrules-file",
+      "patch": {
+        "kind": "dateTime",
+        "dateTime": {
+          "mode": "date",
+          "timeZone": "posixrules"
+        }
+      },
+      "valid": false
+    }
+  ]
+}

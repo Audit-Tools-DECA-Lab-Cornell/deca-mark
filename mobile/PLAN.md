@@ -765,3 +765,10 @@ Read first: MOB-21; `mobile/README.md` (simulator and local stack); `docs/qa/dev
 Do: create `mobile/maestro/` with flows against the local stack: (1) Training → place → answer two questions with the keyboard up (assert the field and Continue sit above the keyboard by frame, MOB-34) → kill → relaunch → Unfinished card → Resume restores the answers; (2) account A saves offline and signs out (the warning names the pause), B signs in and sees none of A's records, A signs back in and the record uploads exactly once; (3) a double tap on a single-choice answer leaves the next question unanswered. Run them on the iOS and Android simulators/emulators of D33.
 Done when: the three flows pass on iOS and Android and fail when MOB-34 or MOB-36 is reverted; the run command is in `mobile/README.md`.
 Verify: the flows on both platforms, output in the PR.
+
+### MOB-50: Schema2 capture inputs and durable frozen context
+Status: doing · Phase 4 · Size L · Depends: CON-07 · Blocks: QA-10
+Read first: CON-08; feedback R11/R25/R26; reviewed contract decisions.
+Do: support decimal/date/time inputs, freeze identity/code/time at first placement outside pruned answers, preserve through restart/profile changes, validate automatic sources; persist actual form schema metadata with bounded safe cache/draft conversion and retained actionable refusal. This takes the needed version-boundary portion of MOB-43; Training/templates and queue replacement stay in their owning tasks.
+Done when: hidden→shown, restart, wrong-account, profile-change and immutable-queue tests pass; physical native keyboard/timezone/DST checks remain explicit release gates. No reset or automatic app version bump.
+Verify: mobile type/lint/tests, engine parity, native acceptance where available.

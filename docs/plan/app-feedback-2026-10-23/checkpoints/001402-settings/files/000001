@@ -1,0 +1,70 @@
+"use client";
+
+import { useId } from "react";
+
+import { Button } from "@/components/contour/Button";
+import { Field } from "@/components/contour/Field";
+import { Select } from "@/components/contour/Select";
+import { TextInput } from "@/components/contour/TextInput";
+import type { Condition } from "@/lib/forms";
+
+import { ConditionRuleEditor } from "./ConditionRuleEditor";
+import type { QuestionPatch } from "./QuestionSettings";
+import type { RawQuestion } from "./raw";
+
+export function ConditionNode({ value, earlier, readOnly, onChange, onRemove }: {
+	value: Condition;
+	earlier: readonly RawQuestion[];
+	readOnly: boolean;
+	onChange: (condition: Condition) => void;
+	onRemove: () => void;
+}) {
+	const id = useId();
+	if (value.kind !== "all" && value.kind !== "any") return <div className="flex min-w-0 flex-col gap-3 border-l-2 border-line pl-4">
+		<ConditionRuleEditor value={value} earlier={earlier} readOnly={readOnly} onChange={onChange} />
+		{!readOnly && <div><Button variant="outline" onClick={onRemove}>Remove condition</Button></div>}
+	</div>;
+	return <fieldset className="flex min-w-0 flex-col gap-4 border-l-2 border-line pl-4">
+		<legend className="mb-3 type-small font-semibold text-ink">Condition group</legend>
+		<Field label="Match" htmlFor={id}>
+			{readOnly ? <TextInput readOnly value={value.kind === "all" ? "All conditions" : "Any condition"} /> : <Select value={value.kind} onChange={event => onChange({ ...value, kind: event.target.value === "any" ? "any" : "all" })}>
+				<option value="all">All conditions</option><option value="any">Any condition</option>
+			</Select>}
+		</Field>
+		{value.of.map((child, index) => <ConditionNode key={index} value={child} earlier={earlier} readOnly={readOnly} onChange={next => onChange({ ...value, of: value.of.map((part, at) => at === index ? next : part) })} onRemove={() => {
+			const of = value.of.filter((_, at) => at !== index);
+			if (of.length === 0) onRemove();
+			else onChange({ ...value, of });
+		}} />)}
+		{!readOnly && <div className="flex flex-wrap gap-3">
+			<Button variant="outline" disabled={earlier.length === 0} onClick={() => { if (earlier[0]) onChange({ ...value, of: [...value.of, { kind: "answered", question: earlier[0].id }] }); }}>Add condition</Button>
+			<Button variant="outline" disabled={earlier.length === 0} onClick={() => { if (earlier[0]) onChange({ ...value, of: [...value.of, { kind: "all", of: [{ kind: "answered", question: earlier[0].id }] }] }); }}>Add group</Button>
+			<Button variant="outline" onClick={onRemove}>Remove group</Button>
+		</div>}
+	</fieldset>;
+}
+
+export function ConditionEditor({ question, earlier, readOnly, onChange }: {
+	question: RawQuestion;
+	earlier: readonly RawQuestion[];
+	readOnly: boolean;
+	onChange: (patch: QuestionPatch) => void;
+}) {
+	const id = useId();
+	return <div className="flex min-w-0 flex-col gap-4 border-t border-rule pt-6">
+		<Field label="Show this question" htmlFor={`${id}-visibility`}>
+			{readOnly ? <TextInput readOnly value={question.dependsOn ? "Conditions" : "Always"} /> : <Select value={question.dependsOn ? "conditions" : "always"} onChange={event => {
+				if (event.target.value === "always") onChange({ dependsOn: undefined, openedBy: undefined });
+				else if (earlier[0]) onChange({ dependsOn: { kind: "all", of: [{ kind: "answered", question: earlier[0].id }] } });
+			}}><option value="always">Always</option><option value="conditions" disabled={earlier.length === 0}>Conditions</option></Select>}
+		</Field>
+		{!readOnly && earlier.length === 0 && <p className="type-small text-ink-2">Conditions can refer to questions earlier in this form.</p>}
+		{question.dependsOn && <>
+			<ConditionNode value={question.dependsOn} earlier={earlier} readOnly={readOnly} onChange={dependsOn => onChange({ dependsOn })} onRemove={() => onChange({ dependsOn: undefined, openedBy: undefined })} />
+			{!readOnly && question.dependsOn.kind !== "all" && question.dependsOn.kind !== "any" && <div><Button variant="outline" onClick={() => { if (question.dependsOn) onChange({ dependsOn: { kind: "all", of: [question.dependsOn] } }); }}>Add condition group</Button></div>}
+			<Field label="Message when this question appears" htmlFor={`${id}-message`} optional>
+				<TextInput value={question.openedBy ?? ""} readOnly={readOnly} onChange={event => onChange({ openedBy: event.target.value || undefined })} />
+			</Field>
+		</>}
+	</div>;
+}

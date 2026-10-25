@@ -1,0 +1,29 @@
+import { describe, expect, it } from "vitest";
+import { capturedAnswers, captureContextSchema, captureProblem } from "./capture";
+import { parseFormDefinition } from "./definition";
+import { reduceSession, startSession } from "./session";
+
+const form = parseFormDefinition({ version: "capture-v2", title: "Capture", summary: "Synthetic", source: "test", status: "published", inclusion: "test", questions: [
+  { id: "branch", code: "branch", exportColumn: "branch", act: "Record", label: "Branch", source: "test", kind: "one", options: [{ code: "yes", label: "Yes" }, { code: "no", label: "No" }] },
+  ...["accountId", "observerCode", "captureTime"].map((valueSource) => ({ id: valueSource, code: valueSource, exportColumn: valueSource, act: "Record", label: valueSource, source: "test", kind: valueSource === "captureTime" ? "dateTime" : "text", valueSource, ...(valueSource === "captureTime" ? { dateTime: { mode: "dateTime", timeZone: "America/New_York" } } : {}), dependsOn: { kind: "equals", question: "branch", option: "yes" } })),
+] });
+const capture = captureContextSchema.parse({ accountId: "account-A", observerCode: "AB", capturedAt: "2026-10-24T14:00:00.000Z" });
+
+describe("Frozen first-placement capture", () => {
+  it("rederives hidden then shown automatic answers from persisted context after restart/profile change", () => {
+    let answers = capturedAnswers(form, { branch: "yes" }, capture);
+    expect(answers).toMatchObject({ accountId: "account-A", observerCode: "AB", captureTime: capture.capturedAt });
+    answers = capturedAnswers(form, reduceSession(form, startSession(answers), { kind: "choose", question: "branch", option: "no" }).state.answers, capture);
+    expect(answers).toEqual({ branch: "no" });
+    const restarted = captureContextSchema.parse(JSON.parse(JSON.stringify(capture)));
+    answers = capturedAnswers(form, { ...answers, branch: "yes", observerCode: "CHANGED PROFILE" }, restarted);
+    expect(answers).toMatchObject({ observerCode: "AB", captureTime: capture.capturedAt });
+    expect(captureProblem(form, answers, restarted, "account-B")).toMatch(/differs/);
+  });
+  it("refuses retained automatic drafts with missing context and blank optional sources", () => {
+    const answers = capturedAnswers(form, { branch: "yes" }, undefined);
+    expect(captureProblem(form, answers, undefined, "account-A")).toMatch(/retained draft/);
+    const blank = { ...capture, observerCode: "" };
+    expect(captureProblem(form, capturedAnswers(form, { branch: "yes" }, blank), blank, "account-A")).toMatch(/no captured value/);
+  });
+});

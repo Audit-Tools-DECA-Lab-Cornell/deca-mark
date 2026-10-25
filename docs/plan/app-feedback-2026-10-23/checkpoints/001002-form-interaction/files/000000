@@ -1,0 +1,7 @@
+# Form implementation journal
+
+Root owns editor/list/model/raw/starter/template/form-creation and pure operations. form_settings worker exclusively owns settings/add dialog/new settings components.
+
+Implemented pure immutable operations: question reordering with visibility/dynamic dependency order refusal; atomic ID rename with nested rule/dynamic parent reference rewriting; ID-based ordinary/dynamic export mappings. Five focused behavior tests pass under Node24. No browser acceptance yet.
+
+Next: integrate operations into editor/list and dataset review, then shared export provenance. Preserve historical columns and distinguish automatic observer answers in exports per spec review.

@@ -1,0 +1,281 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003128-mobile-release",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/evidence/P31-mobile/inputs.json",
+      "state": "present",
+      "sha256": "8927b97d769bbb25ba1caf1a3c422edeb9e9090897aee17f4f26a818bcbcab2d",
+      "blob": "files/000000",
+      "bytes": 8539
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P31-mobile.md",
+      "state": "present",
+      "sha256": "956feddb174dc5826f60b6b80801f586b5a93aa62de646bee444849842bf46cf",
+      "blob": "files/000001",
+      "bytes": 4932
+    },
+    {
+      "path": "mobile/src/data/api/errors.ts",
+      "state": "present",
+      "sha256": "238b4dd488dc641562d7a5809ab1d40c288582639c103b185ff8ceb76c1b6f9b",
+      "blob": "files/000002",
+      "bytes": 5817
+    },
+    {
+      "path": "mobile/src/data/api/schema-refusal.test.ts",
+      "state": "present",
+      "sha256": "15dea8b64ad4220e8f9fdb05109642ee8a8a5030a9b80d172032d7d68302037f",
+      "blob": "files/000003",
+      "bytes": 498
+    },
+    {
+      "path": "mobile/src/domain/build-observation.ts",
+      "state": "present",
+      "sha256": "239e12f16c381b79b37d4c7eecc2794985db458391d6c53b725047a9f843b2c2",
+      "blob": "files/000004",
+      "bytes": 4235
+    },
+    {
+      "path": "mobile/src/features/collect/QuestionStep.tsx",
+      "state": "present",
+      "sha256": "86bbfa6e653a9227b4da4978dde41440a526293a2f14cd77535d9a13d8bb77c5",
+      "blob": "files/000005",
+      "bytes": 8347
+    },
+    {
+      "path": "mobile/src/features/collect/QuestionValueInput.tsx",
+      "state": "present",
+      "sha256": "6649cadff87a6de622313d8cc03b89fe36e86c46e90da6849aca4a9a46bb39d5",
+      "blob": "files/000006",
+      "bytes": 3153
+    },
+    {
+      "path": "mobile/src/features/collect/TemporalInput.tsx",
+      "state": "present",
+      "sha256": "05ed7bbf5402b745d5a1345c7725e22eeca02f11e80197a90c1415b6032465b3",
+      "blob": "files/000007",
+      "bytes": 2334
+    },
+    {
+      "path": "mobile/src/features/collect/temporal-input.test.ts",
+      "state": "present",
+      "sha256": "fa255992486e722cd81e46767b01630589de2fbc311862ec24daf59b24e00f58",
+      "blob": "files/000008",
+      "bytes": 1528
+    },
+    {
+      "path": "mobile/src/features/collect/temporal-input.ts",
+      "state": "present",
+      "sha256": "f0deecf54a1f6e1fb8f5f76909e72ac2175484a6d35176bdde2100f9e1510809",
+      "blob": "files/000009",
+      "bytes": 1484
+    },
+    {
+      "path": "mobile/src/features/projects/versions.ts",
+      "state": "present",
+      "sha256": "fce6e09110abe4b81c6f63ec37b73cf183f3633385d141197eae050094cd281e",
+      "blob": "files/000010",
+      "bytes": 11006
+    },
+    {
+      "path": "mobile/src/forms/capture.test.ts",
+      "state": "present",
+      "sha256": "a5164caa5e4c17b0a3e8c811d4f141e9836e9e8c868d3188e62e33df108041da",
+      "blob": "files/000011",
+      "bytes": 2876
+    },
+    {
+      "path": "mobile/src/forms/capture.ts",
+      "state": "present",
+      "sha256": "69535959c3dd5ef28caa58f291682322b3e3f26ed47135904c53c35afd1c23a0",
+      "blob": "files/000012",
+      "bytes": 2680
+    },
+    {
+      "path": "mobile/src/forms/contracts.test.ts",
+      "state": "present",
+      "sha256": "33d00fb62d9d855719f1f34c2ad30d9c805f8f435f955262b3cd148993057c72",
+      "blob": "files/000013",
+      "bytes": 3448
+    },
+    {
+      "path": "mobile/src/forms/draft-answers.ts",
+      "state": "present",
+      "sha256": "499347333e6b46ae3cb76cc64b230b7244ff7ae7c5669040b2b012ba34851ce0",
+      "blob": "files/000014",
+      "bytes": 831
+    },
+    {
+      "path": "mobile/src/forms/numeric-entry.test.ts",
+      "state": "present",
+      "sha256": "ebffce629f7ac0bff0178accd30e99d6e1836927a5faead0d06820da79aaac12",
+      "blob": "files/000015",
+      "bytes": 1256
+    },
+    {
+      "path": "mobile/src/forms/session.ts",
+      "state": "present",
+      "sha256": "a8ad61d24e58d9c3c9ecc27e950d1248a1150257a3582aec2d0d5ffac9670303",
+      "blob": "files/000016",
+      "bytes": 5363
+    },
+    {
+      "path": "mobile/src/packages/hosted/bound-fixture.ts",
+      "state": "present",
+      "sha256": "c6ef1087b7bcdbbdac90cfc6f0727c9d3bd475ddb6f835360a2753942a095ebf",
+      "blob": "files/000017",
+      "bytes": 3544
+    },
+    {
+      "path": "mobile/src/packages/hosted/bound-prepare.test.ts",
+      "state": "present",
+      "sha256": "bbfdb1c23bb7781a9bf9f0e1da1db15c6fa99f456157bd86454a7bcec2b02f30",
+      "blob": "files/000018",
+      "bytes": 5709
+    },
+    {
+      "path": "mobile/src/packages/hosted/cache-retention.test.ts",
+      "state": "present",
+      "sha256": "6d3c862fc6e80896b28dd0e6a303ab52332e81dd379bcfea97e41dcb1745eb44",
+      "blob": "files/000019",
+      "bytes": 1591
+    },
+    {
+      "path": "mobile/src/packages/hosted/download-failure.ts",
+      "state": "present",
+      "sha256": "15803103cd6e78b56cf9c93194bbd837facb3ea75bb59da03f49ac2df04234dc",
+      "blob": "files/000020",
+      "bytes": 1062
+    },
+    {
+      "path": "mobile/src/packages/hosted/form-upgrade.ts",
+      "state": "present",
+      "sha256": "48394acaadaad665c3d93c8383c2f082dd358182e508755eb66d7b01934a5977",
+      "blob": "files/000021",
+      "bytes": 1426
+    },
+    {
+      "path": "mobile/src/packages/hosted/installation.ts",
+      "state": "present",
+      "sha256": "c47ba902b80b6413ea04d51fca6a0d8edfa73f1283721e4270c54c1d1f3eabcf",
+      "blob": "files/000022",
+      "bytes": 6073
+    },
+    {
+      "path": "mobile/src/packages/hosted/operations.ts",
+      "state": "present",
+      "sha256": "2666136458f411a35ef92767982a69328d1ae601b28aeee992f404191568938e",
+      "blob": "files/000023",
+      "bytes": 8014
+    },
+    {
+      "path": "mobile/src/packages/hosted/prepare.ts",
+      "state": "present",
+      "sha256": "35e83a8d564c886a29db3d90000900dd725016722b53ba5869ba59f5763ded2b",
+      "blob": "files/000024",
+      "bytes": 3219
+    },
+    {
+      "path": "mobile/src/packages/hosted/schema-upgrade.test.ts",
+      "state": "present",
+      "sha256": "753ceecfe21be925fe57be221cd0eaf08c2042e9620b6d8fec29f1b010814db1",
+      "blob": "files/000025",
+      "bytes": 1724
+    },
+    {
+      "path": "mobile/src/packages/hosted/schemas.ts",
+      "state": "present",
+      "sha256": "f0daad10fbf8db15489b474bb2b2f71aa9a43531471750fd03778fd45dce95d4",
+      "blob": "files/000026",
+      "bytes": 4607
+    },
+    {
+      "path": "mobile/src/packages/hosted/verify-bound.ts",
+      "state": "present",
+      "sha256": "73caf5b755bd717c9069ec49dec148fb9377536c7aec8e523e0a5d5fb058fbd3",
+      "blob": "files/000027",
+      "bytes": 4492
+    },
+    {
+      "path": "mobile/src/packages/zone-model-types.ts",
+      "state": "present",
+      "sha256": "dbe3f900ff9a12fd07c2215f7070cf794e893dd57eedf0ac7ab567ebcfacfeb0",
+      "blob": "files/000028",
+      "bytes": 1648
+    },
+    {
+      "path": "mobile/src/session/draft-persistence.ts",
+      "state": "present",
+      "sha256": "156437a6dedc54efbf5026469fc650597d7dc615e75a48fc1358a3b4347c1723",
+      "blob": "files/000029",
+      "bytes": 3570
+    },
+    {
+      "path": "mobile/src/session/observation-actions.ts",
+      "state": "present",
+      "sha256": "5db074b8189bb7668ec1c754edece449590fad4c22fd1fd93371ed4707b139af",
+      "blob": "files/000030",
+      "bytes": 9709
+    },
+    {
+      "path": "mobile/src/session/ownership.ts",
+      "state": "present",
+      "sha256": "be68fa718a07cc6b28cd2f6308a0f343e0b2a3356a711e79e77b4ac5d7d01991",
+      "blob": "files/000031",
+      "bytes": 3789
+    },
+    {
+      "path": "mobile/src/session/package-actions.test.ts",
+      "state": "present",
+      "sha256": "198e2d28a5c390d1fcd86a5cd43f25d938f33dc9468e4f60b080206ac4d3f3f3",
+      "blob": "files/000032",
+      "bytes": 7100
+    },
+    {
+      "path": "mobile/src/session/package-actions.ts",
+      "state": "present",
+      "sha256": "d492314a373009167cfc47882791cbce56972c218b6da5af1d8e5dff1e27db4d",
+      "blob": "files/000033",
+      "bytes": 7541
+    },
+    {
+      "path": "mobile/src/session/provider.tsx",
+      "state": "present",
+      "sha256": "53d4b5bf38ee04a6045332be6d3621c9b0123f82ab7d00f2981ddcdc3c7d3a0a",
+      "blob": "files/000034",
+      "bytes": 7744
+    },
+    {
+      "path": "mobile/src/storage/capture-upgrade.test.ts",
+      "state": "present",
+      "sha256": "8656cc159120db1838ffe83e18302c07d76bd707a0009f83d874e93adb76f10d",
+      "blob": "files/000035",
+      "bytes": 2316
+    },
+    {
+      "path": "mobile/src/storage/draft-retention.test.ts",
+      "state": "present",
+      "sha256": "65e8da49bab127311601167af4f8786da450ef73cdea001e958ca35b1509e502",
+      "blob": "files/000036",
+      "bytes": 3028
+    },
+    {
+      "path": "mobile/src/storage/draft-store.test.ts",
+      "state": "present",
+      "sha256": "f05f93ba77e70463ccace547f7b4cf442eb9804bdda07d46233cae7f30b28db9",
+      "blob": "files/000037",
+      "bytes": 8650
+    },
+    {
+      "path": "mobile/src/storage/draft-store.ts",
+      "state": "present",
+      "sha256": "2289705c41b6e0baf2e2200716839938c897683ba9d9f19118c1fda028f9e9d2",
+      "blob": "files/000038",
+      "bytes": 5613
+    }
+  ]
+}

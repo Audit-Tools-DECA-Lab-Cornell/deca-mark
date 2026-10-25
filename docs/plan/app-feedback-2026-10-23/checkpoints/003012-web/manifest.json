@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003012-web",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "web/src/features/forms/DateTimeSettings.tsx",
+      "state": "present",
+      "sha256": "1fbad7e320bf27b1e251b6ab883c4e6a2dddf1897089fa621219055b0eaa3c10",
+      "blob": "files/000000",
+      "bytes": 3636
+    },
+    {
+      "path": "web/src/features/forms/DraftEditorScreen.tsx",
+      "state": "present",
+      "sha256": "58f77d4ef656ae68eb99ef2a677d9b2e2d6019acdc0f94e42b19d8ba0625c828",
+      "blob": "files/000001",
+      "bytes": 15936
+    },
+    {
+      "path": "web/src/features/forms/model.ts",
+      "state": "present",
+      "sha256": "dba29aabfd8c636cf7cdeca9b994e2d6dbba8e86e51a5c2aee1588d5cfa41d21",
+      "blob": "files/000002",
+      "bytes": 16206
+    },
+    {
+      "path": "web/src/features/forms/starter.ts",
+      "state": "present",
+      "sha256": "1489fd09dfcc1ce387f5c746bf258cd85f3412f1d86cd609b8e625913e0ea2ea",
+      "blob": "files/000003",
+      "bytes": 3433
+    }
+  ]
+}

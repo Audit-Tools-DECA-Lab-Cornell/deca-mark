@@ -1,0 +1,245 @@
+import { useSQLiteContext } from "expo-sqlite";
+import { type PropsWithChildren, useEffect, useRef } from "react";
+import { useAccount } from "../auth/provider";
+import { useMe } from "../data/api/me-provider";
+import type { Coordinate, RoundContext } from "../domain/observation";
+import { useProfile } from "../features/auth/profile-store";
+import { capturedAnswers } from "../forms/capture";
+import type { SessionState } from "../forms/session";
+import { setActivePackage } from "../packages/hosted/access";
+import { useHostedSites } from "../packages/hosted/provider";
+import { useSync } from "../sync/provider";
+import { contextForZone } from "./bound-context";
+import { persistDraft, useDraftRecovery } from "./draft-persistence";
+import { packageActions } from "./package-actions";
+import { useParkedActions } from "./parked-actions";
+import { formForRound } from "./round-forms";
+import { sessionControls } from "./session-controls";
+import { sessionView } from "./session-view";
+import { useSessionMemory } from "./use-session-memory";
+
+/**
+ * One observation period: the package, the zone and round it is stamped with, and the
+ * observation currently being answered.
+ *
+ * Every change writes the draft to SQLite immediately, so a force quit costs nothing and the
+ * upload queue never sees a half-answered form.
+ */
+
+import { type ChangeBlock, FieldSessionContext } from "./context";
+import { useObservationActions } from "./observation-actions";
+
+export { shortLabel } from "../domain/labels";
+export { type OpenOutcome, type SaveOutcome, type SessionSave, useFieldSession } from "./context";
+
+const OPEN_OBSERVATION_BLOCK =
+  "An observation is open. Save or discard it first, so its answers keep the round they were collected in.";
+const OPEN_INVENTORY_BLOCK =
+  "This zone's inventory is open. Save or discard it before choosing another zone.";
+
+export function FieldSessionProvider({ children }: PropsWithChildren) {
+  const database = useSQLiteContext();
+  const { key, ready, account } = useAccount();
+  const { wake } = useSync();
+  const hosted = useHostedSites();
+  const accessNow = useRef(hosted);
+  accessNow.current = hosted;
+  const canAccess = (project: string) =>
+    accessNow.current.problems?.[project] !== "no_access" &&
+    (accessNow.current.allowedProjects == null ||
+      accessNow.current.allowedProjects.includes(project));
+  const accountNow = useRef({ key, generation: 0 });
+  if (accountNow.current.key !== key)
+    accountNow.current = { key, generation: accountNow.current.generation + 1 };
+  const generation = accountNow.current.generation;
+  const visit = useRef<string | null>(null);
+  const current = () =>
+    accountNow.current.key === key && accountNow.current.generation === generation;
+  useEffect(() => {
+    visit.current = null;
+    return () => setActivePackage(key, null);
+  }, [key]);
+  // A hosted form may ask no observer question; its records then carry the account's initials.
+  const profile = useProfile();
+  const me = useMe();
+  const initials = profile.initials || me.profile?.observer_initials || "";
+
+  const memory = useSessionMemory(key);
+  const {
+    packageOwner,
+    setPackageOwner,
+    sitePackage,
+    setSitePackage,
+    zone,
+    zoneRef,
+    setZone,
+    roundType,
+    setRoundType,
+    freshPeriod,
+    setFreshPeriod,
+    placed,
+    setPlaced,
+    placementSource,
+    placementRef,
+    setPlacementSource,
+    setSaves,
+    setArmed,
+    stateRef,
+    apply,
+    setStatus,
+    unreadableDraft,
+    setUnreadableDraft,
+    recovered,
+    setRecovered,
+    inProgress,
+    identity,
+    holdIdentity,
+    openedPackage,
+  } = memory;
+  const form = sitePackage ? formForRound(sitePackage, roundType) : null;
+
+  const context: RoundContext | null =
+    sitePackage && zone
+      ? {
+          packageId: sitePackage.id,
+          packageVersion: sitePackage.version,
+          zoneId: zone.id,
+          zoneLabel: zone.label,
+          roundType,
+          freshPeriod,
+          inheritedFrom: freshPeriod ? "" : sitePackage.inheritedContext,
+        }
+      : null;
+
+  const persist = (next: SessionState, coordinate: Coordinate | null) =>
+    persistDraft({
+      database,
+      key,
+      ready,
+      site: sitePackage,
+      context: context && zoneRef.current ? contextForZone(context, zoneRef.current) : context,
+      owner: identity.current,
+      formVersion: form?.version,
+      placement: placementRef.current,
+      next,
+      coordinate,
+      failed: () => {
+        if (current())
+          setStatus("The draft could not be written to storage. Answers stay on screen.");
+      },
+    });
+  useDraftRecovery({ database, key, ready, setRecovered, setUnreadableDraft, setStatus });
+  const parking = useParkedActions({
+    database,
+    key,
+    ready,
+    current,
+    recovered,
+    open: inProgress !== null,
+    setRecovered,
+    status: setStatus,
+    canAccess,
+  });
+
+  const { openPackage, resumeRecovered, discardRecovered } = packageActions({
+    database,
+    key,
+    identity,
+    current,
+    recovered,
+    sites: hosted.sites,
+    installed: hosted.installed,
+    canAccess,
+    zone,
+    roundType,
+    freshPeriod,
+    setRecovered,
+    setUnreadableDraft,
+    setStatus,
+    opened: (opened, savedZone, savedContext, draft) => {
+      if (openedPackage.current !== opened.id) setSaves([]);
+      openedPackage.current = opened.id;
+      setPackageOwner(key);
+      setSitePackage(opened);
+      setZone(savedZone);
+      setRoundType(savedContext.roundType);
+      setFreshPeriod(savedContext.freshPeriod);
+      if (draft) {
+        setPlaced(draft.coordinates);
+        setPlacementSource(draft.placement?.source ?? "hand");
+        holdIdentity({
+          id: draft.id,
+          startedAt: draft.startedAt,
+          owner: key,
+          packageId: opened.id,
+          packageName: opened.name,
+          ...(draft.binding ? { binding: draft.binding } : {}),
+          ...(draft.capture ? { capture: draft.capture } : {}),
+        });
+        const recoveredForm = formForRound(opened, savedContext.roundType);
+        apply({ index: draft.questionIndex, answers: recoveredForm ? capturedAnswers(recoveredForm, draft.answers, draft.capture) : draft.answers, notice: null });
+      }
+    },
+  });
+
+  const { place, startZoneRecord, nudgeTo, dispatch, save, discard } = useObservationActions({
+    database,
+    key,
+    packageOwner,
+    sitePackage,
+    zone,
+    context,
+    form,
+    recovered,
+    unreadableDraft,
+    placed,
+    initials,
+    accountId: account?.id ?? key,
+    identity,
+    stateRef,
+    placementRef,
+    holdIdentity,
+    setPlaced,
+    setPlacementSource,
+    setArmed,
+    setRecovered,
+    setStatus,
+    setSaves,
+    apply,
+    persist,
+    wake,
+    current,
+  });
+
+  const open = inProgress !== null;
+  const roundBlock: ChangeBlock = open ? OPEN_OBSERVATION_BLOCK : null;
+  const zoneBlock: ChangeBlock = open && placementSource === "zone" ? OPEN_INVENTORY_BLOCK : null;
+
+  return (
+    <FieldSessionContext
+      value={{
+        ...sessionView(memory, key, context, form),
+        ...sessionControls({ memory, key, current, visit, persist, openPackage }),
+        parked: parking.drafts,
+        parkRecovered: parking.parkRecovered,
+        restoreParked: async (id) => {
+          const draft = await parking.restoreParked(id);
+          if (draft && current()) await resumeRecovered(draft);
+        },
+        discardParked: parking.discardParked,
+        roundBlock,
+        zoneBlock,
+        place,
+        startZoneRecord,
+        nudgeTo,
+        dispatch,
+        save,
+        discard,
+        resumeRecovered,
+        discardRecovered,
+      }}
+    >
+      {children}
+    </FieldSessionContext>
+  );
+}

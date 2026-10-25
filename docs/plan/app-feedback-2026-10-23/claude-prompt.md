@@ -1,5 +1,7 @@
 # Claude implementation prompt
 
+Implementation has since started under Codex. Read CURRENT.md first and resume the saved state. For the later read-only UI/UX review, use [the review prompt](claude-ui-review-prompt.md).
+
 Paste the block below into Claude Code while checked out on `docs/app-feedback-2026-10-23-plan`. The referenced plan, intake and initial continuation records are already saved on the branch. The prompt is self-contained as an entrypoint; the linked files hold the full requirements.
 
 ```text

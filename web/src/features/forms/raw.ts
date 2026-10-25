@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import type { formDefinitionSchema, optionSchema, questionSchema } from "@/lib/forms";
+import type { Condition, formDefinitionSchema, optionSchema, questionSchema } from "@/lib/forms";
 
 /**
  * The form editor works on the definition as authored: the shape `contracts/forms/*.json` holds and the API
@@ -9,8 +9,12 @@ import type { formDefinitionSchema, optionSchema, questionSchema } from "@/lib/f
  * result, never inside the edit, so a definition can pass through an invalid state while someone types.
  */
 
-export type RawDefinition = z.input<typeof formDefinitionSchema>;
-export type RawQuestion = z.input<typeof questionSchema>;
+export type RawDefinition = Omit<z.input<typeof formDefinitionSchema>, "questions"> & {
+	questions: RawQuestion[];
+};
+export type RawQuestion = Omit<z.input<typeof questionSchema>, "dependsOn"> & {
+	dependsOn?: Condition;
+};
 export type RawOption = z.input<typeof optionSchema>;
 export type QuestionKind = RawQuestion["kind"];
 export type Act = RawQuestion["act"];
@@ -65,30 +69,29 @@ export const STARTER_OPTIONS: readonly RawOption[] = [
 
 export const ACT_ORDER: readonly Act[] = ["Child", "Social", "Play", "Setting", "Climate", "Inventory", "Record"];
 
-/** Where a question added in the editor says it came from. It has no workbook row and no analysis column. */
+/** Provenance for questions authored in the editor. */
 export const ADDED_SOURCE = "Added in DECA Mark — no workbook row";
 
-/**
- * A new question after the last one of its act (or after the last act that comes before it). It has no
- * analysis column: the editor never invents a column name the research team has not agreed.
- */
+/** Insert a question after the last question in its act, with its ID as the dataset column. */
 export function addQuestion(
 	raw: RawDefinition,
 	act: Act,
 	kind: QuestionKind,
-	label: string
+	label: string,
+	timeZone = "UTC"
 ): { readonly raw: RawDefinition; readonly id: string } {
 	const taken = new Set(raw.questions.map(question => question.id));
 	const id = unique(slugify(label), taken);
 	const question: RawQuestion = {
 		id,
 		code: id,
-		exportColumn: "",
+		exportColumn: id,
 		act,
 		label,
 		kind,
 		...(kind === "one" || kind === "many" ? { options: [...STARTER_OPTIONS], columns: 2 } : {}),
 		...(kind === "text" ? { maxLength: 200 } : {}),
+		...(kind === "dateTime" ? { dateTime: { mode: "dateTime" as const, timeZone } } : {}),
 		source: ADDED_SOURCE
 	};
 	let at = -1;

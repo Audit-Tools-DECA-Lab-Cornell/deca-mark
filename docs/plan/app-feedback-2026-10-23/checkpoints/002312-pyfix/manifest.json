@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002312-pyfix",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/tests/test_schema2_migration_rehearsal.py",
+      "state": "present",
+      "sha256": "27287d2e84bb624caede680869b4ac20296b340f703c5cbad93dccca11e45929",
+      "blob": "files/000000",
+      "bytes": 9475
+    },
+    {
+      "path": "supabase/migrations/20261024090000_form_schema2.sql",
+      "state": "present",
+      "sha256": "42a8bd2bc3c7c4b3432188c70ba34cae15c634905cd3403a8fae042ed8e4bb00",
+      "blob": "files/000001",
+      "bytes": 4981
+    }
+  ]
+}

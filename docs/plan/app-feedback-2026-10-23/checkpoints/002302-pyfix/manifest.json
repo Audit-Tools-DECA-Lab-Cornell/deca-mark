@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002302-pyfix",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/tests/test_schema2_migration_rehearsal.py",
+      "state": "present",
+      "sha256": "e031f916df2fd0fa1c30e0f383e7a6248ef9402d9d58793c215f69bbdde25765",
+      "blob": "files/000000",
+      "bytes": 6375
+    },
+    {
+      "path": "database/baseline-rehearsal.sh",
+      "state": "present",
+      "sha256": "9fd09250aab875fc297e6ae9476ec84086810b621b16845ba7ea45a1af750c01",
+      "blob": "files/000001",
+      "bytes": 4221
+    }
+  ]
+}

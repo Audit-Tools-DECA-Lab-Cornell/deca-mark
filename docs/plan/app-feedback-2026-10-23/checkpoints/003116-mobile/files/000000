@@ -1,0 +1,43 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { describe, expect, it } from "vitest";
+import { readDraft, saveDraft } from "./draft-store";
+import { initializeDatabase, saveObservation } from "./observation-store";
+import { installPackage } from "./package-catalog";
+import { adapter, boundDraft, boundRecord, entry, owner } from "./package-store.fixture";
+
+describe("Durable capture schema upgrade", () => {
+  it("retains frozen context and schema1 work through restart without changing queued upload bytes", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "capture-upgrade-"));
+    const file = join(directory, "collector.db");
+    let sqlite = new DatabaseSync(file);
+    try {
+      let db = adapter(sqlite);
+      await initializeDatabase(db);
+      await installPackage(db, owner, entry);
+      await saveObservation(db, boundRecord, owner);
+      const queued = sqlite.prepare("SELECT payload FROM observations").get();
+      const legacy = { ...boundDraft, id: "60000000-0000-4000-8000-000000000002" };
+      await saveDraft(db, owner, legacy);
+      expect(await readDraft(db, owner)).toEqual(legacy);
+      const upgraded = { ...legacy, schemaVersion: 2 as const, capture: { accountId: "account-A", observerCode: "AB", capturedAt: legacy.startedAt }, answers: { number: -1.25 } };
+      await saveDraft(db, owner, upgraded);
+      sqlite.close();
+      sqlite = new DatabaseSync(file);
+      db = adapter(sqlite);
+      await initializeDatabase(db);
+      expect(await readDraft(db, owner)).toEqual(upgraded);
+      expect(sqlite.prepare("SELECT payload FROM observations").get()).toEqual(queued);
+      const raw = JSON.stringify({ ...upgraded, schemaVersion: 99 });
+      sqlite.prepare("UPDATE observation_drafts SET payload=?").run(raw);
+      await expect(readDraft(db, owner)).rejects.toThrow(/retained/);
+      expect(sqlite.prepare("SELECT payload FROM observation_drafts").get()).toEqual({ payload: raw });
+      expect(sqlite.prepare("SELECT payload FROM observations").get()).toEqual(queued);
+    } finally {
+      sqlite.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+});

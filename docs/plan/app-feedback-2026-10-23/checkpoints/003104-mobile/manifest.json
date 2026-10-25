@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003104-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "mobile/src/features/collect/TemporalInput.tsx",
+      "state": "present",
+      "sha256": "45c0ea54ee366853c5fbb19c95d2199df72bd497a1c8d2d7a79aa2970754eff6",
+      "blob": "files/000000",
+      "bytes": 2024
+    },
+    {
+      "path": "mobile/src/features/collect/temporal-input.ts",
+      "state": "present",
+      "sha256": "197d972236fa4b97742188123dc14379f95024fd66358793b622781017363204",
+      "blob": "files/000001",
+      "bytes": 1396
+    }
+  ]
+}

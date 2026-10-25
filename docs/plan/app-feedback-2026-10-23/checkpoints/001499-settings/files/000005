@@ -1,0 +1,109 @@
+"use client";
+
+import { useId, useState } from "react";
+
+import { Field } from "@/components/contour/Field";
+import { TextInput } from "@/components/contour/TextInput";
+
+import type { QuestionPatch } from "./QuestionSettings";
+import type { RawQuestion } from "./raw";
+
+function boundValue(text: string): number | undefined {
+	if (text.trim() === "") return undefined;
+	return /^-?\d+$/.test(text) && Number.isSafeInteger(Number(text)) ? Number(text) : Number.NaN;
+}
+
+const INVALID_BOUND = "Enter a whole number within the supported range, or leave it blank.";
+export function boundsProblem(question: RawQuestion): string | null {
+	if (question.kind !== "number") return null;
+	if ([question.min, question.max].some(value => value !== undefined && !Number.isSafeInteger(value)))
+		return INVALID_BOUND;
+	if (question.min !== undefined && question.max !== undefined && question.min > question.max)
+		return "Minimum must be less than or equal to maximum.";
+	return null;
+}
+
+function BoundInput({
+	value,
+	readOnly,
+	placeholder,
+	onChange
+}: {
+	value: number | undefined;
+	readOnly: boolean;
+	placeholder: string;
+	onChange: (value: number | undefined) => void;
+}) {
+	const [buffer, setBuffer] = useState({ text: value?.toString() ?? "", value });
+	if (!Object.is(value, buffer.value)) setBuffer({ text: value?.toString() ?? "", value });
+	return (
+		<TextInput
+			inputMode="numeric"
+			value={buffer.text}
+			readOnly={readOnly}
+			placeholder={placeholder}
+			onChange={event => {
+				const next = boundValue(event.target.value);
+				setBuffer({ text: event.target.value, value: next });
+				onChange(next);
+			}}
+		/>
+	);
+}
+
+export function NumberBoundsEditor({
+	question,
+	readOnly,
+	onChange
+}: {
+	question: RawQuestion;
+	readOnly: boolean;
+	onChange: (patch: QuestionPatch) => void;
+}) {
+	const id = useId();
+	const inverted = question.min !== undefined && question.max !== undefined && question.min > question.max;
+	return (
+		<fieldset className="flex flex-col gap-3">
+			<legend className="mb-3 type-small font-semibold text-ink">Number range</legend>
+			<p className="type-small text-ink-2">Leave both blank for no range limit.</p>
+			<div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+				<Field
+					label="Minimum"
+					htmlFor={`${id}-min`}
+					optional
+					error={
+						!readOnly
+							? question.min !== undefined && !Number.isSafeInteger(question.min)
+								? INVALID_BOUND
+								: inverted
+									? "Minimum must be less than or equal to maximum."
+									: undefined
+							: undefined
+					}>
+					<BoundInput
+						value={question.min}
+						readOnly={readOnly}
+						placeholder="No minimum"
+						onChange={min => onChange({ min })}
+					/>
+				</Field>
+				<Field
+					label="Maximum"
+					htmlFor={`${id}-max`}
+					optional
+					error={
+						!readOnly && question.max !== undefined && !Number.isSafeInteger(question.max)
+							? INVALID_BOUND
+							: undefined
+					}>
+					<BoundInput
+						value={question.max}
+						readOnly={readOnly}
+						placeholder="No maximum"
+						onChange={max => onChange({ max })}
+					/>
+				</Field>
+			</div>
+		</fieldset>
+	);
+}

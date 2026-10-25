@@ -1,0 +1,125 @@
+{
+  "verifiedAt": "2026-10-25T05:54:29.420614+00:00",
+  "target": "local Docker supabase_db_field-maps",
+  "dockerEndpoint": "unix:///Users/praty/.docker/run/docker.sock",
+  "migration": "20261024090000",
+  "migrationSourceSha256": "42a8bd2bc3c7c4b3432188c70ba34cae15c634905cd3403a8fae042ed8e4bb00",
+  "validatedForms": 2,
+  "before": {
+    "versions": [
+      {
+        "schema_version": 1,
+        "rows": 2
+      }
+    ],
+    "default": "1",
+    "trigger": "O",
+    "history": 0
+  },
+  "after": {
+    "versions": [
+      {
+        "schema_version": 2,
+        "rows": 2
+      }
+    ],
+    "default": "2",
+    "trigger": "O",
+    "history": 1
+  },
+  "preservedTables": [
+    {
+      "name": "fieldmaps_meta.schema_migrations",
+      "rows": 2,
+      "fingerprint": "a8b33c309d3fa38cc5db14d52788e09e"
+    },
+    {
+      "name": "fieldmaps.form_versions",
+      "rows": 2,
+      "fingerprint": "d6390585c0812f8dacd7f0faaae72ba7"
+    },
+    {
+      "name": "fieldmaps.forms",
+      "rows": 2,
+      "fingerprint": "b9d7b871e541dfb4c33ab4a3b5f2af40"
+    },
+    {
+      "name": "fieldmaps.invitations",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.observations",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.organization_members",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.organizations",
+      "rows": 2,
+      "fingerprint": "6930440403375f58ea8b524d409706fa"
+    },
+    {
+      "name": "fieldmaps.package_checks",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.package_zones",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.profiles",
+      "rows": 4,
+      "fingerprint": "17f576ce757c47ad2236a7032245f74f"
+    },
+    {
+      "name": "fieldmaps.project_memberships",
+      "rows": 3,
+      "fingerprint": "ed1f9a013214e7d9004ad5f6bfd6aaf1"
+    },
+    {
+      "name": "fieldmaps.projects",
+      "rows": 2,
+      "fingerprint": "e96d14c2f5e9dbf6ada83733063ba984"
+    },
+    {
+      "name": "fieldmaps.site_packages",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.site_zone_state",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.sites",
+      "rows": 2,
+      "fingerprint": "e2b91914f12536923feefc58c2cc7baa"
+    },
+    {
+      "name": "fieldmaps.zone_drafts",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.zone_identities",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "name": "fieldmaps.zone_publications",
+      "rows": 0,
+      "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  ],
+  "allApplicationFingerprintsUnchangedExcludingFormSchemaVersion": true,
+  "migrationHistorySourceMatches": true,
+  "hostedChanged": false
+}

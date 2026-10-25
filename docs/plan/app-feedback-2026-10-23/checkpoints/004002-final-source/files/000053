@@ -1,0 +1,20 @@
+# Current execution marker
+
+Step4/5: integration and review fixes. All planned source lanes have implementations; full acceptance is not complete. Templates and variable library remain deferred. No implementation Git writes or hosted deployment occurred.
+
+## Verified evidence
+
+- Mobile924passed/5skipped, type/lint pass, including invalid temporal entry across restart; checkpoint003133-mobile-release.
+- Python185focusedpassed plus114transport/artifact tests; source migration workflow9isolated PostgreSQL/PostGIS tests passed (fresh/empty, stale/altered/legacy/newsemantic/history refusal, exact preservation). Actual local READ-ONLY preflight passed2canonicalrows. No persistent migration applied.
+- TS101focused + shared cases117mobile/70Python/49web passed; exact definition/engine/temporal parity and generated API declarations completed. Tokens/email generation and contrast checks pass.
+- Editor10focused interaction/preview tests passed; full web440passed and type/lint passed. Forms/invitation/report browser specs authored but not run. Isolated actual-component preview on3101 supports390/768/1024/1440 Day/Dusk; it is clearly synthetic and establishes no API/save/publish acceptance. Existing3000serves stale build and is untouched.
+
+## Resume
+
+Read ledger.json, workers/P21-python.md, P31-mobile.md and P32-preview.md. Latest whole-source checkpoint004002-final-source (all changed source/docs files; generated artifacts included). Pending local-only schema migration confirmation was asked asynchronously; elapsed time is not approval. Keep other source/browser work moving while pending. After permission, use `sh database/form-schema2.sh apply-local` (genuine all-row preflight, exact hash/ID preservation and history update), verify, then start email-disabled local API and fresh test web runtime without inspecting secrets or stopping the existing3000server.
+
+Root owns web finishing/central artifacts; remaining independent review and real acceptance follow. No source worker may apply persistent migrations, send real invitations, reset, deploy or write Git. Record blockers as actual boundaries, not feature acceptance.
+
+Final source followups: backend draft create/copy/update now normalize ordinary/dynamic ID column mappings before storage, preserving old published JSON and ETags. Marker consistency is validated in both engines; shared definitionPatch cases pass in all languages. Day/Dusk source views at all four widths were captured in evidence/P41-web. Backend broad run is still active on the frozen current inputs; prior broad run had964passes/one old transport expectation, corrected with114focused passes. No backend inputs changed after the final run began. Keep the final-run result distinct from that earlier run.
+
+Quota last observed25%remaining (weekly); no workers active or new dispatch planned. Below20%stop new dispatch and retain the checkpoint. API full-run process83238 may still be running; root preview72549 is separate. Pending approval is NOT authorization.

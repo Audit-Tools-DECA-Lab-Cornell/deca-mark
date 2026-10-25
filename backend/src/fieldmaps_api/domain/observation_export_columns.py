@@ -4,11 +4,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final, assert_never
 
-from pydantic import JsonValue, TypeAdapter
+from pydantic import JsonValue
 
 from fieldmaps_api.domain.form_definition import Option, Question
-from fieldmaps_api.domain.forms import StoredCanonicalDefinition, StoredFormDefinition
+from fieldmaps_api.domain.forms import StoredCanonicalDefinition
 from fieldmaps_api.domain.legacy_forms import FormDefinition as LegacyDefinition
+from fieldmaps_api.domain.stored_form_versions import historical_definition
 
 RECORD_COLUMNS: Final = (
     "observation_id",
@@ -115,9 +116,8 @@ def canonical_question(question: Question) -> ExportQuestion:
     )
 
 
-def questions(raw: dict[str, JsonValue]) -> tuple[ExportQuestion, ...]:
-    adapter: TypeAdapter[StoredFormDefinition] = TypeAdapter(StoredFormDefinition)
-    definition = adapter.validate_python(raw)
+def questions(raw: dict[str, JsonValue], schema_version: int) -> tuple[ExportQuestion, ...]:
+    definition = historical_definition(raw, schema_version)
     match definition:
         case StoredCanonicalDefinition():
             return tuple(canonical_question(question) for question in definition.questions)

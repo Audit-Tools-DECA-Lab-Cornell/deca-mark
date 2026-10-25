@@ -1,0 +1,166 @@
+import { strToU8 } from "fflate";
+import { z } from "zod";
+import { FORM_SCHEMA_VERSION } from "../../forms/definition";
+import { identityKey, type PackageIdentity } from "../../domain/package-binding";
+import type { LocalDatabase } from "../../storage/observation-store";
+import { installPackage, readCatalog } from "../../storage/package-catalog";
+import { packageCamera } from "./package-camera";
+import { storedForms } from "./prepare";
+import { type StoredPackage, storedPackageSchema } from "./schemas";
+import { historicalForm, verifyBoundIdentity, verifyBoundZones } from "./verify-bound";
+
+export interface ImmutablePackageFiles {
+  read(path: string): string | null;
+  stage(path: string, text: string): void;
+  publish(staged: string, destination: string): void;
+  discard(path: string): void;
+  staged(): readonly string[];
+}
+export class InstallationError extends Error {}
+const contentMetadata = z.object({ contentSha256: z.string().regex(/^[a-f0-9]{64}$/) });
+export type PackageHash = (bytes: Uint8Array) => Promise<string>;
+
+export function packageIdentity(issuer: string, stored: StoredPackage): PackageIdentity {
+  return {
+    issuer,
+    projectId: stored.projectId,
+    siteId: stored.siteId,
+    packageId: stored.packageId,
+    packageVersion: stored.packageVersion,
+    packageSha256: stored.archiveSha256,
+  };
+}
+
+export async function validateStored(stored: StoredPackage, sha256: PackageHash): Promise<void> {
+  storedForms(stored);
+  packageCamera(stored.layers);
+  verifyBoundIdentity(stored.manifest, {
+    site_id: stored.siteId,
+    code: stored.siteCode,
+    package: {
+      package_id: stored.packageId,
+      package_version: stored.packageVersion,
+      forms: stored.manifest.forms,
+      zone_count: stored.manifest.zones.length,
+    },
+  });
+  await verifyBoundZones(stored.manifest, stored.layers, sha256);
+  const checkForm = (
+    binding: StoredPackage["manifest"]["forms"]["play"],
+    definition: Record<string, unknown>,
+  ) =>
+    historicalForm(
+      {
+        code: binding.form_version,
+        version_id: binding.form_version_id,
+        state: "published",
+        form_code: "retained",
+        schema_version: FORM_SCHEMA_VERSION,
+        definition,
+      },
+      binding,
+    );
+  checkForm(stored.manifest.forms.play, stored.forms.play);
+  const inventory = stored.manifest.forms.inventory;
+  if (inventory) {
+    if (!stored.forms.inventory)
+      throw new InstallationError("The bound inventory form is missing.");
+    checkForm(inventory, stored.forms.inventory);
+  } else if (stored.forms.inventory !== null)
+    throw new InstallationError("An unbound inventory form was substituted.");
+}
+
+export async function readInstalledPackage(
+  database: LocalDatabase,
+  owner: string,
+  identity: PackageIdentity,
+  files: ImmutablePackageFiles,
+  sha256: PackageHash,
+): Promise<StoredPackage | null> {
+  const entry = await readCatalog(database, owner, identity);
+  if (!entry) return null;
+  const metadata = contentMetadata.safeParse(entry.metadata);
+  let text: string | null;
+  try {
+    text = files.read(entry.contentPath);
+  } catch (error) {
+    if (error instanceof Error) return null;
+    throw error;
+  }
+  if (!text || !metadata.success || (await sha256(strToU8(text))) !== metadata.data.contentSha256)
+    return null;
+  try {
+    const stored = storedPackageSchema.parse(JSON.parse(text));
+    if (
+      identityKey(packageIdentity(identity.issuer, stored)) !== identityKey(identity) ||
+      stored.siteId !== identity.siteId ||
+      stored.packageVersion !== identity.packageVersion
+    )
+      return null;
+    await validateStored(stored, sha256);
+    return stored;
+  } catch (error) {
+    if (error instanceof Error) return null;
+    throw error;
+  }
+}
+
+export async function installVerifiedPackage(
+  database: LocalDatabase,
+  owner: string,
+  issuer: string,
+  stored: StoredPackage,
+  files: ImmutablePackageFiles,
+  sha256: PackageHash,
+  attempt: string,
+  current: () => boolean,
+): Promise<StoredPackage> {
+  const parsed = storedPackageSchema.parse(stored);
+  await validateStored(parsed, sha256);
+  const identity = packageIdentity(issuer, parsed);
+  const existing = await readInstalledPackage(database, owner, identity, files, sha256);
+  const content = existing ?? parsed;
+  const text = JSON.stringify(content);
+  const contentSha256 = await sha256(strToU8(text));
+  const root = `${encodeURIComponent(issuer)}/${identity.projectId}/${identity.packageId}/${identity.packageSha256}`;
+  const original = `${root}/${contentSha256}.json`;
+  const oldText = files.read(original);
+  const destination =
+    oldText !== null && oldText !== text ? `${root}/${contentSha256}-${attempt}.json` : original;
+  const temporary = `staged/${attempt}.json`;
+  if (!current()) throw new InstallationError("The download was cancelled.");
+  try {
+    if (files.read(destination) !== text) {
+      files.stage(temporary, text);
+      if (files.read(temporary) !== text)
+        throw new InstallationError("The package could not be written completely.");
+      files.publish(temporary, destination);
+    }
+    if (!current()) throw new InstallationError("The download was cancelled.");
+    await installPackage(
+      database,
+      owner,
+      {
+        identity,
+        contentPath: destination,
+        metadata: {
+          contentSha256,
+          archiveBytes: content.archiveBytes,
+          savedAt: content.savedAt,
+          siteCode: content.siteCode,
+          siteName: content.siteName,
+        },
+      },
+      true,
+      current,
+    );
+    return content;
+  } finally {
+    files.discard(temporary);
+  }
+}
+
+/** Only staged files are disposable. Published orphans remain available for recovery. */
+export function reconcileStaging(files: ImmutablePackageFiles): void {
+  for (const path of files.staged()) files.discard(path);
+}

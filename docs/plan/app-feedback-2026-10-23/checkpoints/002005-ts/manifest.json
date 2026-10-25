@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002005-ts",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P20-ts.md",
+      "state": "present",
+      "sha256": "d1fa2cc9ffced064245eb2f9f11a7a7677deebfab96cdc022549a64a4c443f5d",
+      "blob": "files/000000",
+      "bytes": 499
+    },
+    {
+      "path": "mobile/src/forms/definition.ts",
+      "state": "present",
+      "sha256": "a29c0bebf08dca33fab553094a7d4fd315c97dfc487147d27a64420943edc396",
+      "blob": "files/000001",
+      "bytes": 15297
+    },
+    {
+      "path": "mobile/src/forms/temporal.ts",
+      "state": "present",
+      "sha256": "c37fbd8923057d746f68b58bca1cf7b609bdae1f607462706a84eb44d0f2a558",
+      "blob": "files/000002",
+      "bytes": 5347
+    },
+    {
+      "path": "web/src/lib/forms/definition.ts",
+      "state": "present",
+      "sha256": "a29c0bebf08dca33fab553094a7d4fd315c97dfc487147d27a64420943edc396",
+      "blob": "files/000003",
+      "bytes": 15297
+    }
+  ]
+}

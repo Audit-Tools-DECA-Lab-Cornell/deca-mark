@@ -1,0 +1,210 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Button, ButtonLink } from "@/components/contour/Button";
+import { Island } from "@/components/contour/Island";
+import { Note } from "@/components/contour/Note";
+import { ScreenState } from "@/components/contour/ScreenState";
+import { AuthPanel } from "@/components/shell/AuthSplit";
+import { LoadFailure } from "@/components/shell/LoadFailure";
+
+import { previewInvite } from "./actions";
+import { AccountChip } from "./AccountChip";
+import {
+	forgetToken,
+	type InvitationDetails,
+	type InviteProblem,
+	type PreviewOutcome,
+	readInvitationLink,
+	UNKEPT_COPY,
+	UNREACHABLE_COPY
+} from "./invitation";
+import { InvitationCard } from "./InvitationCard";
+import { InvitationSignIn } from "./InvitationSignIn";
+import { formatCountdown, useCooldown } from "./useCooldown";
+import type { Viewer } from "./viewer";
+
+const KICKER = "Invitation";
+
+type View =
+	| { step: "reading" }
+	/** No link is open in this tab. */
+	| { step: "none" }
+	/** There is a link, and the person has to sign in before DECA Mark will show it. */
+	| { step: "sign-in"; unkept: boolean }
+	| { step: "loading" }
+	| { step: "ready"; token: string; invitation: InvitationDetails }
+	| { step: "failed"; token: string; problem: InviteProblem };
+
+/**
+ * Join a project from an invitation link (Org 11). The link is `/invite#t=…`: the secret after the `#`
+ * never reaches DECA Mark in a request, so this screen reads it, keeps it in this tab's sessionStorage
+ * (`fm-invite`) so signing in or creating an account on the way does not lose it, and takes it out of the
+ * address bar. Signed in, it asks DECA Mark what the invitation is (that uses nothing up) and shows the
+ * organization, project, role and expiry; Join then adds the account.
+ */
+export function InviteScreen({ viewer }: { viewer: Viewer }) {
+	const [view, setView] = useState<View>({ step: "reading" });
+	const cooldown = useCooldown();
+	const startWait = cooldown.start;
+	const handled = useRef(new Set<Viewer["status"]>());
+
+	const look = useCallback(
+		async (token: string) => {
+			setView({ step: "loading" });
+			let outcome: PreviewOutcome;
+			try {
+				outcome = await previewInvite({ token });
+			} catch {
+				outcome = { status: "failed", problem: { kind: "unavailable", message: UNREACHABLE_COPY } };
+			}
+			if (outcome.status === "ready") {
+				setView({ step: "ready", token, invitation: outcome.invitation });
+				return;
+			}
+			const { problem } = outcome;
+			if (problem.kind === "expired") forgetToken();
+			if (problem.kind === "wait") startWait(problem.retryAfter ?? 60);
+			setView({ step: "failed", token, problem });
+		},
+		[startWait]
+	);
+
+	// Reads the browser's address and tab storage, which the server cannot see.
+	const open = useCallback(
+		(status: Viewer["status"]) => {
+			// Keep the secret for this tab, then take it out of the address (and so out of history and copies).
+			// When the browser will not keep it, the address stays: it is the only copy there is.
+			const link = readInvitationLink(window.location.hash);
+			if (link.removeFragment)
+				window.history.replaceState(
+					window.history.state,
+					"",
+					window.location.pathname + window.location.search
+				);
+			if (!link.token) setView({ step: "none" });
+			else if (status === "signed-out") setView({ step: "sign-in", unkept: link.unkept });
+			else if (status === "signed-in") void look(link.token);
+			// An unavailable viewer sees the failure state below; the secret is put away as far as it can be.
+		},
+		[look]
+	);
+
+	// Runs once for each state the viewer is found in. A viewer who could not be checked at first and can
+	// be after Try again (signed in, now) still gets their invitation looked up.
+	useEffect(() => {
+		if (handled.current.has(viewer.status)) return;
+		handled.current.add(viewer.status);
+		open(viewer.status);
+	}, [viewer.status, open]);
+
+	if (viewer.status === "unavailable") {
+		return (
+			<AuthPanel kicker={KICKER} title="Your invitation" lead="Opening an invitation needs DECA Mark.">
+				<LoadFailure failure={viewer.failure} what="the invitation" />
+			</AuthPanel>
+		);
+	}
+
+	if (view.step === "sign-in") {
+		return (
+			<AuthPanel
+				kicker={KICKER}
+				title="Sign in to join"
+				lead="Sign in, or create an account, to see which project invited you. Nothing is shared with the project until you join."
+				footnoteRule={false}>
+				<div className="flex flex-col gap-6">
+					{view.unkept && <Note tone="attention">{UNKEPT_COPY}</Note>}
+					<InvitationSignIn next="/invite" />
+				</div>
+			</AuthPanel>
+		);
+	}
+
+	if (view.step === "reading" || view.step === "loading") {
+		return (
+			<AuthPanel kicker={KICKER} title="Your invitation" lead="Opening the invitation…">
+				<Island flush>
+					<ScreenState kind="loading" rows={4} loadingLabel="Opening the invitation…" />
+				</Island>
+			</AuthPanel>
+		);
+	}
+
+	if (view.step === "none") {
+		return (
+			<AuthPanel kicker={KICKER} title="Your invitation">
+				<Island flush>
+					<ScreenState
+						kind="empty"
+						icon="link"
+						headingLevel={2}
+						title="There is no invitation to open"
+						body="Open the invitation link your project manager sent you. If they gave you a join code instead, enter it."
+						actions={
+							<ButtonLink variant="primary" href="/join">
+								Enter a join code
+							</ButtonLink>
+						}
+					/>
+				</Island>
+			</AuthPanel>
+		);
+	}
+
+	if (view.step === "failed") {
+		const { problem, token } = view;
+		const retry = problem.kind === "wait" || problem.kind === "unavailable";
+		return (
+			<AuthPanel kicker={KICKER} title="Your invitation" lead="Nothing was shared, and you have not joined.">
+				<div className="flex flex-col gap-6">
+					<Note tone={problem.kind === "wait" ? "waiting" : "attention"} live="assertive">
+						{problem.message}
+					</Note>
+					<div className="flex flex-col gap-3">
+						{viewer.status === "signed-in" && <AccountChip account={viewer.account} next="/invite" />}
+						{problem.kind === "signed-out" && <InvitationSignIn next="/invite" />}
+						{retry && (
+							<Button
+								variant="primary"
+								size="lg"
+								fullWidth
+								icon="rotate-cw"
+								onClick={() => void look(token)}
+								disabled={cooldown.remaining > 0}
+								disabledReason={`Wait ${formatCountdown(cooldown.remaining)} before trying again.`}>
+								Try again
+							</Button>
+						)}
+						{problem.kind !== "signed-out" && (
+							<ButtonLink variant="outline" size="lg" fullWidth href="/o">
+								Back to your projects
+							</ButtonLink>
+						)}
+					</div>
+				</div>
+			</AuthPanel>
+		);
+	}
+
+	if (viewer.status !== "signed-in") return null;
+	const { invitation, token } = view;
+	const place = invitation.project ?? invitation.organization;
+	return (
+		<AuthPanel
+			kicker={KICKER}
+			title={`Join ${place}?`}
+			lead={`Check the ${invitation.project ? "project" : "organization"} and role before you join.`}
+			footnote={`Nothing is shared with the ${invitation.project ? "project" : "organization"} until you join.`}
+			footnoteRule={false}>
+			<InvitationCard
+				invitation={invitation}
+				account={viewer.account}
+				credential={{ token }}
+				next="/invite"
+				back={{ label: "Not now", href: "/o" }}
+			/>
+		</AuthPanel>
+	);
+}

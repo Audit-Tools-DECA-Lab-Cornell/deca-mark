@@ -1,0 +1,94 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { load } from "./support.mjs";
+
+const { numericInput } = await load("features/forms/numeric-input.ts");
+const { previewAnswers } = await load("features/forms/preview-answers.ts");
+const { parseFormDefinition, reviewProblems } = await load("lib/forms/index.ts");
+const { previousQuestion, removedQuestions } = await load("features/forms/model.ts");
+const form = questions =>
+	parseFormDefinition({
+		version: "feedback-v1",
+		title: "Synthetic",
+		summary: "Test",
+		source: "Test",
+		status: "draft",
+		inclusion: "Test",
+		questions: questions.map(q => ({
+			code: q.id,
+			exportColumn: q.id,
+			act: "Record",
+			label: q.id,
+			source: "Test",
+			...q
+		}))
+	});
+
+test("numeric input retains invalid intermediates and finite decimal precision", () => {
+	assert.equal(numericInput(""), undefined);
+	assert.ok(Number.isNaN(numericInput("-")));
+	assert.ok(Number.isNaN(numericInput("1.2")));
+	assert.equal(numericInput("-1.23456789012345", true), -1.23456789012345);
+	assert.equal(numericInput("1e-100", true), 1e-100);
+	for (const invalid of ["Infinity", "1e999", "0x10", "1e"]) assert.ok(Number.isNaN(numericInput(invalid, true)));
+	const definition = form([{ id: "count", kind: "number" }]);
+	const answers = previewAnswers(definition, { count: Number.NaN }, { instant: "2026-10-24T12:00:00.000Z" });
+	assert.ok(Number.isNaN(answers.count));
+	assert.equal(reviewProblems(definition, answers)[0].reason, "range");
+});
+
+test("automatic preview values reappear from frozen capture after visibility changes", () => {
+	const definition = form([
+		{
+			id: "gate",
+			kind: "one",
+			options: [
+				{ code: "yes", label: "Yes" },
+				{ code: "no", label: "No" }
+			]
+		},
+		{
+			id: "observer",
+			kind: "text",
+			valueSource: "accountId",
+			dependsOn: { kind: "equals", question: "gate", option: "yes" }
+		},
+		{ id: "when", kind: "dateTime", dateTime: { mode: "dateTime", timeZone: "UTC" }, valueSource: "captureTime" }
+	]);
+	const capture = { instant: "2026-10-24T12:00:00.000Z", observer: { userId: "captured-user", code: "PS" } };
+	const hidden = previewAnswers(definition, { gate: "no" }, capture);
+	assert.equal(hidden.observer, undefined);
+	const shown = previewAnswers(definition, { ...hidden, gate: "yes" }, capture);
+	assert.equal(shown.observer, "captured-user");
+	assert.equal(shown.when, capture.instant);
+	assert.deepEqual(reviewProblems(definition, shown), []);
+	const missing = previewAnswers(definition, { gate: "yes" }, { instant: capture.instant });
+	assert.equal(reviewProblems(definition, missing)[0].reason, "required");
+});
+
+test("renamed base questions retain restrictions and ambiguous codes are not falsely kept", () => {
+	const before = {
+		questions: [
+			{ id: "a", code: "stable" },
+			{ id: "b", code: "other" }
+		]
+	};
+	const renamed = { id: "b", code: "stable" };
+	assert.equal(previousQuestion(renamed, before), before.questions[0]);
+	assert.deepEqual(removedQuestions({ questions: [renamed] }, before), [before.questions[1]]);
+	const ambiguous = {
+		questions: [
+			{ id: "a", code: "same" },
+			{ id: "b", code: "same" }
+		]
+	};
+	assert.equal(previousQuestion({ id: "new", code: "same" }, ambiguous), undefined);
+	assert.equal(removedQuestions({ questions: [{ id: "new", code: "same" }] }, ambiguous).length, 2);
+});
+
+test("rule and dynamic-parent choices include fallback and dependent options", async () => {
+	const { availableOptions } = await load("features/forms/available-options.ts");
+	const question = {options:[{code:"fallback",label:"Fallback"}],dynamicFrom:{sets:{a:{options:[{code:"first",label:"First"},{code:"same",label:"Same"}]},b:{options:[{code:"same",label:"Same"},{code:"second",label:"Second"}]}}}};
+	assert.deepEqual(availableOptions(question).map(option=>option.code),["fallback","first","same","second"]);
+});

@@ -1,0 +1,23 @@
+# Current execution marker
+
+Step4/5 source implementation and automated verification complete. Step5 real application browser/native acceptance is pending. Branch: docs/app-feedback-2026-10-23-plan. Implementation is local and uncommitted; planning commit4cc5df6 was pushed earlier. No persistent migration, hosted change, reset, real invitation or deployment occurred.
+
+## Verified
+
+- Web441passed; mobile924passed/5skipped; backend977passed on isolated PostgreSQL/PostGIS. Web/mobile/backend type and lint checks pass. Ten recovery tests, form-engine parity and token/email/contrast checks pass.
+- Exact source preview widths390/768/1024/1440 in Day/Dusk inspected; raw captures under evidence/P41-web. This synthetic harness proves UI rendering/selected interactions, not auth/API/save/publish acceptance.
+- Schema2 migration preflight/workflow and atomic refusal tests pass. READ-ONLY actual local preflight validated2canonicalform rows. Definitions/IDs/revisions/answers/bindings are preserved by the tested transition; new draft writes normalize all ID columns.
+
+## Recovery and authorization
+
+Whole-source checkpoint: checkpoints/004006-verified-source/manifest.json (all changed source/docs and generated artifacts). Verify/compare with Node24 scripts/feedback-checkpoint.mjs. Evidence index: evidence/P40-integration/verification.json. Existing journals retain failed attempts and corrections; final green backend log is backend-unit-integration.log, not earlier failed broad-run logs.
+
+The asynchronous local-only migration question has NO human answer yet. Time elapsed or a preselected option is not permission. Apply only after explicit approval: sh database/form-schema2.sh apply-local. Check the Docker context is local first. No hosted migration/reset or secret-file inspection is included.
+
+Quota observed2026-10-25T03:38:27Z:20%weekly remaining. Reserve reached; no new worker dispatch. Keep checkpoints and release ownership. Continue only within the user's usage/authorization constraints.
+
+## Next bounded action
+
+After approval and available quota, start the email-disabled local API and a fresh source web runtime, preserving the stale existing3000server. Run forms-feedback/forms, invite-viewer/team and reports-feedback real browser specs, then record remaining native/screen-reader/QGIS/hosted gates. Temporary source preview: /private/tmp/deca-feedback-preview, root session72549, port3101; browser handoff tab2. Never mistake it for the real API runtime. Reuse existing guarded launchers without manually inspecting credentials or reconfiguring passwords.
+
+For later Claude review, use claude-ui-review-prompt.md; do not restart completed implementation packets. Product task status stays in owning PLAN.md files. No Git write is authorized for this implementation.

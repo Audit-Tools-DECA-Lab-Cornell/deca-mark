@@ -9,6 +9,7 @@ import { ScreenState } from "@/components/contour/ScreenState";
 import { AuthPanel } from "@/components/shell/AuthSplit";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 
+import { AccountChip } from "./AccountChip";
 import { previewInvite } from "./actions";
 import {
 	forgetToken,
@@ -63,7 +64,7 @@ export function InviteScreen({ viewer }: { viewer: Viewer }) {
 				return;
 			}
 			const { problem } = outcome;
-			if (problem.kind === "expired" || problem.kind === "invalid") forgetToken();
+			if (problem.kind === "expired") forgetToken();
 			if (problem.kind === "wait") startWait(problem.retryAfter ?? 60);
 			setView({ step: "failed", token, problem });
 		},
@@ -162,6 +163,7 @@ export function InviteScreen({ viewer }: { viewer: Viewer }) {
 						{problem.message}
 					</Note>
 					<div className="flex flex-col gap-3">
+						{viewer.status === "signed-in" && <AccountChip account={viewer.account} next="/invite" />}
 						{problem.kind === "signed-out" && <InvitationSignIn next="/invite" />}
 						{retry && (
 							<Button
@@ -186,6 +188,7 @@ export function InviteScreen({ viewer }: { viewer: Viewer }) {
 		);
 	}
 
+	if (viewer.status !== "signed-in") return null;
 	const { invitation, token } = view;
 	const place = invitation.project ?? invitation.organization;
 	return (
@@ -197,6 +200,7 @@ export function InviteScreen({ viewer }: { viewer: Viewer }) {
 			footnoteRule={false}>
 			<InvitationCard
 				invitation={invitation}
+				account={viewer.account}
 				credential={{ token }}
 				next="/invite"
 				back={{ label: "Not now", href: "/o" }}

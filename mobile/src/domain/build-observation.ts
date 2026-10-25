@@ -75,7 +75,14 @@ export function buildObservation(input: ObservationInput): BuildResult {
     const observerQuestion = input.form.questions.find(
       (question) => question.exportColumn === "observer" && question.kind === "text",
     );
-    const observer = observerQuestion ? text(answers, observerQuestion.id) : (input.observer ?? "");
+    const automaticObserver = input.form.questions.some(
+      (question) => question.valueSource === "observerCode",
+    );
+    const observer = automaticObserver
+      ? (input.observer ?? "")
+      : observerQuestion
+        ? text(answers, observerQuestion.id)
+        : (input.observer ?? "");
     if (!observerQuestion && observer.trim() === "")
       return {
         ok: false,

@@ -1,0 +1,51 @@
+"""Canonical temporal strings are independent of the instrument's display preferences."""
+
+import re
+from datetime import date, datetime, time
+from functools import cache
+from typing import Literal, assert_never
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError, available_timezones
+
+
+@cache
+def casefold_time_zones() -> dict[str, str]:
+    """Reuse installed IANA identifiers when Intl accepts a differently cased spelling."""
+    return {name.casefold(): name for name in available_timezones()}
+
+
+def valid_time_zone(value: str) -> bool:
+    if not value or value.startswith(("/", ".", "+", "-")):
+        return False
+    canonical = casefold_time_zones().get(value.casefold())
+    if canonical is None:
+        return False
+    try:
+        ZoneInfo(canonical)
+    except (ZoneInfoNotFoundError, ValueError):
+        return False
+    return True
+
+
+def valid_temporal(mode: Literal["date", "time", "dateTime"], value: str) -> bool:
+    """Require real calendar dates and clocks; combined values are explicit UTC instants."""
+    try:
+        match mode:
+            case "date":
+                return bool(re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value)) and bool(
+                    date.fromisoformat(value)
+                )
+            case "time":
+                return bool(re.fullmatch(r"[0-9]{2}:[0-9]{2}:[0-9]{2}", value)) and bool(
+                    time.fromisoformat(value)
+                )
+            case "dateTime":
+                return bool(
+                    re.fullmatch(
+                        r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,3})?Z",
+                        value,
+                    )
+                ) and bool(datetime.fromisoformat(value))
+            case _:
+                assert_never(mode)
+    except ValueError:
+        return False

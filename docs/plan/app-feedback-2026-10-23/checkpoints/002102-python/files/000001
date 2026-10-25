@@ -1,0 +1,7 @@
+# P21 Python schema2 boundaries
+
+Ownership: backend form domain, form API schema/query/repository/service boundaries, automatic bound-upload validation, historical metadata/export provenance, focused Python tests, and forward migration source only. Shared checkout; preserve other workers' edits. No Git writes, environment/secret access, DB mutation, migration application or deployment.
+
+Step 1 of 5 done: schema2 decimal/safe-integer and canonical date/time boundaries implemented; 23 focused tests passed locally. Read `omo:programming` and Python reference. `supabase/README.md` is absent; database README describes canonical migration ownership. Combined temporal strings match TS lane: seconds plus optional 1–3 fractional digits, terminal Z; real calendar year 0001–9999.
+
+Checkpoints: 002100-python, 002101-python. Next: guard served schema2 and explicit stored version reads/writes, then automatic validation/export provenance and migration preflight. No runtime upgrade acceptance claimed.

@@ -1,0 +1,69 @@
+import { z } from "zod";
+import type { Answers, AnswerValue, FormDefinition } from "./definition";
+import { pruneAnswers, visibleQuestions } from "./engine";
+import { captureTimeValue } from "./temporal";
+
+/** Frozen at first placement, separate from visibility-pruned answers. */
+export const captureContextSchema = z.strictObject({
+  accountId: z.string().min(1),
+  observerCode: z.string(),
+  capturedAt: z.iso.datetime(),
+});
+export type CaptureContext = Readonly<z.infer<typeof captureContextSchema>>;
+
+export function capturedAnswers(
+  form: FormDefinition,
+  answers: Answers,
+  capture: CaptureContext | undefined,
+): Answers {
+  const values: Record<string, AnswerValue> = { ...answers };
+  // Resolve the full dependency chain: newly captured values may reveal another automatic field.
+  for (let pass = 0; pass <= form.questions.length; pass += 1) {
+    let changed = false;
+    for (const question of visibleQuestions(form, values)) {
+      const source = question.valueSource ?? "manual";
+      if (source === "manual") continue;
+      const value = !capture
+        ? undefined
+        : source === "accountId"
+          ? capture.accountId
+          : source === "observerCode"
+            ? capture.observerCode
+            : question.dateTime
+              ? captureTimeValue(question.dateTime, capture.capturedAt)
+              : undefined;
+      if (value == null || value === "") {
+        if (values[question.id] !== undefined) {
+          delete values[question.id];
+          changed = true;
+        }
+      } else if (values[question.id] !== value) {
+        values[question.id] = value;
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+  return pruneAnswers(form, values).answers;
+}
+
+export function captureProblem(
+  form: FormDefinition,
+  answers: Answers,
+  capture: CaptureContext | undefined,
+  accountId: string,
+): string | null {
+  const automatic = visibleQuestions(form, answers).filter(
+    (question) => (question.valueSource ?? "manual") !== "manual",
+  );
+  if (capture && capture.accountId !== accountId)
+    return "This observation's captured account differs from the current account. Its draft is retained.";
+  if (!automatic.length) return null;
+  if (!capture)
+    return "This retained draft has no capture context. Its data stays on this device; resume it with a compatible form or explicitly discard it.";
+  if (
+    automatic.some((question) => answers[question.id] === undefined || answers[question.id] === "")
+  )
+    return "An automatic field has no captured value. Check your observer code and start a new observation; this draft is retained.";
+  return null;
+}

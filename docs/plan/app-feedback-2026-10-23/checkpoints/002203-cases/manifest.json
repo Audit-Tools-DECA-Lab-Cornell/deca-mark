@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002203-cases",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "contracts/README.md",
+      "state": "present",
+      "sha256": "67024747c3c7c31b7beca7f1a52e48c1c0bd4a08b56002abcc652dcc4432ba8a",
+      "blob": "files/000000",
+      "bytes": 16280
+    },
+    {
+      "path": "contracts/forms/definition.cases.json",
+      "state": "present",
+      "sha256": "c3bfc97817c5b53402dc7a2f5759892cba0d408cb9af341cf0fc9c96ba02462a",
+      "blob": "files/000001",
+      "bytes": 7699
+    }
+  ]
+}

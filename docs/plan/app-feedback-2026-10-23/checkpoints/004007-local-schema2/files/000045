@@ -1,0 +1,458 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "columnNaming": {
+      "type": "string",
+      "const": "questionId"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published"
+      ]
+    },
+    "inclusion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "knownExportCollisions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "protocolNotes": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "detail",
+          "source"
+        ]
+      }
+    },
+    "questions": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exportColumn": {
+            "type": "string"
+          },
+          "act": {
+            "type": "string",
+            "enum": [
+              "Child",
+              "Social",
+              "Play",
+              "Setting",
+              "Climate",
+              "Inventory",
+              "Record"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "one",
+              "many",
+              "text",
+              "number",
+              "dateTime"
+            ]
+          },
+          "numberMode": {
+            "type": "string",
+            "enum": [
+              "integer",
+              "decimal"
+            ]
+          },
+          "valueSource": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "accountId",
+              "observerCode",
+              "captureTime"
+            ]
+          },
+          "dateTime": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "date",
+                  "time",
+                  "dateTime"
+                ]
+              },
+              "dateFormat": {
+                "default": "iso",
+                "type": "string",
+                "enum": [
+                  "iso",
+                  "monthFirst",
+                  "dayFirst"
+                ]
+              },
+              "timeFormat": {
+                "default": "24h",
+                "type": "string",
+                "enum": [
+                  "12h",
+                  "24h"
+                ]
+              },
+              "timeZone": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "mode",
+              "timeZone"
+            ]
+          },
+          "options": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "code",
+                "label"
+              ]
+            }
+          },
+          "columns": {
+            "default": 1,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "required": {
+            "default": false,
+            "type": "boolean"
+          },
+          "dependsOn": {
+            "$ref": "#/$defs/__schema0"
+          },
+          "openedBy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dynamicFrom": {
+            "type": "object",
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sets": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "exportColumn": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "options": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "label": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "label"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "exportColumn",
+                    "label",
+                    "options"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "question",
+              "sets"
+            ]
+          },
+          "placeholder": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "maxLength": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "protocolFlag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "optionsPending": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "exportColumn",
+          "act",
+          "label",
+          "kind",
+          "source"
+        ]
+      }
+    }
+  },
+  "required": [
+    "version",
+    "title",
+    "summary",
+    "source",
+    "status",
+    "inclusion",
+    "questions"
+  ],
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "answered"
+            },
+            "question": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "question"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "equals"
+            },
+            "question": {
+              "type": "string",
+              "minLength": 1
+            },
+            "option": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "question",
+            "option"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "notEquals"
+            },
+            "question": {
+              "type": "string",
+              "minLength": 1
+            },
+            "option": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "question",
+            "option"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "includes"
+            },
+            "question": {
+              "type": "string",
+              "minLength": 1
+            },
+            "option": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "question",
+            "option"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "all"
+            },
+            "of": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "of"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "any"
+            },
+            "of": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "of"
+          ]
+        }
+      ]
+    }
+  }
+}

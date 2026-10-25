@@ -162,6 +162,9 @@ WEB-20 to WEB-26 and MOB-23 to MOB-27 build the Contour screens ahead of the wir
 
 ### Phase 4: Mobile UX and hardening (weeks 9–12)
 
+- **Reviewer feedback (2026-10-23):** CON-08, DB-21, BE-27, WEB-61, WEB-62, WEB-63, WEB-64, MOB-50, QA-10
+
+
 **Demo:** TestFlight and Play internal builds run against production. The isolation suites pass and a restore drill is done.
 
 - **Mobile:** MOB-16, MOB-17, MOB-18, MOB-20, MOB-21

@@ -94,7 +94,7 @@ Reviewer wording: **“Database-backed form templates are already planned for a 
 | Library and automated Observer ID | Library deferred. Automatic Observer ID uses existing authenticated account identity, with existing initials/code alongside it; no new study-ID assignment system. |
 | Numeric/date formats and usage | Approved: any finite decimal without rounding/place limit; manual date/time default with optional frozen capture time. The saved plan fixes representation/display rules. At most three parallel workers; stop new dispatch at 20% reported remaining quota/context and retain durable checkpoints. |
 
-## Current-code evidence
+## Baseline code evidence (before implementation)
 
 | Evidence | What it establishes |
 | --- | --- |
@@ -129,4 +129,4 @@ The separate screenshot shows a **Published** version. Its read-only controls ar
 
 Use existing `web/e2e/forms.spec.ts`, `invite-viewer.spec.ts`, report/QGIS specs, form-definition/shared cases and export tests for the relevant slices. New subtle behavior boundaries need targeted cases; wording changes do not need tests that merely repeat the text. Run `pnpm forms:parity` and the affected app checks when engines/contracts change. API shape changes require generated contracts and matching client coverage. Run `pnpm plan:check` when scheduling in component plans. Local checks do not establish deployed, physical-device or QGIS Desktop acceptance.
 
-**Next implementation slice:** the saved plan's specification review and recovery setup, followed by existing-format editor, invitation and report lanes. Contract-dependent UI waits for its shared prerequisites.
+**Implementation follow-up:** source changes and focused verification are in progress under the [execution marker](../../plan/app-feedback-2026-10-23/CURRENT.md). Component task status remains in the owning PLAN.md files. This assessment table records the original baseline; it is not an assertion that those defects remain in the edited source.

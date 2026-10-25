@@ -1,0 +1,13 @@
+# P20 TS engine journal
+
+Completed TS engine slice. Own changes: mobile forms definition.ts/engine.ts/temporal.ts, exact web mirrors, schema2.test.ts/temporal.test.ts, generated contracts/form-definition.schema.json. Other workers share checkout; no secret reads, Git writes, deployment or migration application.
+
+Schema version 2 reads current served definitions only. Historical canonical JSON still parses through parseFormDefinition. Added optional columnNaming, numberMode, valueSource, dateTime configuration with source/kind/timezone checks; decimal finite values/bounds and safe-integer default; optional visible automatic missing/blank answers block review. Date/time canonical storage is strict and survives pruning. Review summaries apply configured formats and zone.
+
+Temporal API (both copies): DateTimeConfig; isTimeZone(string); isCanonicalTemporalValue(config,value); captureTimeValue(config,instant):string|null; resolveLocalDateTime(local YYYY-MM-DDTHH:mm:ss,zone,occurrence?:earlier|later) -> success UTC string or invalid/nonexistent/ambiguous with candidates; formatTemporalValue(config,value). Combined UTC values accept seconds with optional 1-3 fractional digits and terminal Z. Generated values include milliseconds. No dependencies added. Explicit DST selection tested for New York and half-hour Lord Howe; spring gap and skipped Apia date refused.
+
+Verification: confirmed initial13 schema2 tests failed9 for intended missing behavior; now101 tests across definition/engine/schema2/temporal/shared-answer suites pass. Biome five owned mobile files clean. All three mobile/web files byte-identical (cmp). Form schema regeneration twice unchanged sha256 cb0cb5866f21639f5dfaaff17ce8241d6945defb52b78e348a3b08bd152e2561. Generator initially needed correction because Node direct TS imports do not resolve extensionless helper; definition now keeps IANA boundary check self-contained.
+
+Integration pending coordinator: shared definition cases still schema1/current and unknown2; expected3 failures in both mobile definition-cases and web form-definition-cases until coordinator's schema2/current unknown3 update. Mobile typecheck only concurrently edited package schema_version fixtures and session/provider nullable form failed; reported to capture worker/coordinator. No P20 type diagnostics. Existing definition file was already above skill size guideline; kept bounded changes within assigned ownership instead of broad unrelated split. This evidence establishes local engine behavior only, not UI/native/hosted acceptance.
+
+Last complete snapshot002009-ts before journal; final snapshot002010-ts includes full owned set and this journal. Next: coordinator update shared schema cases then rerun definition-cases plus full integration checks.

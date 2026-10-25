@@ -4,13 +4,18 @@ Approved scope: October 24, 2026. Planning base: `bc52cac658af280c0a97d6ab22422f
 
 Implement **28 requirements** from the [feedback inventory](../../reviews/app-feedback-2026-10-23/README.md). Exclude R27 (database-backed whole-form templates) and R29 (individual-variable library). Both are future features. Keep their existing roadmap separate from this implementation.
 
-This package is a specification and continuation handoff. Application implementation has **not** started. Component plans retain canonical task status; the execution ledger records work-packet ownership, progress, evidence and recovery pointers, not a competing product roadmap.
+Source implementation and automated checks are complete locally. The separately
+approved local schema-2 migration passed on October 25, 2026; real web/API browser
+and physical-device acceptance remain pending. Use [CURRENT.md](CURRENT.md) for the
+verified continuation point. Component plans retain canonical task status; the
+ledger records work-packet ownership, evidence and recovery pointers.
 
 ## Start or resume
 
 1. Read [CURRENT.md](CURRENT.md), [ledger.json](ledger.json), and the latest completed checkpoint if one exists. Reconcile actual disk contents before changing anything.
 2. Read the root/component instructions and owning READMEs; use [work-packages.md](work-packages.md) for lanes and [recovery.md](recovery.md) for checkpoint rules.
-3. Give the implementing session [claude-prompt.md](claude-prompt.md). Review the plan, establish recovery, and start Wave 1 during that session.
+3. Resume only the pending acceptance packet; do not restart completed waves. Use
+   [claude-ui-review-prompt.md](claude-ui-review-prompt.md) for a later independent review.
 
 ## Settled decisions
 
@@ -24,7 +29,11 @@ This package is a specification and continuation handoff. Application implementa
 
 ## Current-checkout reconciliation
 
-CON-07 has landed in the planning base. [The contracts guide](../../../contracts/README.md#form-schema-version) defines the current version as **1**, beside the definition, never inside its document. Both engines already expose `FORM_SCHEMA_VERSION`, `parseServedDefinition`, `UnknownSchemaVersionError`, and `isUnknownSchemaVersion`. Do not recreate this work.
+CON-07 landed in the planning base with version 1. The implemented feedback contract
+now serves version **2**, beside the definition, never inside its document. Both
+engines retain `FORM_SCHEMA_VERSION`, `parseServedDefinition`,
+`UnknownSchemaVersionError`, and `isUnknownSchemaVersion`. See the
+[contracts guide](../../../contracts/README.md#form-schema-version).
 
 Producer/consumer wiring remains in BE-24, MOB-43 and WEB-56. Before extended types are enabled, reconcile the narrowly necessary wiring with those owning tasks. Do not pull in deferred templates, the whole pilot-readiness program, database resets or unrelated legacy cleanup. [D36 and the deployment hold](../pilot-readiness.md) apply if that prerequisite is implemented; a planning branch does not authorize API deployment or master changes.
 
@@ -76,7 +85,14 @@ Evidence records command, exit code, tested input hashes/revision, environment, 
 
 ## Safety and completion
 
-This handoff authorizes source implementation and ordinary existing local checks, not secrets access, database resets, volume deletion, database migration application, hosted changes, real invitations, deployment or releases. Future Git branch/commit/push/merge actions need direct authorization for that execution session. The current user authorized only this planning branch's creation, documentation commit and push. Never inherit authorization from an older repository prompt.
+This handoff authorizes source implementation and ordinary existing local checks.
+On October 25, 2026 the user separately approved applying schema 2 to the existing
+local Supabase database and requested production instructions; that local application
+is verified. Production application remains separately authorized through the
+[rollout procedure](../../../database/hosted/form-schema2-rollout.md). Secrets access,
+resets, volume deletion, hosted changes, real invitations, deployments and releases
+remain outside this authorization. Future Git writes need direct authorization for
+that execution session; the prior Git approval covered planning documentation only.
 
 Node 24 and pnpm 10.17.1; each application retains its own dependency installation. Apply relevant installed skills, but do not import COPA/Playspace architecture or paths from generic examples into DECA Mark.
 

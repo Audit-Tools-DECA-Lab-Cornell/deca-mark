@@ -5,118 +5,145 @@ import { useId } from "react";
 import { Button } from "@/components/contour/Button";
 import { Checkbox } from "@/components/contour/Checkbox";
 import { Field } from "@/components/contour/Field";
-import { Icon } from "@/components/contour/Icon";
-import { IconButton } from "@/components/contour/IconButton";
 import { Note } from "@/components/contour/Note";
 import { Select } from "@/components/contour/Select";
 import { TextInput } from "@/components/contour/TextInput";
 
+import { ConditionEditor } from "./ConditionEditor";
+import { DateTimeSettings } from "./DateTimeSettings";
+import { DynamicOptionsEditor } from "./DynamicOptionsEditor";
 import { FORMAT_LABEL, questionChanges } from "./model";
-import { ADDED_SOURCE, type QuestionKind, type RawOption, type RawQuestion, slugify, STARTER_OPTIONS } from "./raw";
+import { boundsProblem, NumberBoundsEditor } from "./NumberBoundsEditor";
+import { optionListProblem } from "./OptionsEditor";
+import { QuestionIdEditor } from "./QuestionIdEditor";
+import { ADDED_SOURCE, type QuestionKind, type RawQuestion, STARTER_OPTIONS } from "./raw";
+import { TextSourceSettings } from "./TextSourceSettings";
 
-export type QuestionPatch = Partial<
-	Pick<RawQuestion, "label" | "hint" | "required" | "kind" | "options" | "columns" | "maxLength">
->;
-
-/** The fewest options a choice question can carry and still be answerable. */
+export type QuestionPatch = Partial<Omit<RawQuestion, "id">>;
 export const MIN_CHOICE_OPTIONS = 2;
+const KINDS = ["one", "many", "text", "number", "dateTime"] as const;
 
-/**
- * What changing an added question's answer format also changes. A choice format needs options to be
- * answerable, so it keeps the question's options or starts from Yes and No; a written answer gets its
- * length limit; a number carries neither. Keys set to `undefined` are removed from the draft.
- */
-export function formatPatch(question: RawQuestion, kind: QuestionKind): QuestionPatch {
+export function formatPatch(question: RawQuestion, kind: QuestionKind, timeZone = "UTC"): QuestionPatch {
+	const reset = { numberMode: undefined, valueSource: undefined, dateTime: undefined };
 	if (kind === "one" || kind === "many") {
-		const options = question.options && question.options.length > 0 ? question.options : [...STARTER_OPTIONS];
-		return { kind, options, columns: question.columns ?? 2, maxLength: undefined };
+		const options = question.options?.length ? question.options : [...STARTER_OPTIONS];
+		return {
+			...reset,
+			kind,
+			options,
+			columns: question.columns ?? 2,
+			maxLength: undefined,
+			min: undefined,
+			max: undefined
+		};
 	}
-	if (kind === "text") return { kind, options: undefined, columns: undefined, maxLength: question.maxLength ?? 200 };
-	return { kind, options: undefined, columns: undefined, maxLength: undefined };
+	if (kind === "text")
+		return {
+			...reset,
+			kind,
+			options: undefined,
+			dynamicFrom: undefined,
+			optionsPending: undefined,
+			columns: undefined,
+			maxLength: question.maxLength ?? 200,
+			min: undefined,
+			max: undefined
+		};
+	return {
+		...reset,
+		kind,
+		...(kind === "dateTime" ? { dateTime: { mode: "dateTime" as const, timeZone } } : {}),
+		options: undefined,
+		dynamicFrom: undefined,
+		optionsPending: undefined,
+		columns: undefined,
+		maxLength: undefined,
+		min: undefined,
+		max: undefined
+	};
 }
 
-/** An option code from its label, unique among the others. Codes of an unpublished question may follow its label. */
-function optionCode(label: string, others: readonly RawOption[]): string {
-	const taken = new Set(others.map(option => option.code));
-	const base = slugify(label);
-	if (!taken.has(base)) return base;
-	for (let n = 2; ; n++) if (!taken.has(`${base}_${n}`)) return `${base}_${n}`;
-}
-
-/** Why an added choice question cannot be saved yet, or null. */
 export function optionsProblem(question: RawQuestion): string | null {
 	if (question.kind !== "one" && question.kind !== "many") return null;
-	if (question.dynamicFrom) return null;
-	const options = question.options ?? [];
-	if (options.length < MIN_CHOICE_OPTIONS)
-		return `Add at least ${MIN_CHOICE_OPTIONS} options so observers can answer it.`;
-	if (options.some(option => option.label.trim() === "")) return "Every option needs a label.";
-	return null;
+	if (question.dynamicFrom) {
+		const sets = Object.values(question.dynamicFrom.sets);
+		if (sets.length === 0)
+			return question.optionsPending && !question.required
+				? null
+				: "Add an option list for the controlling question's answers.";
+		for (const set of sets) {
+			if (set.options.length === 0 && question.optionsPending && !question.required) continue;
+			const problem = optionListProblem(set.options);
+			if (problem) return `${set.label}: ${problem}`;
+		}
+		return null;
+	}
+	if (!question.options?.length && question.optionsPending && !question.required) return null;
+	return optionListProblem(question.options ?? [], MIN_CHOICE_OPTIONS);
 }
 
-/**
- * Whether a question's answer format and options are still open: it was added in a draft and is not in
- * the version before it. Once a version with it is published, its option codes name answers in collected
- * records, so they stay fixed in every later draft even though the source marker remains.
- */
 export function isOpenQuestion(question: RawQuestion, base: RawQuestion | undefined): boolean {
 	return question.source === ADDED_SOURCE && base === undefined;
 }
 
-/** Why a question cannot be saved to the draft as it stands, or null when it can. */
-export function saveProblem(question: RawQuestion, base: RawQuestion | undefined): string | null {
-	if (question.label.trim() === "") return "Enter a question label first.";
-	return isOpenQuestion(question, base) ? optionsProblem(question) : null;
+export function saveProblem(question: RawQuestion, base?: RawQuestion): string | null {
+	void base;
+	if (question.label.trim() === "") return "Enter the question text first.";
+	return boundsProblem(question) ?? optionsProblem(question);
 }
 
-/** The question properties that have a field of their own below. Other refusals are listed in a note. */
-const SHOWN = new Set(["label", "hint", "options", "required", "kind"]);
+const SHOWN = new Set(["label", "hint", "options", "required", "kind", "min", "max"]);
 
-/**
- * Question settings: the label and guidance a draft may reword, the stable ID it never changes, the answer
- * format and options (open for a question added in this draft, fixed otherwise) and whether an answer is
- * required. Every keystroke reaches the collector view; the draft's Save draft button keeps the edits.
- */
 export function QuestionSettings({
 	question,
+	questions,
 	base,
 	baseVersion,
 	readOnly,
+	timeZone = "UTC",
 	problems,
 	onChange,
+	onRename,
 	onRemove
 }: {
 	question: RawQuestion;
-	/** The same question in the version before, when there is one. */
+	questions: readonly RawQuestion[];
 	base: RawQuestion | undefined;
 	baseVersion: string | null;
-	/** A published or retired version: nothing here can change. */
 	readOnly: boolean;
-	/** What the last refused save said about this question, by property. */
+	timeZone?: string;
 	problems: Readonly<Record<string, string>>;
 	onChange: (patch: QuestionPatch) => void;
-	/** Takes the question out of the draft. Offered only for a question added in this draft. */
+	onRename: (nextId: string) => string | null;
 	onRemove?: () => void;
 }) {
 	const id = useId();
 	const added = !readOnly && isOpenQuestion(question, base);
 	const wording = questionChanges(question, base).filter(
-		change => change.field === "Question label" || change.field === "Guidance" || change.field === "Required"
+		change =>
+			change.field === "Question Text" ||
+			change.field === "Instructions to Observers" ||
+			change.field === "Required"
 	);
-	const labelMissing = question.label.trim() === "";
+	const earlier = questions.slice(
+		0,
+		Math.max(
+			0,
+			questions.findIndex(candidate => candidate.id === question.id)
+		)
+	);
 	const otherProblems = Object.entries(problems).filter(([property]) => !SHOWN.has(property));
-
 	return (
-		<div className="flex flex-col gap-6">
+		<div className="flex min-w-0 flex-col gap-6">
 			<Field
-				label="Question label"
+				label="Question Text"
 				htmlFor={`${id}-label`}
 				error={
-					!readOnly && labelMissing
-						? "Enter the question as observers read it."
-						: !readOnly
-							? problems.label
-							: undefined
+					!readOnly
+						? question.label.trim() === ""
+							? "Enter the question as observers read it."
+							: problems.label
+						: undefined
 				}>
 				<TextInput
 					value={question.label}
@@ -124,27 +151,32 @@ export function QuestionSettings({
 					onChange={event => onChange({ label: event.target.value })}
 				/>
 			</Field>
-
+			<QuestionIdEditor key={question.id} value={question.id} readOnly={readOnly} onRename={onRename} />
+			{readOnly && (
+				<p className="type-small text-ink-2">
+					Saved dataset column names:{" "}
+					{[
+						...new Set(
+							[
+								question.exportColumn,
+								...Object.values(question.dynamicFrom?.sets ?? {}).map(set => set.exportColumn)
+							].filter(Boolean)
+						)
+					].join(", ") || "None assigned in this version"}
+					. New drafts use the Question ID.
+				</p>
+			)}
 			<Field
-				label="Question ID"
-				htmlFor={`${id}-identifier`}
-				hint="Stays the same when you reword the question. Records store answers under it.">
-				<TextInput value={question.id} readOnly className="font-mono" />
-			</Field>
-
-			<Field
-				label="Guidance"
+				label="Instructions to Observers"
 				htmlFor={`${id}-guidance`}
-				optional={!readOnly}
+				optional
 				error={!readOnly ? problems.hint : undefined}>
 				<TextInput
 					value={question.hint ?? ""}
 					readOnly={readOnly}
-					placeholder={readOnly ? undefined : "What the observer should know before answering"}
-					onChange={event => onChange({ hint: event.target.value })}
+					onChange={event => onChange({ hint: event.target.value || undefined })}
 				/>
 			</Field>
-
 			{baseVersion && wording.length > 0 && base && (
 				<Note tone="waiting" icon="pencil" live="polite">
 					<p className="font-semibold text-waiting">Changed from {baseVersion}</p>
@@ -163,45 +195,73 @@ export function QuestionSettings({
 					</p>
 				</Note>
 			)}
-
-			{added ? (
-				<Field
-					label="Answer format"
-					htmlFor={`${id}-format`}
-					hint="Open while the question is new. It cannot change once a version with it is published.">
+			<Field label="Answer format" htmlFor={`${id}-format`}>
+				{added ? (
 					<Select
 						value={question.kind}
-						onChange={event => onChange(formatPatch(question, event.target.value as QuestionKind))}>
-						{(Object.keys(FORMAT_LABEL) as QuestionKind[]).map(kind => (
+						onChange={event => {
+							const kind = KINDS.find(candidate => candidate === event.target.value);
+							if (kind) onChange(formatPatch(question, kind, timeZone));
+						}}>
+						{KINDS.map(kind => (
 							<option key={kind} value={kind}>
 								{FORMAT_LABEL[kind]}
 							</option>
 						))}
 					</Select>
-				</Field>
-			) : (
-				<Field
-					label="Answer format"
-					htmlFor={`${id}-format`}
-					hint="Fixed, so every answer keeps its meaning across versions.">
+				) : (
 					<TextInput value={FORMAT_LABEL[question.kind]} readOnly />
-				</Field>
+				)}
+			</Field>
+			{(question.kind === "one" || question.kind === "many") && (
+				<DynamicOptionsEditor
+					question={question}
+					earlier={earlier}
+					readOnly={readOnly}
+					problem={problems.options}
+					onChange={onChange}
+				/>
 			)}
-
-			{added && (question.kind === "one" || question.kind === "many") ? (
-				<OptionsEditor question={question} problem={problems.options} onChange={onChange} />
-			) : (
-				<Options question={question} />
+			{question.kind === "number" && (
+				<>
+					<Field label="Number type" htmlFor={`${id}-number-mode`}>
+						<Select
+							value={question.numberMode ?? "integer"}
+							disabled={readOnly}
+							onChange={event =>
+								onChange({ numberMode: event.target.value === "decimal" ? "decimal" : undefined })
+							}>
+							<option value="integer">Whole number</option>
+							<option value="decimal">Decimal number</option>
+						</Select>
+					</Field>
+					<NumberBoundsEditor
+						key={`${question.id}-${question.numberMode}`}
+						question={question}
+						readOnly={readOnly}
+						onChange={onChange}
+					/>
+				</>
 			)}
-
+			{question.kind === "dateTime" && (
+				<DateTimeSettings question={question} readOnly={readOnly} onChange={onChange} />
+			)}
+			{question.kind === "text" && (
+				<TextSourceSettings question={question} readOnly={readOnly} onChange={onChange} />
+			)}
+			{question.kind === "text" && question.maxLength !== undefined && (
+				<p className="type-small text-ink-2">
+					Written answers can contain up to {question.maxLength} characters.
+				</p>
+			)}
 			<Checkbox
 				id={`${id}-required`}
 				checked={question.required ?? false}
 				disabled={readOnly}
-				onCheckedChange={checked => onChange({ required: checked })}>
-				Required when visible
+				onCheckedChange={required => onChange({ required })}>
+				Response required when question is visible
 			</Checkbox>
-
+			<ConditionEditor question={question} earlier={earlier} readOnly={readOnly} onChange={onChange} />
 			{otherProblems.length > 0 && (
 				<Note tone="attention" title="The last save refused this question.">
 					{otherProblems.map(([property, problem]) => (
@@ -211,10 +271,9 @@ export function QuestionSettings({
 					))}
 				</Note>
 			)}
-
 			{added && onRemove && (
 				<div className="border-t border-rule pt-6">
-					<Button variant="danger" size="sm" icon="trash-2" onClick={onRemove}>
+					<Button variant="danger" icon="trash-2" onClick={onRemove}>
 						Remove question
 					</Button>
 					<p className="mt-2 type-small text-ink-2">
@@ -223,134 +282,5 @@ export function QuestionSettings({
 				</div>
 			)}
 		</div>
-	);
-}
-
-function Options({ question }: { question: RawQuestion }) {
-	if (question.kind === "text")
-		return (
-			<div>
-				<p className="type-small font-semibold text-ink">Answer</p>
-				<p className="mt-2 type-body text-ink-2">
-					Written answer
-					{question.maxLength !== undefined ? ` · up to ${question.maxLength} characters` : ""}
-				</p>
-			</div>
-		);
-	if (question.kind === "number")
-		return (
-			<div>
-				<p className="type-small font-semibold text-ink">Answer</p>
-				<p className="mt-2 type-body text-ink-2">A whole number</p>
-			</div>
-		);
-
-	const options = question.options ?? [];
-	const dynamic = question.dynamicFrom;
-
-	return (
-		<div>
-			<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-				<p className="type-small font-semibold text-ink">Options</p>
-				<p className="inline-flex items-baseline gap-1.5 type-small text-ink-2">
-					<Icon name="lock" size={16} className="shrink-0 self-center" />
-					Fixed
-				</p>
-			</div>
-			{question.optionsPending ? (
-				<Note tone="waiting" icon="flag" className="mt-3">
-					{question.optionsPending}
-				</Note>
-			) : dynamic ? (
-				<p className="mt-2 type-body text-ink-2">
-					The options follow the answer to the earlier question: {Object.keys(dynamic.sets).length} option
-					sets, one per answer.
-				</p>
-			) : (
-				<ul className="mt-3 flex flex-wrap gap-2" aria-label="Options">
-					{options.map(option => (
-						<li
-							key={option.code}
-							className="inline-flex min-h-9 items-center rounded-pill border border-edge px-3 type-small text-ink">
-							{option.label}
-						</li>
-					))}
-				</ul>
-			)}
-		</div>
-	);
-}
-
-/**
- * The options of a question added in this draft: each label can be edited, removed or added to. Codes
- * follow the labels while the question is unpublished, and a choice question always keeps at least two.
- */
-function OptionsEditor({
-	question,
-	problem: refused,
-	onChange
-}: {
-	question: RawQuestion;
-	problem: string | undefined;
-	onChange: (patch: QuestionPatch) => void;
-}) {
-	const id = useId();
-	const options = question.options ?? [];
-
-	function relabel(index: number, label: string) {
-		const others = options.filter((_, at) => at !== index);
-		const next = options.map((option, at) => (at === index ? { code: optionCode(label, others), label } : option));
-		onChange({ options: next });
-	}
-
-	function remove(index: number) {
-		onChange({ options: options.filter((_, at) => at !== index) });
-	}
-
-	function add() {
-		const label = `Option ${options.length + 1}`;
-		onChange({ options: [...options, { code: optionCode(label, options), label }] });
-	}
-
-	const problem = optionsProblem(question) ?? refused ?? null;
-	return (
-		<fieldset className="flex flex-col gap-3" aria-describedby={`${id}-problem`}>
-			<legend className="type-small font-semibold text-ink">Options</legend>
-			<ol className="flex flex-col gap-2">
-				{options.map((option, index) => (
-					<li key={index} className="flex items-center gap-2">
-						<span aria-hidden="true" className="w-6 shrink-0 text-right type-mono-data text-ink-2">
-							{index + 1}
-						</span>
-						<TextInput
-							aria-label={`Option ${index + 1} label`}
-							value={option.label}
-							onChange={event => relabel(index, event.target.value)}
-							className="min-w-0 grow"
-						/>
-						<IconButton
-							icon="x"
-							label={
-								options.length <= MIN_CHOICE_OPTIONS
-									? `Remove option ${index + 1}, a choice needs at least ${MIN_CHOICE_OPTIONS}`
-									: `Remove option ${index + 1}`
-							}
-							disabled={options.length <= MIN_CHOICE_OPTIONS}
-							onClick={() => remove(index)}
-						/>
-					</li>
-				))}
-			</ol>
-			<div>
-				<Button variant="outline" icon="plus" onClick={add}>
-					Add an option
-				</Button>
-			</div>
-			<p
-				id={`${id}-problem`}
-				className={problem ? "type-small font-semibold text-attention" : "type-small text-ink-2"}>
-				{problem ?? "Codes follow the labels until a version with this question is published."}
-			</p>
-		</fieldset>
 	);
 }

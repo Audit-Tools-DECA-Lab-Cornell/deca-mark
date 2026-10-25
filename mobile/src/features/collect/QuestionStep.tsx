@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { AccessibilityInfo, findNodeHandle, ScrollView, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import type { Act, FormDefinition } from "../../forms/definition";
@@ -11,13 +11,12 @@ import {
   Mono,
   Note,
   Text,
-  Textarea,
-  TextInput,
   TextLink,
   type Theme,
   useHaptics,
   useStyles,
 } from "../../ui";
+import { QuestionValueInput } from "./QuestionValueInput";
 
 type Props = {
   readonly form: FormDefinition;
@@ -94,33 +93,10 @@ export function QuestionStep({
   const chosen = Array.isArray(value) ? value : [];
   const acts = formActs(form);
   const actIndex = acts.indexOf(question.act);
-  const inputText = typeof value === "string" || typeof value === "number" ? String(value) : "";
-  const [text, setText] = useState(inputText);
-  const [shown, setShown] = useState(question.id);
-  // Reload the field only when the question changes, not whenever the stored answer lands.
-  if (shown !== question.id) {
-    setShown(question.id);
-    setText(inputText);
-  }
-
   const answered =
     question.kind === "many"
       ? chosen.length > 0
-      : question.kind === "one"
-        ? single !== ""
-        : text.trim() !== "";
-
-  function type(next: string) {
-    const cleaned =
-      question.kind === "number"
-        ? next.replace(/[^0-9]/g, "")
-        : question.exportColumn === "observer"
-          ? next.toUpperCase().replace(/\s+/g, "")
-          : next;
-    setText(cleaned);
-    // Straight to the draft: debouncing would lose what was typed just before a force quit.
-    onWrite(cleaned);
-  }
+      : value !== undefined && String(value).trim() !== "";
 
   return (
     <View style={s.root}>
@@ -195,30 +171,13 @@ export function QuestionStep({
           </Note>
         ) : null}
 
-        {question.kind === "text" && (question.rows ?? 1) > 1 ? (
-          <Textarea
-            accessibilityLabel={question.label}
-            value={text}
-            onChangeText={type}
-            rows={question.rows ?? 4}
-            maxLength={question.maxLength}
-            placeholder={question.placeholder}
-          />
-        ) : null}
-        {(question.kind === "text" && (question.rows ?? 1) <= 1) || question.kind === "number" ? (
-          <TextInput
-            accessibilityLabel={question.label}
-            value={text}
-            onChangeText={type}
-            keyboardType={question.kind === "number" ? "number-pad" : "default"}
-            autoCapitalize={question.exportColumn === "observer" ? "characters" : "sentences"}
-            autoCorrect={question.kind === "text" && question.exportColumn !== "observer"}
-            maxLength={question.maxLength}
-            placeholder={question.placeholder}
-            returnKeyType="next"
-            onSubmitEditing={onAdvance}
-          />
-        ) : null}
+        <QuestionValueInput
+          key={question.id}
+          question={question}
+          value={value}
+          onWrite={onWrite}
+          onAdvance={onAdvance}
+        />
 
         {question.protocolFlag ? (
           <Note tone="waiting" icon="flag" title="Protocol note.">

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "001404-settings",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P10-settings.md",
+      "state": "present",
+      "sha256": "a5b8f91eac96121e4b8142aa12bc9e2f2eaf272cc446c20eac396800f7dc9a3d",
+      "blob": "files/000000",
+      "bytes": 917
+    },
+    {
+      "path": "web/src/features/forms/AddQuestionDialog.tsx",
+      "state": "present",
+      "sha256": "5f1e839ecb9c87fd19d9d3547fe75d6337d7eb152133216d8d6345dddace0d42",
+      "blob": "files/000001",
+      "bytes": 2746
+    },
+    {
+      "path": "web/src/features/forms/QuestionSettings.tsx",
+      "state": "present",
+      "sha256": "c4144e16071c79c6ff47b4b535c7562250eca9648429bf1ac96eef35a58b2185",
+      "blob": "files/000002",
+      "bytes": 7275
+    }
+  ]
+}

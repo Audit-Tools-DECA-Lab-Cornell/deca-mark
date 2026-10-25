@@ -1,0 +1,125 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { failedChange } from "@/features/people/result";
+import type { InviteRequest, InviteResult, PeopleActionResult } from "@/features/people/types";
+import { apiRequestError, wasRefused } from "@/lib/api/errors";
+import {
+	createProjectInvitation,
+	removeProjectMember,
+	revokeProjectInvitation,
+	setProjectRole
+} from "@/lib/api/mutations";
+
+import { checkInvitation, idSchema, roleSchema, type TeamContext, teamContextSchema, type TeamRole } from "./rules";
+
+/**
+ * Changes to a project's team. Each one checks what it was given, calls the API (which decides whether
+ * the signed-in person may), and says what did not happen when it fails. A role or membership change
+ * refreshes everything under /o, because the header and the tabs read the person's own roles from the
+ * same place; an invitation only changes the team page.
+ */
+
+const DONE: PeopleActionResult = { status: "done" };
+
+/** The page was built from something this action no longer recognises. */
+function stale(nothing: string): { status: "failed"; message: string } {
+	return { status: "failed", message: `${nothing} Reload the page and try again.` };
+}
+
+export async function changeMemberRole(
+	context: TeamContext,
+	userId: string,
+	role: TeamRole
+): Promise<PeopleActionResult> {
+	const nothing = "Nothing was changed.";
+	const where = teamContextSchema.safeParse(context);
+	const member = idSchema.safeParse(userId);
+	const next = roleSchema.safeParse(role);
+	if (!where.success || !member.success || !next.success) return stale(nothing);
+	try {
+		await setProjectRole(where.data.projectId, member.data, next.data);
+	} catch (error) {
+		return failedChange(nothing, error);
+	}
+	revalidatePath("/o", "layout");
+	return DONE;
+}
+
+/** `leaving` is the signed-in person removing themselves: they have no project to come back to. */
+export async function removeMember(
+	context: TeamContext,
+	userId: string,
+	leaving: boolean
+): Promise<PeopleActionResult> {
+	const nothing = "Nobody was removed.";
+	const where = teamContextSchema.safeParse(context);
+	const member = idSchema.safeParse(userId);
+	if (!where.success || !member.success) return stale(nothing);
+	try {
+		await removeProjectMember(where.data.projectId, member.data);
+	} catch (error) {
+		return failedChange(nothing, error);
+	}
+	revalidatePath("/o", "layout");
+	if (leaving) redirect("/o");
+	return DONE;
+}
+
+/** Creates a link and a join code. They are returned once and never read again. */
+export async function createInvitation(context: TeamContext, request: InviteRequest<TeamRole>): Promise<InviteResult> {
+	const nothing = "No invitation was created.";
+	const where = teamContextSchema.safeParse(context);
+	if (!where.success) return { ...stale(nothing), definite: true };
+	const checked = checkInvitation(request);
+	if (!checked.ok)
+		return {
+			status: "failed",
+			message: `${nothing} Check the fields marked below.`,
+			definite: true,
+			fields: checked.fields
+		};
+	const { role, email, maxUses, expiresInDays } = checked.values;
+	let created;
+	try {
+		created = await createProjectInvitation(where.data.projectId, {
+			role,
+			...(email === null ? {} : { email }),
+			max_uses: maxUses,
+			expires_in_days: expiresInDays
+		});
+	} catch (error) {
+		const failed = { ...failedChange(nothing, error), definite: wasRefused(error) };
+		const fields = apiRequestError(error).fields;
+		return Object.keys(fields).length > 0 ? { ...failed, fields: { ...fields } } : failed;
+	}
+	revalidatePath(`/o/${where.data.org}/p/${where.data.project}/team`);
+	return {
+		status: "done",
+		invitation: {
+			code: created.code,
+			email_delivery: created.email_delivery,
+			token: created.token,
+			role: created.role,
+			email: created.email,
+			max_uses: created.max_uses,
+			expires_at: created.expires_at
+		}
+	};
+}
+
+export async function revokeInvitation(context: TeamContext, invitationId: string): Promise<PeopleActionResult> {
+	const nothing = "The invitation was not revoked.";
+	const where = teamContextSchema.safeParse(context);
+	const invitation = idSchema.safeParse(invitationId);
+	if (!where.success || !invitation.success) return stale(nothing);
+	try {
+		await revokeProjectInvitation(where.data.projectId, invitation.data);
+	} catch (error) {
+		return failedChange(nothing, error);
+	}
+	revalidatePath(`/o/${where.data.org}/p/${where.data.project}/team`);
+	return DONE;
+}

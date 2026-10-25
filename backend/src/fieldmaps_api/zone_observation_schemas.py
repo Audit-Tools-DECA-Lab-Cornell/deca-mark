@@ -30,10 +30,10 @@ CAPTURE_TIME_TEXT: Final = TypeAdapter[CaptureTimeText](CaptureTimeText)
 
 type AnswerValue = (
     StrictStr
-    | Annotated[int, Field(strict=True, ge=-MAX_EXACT_INTEGER, le=MAX_EXACT_INTEGER)]
+    | Annotated[int, Field(strict=True)]
     | Annotated[
         float,
-        Field(strict=True, allow_inf_nan=False, ge=-MAX_EXACT_INTEGER, le=MAX_EXACT_INTEGER),
+        Field(strict=True, allow_inf_nan=False),
     ]
     | tuple[StrictStr, ...]
 )
@@ -48,6 +48,23 @@ class BoundObservationBase(BaseModel):
     observer: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=12)]
     observed_at: AwareDatetime
     answers: Annotated[dict[str, AnswerValue], Field(max_length=200)]
+
+    @field_validator("answers")
+    @classmethod
+    def canonical_json_numbers(cls, values: dict[str, AnswerValue]) -> dict[str, AnswerValue]:
+        # ECMAScript/JCS has finite IEEE754 numbers; normalize only newly allowed unsafe ints.
+        normalized: dict[str, AnswerValue] = {}
+        for key, value in values.items():
+            if isinstance(value, int) and abs(value) > MAX_EXACT_INTEGER:
+                try:
+                    numeric = float(value)
+                    normalized[key] = numeric
+                    continue
+                except OverflowError as error:
+                    message = "Number answer must be finite"
+                    raise ValueError(message) from error
+            normalized[key] = value
+        return normalized
 
     @field_validator("observed_at", mode="before")
     @classmethod

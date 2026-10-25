@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002102-python",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/src/fieldmaps_api/domain/forms.py",
+      "state": "present",
+      "sha256": "dbf059fc833abbc3b14c5ac4e2084be05172933e1f0c3ec1ee32a00ac3b4ddbb",
+      "blob": "files/000000",
+      "bytes": 7482
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P21-python.md",
+      "state": "present",
+      "sha256": "f00a255361f2f69f88e39bd81e4e55d1f32c593bedc9802b94e96c520afc996c",
+      "blob": "files/000001",
+      "bytes": 1005
+    }
+  ]
+}

@@ -670,3 +670,19 @@ Read first: `supabase/migrations/20261012120000_current_baseline.sql` (form_vers
 Do: seed the Training project with a practice site, a published map package (the Practice garden, two zones) and its published play and inventory forms in the canonical format; add a `form_templates` table seeded from `contracts/forms` (title, summary, definition, schema version); remove the mismatched and legacy-shaped seed rows. Under D31 the baseline may be edited in place until the pilot launches.
 Done when: `pnpm db:reset` builds the baseline; `pnpm db:test` asserts every seeded form version validates against the canonical schema, the Training project has one site with a current package naming its forms, and templates exist; a new account joins Training and sees the site.
 Verify: `pnpm db:reset`, `pnpm db:test` on the local stack only.
+
+### DB-21: Atomic schema2 form-version forward transition
+Status: done · Phase 4 · Size M · Depends: CON-07 · Blocks: QA-10
+Read first: CON-08; reviewed feedback contract decisions; form_versions immutable trigger.
+Do: prepare an atomic source migration with genuine schema preflight and conservative SQL gates, refuse legacy/unknown or formerly ignored newly meaningful properties; preserve definition JSON/IDs/bindings/history and restore the published trigger.
+Done when: disposable rehearsal covers success and all-or-nothing refusal, including formerly ignored fields; persistent application separately authorized. No template table or reset.
+Needs user: applying migration to a persistent local or hosted database.
+Verify: migration/preflight tests and reviewed rehearsal evidence before application.
+
+October 25, 2026 local acceptance: after explicit user approval, the two stored
+canonical forms moved to schema 2 in one transaction with exact source recorded
+in Supabase history. Default 2 and enabled immutability trigger verified; all 18
+application-table fingerprints were unchanged excluding form schema-version metadata.
+See [evidence](../docs/plan/app-feedback-2026-10-23/evidence/P42-local-migration/verification.json)
+and the [production procedure](../database/hosted/form-schema2-rollout.md).
+Hosted application and real web/API acceptance remain pending; no reset or deployment.

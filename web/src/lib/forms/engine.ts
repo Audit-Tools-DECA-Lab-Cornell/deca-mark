@@ -1,6 +1,5 @@
-// Copied from mobile/src/forms/engine.ts. Keep identical below this header;
-// `pnpm forms:parity` checks it.
 import type { Answers, AnswerValue, Condition, FormDefinition, Question } from "./definition";
+import { formatTemporalValue, isCanonicalTemporalValue } from "./temporal";
 
 /**
  * The reusable part: visibility, dynamic option sets, pruning and validation. It knows nothing
@@ -71,7 +70,7 @@ export function visibleQuestions(
 
 function retainValue(question: ResolvedQuestion, value: AnswerValue): AnswerValue | null {
   if (question.kind === "number") return typeof value === "number" ? value : null;
-  if (question.kind === "text")
+  if (question.kind === "text" || question.kind === "dateTime")
     return typeof value === "string" && value.trim() !== "" ? value : null;
   const codes = new Set(question.options.map((option) => option.code));
   if (question.kind === "one") return typeof value === "string" && codes.has(value) ? value : null;
@@ -130,11 +129,18 @@ function answerProblem(
   switch (question.kind) {
     case "number":
       if (typeof value !== "number") return "type";
-      return !Number.isInteger(value) ||
+      return !Number.isFinite(value) ||
+        (question.numberMode !== "decimal" && !Number.isSafeInteger(value)) ||
         (question.min !== undefined && value < question.min) ||
         (question.max !== undefined && value > question.max)
         ? "range"
         : null;
+    case "dateTime":
+      if (typeof value !== "string") return "type";
+      if (value.trim() === "") return null;
+      return question.dateTime !== undefined && isCanonicalTemporalValue(question.dateTime, value)
+        ? null
+        : "range";
     case "text":
       if (typeof value !== "string") return "type";
       return question.maxLength !== undefined && Array.from(value).length > question.maxLength
@@ -162,12 +168,20 @@ export function reviewProblems(form: FormDefinition, answers: Answers): readonly
   for (const question of visibleQuestions(form, answers)) {
     const value = answers[question.id];
     if (value === undefined) {
-      if (question.required) problems.push({ question, reason: "required" });
+      if (
+        question.required ||
+        (question.valueSource !== undefined && question.valueSource !== "manual")
+      )
+        problems.push({ question, reason: "required" });
       continue;
     }
     const reason = answerProblem(question, value);
     if (reason !== null) problems.push({ question, reason });
-    else if (question.required && !isAnswered(value))
+    else if (
+      (question.required ||
+        (question.valueSource !== undefined && question.valueSource !== "manual")) &&
+      !isAnswered(value)
+    )
       problems.push({ question, reason: "required" });
   }
   return problems;
@@ -191,6 +205,8 @@ export function optionLabel(question: ResolvedQuestion, code: string): string {
 export function answerSummary(question: ResolvedQuestion, value: AnswerValue | undefined): string {
   if (!isAnswered(value)) return question.required ? "Required" : "Not answered";
   if (typeof value === "number") return String(value);
+  if (typeof value === "string" && question.kind === "dateTime" && question.dateTime !== undefined)
+    return formatTemporalValue(question.dateTime, value);
   if (typeof value === "string")
     return question.kind === "one" ? optionLabel(question, value) : value;
   return value.map((code) => optionLabel(question, code)).join(", ");

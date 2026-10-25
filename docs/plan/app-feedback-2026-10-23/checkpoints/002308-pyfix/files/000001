@@ -1,0 +1,200 @@
+"""Real PostgreSQL migration acceptance on newly created, isolated Docker containers only."""
+
+import os
+import subprocess
+import time
+from collections.abc import Iterator
+from pathlib import Path
+from shutil import which
+
+import pytest
+
+from fieldmaps_api.form_schema_upgrade import (
+    MIGRATION,
+    VERSION,
+    application_sql,
+    psql,
+    run,
+    snapshot_report,
+)
+
+ROOT = Path(__file__).resolve().parents[2]
+pytestmark = pytest.mark.integration
+
+
+def docker(*args: str) -> str:
+    executable = which("docker")
+    if executable is None:
+        message = "Docker executable is required for the isolated rehearsal"
+        raise FileNotFoundError(message)
+    result = subprocess.run(  # noqa: S603 - all arguments are test-owned literals/container IDs
+        [executable, *args], check=True, capture_output=True, text=True, timeout=120
+    )
+    return result.stdout.strip()
+
+
+@pytest.fixture
+def schema2_container() -> Iterator[str]:
+    """No existing stack, credentials, TCP port, volume or configuration is used."""
+    container = f"decamark-schema2-{os.getpid()}"
+    identity = docker(
+        "run",
+        "--rm",
+        "--pull",
+        "never",
+        "-d",
+        "--name",
+        container,
+        "--user",
+        "postgres",
+        "--tmpfs",
+        "/tmp",  # noqa: S108 - socket inside a new, isolated test container
+        "--entrypoint",
+        "sh",
+        "public.ecr.aws/supabase/postgres:17.6.1.171",
+        "-c",
+        "initdb -D /tmp/schema2-db -A trust >/tmp/init.log && "
+        "exec postgres -D /tmp/schema2-db -c shared_preload_libraries=pg_cron "
+        "-c cron.database_name=postgres -c listen_addresses= -k /tmp",
+    )
+    try:
+        for attempt in range(30):
+            try:
+                psql(container, "SELECT 1;")
+                break
+            except subprocess.CalledProcessError:
+                if attempt == 29:
+                    raise
+                time.sleep(1)
+        psql(container, (ROOT / "database/tests/zone-bootstrap.sql").read_text())
+        for path in sorted((ROOT / "supabase/migrations").glob("*.sql")):
+            if path.name.startswith(VERSION):
+                break
+            psql(container, path.read_text())
+        psql(
+            container,
+            """
+CREATE SCHEMA supabase_migrations;
+CREATE TABLE supabase_migrations.schema_migrations
+(version text PRIMARY KEY, statements text[], name text);
+""",
+        )
+        yield container
+    finally:
+        docker("stop", identity)
+
+
+def protected_state(container: str) -> str:
+    return psql(
+        container,
+        """
+SELECT jsonb_build_object(
+ 'rows',(SELECT jsonb_agg(to_jsonb(f) ORDER BY id) FROM fieldmaps.form_versions f),
+ 'default',(SELECT pg_get_expr(adbin,adrelid) FROM pg_attrdef d JOIN pg_attribute a
+   ON a.attrelid=d.adrelid AND a.attnum=d.adnum
+   WHERE d.adrelid='fieldmaps.form_versions'::regclass AND a.attname='schema_version'),
+ 'triggers',(SELECT jsonb_agg(jsonb_build_array(tgname,tgenabled) ORDER BY tgname)
+   FROM pg_trigger WHERE tgrelid='fieldmaps.form_versions'::regclass),
+ 'history',(SELECT jsonb_agg(to_jsonb(h)) FROM supabase_migrations.schema_migrations h));
+""",
+    )
+
+
+@pytest.mark.parametrize(
+    "failure", ["legacy", "new-property", "stale-report", "history-conflict", "missing-report"]
+)
+def test_schema2_refusal_preserves_all_rows_default_trigger_and_history(
+    schema2_container: str, failure: str
+) -> None:
+    # Given an untouched canonical baseline, add only the named synthetic rejection condition.
+    container = schema2_container
+    source = MIGRATION.read_text()
+    report = snapshot_report(container)
+    mutations = {
+        "missing-report": "SELECT 1;",
+        "legacy": "UPDATE fieldmaps.form_versions SET definition='{\"fields\":[]}'::jsonb;",
+        "new-property": (
+            "UPDATE fieldmaps.form_versions SET definition=definition || "
+            '\'{"columnNaming":"questionId"}\';'
+        ),
+        "stale-report": (
+            "UPDATE fieldmaps.form_versions SET definition="
+            "jsonb_set(definition,'{title}','\"Stale report fixture\"');"
+        ),
+        "history-conflict": (
+            "INSERT INTO supabase_migrations.schema_migrations(version) VALUES ('20261024090000');"
+        ),
+    }
+    psql(
+        container,
+        "ALTER TABLE fieldmaps.form_versions DISABLE TRIGGER immutable_form_version;"
+        + mutations[failure]
+        + "ALTER TABLE fieldmaps.form_versions ENABLE TRIGGER immutable_form_version;",
+    )
+    before = protected_state(container)
+    # When the operational helper or its already-bound report is applied.
+    if failure == "missing-report":
+        with pytest.raises(subprocess.CalledProcessError):
+            psql(container, source)
+    elif failure in {"stale-report", "history-conflict"}:
+        with pytest.raises(subprocess.CalledProcessError):
+            psql(container, application_sql(report, source))
+    else:
+        with pytest.raises(ValueError, match=r"validation error|formerly ignored"):
+            run("apply-local", container)
+    # Then all protected state is exactly unchanged by refusal.
+    assert protected_state(container) == before
+
+
+@pytest.mark.parametrize("empty", [False, True])
+def test_schema2_upgrades_canonical_or_empty_rows_and_tracks_exact_source(
+    schema2_container: str, *, empty: bool
+) -> None:
+    # Given either the actual canonical baseline or an explicitly empty disposable fixture.
+    container = schema2_container
+    if empty:
+        psql(container, "TRUNCATE fieldmaps.form_versions CASCADE;")
+    before = psql(
+        container,
+        "SELECT coalesce(jsonb_agg(to_jsonb(f)-'schema_version' ORDER BY id),'[]') "
+        "FROM fieldmaps.form_versions f;",
+    )
+    # When the executable operation runs real Python validation and the migration in one session.
+    run("apply-local", container)
+    # Then definitions/IDs/revisions survive and rows/default/trigger/history upgrade.
+    after = psql(
+        container,
+        "SELECT coalesce(jsonb_agg(to_jsonb(f)-'schema_version' ORDER BY id),'[]') "
+        "FROM fieldmaps.form_versions f;",
+    )
+    assert after == before
+    assert (
+        psql(container, "SELECT count(*) FROM fieldmaps.form_versions WHERE schema_version<>2;")
+        == "0"
+    )
+    assert (
+        psql(
+            container,
+            "SELECT pg_get_expr(adbin,adrelid) FROM pg_attrdef d JOIN pg_attribute a "
+            "ON a.attrelid=d.adrelid AND a.attnum=d.adnum "
+            "WHERE d.adrelid='fieldmaps.form_versions'::regclass AND a.attname='schema_version';",
+        )
+        == "2"
+    )
+    assert (
+        psql(
+            container,
+            "SELECT tgenabled FROM pg_trigger "
+            "WHERE tgrelid='fieldmaps.form_versions'::regclass "
+            "AND tgname='immutable_form_version';",
+        )
+        == "O"
+    )
+    assert (
+        psql(
+            container,
+            "SELECT statements[1] FROM supabase_migrations.schema_migrations "
+            "WHERE version='20261024090000';",
+        )
+        == MIGRATION.read_text().strip()
+    )

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003103-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "mobile/src/packages/hosted/form-upgrade.ts",
+      "state": "present",
+      "sha256": "ad4b6302981bc641b3536a939de2af14f310bdee25a46d1c67b664722ff7dd80",
+      "blob": "files/000000",
+      "bytes": 1209
+    },
+    {
+      "path": "mobile/src/packages/hosted/installation.ts",
+      "state": "present",
+      "sha256": "63aadcecc4fac228798644b13c98b75a1f29e648f6ab409ab15ff102fb62e2f8",
+      "blob": "files/000001",
+      "bytes": 5828
+    },
+    {
+      "path": "mobile/src/packages/hosted/prepare.ts",
+      "state": "present",
+      "sha256": "8281fb39b7aadcee401443e753f7ad17223fe0e4125392155937a788633d8cda",
+      "blob": "files/000002",
+      "bytes": 3207
+    },
+    {
+      "path": "mobile/src/packages/hosted/schemas.ts",
+      "state": "present",
+      "sha256": "d952a97a1026e67d072514aae70a9a6a8a757330971eaeb6339065e05281b4df",
+      "blob": "files/000003",
+      "bytes": 4580
+    },
+    {
+      "path": "mobile/src/packages/hosted/verify-bound.ts",
+      "state": "present",
+      "sha256": "73caf5b755bd717c9069ec49dec148fb9377536c7aec8e523e0a5d5fb058fbd3",
+      "blob": "files/000004",
+      "bytes": 4492
+    }
+  ]
+}

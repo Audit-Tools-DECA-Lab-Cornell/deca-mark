@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003132-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "mobile/src/features/collect/TemporalInput.test.tsx",
+      "state": "present",
+      "sha256": "ba83e95b9ac7dde3648d6e4e9503eb8341d69bef8cddee713b7d64d8049d892e",
+      "blob": "files/000000",
+      "bytes": 2849
+    }
+  ]
+}

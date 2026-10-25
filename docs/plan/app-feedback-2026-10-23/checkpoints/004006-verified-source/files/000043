@@ -1,0 +1,111 @@
+# Shared contracts
+
+Language-neutral JSON shared by the independently managed mobile, web and API applications. There is no shared runtime package or dependency installation here. Task status belongs in [the contract plan](../docs/plan/contracts.md).
+
+| File | Source and editing rule | Consumers |
+| --- | --- | --- |
+| `form-definition.schema.json` | Generated from `mobile/src/forms/definition.ts` using Zod's `io: "input"` mode. Never edit by hand. | Definition tooling; backend structural validation in BE-10 |
+| `forms/shell-v1.json`, `forms/janet-test-v1.json`, `forms/janet-inventory-v1.json` | **Seed and test data** (D32), not a runtime source: forms live only in the database, in the format `form-definition.schema.json` describes. These files seed the database (Training forms and the form templates, DB-20), feed the shared cases and tests, and are reviewed like any definition. Edit the JSON, not the thin TypeScript imports. The mobile registry and the web "start from" templates still compile them in until MOB-43 (collector) and BE-25 with WEB-56 (web) move both to the API. | Database seeds, mobile and web tests, backend validation; general typed GIS publication remains GIS-01 |
+| `forms/definition.cases.json`, `forms/cases/*.cases.json` | Hand-authored expected behavior: definition boundaries and the form schema version, and answers against the seed forms. Never regenerate expectations from the engine. | Mobile Vitest, web unit tests and Python shared-case parity (BE-10) |
+
+Definition cases may use `definitionPatch` for top-level definition properties before applying the question `patch`.
+| `contour.json` | Hand-authored Contour design tokens: the Day (default) and Dusk colours, with the Dusk values the design left out derived and listed under `derived`; the contrast pairs; fonts; the type, spacing, layout, radius, size and motion scales; and the state vocabulary (kind × state → label, Lucide icon and tone). Edit the JSON, then run `pnpm tokens`. Map colours do not belong here. | `scripts/contour-tokens.mjs` generates `web/src/styles/contour.css` (checked in, never edited by hand); web code reads the state vocabulary and motion through `web/src/lib/contour.ts`; the collector reads the file in `mobile/src/ui/tokens.ts` |
+| `map-palettes.json` | Hand-authored cartography for every map canvas: `day` (default) and `night`, with identical keys. The app chrome follows Contour's own Day or Dusk theme; only the map changes palette, and UI state colours never appear on it. | Mobile field map (MapLibre) and web observation and package-preview maps (SVG) |
+| `openapi.json` | Generated from FastAPI with `make -C backend openapi`; never edit by hand. | Separate generated TypeScript declarations in web and mobile |
+| `zones/*.cases.json` | Authored synthetic geometry, publication, upload and fingerprint expectations. Never regenerate expectations from implementation. See [zone contracts](zones/README.md). | Current SQL/API and mobile coverage/immutable serializer/receipt adapters; MOB-29 has disposable HTTP/SQLite acceptance, with native QGIS readback verified; physical iPad/Android collector acceptance pending |
+
+The backend authors canonical `questions` definitions only. Its narrow historical
+`fields` reader/validator remains available for existing records and exact bound uploads.
+The fresh database's synthetic
+shell initializer preserves its original two answer IDs, `people` and `notes`, bounds,
+requiredness and export names. It deliberately differs from the collector practice file,
+which also authors an observer question. No golden upload JSON, canonical bytes or
+fingerprints changed. Removing the historical reader requires the concrete inventory,
+device-queue and data-retention gates in the
+[compatibility resolution](../docs/reviews/fields-only-transition-2026-10-17/README.md).
+
+## Generate and verify
+
+With Node 24 and pnpm 10.17.1, from the repository root:
+
+```sh
+pnpm --dir mobile contracts:forms
+pnpm --dir mobile test
+pnpm mobile:check
+pnpm plan:check
+pnpm tokens:check
+pnpm contracts:generate
+```
+
+`pnpm tokens:check` fails if `web/src/styles/contour.css` has drifted from `contour.json`, or if any declared colour pair misses its WCAG minimum in Day or Dusk: 4.5:1 for text, 3:1 for UI.
+
+The form generator only writes the JSON Schema. It does not overwrite authored forms or cases. The mobile suite compares the committed schema to fresh generation and discovers every `*.cases.json` file. Run the generator twice and confirm the second run makes no change. CI runs these tests through its mobile job and separately regenerates OpenAPI and both app declarations to reject contract drift.
+
+OpenAPI generation needs the installed backend dependencies and each app's own `openapi-typescript` dependency. It needs no running API, database or credentials. Generated declarations live in `web/src/lib/api/schema.d.ts` and `mobile/src/data/api/schema.d.ts`; runtime input validation remains necessary.
+
+Each app's adjacent `errors.ts` parses error envelopes into typed errors and local user copy. Error codes determine retry, sign-in and rejection, with transport fallbacks for 401 and 5xx. Unknown or malformed responses remain retryable; on mobile this preserves the local record, including when an older API returns an unstructured 403/409/422. Known validation/access/conflict codes remain rejected. Run `pnpm --dir web test:api-errors` and `pnpm mobile:test` to verify these decisions.
+
+## Form lifecycle preconditions
+
+`FormVersionSummary` and `FormVersionDetail` expose `revision` and `etag`. Draft save,
+discard and publication require one strong `If-Match: "form-draft:<version UUID>:<revision>"`
+from the loaded definition/review. Detail reads and saves also expose the ETag header.
+The definition body remains `DraftUpdate { definition }`; the revision precondition is
+an HTTP header. A save returns the next revision/ETag. Missing or malformed values are
+428 (`precondition_required`); stale identity/revision is 412 (`revision_conflict`).
+Published/retired versions retain lifecycle protection. Keep the reviewed precondition
+through publication and require explicit review after conflict; no automatic refresh/retry.
+Regenerate OpenAPI and both TypeScript declarations with `pnpm contracts:generate`.
+
+## Form schema version
+
+**The source form schema version is 2.** It adds decimal numbers, Date/Time, automatic value sources and explicit new-draft column naming (CON-08). `FORM_SCHEMA_VERSION` in both engine copies and `currentSchemaVersion` in the shared cases pin it. The number stays beside `definition`, never inside it. Form detail and historical observation detail serve the stored `schema_version`; package bindings remain immutable references and the collector caches the actual detail version.
+
+The schema2 migration is prepared source; persistent application and hosted deployment have not been performed. The new runtime refuses schema1 database reads/writes until the controlled transition succeeds. It locks/preflights every row, rejects formerly ignored properties that would acquire meaning, preserves definition JSON/IDs/columns/bindings and restores the published trigger. Read `docs/plan/app-feedback-2026-10-23/contract-decisions.md` before application.
+
+Every party follows one rule:
+
+1. **The API validates writes against the current version and serves only it.** Every form write is checked against the current schema and stored with `schema_version` equal to it; no response carries another number. A write may omit the number, which means the current version; a write that names another number, or `null`, is refused with a typed error (BE-24). After a future schema change, a stale client that omits the number gets the schema's validation error rather than `unknown_schema_version`. The current version is a JSON number equal to it: the clients' JSON readers cannot tell `1.0` from `1`, so the API accepts both and never a boolean or a string.
+2. **A client that receives a schema version it does not know refuses that site or form.** It reads a served definition through `parseServedDefinition(schemaVersion, definition)`. Any number other than `FORM_SCHEMA_VERSION`, or none, throws `UnknownSchemaVersionError`, whose stable `code` is `unknown_schema_version` (`isUnknownSchemaVersion` tests the code, not the class, so an API error with that code matches too; read `schemaVersion` only from an `UnknownSchemaVersionError` instance). The screen maps that code to "Update DECA Mark to use this form" and does not open the site or form. It never parses on a guess, retries with an older reader or drops the properties it does not recognise.
+3. **A new schema version is a forward migration of stored definitions, never a dual format.** One migration rewrites every stored definition and template to the new shape and sets the new `schema_version`, keeping question IDs, option codes and export columns so collected answers keep their meaning. The schema file, `FORM_SCHEMA_VERSION` in both engine copies, the API validator and `currentSchemaVersion` in the shared cases change in that same release. No reader and no API path accepts two versions. From the pilot launch on (D31), hosted data is never reset to get there, and a build that predates the migration refuses the migrated forms with the sentence above. Published versions are otherwise immutable (the published-version trigger freezes `definition` and `schema_version`); that schema migration is the one sanctioned exception and must say so where it lifts the trigger.
+
+The required schema-version wiring is implemented under BE-27/WEB-64/MOB-50. BE-24, WEB-56 and MOB-43 retain their broader cleanup/Training work; database-backed templates remain future BE-25/DB-20 scope. Current serving has one schema. Historical upload/export readers retain original schema1 semantics, including ignoring properties that were unknown then; exact immutable replay is checked before target validation. Safe known cached layouts receive a bounded forward conversion; unknown packages/drafts remain stored with an update/refusal action. No queued request body is rewritten.
+
+Hosted release remains held by D36/OPS-19. Do not infer deployment from generated source or local tests.
+
+## Definition rules
+
+The input schema accepts omitted defaults and unknown properties. Parsing fills the defaults and discards unknown properties. JSON Schema checks structure; it does not replace `parseFormDefinition`'s reference, cycle, ordering and export-column checks. Server parity requires those checks too.
+
+Question IDs and option codes identify answers; labels may change without changing those identifiers. Export columns are only for analysis. Preserve unresolved protocol notes, empty export names and pending option lists. Do not infer new research fields or choices from test fixtures. `janet-test-v1` remains a draft and is not enabled for upload by this work. Published versions require a new version for changes.
+
+Canonical number questions reject `min > max`, including optional questions. Whole numbers are the default and retain safe-integer values/bounds. `numberMode: "decimal"` accepts any finite JSON number and finite bounds without rounding or a fractional-place limit. Equal bounds, negative values, zero and omitted one-sided bounds are valid. This is a local constraint check, not a conditional-form satisfiability solver.
+
+Question IDs use the nested `answers` namespace. Names such as `round_type`, `site_id` and `placement` are allowed independently of envelope metadata. Duplicate IDs, reference checks and export-column checks still apply. Exports allocate separate answer columns when a column name conflicts with record metadata.
+
+`forms/definition.cases.json` contains authored definition-boundary expectations shared by Python, mobile and web tests. Each case patches the synthetic `question`, combines it with `definition`, and declares `valid`. These cases exercise the production parsers; they do not define a second validator. The answer cases below retain their existing format.
+
+The same file pins the schema version. Its top-level `currentSchemaVersion` must equal `FORM_SCHEMA_VERSION`. A case with a `schemaVersion` key (a number, text, a boolean or `null`) is read with that version served beside the definition: `valid: true` parses, and `valid: false` carries `"refusal": "unknown_schema_version"`, which both engines must throw as the stable code and the backend must refuse once BE-24 lands. Until then the Python runner checks that such a case's definition is itself valid and that its number equals `currentSchemaVersion` exactly when `valid` is true, so the version is the sole reason for refusal.
+
+Number answers follow the selected integer/decimal mode and optional `min`/`max`. Single choices hold an option code; multiple choices hold distinct option codes. Text limits count Unicode code points, matching JSON Schema and Python string length. Blank text and empty selections count as unanswered. A present value of the wrong type is invalid even when the question is optional.
+
+`dateTime` questions require mode (`date`, `time`, `dateTime`), IANA `timeZone`, and optional display choices (`iso`/`monthFirst`/`dayFirst`, `12h`/`24h`). Stored values are real `YYYY-MM-DD`, `HH:mm:ss`, or UTC `YYYY-MM-DDTHH:mm:ss[.sss]Z` (1–3 fractional digits). Manual local datetime gaps are rejected and repeated times require an occurrence choice. `valueSource` defaults to manual; `accountId`/`observerCode` apply only to text, `captureTime` only to Date/Time. First-placement context persists outside pruned answers. Every visible automatic value must be present, even on an optional question; hidden values prune normally. Upload validates account ID against the authenticated owner and observer code against the frozen envelope, without refilling missing answers or equating capture time with later save time.
+
+New authored drafts set `columnNaming: "questionId"` and map every ordinary/dynamic answer to its question ID. Historical definitions retain their original export mappings and observer-column omission. Reserved/formula-sensitive header protection remains in the export allocator.
+
+Visibility follows authored dependency order. Hidden answers cannot reveal descendants. Validate visible answers before pruning: `required`, `type`, `range`, `option`, `duplicate` and `maxLength` errors block saving. Hidden answers are pruned without errors. The interactive mobile pruning helper also removes stale options after a parent changes; that cleanup must not make an invalid incoming payload pass validation. The builder validates first and then prunes.
+
+## Shared case format
+
+Each file names a `formVersion`, an optional-use `definitions` map of synthetic test forms, and a `cases` array. A case has a unique `id`, an optional `definition` key selecting one of those synthetic forms, and ordered `steps`. Without that key it uses `forms/<formVersion>.json`.
+
+Each step supplies a complete `answers` snapshot and an `expected` object:
+
+- `visible`: question IDs in authored order, before interactive option cleanup.
+- `problems`: ordered `{ "id", "reason" }` objects from validating the supplied visible answers.
+- `answers` and `dropped`: the interactive cleanup result and fully removed question IDs. Partial multi-choice cleanup retains the question.
+- `options`, when present: resolved option codes for named dynamic questions.
+
+Only a step with no problems can be saved. Multi-step cases model parent-answer changes; each step is a full snapshot, not a patch. Synthetic forms cover input kinds and conditions absent from Janet's current subset. They are test data, not proposed research variables. The defaults case omits every defaulted property and includes unknown properties.
+
+BE-10 runs the shared cases through Python; its recorded local upload/readback evidence lives in [backend/PLAN.md](../backend/PLAN.md#be-10-canonical-form-validator). MOB-29’s disposable HTTP/SQLite acceptance covers current bound upload and replay ([evidence](../docs/reviews/mob29-2026-10-15/README.md)); native QGIS demo/live-export readback also passes, while physical iPad/Android collector and hosted acceptance remain separate gates. See [the current roadmap](../docs/plan/current-state.md).

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "001111-invites",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "web/src/features/auth/AccountChip.tsx",
+      "state": "present",
+      "sha256": "6026e4bc83da9ce4ffd3e945348b01e35a3f66f3c574a466e7b66eac00bf05b7",
+      "blob": "files/000000",
+      "bytes": 1742
+    },
+    {
+      "path": "web/src/features/auth/InvitationCard.tsx",
+      "state": "present",
+      "sha256": "bb4c964c9f1198f58708d7ca62a8d9573fc23c2e72ddfda451a0746a8a1fdec4",
+      "blob": "files/000001",
+      "bytes": 6807
+    },
+    {
+      "path": "web/src/features/auth/JoinScreen.tsx",
+      "state": "present",
+      "sha256": "e4a7487d6c25c3e3dd51be943e98e54c8a6b90acdd295864700f45f50d9006ac",
+      "blob": "files/000002",
+      "bytes": 3168
+    },
+    {
+      "path": "web/src/features/people/invitation-batch.ts",
+      "state": "present",
+      "sha256": "a4ce3272f8373f7a82d8a1f91360bbbc6e0229578df4db23612c4f0f8d8abc62",
+      "blob": "files/000003",
+      "bytes": 3179
+    }
+  ]
+}

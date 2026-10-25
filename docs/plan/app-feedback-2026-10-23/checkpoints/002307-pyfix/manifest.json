@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002307-pyfix",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/src/fieldmaps_api/form_schema_upgrade.py",
+      "state": "present",
+      "sha256": "5044cb08c568d559afccb5f74f1b2b4760be094c5db1ecc4a4ad59fafa3b1b8e",
+      "blob": "files/000000",
+      "bytes": 4273
+    },
+    {
+      "path": "database/zone-api-rehearsal.sh",
+      "state": "present",
+      "sha256": "abe68bbb9e9ee7c2c9f658269d106a24b03bc4123087768e332954e2fc35476e",
+      "blob": "files/000001",
+      "bytes": 2929
+    }
+  ]
+}

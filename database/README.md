@@ -252,3 +252,41 @@ Hosted schema replacement remains a separate operation. `hosted/verify.sql` requ
 ### Mobile package acceptance
 
 `sh database/mobile-package-rehearsal.sh -q -s` uses Node 24, pnpm and a disposable local PostGIS/API fixture. The current-contract rehearsal passed on 2026-10-13: it installs the zone-aware `format: 1` archive from `/v1` and reopens the exact SQLite/filesystem catalog and form bindings ([evidence](../docs/reviews/zone-boundaries-2026-10-13/mob28-mob33.md)). This verifies package installation/restart, not MOB-29’s bound uploads or physical-device acceptance. No hosted configuration is used. Schema mismatch resets incompatible data under the [pre-launch reset policy](../docs/plan/README.md#pre-launch-compatibility-policy-2026-10-11).
+
+## Schema2 form migration: explicit local operation
+
+`20261024090000_form_schema2.sql` accepts only a genuine all-row Python preflight
+report. The exact untouched two-row canonical baseline and an empty table have
+embedded reports validated by that same parser, so ordinary fresh Supabase setup
+works without an external report. Count, identity and SHA256 are checked under the
+table lock. Any other populated database needs the local helper before continuing
+with the CLI. Do not manually stamp the migration as applied.
+
+1. Run `sh database/form-schema2.sh preflight` for a read-only check of every stored
+   form in the existing `supabase_db_field-maps` Docker container. It uses local
+   PostgreSQL socket access as `postgres`, with no config, password or environment
+   file access. Legacy, unknown or newly meaningful properties abort the check.
+2. After separate approval to apply the migration, run
+   `sh database/form-schema2.sh apply-local`. It takes a fresh snapshot and runs the
+   production Python parser, then supplies its exact ID/hash report, applies the
+   migration and records the exact source in `supabase_migrations.schema_migrations`
+   in one PostgreSQL session/transaction. Stale rows or a history conflict roll back
+   rows, default, trigger state and history together. Hosted targets are unsupported.
+3. Rehearse without touching existing databases with
+   `backend/.venv/bin/pytest backend/tests/test_schema2_migration_rehearsal.py -q`.
+   Each case creates and removes its own PostgreSQL/PostGIS container, with no ports
+   or persistent volumes. `sh database/baseline-rehearsal.sh --reset-only` also routes
+   the actual canonical baseline through this helper before seeding.
+
+The only reports embedded in source cover the exact canonical baseline and the
+vacuously valid empty snapshot. A modified or additional row cannot use that proof.
+All other populated tables require a fresh explicit report. The local helper never converts legacy definitions or guesses
+historical provenance. Executing the persistent local apply requires explicit approval;
+the helper cannot target hosted databases. The [production rollout procedure](hosted/form-schema2-rollout.md)
+uses a fresh production snapshot and the same reviewed transaction builder.
+
+October 25, 2026: the user approved the existing local Supabase application. Both
+stored forms moved to schema 2; default 2, the enabled immutability trigger and exact
+history source were verified. Fingerprints of all 18 application tables were unchanged
+apart from the form version metadata. See [local evidence](../docs/plan/app-feedback-2026-10-23/evidence/P42-local-migration/verification.json).
+This does not establish production or browser acceptance.

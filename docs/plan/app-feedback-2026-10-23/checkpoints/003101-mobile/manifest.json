@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003101-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "mobile/src/session/draft-persistence.ts",
+      "state": "present",
+      "sha256": "ad02a80c4797f568615afcdc89bc94c7126dcabee0baba214454dd0aa29d3074",
+      "blob": "files/000000",
+      "bytes": 3517
+    },
+    {
+      "path": "mobile/src/session/observation-actions.ts",
+      "state": "present",
+      "sha256": "f77881a620c815447cc0615dc7a106e8654b3934250fb2bc02ae61e28737ff51",
+      "blob": "files/000001",
+      "bytes": 9869
+    }
+  ]
+}

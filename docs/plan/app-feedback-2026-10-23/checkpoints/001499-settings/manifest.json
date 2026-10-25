@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "001499-settings",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P10-settings.md",
+      "state": "present",
+      "sha256": "303e42242a220be95d546f0db2f382430c1fbf97dd6fcbc385b2a04b1e975b52",
+      "blob": "files/000000",
+      "bytes": 2908
+    },
+    {
+      "path": "web/src/features/forms/AddQuestionDialog.tsx",
+      "state": "present",
+      "sha256": "1b35086afcf3c3fbcd1143187501ea9cd4d22e4f2b0f42836c1d42193012fcca",
+      "blob": "files/000001",
+      "bytes": 2761
+    },
+    {
+      "path": "web/src/features/forms/ConditionEditor.tsx",
+      "state": "present",
+      "sha256": "b99b8aac5cbd130413580ebe99750cb7eaaa21fbae916988514379465d45c68e",
+      "blob": "files/000002",
+      "bytes": 5125
+    },
+    {
+      "path": "web/src/features/forms/ConditionRuleEditor.tsx",
+      "state": "present",
+      "sha256": "e0eb79163ad556c54fb6a26bddcdb044347303973fc90a8eb98b9fcac2f4f058",
+      "blob": "files/000003",
+      "bytes": 4125
+    },
+    {
+      "path": "web/src/features/forms/DynamicOptionsEditor.tsx",
+      "state": "present",
+      "sha256": "4e2ad858c27c08e1e76fc5e38a9acf9ef724c46bb4a350079900cf4ec0feebbe",
+      "blob": "files/000004",
+      "bytes": 5520
+    },
+    {
+      "path": "web/src/features/forms/NumberBoundsEditor.tsx",
+      "state": "present",
+      "sha256": "661bbe0be600a75936917ff7f5efb6890933512b0391a908c2d7a2caa36b5218",
+      "blob": "files/000005",
+      "bytes": 3116
+    },
+    {
+      "path": "web/src/features/forms/OptionsEditor.tsx",
+      "state": "present",
+      "sha256": "4e11d72ff59d7b8864be317ed48457c04a0971685e388473ca97f7f29773a111",
+      "blob": "files/000006",
+      "bytes": 2917
+    },
+    {
+      "path": "web/src/features/forms/QuestionIdEditor.tsx",
+      "state": "present",
+      "sha256": "0bd45b7dcc77d3e37d9b234dda65493b6d688c2b6c1efe4771a995b25ea94657",
+      "blob": "files/000007",
+      "bytes": 1916
+    },
+    {
+      "path": "web/src/features/forms/QuestionSettings.tsx",
+      "state": "present",
+      "sha256": "945c0d9592e1de66ec4279f0694694c5eb276571f4eacc815b5b2e49a428ac28",
+      "blob": "files/000008",
+      "bytes": 7527
+    }
+  ]
+}

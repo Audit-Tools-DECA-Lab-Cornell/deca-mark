@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "003126-mobile",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/evidence/P31-mobile/inputs.json",
+      "state": "present",
+      "sha256": "2e0d7adf755d9ef2dd276fa125c931d1a452490c8b001d637356091c5e697f48",
+      "blob": "files/000000",
+      "bytes": 8439
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P31-mobile.md",
+      "state": "present",
+      "sha256": "e96b3b3bba42b12b913166ed1bb6e50fb34b2fb0cd8ced802c50bbb1210d65a7",
+      "blob": "files/000001",
+      "bytes": 4318
+    }
+  ]
+}

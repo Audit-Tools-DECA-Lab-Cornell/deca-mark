@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002599-pydraft",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/src/fieldmaps_api/domain/form_authoring.py",
+      "state": "present",
+      "sha256": "566d1a79ca4a91b73ebab8f859d15b8e848e73d33f6630790bf95b534a3de409",
+      "blob": "files/000000",
+      "bytes": 1624
+    },
+    {
+      "path": "backend/src/fieldmaps_api/services/forms.py",
+      "state": "present",
+      "sha256": "a4b75608795ab791ebc284c22efe3d46a5dd7d93ee633f6f32e2e320be49ef0d",
+      "blob": "files/000001",
+      "bytes": 8853
+    },
+    {
+      "path": "backend/tests/test_form_authoring_normalization.py",
+      "state": "present",
+      "sha256": "8845703948351da87e26432201dcac572534b8c1af9581a69674a22c49a91cf6",
+      "blob": "files/000002",
+      "bytes": 4266
+    },
+    {
+      "path": "backend/tests/test_form_authoring_normalization_api.py",
+      "state": "present",
+      "sha256": "c91bbe266ffe6299369027f662212a889004601b09b143a6541abc40c5226b98",
+      "blob": "files/000003",
+      "bytes": 4641
+    },
+    {
+      "path": "backend/tests/test_form_validation_api.py",
+      "state": "present",
+      "sha256": "031b145335a734706fa42b206eca26a73047a91e7a84343b28dbc7fcb910e7e2",
+      "blob": "files/000004",
+      "bytes": 9791
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P21-python.md",
+      "state": "present",
+      "sha256": "3f8b00e4c6df5b1c28b16e72b69c0e9d476c430e1a9de9d0bf33f2ed7d7f27ca",
+      "blob": "files/000005",
+      "bytes": 12491
+    }
+  ]
+}

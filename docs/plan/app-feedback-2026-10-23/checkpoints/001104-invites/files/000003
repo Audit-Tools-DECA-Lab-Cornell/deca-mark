@@ -1,0 +1,66 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { registerHooks } from "node:module";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+import React from "react";
+import { act, create } from "react-test-renderer";
+import ts from "typescript";
+import { load } from "./support.mjs";
+
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+const src = new URL("../../src/", import.meta.url);
+const visuals = {
+	"components/contour/Button.tsx": ["Button", "ButtonLink"],
+	"components/contour/Dialog.tsx": ["Dialog", "DialogClose"],
+	"components/contour/Field.tsx": ["Field"],
+	"components/contour/Note.tsx": ["Note"],
+	"components/contour/NumberStepper.tsx": ["NumberStepper"],
+	"components/contour/RadioRows.tsx": ["RadioRows"],
+	"components/contour/Segmented.tsx": ["Segmented"],
+	"components/contour/TextArea.tsx": ["Textarea"],
+	"components/contour/TextInput.tsx": ["TextInput"],
+	"features/people/InvitationCreated.tsx": ["InvitationCreated"]
+};
+registerHooks({load(url, context, next) {
+	const relative = url.startsWith(src.href) ? url.slice(src.href.length) : "";
+	if (visuals[relative]) return {format:"module", shortCircuit:true, source:`import React from "react"; ${visuals[relative].map(name => `export const ${name}=p=>${name === "Dialog" ? "p.open ? " : ""}React.createElement("${name}",p,p.children,p.footer)${name === "Dialog" ? " : null" : ""};`).join("")}`};
+	if (url.endsWith(".tsx")) return { format:"module",shortCircuit:true,source:ts.transpileModule(readFileSync(fileURLToPath(url),"utf8"),{compilerOptions:{module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ESNext}}).outputText};
+	return next(url,context);
+}});
+const { InviteDialog } = await load("features/people/InviteDialog.tsx");
+const base = {open:true,onOpenChange(){},title:"Invite",roleOptions:[{value:"observer",label:"Observer"}],defaultRole:"observer",timeZone:"UTC"};
+const invitation = email => ({code:"ABCDEFGH",token:"secret",role:"observer",email,max_uses:1,expires_at:"2026-11-07"});
+const stepper = tree => tree.root.findAllByType("NumberStepper").find(node=>node.props.label==="Days until it expires");
+
+test("starts at fourteen days and resets expiry after closing", async () => {
+	let tree;
+	await act(async()=>{tree=create(React.createElement(InviteDialog,{...base,onCreate:async()=>({status:"done",invitation:invitation(null)})}));});
+	assert.equal(stepper(tree).props.value,14);
+	await act(async()=>stepper(tree).props.onChange(2));
+	assert.equal(stepper(tree).props.value,2);
+	await act(async()=>tree.root.findByType("Dialog").props.onOpenChange(false));
+	assert.equal(stepper(tree).props.value,14);
+	await act(async()=>tree.unmount());
+});
+
+test("creates one invitation per unique recipient and retry excludes successes and unknown writes", async () => {
+	const calls=[];
+	let tree;
+	await act(async()=>{tree=create(React.createElement(InviteDialog,{...base,onCreate:async request=>{
+		calls.push(request);
+		if(request.email==="refused@example.test" && calls.filter(item=>item.email===request.email).length===1) return {status:"failed",definite:true,message:"Refused"};
+		if(request.email==="unknown@example.test") return {status:"failed",definite:false,message:"Unknown"};
+		return {status:"done",invitation:invitation(request.email)};
+	}}));});
+	await act(async()=>tree.root.findAll(node=>node.type === "Textarea" || node.type === "TextInput")[0].props.onChange({target:{value:"ok@example.test, OK@example.test, refused@example.test, unknown@example.test"}}));
+	await act(async()=>tree.root.findByType("form").props.onSubmit({preventDefault(){}}));
+	assert.equal(calls.length,3);
+	assert.ok(calls.every(request=>request.maxUses===1 && request.expiresInDays===14));
+	const retry=tree.root.findAllByType("Button").find(node=>[node.props.children].flat().includes("Retry failed invitations"));
+	assert.ok(retry);
+	await act(async()=>retry.props.onClick());
+	assert.deepEqual(calls.map(request=>request.email),["ok@example.test","refused@example.test","unknown@example.test","refused@example.test"]);
+	assert.equal(tree.root.findAllByType("Note").filter(node=>node.props.title==="Not confirmed").length,1);
+	await act(async()=>tree.unmount());
+});

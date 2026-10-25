@@ -57,7 +57,7 @@ def test_stored_bounds_are_not_authoring_eligibility_or_answer_permission() -> N
         with pytest.raises(ValidationError, match="minimum greater"):
             FormDefinition.model_validate(raw)
         stored = STORED.validate_python(raw)
-        assert questions(raw)[0].id == ("notes" if hidden else "people")
+        assert questions(raw, 1)[0].id == ("notes" if hidden else "people")
         answers: dict[str, JsonValue] = {"round_type": 7}
         if not required or hidden:
             assert normalize_answers(stored, answers).answers == answers
@@ -91,7 +91,7 @@ def test_stored_reader_keeps_structural_safety(patch: dict[str, JsonValue]) -> N
     with pytest.raises(ValidationError):
         STORED.validate_python(raw)
     with pytest.raises(ValidationError):
-        questions(raw)
+        questions(raw, 1)
 
 
 @pytest.mark.integration

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "000001-recovery",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/CURRENT.md",
+      "state": "present",
+      "sha256": "0ae91a4122d24820a6988b73d187401d46b5854eb4b9ebfd4271ac9b4335a682",
+      "blob": "files/000000",
+      "bytes": 665
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/ledger.json",
+      "state": "present",
+      "sha256": "053bc4acdb0e06f8e100fe40e5899929e3caa1fba9a799a7060067be1c401693",
+      "blob": "files/000001",
+      "bytes": 3680
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P00-coordinator.md",
+      "state": "present",
+      "sha256": "b3e74cf7c27ca3a6056d008716067dd235b5fac6523aeaace2cc25d7ea1a5c7b",
+      "blob": "files/000002",
+      "bytes": 988
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P00-coverage.md",
+      "state": "present",
+      "sha256": "d7a66049e434dfe3ec9ca6c765bc57c178289815a65d55b3eb9b9ba1f274cd7e",
+      "blob": "files/000003",
+      "bytes": 714
+    },
+    {
+      "path": "docs/plan/app-feedback-2026-10-23/workers/P00-spec-review.md",
+      "state": "present",
+      "sha256": "ef5c52dea2afd22dbed3ee20a5368fd4035abf03fc187c5564112e1ae946eb59",
+      "blob": "files/000004",
+      "bytes": 796
+    },
+    {
+      "path": "scripts/feedback-checkpoint.mjs",
+      "state": "present",
+      "sha256": "8dfb82c1ce45113a0912649b36dabd7cbd0550fb79320c6c965a0f726dbb7961",
+      "blob": "files/000005",
+      "bytes": 8752
+    },
+    {
+      "path": "scripts/feedback-checkpoint.test.mjs",
+      "state": "present",
+      "sha256": "472a54a4a49a5d20832d3bb45c72afa346395eb6994ccb82c5af62aa447aafb0",
+      "blob": "files/000006",
+      "bytes": 7447
+    }
+  ]
+}

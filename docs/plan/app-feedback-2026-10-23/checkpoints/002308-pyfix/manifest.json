@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "status": "complete",
+  "id": "002308-pyfix",
+  "root": "/Users/praty/Desktop/StudentJob.nosync/field-ops",
+  "files": [
+    {
+      "path": "backend/src/fieldmaps_api/form_schema_upgrade.py",
+      "state": "present",
+      "sha256": "faa364214512f0d791e09aa2720eed1e9c936fda572966d081db9c42ed274b89",
+      "blob": "files/000000",
+      "bytes": 4273
+    },
+    {
+      "path": "backend/tests/test_schema2_migration_rehearsal.py",
+      "state": "present",
+      "sha256": "5d6b1bd07484c84d21a99359699dea3225c63bd294e0986cfe968f6bbccac049",
+      "blob": "files/000001",
+      "bytes": 7095
+    }
+  ]
+}

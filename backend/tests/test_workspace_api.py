@@ -226,7 +226,17 @@ def test_question_ids_are_independent_of_record_metadata(
     )
     assert created.status_code == 201, created.text
     stored = FormVersionDetail.model_validate_json(created.content)
-    assert stored.definition["questions"] == definition["questions"]
+    # Authoring owns column names; reserved IDs remain valid nested answer keys.
+    stored_questions = stored.definition["questions"]
+    assert isinstance(stored_questions, list)
+    assert stored.definition["columnNaming"] == "questionId"
+    for saved, submitted in zip(stored_questions, definition["questions"], strict=True):
+        assert isinstance(saved, dict)
+        assert isinstance(submitted, dict)
+        assert saved["exportColumn"] == saved["id"]
+        assert {key: value for key, value in saved.items() if key != "exportColumn"} == {
+            key: value for key, value in submitted.items() if key != "exportColumn"
+        }
 
 
 @pytest.mark.parametrize("number", [1, 2])

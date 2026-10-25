@@ -1,0 +1,108 @@
+import type { z } from "zod";
+
+import type { Condition, formDefinitionSchema, optionSchema, questionSchema } from "@/lib/forms";
+
+/**
+ * The form editor works on the definition as authored: the shape `contracts/forms/*.json` holds and the API
+ * stores, rather than the parsed shape. A saved draft then differs from its source only where a person
+ * changed something. Every edit is a pure function that returns a new definition; checking happens on the
+ * result, never inside the edit, so a definition can pass through an invalid state while someone types.
+ */
+
+export type RawDefinition = Omit<z.input<typeof formDefinitionSchema>, "questions"> & {
+	questions: RawQuestion[];
+};
+export type RawQuestion = Omit<z.input<typeof questionSchema>, "dependsOn"> & {
+	dependsOn?: Condition;
+};
+export type RawOption = z.input<typeof optionSchema>;
+export type QuestionKind = RawQuestion["kind"];
+export type Act = RawQuestion["act"];
+
+/* ── Identifiers ──────────────────────────────────────────────────────────── */
+
+/** A stable identifier from a label. Codes are what records store, so they never follow a relabel. */
+export function slugify(label: string): string {
+	const slug = label
+		.normalize("NFKD")
+		.replace(/[̀-ͯ]/g, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "_")
+		.replace(/^_+|_+$/g, "")
+		.slice(0, 40);
+	return slug === "" ? "item" : slug;
+}
+
+/** `base`, or `base_2`, `base_3` … the first that is not taken. */
+export function unique(base: string, taken: ReadonlySet<string>): string {
+	if (!taken.has(base)) return base;
+	for (let n = 2; ; n++) if (!taken.has(`${base}_${n}`)) return `${base}_${n}`;
+}
+
+/* ── Questions ────────────────────────────────────────────────────────────── */
+
+/** Sets or clears fields. `undefined` removes an optional key so the stored file stays as authored. */
+export function updateQuestion(raw: RawDefinition, id: string, patch: Partial<RawQuestion>): RawDefinition {
+	return {
+		...raw,
+		questions: raw.questions.map(question => {
+			if (question.id !== id) return question;
+			const next: Record<string, unknown> = { ...question };
+			for (const [key, value] of Object.entries(patch)) {
+				if (value === undefined) delete next[key];
+				else next[key] = value;
+			}
+			return next as RawQuestion;
+		})
+	};
+}
+
+export function removeQuestion(raw: RawDefinition, id: string): RawDefinition {
+	return { ...raw, questions: raw.questions.filter(question => question.id !== id) };
+}
+
+/** Most questions a manager adds mid-study are yes/no; every other list starts from these two. */
+export const STARTER_OPTIONS: readonly RawOption[] = [
+	{ code: "yes", label: "Yes" },
+	{ code: "no", label: "No" }
+];
+
+export const ACT_ORDER: readonly Act[] = ["Child", "Social", "Play", "Setting", "Climate", "Inventory", "Record"];
+
+/** Provenance for questions authored in the editor. */
+export const ADDED_SOURCE = "Added in DECA Mark — no workbook row";
+
+/** Insert a question after the last question in its act, with its ID as the dataset column. */
+export function addQuestion(
+	raw: RawDefinition,
+	act: Act,
+	kind: QuestionKind,
+	label: string,
+	timeZone = "UTC"
+): { readonly raw: RawDefinition; readonly id: string } {
+	const taken = new Set(raw.questions.map(question => question.id));
+	const id = unique(slugify(label), taken);
+	const question: RawQuestion = {
+		id,
+		code: id,
+		exportColumn: id,
+		act,
+		label,
+		kind,
+		...(kind === "one" || kind === "many" ? { options: [...STARTER_OPTIONS], columns: 2 } : {}),
+		...(kind === "text" ? { maxLength: 200 } : {}),
+		...(kind === "dateTime" ? { dateTime: { mode: "dateTime" as const, timeZone } } : {}),
+		source: ADDED_SOURCE
+	};
+	let at = -1;
+	raw.questions.forEach((candidate, index) => {
+		if (candidate.act === act) at = index;
+	});
+	if (at < 0) {
+		const order = ACT_ORDER.indexOf(act);
+		at = raw.questions.findLastIndex(candidate => ACT_ORDER.indexOf(candidate.act) <= order);
+	}
+	const questions = [...raw.questions];
+	questions.splice(at + 1, 0, question);
+	return { raw: { ...raw, questions }, id };
+}
