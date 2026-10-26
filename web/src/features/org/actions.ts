@@ -5,7 +5,7 @@ import { redirect, RedirectType } from "next/navigation";
 
 import { DONE, failedChange } from "@/features/people/result";
 import type { InviteRequest, InviteResult, PeopleActionResult } from "@/features/people/types";
-import { apiRequestError, failedWrite } from "@/lib/api/errors";
+import { apiRequestError, failedWrite, wasRefused } from "@/lib/api/errors";
 import {
 	createOrgInvitation,
 	createProject,
@@ -162,7 +162,12 @@ export async function createOrgInvitationAction(
 	const nothing = "No invitation was created.";
 	const parsed = inviteInput.safeParse({ orgId, ...request });
 	if (!parsed.success)
-		return { status: "failed", message: `${nothing} ${UNREADABLE}`, fields: fieldsOf(parsed.error) };
+		return {
+			status: "failed",
+			message: `${nothing} ${UNREADABLE}`,
+			definite: true,
+			fields: fieldsOf(parsed.error)
+		};
 	const { email, maxUses, expiresInDays, role } = parsed.data;
 	try {
 		const created = await createOrgInvitation(parsed.data.orgId, {
@@ -185,7 +190,7 @@ export async function createOrgInvitationAction(
 			}
 		};
 	} catch (error) {
-		const failure = failedChange(nothing, error);
+		const failure = { ...failedChange(nothing, error), definite: wasRefused(error) };
 		const fields = apiRequestError(error).fields;
 		return Object.keys(fields).length > 0 ? { ...failure, fields: { ...fields } } : failure;
 	}

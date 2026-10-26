@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { ZodError } from "zod";
 
+import { parseServedDefinition } from "@/lib/forms";
 import { type ProjectedSite, projectSite } from "@/lib/plan";
 import { PackageArchiveError, packageSiteCollection, readPackageArchive, siteBoundaryOf } from "@/lib/sites/archive";
 import { buildWorkspaceIndex, unavailableWorkspace } from "@/lib/workspace/build";
@@ -425,5 +426,6 @@ export const getObservation = cache(async (projectId: string, observationId: str
 	);
 	const parsed = observationDetailSchema.safeParse(data);
 	if (!parsed.success) throw new ApiError("unknown", "retry");
+	parseServedDefinition(parsed.data.schema_version, parsed.data.definition);
 	return parsed.data;
 });

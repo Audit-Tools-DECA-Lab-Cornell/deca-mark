@@ -105,9 +105,9 @@ export async function redeemInvite(
 		return { status: "joined", path: destinationFor(redeemed, workspace), role: redeemed.role };
 	} catch (error) {
 		const problem = inviteProblem(apiRequestError(error), { step: "redeem", credential: kindOf(read.credential) });
-		if (problem.kind !== "already-member" && problem.kind !== "invalid") return { status: "failed", problem };
-		// DECA Mark refuses a repeat join, and says so as "invitation not found" or as a conflict. If the
-		// person is on that project already, that is what happened.
+		if (problem.kind !== "already-member") return { status: "failed", problem };
+		// Only an explicit duplicate refusal supports the already-member recovery path.
+		// A generic invalid reply can also mean the invited email does not match.
 		const place = placeOf(await getWorkspace(), names);
 		if (place)
 			return {

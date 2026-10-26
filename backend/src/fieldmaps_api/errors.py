@@ -34,6 +34,7 @@ type ErrorCode = Literal[
     "archive_unavailable",
     "validation_failed",
     "unsupported_operation",
+    "unknown_schema_version",
     "rate_limited",
     "internal",
     "storage_unavailable",

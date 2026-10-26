@@ -124,7 +124,7 @@ def assets(
     snapshot: ExportSnapshot, filters: ObservationExportQuery, project_id: str
 ) -> dict[str, bytes]:
     rows = snapshot.items
-    planned = plan(rows, snapshot.forms)
+    planned = plan(rows, snapshot.forms, snapshot.form_schema_versions)
     codebook = [["export_column", "source", "label", "type", "values"]]
     codebook.extend([[column, "record", column, "record value", ""] for column in RECORD_COLUMNS])
     codebook.extend(
@@ -207,6 +207,7 @@ def assets(
     files["metadata.json"] = orjson.dumps(
         {
             "project_id": project_id,
+            "form_schema_versions": snapshot.form_schema_versions,
             "total_matching": snapshot.total_matching,
             "generated_at": snapshot.generated_at.isoformat(),
             "project_timezone": snapshot.timezone,

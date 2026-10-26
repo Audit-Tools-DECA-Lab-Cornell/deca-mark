@@ -132,6 +132,7 @@ test("actual save → review → publish flow retains ETags, local edits and exp
 	let revision = 1;
 	state.current = {
 		version_id: "00000000-0000-4000-8000-000000000001",
+		schema_version: 2,
 		code: "check-v1",
 		version: 1,
 		form_code: "check",

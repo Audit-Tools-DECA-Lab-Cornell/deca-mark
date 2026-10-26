@@ -10,6 +10,7 @@ import {
   identityKey,
   packageBindingSchema,
 } from "../domain/package-binding";
+import { captureContextSchema } from "../forms/capture";
 import { databaseTransaction, databaseWrite } from "./database-write";
 import type { LocalDatabase } from "./observation-store";
 import { requireAuthorizedPackage } from "./package-catalog-read";
@@ -21,6 +22,8 @@ import { requireAuthorizedPackage } from "./package-catalog-read";
  */
 export const observationDraftSchema = z
   .object({
+    schemaVersion: z.literal(2).optional(),
+    capture: captureContextSchema.optional(),
     id: z.uuid(),
     /** The account scope that started it. Stored in the payload so recovery can verify it. */
     owner: z.string().min(1),
@@ -36,6 +39,7 @@ export const observationDraftSchema = z
     startedAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
+  .strict()
   .refine(
     (draft) =>
       !draft.binding ||
@@ -120,11 +124,11 @@ export function readDraft(db: LocalDatabase, scope: string): Promise<Observation
     try {
       payload = JSON.parse(row.payload);
     } catch (error) {
-      if (error instanceof SyntaxError) return null;
+      if (error instanceof SyntaxError) throw new DraftReadError();
       throw error;
     }
     const parsed = observationDraftSchema.safeParse(payload);
-    if (!parsed.success || parsed.data.owner !== scope) return null;
+    if (!parsed.success || parsed.data.owner !== scope) throw new DraftReadError();
     return parsed.data;
   });
 }
@@ -143,4 +147,13 @@ export function draftSummary(draft: ObservationDraft): string {
     : "An observation with no point yet";
   const counted = `${answers} ${answers === 1 ? "answer" : "answers"}`;
   return `${where} with ${counted} was never saved. Answers are written to storage as you tap, so nothing waits on a save.`;
+}
+
+export class DraftReadError extends Error {
+  constructor() {
+    super(
+      "This unfinished observation cannot be read by this build. Its data is retained; update the app or explicitly discard it before starting another.",
+    );
+    this.name = "DraftReadError";
+  }
 }

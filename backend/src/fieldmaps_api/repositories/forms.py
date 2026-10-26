@@ -2,16 +2,28 @@ import json
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, JsonValue, TypeAdapter
+from pydantic import BaseModel, JsonValue
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fieldmaps_api.domain.form_definition import FORM_SCHEMA_VERSION
+from fieldmaps_api.errors import StorageUnavailableError
+from fieldmaps_api.form_schema_version import require_current_schema
 from fieldmaps_api.form_schemas import FormSummary, FormVersionDetail
 from fieldmaps_api.queries import forms as queries
 
 if TYPE_CHECKING:
     from sqlalchemy import Result
 
-DEFINITION: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
+class StoredDefinition(BaseModel):
+    schema_version: int
+    definition: dict[str, JsonValue]
+
+
+async def require_current_storage(session: AsyncSession) -> None:
+    result: Result[tuple[bool]] = await session.execute(queries.SCHEMA_READY)
+    if result.scalar_one_or_none() is not True:
+        message = "Form schema2 migration is required before authoring forms"
+        raise StorageUnavailableError(message)
 
 
 class FormRef(BaseModel):
@@ -46,7 +58,11 @@ async def get_form(session: AsyncSession, project_id: UUID, code: str) -> FormRe
 async def latest_definition(session: AsyncSession, form_id: UUID) -> dict[str, JsonValue] | None:
     result: Result[tuple[str]] = await session.execute(queries.LATEST_DEFINITION, {"form": form_id})
     data = result.scalar_one_or_none()
-    return None if data is None else DEFINITION.validate_json(data)
+    if data is None:
+        return None
+    stored = StoredDefinition.model_validate_json(data)
+    require_current_schema(stored.schema_version)
+    return stored.definition
 
 
 async def next_version(session: AsyncSession, form_id: UUID) -> int:
@@ -81,6 +97,7 @@ async def insert_draft(  # noqa: PLR0913 - one row's columns, named at the call 
     code: str,
     definition: dict[str, JsonValue],
 ) -> None:
+    await require_current_storage(session)
     await session.execute(
         queries.CREATE_DRAFT,
         {
@@ -91,6 +108,7 @@ async def insert_draft(  # noqa: PLR0913 - one row's columns, named at the call 
             "version": version,
             "code": code,
             "definition": json.dumps(definition, sort_keys=True),
+            "schema_version": FORM_SCHEMA_VERSION,
         },
     )
 
@@ -103,12 +121,14 @@ async def update_draft(  # noqa: PLR0913, PLR0917 - definition and its atomic pr
     version_id: UUID,
     revision: int,
 ) -> bool:
+    await require_current_storage(session)
     result: Result[tuple[UUID]] = await session.execute(
         queries.UPDATE_DRAFT,
         {
             "project": project_id,
             "code": code,
             "definition": json.dumps(definition, sort_keys=True),
+            "schema_version": FORM_SCHEMA_VERSION,
             "version_id": version_id,
             "revision": revision,
         },

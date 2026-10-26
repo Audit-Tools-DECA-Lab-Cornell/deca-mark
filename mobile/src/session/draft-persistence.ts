@@ -3,6 +3,7 @@ import type { Coordinate, Placement, RoundContext } from "../domain/observation"
 import type { SessionState } from "../forms/session";
 import type { SitePackage } from "../packages/site-package";
 import {
+  DraftReadError,
   hasDraft,
   type ObservationDraft,
   observationDraftSchema,
@@ -40,8 +41,14 @@ export function useDraftRecovery(input: {
         }
       })
       .catch((error: unknown) => {
-        if (active && error instanceof Error)
-          callbacks.current.setStatus("Saved drafts could not be read on this device.");
+        if (active && error instanceof Error) {
+          if (error instanceof DraftReadError) callbacks.current.setUnreadableDraft(true);
+          callbacks.current.setStatus(
+            error instanceof DraftReadError
+              ? error.message
+              : "Saved drafts could not be read on this device.",
+          );
+        }
       });
     return () => {
       active = false;
@@ -71,6 +78,8 @@ export function persistDraft(input: {
   )
     return;
   const draft = observationDraftSchema.safeParse({
+    schemaVersion: 2,
+    ...(owner.capture ? { capture: owner.capture } : {}),
     id: owner.id,
     owner: owner.owner,
     formVersion: input.formVersion ?? site.formVersion,

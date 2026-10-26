@@ -1,6 +1,6 @@
 import { strToU8 } from "fflate";
 import type { FormDefinition } from "../../forms/definition";
-import { parseFormDefinition } from "../../forms/definition";
+import { parseServedDefinition } from "../../forms/definition";
 import { type BoundManifest, boundFeatureSchema } from "./bound-manifest";
 import type { FormVersion, HostedSite, PackageLayers } from "./schemas";
 
@@ -90,7 +90,7 @@ export function historicalForm(
     version.state === "draft"
   )
     throw new BoundPackageError("The exact bound form identity could not be verified.");
-  const form = parseFormDefinition(version.definition);
+  const form = parseServedDefinition(version.schema_version, version.definition);
   if (form.version !== expected.form_version || form.status !== "published")
     throw new BoundPackageError("The bound form definition is not a published snapshot.");
   return form;

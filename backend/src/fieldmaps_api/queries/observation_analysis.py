@@ -71,7 +71,7 @@ FROM rows),'[]'::jsonb),'total_matching',(SELECT count(*) FROM matched),
 DETAIL: Final = text(
     "SELECT ("
     + ROW_DATA
-    + " || jsonb_build_object('definition',f.definition))::text "
+    + " || jsonb_build_object('definition',f.definition,'schema_version',f.schema_version))::text "
     + JOINS
     + " WHERE "
     + FILTER
@@ -122,8 +122,9 @@ FROM raw_size), matched AS MATERIALIZED ("""
     )
     + " CROSS JOIN gate WHERE gate.allowed), forms AS ("
     + """
-SELECT coalesce(jsonb_object_agg(code,definition),'{}'::jsonb) AS data FROM (
-SELECT f.code,f.definition FROM fieldmaps.form_versions f
+SELECT coalesce(jsonb_object_agg(code,definition),'{}'::jsonb) AS data,
+coalesce(jsonb_object_agg(code,schema_version),'{}'::jsonb) AS versions FROM (
+SELECT f.code,f.definition,f.schema_version FROM fieldmaps.form_versions f
 JOIN form_refs r ON r.id=f.id CROSS JOIN gate WHERE gate.allowed) u),
 zones AS (SELECT coalesce(jsonb_object_agg(key,geometry),'{}'::jsonb) AS data FROM (
 SELECT z.package_id::text || ':' || z.zone_id::text AS key,
@@ -139,6 +140,8 @@ THEN coalesce((SELECT jsonb_agg(data ORDER BY observed_at DESC,id) FROM matched)
 ELSE '[]'::jsonb END,'total_matching',size.count,'source_bytes',size.bytes,
 'forms',CASE WHEN size.count <= :row_limit AND size.bytes <= :byte_limit
 THEN (SELECT data FROM forms) ELSE '{}'::jsonb END,
+'form_schema_versions',CASE WHEN size.count <= :row_limit AND size.bytes <= :byte_limit
+THEN (SELECT versions FROM forms) ELSE '{}'::jsonb END,
 'historical_zones',CASE WHEN size.count <= :row_limit AND size.bytes <= :byte_limit
 THEN (SELECT data FROM zones) ELSE '{}'::jsonb END,
 'generated_at',statement_timestamp(),

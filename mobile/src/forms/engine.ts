@@ -1,4 +1,5 @@
 import type { Answers, AnswerValue, Condition, FormDefinition, Question } from "./definition";
+import { formatTemporalValue, isCanonicalTemporalValue } from "./temporal";
 
 /**
  * The reusable part: visibility, dynamic option sets, pruning and validation. It knows nothing
@@ -67,9 +68,16 @@ export function visibleQuestions(
   return visible;
 }
 
-function retainValue(question: ResolvedQuestion, value: AnswerValue): AnswerValue | null {
-  if (question.kind === "number") return typeof value === "number" ? value : null;
-  if (question.kind === "text")
+function retainValue(
+  question: ResolvedQuestion,
+  value: AnswerValue,
+  retainDraftNumberText: boolean,
+): AnswerValue | null {
+  if (question.kind === "number") {
+    if (typeof value === "number") return value;
+    return retainDraftNumberText && typeof value === "string" && value.trim() !== "" ? value : null;
+  }
+  if (question.kind === "text" || question.kind === "dateTime")
     return typeof value === "string" && value.trim() !== "" ? value : null;
   const codes = new Set(question.options.map((option) => option.code));
   if (question.kind === "one") return typeof value === "string" && codes.has(value) ? value : null;
@@ -84,12 +92,21 @@ export type Pruned = {
   readonly dropped: readonly ResolvedQuestion[];
 };
 
+export type PruneOptions = {
+  /** Drafts only: retain numeric text during every pruning pass to preserve its dependents. */
+  readonly retainDraftNumberText?: boolean;
+};
+
 /**
  * Removes answers to questions that are no longer asked, and answers whose option no longer
  * exists after a parent changed. Repeats until stable, because dropping one answer can hide
  * the question that held the next. Data integrity: hidden answers are never saved silently.
  */
-export function pruneAnswers(form: FormDefinition, answers: Answers): Pruned {
+export function pruneAnswers(
+  form: FormDefinition,
+  answers: Answers,
+  options: PruneOptions = {},
+): Pruned {
   const dropped: ResolvedQuestion[] = [];
   let current: Answers = answers;
   for (;;) {
@@ -100,7 +117,9 @@ export function pruneAnswers(form: FormDefinition, answers: Answers): Pruned {
     let changed = false;
     for (const [id, value] of Object.entries(current)) {
       const question = visible.get(id);
-      const kept = question ? retainValue(question, value) : null;
+      const kept = question
+        ? retainValue(question, value, options.retainDraftNumberText === true)
+        : null;
       if (kept === null) {
         changed = true;
         const authored = form.questions.find((candidate) => candidate.id === id);
@@ -128,11 +147,18 @@ function answerProblem(
   switch (question.kind) {
     case "number":
       if (typeof value !== "number") return "type";
-      return !Number.isInteger(value) ||
+      return !Number.isFinite(value) ||
+        (question.numberMode !== "decimal" && !Number.isSafeInteger(value)) ||
         (question.min !== undefined && value < question.min) ||
         (question.max !== undefined && value > question.max)
         ? "range"
         : null;
+    case "dateTime":
+      if (typeof value !== "string") return "type";
+      if (value.trim() === "") return null;
+      return question.dateTime !== undefined && isCanonicalTemporalValue(question.dateTime, value)
+        ? null
+        : "range";
     case "text":
       if (typeof value !== "string") return "type";
       return question.maxLength !== undefined && Array.from(value).length > question.maxLength
@@ -160,12 +186,20 @@ export function reviewProblems(form: FormDefinition, answers: Answers): readonly
   for (const question of visibleQuestions(form, answers)) {
     const value = answers[question.id];
     if (value === undefined) {
-      if (question.required) problems.push({ question, reason: "required" });
+      if (
+        question.required ||
+        (question.valueSource !== undefined && question.valueSource !== "manual")
+      )
+        problems.push({ question, reason: "required" });
       continue;
     }
     const reason = answerProblem(question, value);
     if (reason !== null) problems.push({ question, reason });
-    else if (question.required && !isAnswered(value))
+    else if (
+      (question.required ||
+        (question.valueSource !== undefined && question.valueSource !== "manual")) &&
+      !isAnswered(value)
+    )
       problems.push({ question, reason: "required" });
   }
   return problems;
@@ -189,6 +223,8 @@ export function optionLabel(question: ResolvedQuestion, code: string): string {
 export function answerSummary(question: ResolvedQuestion, value: AnswerValue | undefined): string {
   if (!isAnswered(value)) return question.required ? "Required" : "Not answered";
   if (typeof value === "number") return String(value);
+  if (typeof value === "string" && question.kind === "dateTime" && question.dateTime !== undefined)
+    return formatTemporalValue(question.dateTime, value);
   if (typeof value === "string")
     return question.kind === "one" ? optionLabel(question, value) : value;
   return value.map((code) => optionLabel(question, code)).join(", ");

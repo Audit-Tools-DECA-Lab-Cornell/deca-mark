@@ -122,6 +122,7 @@ export function ReportsScreen({
 	const [pending, startTransition] = useTransition();
 	const [from, setFrom] = useState(initialFrom);
 	const [to, setTo] = useState(initialTo);
+	const [dateRange, setDateRange] = useState<"all" | "custom">(initialFrom || initialTo ? "custom" : "all");
 	const projectClock = useMemo(() => clock(timeZone), [timeZone]);
 
 	const fromKey = parseDayKey(from);
@@ -152,7 +153,19 @@ export function ReportsScreen({
 	function clear() {
 		setFrom("");
 		setTo("");
+		setDateRange("all");
 		startTransition(() => router.replace(pathname, { scroll: false }));
+	}
+
+	function chooseDateRange(value: string) {
+		if (value === "all") {
+			setDateRange("all");
+			setFrom("");
+			setTo("");
+			choose({ site, round, from: "", to: "" });
+		} else if (value === "custom") {
+			setDateRange("custom");
+		}
 	}
 
 	// The sheet names the days its counts are for (the ones applied), never days still being typed or loaded.
@@ -197,7 +210,7 @@ export function ReportsScreen({
 			/>
 
 			<Island aria-label="Report filters" aria-busy={pending || undefined}>
-				<div className="grid gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+				<div className="grid min-w-0 gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
 					<Field label="Site" htmlFor={`${ids}-site`}>
 						<Select
 							id={`${ids}-site`}
@@ -211,7 +224,7 @@ export function ReportsScreen({
 							))}
 						</Select>
 					</Field>
-					<Field label="Round" htmlFor={`${ids}-round`}>
+					<Field label="Round Type" htmlFor={`${ids}-round`}>
 						<Select
 							id={`${ids}-round`}
 							value={round}
@@ -231,25 +244,38 @@ export function ReportsScreen({
 							))}
 						</Select>
 					</Field>
-					<Field label="First day" htmlFor={`${ids}-from`}>
-						<TextInput
-							id={`${ids}-from`}
-							type="date"
-							value={from}
-							onChange={event => chooseDays({ from: event.target.value, to })}
-						/>
+					<Field label="Date Range" htmlFor={`${ids}-date-range`}>
+						<Select
+							id={`${ids}-date-range`}
+							value={dateRange}
+							onChange={event => chooseDateRange(event.target.value)}>
+							<option value="all">All observation dates</option>
+							<option value="custom">Custom observation dates</option>
+						</Select>
 					</Field>
-					<Field
-						label="Last day"
-						htmlFor={`${ids}-to`}
-						error={backwards ? "The last day is before the first day." : undefined}>
-						<TextInput
-							id={`${ids}-to`}
-							type="date"
-							value={to}
-							onChange={event => chooseDays({ from, to: event.target.value })}
-						/>
-					</Field>
+					{dateRange === "custom" && (
+						<>
+							<Field label="From" htmlFor={`${ids}-from`}>
+								<TextInput
+									id={`${ids}-from`}
+									type="date"
+									value={from}
+									onChange={event => chooseDays({ from: event.target.value, to })}
+								/>
+							</Field>
+							<Field
+								label="To"
+								htmlFor={`${ids}-to`}
+								error={backwards ? "The last day is before the first day." : undefined}>
+								<TextInput
+									id={`${ids}-to`}
+									type="date"
+									value={to}
+									onChange={event => chooseDays({ from, to: event.target.value })}
+								/>
+							</Field>
+						</>
+					)}
 				</div>
 				<div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
 					<p className="min-w-0 max-w-prose type-small text-ink-2">

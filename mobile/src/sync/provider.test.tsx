@@ -413,6 +413,8 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
     }
   });
 
+=======
+>>>>>>> origin/master
   it("never retries a failed record more than once per 5 s however often the network flaps", async () => {
     const { sqlite } = await mountOnline();
     const sent = serve(() => new Response("", { status: 503 }));

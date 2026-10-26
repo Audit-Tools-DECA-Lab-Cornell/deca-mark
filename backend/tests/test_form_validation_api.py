@@ -106,7 +106,11 @@ def test_publication_revalidates_synthetically_stored_invalid_draft(
     assert disposable_database_selected(), "Stored-invalid acceptance requires disposable data"
     project = f"/v1/projects/{tenant.project}"
     draft = start_form(api_client, project)
-    invalid = draft.definition | {"questions": [SUITE.question | {"min": 10, "max": 1}]}
+    authored = draft.definition["questions"]
+    assert isinstance(authored, list)
+    assert isinstance(authored[0], dict)
+    invalid_question: dict[str, JsonValue] = {**authored[0], "min": 10, "max": 1}
+    invalid: dict[str, JsonValue] = {**draft.definition, "questions": [invalid_question]}
     admin_sql(
         "UPDATE fieldmaps.form_versions SET definition=:'definition'::jsonb WHERE id=:'version';",
         f"definition={json.dumps(invalid)}",
@@ -193,6 +197,7 @@ def assert_exports(
     client: TestClient, project: str, frozen: FormVersionDetail, answers: dict[str, JsonValue]
 ) -> None:
     question = FormDefinition.model_validate(frozen.definition).questions[0]
+    answer_column = "answer_round_type" if question.id == "round_type" else question.export_column
     for format_name in ("csv", "geojson"):
         response = client.get(f"{project}/observations/export", params={"format": format_name})
         assert response.status_code == 200, response.text
@@ -200,7 +205,7 @@ def assert_exports(
         if format_name == "csv":
             row = next(csv.DictReader(StringIO(bundle["observations.csv"].decode("utf-8-sig"))))
             assert row["round_type"] == "standard"
-            assert row[question.export_column] == str(answers[question.id])
+            assert row[answer_column] == str(answers[question.id])
         else:
             features = document(bundle["observations.geojson"])["features"]
             assert isinstance(features, list)
@@ -210,5 +215,5 @@ def assert_exports(
             assert isinstance(properties, dict)
             assert properties["round_type"] == "standard"
             assert properties["answers"] == answers
-            assert properties[question.export_column] == answers[question.id]
+            assert properties[answer_column] == answers[question.id]
         assert document(bundle["forms.json"])[frozen.code] == frozen.definition

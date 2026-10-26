@@ -1,0 +1,928 @@
+{
+  "assessment_date": "2026-10-18",
+  "timezone": "America/New_York",
+  "target": {
+    "supabase": "lezmqhuucfwqknspgcdy",
+    "render_service": "srv-dapctm7f3r2c73c9mi50",
+    "vercel_project": "prj_PfiR0vGpFniJUhQZi6qoVeLDZE68"
+  },
+  "source": {
+    "local_head": "1dee69edafb8d0e8cd3d850766097b76979a0181",
+    "local_branch": "review/account-deletion-recovery",
+    "initial_worktree": "clean",
+    "deployed_sha": "7264f8408683de549dc66bf7572a5e69e69a8246",
+    "tree_sha": "5c91e9c9149c84c760868c5a08efa2d29b7c9b5d",
+    "deployed_tree_equals_tested_head": true
+  },
+  "migrations": {
+    "migrations": [
+      {
+        "version": "20261012120000",
+        "name": "current_baseline"
+      },
+      {
+        "version": "20261012142629",
+        "name": "transactional_email_outbox"
+      },
+      {
+        "version": "20261017000657",
+        "name": "observation_creator_visibility"
+      },
+      {
+        "version": "20261017050453",
+        "name": "form_draft_revisions"
+      },
+      {
+        "version": "20261018030756",
+        "name": "account_deletion_recovery"
+      }
+    ]
+  },
+  "render": {
+    "service_id": "srv-dapctm7f3r2c73c9mi50",
+    "plan": "0.5c-512mb",
+    "instances": 1,
+    "health_path": "/health",
+    "auto_deploy": "yes",
+    "auto_deploy_trigger": "commit",
+    "branch": "master"
+  },
+  "web": {
+    "deployment": {
+      "id": "dpl_CxDyRfmRswwiqQc9obo7azQ1WNEz",
+      "state": "READY",
+      "target": "production",
+      "url": "deca-mark-7qacci0r3-audit-tools-web-apps-deca-lab-at-cornell.vercel.app",
+      "sha": "7264f8408683de549dc66bf7572a5e69e69a8246",
+      "branch": "master",
+      "aliases": [
+        "decamark.vercel.app",
+        "maps.decalab-cornell.tech",
+        "field-maps.vercel.app",
+        "deca-mark-audit-tools-web-apps-deca-lab-at-cornell.vercel.app",
+        "deca-mark-git-master-audit-tools-web-apps-deca-lab-at-cornell.vercel.app"
+      ],
+      "created_at": 1792353555201,
+      "ready_at": 1792353600460
+    }
+  },
+  "smoke": [
+    {
+      "url": "https://field-maps.onrender.com/health",
+      "status": 200,
+      "bytes": 20,
+      "content_type": "application/json",
+      "body": "{\"status\":\"running\"}"
+    },
+    {
+      "url": "https://field-maps.onrender.com/ready",
+      "status": 200,
+      "bytes": 18,
+      "content_type": "application/json",
+      "body": "{\"status\":\"ready\"}"
+    },
+    {
+      "url": "https://field-maps.onrender.com/openapi.json",
+      "status": 200,
+      "bytes": 199170,
+      "content_type": "application/json",
+      "sha256": "d8a2425704425623356158a160b0b1f2e5b15eaa67c8161e0af252114d5eefcf"
+    },
+    {
+      "url": "https://decamark.vercel.app/",
+      "status": 200,
+      "bytes": 63447,
+      "content_type": "text/html; charset=utf-8"
+    }
+  ],
+  "auth_cors": [
+    {
+      "method": "GET",
+      "path": "/v1/projects/{project_id}/forms",
+      "status": 401,
+      "body": "{\"error\":{\"code\":\"unauthenticated\",\"message\":\"Sign in to synchronize\",\"details\":{}}}"
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/v1/projects/{project_id}/forms",
+      "status": 200,
+      "allow_headers": "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, if-match, x-request-id",
+      "allow_origin": "https://decamark.vercel.app"
+    }
+  ],
+  "backlog": [
+    {
+      "audit": {
+        "counts": {
+          "forms": 6,
+          "drafts": 1,
+          "packages": 3,
+          "observations": 72
+        },
+        "errors": [],
+        "tables": [],
+        "backlog": {
+          "pending": 0,
+          "due_unleased": 0,
+          "max_attempts": null,
+          "active_leases": 0,
+          "expired_leases": 0,
+          "actionable_failures": 0,
+          "oldest_requested_at": null
+        },
+        "database": "postgres",
+        "read_only": "on",
+        "audit_role": "postgres",
+        "migrations": [
+          "0001_current_baseline",
+          "20261018030756"
+        ],
+        "sampled_at": "2026-10-18T21:31:00.110493+00:00",
+        "tombstones": {
+          "retained": 0,
+          "with_pending": 0
+        },
+        "role_bypassrls": true
+      }
+    }
+  ],
+  "catalog": [
+    {
+      "catalog": {
+        "sampled_at": "2026-10-18T21:32:29.014528+00:00",
+        "queue_tables": null,
+        "runtime_role": {
+          "role": "fieldmaps_api",
+          "login": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        "form_revision": {
+          "column": true,
+          "conditional_publish": true,
+          "unconditional_publish": false
+        },
+        "deletion_table": {
+          "rls": true,
+          "owner": "postgres",
+          "force_rls": false
+        },
+        "deletion_grants": [
+          {
+            "role": "anon",
+            "delete": false,
+            "insert": false,
+            "select": false,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": null,
+            "update_requested_at": false
+          },
+          {
+            "role": "authenticated",
+            "delete": false,
+            "insert": false,
+            "select": false,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": null,
+            "update_requested_at": false
+          },
+          {
+            "role": "service_role",
+            "delete": false,
+            "insert": false,
+            "select": false,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": null,
+            "update_requested_at": false
+          },
+          {
+            "role": "fieldmaps_api",
+            "delete": true,
+            "insert": false,
+            "select": true,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": [
+              "attempts",
+              "last_attempt_at",
+              "last_error",
+              "lease_token",
+              "lease_until",
+              "next_attempt_at"
+            ],
+            "update_requested_at": false
+          }
+        ],
+        "enqueue_trigger": [
+          {
+            "name": "enqueue_account_deletion",
+            "enabled": "O",
+            "definition": "CREATE TRIGGER enqueue_account_deletion AFTER INSERT OR UPDATE OF deleted_at ON fieldmaps.profiles FOR EACH ROW EXECUTE FUNCTION fieldmaps_private.enqueue_account_deletion()"
+          }
+        ],
+        "enqueue_function": {
+          "config": [
+            "search_path=\"\""
+          ],
+          "source": "\nBEGIN\n    IF NEW.deleted_at IS NOT NULL THEN\n        INSERT INTO fieldmaps_private.account_deletions(user_id,requested_at)\n        VALUES (NEW.user_id,NEW.deleted_at) ON CONFLICT (user_id) DO NOTHING;\n    END IF;\n    RETURN NEW;\nEND;\n",
+          "security_definer": true
+        },
+        "deletion_policies": [
+          {
+            "name": "backend_deletion",
+            "qual": "true",
+            "check": "true"
+          }
+        ],
+        "observation_policy": {
+          "name": "assigned_observations",
+          "qual": "((project_id IN ( SELECT fieldmaps_private.my_project_ids() AS my_project_ids)) AND (EXISTS ( SELECT\n   FROM fieldmaps.projects p\n  WHERE ((p.id = observations.project_id) AND ((observations.created_by = fieldmaps.request_user_id()) OR ((NOT p.is_training) AND fieldmaps_private.has_project_role(p.id, ARRAY['manager'::text, 'viewer'::text])))))))"
+        },
+        "observation_columns": [
+          "id",
+          "qgis_id",
+          "organization_id",
+          "project_id",
+          "site_id",
+          "form_version_id",
+          "observer_code",
+          "observed_at",
+          "received_at",
+          "updated_at",
+          "revision",
+          "deleted_at",
+          "geom",
+          "answers",
+          "created_by",
+          "upload_hash",
+          "zone_code",
+          "round_type",
+          "first_round",
+          "placement_source",
+          "package_id",
+          "zone_id"
+        ]
+      }
+    }
+  ],
+  "inventory": {
+    "forms": [
+      {
+        "id": "10000000-0000-4000-8000-000000000004",
+        "code": "shell-v1",
+        "state": "published",
+        "packages": 0,
+        "project_id": "10000000-0000-4000-8000-000000000002",
+        "observations": 0,
+        "organization_id": "10000000-0000-4000-8000-000000000001"
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000104",
+        "code": "training-v1",
+        "state": "published",
+        "packages": 0,
+        "project_id": "10000000-0000-4000-8000-000000000102",
+        "observations": 0,
+        "organization_id": "10000000-0000-4000-8000-000000000101"
+      },
+      {
+        "id": "48451e7d-bbe1-515a-993a-7ae6765fa376",
+        "code": "janet-inventory-v1",
+        "state": "published",
+        "packages": 3,
+        "project_id": "d20acd64-658c-4b2e-bdcf-e0943b9314e0",
+        "observations": 0,
+        "organization_id": "cc78969f-f825-401f-8d96-d3ed51811291"
+      },
+      {
+        "id": "595976de-ce4d-4d46-9910-bc4adc5ee2e8",
+        "code": "synthetic-inventory-v1",
+        "state": "published",
+        "packages": 0,
+        "project_id": "e4264b25-01b9-4ba2-8b4f-5509af280744",
+        "observations": 0,
+        "organization_id": "cc78969f-f825-401f-8d96-d3ed51811291"
+      },
+      {
+        "id": "76718b58-a33a-4dcc-b2a9-89aa51467141",
+        "code": "synthetic-point-v1",
+        "state": "published",
+        "packages": 0,
+        "project_id": "e4264b25-01b9-4ba2-8b4f-5509af280744",
+        "observations": 0,
+        "organization_id": "cc78969f-f825-401f-8d96-d3ed51811291"
+      },
+      {
+        "id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2",
+        "code": "janet-test-v1",
+        "state": "published",
+        "packages": 3,
+        "project_id": "d20acd64-658c-4b2e-bdcf-e0943b9314e0",
+        "observations": 72,
+        "organization_id": "cc78969f-f825-401f-8d96-d3ed51811291"
+      }
+    ],
+    "sampled_at": "2026-10-18T21:31:38.045698+00:00",
+    "bounds_inventory": [],
+    "fields_inventory": [
+      {
+        "code": "shell-v1",
+        "state": "published",
+        "drafts": 0,
+        "packages": 0,
+        "project_id": "10000000-0000-4000-8000-000000000002",
+        "observations": 0,
+        "stored_format": "fields-only",
+        "form_version_id": "10000000-0000-4000-8000-000000000004",
+        "organization_id": "10000000-0000-4000-8000-000000000001",
+        "package_bindings": []
+      }
+    ]
+  },
+  "packages": [
+    {
+      "inventory": {
+        "packages": [
+          {
+            "id": "52a18aa1-5d4b-4919-9e34-5167542a1b24",
+            "state": "ready",
+            "zones": 3,
+            "current": true,
+            "site_id": "4b68999d-1a39-4189-88af-e336a62d949f",
+            "version": 2,
+            "project_id": "d20acd64-658c-4b2e-bdcf-e0943b9314e0",
+            "prepared_at": "2026-10-15T03:55:21.764958+00:00",
+            "observations": 0,
+            "manifest_keys": [
+              "format",
+              "forms",
+              "package_id",
+              "package_version",
+              "site_code",
+              "site_id",
+              "zones"
+            ],
+            "archive_sha256": "844218ade3cb62298bf59a6a4e4d8739a74224035a8daf85919a6f9b79632db6",
+            "manifest_forms": {
+              "play": {
+                "form_version": "janet-test-v1",
+                "form_version_id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2"
+              },
+              "inventory": {
+                "form_version": "janet-inventory-v1",
+                "form_version_id": "48451e7d-bbe1-515a-993a-7ae6765fa376"
+              }
+            },
+            "play_form_code": "janet-test-v1",
+            "form_version_id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2",
+            "inventory_form_code": "janet-inventory-v1",
+            "archive_digest_matches": true,
+            "inventory_form_version_id": "48451e7d-bbe1-515a-993a-7ae6765fa376"
+          },
+          {
+            "id": "5ecc1e2d-a329-5c78-9d13-ae3e05761ee1",
+            "state": "ready",
+            "zones": 3,
+            "current": false,
+            "site_id": "4b68999d-1a39-4189-88af-e336a62d949f",
+            "version": 1,
+            "project_id": "d20acd64-658c-4b2e-bdcf-e0943b9314e0",
+            "prepared_at": "2026-10-14T21:06:35.073279+00:00",
+            "observations": 12,
+            "manifest_keys": [
+              "format",
+              "forms",
+              "package_id",
+              "package_version",
+              "site_code",
+              "site_id",
+              "zones"
+            ],
+            "archive_sha256": "fb99a1b7947543dbe871d3bde30394abb8e6bec116f30b041f3bd11924f90815",
+            "manifest_forms": {
+              "play": {
+                "form_version": "janet-test-v1",
+                "form_version_id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2"
+              },
+              "inventory": {
+                "form_version": "janet-inventory-v1",
+                "form_version_id": "48451e7d-bbe1-515a-993a-7ae6765fa376"
+              }
+            },
+            "play_form_code": "janet-test-v1",
+            "form_version_id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2",
+            "inventory_form_code": "janet-inventory-v1",
+            "archive_digest_matches": true,
+            "inventory_form_version_id": "48451e7d-bbe1-515a-993a-7ae6765fa376"
+          },
+          {
+            "id": "a7c42ed9-fe70-56d0-a2b1-bd9cf4485be4",
+            "state": "ready",
+            "zones": 1,
+            "current": true,
+            "site_id": "c9042614-11a5-40d8-b286-530af4ab2c6d",
+            "version": 1,
+            "project_id": "d20acd64-658c-4b2e-bdcf-e0943b9314e0",
+            "prepared_at": "2026-10-14T21:06:35.014546+00:00",
+            "observations": 60,
+            "manifest_keys": [
+              "format",
+              "forms",
+              "package_id",
+              "package_version",
+              "site_code",
+              "site_id",
+              "zones"
+            ],
+            "archive_sha256": "8320ba30fb24010d9f735071f0952416d2e8185aadf53a0a99cd710737c03e9a",
+            "manifest_forms": {
+              "play": {
+                "form_version": "janet-test-v1",
+                "form_version_id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2"
+              },
+              "inventory": {
+                "form_version": "janet-inventory-v1",
+                "form_version_id": "48451e7d-bbe1-515a-993a-7ae6765fa376"
+              }
+            },
+            "play_form_code": "janet-test-v1",
+            "form_version_id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2",
+            "inventory_form_code": "janet-inventory-v1",
+            "archive_digest_matches": true,
+            "inventory_form_version_id": "48451e7d-bbe1-515a-993a-7ae6765fa376"
+          }
+        ],
+        "receipts": {
+          "missing_form": 0,
+          "observations": 72,
+          "missing_package": 0,
+          "snapshot_sha256": "f92bcd13d88d0e5d7b5336341edc63833ab936ac1643322a5ee0b1860e49944e",
+          "newest_received_at": "2026-10-15T03:25:02.445985+00:00",
+          "valid_upload_hashes": 72,
+          "missing_zone_snapshot": 0
+        },
+        "sampled_at": "2026-10-18T21:33:04.861788+00:00"
+      }
+    }
+  ],
+  "recovery_startup": {
+    "hasMore": false,
+    "logs": [
+      {
+        "id": "9b00e368-1488-40e5-b059-7e829de6acd2",
+        "labels": [
+          {
+            "name": "resource",
+            "value": "srv-dapctm7f3r2c73c9mi50"
+          },
+          {
+            "name": "instance",
+            "value": "srv-dapctm7f3r2c73c9mi50-2sqn2"
+          },
+          {
+            "name": "level",
+            "value": "info"
+          },
+          {
+            "name": "type",
+            "value": "app"
+          }
+        ],
+        "message": "account_deletion_recovery_configured enabled=False",
+        "timestamp": "2026-10-18T21:27:28.653902504Z"
+      },
+      {
+        "id": "8fb401bb-b06b-41ec-afd8-b9c3cf073736",
+        "labels": [
+          {
+            "name": "resource",
+            "value": "srv-dapctm7f3r2c73c9mi50"
+          },
+          {
+            "name": "instance",
+            "value": "srv-dapctm7f3r2c73c9mi50-bsfmg"
+          },
+          {
+            "name": "level",
+            "value": "info"
+          },
+          {
+            "name": "type",
+            "value": "app"
+          }
+        ],
+        "message": "account_deletion_recovery_configured enabled=False",
+        "timestamp": "2026-10-18T21:27:58.783003672Z"
+      }
+    ],
+    "nextEndTime": "2026-10-18T21:27:28.653902504Z",
+    "nextStartTime": "2026-10-18T21:27:00Z"
+  },
+  "api_app_error_scan": {
+    "hasMore": false,
+    "logs": [],
+    "nextEndTime": "2026-10-18T21:31:30Z",
+    "nextStartTime": "2026-10-18T21:27:37Z"
+  },
+  "api_request_5xx_scan": {
+    "hasMore": false,
+    "logs": [],
+    "nextEndTime": "2026-10-18T21:33:30Z",
+    "nextStartTime": "2026-10-18T21:27:37Z"
+  },
+  "metrics": {
+    "resourceId": "srv-dapctm7f3r2c73c9mi50",
+    "timeRange": {
+      "start": "2026-10-18T21:28:08Z",
+      "end": "2026-10-18T21:32:30Z"
+    },
+    "metrics": [
+      {
+        "type": "http_request_count",
+        "data": [
+          {
+            "labels": [
+              {
+                "field": "statusCode",
+                "value": "200"
+              }
+            ],
+            "unit": "unitless",
+            "values": [
+              {
+                "timestamp": "2026-10-18T21:31:08Z",
+                "value": 1
+              },
+              {
+                "timestamp": "2026-10-18T21:32:08Z",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "labels": [
+              {
+                "field": "statusCode",
+                "value": "404"
+              }
+            ],
+            "unit": "unitless",
+            "values": [
+              {
+                "timestamp": "2026-10-18T21:28:08Z",
+                "value": 1
+              },
+              {
+                "timestamp": "2026-10-18T21:29:08Z",
+                "value": 1
+              },
+              {
+                "timestamp": "2026-10-18T21:30:08Z",
+                "value": 0
+              },
+              {
+                "timestamp": "2026-10-18T21:31:08Z",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "labels": [
+              {
+                "field": "statusCode",
+                "value": "503"
+              }
+            ],
+            "unit": "unitless",
+            "values": [
+              {
+                "timestamp": "2026-10-18T21:28:08Z",
+                "value": 1
+              },
+              {
+                "timestamp": "2026-10-18T21:29:08Z",
+                "value": 0
+              },
+              {
+                "timestamp": "2026-10-18T21:30:08Z",
+                "value": 0
+              },
+              {
+                "timestamp": "2026-10-18T21:31:08Z",
+                "value": 0
+              },
+              {
+                "timestamp": "2026-10-18T21:32:08Z",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "instance_count",
+        "data": [
+          {
+            "labels": [
+              {
+                "field": "resource",
+                "value": "srv-dapctm7f3r2c73c9mi50"
+              }
+            ],
+            "unit": "unitless",
+            "values": [
+              {
+                "timestamp": "2026-10-18T21:28:08Z",
+                "value": 0
+              },
+              {
+                "timestamp": "2026-10-18T21:29:08Z",
+                "value": 1
+              },
+              {
+                "timestamp": "2026-10-18T21:30:08Z",
+                "value": 1
+              },
+              {
+                "timestamp": "2026-10-18T21:31:08Z",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "memory_usage",
+        "data": [
+          {
+            "labels": [
+              {
+                "field": "instance",
+                "value": "srv-dapctm7f3r2c73c9mi50-gmzrm"
+              },
+              {
+                "field": "service",
+                "value": "srv-dapctm7f3r2c73c9mi50"
+              },
+              {
+                "field": "resource",
+                "value": "srv-dapctm7f3r2c73c9mi50"
+              }
+            ],
+            "unit": "bytes",
+            "values": [
+              {
+                "timestamp": "2026-10-18T21:28:08Z",
+                "value": 99618820
+              }
+            ]
+          },
+          {
+            "labels": [
+              {
+                "field": "instance",
+                "value": "srv-dapctm7f3r2c73c9mi50-bsfmg"
+              },
+              {
+                "field": "service",
+                "value": "srv-dapctm7f3r2c73c9mi50"
+              },
+              {
+                "field": "resource",
+                "value": "srv-dapctm7f3r2c73c9mi50"
+              }
+            ],
+            "unit": "bytes",
+            "values": [
+              {
+                "timestamp": "2026-10-18T21:28:08Z",
+                "value": 99606530
+              },
+              {
+                "timestamp": "2026-10-18T21:29:08Z",
+                "value": 99635200
+              },
+              {
+                "timestamp": "2026-10-18T21:30:08Z",
+                "value": 99651580
+              },
+              {
+                "timestamp": "2026-10-18T21:31:08Z",
+                "value": 99663870
+              },
+              {
+                "timestamp": "2026-10-18T21:32:08Z",
+                "value": 107888640
+              }
+            ]
+          },
+          {
+            "labels": [
+              {
+                "field": "service",
+                "value": "srv-dapctm7f3r2c73c9mi50"
+              },
+              {
+                "field": "resource",
+                "value": "srv-dapctm7f3r2c73c9mi50"
+              },
+              {
+                "field": "instance",
+                "value": "srv-dapctm7f3r2c73c9mi50-2sqn2"
+              }
+            ],
+            "unit": "bytes",
+            "values": [
+              {
+                "timestamp": "2026-10-18T21:28:08Z",
+                "value": 98746370
+              },
+              {
+                "timestamp": "2026-10-18T21:29:08Z",
+                "value": 98856960
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "web_runtime_error_scan": {
+    "text": "## Runtime Log Counts\n\n**Project:** prj_PfiR0vGpFniJUhQZi6qoVeLDZE68\n**Grouped by:** level\n**Showing:** Top 25 groups by log count; this may omit other groups.\n\n| level | count |\n|---|---|"
+  },
+  "supabase_log_levels": {
+    "result": [
+      {
+        "entries": 1,
+        "level": "info",
+        "source": "auth_logs"
+      },
+      {
+        "entries": 63,
+        "level": "",
+        "source": "pgbouncer_logs"
+      },
+      {
+        "entries": 3,
+        "level": "",
+        "source": "postgres_logs"
+      },
+      {
+        "entries": 9,
+        "level": "info",
+        "source": "supavisor_logs"
+      }
+    ]
+  },
+  "postgres_log_levels": {
+    "result": [
+      {
+        "entries": 1,
+        "severity": "ERROR",
+        "sql_state": "42703"
+      },
+      {
+        "entries": 2,
+        "severity": "LOG",
+        "sql_state": "00000"
+      }
+    ]
+  },
+  "auth_edge_statuses": {
+    "result": [
+      {
+        "entries": 1,
+        "source": "auth_logs",
+        "status_fields": {
+          "level": "info",
+          "status": "200"
+        }
+      },
+      {
+        "entries": 8,
+        "source": "edge_logs",
+        "status_fields": {
+          "response.headers.cf_cache_status": "DYNAMIC",
+          "response.status_code": "200"
+        }
+      },
+      {
+        "entries": 2,
+        "source": "edge_logs",
+        "status_fields": {
+          "response.headers.cf_cache_status": "DYNAMIC",
+          "response.status_code": "200"
+        }
+      }
+    ]
+  },
+  "security_advisors": {
+    "result": {
+      "lints": [
+        {
+          "name": "rls_enabled_no_policy",
+          "title": "RLS Enabled No Policy",
+          "level": "INFO",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+          "count": 1,
+          "findings": [
+            {
+              "detail": "Table \\`fieldmaps_meta.schema_migrations\\` has RLS enabled, but no policies exist",
+              "metadata": {
+                "name": "schema_migrations",
+                "type": "table",
+                "schema": "fieldmaps_meta"
+              },
+              "observed_at": "2026-10-18T21:33:47.576Z"
+            }
+          ]
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "title": "Leaked Password Protection Disabled",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Leaked password protection is currently disabled.",
+          "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+          "count": 1,
+          "findings": [
+            {
+              "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+              "metadata": {
+                "type": "auth",
+                "entity": "Auth"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reused_ci": {
+    "run_id": 39159850774,
+    "head_sha": "1dee69edafb8d0e8cd3d850766097b76979a0181",
+    "url": "https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark/actions/runs/39159850774",
+    "jobs": [
+      {
+        "name": "contracts",
+        "conclusion": "success",
+        "id": 117770663656
+      },
+      {
+        "name": "mobile",
+        "conclusion": "success",
+        "id": 117770663930
+      },
+      {
+        "name": "plan",
+        "conclusion": "success",
+        "id": 117770663943
+      },
+      {
+        "name": "database",
+        "conclusion": "success",
+        "id": 117770663952
+      },
+      {
+        "name": "backend",
+        "conclusion": "success",
+        "id": 117770663989
+      },
+      {
+        "name": "web",
+        "conclusion": "success",
+        "id": 117770664104
+      }
+    ],
+    "backend_passed": 864,
+    "forward_passed": 1
+  },
+  "unknown": {
+    "device_census": "not supplied / no device access",
+    "queued_observations": "unknown",
+    "unsatisfiable_queue_ids": "none established; devices not inventoried",
+    "deletion_monitor_owner": "unassigned",
+    "hosted_deletion_acceptance": "not demonstrated / worker disabled"
+  },
+  "corrections": {
+    "sql_preflight": "Initial read-only query used p.id instead of p.user_id and returned 42703. Corrected query passed; no writes.",
+    "inventory_response_parser": "Initial local untrusted-data wrapper parsing failed after successful SQL. Parsed the saved response without repeating the inventory.",
+    "web_logs": "Full-release window unavailable on Vercel Hobby; recent 30-minute window succeeded.",
+    "route_smoke": "Initial nonexistent form-version collection route returned 404; OpenAPI-advertised forms route subsequently returned expected 401. CORS script corrected Request.get_method usage."
+  }
+}
