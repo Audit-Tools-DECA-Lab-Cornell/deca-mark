@@ -1,12 +1,13 @@
 import type { ReactElement } from "react";
 import { act, create, type ReactTestInstance } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
+import { type FormDefinition, parseFormDefinition } from "../../forms/definition";
 import { type ResolvedQuestion, visibleQuestions } from "../../forms/engine";
 import { janetTestV1 } from "../../forms/fixtures/janet-test-v1";
 import { startSession } from "../../forms/session";
 import { PreferencesProvider } from "../../ui/preferences";
 import { ThemeProvider } from "../../ui/theme";
-import { QuestionStep } from "./QuestionStep";
+import { caretLine, QuestionStep } from "./QuestionStep";
 
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
 vi.mock(
@@ -29,8 +30,8 @@ vi.mock("expo-router", async () => (await import("../../ui/native.fixture")).rou
 
 /** MOB-34: what the question step does for the keyboard. */
 
-function question(id: string): ResolvedQuestion {
-  const found = visibleQuestions(janetTestV1, {}).find((entry) => entry.id === id);
+function question(id: string, form: FormDefinition = janetTestV1): ResolvedQuestion {
+  const found = visibleQuestions(form, {}).find((entry) => entry.id === id);
   if (!found) throw new Error(`No question ${id} is visible on an empty form.`);
   return found;
 }
@@ -43,26 +44,30 @@ const hostProps = (node: ReactTestInstance) =>
     disableFullscreenUI?: boolean;
     keyboardDismissMode?: string;
     keyboardShouldPersistTaps?: string;
+    value?: string;
+    onSelectionChange?: (event: unknown) => void;
   };
 
 function mount(
   id: string,
   extra: { keyboardUp?: boolean; showLinks?: boolean; compactField?: boolean } = {},
+  form: FormDefinition = janetTestV1,
 ) {
   const scrollTo = vi.fn();
+  const write = vi.fn();
   const element: ReactElement = (
     <PreferencesProvider>
       <ThemeProvider>
         <QuestionStep
-          form={janetTestV1}
+          form={form}
           state={startSession()}
-          question={question(id)}
+          question={question(id, form)}
           position={1}
           total={12}
           columns={2}
           onChoose={() => {}}
           onToggle={() => {}}
-          onWrite={() => {}}
+          onWrite={write}
           onBack={() => {}}
           onAdvance={() => {}}
           onReview={() => {}}
@@ -92,6 +97,7 @@ function mount(
     });
   const input = hosts("TextInput")[0];
   return {
+    write,
     scrollTo,
     scroll,
     field,
@@ -100,6 +106,13 @@ function mount(
     /** Types into the answer field the way the observer does. */
     typeText: (text: string) =>
       act(() => hostProps(input as ReactTestInstance).onChangeText?.(text)),
+    /** Moves the caret, as the keyboard or a tap in the text does. */
+    select: (start: number, end: number = start) =>
+      act(() =>
+        hostProps(input as ReactTestInstance).onSelectionChange?.({
+          nativeEvent: { selection: { start, end } },
+        }),
+      ),
     /** The minimum height the answer field is drawn at, and whether it carries a character counter. */
     drawn: () => {
       const input = hosts("TextInput")[0];
@@ -124,6 +137,35 @@ function mount(
 }
 
 describe("the question step on a keyboard (MOB-34)", () => {
+  it("updates Continue immediately before the durable answer arrives", () => {
+    const m = mount("play_event_summary");
+    expect(m.labels()).toContain("Skip for now");
+    m.typeText("Children digging");
+    expect(m.labels()).toContain("Continue");
+    m.typeText("");
+    expect(m.labels()).toContain("Skip for now");
+    expect(m.write.mock.calls.map(([value]) => value)).toEqual(["Children digging", ""]);
+  });
+
+  it("cleans semantic observer initials while preserving an unrelated observer ID", () => {
+    const observer = question("observer_initials");
+    const form = parseFormDefinition({
+      ...janetTestV1,
+      columnNaming: "questionId",
+      questions: [
+        { ...observer, id: "recorded_by", exportColumn: "recorded_by", role: "observer" },
+        { ...observer, id: "observer", exportColumn: "observer" },
+      ],
+    });
+    const initials = mount("recorded_by", {}, form);
+    initials.typeText("a b\t");
+    expect(initials.write).toHaveBeenLastCalledWith("AB");
+    expect(hostProps(initials.input as ReactTestInstance).value).toBe("AB");
+    const unrelated = mount("observer", {}, form);
+    unrelated.typeText("a b\t");
+    expect(unrelated.write).toHaveBeenLastCalledWith("a b\t");
+  });
+
   it("a drag on the scrolling area dismisses the keyboard, and a tap on a control still lands", () => {
     const { scroll } = mount("play_event_summary");
     expect(hostProps(scroll).keyboardDismissMode).toBe("on-drag");
@@ -286,6 +328,81 @@ describe("the question step on a keyboard (MOB-34)", () => {
       m.layout(m.input, 2, 120);
       m.layout(m.field, TOP, 151);
       expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP, animated: false });
+    });
+  });
+
+  // MOB-35 review: the caret is not always at the end of the answer, and `Textarea` never scrolls itself.
+  describe("a grown answer edited on an earlier line", () => {
+    const VIEW = 114;
+    const TOP = 80;
+    const LINE = 22;
+    const SIX = "One.\nTwo.\nThree.\nFour.\nFive.\nSix.";
+    /** An iPhone SE in portrait: the 6-line input is 164 pt (16 padding and 6 x 22 each way) in a 195 pt field. */
+    const lay = (m: ReturnType<typeof mount>, view = VIEW) => {
+      m.layout(m.scroll, 0, view);
+      m.layout(m.field, TOP, 195);
+      m.layout(m.input, 2, 164);
+    };
+    /** The y the caret line sits at in the scrolling area's content: the field, the border and the padding, then the lines above it. */
+    const lineTop = (line: number) => TOP + 2 + 16 + line * LINE;
+    const shows = (m: ReturnType<typeof mount>, line: number, view: number) => {
+      const [{ y }] = m.scrollTo.mock.calls.at(-1) as [{ y: number }];
+      expect(lineTop(line)).toBeGreaterThanOrEqual(y);
+      expect(lineTop(line) + LINE).toBeLessThanOrEqual(y + view);
+    };
+
+    it("keeps a caret on line 1 inside the area after a layout change (a rotation with the keyboard open)", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(SIX);
+      m.select(0);
+      lay(m);
+      shows(m, 0, VIEW);
+      // The phone turns: the area is 89 pt tall and the field is laid out again.
+      lay(m, 89);
+      shows(m, 0, 89);
+    });
+
+    it("keeps a caret in the middle of the answer inside the area", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(SIX);
+      // Line 3 begins after "One.\nTwo.\n".
+      m.select(10);
+      lay(m);
+      shows(m, 2, VIEW);
+      lay(m, 89);
+      shows(m, 2, 89);
+    });
+
+    it("still follows the foot while the caret is at the end", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(SIX);
+      m.select(SIX.length);
+      lay(m);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP + 195 + 8 - VIEW, animated: false });
+      // The foot also holds after a layout change.
+      lay(m, 89);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP + 195 + 8 - 89, animated: false });
+    });
+
+    it("reads the caret's row from the line breaks, and from the characters once lines wrap", () => {
+      expect(caretLine(SIX, 0, 6)).toBe(0);
+      expect(caretLine(SIX, 10, 6)).toBe(2);
+      expect(caretLine("a\nb\nc", 2, 3)).toBe(1);
+      // A wrapped paragraph after one break: the caret is never taken above the break before it.
+      expect(caretLine(`a\n${"x".repeat(98)}`, 2, 5)).toBe(1);
+      // One long paragraph wrapped into five rows: a caret halfway through sits near the middle row.
+      expect(caretLine("x".repeat(100), 50, 5)).toBe(2);
+      expect(caretLine("x".repeat(100), 100, 5)).toBe(4);
+    });
+
+    it("follows the foot again when the caret returns to the end", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(SIX);
+      m.select(0);
+      lay(m);
+      m.select(SIX.length);
+      lay(m);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP + 195 + 8 - VIEW, animated: false });
     });
   });
 

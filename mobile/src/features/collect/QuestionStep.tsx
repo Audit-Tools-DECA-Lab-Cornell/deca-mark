@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
-import type { Act, FormDefinition } from "../../forms/definition";
+import { type Act, type FormDefinition, isObserverQuestion } from "../../forms/definition";
 import type { ResolvedQuestion } from "../../forms/engine";
 import type { SessionState } from "../../forms/session";
 import {
@@ -18,14 +18,13 @@ import {
   Mono,
   Note,
   Text,
-  Textarea,
-  TextInput,
   TextLink,
   type Theme,
   useHaptics,
   useStyles,
   useTheme,
 } from "../../ui";
+import { QuestionValueInput } from "./QuestionValueInput";
 
 type Props = {
   readonly form: FormDefinition;
@@ -58,6 +57,19 @@ type Props = {
 const FIELD_MARGIN = 8;
 /** The most rows a text field shows while `compactField` is on. */
 const COMPACT_ROWS = 2;
+
+/**
+ * The row of the box a caret sits on, from 0, for a box of `lines` rows. Text that wraps nowhere puts
+ * it after the line breaks before it; wrapped text is measured only by the box's height, so the row
+ * is then taken in proportion to the characters before the caret, never above the breaks before it.
+ */
+export function caretLine(text: string, caret: number, lines: number): number {
+  const before = text.slice(0, caret);
+  const breaks = before.split("\n").length - 1;
+  const hardLines = text.split("\n").length;
+  const row = lines > hardLines ? Math.floor((caret / Math.max(1, text.length)) * lines) : breaks;
+  return Math.min(lines - 1, Math.max(breaks, row));
+}
 
 /** The acts a form actually asks, in order: Child · Social · Play · Setting, or Climate · Inventory. */
 export function formActs(form: FormDefinition): readonly Act[] {
@@ -124,10 +136,13 @@ export function QuestionStep({
   const inputText = typeof value === "string" || typeof value === "number" ? String(value) : "";
   const [text, setText] = useState(inputText);
   const [shown, setShown] = useState(question.id);
+  /** The caret's character offset in a multi-line answer; null until the observer has moved it. */
+  const caretAt = useRef<number | null>(null);
   // Reload the field only when the question changes, not whenever the stored answer lands.
   if (shown !== question.id) {
     setShown(question.id);
     setText(inputText);
+    caretAt.current = null;
   }
 
   // While the keyboard is up, a text or number answer is kept in view above the footer, and the
@@ -145,41 +160,50 @@ export function QuestionStep({
   const fieldBottom = useRef(0);
   /** The height of the text box itself; it is the rows' minimum height until the text outgrows them. */
   const boxHeight = useRef(0);
-  const typing = question.kind === "text" || question.kind === "number";
+  /** Where the text box starts inside the field (its border). */
+  const boxTop = useRef(0);
+  const automatic = (question.valueSource ?? "manual") !== "manual";
+  const typing =
+    !automatic &&
+    (question.kind === "text" || question.kind === "number" || question.kind === "dateTime");
   const multiline = question.kind === "text" && (question.rows ?? 1) > 1;
   /** The current text, so `showField` reads it as of the latest render, not the one it was made in. */
   const typed = useRef(text);
   typed.current = text;
   const rowsHeight = useRef(rowsMinHeight);
   rowsHeight.current = rowsMinHeight;
+  const padding = theme.space.s4;
+  const lineHeight = theme.type.answer.lineHeight ?? 0;
   const showField = useCallback(() => {
     if (!keyboardUp || !typing || viewport.current === 0) return;
     const foot = Math.max(0, fieldBottom.current + FIELD_MARGIN - viewport.current);
     // Only typed text can outgrow the rows; an empty box measured by its placeholder is not grown.
     const grown = multiline && typed.current !== "" && boxHeight.current > rowsHeight.current + 0.5;
-    scroller.current?.scrollTo({
-      y: grown ? foot : Math.min(foot, fieldTop.current),
-      animated: false,
-    });
-  }, [keyboardUp, typing, multiline]);
+    let y = grown ? foot : Math.min(foot, fieldTop.current);
+    // The text box never scrolls itself, so an edit on an earlier line of a grown answer keeps that
+    // line in view, not the foot: a rotation with the keyboard open lays the field out again.
+    const caret = caretAt.current;
+    if (grown && caret !== null && caret < typed.current.length && lineHeight > 0) {
+      const lines = Math.max(1, Math.round((boxHeight.current - padding * 2) / lineHeight));
+      const line = caretLine(typed.current, caret, lines);
+      const lineBottom = fieldTop.current + boxTop.current + padding + (line + 1) * lineHeight;
+      y = Math.max(0, lineBottom + FIELD_MARGIN - viewport.current);
+    }
+    scroller.current?.scrollTo({ y, animated: false });
+  }, [keyboardUp, typing, multiline, padding, lineHeight]);
   useEffect(showField, [showField]);
 
   const answered =
     question.kind === "many"
       ? chosen.length > 0
       : question.kind === "one"
-        ? single !== ""
-        : text.trim() !== "";
+        ? single.trim() !== ""
+        : (automatic ? inputText : text).trim() !== "";
+  const observer = isObserverQuestion(question, form.columnNaming);
 
   function type(next: string) {
-    const cleaned =
-      question.kind === "number"
-        ? next.replace(/[^0-9]/g, "")
-        : question.exportColumn === "observer"
-          ? next.toUpperCase().replace(/\s+/g, "")
-          : next;
+    const cleaned = observer ? next.toUpperCase().replace(/\s+/g, "") : next;
     setText(cleaned);
-    // Straight to the draft: debouncing would lose what was typed just before a force quit.
     onWrite(cleaned);
   }
 
@@ -262,48 +286,31 @@ export function QuestionStep({
           </Note>
         ) : null}
 
-        {typing ? (
-          <View
-            testID="collect-field"
-            onLayout={(event: LayoutChangeEvent) => {
-              const { y, height } = event.nativeEvent.layout;
-              fieldTop.current = y;
-              fieldBottom.current = y + height;
-              showField();
-            }}
-          >
-            {multiline ? (
-              <Textarea
-                accessibilityLabel={question.label}
-                value={text}
-                onChangeText={type}
-                rows={rows}
-                onLayout={(event: LayoutChangeEvent) => {
-                  boxHeight.current = event.nativeEvent.layout.height;
-                  showField();
-                }}
-                disableFullscreenUI
-                showCount={!compactField}
-                maxLength={question.maxLength}
-                placeholder={question.placeholder}
-              />
-            ) : (
-              <TextInput
-                accessibilityLabel={question.label}
-                value={text}
-                onChangeText={type}
-                keyboardType={question.kind === "number" ? "number-pad" : "default"}
-                autoCapitalize={question.exportColumn === "observer" ? "characters" : "sentences"}
-                autoCorrect={question.kind === "text" && question.exportColumn !== "observer"}
-                maxLength={question.maxLength}
-                placeholder={question.placeholder}
-                disableFullscreenUI
-                returnKeyType="next"
-                onSubmitEditing={onAdvance}
-              />
-            )}
-          </View>
-        ) : null}
+        <QuestionValueInput
+          key={question.id}
+          question={question}
+          value={value}
+          text={text}
+          observer={observer}
+          rows={rows}
+          compactField={compactField}
+          onWrite={type}
+          onAdvance={onAdvance}
+          onFieldLayout={(event) => {
+            const { y, height } = event.nativeEvent.layout;
+            fieldTop.current = y;
+            fieldBottom.current = y + height;
+            showField();
+          }}
+          onInputLayout={(event) => {
+            boxTop.current = event.nativeEvent.layout.y;
+            boxHeight.current = event.nativeEvent.layout.height;
+            showField();
+          }}
+          onCaretChange={(caret) => {
+            caretAt.current = caret;
+          }}
+        />
 
         {question.protocolFlag ? (
           <Note tone="waiting" icon="flag" title="Protocol note.">

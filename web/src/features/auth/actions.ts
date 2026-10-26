@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { PLACE_COOKIE } from "@/features/shell/navigation";
 import { apiRequestError } from "@/lib/api/errors";
 import { previewInvitation, redeemInvitation } from "@/lib/api/mutations";
 import { getWorkspace } from "@/lib/api/workspace";
@@ -104,9 +105,9 @@ export async function redeemInvite(
 		return { status: "joined", path: destinationFor(redeemed, workspace), role: redeemed.role };
 	} catch (error) {
 		const problem = inviteProblem(apiRequestError(error), { step: "redeem", credential: kindOf(read.credential) });
-		if (problem.kind !== "already-member" && problem.kind !== "invalid") return { status: "failed", problem };
-		// DECA Mark refuses a repeat join, and says so as "invitation not found" or as a conflict. If the
-		// person is on that project already, that is what happened.
+		if (problem.kind !== "already-member") return { status: "failed", problem };
+		// Only an explicit duplicate refusal supports the already-member recovery path.
+		// A generic invalid reply can also mean the invited email does not match.
 		const place = placeOf(await getWorkspace(), names);
 		if (place)
 			return {
@@ -124,10 +125,11 @@ export async function redeemInvite(
 export async function switchAccount(form: FormData): Promise<void> {
 	const next = safeNext(form.get("next"));
 	const supabase = await createClient();
-	const { error } = await supabase.auth.signOut();
+	// This browser only: the same account's session on the phone collector stays signed in.
+	const { error } = await supabase.auth.signOut({ scope: "local" });
 	if (error) throw error;
 	const store = await cookies();
-	for (const name of ["fm-verify-email", "fm-recovery-email", "fm-recovery-user", "fm-email-sent"])
+	for (const name of ["fm-verify-email", "fm-recovery-email", "fm-recovery-user", "fm-email-sent", PLACE_COOKIE])
 		store.delete(name);
 	redirect(`/sign-in?next=${encodeURIComponent(next)}`);
 }

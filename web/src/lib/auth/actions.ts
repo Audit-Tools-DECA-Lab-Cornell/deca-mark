@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { PLACE_COOKIE } from "@/features/shell/navigation";
 import { safeNext } from "@/lib/auth/navigation";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
@@ -133,14 +134,20 @@ export async function authenticate(_state: AuthState, form: FormData): Promise<A
 	redirect(next);
 }
 
+/**
+ * Sign out ends this browser's session only. Auth's default scope is `global`, which would revoke the same
+ * account's session on the phone collector as well; "Signing out here does not affect the app" (Account)
+ * has to stay true. The last place (`fm-place`) is forgotten too, so the next person here starts from `/o`.
+ */
 export async function signOut(): Promise<void> {
 	const { supabase } = await requireUser();
-	const { error } = await supabase.auth.signOut();
+	const { error } = await supabase.auth.signOut({ scope: "local" });
 	if (error) throw error;
 	const store = await cookies();
 	store.delete("fm-verify-email");
 	store.delete("fm-recovery-email");
 	store.delete("fm-recovery-user");
 	store.delete("fm-email-sent");
+	store.delete(PLACE_COOKIE);
 	redirect("/sign-in");
 }

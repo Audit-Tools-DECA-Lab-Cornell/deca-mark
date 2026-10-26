@@ -52,10 +52,51 @@ test("a form row names its newest published version, its drafts and the sites th
 	);
 	assert.equal(row.newest.code, "check-v3");
 	assert.deepEqual(
-		row.sites.map(s => s.name),
-		["Site A", "Site B"]
+		row.uses.map(use => [use.name, use.version]),
+		[
+			["Site A", 2],
+			["Site B", 1]
+		]
 	);
 	assert.deepEqual(row.versions[1].sites, [{ code: "a", name: "Site A" }]);
+});
+
+test("with v1 bound by Site A's map and v2 published, the row names Site A with v1 and not v2", () => {
+	const [row] = model.formRows(
+		[form("check", [version("check-v2", 2, "published"), version("check-v1", 1, "published")])],
+		[site("a", "Site A", "check-v1"), site("b", "Site B", null)]
+	);
+	assert.equal(row.published.code, "check-v2");
+	assert.deepEqual(row.uses, [{ code: "a", name: "Site A", version: 1, versionCode: "check-v1" }]);
+});
+
+test("a site that binds two versions of one form is listed once for each", () => {
+	const [row] = model.formRows(
+		[form("check", [version("check-v2", 2, "published"), version("check-v1", 1, "published")])],
+		[site("a", "Site A", "check-v1", "check-v2")]
+	);
+	assert.deepEqual(
+		row.uses.map(use => [use.code, use.version]),
+		[
+			["a", 2],
+			["a", 1]
+		]
+	);
+});
+
+test("a retired version still names the sites whose map is on it, and a form nobody uses lists none", () => {
+	const [retired, unused] = model.formRows(
+		[
+			form("old", [version("old-v2", 2, "published"), version("old-v1", 1, "retired")]),
+			form("idle", [version("idle-v1", 1, "published")])
+		],
+		[site("a", "Site A", "old-v1")]
+	);
+	assert.deepEqual(
+		retired.uses.map(use => [use.name, use.version]),
+		[["Site A", 1]]
+	);
+	assert.deepEqual(unused.uses, []);
 });
 
 test("a form without a published version has none, and a reader's form can hold no versions", () => {
@@ -144,7 +185,7 @@ test("draft changes name the field that changed, and a new question is new", () 
 	assert.deepEqual(
 		changes.map(c => [c.questionId, c.field]),
 		[
-			["age_range", "Question label"],
+			["age_range", "Question Text"],
 			["play_type_1", "Required"],
 			["added", "New question"]
 		]
@@ -168,14 +209,14 @@ test("draft changes name the field that changed, and a new question is new", () 
 	);
 });
 
-test("guidance that is only emptied reads as 'No guidance'", () => {
+test("emptied observer instructions are visible in the publication review", () => {
 	const base = { ...behaviour, questions: [{ ...behaviour.questions[0], hint: "Ask the parent" }] };
 	const draft = structuredClone(base);
 	delete draft.questions[0].hint;
 	const [change] = model.draftChanges(draft, base);
-	assert.equal(change.field, "Guidance");
+	assert.equal(change.field, "Instructions to Observers");
 	assert.equal(change.was, "Ask the parent");
-	assert.equal(change.now, "No guidance");
+	assert.equal(change.now, "No instructions");
 });
 
 test("two definitions are the same when only the order of their keys differs", () => {

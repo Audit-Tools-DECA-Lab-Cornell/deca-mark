@@ -23,17 +23,17 @@ const ROLE_OPTIONS: readonly RoleOption<TeamRole>[] = [
 	{
 		value: "observer",
 		label: stateOf("role", "observer").label,
-		hint: "Collects observations in the DECA Mark app."
+		hint: stateOf("role", "observer").allows
 	},
 	{
 		value: "viewer",
 		label: stateOf("role", "viewer").label,
-		hint: "Reads observations and reports. Cannot change anything."
+		hint: stateOf("role", "viewer").allows
 	},
 	{
 		value: "manager",
 		label: stateOf("role", "manager").label,
-		hint: "Manages the team, sites, map packages, forms and settings."
+		hint: stateOf("role", "manager").allows
 	}
 ];
 

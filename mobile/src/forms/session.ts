@@ -1,5 +1,6 @@
 import type { Answers, AnswerValue, FormDefinition } from "./definition";
-import { pruneAnswers, type ResolvedQuestion, visibleQuestions } from "./engine";
+import { pruneDraftAnswers } from "./draft-answers";
+import { type ResolvedQuestion, visibleQuestions } from "./engine";
 
 /**
  * One observation in progress: which question is on screen, what has been answered, and what
@@ -61,7 +62,7 @@ function withAnswer(
   const draft: Record<string, AnswerValue> = { ...state.answers };
   if (value === undefined) delete draft[question];
   else draft[question] = value;
-  const { answers, dropped } = pruneAnswers(form, draft);
+  const { answers, dropped } = pruneDraftAnswers(form, draft);
   const notice =
     dropped.length > 0
       ? {
@@ -106,7 +107,9 @@ export function reduceSession(
         action.value.trim() === ""
           ? undefined
           : question?.kind === "number"
-            ? Number(action.value)
+            ? Number.isFinite(Number(action.value))
+              ? Number(action.value)
+              : action.value
             : action.value;
       return {
         state: withAnswer(form, state, action.question, value),

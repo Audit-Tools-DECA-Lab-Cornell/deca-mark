@@ -39,6 +39,7 @@ export const historicalObservationSchema = z.object({
 export type Observation = z.infer<typeof historicalObservationSchema>;
 
 export const observationDetailSchema = historicalObservationSchema.extend({
+	schema_version: z.number().int().positive(),
 	definition: z.record(z.string(), z.unknown())
 });
 export type ObservationDetail = z.infer<typeof observationDetailSchema>;
