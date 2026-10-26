@@ -58,6 +58,19 @@ const FIELD_MARGIN = 8;
 /** The most rows a text field shows while `compactField` is on. */
 const COMPACT_ROWS = 2;
 
+/**
+ * The row of the box a caret sits on, from 0, for a box of `lines` rows. Text that wraps nowhere puts
+ * it after the line breaks before it; wrapped text is measured only by the box's height, so the row
+ * is then taken in proportion to the characters before the caret, never above the breaks before it.
+ */
+export function caretLine(text: string, caret: number, lines: number): number {
+  const before = text.slice(0, caret);
+  const breaks = before.split("\n").length - 1;
+  const hardLines = text.split("\n").length;
+  const row = lines > hardLines ? Math.floor((caret / Math.max(1, text.length)) * lines) : breaks;
+  return Math.min(lines - 1, Math.max(breaks, row));
+}
+
 /** The acts a form actually asks, in order: Child · Social · Play · Setting, or Climate · Inventory. */
 export function formActs(form: FormDefinition): readonly Act[] {
   const acts: Act[] = [];
@@ -123,10 +136,13 @@ export function QuestionStep({
   const inputText = typeof value === "string" || typeof value === "number" ? String(value) : "";
   const [text, setText] = useState(inputText);
   const [shown, setShown] = useState(question.id);
+  /** The caret's character offset in a multi-line answer; null until the observer has moved it. */
+  const caretAt = useRef<number | null>(null);
   // Reload the field only when the question changes, not whenever the stored answer lands.
   if (shown !== question.id) {
     setShown(question.id);
     setText(inputText);
+    caretAt.current = null;
   }
 
   // While the keyboard is up, a text or number answer is kept in view above the footer, and the
@@ -144,6 +160,8 @@ export function QuestionStep({
   const fieldBottom = useRef(0);
   /** The height of the text box itself; it is the rows' minimum height until the text outgrows them. */
   const boxHeight = useRef(0);
+  /** Where the text box starts inside the field (its border). */
+  const boxTop = useRef(0);
   const automatic = (question.valueSource ?? "manual") !== "manual";
   const typing =
     !automatic &&
@@ -154,16 +172,25 @@ export function QuestionStep({
   typed.current = text;
   const rowsHeight = useRef(rowsMinHeight);
   rowsHeight.current = rowsMinHeight;
+  const padding = theme.space.s4;
+  const lineHeight = theme.type.answer.lineHeight ?? 0;
   const showField = useCallback(() => {
     if (!keyboardUp || !typing || viewport.current === 0) return;
     const foot = Math.max(0, fieldBottom.current + FIELD_MARGIN - viewport.current);
     // Only typed text can outgrow the rows; an empty box measured by its placeholder is not grown.
     const grown = multiline && typed.current !== "" && boxHeight.current > rowsHeight.current + 0.5;
-    scroller.current?.scrollTo({
-      y: grown ? foot : Math.min(foot, fieldTop.current),
-      animated: false,
-    });
-  }, [keyboardUp, typing, multiline]);
+    let y = grown ? foot : Math.min(foot, fieldTop.current);
+    // The text box never scrolls itself, so an edit on an earlier line of a grown answer keeps that
+    // line in view, not the foot: a rotation with the keyboard open lays the field out again.
+    const caret = caretAt.current;
+    if (grown && caret !== null && caret < typed.current.length && lineHeight > 0) {
+      const lines = Math.max(1, Math.round((boxHeight.current - padding * 2) / lineHeight));
+      const line = caretLine(typed.current, caret, lines);
+      const lineBottom = fieldTop.current + boxTop.current + padding + (line + 1) * lineHeight;
+      y = Math.max(0, lineBottom + FIELD_MARGIN - viewport.current);
+    }
+    scroller.current?.scrollTo({ y, animated: false });
+  }, [keyboardUp, typing, multiline, padding, lineHeight]);
   useEffect(showField, [showField]);
 
   const answered =
@@ -276,8 +303,12 @@ export function QuestionStep({
             showField();
           }}
           onInputLayout={(event) => {
+            boxTop.current = event.nativeEvent.layout.y;
             boxHeight.current = event.nativeEvent.layout.height;
             showField();
+          }}
+          onCaretChange={(caret) => {
+            caretAt.current = caret;
           }}
         />
 
