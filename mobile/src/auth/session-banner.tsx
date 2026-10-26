@@ -4,7 +4,7 @@ import { openResumeSignIn } from "../features/auth/ResumeUploadsNote";
 import { space } from "../theme";
 import { useAccount } from "./provider";
 
-/** The legacy Nocturne screens' banner (records); Contour screens show `ResumeUploadsNote`. */
+/** The old Nocturne screens' banner (records); Contour screens show `ResumeUploadsNote`. */
 export function SessionBanner() {
   const { recovery } = useAccount();
   if (!recovery) return null;

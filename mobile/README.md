@@ -322,8 +322,8 @@ References: [MapLibre Expo setup](https://maplibre.org/maplibre-react-native/doc
 `app.config.ts` selects public `config/development.json`, `config/staging.json` or
 `config/production.json` through `APP_ENV` (development by default). EAS profiles set it explicitly
 and disable dotenv loading. Local development uses the local Supabase stack and
-`com.fieldmaps.collector.local`; staging keeps the lezmq Auth issuer and
-`com.fieldmaps.collector.dev` so existing test installs retain SQLite and their session.
+`com.fieldmaps.collector.local`; staging keeps the lezmq Auth project and
+`com.fieldmaps.collector.dev`. The only URI scheme is `decamark`.
 Production values are placeholders, not a deployable configuration. `powersyncUrl` stays null.
 
 ```bash
@@ -336,10 +336,12 @@ in the appropriate public JSON config. Never include database passwords or servi
 The validator accepts publishable keys and public anon JWTs, including the local stack's anon key.
 Expo exposes these values through `extra.connection`.
 
-Legacy SQLite `owner_scope` keys remain frozen at their original localhost URL, lezmq issuer,
-account UUID and seeded project UUID until MOB-11. Uploads use the configured API URL separately,
-and receipts must match the destination project, account and record. Changing the active project
-never changes this legacy key or claims prior local practice records.
+SQLite `owner_scope` keys are built from the configured connection and the signed-in account: the
+API URL, the Supabase URL (the issuer), the user id and a fixed placeholder project
+(`accountWorkspace` in `src/auth/session-retention.ts`). A build pointed at another backend, or
+another account on the same backend, sees none of those records. Uploads go to the configured API
+URL, and receipts must match the destination project, account and record. Changing the active
+project never changes this key.
 
 `MeProvider` fetches the typed `/v1/me` response on sign-in and foreground resume. `useMe()` exposes
 profile, project memberships, active project and refresh errors. The last verified response and
