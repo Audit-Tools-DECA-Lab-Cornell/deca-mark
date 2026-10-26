@@ -1,5 +1,5 @@
 import { isBoundObservation, type Observation } from "../domain/observation";
-import type { FormDefinition } from "./definition";
+import { type FormDefinition, isObserverQuestion } from "./definition";
 import { janetInventoryV1 } from "./fixtures/janet-inventory-v1";
 import { janetTestV1 } from "./fixtures/janet-test-v1";
 import { shellV1 } from "./fixtures/shell-v1";
@@ -33,10 +33,10 @@ export function isUploadableRecord(record: Observation): boolean {
 
 /**
  * Answers carried into the next observation of a session: the observer code, wherever a form asks
- * for it (the question whose export column is `observer`). Every event answer starts empty again.
+ * for it through its semantic role or historical column. Every event answer starts empty again.
  */
 export function carriedQuestionIds(form: FormDefinition): readonly string[] {
   return form.questions
-    .filter((question) => question.exportColumn === "observer" && question.kind === "text")
+    .filter((question) => isObserverQuestion(question, form.columnNaming))
     .map((question) => question.id);
 }

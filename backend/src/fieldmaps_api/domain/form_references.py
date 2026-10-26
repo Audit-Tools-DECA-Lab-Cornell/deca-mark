@@ -10,6 +10,7 @@ from fieldmaps_api.domain.form_definition import (
     Junction,
     Question,
 )
+from fieldmaps_api.domain.form_question_rules import extended_question_problems
 
 
 def references(condition: Condition) -> list[str]:
@@ -92,6 +93,8 @@ def definition_problems(form: CanonicalDefinition) -> list[str]:
 
 def structural_problems(form: CanonicalDefinition) -> list[str]:
     problems: list[str] = []
+    if sum(question.role == "observer" for question in form.questions) > 1:
+        problems.append("Only one question can have the observer role.")
     by_id: dict[str, Question] = {}
     for question in form.questions:
         if question.id in by_id:
@@ -118,6 +121,7 @@ def question_problems(
     question: Question, form: CanonicalDefinition, by_id: dict[str, Question]
 ) -> list[str]:
     problems: list[str] = []
+    problems.extend(extended_question_problems(question, form))
     if question.options_pending is not None and question.required:
         problems.append(f'"{question.id}" is required but its option list has not been supplied.')
     choice = question.kind in {"one", "many"}

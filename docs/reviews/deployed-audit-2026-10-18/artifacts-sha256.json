@@ -1,0 +1,11 @@
+{
+  "README.md": "5f11c9b9503a30786855aedb0e60d6c76cc6b4f132e160c6d7d665cd89e5698d",
+  "backlog-preflight.sql": "4b904a16a588bc6fdec1b4b7bac82e489155bb4fe25177c9807ee2c5e9cc823a",
+  "catalog.sql": "a27e9c8989d79f9a753f98db4f8042e1b1ba635c5f444dfcd911185978701934",
+  "device-inventory.md": "930e932c2adacde029b7c481085bd95b676603300b4ebcdb54ab2ee5c42c57ec",
+  "evidence.json": "ba78fc651d49d2c7a5d77c3b10b6a86b8e2c815bb768e22e81c2b6686467ad20",
+  "forms-summary.json": "220cf4e3c597b58901ef7afa828dec4d8da19488322b5657c69be4034bc2a975",
+  "historical-inventory.sql": "525befaaed27447aa69d9a733d5100a34cb89f7378d0d0984af4a173b704d08e",
+  "package-references.sql": "03fa050bc43ae6b3c656a876e13b65b451e08eb9516fc3a0f620444676919cdd",
+  "preserved-readers-contracts.json": "688cd738b07629056473434f970f81417fbb0803099ae1eb136b92c907a7d2e9"
+}

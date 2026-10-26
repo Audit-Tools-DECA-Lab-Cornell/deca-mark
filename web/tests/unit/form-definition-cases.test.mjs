@@ -15,6 +15,7 @@ for (const scenario of suite.cases) {
 	test(`canonical definition: ${scenario.id}`, () => {
 		const input = {
 			...suite.definition,
+			...scenario.definitionPatch,
 			questions: [{ ...suite.question, ...scenario.patch }]
 		};
 		if (Object.hasOwn(scenario, "schemaVersion")) {

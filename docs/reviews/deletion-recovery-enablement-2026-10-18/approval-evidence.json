@@ -1,0 +1,105 @@
+{
+  "approval": "User explicitly replied Approved! to the concrete production configuration/deploy proposal.",
+  "sampled_at": "2026-10-18T23:29:13Z",
+  "applied": false,
+  "live_source": "7264f8408683de549dc66bf7572a5e69e69a8246",
+  "live_deploy": "dep-dbajjb8jgiss739hjmvg",
+  "preview_mode_observed": "automatic",
+  "mounted_file_status": "not exposed by tools; operator confirmation pending",
+  "preactivation": [
+    {
+      "preactivation": {
+        "sampled_at": "2026-10-18T23:29:13.338825+00:00",
+        "recovery_rls": true,
+        "runtime_role": {
+          "bypassrls": false,
+          "superuser": false
+        },
+        "runtime_grants": {
+          "delete": true,
+          "insert": false,
+          "select": true,
+          "enqueue_execute": false,
+          "update_identity": false
+        },
+        "pending_deletions": 0,
+        "migration_recorded": true,
+        "retained_tombstones": 0
+      }
+    }
+  ],
+  "startup": {
+    "hasMore": false,
+    "logs": [
+      {
+        "id": "9b00e368-1488-40e5-b059-7e829de6acd2",
+        "labels": [
+          {
+            "name": "resource",
+            "value": "srv-dapctm7f3r2c73c9mi50"
+          },
+          {
+            "name": "instance",
+            "value": "srv-dapctm7f3r2c73c9mi50-2sqn2"
+          },
+          {
+            "name": "level",
+            "value": "info"
+          },
+          {
+            "name": "type",
+            "value": "app"
+          }
+        ],
+        "message": "account_deletion_recovery_configured enabled=False",
+        "timestamp": "2026-10-18T21:27:28.653902504Z"
+      },
+      {
+        "id": "8fb401bb-b06b-41ec-afd8-b9c3cf073736",
+        "labels": [
+          {
+            "name": "resource",
+            "value": "srv-dapctm7f3r2c73c9mi50"
+          },
+          {
+            "name": "instance",
+            "value": "srv-dapctm7f3r2c73c9mi50-bsfmg"
+          },
+          {
+            "name": "level",
+            "value": "info"
+          },
+          {
+            "name": "type",
+            "value": "app"
+          }
+        ],
+        "message": "account_deletion_recovery_configured enabled=False",
+        "timestamp": "2026-10-18T21:27:58.783003672Z"
+      }
+    ],
+    "nextEndTime": "2026-10-18T21:27:28.653902504Z",
+    "nextStartTime": "2026-10-18T21:27:00Z"
+  },
+  "ci": {
+    "sha": "b25c0d314d5a51ba41924994fb55e344b4f3902d",
+    "run": 39169759920,
+    "conclusion": "success",
+    "jobs": [
+      "backend",
+      "database",
+      "contracts",
+      "web",
+      "mobile",
+      "plan"
+    ]
+  },
+  "health": {
+    "api_health": 200,
+    "api_ready": 200,
+    "scope": "before activation; still-disabled deployment"
+  },
+  "production_mutations": [],
+  "no_credentials_read": true,
+  "no_accounts_deleted": true
+}

@@ -9,6 +9,7 @@ from fieldmaps_api.domain.forms import FormDefinition
 class DefinitionCase(BaseModel):
     id: str
     patch: dict[str, JsonValue]
+    definition_patch: dict[str, JsonValue] = Field(default_factory=dict, alias="definitionPatch")
     valid: bool
     # A schema version is served beside a definition. BE-24 enforces it; today it only has to be
     # the sole reason a case is refused, so these cases are told apart by the key being present.
@@ -34,7 +35,7 @@ VERSION_CASES = [case for case in SUITE.cases if "schema_version" in case.model_
 @pytest.mark.parametrize("case", SHAPE_CASES, ids=[case.id for case in SHAPE_CASES])
 def test_shared_definition_case(case: DefinitionCase) -> None:
     # Given a synthetic question with an explicitly authored validity expectation.
-    raw = SUITE.definition | {"questions": [SUITE.question | case.patch]}
+    raw = SUITE.definition | case.definition_patch | {"questions": [SUITE.question | case.patch]}
     # When the same production parser used for drafts, uploads and exports reads it.
     # Then the canonical boundary agrees with TypeScript.
     if case.valid:

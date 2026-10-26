@@ -67,6 +67,8 @@ Import accepts at most 64 selected files totalling 16 MB, with bounded ZIP expan
 
 Primitives live in `src/components/contour/`, with the same names as the collector's `mobile/src/ui/`. When one side gains a primitive, give the other the same one. `/dev/contour` (dev and preview builds only) shows every primitive in Day and Dusk.
 
+The text fields (`TextInput`, `PasswordInput`, `CodeInput`, `Textarea`) are read-only, and a `Button` with `type="submit"` is disabled, until the page has hydrated (`useHydrated`). React overwrites a controlled textarea when it hydrates and loses text typed into an input before then, and a Save pressed early posts the form natively. `e2e/hydration.spec.ts` holds the page's scripts, types, and checks that nothing is accepted until they are released. `buttonClasses` lives in its own module (`buttonClasses.ts`) so server components can import the class function without importing the client `Button`.
+
 ## Public policy pages
 
 `/privacy` and `/privacy/delete-data` are the privacy policy and data deletion pages for the native collector, for its Google Play listing. They live in `src/app/(legal)/`, carry their own stylesheet because they follow the visitor's light or dark system setting, and are prerendered as static pages. Every statement was checked against the mobile, backend and database code; update the pages before the app collects anything new.

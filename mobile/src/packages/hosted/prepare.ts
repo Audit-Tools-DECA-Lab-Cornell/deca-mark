@@ -1,5 +1,6 @@
-import { type FormDefinition, parseFormDefinition } from "../../forms/definition";
+import type { FormDefinition } from "../../forms/definition";
 import { PackageArchiveError, readArchive } from "./archive";
+import { cachedForm } from "./form-upgrade";
 import { packageCamera } from "./package-camera";
 import type { FormVersion, HostedSite, StoredPackage } from "./schemas";
 import { historicalForm, verifyBoundIdentity, verifyBoundZones } from "./verify-bound";
@@ -65,6 +66,7 @@ export async function preparePackage(
     manifest: contents.manifest,
     layers: contents.layers,
     forms: { play: play.definition, inventory: inventory?.definition ?? null },
+    formSchemaVersions: { play: play.schema_version, inventory: inventory?.schema_version ?? null },
   };
 }
 export function storedForms(stored: StoredPackage): {
@@ -72,7 +74,9 @@ export function storedForms(stored: StoredPackage): {
   readonly inventory: FormDefinition | null;
 } {
   return {
-    play: parseFormDefinition(stored.forms.play),
-    inventory: stored.forms.inventory ? parseFormDefinition(stored.forms.inventory) : null,
+    play: cachedForm(stored.formSchemaVersions?.play, stored.forms.play),
+    inventory: stored.forms.inventory
+      ? cachedForm(stored.formSchemaVersions?.inventory ?? undefined, stored.forms.inventory)
+      : null,
   };
 }

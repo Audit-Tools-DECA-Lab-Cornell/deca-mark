@@ -2,10 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Annotated, ClassVar, Literal, Self
+import math
+from typing import Annotated, ClassVar, Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator, model_validator
 from pydantic.alias_generators import to_camel
+
+from fieldmaps_api.domain.form_temporal import valid_time_zone
+
+FORM_SCHEMA_VERSION: Final = 2
+MAX_SAFE_INTEGER: Final = 9_007_199_254_740_991
+
+
+def finite_json_number(value: float) -> bool:
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
+
 
 NonEmpty = Annotated[str, Field(min_length=1)]
 
@@ -52,6 +66,21 @@ class DynamicFrom(ContractModel):
     sets: dict[str, OptionSet]
 
 
+class DateTimeConfig(ContractModel):
+    mode: Literal["date", "time", "dateTime"]
+    date_format: Literal["iso", "monthFirst", "dayFirst"] = "iso"
+    time_format: Literal["12h", "24h"] = "24h"
+    time_zone: NonEmpty
+
+    @field_validator("time_zone")
+    @classmethod
+    def iana_time_zone(cls, value: str) -> str:
+        if not valid_time_zone(value):
+            message = "timeZone must name a valid IANA time zone"
+            raise ValueError(message)
+        return value
+
+
 class Question(ContractModel):
     id: NonEmpty
     code: NonEmpty
@@ -59,7 +88,11 @@ class Question(ContractModel):
     act: Literal["Child", "Social", "Play", "Setting", "Climate", "Inventory", "Record"]
     label: NonEmpty
     hint: NonEmpty | None = None
-    kind: Literal["one", "many", "text", "number"]
+    kind: Literal["one", "many", "text", "number", "dateTime"]
+    role: Literal["observer"] | None = None
+    number_mode: Literal["integer", "decimal"] | None = None
+    value_source: Literal["manual", "accountId", "observerCode", "captureTime"] | None = None
+    date_time: DateTimeConfig | None = None
     options: list[Option] = Field(default_factory=list[Option])
     columns: Annotated[int, Field(ge=1, le=4)] = 1
     required: bool = False
@@ -69,8 +102,8 @@ class Question(ContractModel):
     placeholder: NonEmpty | None = None
     rows: Annotated[int, Field(ge=1, le=8)] | None = None
     max_length: Annotated[int, Field(ge=1, le=9007199254740991)] | None = None
-    min: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)] | None = None
-    max: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)] | None = None
+    min: Annotated[int | float, Field(allow_inf_nan=False)] | None = None
+    max: Annotated[int | float, Field(allow_inf_nan=False)] | None = None
     source: NonEmpty
     protocol_flag: NonEmpty | None = None
     options_pending: NonEmpty | None = None
@@ -81,6 +114,14 @@ class Question(ContractModel):
         # JSON has one number type: 1.0 must parse like 1, without coercing strings/bools.
         if isinstance(value, float) and value.is_integer():
             return int(value)
+        return value
+
+    @field_validator("min", "max")
+    @classmethod
+    def finite_bounds(cls, value: float | None) -> int | float | None:
+        if value is not None and not finite_json_number(value):
+            message = "Numeric bounds must be finite JSON numbers"
+            raise ValueError(message)
         return value
 
     @model_validator(mode="after")
@@ -106,6 +147,14 @@ class CanonicalDefinition(ContractModel):
     source: NonEmpty
     status: Literal["draft", "published"]
     inclusion: NonEmpty
+    column_naming: Literal["questionId"] | None = None
     known_export_collisions: list[str] = Field(default_factory=list[str])
     protocol_notes: list[ProtocolNote] = Field(default_factory=list[ProtocolNote])
     questions: Annotated[list[Question], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def marker_not_null(self) -> Self:
+        if "column_naming" in self.model_fields_set and self.column_naming is None:
+            message = "columnNaming must be omitted rather than null"
+            raise ValueError(message)
+        return self

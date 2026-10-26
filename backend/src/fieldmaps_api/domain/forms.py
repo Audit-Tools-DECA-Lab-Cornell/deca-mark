@@ -1,12 +1,16 @@
 """Canonical validation and compatibility with immutable legacy field definitions."""
 
-import math
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self, assert_never
 
 from pydantic import Discriminator, JsonValue, Tag, model_validator
 
-from fieldmaps_api.domain.form_definition import CanonicalDefinition, Question
+from fieldmaps_api.domain.form_definition import (
+    MAX_SAFE_INTEGER,
+    CanonicalDefinition,
+    Question,
+    finite_json_number,
+)
 from fieldmaps_api.domain.form_engine import (
     Answers,
     is_answered,
@@ -19,6 +23,7 @@ from fieldmaps_api.domain.form_references import (
     inverted_bounds,
     structural_problems,
 )
+from fieldmaps_api.domain.form_temporal import valid_temporal
 from fieldmaps_api.domain.legacy_forms import (
     AnswerError,
 )
@@ -92,7 +97,9 @@ class ReviewProblem:
     reason: Reason
 
 
-def answer_problem(question: Question, value: JsonValue) -> Reason | None:
+def answer_problem(  # noqa: PLR0911 - one branch per canonical question kind
+    question: Question, value: JsonValue
+) -> Reason | None:
     match question.kind:
         case "number":
             return number_problem(question, value)
@@ -104,6 +111,8 @@ def answer_problem(question: Question, value: JsonValue) -> Reason | None:
                 if question.max_length is not None and len(value) > question.max_length
                 else None
             )
+        case "dateTime":
+            return temporal_problem(question, value)
         case "one":
             if not isinstance(value, str):
                 return "type"
@@ -115,11 +124,27 @@ def answer_problem(question: Question, value: JsonValue) -> Reason | None:
             assert_never(question.kind)
 
 
+def temporal_problem(question: Question, value: JsonValue) -> Reason | None:
+    if not isinstance(value, str):
+        return "type"
+    if not trim_text(value):
+        return None
+    config = question.date_time
+    return None if config is not None and valid_temporal(config.mode, value) else "range"
+
+
 def number_problem(question: Question, value: JsonValue) -> Reason | None:
     if not isinstance(value, int | float) or isinstance(value, bool):
         return "type"
     if (
-        (isinstance(value, float) and (not math.isfinite(value) or not value.is_integer()))
+        (not finite_json_number(value))
+        or (
+            question.number_mode != "decimal"
+            and (
+                abs(value) > MAX_SAFE_INTEGER
+                or (isinstance(value, float) and not value.is_integer())
+            )
+        )
         or (question.min is not None and value < question.min)
         or (question.max is not None and value > question.max)
     ):
@@ -140,14 +165,21 @@ def review_problems(form: StoredCanonicalDefinition, answers: Answers) -> list[R
     problems: list[ReviewProblem] = []
     for question in visible_questions(form, answers):
         if question.id not in answers:
-            if question.required:
+            if question.required or question.value_source in {
+                "accountId",
+                "observerCode",
+                "captureTime",
+            }:
                 problems.append(ReviewProblem(question.id, "required"))
             continue
         value = answers[question.id]
         reason = answer_problem(question, value)
         if reason:
             problems.append(ReviewProblem(question.id, reason))
-        elif question.required and not is_answered(value):
+        elif (
+            question.required
+            or question.value_source in {"accountId", "observerCode", "captureTime"}
+        ) and not is_answered(value):
             problems.append(ReviewProblem(question.id, "required"))
     return problems
 

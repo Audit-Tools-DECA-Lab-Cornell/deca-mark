@@ -98,6 +98,7 @@ describe("Exact bound package preparation", () => {
       code === inventory.form_version
         ? {
             code,
+            schema_version: 2,
             version_id: inventory.form_version_id,
             state: "retired" as const,
             form_code: "inventory",

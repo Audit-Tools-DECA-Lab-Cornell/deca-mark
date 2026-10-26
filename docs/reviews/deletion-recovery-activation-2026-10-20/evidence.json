@@ -1,0 +1,216 @@
+{
+  "assessed_at": "2026-10-20T22:32:17Z",
+  "timezone": "America/New_York",
+  "approved_source": "0279fd38f732eb3167fb174b9c2c19e177c273b1",
+  "live_deployment": {
+    "id": "dep-dbbun21srm7s73d74ahg",
+    "status": "live",
+    "finished_at": "2026-10-20T22:31:08.970033Z",
+    "operator_triggered": true
+  },
+  "observed_startup": {
+    "instance": "srv-dapctm7f3r2c73c9mi50-dhfpk",
+    "at": "2026-10-20T22:31:02.885348975Z",
+    "message": "account_deletion_recovery_configured enabled=True"
+  },
+  "screenshot_confirmation": {
+    "config_selector": "/etc/secrets/decamark-runtime.json",
+    "secret_file_names": [
+      "database-password",
+      "decamark-runtime.json",
+      "supabase-secret-key"
+    ],
+    "contents": "not inspected"
+  },
+  "health": [
+    {
+      "url": "https://field-maps.onrender.com/health",
+      "status": 200,
+      "body": "{\"status\":\"running\"}"
+    },
+    {
+      "url": "https://field-maps.onrender.com/ready",
+      "status": 200,
+      "body": "{\"status\":\"ready\"}"
+    },
+    {
+      "url": "https://field-maps.onrender.com/openapi.json",
+      "status": 200,
+      "matches_contract": true,
+      "sha256": "d8a2425704425623356158a160b0b1f2e5b15eaa67c8161e0af252114d5eefcf"
+    }
+  ],
+  "catalog": [
+    {
+      "catalog": {
+        "sampled_at": "2026-10-20T22:31:45.616626+00:00",
+        "queue_tables": null,
+        "runtime_role": {
+          "role": "fieldmaps_api",
+          "login": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        "form_revision": {
+          "column": true,
+          "conditional_publish": true,
+          "unconditional_publish": false
+        },
+        "deletion_table": {
+          "rls": true,
+          "owner": "postgres",
+          "force_rls": false
+        },
+        "deletion_grants": [
+          {
+            "role": "anon",
+            "delete": false,
+            "insert": false,
+            "select": false,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": null,
+            "update_requested_at": false
+          },
+          {
+            "role": "authenticated",
+            "delete": false,
+            "insert": false,
+            "select": false,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": null,
+            "update_requested_at": false
+          },
+          {
+            "role": "service_role",
+            "delete": false,
+            "insert": false,
+            "select": false,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": null,
+            "update_requested_at": false
+          },
+          {
+            "role": "fieldmaps_api",
+            "delete": true,
+            "insert": false,
+            "select": true,
+            "update_table": false,
+            "enqueue_execute": false,
+            "update_identity": false,
+            "metadata_updates": [
+              "attempts",
+              "last_attempt_at",
+              "last_error",
+              "lease_token",
+              "lease_until",
+              "next_attempt_at"
+            ],
+            "update_requested_at": false
+          }
+        ],
+        "enqueue_trigger": [
+          {
+            "name": "enqueue_account_deletion",
+            "enabled": "O",
+            "definition": "CREATE TRIGGER enqueue_account_deletion AFTER INSERT OR UPDATE OF deleted_at ON fieldmaps.profiles FOR EACH ROW EXECUTE FUNCTION fieldmaps_private.enqueue_account_deletion()"
+          }
+        ],
+        "enqueue_function": {
+          "config": [
+            "search_path=\"\""
+          ],
+          "source": "\nBEGIN\n    IF NEW.deleted_at IS NOT NULL THEN\n        INSERT INTO fieldmaps_private.account_deletions(user_id,requested_at)\n        VALUES (NEW.user_id,NEW.deleted_at) ON CONFLICT (user_id) DO NOTHING;\n    END IF;\n    RETURN NEW;\nEND;\n",
+          "security_definer": true
+        },
+        "deletion_policies": [
+          {
+            "name": "backend_deletion",
+            "qual": "true",
+            "check": "true"
+          }
+        ],
+        "observation_policy": {
+          "name": "assigned_observations",
+          "qual": "((project_id IN ( SELECT fieldmaps_private.my_project_ids() AS my_project_ids)) AND (EXISTS ( SELECT\n   FROM fieldmaps.projects p\n  WHERE ((p.id = observations.project_id) AND ((observations.created_by = fieldmaps.request_user_id()) OR ((NOT p.is_training) AND fieldmaps_private.has_project_role(p.id, ARRAY['manager'::text, 'viewer'::text])))))))"
+        },
+        "observation_columns": [
+          "id",
+          "qgis_id",
+          "organization_id",
+          "project_id",
+          "site_id",
+          "form_version_id",
+          "observer_code",
+          "observed_at",
+          "received_at",
+          "updated_at",
+          "revision",
+          "deleted_at",
+          "geom",
+          "answers",
+          "created_by",
+          "upload_hash",
+          "zone_code",
+          "round_type",
+          "first_round",
+          "placement_source",
+          "package_id",
+          "zone_id"
+        ]
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "preactivation": {
+        "sampled_at": "2026-10-20T22:31:49.564958+00:00",
+        "recovery_rls": true,
+        "runtime_role": {
+          "bypassrls": false,
+          "superuser": false
+        },
+        "runtime_grants": {
+          "delete": true,
+          "insert": false,
+          "select": true,
+          "enqueue_execute": false,
+          "update_identity": false
+        },
+        "pending_deletions": 0,
+        "migration_recorded": true,
+        "retained_tombstones": 0
+      }
+    }
+  ],
+  "error_scan": {
+    "hasMore": false,
+    "logs": [],
+    "nextEndTime": "2026-10-20T22:31:50.467877404Z",
+    "nextStartTime": "2026-10-20T22:30:32Z"
+  },
+  "preview_mode": "automatic",
+  "remaining": {
+    "preview_mode_action": "Set existing service PR previews to Manual; not manageable through connected tools",
+    "admin_key_readability_and_permission": "not established: no claimed work or approved disposable-account test",
+    "real_provider_acceptance": "not performed; explicit account allowlist still needed",
+    "isolated_failure_acceptance": "not performed",
+    "monitoring_owner": "unassigned deployment/Auth operator",
+    "device_census": "unassigned collection lead; incomplete",
+    "unsatisfiable_queues": "unknown; decisions unassigned research/data owner"
+  },
+  "assistant_actions": {
+    "production_mutations": [],
+    "duplicate_deploys_triggered": 0,
+    "credentials_read": false,
+    "accounts_deleted": false,
+    "sql": "SELECT only in BEGIN READ ONLY / ROLLBACK",
+    "application_schema_readers_changed": false
+  },
+  "active_deca_preview_services_in_listing": 0
+}

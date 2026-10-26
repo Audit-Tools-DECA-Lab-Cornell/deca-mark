@@ -26,7 +26,7 @@ const DESCRIPTION: Record<Exclude<TemplateId, "blank">, string> = {
 const TITLE: Record<TemplateId, string> = {
 	"behaviour-mapping": "Behaviour mapping",
 	"zone-inventory": "Zone inventory",
-	blank: "Blank"
+	blank: "Custom"
 };
 
 export function listTemplates(): TemplateInfo[] {
@@ -35,7 +35,7 @@ export function listTemplates(): TemplateInfo[] {
 			? {
 					id,
 					title: TITLE[id],
-					description: "One free-text notes question to build from.",
+					description: "Create a custom form with your own questions.",
 					questions: 1
 				}
 			: { id, title: TITLE[id], description: DESCRIPTION[id], questions: SHIPPED[id].questions.length }

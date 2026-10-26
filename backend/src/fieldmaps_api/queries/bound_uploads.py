@@ -6,7 +6,7 @@ TARGET: Final = text("""
 SELECT json_build_object('organization_id', p.organization_id, 'site_id', p.site_id,
   'ready', (p.state = 'ready' AND p.manifest->>'format' = '1') IS TRUE,
   'zone_present', z.zone_id IS NOT NULL, 'form_version_id', f.id,
-  'form_version', f.code, 'definition', f.definition,
+  'form_version', f.code, 'schema_version', f.schema_version, 'definition', f.definition,
   'point_covered', CASE WHEN CAST(:longitude AS double precision) IS NULL THEN true ELSE
     coalesce(extensions.ST_Covers(z.geom, fieldmaps.make_point(:longitude, :latitude)), false)
   END)::text

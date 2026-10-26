@@ -34,6 +34,7 @@ export const errorCopy = {
 	archive_unavailable: "This map package is unavailable. Ask the project manager to prepare it again.",
 	validation_failed: "Check the values and try again.",
 	unsupported_operation: "This action is not available yet.",
+	unknown_schema_version: "Update DECA Mark to use this form",
 	rate_limited: "Too many tries. Wait a minute and try again.",
 	internal: "DECA Mark could not finish this. Try again in a few minutes.",
 	storage_unavailable: "DECA Mark cannot be reached right now. Try again in a few minutes."
@@ -258,6 +259,7 @@ export function parseApiError(status: number, body: unknown, headers?: HeaderSou
 		case "archive_unavailable":
 		case "validation_failed":
 		case "unsupported_operation":
+		case "unknown_schema_version":
 			return new ApiError(code, "rejected", options);
 		default: {
 			const unreachable: never = code;
@@ -283,6 +285,8 @@ export async function readApiError(response: Response): Promise<ApiError> {
  */
 export function apiRequestError(error: unknown): ApiError {
 	if (error instanceof ApiError) return error;
+	if (typeof error === "object" && error !== null && "code" in error && error.code === "unknown_schema_version")
+		return new ApiError("unknown_schema_version", "rejected");
 	if (error instanceof SyntaxError) return new ApiError("unknown", "retry");
 	if (error instanceof TypeError || error instanceof DOMException)
 		return new ApiError("storage_unavailable", "retry");

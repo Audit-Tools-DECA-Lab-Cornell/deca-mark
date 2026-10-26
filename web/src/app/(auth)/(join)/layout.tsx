@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { AuthSplit } from "@/components/shell/AuthSplit";
 import { PublicHeader } from "@/components/shell/PublicHeader";
 import { AccountChip } from "@/features/auth/AccountChip";
-import { AuthHero } from "@/features/auth/AuthHero";
 import { readViewer } from "@/features/auth/viewer";
 
 /**
@@ -17,7 +16,7 @@ export default async function JoinLayout({ children }: Readonly<{ children: Reac
 		<>
 			<PublicHeader brandMarkOnlyOnPhones>{account ? <AccountChip account={account} /> : undefined}</PublicHeader>
 			<main id="main" tabIndex={-1} className="flex flex-1 flex-col">
-				<AuthSplit hero={<AuthHero />}>{children}</AuthSplit>
+				<AuthSplit className="lg:justify-center">{children}</AuthSplit>
 			</main>
 		</>
 	);

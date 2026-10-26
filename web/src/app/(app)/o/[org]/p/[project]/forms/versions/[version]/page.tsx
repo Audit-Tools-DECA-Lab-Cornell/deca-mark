@@ -11,7 +11,16 @@ import { LegacyVersionScreen } from "@/features/forms/LegacyVersionScreen";
 import { baseVersionOf, formRows } from "@/features/forms/model";
 import type { RawDefinition } from "@/features/forms/raw";
 import { projectHref } from "@/features/shell/navigation";
-import { getFormVersion, getSitePlan, listForms, listSites, resolveProject } from "@/lib/api/workspace";
+import {
+	getFormVersion,
+	getMe,
+	getProject,
+	getSitePlan,
+	listForms,
+	listSites,
+	resolveProject
+} from "@/lib/api/workspace";
+import { isUnknownSchemaVersion, parseServedDefinition } from "@/lib/forms";
 import { readDefinition } from "@/lib/observations/answers";
 import { projectAbilities } from "@/lib/workspace/access";
 import { isNotFound, settle } from "@/lib/workspace/result";
@@ -82,6 +91,21 @@ export default async function FormVersionPage({ params }: { params: Promise<Para
 		formName: version.form_name
 	};
 
+	try {
+		parseServedDefinition(version.schema_version, version.definition);
+	} catch (error) {
+		return (
+			<ScreenState
+				kind="error"
+				icon="file-text"
+				title={
+					isUnknownSchemaVersion(error) ? "Update DECA Mark to use this form" : "This form needs attention"
+				}
+				body="The saved definition has been kept. Ask a project manager to check the form before editing it."
+			/>
+		);
+	}
+
 	if (!isCanonical(version.definition))
 		return (
 			<LegacyVersionScreen
@@ -92,7 +116,13 @@ export default async function FormVersionPage({ params }: { params: Promise<Para
 			/>
 		);
 
-	const [formList, siteList] = await Promise.all([settle(listForms(ref.id)), settle(listSites(ref.id))]);
+	const [formList, siteList, projectInfo, identity] = await Promise.all([
+		settle(listForms(ref.id)),
+		settle(listSites(ref.id)),
+		settle(getProject(ref.id)),
+		settle(getMe())
+	]);
+	if (!projectInfo.ok) return <LoadFailure failure={projectInfo.failure} what="this project's form settings" />;
 
 	// The version before this one, to mark what changed. Not being able to read it leaves the editor working.
 	let base: { code: string; definition: RawDefinition } | null = null;
@@ -113,7 +143,17 @@ export default async function FormVersionPage({ params }: { params: Promise<Para
 		siteName: "Your site",
 		zoneId: null,
 		zoneName: null,
-		mapVersion: null
+		mapVersion: null,
+		timeZone: projectInfo.data.timezone,
+		captureInstant: new Date().toISOString(),
+		...(identity.ok
+			? {
+					observer: {
+						userId: identity.data.profile.user_id,
+						code: identity.data.profile.observer_initials ?? ""
+					}
+				}
+			: {})
 	};
 	if (siteList.ok) {
 		const site = siteList.data.find(candidate => candidate.package !== null);
@@ -122,6 +162,7 @@ export default async function FormVersionPage({ params }: { params: Promise<Para
 			const drawn = plan.ok ? plan.data : null;
 			const zone = drawn?.zones[0];
 			collector = {
+				...collector,
 				plan: drawn,
 				siteName: site.name,
 				zoneId: zone?.id ?? null,

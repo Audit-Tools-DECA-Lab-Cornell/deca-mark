@@ -65,6 +65,7 @@ import {
   useTheme,
 } from "../../ui";
 import { type AimStore, useAim } from "./aim-store";
+import { controlColumns, LAYERS_MENU_WIDTH, layersMenuBox, MAP_CONTROL } from "./map-controls";
 import { AimReticle, markColours, PLACED_BOX, PlacedMark } from "./pin";
 import { nearEdgeHint, type PlacementState, placementState, zoneTap } from "./placement";
 
@@ -251,11 +252,14 @@ function mapStyles(t: Theme) {
       gap: t.space.s2,
       alignItems: "flex-end",
     },
+    // In a short frame the controls take two columns: zoom and framing at the edge, the rest beside it.
+    controlsPair: { flexDirection: "row-reverse", alignItems: "flex-start" },
+    controlColumn: { gap: t.space.s2, alignItems: "flex-end" },
     menu: {
       position: "absolute",
       top: t.space.s3,
-      right: 44 + t.space.s3 + t.space.s3,
-      width: 248,
+      right: MAP_CONTROL + t.space.s3 + t.space.s3,
+      width: LAYERS_MENU_WIDTH,
       maxHeight: 340,
       borderRadius: t.radius.panel,
       backgroundColor: t.c.island,
@@ -354,6 +358,8 @@ export function CollectMap({
   const home = zone.zoom ?? DEFAULT_ZOOM;
   const [zoom, setZoom] = useState(home);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [frameHeight, setFrameHeight] = useState(0);
+  const [frameWidth, setFrameWidth] = useState(0);
   const [hidden, setHidden] = useState<readonly string[]>([]);
   const [filter, setFilter] = useState<ObservationFilter>("all");
   const [selected, setSelected] = useState<string | null>(null);
@@ -493,9 +499,76 @@ export function CollectMap({
   const bar = scaleBar(zoom, latitude);
 
   const aiming = mode === "aim";
+  const controls = [
+    <IconButton
+      key="zoom-in"
+      variant="map"
+      icon="plus"
+      label={zoom >= MAX_ZOOM ? "Zoom in, closest zoom reached" : "Zoom in"}
+      disabled={zoom >= MAX_ZOOM - 0.01}
+      onPress={() =>
+        camera.current?.zoomTo(Math.min(zoom + 1, MAX_ZOOM), { duration: motion.camera })
+      }
+    />,
+    <IconButton
+      key="zoom-out"
+      variant="map"
+      icon="minus"
+      label={zoom <= MIN_ZOOM ? "Zoom out, widest zoom reached" : "Zoom out"}
+      disabled={zoom <= MIN_ZOOM + 0.01}
+      onPress={() =>
+        camera.current?.zoomTo(Math.max(zoom - 1, MIN_ZOOM), { duration: motion.camera })
+      }
+    />,
+    <IconButton
+      key="frame-zone"
+      variant="map"
+      icon="locate-fixed"
+      label="Frame this zone"
+      onPress={fitZone}
+    />,
+    <IconButton
+      key="locate"
+      variant="map"
+      icon="navigation"
+      label={
+        me.status === "denied" || me.status === "services-off"
+          ? "Location is off. Open Settings"
+          : me.status === "off" || me.status === "unavailable"
+            ? "Show my location"
+            : aiming
+              ? "Move the cross to my location"
+              : "Centre on my location"
+      }
+      selected={me.status === "on" || me.status === "searching"}
+      onPress={locate}
+    />,
+    <IconButton
+      key="layers"
+      variant="map"
+      icon="layers"
+      label="Map layers"
+      selected={menuOpen}
+      onPress={() => setMenuOpen(!menuOpen)}
+    />,
+    <IconButton
+      key="larger"
+      variant="map"
+      icon={expanded ? "minimize" : "maximize"}
+      label={expanded ? "Show the panel" : "Make the map larger"}
+      onPress={onToggleExpanded}
+    />,
+  ];
+  const columns = controlColumns(frameHeight);
 
   return (
-    <View style={[s.frame, aiming ? s.armed : s.rest, { backgroundColor: palette.background }]}>
+    <View
+      style={[s.frame, aiming ? s.armed : s.rest, { backgroundColor: palette.background }]}
+      onLayout={(event) => {
+        setFrameHeight(event.nativeEvent.layout.height);
+        setFrameWidth(event.nativeEvent.layout.width);
+      }}
+    >
       <NativeMap
         ref={native}
         mapStyle={sitePackage.bases[base]}
@@ -759,58 +832,35 @@ export function CollectMap({
         ) : null}
       </View>
 
-      <View pointerEvents="box-none" style={s.controls}>
-        <IconButton
-          variant="map"
-          icon="plus"
-          label={zoom >= MAX_ZOOM ? "Zoom in, closest zoom reached" : "Zoom in"}
-          disabled={zoom >= MAX_ZOOM - 0.01}
-          onPress={() =>
-            camera.current?.zoomTo(Math.min(zoom + 1, MAX_ZOOM), { duration: motion.camera })
-          }
-        />
-        <IconButton
-          variant="map"
-          icon="minus"
-          label={zoom <= MIN_ZOOM ? "Zoom out, widest zoom reached" : "Zoom out"}
-          disabled={zoom <= MIN_ZOOM + 0.01}
-          onPress={() =>
-            camera.current?.zoomTo(Math.max(zoom - 1, MIN_ZOOM), { duration: motion.camera })
-          }
-        />
-        <IconButton variant="map" icon="locate-fixed" label="Frame this zone" onPress={fitZone} />
-        <IconButton
-          variant="map"
-          icon="navigation"
-          label={
-            me.status === "denied" || me.status === "services-off"
-              ? "Location is off. Open Settings"
-              : me.status === "off" || me.status === "unavailable"
-                ? "Show my location"
-                : aiming
-                  ? "Move the cross to my location"
-                  : "Centre on my location"
-          }
-          selected={me.status === "on" || me.status === "searching"}
-          onPress={locate}
-        />
-        <IconButton
-          variant="map"
-          icon="layers"
-          label="Map layers"
-          selected={menuOpen}
-          onPress={() => setMenuOpen(!menuOpen)}
-        />
-        <IconButton
-          variant="map"
-          icon={expanded ? "minimize" : "maximize"}
-          label={expanded ? "Show the panel" : "Make the map larger"}
-          onPress={onToggleExpanded}
-        />
+      <View pointerEvents="box-none" style={[s.controls, columns === 2 ? s.controlsPair : null]}>
+        {columns === 2 ? (
+          <>
+            <View pointerEvents="box-none" style={s.controlColumn}>
+              {controls.slice(0, 3)}
+            </View>
+            <View pointerEvents="box-none" style={s.controlColumn}>
+              {controls.slice(3)}
+            </View>
+          </>
+        ) : (
+          controls
+        )}
       </View>
 
       {menuOpen ? (
-        <View style={s.menu} accessibilityViewIsModal={false}>
+        <View
+          style={[
+            s.menu,
+            {
+              // Beside the controls, whatever the number of columns, and no wider or taller than the frame.
+              ...layersMenuBox(columns, frameWidth, t.space.s2, t.space.s3),
+              ...(frameHeight > 0
+                ? { maxHeight: Math.min(340, frameHeight - t.space.s3 * 2) }
+                : {}),
+            },
+          ]}
+          accessibilityViewIsModal={false}
+        >
           <ScrollView contentContainerStyle={s.menuBody}>
             <Text variant="smallStrong">Plan</Text>
             <Segmented

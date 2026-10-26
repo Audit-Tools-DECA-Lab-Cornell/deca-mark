@@ -23,7 +23,8 @@ SELECT json_build_object(
   'question_count', CASE WHEN jsonb_typeof(v.definition -> 'questions') = 'array'
     THEN jsonb_array_length(v.definition -> 'questions') ELSE 0 END,
   'created_at', v.created_at, 'published_at', v.published_at,
-  'form_id', f.id, 'form_code', f.code, 'form_name', f.name, 'definition', v.definition)::text
+  'schema_version', v.schema_version, 'form_id', f.id, 'form_code', f.code,
+  'form_name', f.name, 'definition', v.definition)::text
 FROM fieldmaps.form_versions v JOIN fieldmaps.forms f ON f.id = v.form_id
 WHERE v.project_id = :project AND v.code = :code
 """)
@@ -34,7 +35,8 @@ FROM fieldmaps.forms f WHERE f.project_id = :project AND f.code = :code
 """)
 
 LATEST_DEFINITION: Final = text("""
-SELECT v.definition::text FROM fieldmaps.form_versions v
+SELECT json_build_object('schema_version',v.schema_version,'definition',v.definition)::text
+FROM fieldmaps.form_versions v
 WHERE v.form_id = :form ORDER BY v.version DESC LIMIT 1
 """)
 
@@ -49,13 +51,15 @@ VALUES (:id, :organization, :project, :code, :name, fieldmaps.request_user_id())
 
 CREATE_DRAFT: Final = text("""
 INSERT INTO fieldmaps.form_versions
-  (id, organization_id, project_id, form_id, version, code, definition, state, created_by)
+  (id, organization_id, project_id, form_id, version, code, definition, schema_version,
+   state, created_by)
 VALUES (:id, :organization, :project, :form, :version, :code, CAST(:definition AS jsonb),
-  'draft', fieldmaps.request_user_id())
+  :schema_version, 'draft', fieldmaps.request_user_id())
 """)
 
 UPDATE_DRAFT: Final = text("""
-UPDATE fieldmaps.form_versions SET definition = CAST(:definition AS jsonb)
+UPDATE fieldmaps.form_versions
+SET definition = CAST(:definition AS jsonb), schema_version = :schema_version
 WHERE project_id = :project AND code = :code AND state = 'draft'
   AND id = :version_id AND revision = :revision
 RETURNING id
@@ -70,3 +74,10 @@ RETURNING id
 
 PUBLISH: Final = text("SELECT fieldmaps_private.publish_form_version(:project, :id, :revision)")
 RETIRE: Final = text("SELECT fieldmaps_private.retire_form_version(:project, :id)")
+
+SCHEMA_READY: Final = text("""
+SELECT pg_catalog.pg_get_expr(d.adbin,d.adrelid) = '2'
+FROM pg_catalog.pg_attrdef d
+JOIN pg_catalog.pg_attribute a ON a.attrelid=d.adrelid AND a.attnum=d.adnum
+WHERE d.adrelid='fieldmaps.form_versions'::regclass AND a.attname='schema_version'
+""")

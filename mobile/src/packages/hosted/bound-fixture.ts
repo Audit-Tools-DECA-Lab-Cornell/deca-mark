@@ -112,6 +112,7 @@ export function boundFixture(manifest: unknown = boundManifest, layers = boundLa
     archive: async () => bytes,
     sha256,
     formVersion: async (code) => ({
+      schema_version: 2,
       code,
       version_id: ids.form,
       state: "retired",

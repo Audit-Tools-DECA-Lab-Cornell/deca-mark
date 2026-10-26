@@ -1,0 +1,9 @@
+{
+  "README.md": "8a0b9073f0af1dcab9afd7139b7888a1517fadfbe8721accd3bcc8335cd7e2ff",
+  "hosted-evidence.json": "3042fd308c9d5b99c4273167518449bf1ac12198b20828e560fdf498e1200b19",
+  "isolated-auth-http.json": "400eecd84bce824dad8b57a7879970a9a1345a337a6943bda749792fa086c5d6",
+  "isolated_auth_http.py": "f72ea771bf567145102952510b29890eb859ac441652c104101ebdef2a26531f",
+  "preservation-readonly.sql": "f3bbdbc82ec4ea6e6fc8385369976a008c9c7b1dffc552139cdddade6cb06d3b",
+  "test_isolated_auth_http.py": "6805285fc93c9c20c1211bac6def04c4370ae071d8e65c8e61e3890432ad8c01",
+  "verification.json": "875f8c28e6a20b6bca1faaf66fae3bbd6b45ad44b7d3bdc09fe1d9b12a2efde6"
+}

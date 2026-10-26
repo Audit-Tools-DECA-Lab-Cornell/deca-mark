@@ -15,7 +15,6 @@ import {
   joinCodeOf,
 } from "../../../src/features/onboarding/invitation";
 import { useInvitations } from "../../../src/features/onboarding/use-invitations";
-import { useKeyboardVisible } from "../../../src/features/onboarding/use-keyboard-visible";
 import {
   announce,
   Button,
@@ -31,6 +30,7 @@ import {
   useHaptics,
   useStyles,
 } from "../../../src/ui";
+import { useKeyboardVisible } from "../../../src/ui/use-keyboard-visible";
 
 /**
  * Onboarding step 2 of 2 (mobile-30): enter the eight-character join code, see the project before

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { FORM_SCHEMA_VERSION } from "@/lib/forms";
 import type { OrgRole, ProjectRole } from "@/lib/workspace/types";
 import type { DraftZone } from "@/lib/zones/geometry";
 import { type ZoneDraft, zoneDraftSchema } from "@/lib/zones/schemas";
@@ -156,7 +157,10 @@ export function createForm(
 	body: { code: string; name: string; definition: RawDefinition }
 ): Promise<FormVersionDetail> {
 	return call(api =>
-		api.POST("/v1/projects/{project_id}/forms", { params: { path: { project_id: projectId } }, body })
+		api.POST("/v1/projects/{project_id}/forms", {
+			params: { path: { project_id: projectId } },
+			body: { ...body, schema_version: FORM_SCHEMA_VERSION }
+		})
 	);
 }
 
@@ -172,7 +176,7 @@ export function createDraft(
 	return call(api =>
 		api.POST("/v1/projects/{project_id}/forms/{form_code}/versions", {
 			params: { path: { project_id: projectId, form_code: formCode } },
-			body: definition ? { definition } : {}
+			body: { schema_version: FORM_SCHEMA_VERSION, ...(definition ? { definition } : {}) }
 		})
 	);
 }
@@ -187,7 +191,7 @@ export function saveDraft(
 	return call(api =>
 		api.PUT("/v1/projects/{project_id}/form-versions/{version_code}", {
 			params: { path: { project_id: projectId, version_code: versionCode } },
-			body: { definition },
+			body: { definition, schema_version: FORM_SCHEMA_VERSION },
 			headers: { "If-Match": etag }
 		})
 	);

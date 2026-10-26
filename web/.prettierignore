@@ -130,6 +130,7 @@ skills-lock.json
 # =============================================================================
 src/lib/forms/definition.ts
 src/lib/forms/engine.ts
+src/lib/forms/temporal.ts
 src/lib/api/schema.d.ts
 
 # =============================================================================

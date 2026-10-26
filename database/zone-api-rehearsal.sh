@@ -34,9 +34,19 @@ docker cp contracts/zones/geometry.cases.json "$zone_container:$zone_root/zone-g
 # docker cp retains restrictive checkout modes; these are public synthetic fixtures only.
 docker exec --user root "$zone_container" chmod -R a+rX "$zone_root"
 zone_psql -f "$zone_root/database/tests/zone-bootstrap.sql"
+zone_psql -c "CREATE SCHEMA IF NOT EXISTS supabase_migrations;
+CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations
+(version text PRIMARY KEY, statements text[], name text);" >/dev/null
 for zone_migration in supabase/migrations/*.sql; do
   zone_name=$(basename "$zone_migration")
-  zone_psql --single-transaction -f "$zone_root/supabase/migrations/$zone_name" >/dev/null
+  if [ "$zone_name" = '20261024090000_form_schema2.sql' ]; then
+    sh database/form-schema2.sh apply-local "$zone_container"
+  else
+    zone_psql --single-transaction -f "$zone_root/supabase/migrations/$zone_name" >/dev/null
+    zone_version=${zone_name%%_*}
+    zone_psql -c "INSERT INTO supabase_migrations.schema_migrations(version,name,statements)
+      VALUES ('$zone_version','$zone_name',ARRAY[]::text[]);" >/dev/null
+  fi
 done
 zone_psql -f "$zone_root/supabase/seed.sql"
 zone_port=$(docker port "$zone_container" 5432/tcp | sed 's/127.0.0.1://')

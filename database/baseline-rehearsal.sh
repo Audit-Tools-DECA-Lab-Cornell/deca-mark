@@ -48,9 +48,20 @@ if [ ! -f "$1" ] || [ "$(basename "$1")" != '20261012120000_current_baseline.sql
   printf '%s\n' 'Expected the current schema baseline as the first migration.' >&2
   exit 1
 fi
+baseline_psql -c "CREATE SCHEMA IF NOT EXISTS supabase_migrations;
+CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations
+(version text PRIMARY KEY, statements text[], name text);" >/dev/null
 for baseline_migration in "$@"; do
   baseline_name=$(basename "$baseline_migration")
-  baseline_psql --single-transaction -f "$baseline_root/supabase/migrations/$baseline_name" >/dev/null
+  if [ "$baseline_name" = '20261024090000_form_schema2.sql' ]; then
+    # Genuine all-row Python validation, report and history are one explicit local operation.
+    sh database/form-schema2.sh apply-local "$baseline_container"
+  else
+    baseline_psql --single-transaction -f "$baseline_root/supabase/migrations/$baseline_name" >/dev/null
+    baseline_version=${baseline_name%%_*}
+    baseline_psql -c "INSERT INTO supabase_migrations.schema_migrations(version,name,statements)
+      VALUES ('$baseline_version','$baseline_name',ARRAY[]::text[]);" >/dev/null
+  fi
 done
 baseline_psql -f "$baseline_root/supabase/seed.sql"
 if [ "$baseline_mode" = '--reset-only' ]; then

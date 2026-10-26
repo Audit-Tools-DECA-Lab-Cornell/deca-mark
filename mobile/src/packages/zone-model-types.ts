@@ -14,7 +14,7 @@ export type SiteVersions = {
   readonly installed: readonly {
     readonly packageId: string;
     readonly version: number;
-    readonly status: "verified" | "needs_redownload";
+    readonly status: "verified" | "needs_redownload" | "update_required";
     readonly bytes: number;
     readonly installedAt: string | null;
     readonly references: VersionReferences;

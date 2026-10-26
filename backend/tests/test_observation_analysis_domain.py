@@ -52,6 +52,7 @@ def snapshot(answers: dict[str, JsonValue], definition: dict[str, JsonValue]) ->
         {
             "items": [row],
             "forms": {"test-v1": definition},
+            "form_schema_versions": {"test-v1": 2},
             "historical_zones": {
                 f"{package_id}:{zone_id}": {
                     "type": "MultiPolygon",
@@ -232,6 +233,7 @@ def test_codebook_preserves_meanings_when_versions_share_a_column() -> None:
         update={
             "items": [*data.items, second],
             "forms": data.forms | {"test-v2": canonical([new])},
+            "form_schema_versions": data.form_schema_versions | {"test-v2": 2},
             "total_matching": 2,
         }
     )

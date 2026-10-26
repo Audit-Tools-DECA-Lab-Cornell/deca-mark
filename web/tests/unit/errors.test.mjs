@@ -182,3 +182,12 @@ test("a refusal names its zone problems, and a conflict the current package, len
 		"details that cannot be read say nothing"
 	);
 });
+
+test("unknown served form versions retain actionable update refusal", async () => {
+	const { UnknownSchemaVersionError } = await load("lib/forms/definition.ts");
+	const { apiRequestError } = await load("lib/api/errors.ts");
+	const refused = apiRequestError(new UnknownSchemaVersionError(3));
+	assert.equal(refused.code, "unknown_schema_version");
+	assert.equal(refused.kind, "rejected");
+	assert.equal(refused.message, "Update DECA Mark to use this form");
+});

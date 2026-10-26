@@ -52,4 +52,4 @@ export type CreatedInvitation = {
 
 export type InviteResult =
 	| { status: "done"; invitation: CreatedInvitation }
-	| { status: "failed"; message: string; fields?: Record<string, string> };
+	| { status: "failed"; message: string; definite?: boolean; fields?: Record<string, string> };

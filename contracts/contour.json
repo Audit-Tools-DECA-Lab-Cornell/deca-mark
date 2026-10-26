@@ -843,19 +843,19 @@
         "label": "Manager",
         "icon": "shield-check",
         "tone": "ink",
-        "allows": "Manage forms, maps, team and publication"
+        "allows": "Manages the team, sites, map packages, forms and settings. Can review and export data and reports."
       },
       "observer": {
         "label": "Observer",
         "icon": "crosshair",
         "tone": "ink",
-        "allows": "Collect observations in the native app"
+        "allows": "Collects observations in the DECA Mark app. Cannot make changes. Cannot review data or reports."
       },
       "viewer": {
         "label": "Viewer",
         "icon": "eye",
         "tone": "ink",
-        "allows": "Read data and reports; export the permitted scope"
+        "allows": "Can review observation data and read reports. Cannot make changes."
       },
       "practice": {
         "label": "Practice",

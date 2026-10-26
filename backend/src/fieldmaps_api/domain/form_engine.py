@@ -104,7 +104,7 @@ def retain_value(question: Question, value: JsonValue) -> JsonValue:
     match question.kind:
         case "number":
             return value if isinstance(value, int | float) and not isinstance(value, bool) else None
-        case "text":
+        case "text" | "dateTime":
             return value if isinstance(value, str) and trim_text(value) else None
         case "one":
             codes = {option.code for option in question.options}

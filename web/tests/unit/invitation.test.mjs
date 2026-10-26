@@ -259,3 +259,21 @@ test("the Android link is used only when it is an https address", () => {
 	assert.equal(androidAppUrl("not a url"), null);
 	assert.equal(androidAppUrl("https://user:pass@play.example/app"), null);
 });
+
+test("a join refusal with no recipient evidence remains invalid and recoverable", () => {
+	// Given the generic backend refusal that also covers the wrong email address.
+	const source = rejected("invitation_invalid", { status: 404 });
+	// When it is presented, no membership is inferred.
+	const problem = inviteProblem(source, { step: "redeem", credential: "token" });
+	assert.equal(problem.kind, "invalid");
+	assert.equal(problem.path, undefined);
+});
+
+test("a join code survives account switching within the same tab", async () => {
+	const { rememberCode, recalledCode, forgetCode } = await load("features/auth/invitation.ts");
+	const store = memory();
+	assert.equal(rememberCode("K7QD2MXA", store), true);
+	assert.equal(recalledCode(store), "K7QD2MXA");
+	forgetCode(store);
+	assert.equal(recalledCode(store), undefined);
+});

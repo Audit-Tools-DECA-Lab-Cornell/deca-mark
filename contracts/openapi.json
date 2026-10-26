@@ -7,13 +7,9 @@
             "type": "string"
           },
           {
-            "maximum": 9007199254740991.0,
-            "minimum": -9007199254740991.0,
             "type": "integer"
           },
           {
-            "maximum": 9007199254740991.0,
-            "minimum": -9007199254740991.0,
             "type": "number"
           },
           {
@@ -525,6 +521,10 @@
               }
             ],
             "title": "Definition"
+          },
+          "schema_version": {
+            "$ref": "#/components/schemas/JsonValue",
+            "default": 2
           }
         },
         "title": "DraftCreate",
@@ -729,6 +729,10 @@
             },
             "title": "Definition",
             "type": "object"
+          },
+          "schema_version": {
+            "$ref": "#/components/schemas/JsonValue",
+            "default": 2
           }
         },
         "required": [
@@ -755,6 +759,7 @@
           "archive_unavailable",
           "validation_failed",
           "unsupported_operation",
+          "unknown_schema_version",
           "rate_limited",
           "internal",
           "storage_unavailable",
@@ -969,6 +974,10 @@
           },
           "name": {
             "$ref": "#/components/schemas/Name"
+          },
+          "schema_version": {
+            "$ref": "#/components/schemas/JsonValue",
+            "default": 2
           }
         },
         "required": [
@@ -1074,6 +1083,10 @@
             "title": "Revision",
             "type": "integer"
           },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
           "state": {
             "$ref": "#/components/schemas/VersionState"
           },
@@ -1111,6 +1124,7 @@
           "form_id",
           "form_code",
           "form_name",
+          "schema_version",
           "definition",
           "etag"
         ],
@@ -1460,6 +1474,10 @@
           "round_type": {
             "$ref": "#/components/schemas/RoundType"
           },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
           "site_code": {
             "title": "Site Code",
             "type": "string"
@@ -1519,6 +1537,7 @@
           "spatial_support",
           "geometry",
           "display_anchor",
+          "schema_version",
           "definition"
         ],
         "title": "HistoricalObservationDetail",
@@ -2272,7 +2291,7 @@
             "title": "Email"
           },
           "expires_in_days": {
-            "default": 7,
+            "default": 14,
             "maximum": 365.0,
             "minimum": 1.0,
             "title": "Expires In Days",
@@ -3273,7 +3292,7 @@
             "title": "Email"
           },
           "expires_in_days": {
-            "default": 7,
+            "default": 14,
             "maximum": 365.0,
             "minimum": 1.0,
             "title": "Expires In Days",

@@ -1,0 +1,67 @@
+[
+  {
+    "id": "10000000-0000-4000-8000-000000000004",
+    "code": "shell-v1",
+    "state": "published",
+    "observations": 0,
+    "packages": 0,
+    "definition_sha256": "d4590dc6b91b93f886bf58221f315be62d9ce9cf51857a6bec67d11d383cdb4c",
+    "stored_parse": "pass",
+    "stored_model": "FormDefinition"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000104",
+    "code": "training-v1",
+    "state": "published",
+    "observations": 0,
+    "packages": 0,
+    "definition_sha256": "deef59a793db8d975bdb08dbe04d517e2cf8fc343023e348f18608acea7b3995",
+    "stored_parse": "pass",
+    "stored_model": "StoredCanonicalDefinition",
+    "authoring_parse": "pass"
+  },
+  {
+    "id": "48451e7d-bbe1-515a-993a-7ae6765fa376",
+    "code": "janet-inventory-v1",
+    "state": "published",
+    "observations": 0,
+    "packages": 3,
+    "definition_sha256": "07ad3af9d4bbb14f4878a4774a6c679f44b516f232c91eff1b14e05c4d190153",
+    "stored_parse": "pass",
+    "stored_model": "StoredCanonicalDefinition",
+    "authoring_parse": "pass"
+  },
+  {
+    "id": "595976de-ce4d-4d46-9910-bc4adc5ee2e8",
+    "code": "synthetic-inventory-v1",
+    "state": "published",
+    "observations": 0,
+    "packages": 0,
+    "definition_sha256": "31ff3d6c6d489bc9c308fc18c3d0b7bb8922d883183405812b072aaad889a5a9",
+    "stored_parse": "pass",
+    "stored_model": "StoredCanonicalDefinition",
+    "authoring_parse": "pass"
+  },
+  {
+    "id": "76718b58-a33a-4dcc-b2a9-89aa51467141",
+    "code": "synthetic-point-v1",
+    "state": "published",
+    "observations": 0,
+    "packages": 0,
+    "definition_sha256": "301814655a6dd8d5a9e4c249aa6b64430349070a2627325ca54e62cae0a28fca",
+    "stored_parse": "pass",
+    "stored_model": "StoredCanonicalDefinition",
+    "authoring_parse": "pass"
+  },
+  {
+    "id": "ccc1d17a-ce0e-55ca-9023-0ef2725ea8e2",
+    "code": "janet-test-v1",
+    "state": "published",
+    "observations": 72,
+    "packages": 3,
+    "definition_sha256": "dcf7df681f0a161a3d4f4be4e0488890fd1874c07f3593dd5fa645d1583067b0",
+    "stored_parse": "pass",
+    "stored_model": "StoredCanonicalDefinition",
+    "authoring_parse": "pass"
+  }
+]

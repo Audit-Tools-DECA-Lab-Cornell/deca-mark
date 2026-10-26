@@ -124,7 +124,7 @@ describe("Unfinished observations", () => {
         .run("local", draft.id, draft.updatedAt, JSON.stringify({ answers: "not a record" }));
       // When recovery runs.
       // Then it declines resume but preserves the original answers for recovery.
-      expect(await readDraft(adapter(database), "local")).toBeNull();
+      await expect(readDraft(adapter(database), "local")).rejects.toThrow(/retained/);
       expect(database.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
         total: 1,
       });
@@ -150,7 +150,7 @@ describe("Unfinished observations", () => {
         );
       // When that account opens the app.
       // Then the draft is refused and preserved, so one observer's answers cannot change hands.
-      expect(await readDraft(adapter(database), "account-b")).toBeNull();
+      await expect(readDraft(adapter(database), "account-b")).rejects.toThrow(/retained/);
       expect(database.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
         total: 1,
       });

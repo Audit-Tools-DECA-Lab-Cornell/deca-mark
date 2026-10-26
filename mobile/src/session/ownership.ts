@@ -1,4 +1,5 @@
 import type { PackageBinding } from "../domain/package-binding";
+import type { CaptureContext } from "../forms/capture";
 /**
  * An observation belongs to the account and the site package that started it.
  *
@@ -10,6 +11,7 @@ import type { PackageBinding } from "../domain/package-binding";
 
 export type ObservationIdentity = {
   readonly binding?: PackageBinding;
+  readonly capture?: CaptureContext;
   readonly id: string;
   readonly startedAt: string;
   /** The account scope key in force when the observation was started. */

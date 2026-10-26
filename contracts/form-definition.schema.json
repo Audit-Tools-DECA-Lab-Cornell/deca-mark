@@ -2,6 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "columnNaming": {
+      "type": "string",
+      "const": "questionId"
+    },
     "version": {
       "type": "string",
       "minLength": 1
@@ -110,7 +114,66 @@
               "one",
               "many",
               "text",
-              "number"
+              "number",
+              "dateTime"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "const": "observer"
+          },
+          "numberMode": {
+            "type": "string",
+            "enum": [
+              "integer",
+              "decimal"
+            ]
+          },
+          "valueSource": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "accountId",
+              "observerCode",
+              "captureTime"
+            ]
+          },
+          "dateTime": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "date",
+                  "time",
+                  "dateTime"
+                ]
+              },
+              "dateFormat": {
+                "default": "iso",
+                "type": "string",
+                "enum": [
+                  "iso",
+                  "monthFirst",
+                  "dayFirst"
+                ]
+              },
+              "timeFormat": {
+                "default": "24h",
+                "type": "string",
+                "enum": [
+                  "12h",
+                  "24h"
+                ]
+              },
+              "timeZone": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "mode",
+              "timeZone"
             ]
           },
           "options": {
@@ -228,14 +291,10 @@
             "maximum": 9007199254740991
           },
           "min": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
+            "type": "number"
           },
           "max": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
+            "type": "number"
           },
           "source": {
             "type": "string",

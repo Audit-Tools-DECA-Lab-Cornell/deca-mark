@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fieldmaps_api.domain.observation_filters import decode_cursor, encode_cursor
 from fieldmaps_api.errors import NotFoundError
+from fieldmaps_api.form_schema_version import require_current_schema
 from fieldmaps_api.observation_analysis_schemas import (
     HistoricalObservationDetail,
     ObservationFilters,
@@ -45,6 +46,7 @@ async def detail(
     if result is None:
         message = "Observation not found"
         raise NotFoundError(message)
+    require_current_schema(result.schema_version)
     return result
 
 

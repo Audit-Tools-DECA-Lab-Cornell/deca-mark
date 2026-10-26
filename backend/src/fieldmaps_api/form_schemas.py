@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, JsonValue, computed_field
 
+from fieldmaps_api.domain.form_definition import FORM_SCHEMA_VERSION
 from fieldmaps_api.form_preconditions import form_etag
 from fieldmaps_api.tenancy_schemas import Input, Name, Slug
 
@@ -45,6 +46,7 @@ class FormVersionDetail(FormVersionSummary):
     form_id: UUID
     form_code: str
     form_name: str
+    schema_version: int
     definition: dict[str, JsonValue]
 
 
@@ -53,14 +55,17 @@ class FormCreate(Input):
 
     code: Slug
     name: Name
+    schema_version: JsonValue = FORM_SCHEMA_VERSION
     definition: dict[str, JsonValue]
 
 
 class DraftCreate(Input):
     """The next version of a form, as a draft: a copy of the newest version unless one is given."""
 
+    schema_version: JsonValue = FORM_SCHEMA_VERSION
     definition: dict[str, JsonValue] | None = None
 
 
 class DraftUpdate(Input):
+    schema_version: JsonValue = FORM_SCHEMA_VERSION
     definition: dict[str, JsonValue]

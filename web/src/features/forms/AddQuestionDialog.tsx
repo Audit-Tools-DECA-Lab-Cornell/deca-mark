@@ -11,15 +11,16 @@ import { TextInput } from "@/components/contour/TextInput";
 import { FORMAT_LABEL } from "./model";
 import type { QuestionKind } from "./raw";
 
+const KINDS = ["one", "many", "text", "number", "dateTime"] as const;
+
 /**
  * Add a question: its wording and its answer format. The question joins the draft and is saved with it. It
- * starts with no analysis column; choice questions start with Yes and No, which can be reworded until a
- * version with the question is published.
+ * starts with the selected response format; choice questions start with editable Yes and No options.
  */
 export function AddQuestionDialog({ onAdd }: { onAdd: (label: string, kind: QuestionKind) => void }) {
 	const [open, setOpen] = useState(false);
 	const [label, setLabel] = useState("");
-	const [kind, setKind] = useState<QuestionKind>("text");
+	const [kind, setKind] = useState<QuestionKind>("one");
 	const [error, setError] = useState<string | undefined>();
 	const labelRef = useRef<HTMLInputElement>(null);
 
@@ -39,21 +40,21 @@ export function AddQuestionDialog({ onAdd }: { onAdd: (label: string, kind: Ques
 			open={open}
 			onOpenChange={next => {
 				setOpen(next);
-				if (!next) {
+				if (next) {
 					setLabel("");
-					setKind("text");
+					setKind("one");
 					setError(undefined);
 				}
 			}}
 			title="Add a question"
-			description="It is added to this draft. Save the draft to keep it."
+			description="Question will be added to this draft. Save the draft to keep it."
 			trigger={
 				<Button variant="outline" icon="plus">
 					Add a question
 				</Button>
 			}>
 			<form onSubmit={submit} noValidate className="flex flex-col gap-6">
-				<Field label="Question label" htmlFor="add-question-label" error={error}>
+				<Field label="Question Text" htmlFor="add-question-label" error={error}>
 					<TextInput
 						ref={labelRef}
 						value={label}
@@ -65,8 +66,13 @@ export function AddQuestionDialog({ onAdd }: { onAdd: (label: string, kind: Ques
 					/>
 				</Field>
 				<Field label="Answer format" htmlFor="add-question-format">
-					<Select value={kind} onChange={event => setKind(event.target.value as QuestionKind)}>
-						{(Object.keys(FORMAT_LABEL) as QuestionKind[]).map(option => (
+					<Select
+						value={kind}
+						onChange={event => {
+							const selected = KINDS.find(candidate => candidate === event.target.value);
+							if (selected) setKind(selected);
+						}}>
+						{KINDS.map(option => (
 							<option key={option} value={option}>
 								{FORMAT_LABEL[option]}
 							</option>

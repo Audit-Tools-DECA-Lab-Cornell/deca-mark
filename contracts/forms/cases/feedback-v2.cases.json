@@ -1,0 +1,496 @@
+{
+  "formVersion": "janet-test-v1",
+  "definitions": {
+    "feedback": {
+      "version": "feedback-v2-cases",
+      "title": "Synthetic feedback contract cases",
+      "summary": "Synthetic behavior coverage only; not a research instrument.",
+      "source": "P22 synthetic contract cases",
+      "status": "draft",
+      "inclusion": "Synthetic only",
+      "columnNaming": "questionId",
+      "questions": [
+        {
+          "id": "whole",
+          "code": "whole",
+          "exportColumn": "whole",
+          "act": "Record",
+          "label": "Whole number",
+          "kind": "number",
+          "numberMode": "integer",
+          "source": "Synthetic",
+          "min": -2,
+          "max": 5
+        },
+        {
+          "id": "fraction",
+          "code": "fraction",
+          "exportColumn": "fraction",
+          "act": "Record",
+          "label": "Decimal number",
+          "kind": "number",
+          "numberMode": "decimal",
+          "source": "Synthetic",
+          "min": -2.5,
+          "max": 5.5
+        },
+        {
+          "id": "flag",
+          "code": "flag",
+          "exportColumn": "flag",
+          "act": "Record",
+          "label": "Boolean is not a choice",
+          "kind": "text",
+          "source": "Synthetic"
+        },
+        {
+          "id": "required_auto",
+          "code": "required_auto",
+          "exportColumn": "required_auto",
+          "act": "Record",
+          "label": "Automatic account",
+          "kind": "text",
+          "source": "Synthetic",
+          "required": true,
+          "valueSource": "accountId"
+        },
+        {
+          "id": "hidden_gate",
+          "code": "hidden_gate",
+          "exportColumn": "hidden_gate",
+          "act": "Record",
+          "label": "Gate",
+          "kind": "one",
+          "source": "Synthetic",
+          "options": [
+            {
+              "code": "yes",
+              "label": "Yes"
+            },
+            {
+              "code": "no",
+              "label": "No"
+            }
+          ]
+        },
+        {
+          "id": "hidden_auto",
+          "code": "hidden_auto",
+          "exportColumn": "hidden_auto",
+          "act": "Record",
+          "label": "Hidden automatic account",
+          "kind": "text",
+          "source": "Synthetic",
+          "required": true,
+          "valueSource": "accountId",
+          "dependsOn": {
+            "kind": "equals",
+            "question": "hidden_gate",
+            "option": "yes"
+          }
+        },
+        {
+          "id": "date",
+          "code": "date",
+          "exportColumn": "date",
+          "act": "Record",
+          "label": "Date",
+          "kind": "dateTime",
+          "source": "Synthetic",
+          "dateTime": {
+            "mode": "date",
+            "timeZone": "UTC"
+          }
+        },
+        {
+          "id": "time",
+          "code": "time",
+          "exportColumn": "time",
+          "act": "Record",
+          "label": "Time",
+          "kind": "dateTime",
+          "source": "Synthetic",
+          "dateTime": {
+            "mode": "time",
+            "timeZone": "UTC"
+          }
+        },
+        {
+          "id": "instant",
+          "code": "instant",
+          "exportColumn": "instant",
+          "act": "Record",
+          "label": "UTC instant",
+          "kind": "dateTime",
+          "source": "Synthetic",
+          "dateTime": {
+            "mode": "dateTime",
+            "timeZone": "America/New_York"
+          }
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "integer-accepts-negative-whole",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "whole": -2
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [
+              {
+                "id": "required_auto",
+                "reason": "required"
+              }
+            ],
+            "answers": {
+              "whole": -2
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "integer-rejects-fraction",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "whole": 1.5
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [
+              {
+                "id": "whole",
+                "reason": "range"
+              },
+              {
+                "id": "required_auto",
+                "reason": "required"
+              }
+            ],
+            "answers": {
+              "whole": 1.5
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "decimal-accepts-negative-fraction",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "fraction": -1.25,
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [],
+            "answers": {
+              "fraction": -1.25,
+              "required_auto": "acct"
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "wrong-type-including-boolean",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "whole": true,
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [
+              {
+                "id": "whole",
+                "reason": "type"
+              }
+            ],
+            "answers": {
+              "required_auto": "acct"
+            },
+            "dropped": [
+              "whole"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "automatic-required-on-manual-omission",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {},
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [
+              {
+                "id": "required_auto",
+                "reason": "required"
+              }
+            ],
+            "answers": {},
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "hidden-required-automatic-may-be-absent",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "hidden_gate": "no",
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [],
+            "answers": {
+              "hidden_gate": "no",
+              "required_auto": "acct"
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "date-real-leap-day",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "date": "2024-02-29",
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [],
+            "answers": {
+              "date": "2024-02-29",
+              "required_auto": "acct"
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "date-rejects-impossible-day",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "date": "2023-02-29",
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [
+              {
+                "id": "date",
+                "reason": "range"
+              }
+            ],
+            "answers": {
+              "date": "2023-02-29",
+              "required_auto": "acct"
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "time-rejects-impossible-hour",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "time": "24:00:00",
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [
+              {
+                "id": "time",
+                "reason": "range"
+              }
+            ],
+            "answers": {
+              "time": "24:00:00",
+              "required_auto": "acct"
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "utc-instant-accepts-z",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "instant": "2026-10-24T12:30:00Z",
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [],
+            "answers": {
+              "instant": "2026-10-24T12:30:00Z",
+              "required_auto": "acct"
+            },
+            "dropped": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "utc-instant-rejects-offset",
+      "definition": "feedback",
+      "steps": [
+        {
+          "answers": {
+            "instant": "2026-10-24T08:30:00-04:00",
+            "required_auto": "acct"
+          },
+          "expected": {
+            "visible": [
+              "whole",
+              "fraction",
+              "flag",
+              "required_auto",
+              "hidden_gate",
+              "date",
+              "time",
+              "instant"
+            ],
+            "problems": [
+              {
+                "id": "instant",
+                "reason": "range"
+              }
+            ],
+            "answers": {
+              "instant": "2026-10-24T08:30:00-04:00",
+              "required_auto": "acct"
+            },
+            "dropped": []
+          }
+        }
+      ]
+    }
+  ]
+}

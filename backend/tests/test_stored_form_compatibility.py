@@ -48,7 +48,7 @@ def test_shell_blank_text_and_historical_export_names_remain_exact() -> None:
         "people": 0,
         "notes": "",
     }
-    assert [(q.id, q.column, q.label, q.kind) for q in questions(FIELDS_ONLY)] == [
+    assert [(q.id, q.column, q.label, q.kind) for q in questions(FIELDS_ONLY, 1)] == [
         ("people", "people", "people", "integer"),
         ("notes", "notes", "notes", "text"),
     ]

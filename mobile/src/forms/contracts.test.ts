@@ -1,12 +1,15 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { formDefinitionSchema, parseFormDefinition } from "./definition";
+import { type AnswerValue, formDefinitionSchema, parseFormDefinition } from "./definition";
 import { pruneAnswers, reviewProblems, visibleQuestions } from "./engine";
 
 const contracts = new URL("../../../contracts/", import.meta.url);
 const casesDirectory = new URL("forms/cases/", contracts);
-const answers = z.record(z.string(), z.union([z.string(), z.number(), z.array(z.string())]));
+const answers = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]),
+);
 const suiteSchema = z.object({
   formVersion: z.string(),
   definitions: z.record(z.string(), z.unknown()),
@@ -52,10 +55,11 @@ for (const filename of files) {
           scenario.definition === undefined ? canonical : suite.definitions[scenario.definition];
         const form = parseFormDefinition(definition);
         for (const step of scenario.steps) {
+          const inputAnswers = step.answers as unknown as Readonly<Record<string, AnswerValue>>;
           // When the engine evaluates this answer snapshot.
-          const visible = visibleQuestions(form, step.answers);
-          const problems = reviewProblems(form, step.answers);
-          const pruned = pruneAnswers(form, step.answers);
+          const visible = visibleQuestions(form, inputAnswers);
+          const problems = reviewProblems(form, inputAnswers);
+          const pruned = pruneAnswers(form, inputAnswers);
           // Then it matches the language-neutral contract, including hidden-answer pruning.
           expect(visible.map((question) => question.id)).toEqual(step.expected.visible);
           expect(problems.map(({ question, reason }) => ({ id: question.id, reason }))).toEqual(

@@ -158,7 +158,7 @@ export function versionView(model: SiteVersions, now: Date = new Date()): Versio
       .map((entry) => ({
         packageId: entry.packageId,
         version: entry.version,
-        label: `Map v${entry.version} · ${sizeLabel(entry.bytes)}${entry.status === "needs_redownload" ? " · needs downloading again" : ""}`,
+        label: `Map v${entry.version} · ${sizeLabel(entry.bytes)}${entry.status === "update_required" ? " · update DECA Mark to use this form; map and unfinished work retained" : entry.status === "needs_redownload" ? " · needs downloading again" : ""}`,
         usedBy: referencesSentence(entry.references),
       })),
     refresh: refreshLine(model, now),

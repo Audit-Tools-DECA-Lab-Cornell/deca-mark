@@ -6,6 +6,7 @@ import { cx } from "@/lib/cx";
 
 import { controlFrame } from "./classes";
 import { useFieldControl, useFieldCounter } from "./Field";
+import { useHydrated } from "./useHydrated";
 
 export type TextareaProps = ComponentPropsWithRef<"textarea"> & {
 	/** Draws the attention edge and sets aria-invalid. Inside a Field, an error does this already. */
@@ -21,6 +22,8 @@ function lengthOf(value: TextareaProps["value"]): number {
 /**
  * A multi-line text field with the Contour frame, at least 112 px tall and resizable in height.
  * `className` sizes and places it (it lands on the wrapper); every other prop reaches the <textarea>.
+ * Until the page has hydrated it is read-only without the read-only look: React overwrites a controlled
+ * textarea at hydration, so text typed before then would be lost or merged with the old text (useHydrated).
  */
 export function Textarea({
 	ref,
@@ -43,6 +46,7 @@ export function Textarea({
 
 	const countedByField = useFieldCounter(count);
 	const field = useFieldControl({ id, invalid, describedBy });
+	const hydrated = useHydrated();
 	const ownCounterId = count !== null && !countedByField && field.id ? `${field.id}-counter` : undefined;
 
 	function handleChange(event: ChangeEvent<HTMLTextAreaElement>) {
@@ -55,7 +59,7 @@ export function Textarea({
 			<textarea
 				ref={ref}
 				id={field.id}
-				readOnly={readOnly}
+				readOnly={readOnly || !hydrated}
 				maxLength={maxLength}
 				value={value}
 				defaultValue={defaultValue}

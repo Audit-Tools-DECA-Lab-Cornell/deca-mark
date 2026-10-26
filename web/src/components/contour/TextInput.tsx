@@ -7,6 +7,7 @@ import { cx } from "@/lib/cx";
 import { controlFrame } from "./classes";
 import { useFieldControl } from "./Field";
 import { Icon, type IconName } from "./Icon";
+import { useHydrated } from "./useHydrated";
 
 export type TextInputProps = ComponentPropsWithRef<"input"> & {
 	/** Draws the attention edge and sets aria-invalid. Inside a Field, an error does this already. */
@@ -35,7 +36,8 @@ function reserveTrailingSpace(node: HTMLDivElement | null) {
 /**
  * The 46 px Contour text field. `className` sizes and places the field (it lands on the wrapper, and the
  * input inherits its font family); every other prop reaches the <input>. Read-only fields sit in the
- * well with secondary ink; the caller says why beside it, usually as the Field hint.
+ * well with secondary ink; the caller says why beside it, usually as the Field hint. Until the page has
+ * hydrated the input is read-only without the read-only look, so text typed early is refused, not lost (useHydrated).
  */
 export function TextInput({
 	ref,
@@ -50,6 +52,7 @@ export function TextInput({
 	...props
 }: TextInputProps) {
 	const field = useFieldControl({ id, invalid, describedBy });
+	const hydrated = useHydrated();
 
 	return (
 		<div className={cx("relative", className)}>
@@ -57,7 +60,7 @@ export function TextInput({
 				ref={ref}
 				id={field.id}
 				type={type}
-				readOnly={readOnly}
+				readOnly={readOnly || !hydrated}
 				aria-invalid={field.invalid || undefined}
 				aria-describedby={field.describedBy}
 				className={cx(

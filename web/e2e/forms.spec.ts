@@ -39,7 +39,7 @@ test("a manager starts a new draft, saves a change and publishes it", async ({ p
 
 	// Change the question's wording and save the draft.
 	const wording = `${SEED.question.label} ${runStamp()}`;
-	const field = page.getByRole("textbox", { name: /^question label/i }).first();
+	const field = page.getByRole("textbox", { name: /^question text/i }).first();
 	await field.fill(wording);
 	await page.getByRole("button", { name: "Save draft", exact: true }).click();
 	await expect(page.getByText(/saved/i).first()).toBeVisible();

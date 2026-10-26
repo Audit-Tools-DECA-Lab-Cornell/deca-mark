@@ -85,6 +85,7 @@ export const formSummarySchema = z.object({
 export const formSummariesSchema = z.array(formSummarySchema);
 export type FormSummary = z.infer<typeof formSummarySchema>;
 export const formVersionSchema = z.object({
+  schema_version: z.number().int().positive(),
   code: z.string().min(1),
   state: versionStateSchema,
   form_code: z.string().min(1),
@@ -104,6 +105,12 @@ export const storedPackageSchema = z.strictObject({
   savedAt: z.iso.datetime(),
   manifest: manifestSchema,
   layers: layersSchema,
+  formSchemaVersions: z
+    .strictObject({
+      play: z.number().int().positive(),
+      inventory: z.number().int().positive().nullable(),
+    })
+    .optional(),
   forms: z.strictObject({
     play: z.record(z.string(), z.unknown()),
     inventory: z.record(z.string(), z.unknown()).nullable(),

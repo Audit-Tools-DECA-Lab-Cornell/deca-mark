@@ -38,7 +38,13 @@ type Props = {
 
 function savedStyles(t: Theme) {
   return StyleSheet.create({
+    root: { flex: 1, minHeight: 0 },
     body: { paddingTop: t.space.s4, paddingBottom: t.space.s4, gap: t.space.s4 },
+    actions: {
+      paddingTop: t.space.s3,
+      borderTopWidth: t.size.border,
+      borderTopColor: t.c.rule,
+    },
     tick: {
       width: 48,
       height: 48,
@@ -56,7 +62,8 @@ function savedStyles(t: Theme) {
  * Saved (MOB-26): what was stored, where it is, and what carries into the next record. The check
  * scales in once (unless motion is reduced) beside a success haptic fired by the caller. "Place the
  * next observation" returns to the map with no transition, because repeated collection is faster
- * without one.
+ * without one. The forward action is pinned under the scrolling card, as Place, Question and Review
+ * pin theirs, so a phone's short panel never hides it (MOB-34).
  */
 export function SavedStep({
   save,
@@ -82,83 +89,90 @@ export function SavedStep({
   const zoneName = save.zoneLabel.split(" · ")[0] ?? save.zoneLabel;
 
   return (
-    <ScrollView contentContainerStyle={s.body}>
-      <Island tone="saved">
-        <View style={{ gap: 12 }}>
-          <View style={s.head}>
-            <Animated.View style={[s.tick, tickStyle]}>
-              <Icon name="check" size={26} color={t.c.saved} strokeWidth={2.5} />
-            </Animated.View>
-            <View style={{ flex: 1, gap: 2 }}>
-              <Mono variant="label" tone="saved">
-                {inventory ? `${zoneName} inventory saved` : "Saved on this device"}
-              </Mono>
-              <Mono variant="title">{shortLabel(save.id)}</Mono>
+    <View style={s.root}>
+      <ScrollView contentContainerStyle={s.body}>
+        <Island tone="saved">
+          <View style={{ gap: 12 }}>
+            <View style={s.head}>
+              <Animated.View style={[s.tick, tickStyle]}>
+                <Icon name="check" size={26} color={t.c.saved} strokeWidth={2.5} />
+              </Animated.View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Mono variant="label" tone="saved">
+                  {inventory ? `${zoneName} inventory saved` : "Saved on this device"}
+                </Mono>
+                <Mono variant="title">{shortLabel(save.id)}</Mono>
+              </View>
             </View>
+            <Text tone="ink2">{`${save.zoneLabel} · ${roundLabel(save.roundType)} · ${clock}`}</Text>
+            <FactsList
+              surface="ground"
+              items={[
+                {
+                  label: "Map and form",
+                  value: `${mapVersion.charAt(0).toUpperCase()}${mapVersion.slice(1)} · form ${formVersion}`,
+                },
+                {
+                  label: "Carried forward",
+                  value: inventory
+                    ? "Observer code and the round"
+                    : "Observer code, zone and round",
+                },
+                {
+                  label: "Cleared",
+                  value: inventory ? "Every inventory answer" : "Every play-event answer",
+                },
+                {
+                  label: "Upload",
+                  value: save.heldOnly
+                    ? `Held on this device: form ${formVersion} is not published to the server yet`
+                    : "Uploads by itself whenever the app is open and online",
+                },
+              ]}
+            />
           </View>
-          <Text tone="ink2">{`${save.zoneLabel} · ${roundLabel(save.roundType)} · ${clock}`}</Text>
-          <FactsList
-            surface="ground"
-            items={[
-              {
-                label: "Map and form",
-                value: `${mapVersion.charAt(0).toUpperCase()}${mapVersion.slice(1)} · form ${formVersion}`,
-              },
-              {
-                label: "Carried forward",
-                value: inventory ? "Observer code and the round" : "Observer code, zone and round",
-              },
-              {
-                label: "Cleared",
-                value: inventory ? "Every inventory answer" : "Every play-event answer",
-              },
-              {
-                label: "Upload",
-                value: save.heldOnly
-                  ? `Held on this device: form ${formVersion} is not published to the server yet`
-                  : "Uploads by itself whenever the app is open and online",
-              },
-            ]}
-          />
-        </View>
-      </Island>
+        </Island>
 
-      {inventory ? (
-        nextZone ? (
-          <Button
-            label={`Inventory ${nextZone.label.split(" · ")[0] ?? nextZone.label} next`}
-            icon="arrow-right"
-            size="collector"
-            fullWidth
-            onPress={() => onInventoryZone(nextZone)}
+        <View style={s.links}>
+          <TextLink
+            label={inventory ? "Choose another zone" : "Change zone or round"}
+            icon="map"
+            onPress={inventory ? onNext : onChangeRound}
           />
+          <TextLink label="Records on this device" icon="list" onPress={onRecords} />
+        </View>
+      </ScrollView>
+
+      <View style={s.actions}>
+        {inventory ? (
+          nextZone ? (
+            <Button
+              label={`Inventory ${nextZone.label.split(" · ")[0] ?? nextZone.label} next`}
+              icon="arrow-right"
+              size="collector"
+              fullWidth
+              onPress={() => onInventoryZone(nextZone)}
+            />
+          ) : (
+            <Button
+              label="Finish the inventory round"
+              icon="check"
+              size="collector"
+              fullWidth
+              onPress={onChangeRound}
+            />
+          )
         ) : (
           <Button
-            label="Finish the inventory round"
-            icon="check"
+            label="Place the next observation"
+            icon="crosshair"
             size="collector"
             fullWidth
-            onPress={onChangeRound}
+            onPress={onNext}
+            testID="collect-next"
           />
-        )
-      ) : (
-        <Button
-          label="Place the next observation"
-          icon="crosshair"
-          size="collector"
-          fullWidth
-          onPress={onNext}
-          testID="collect-next"
-        />
-      )}
-      <View style={s.links}>
-        <TextLink
-          label={inventory ? "Choose another zone" : "Change zone or round"}
-          icon="map"
-          onPress={inventory ? onNext : onChangeRound}
-        />
-        <TextLink label="Records on this device" icon="list" onPress={onRecords} />
+        )}
       </View>
-    </ScrollView>
+    </View>
   );
 }

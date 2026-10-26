@@ -1,0 +1,42 @@
+[
+  {
+    "path": "backend/src/fieldmaps_api/domain/forms.py",
+    "expected": "4ec8ff72918877fd360a8526f6309470122b74f18a1ce2f1a6c36c425976c520",
+    "actual": "4ec8ff72918877fd360a8526f6309470122b74f18a1ce2f1a6c36c425976c520"
+  },
+  {
+    "path": "backend/src/fieldmaps_api/domain/legacy_forms.py",
+    "expected": "c24d7b913367a862636e5cf2a22a96d8e6bb9a6f3cfb23770524811622e4becf",
+    "actual": "c24d7b913367a862636e5cf2a22a96d8e6bb9a6f3cfb23770524811622e4becf"
+  },
+  {
+    "path": "backend/src/fieldmaps_api/domain/form_references.py",
+    "expected": "43aae0f3afa8d58b310d3306b8f065ac29ea309f729b5e068bba20527c3d4e28",
+    "actual": "43aae0f3afa8d58b310d3306b8f065ac29ea309f729b5e068bba20527c3d4e28"
+  },
+  {
+    "path": "backend/src/fieldmaps_api/repositories/bound_uploads.py",
+    "expected": "785ded6abe108e93034ba8c5086374628599def8e42934f67c0cdcab947ee711",
+    "actual": "785ded6abe108e93034ba8c5086374628599def8e42934f67c0cdcab947ee711"
+  },
+  {
+    "path": "mobile/src/sync/upload-failure.ts",
+    "expected": "bd9f6689110773983e5957509c3e3d05abc32282764c68eabf104dbd9e336d3c",
+    "actual": "bd9f6689110773983e5957509c3e3d05abc32282764c68eabf104dbd9e336d3c"
+  },
+  {
+    "path": "contracts/openapi.json",
+    "expected": "677f1cf6916450196432d8c675cd9eaaef918915313581efbb9ec8868ccd48e4",
+    "actual": "677f1cf6916450196432d8c675cd9eaaef918915313581efbb9ec8868ccd48e4"
+  },
+  {
+    "path": "web/src/lib/api/schema.d.ts",
+    "expected": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc",
+    "actual": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc"
+  },
+  {
+    "path": "mobile/src/data/api/schema.d.ts",
+    "expected": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc",
+    "actual": "feb5da5d64807dddf708f7af1c484777d550315674f4439166b5758cf7a524bc"
+  }
+]

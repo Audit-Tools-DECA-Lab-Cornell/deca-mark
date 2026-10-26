@@ -121,3 +121,24 @@ test("play type is the first single-choice Play question", () => {
 	assert.equal(humanize("Rel_Round"), "Rel round");
 	assert.equal(humanize("playType1"), "Play type1");
 });
+
+test("decimal display retains small and high-precision values", () => {
+	for (const value of [0.00000001, -12.1234567890123, 1.23456789012345e100])
+		assert.equal(answerLabel(legacy, "people", value), String(value));
+});
+
+test("date/time answers use their saved format and zone without changing stored values", () => {
+	const definition = {
+		questions: [
+			{
+				id: "when",
+				label: "When?",
+				kind: "dateTime",
+				dateTime: { mode: "dateTime", dateFormat: "dayFirst", timeFormat: "12h", timeZone: "America/New_York" }
+			}
+		]
+	};
+	const value = "2026-10-24T18:30:00.000Z";
+	assert.equal(answerLabel(definition, "when", value), "24/10/2026 2:30:00 PM");
+	assert.equal(answerRows(definition, { when: value })[0].raw, value);
+});

@@ -363,7 +363,7 @@
           "people": 9007199254740992
         }
       },
-      "valid": false
+      "valid": true
     },
     {
       "id": "unknown_round",

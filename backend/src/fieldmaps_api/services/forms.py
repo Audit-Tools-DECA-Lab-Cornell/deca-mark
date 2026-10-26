@@ -11,9 +11,11 @@ from pydantic import JsonValue, ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fieldmaps_api.domain.form_authoring import normalize_draft_columns
 from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.errors import ConflictError, NotFoundError, ValidationFailedError
 from fieldmaps_api.form_preconditions import require_form_etag, revision_conflict
+from fieldmaps_api.form_schema_version import require_current_schema
 from fieldmaps_api.form_schemas import (
     DraftCreate,
     DraftUpdate,
@@ -36,7 +38,8 @@ def checked_definition(
     definition: dict[str, JsonValue], code: str, state: str
 ) -> dict[str, JsonValue]:
     """Stamp the definition with its version code and state, or name what is wrong (422)."""
-    stamped: dict[str, JsonValue] = {**definition, "version": code, "status": state}
+    authored = normalize_draft_columns(definition) if state == "draft" else definition
+    stamped: dict[str, JsonValue] = {**authored, "version": code, "status": state}
     try:
         FormDefinition.model_validate(stamped)
     except ValidationError as error:
@@ -59,12 +62,14 @@ async def get_version(session: AsyncSession, project_id: UUID, code: str) -> For
     if version is None:
         message = "Form version not found"
         raise NotFoundError(message)
+    require_current_schema(version.schema_version)
     return version
 
 
 async def create_form(
     session: AsyncSession, project_id: UUID, payload: FormCreate
 ) -> FormVersionDetail:
+    require_current_schema(payload.schema_version)
     await tenancy_db.require_manager(session, tenancy_queries.PROJECT_MANAGER, project_id)
     organization_id = await site_db.project_organization(session, project_id)
     if organization_id is None:
@@ -95,6 +100,7 @@ async def create_form(
 async def create_draft(
     session: AsyncSession, project_id: UUID, form_code: str, payload: DraftCreate
 ) -> FormVersionDetail:
+    require_current_schema(payload.schema_version)
     await tenancy_db.require_manager(session, tenancy_queries.PROJECT_MANAGER, project_id)
     form = await forms.get_form(session, project_id, form_code)
     if form is None:
@@ -131,6 +137,7 @@ async def create_draft(
 async def update_draft(
     session: AsyncSession, project_id: UUID, code: str, payload: DraftUpdate, etag: str | None
 ) -> FormVersionDetail:
+    require_current_schema(payload.schema_version)
     await tenancy_db.require_manager(session, tenancy_queries.PROJECT_MANAGER, project_id)
     expected_id, revision = require_form_etag(etag)
     current = await get_version(session, project_id, code)
@@ -178,6 +185,7 @@ async def publish(
     current = await get_version(session, project_id, code)
     if current.version_id != expected_id or current.revision != revision:
         raise revision_conflict()
+    await forms.require_current_storage(session)
     # Checked again at publication: what devices download must parse exactly as uploads are checked.
     checked_definition(current.definition, code, "published")
     await forms.publish(session, project_id, current.version_id, revision)

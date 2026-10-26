@@ -185,7 +185,7 @@ export function inviteProblem(error: ProblemSource, { step, credential }: Proble
 			return {
 				kind: "invalid",
 				message:
-					"This invitation could not be used. You may already be a member, or it may have been sent to a different email address. Ask your project manager for a new one."
+					"This invitation could not be used. Check the signed-in email address and switch accounts if needed. It may also have been revoked or used up, or you may already be a member."
 			};
 		return {
 			kind: "invalid",
@@ -242,4 +242,35 @@ export function destinationFor(
 /** The sign-in or sign-up pages bring the person back to one of these. */
 export function isInvitationPath(path: string): boolean {
 	return path === "/invite" || path === "/join";
+}
+
+const JOIN_STORAGE_KEY = "fm-join-code";
+const JOIN_CODE = /^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{8}$/;
+
+/** A code stays in this tab while its owner switches accounts, never in an address. */
+export function rememberCode(code: string, store: Store | null = tabStore()): boolean {
+	try {
+		if (!JOIN_CODE.test(code)) return false;
+		store?.setItem(JOIN_STORAGE_KEY, code);
+		return store !== null;
+	} catch {
+		return false;
+	}
+}
+
+export function recalledCode(store: Store | null = tabStore()): string | undefined {
+	try {
+		const value = store?.getItem(JOIN_STORAGE_KEY);
+		return value && JOIN_CODE.test(value) ? value : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+export function forgetCode(store: Store | null = tabStore()): void {
+	try {
+		store?.removeItem(JOIN_STORAGE_KEY);
+	} catch {
+		// Storage may be unavailable; no code can be removed there.
+	}
 }

@@ -1,3 +1,4 @@
+import { questionIdColumns } from "./operations";
 import { ADDED_SOURCE, type RawDefinition } from "./raw";
 
 /**
@@ -24,7 +25,8 @@ export function isTemplateId(value: unknown): value is TemplateId {
 
 /** A form code is also part of every version code (`code-v1`): the API accepts 3 to 40 of these. */
 export const FORM_CODE_PATTERN = /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
-export const FORM_CODE_HINT = "Short and unique. It appears in every version code, such as workspace-check-v1.";
+export const FORM_CODE_HINT =
+	"Use a unique code for this form within the project. For example, play-study becomes play-study-v1 for its first version.";
 export const NAME_LIMIT = 100;
 
 /** A code from a name: lower case, letters and numbers, dashes between words. */
@@ -59,6 +61,7 @@ export function formNameProblem(name: string): string | null {
 export function blankDefinition(code: string, name: string): RawDefinition {
 	return {
 		version: `${code}-v1`,
+		columnNaming: "questionId",
 		title: name,
 		summary: "Questions observers answer at each observation.",
 		source: "Written in DECA Mark",
@@ -70,7 +73,7 @@ export function blankDefinition(code: string, name: string): RawDefinition {
 			{
 				id: "notes",
 				code: "notes",
-				exportColumn: "",
+				exportColumn: "notes",
 				act: "Record",
 				label: "Notes",
 				hint: "Anything about this observation that the other questions do not cover",
@@ -84,5 +87,5 @@ export function blankDefinition(code: string, name: string): RawDefinition {
 
 /** A shipped form as the first draft of a new form: named for the form, versioned `code-v1`. */
 export function startingDefinition(template: RawDefinition, code: string, name: string): RawDefinition {
-	return { ...template, version: `${code}-v1`, title: name, status: "draft" };
+	return questionIdColumns({ ...template, version: `${code}-v1`, title: name, status: "draft" });
 }

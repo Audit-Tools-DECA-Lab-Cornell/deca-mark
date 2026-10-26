@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Checks that web/src/lib/forms/{definition,engine}.ts stay byte-identical to their mobile
+// Checks that web/src/lib/forms/{definition,engine,temporal}.ts stay byte-identical to their mobile
 // originals below a short header comment. Plain Node ESM, no dependencies.
 
 import { readFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
-const files = ["definition.ts", "engine.ts"];
+const files = ["definition.ts", "engine.ts", "temporal.ts"];
 
 /** Normalizes CRLF/CR to LF so the comparison ignores line-ending differences. */
 function normalizeLineEndings(text) {

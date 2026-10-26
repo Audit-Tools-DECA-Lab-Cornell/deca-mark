@@ -1,0 +1,216 @@
+{
+  "assessed_at": "2026-10-18",
+  "timezone": "America/New_York",
+  "deployed_sha": "7264f8408683de549dc66bf7572a5e69e69a8246",
+  "service": {
+    "autoDeploy": "yes",
+    "autoDeployTrigger": "commit",
+    "branch": "master",
+    "createdAt": "2026-09-22T18:54:17.303747Z",
+    "dashboardUrl": "https://dashboard.render.com/web/srv-dapctm7f3r2c73c9mi50",
+    "environmentId": "evm-dapct7ijnfac73817u90",
+    "id": "srv-dapctm7f3r2c73c9mi50",
+    "name": "Decamark",
+    "notifyOnFail": "notify",
+    "ownerId": "tea-da4bmt0n74is738uagpg",
+    "repo": "https://github.com/Audit-Tools-DECA-Lab-Cornell/deca-mark",
+    "rootDir": "backend/",
+    "serviceDetails": {
+      "buildPlan": "starter",
+      "cache": {
+        "profile": "no-cache"
+      },
+      "env": "docker",
+      "envSpecificDetails": {
+        "dockerCommand": "",
+        "dockerContext": ".",
+        "dockerfilePath": "./Dockerfile"
+      },
+      "healthCheckPath": "/health",
+      "ipAllowList": [
+        {
+          "cidrBlock": "0.0.0.0/0",
+          "description": "everywhere"
+        }
+      ],
+      "maintenanceMode": {
+        "enabled": false,
+        "uri": ""
+      },
+      "numInstances": 1,
+      "openPorts": [
+        {
+          "port": 10000,
+          "protocol": "TCP"
+        }
+      ],
+      "plan": "0.5c-512mb",
+      "previews": {
+        "generation": "automatic"
+      },
+      "pullRequestPreviewsEnabled": "yes",
+      "region": "ohio",
+      "renderSubdomainPolicy": "enabled",
+      "runtime": "docker",
+      "sshAddress": "srv-dapctm7f3r2c73c9mi50@ssh.ohio.render.com",
+      "url": "https://field-maps.onrender.com"
+    },
+    "slug": "field-maps",
+    "suspended": "not_suspended",
+    "suspenders": [],
+    "type": "web_service",
+    "updatedAt": "2026-10-18T21:28:08.37786Z"
+  },
+  "startup_logs": {
+    "hasMore": false,
+    "logs": [
+      {
+        "id": "9b00e368-1488-40e5-b059-7e829de6acd2",
+        "labels": [
+          {
+            "name": "resource",
+            "value": "srv-dapctm7f3r2c73c9mi50"
+          },
+          {
+            "name": "instance",
+            "value": "srv-dapctm7f3r2c73c9mi50-2sqn2"
+          },
+          {
+            "name": "level",
+            "value": "info"
+          },
+          {
+            "name": "type",
+            "value": "app"
+          }
+        ],
+        "message": "account_deletion_recovery_configured enabled=False",
+        "timestamp": "2026-10-18T21:27:28.653902504Z"
+      },
+      {
+        "id": "8fb401bb-b06b-41ec-afd8-b9c3cf073736",
+        "labels": [
+          {
+            "name": "resource",
+            "value": "srv-dapctm7f3r2c73c9mi50"
+          },
+          {
+            "name": "instance",
+            "value": "srv-dapctm7f3r2c73c9mi50-bsfmg"
+          },
+          {
+            "name": "level",
+            "value": "info"
+          },
+          {
+            "name": "type",
+            "value": "app"
+          }
+        ],
+        "message": "account_deletion_recovery_configured enabled=False",
+        "timestamp": "2026-10-18T21:27:58.783003672Z"
+      }
+    ],
+    "nextEndTime": "2026-10-18T21:27:28.653902504Z",
+    "nextStartTime": "2026-10-18T21:27:00Z"
+  },
+  "preactivation": [
+    {
+      "preactivation": {
+        "sampled_at": "2026-10-18T21:46:35.667987+00:00",
+        "recovery_rls": true,
+        "runtime_role": {
+          "bypassrls": false,
+          "superuser": false
+        },
+        "runtime_grants": {
+          "delete": true,
+          "insert": false,
+          "select": true,
+          "enqueue_execute": false,
+          "update_identity": false
+        },
+        "pending_deletions": 0,
+        "migration_recorded": true,
+        "retained_tombstones": 0
+      }
+    }
+  ],
+  "source_reason": {
+    "enabled": "issuer is not None and auth_admin_key_file is not None",
+    "bundled_issuer": "https://lezmqhuucfwqknspgcdy.supabase.co/auth/v1",
+    "bundled_jwks_url": "https://lezmqhuucfwqknspgcdy.supabase.co/auth/v1/.well-known/jwks.json",
+    "bundled_auth_admin_key_file": null,
+    "effective_key_file_mount": "not inspected / operator confirmation required",
+    "effective_config_selector": "not exposed by available metadata tools"
+  },
+  "proposal": {
+    "approval": "NOT YET GIVEN",
+    "deployment_changed": false,
+    "credential_read": false,
+    "auth_requests_made": false,
+    "secret_file_names": [
+      "supabase-secret-key",
+      "decamark-runtime.json"
+    ],
+    "config_selector": {
+      "key": "DECAMARK_CONFIG",
+      "value": "/etc/secrets/decamark-runtime.json"
+    },
+    "existing_secret_preserved": "database-password",
+    "source_unchanged": true,
+    "preview_change": {
+      "from": "automatic",
+      "to": "Manual (no automatically created PR previews)",
+      "applied": false,
+      "required_before_admin_mount": true
+    },
+    "allowed_source_shas": [
+      "7264f8408683de549dc66bf7572a5e69e69a8246",
+      "0279fd38f732eb3167fb174b9c2c19e177c273b1"
+    ]
+  },
+  "local_validation": {
+    "interpreter": "backend/.venv/bin/python with PYTHONPATH=backend/src",
+    "current_enabled": false,
+    "proposed_enabled": true,
+    "only_setting_added": "auth_admin_key_file",
+    "all_other_public_settings_equal": true,
+    "credential_validity_verified": false
+  },
+  "authorization": {
+    "production_activation": "approval pending",
+    "production_disposable_accounts": "no UUID allowlist supplied",
+    "isolated_fault_tests": "prepared; no new fault run authorized or performed",
+    "backlog_alert_owner": "unassigned operator with deployment/Auth access",
+    "device_census_owner": "unassigned collection lead",
+    "unsatisfiable_queue_owner": "unassigned research/data owner"
+  },
+  "documentation_verified": [
+    "https://render.com/docs/configure-environment-variables",
+    "https://render.com/docs/docker-secrets",
+    "https://render.com/docs/deploys",
+    "https://render.com/docs/health-checks",
+    "https://render.com/docs/service-previews"
+  ],
+  "capability_limit": "Connected Render tools can merge DECAMARK_CONFIG and trigger deploys; they cannot inspect/create Secret Files or change preview mode. No browser-control tool is available. Operator must set previews Manual and install files privately before approved activation.",
+  "no_new_environment": true,
+  "review_deployment_safety": {
+    "branch": "review/account-deletion-recovery",
+    "render_tracked_branch": "master",
+    "render_preview_title": "[skip preview]",
+    "render_commit_phrase": "[skip render]",
+    "vercel_review_branch_disabled_in_both_configs": true,
+    "active_deca_preview_services_in_listing": 0
+  },
+  "prepush_source_recheck": {
+    "master_sha": "0279fd38f732eb3167fb174b9c2c19e177c273b1",
+    "master_and_deployed_and_tested_tree": "5c91e9c9149c84c760868c5a08efa2d29b7c9b5d",
+    "intervening_commits": [
+      "86d2e59",
+      "0279fd3"
+    ],
+    "net_source_diff": "empty",
+    "api_still_live_sha": "7264f8408683de549dc66bf7572a5e69e69a8246"
+  }
+}

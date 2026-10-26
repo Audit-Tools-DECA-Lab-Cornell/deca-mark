@@ -29,6 +29,8 @@ export const errorCopy = {
   invitation_expired: "This invitation has expired. Ask for a new invitation.",
   archive_unavailable: "This map package is unavailable. Ask the manager to prepare it again.",
   validation_failed: "Check the form values. Your local record is preserved.",
+  unknown_schema_version:
+    "Update DECA Mark to use this form. Installed maps and unfinished work are retained on this device.",
   unsupported_operation: "This action is not supported. Update the app before trying again.",
   rate_limited: "Sync is busy. Your record is saved and will retry.",
   internal: "Server unavailable. Your record is saved and will retry.",
@@ -114,6 +116,7 @@ export function parseApiError(status: number, body: unknown): ApiError {
     case "invitation_expired":
     case "archive_unavailable":
     case "validation_failed":
+    case "unknown_schema_version":
     case "unsupported_operation":
       return new ApiError(code, "rejected");
     default: {

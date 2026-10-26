@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 from pydantic import JsonValue
 
+from fieldmaps_api.domain.forms import StoredCanonicalDefinition
 from fieldmaps_api.domain.observation_export_columns import (
     Column,
     ExportQuestion,
@@ -13,6 +14,7 @@ from fieldmaps_api.domain.observation_export_columns import (
     questions,
     repeated,
 )
+from fieldmaps_api.domain.stored_form_versions import historical_definition
 from fieldmaps_api.observation_analysis_schemas import HistoricalObservation
 
 
@@ -91,7 +93,9 @@ def question_source(
 
 
 def plan(
-    rows: Sequence[HistoricalObservation], definitions: dict[str, dict[str, JsonValue]]
+    rows: Sequence[HistoricalObservation],
+    definitions: dict[str, dict[str, JsonValue]],
+    schema_versions: dict[str, int],
 ) -> Plan:
     builder = ColumnBuilder()
     sources: dict[str, tuple[Source, ...]] = {}
@@ -99,11 +103,19 @@ def plan(
         taken: set[str] = set()
         version_sources: list[Source] = []
         omitted: set[str] = set()
-        for question in questions(definition):
-            if repeated(question.id) and all(
-                question.id not in row.answers or row.answers[question.id] == row.observer
-                for row in rows
-                if row.form_version == version
+        parsed = historical_definition(definition, schema_versions[version])
+        id_columns = (
+            isinstance(parsed, StoredCanonicalDefinition) and parsed.column_naming == "questionId"
+        )
+        for question in questions(definition, schema_versions[version]):
+            if (
+                not id_columns
+                and repeated(question.id)
+                and all(
+                    question.id not in row.answers or row.answers[question.id] == row.observer
+                    for row in rows
+                    if row.form_version == version
+                )
             ):
                 omitted.add(question.id)
             else:
