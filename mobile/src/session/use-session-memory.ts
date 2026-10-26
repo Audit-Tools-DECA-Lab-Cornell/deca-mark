@@ -27,6 +27,11 @@ export function useSessionMemory(key: string) {
   const [armed, setArmed] = useState(false);
   const [state, setState] = useState<SessionState>(startSession());
   const [status, setStatus] = useState("Offline-first collector ready.");
+  const [draftWriteFailed, setDraftWriteFailed] = useState(false);
+  /** Counts the draft writes issued, so only the newest write's result is shown (MOB-41). */
+  const draftWrites = useRef(0);
+  /** True from the moment a save starts its commit until the save has finished with the session. */
+  const committing = useRef(false);
   const [unreadableDraft, setUnreadableDraft] = useState(false);
   const [recovered, setRecovered] = useState<ObservationDraft | null>(null);
   const [inProgress, setInProgress] = useState<ObservationIdentity | null>(null);
@@ -36,6 +41,11 @@ export function useSessionMemory(key: string) {
   const holdIdentity = useCallback((next: ObservationIdentity | null) => {
     identity.current = next;
     setInProgress(next);
+    if (next === null) {
+      // No observation is open: a write still in flight for the last one reports nothing.
+      draftWrites.current += 1;
+      setDraftWriteFailed(false);
+    }
   }, []);
   const apply = useCallback((next: SessionState) => {
     stateRef.current = next;
@@ -90,6 +100,10 @@ export function useSessionMemory(key: string) {
     apply,
     status,
     setStatus,
+    draftWriteFailed,
+    setDraftWriteFailed,
+    draftWrites,
+    committing,
     unreadableDraft,
     setUnreadableDraft,
     recovered,

@@ -163,6 +163,7 @@ function sessionAtSummary(): FieldSessionValue {
     armed: false,
     state: { ...startSession(), index },
     status: "",
+    draftWriteFailed: false,
     recovered: null,
     unreadableDraft: false,
     context: null,
@@ -745,5 +746,52 @@ describe("rotating keeps the field map and the step mounted (audit C21)", () => 
     rotate(screen, session);
     expect(device.mapMounts).toBe(1);
     expect(device.mapUnmounts).toBe(0);
+  });
+});
+
+describe("the status line tells the truth about the draft (MOB-41, audit C08)", () => {
+  const KEPT = "Draft kept on this device as you answer";
+  const NOT_KEPT = "Not kept: this observation is only in memory. Save it now.";
+
+  it("says the draft is kept while its writes are landing", () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const screen = render(
+      <FieldSessionContext.Provider value={sessionAtSummary()}>
+        <CollectScreen />
+      </FieldSessionContext.Provider>,
+    );
+    expect(screen.says(KEPT)).toBe(true);
+    expect(screen.says("Not kept")).toBe(false);
+  });
+
+  it("says it is not kept, and not that it is, when the last draft write failed", () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const screen = render(
+      <FieldSessionContext.Provider value={{ ...sessionAtSummary(), draftWriteFailed: true }}>
+        <CollectScreen />
+      </FieldSessionContext.Provider>,
+    );
+    expect(screen.says(NOT_KEPT)).toBe(true);
+    expect(screen.says(KEPT)).toBe(false);
+  });
+
+  it("keeps saying it on a phone while the keyboard is up, when the status row is otherwise hidden", () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const screen = openWithKeyboardUp({ ...sessionAtSummary(), draftWriteFailed: true });
+    expect(screen.says(NOT_KEPT)).toBe(true);
+    const quiet = openWithKeyboardUp(sessionAtSummary());
+    expect(quiet.says(KEPT)).toBe(false);
+  });
+
+  it("does not warn when nothing is open, whatever the last write did", () => {
+    use(PILOT_DEVICES[0] as Pilot);
+    const screen = render(
+      <FieldSessionContext.Provider
+        value={{ ...sessionAtSummary(), draftWriteFailed: true, placed: null, inProgress: null }}
+      >
+        <CollectScreen />
+      </FieldSessionContext.Provider>,
+    );
+    expect(screen.says("Not kept")).toBe(false);
   });
 });
