@@ -14,7 +14,7 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { initializeDatabase, type LocalDatabase } from "../../storage/observation-store";
-import { readSelected } from "../../storage/package-catalog";
+import { installedFor } from "../../storage/package-store.fixture";
 import { boundFixture, ids } from "./bound-fixture";
 import {
   type ImmutablePackageFiles,
@@ -90,7 +90,7 @@ describe("SQLite and immutable filesystem installation", () => {
       db.close();
       db = new DatabaseSync(join(root, "catalog.db"));
       await initializeDatabase(adapter(db));
-      const entry = await readSelected(adapter(db), owner, ids.project, ids.site);
+      const entry = await installedFor(adapter(db), owner, ids.project, ids.site);
       expect(entry?.identity.packageVersion).toBe(7);
       expect(
         await readInstalledPackage(
@@ -156,7 +156,7 @@ describe("SQLite and immutable filesystem installation", () => {
         ),
       ).rejects.toThrow("disk quota");
       expect(
-        (await readSelected(adapter(db), owner, ids.project, ids.site))?.identity.packageVersion,
+        (await installedFor(adapter(db), owner, ids.project, ids.site))?.identity.packageVersion,
       ).toBe(7);
       expect(disk.staged()).toEqual([]);
     } finally {

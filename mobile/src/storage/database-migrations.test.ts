@@ -8,10 +8,10 @@ const collectionTables = [
   "observation_drafts",
   "package_contents",
   "package_authorizations",
-  "package_selections",
   "available_current_packages",
-  "active_sessions",
 ] as const;
+/** Tables that older builds created and nothing writes any more: a reset leaves none of them behind. */
+const retiredTables = ["package_selections", "active_sessions"] as const;
 
 describe("Prelaunch collection schema reset", () => {
   for (const version of [1, 2, 3, 4, 99] as const) {
@@ -19,7 +19,7 @@ describe("Prelaunch collection schema reset", () => {
       const sqlite = new DatabaseSync(":memory:");
       const db = adapter(sqlite);
       try {
-        for (const table of collectionTables)
+        for (const table of [...collectionTables, ...retiredTables])
           sqlite.exec(`CREATE TABLE ${table}(payload TEXT); INSERT INTO ${table} VALUES ('old');`);
         sqlite.exec(`
           CREATE TABLE server_capabilities(payload TEXT);
@@ -31,6 +31,10 @@ describe("Prelaunch collection schema reset", () => {
         await initializeDatabase(db);
         for (const table of collectionTables)
           expect(sqlite.prepare(`SELECT COUNT(*) total FROM ${table}`).get()).toEqual({ total: 0 });
+        for (const table of retiredTables)
+          expect(
+            sqlite.prepare("SELECT name FROM sqlite_master WHERE name = ?").all(table),
+          ).toEqual([]);
         expect(
           sqlite
             .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'retired%'")

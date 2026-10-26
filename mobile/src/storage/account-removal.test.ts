@@ -20,8 +20,6 @@ const tables = [
   "observations",
   "observation_drafts",
   "parked_observation_drafts",
-  "active_sessions",
-  "package_selections",
   "package_authorizations",
   "available_current_packages",
 ] as const;
@@ -48,14 +46,6 @@ async function seededDatabase() {
         id,
       );
     await fixture.db.runAsync(
-      "INSERT INTO active_sessions (owner_scope, package_key, payload) VALUES (?, 'shared-content', '{}')",
-      owner,
-    );
-    await fixture.db.runAsync(
-      "INSERT INTO package_selections (owner_scope, project_id, site_id, content_key) VALUES (?, 'project', 'site', 'shared-content')",
-      owner,
-    );
-    await fixture.db.runAsync(
       "INSERT INTO package_authorizations (owner_scope, content_key) VALUES (?, 'shared-content')",
       owner,
     );
@@ -72,7 +62,7 @@ async function seededDatabase() {
 }
 
 describe("removeAccountData (MOB-07)", () => {
-  it("removes all seven tables across an account's scopes while retaining other accounts, issuers and practice", async () => {
+  it("removes all five tables across an account's scopes while retaining other accounts, issuers and practice", async () => {
     // Given two API/project scopes for A and shared content also used by B.
     const { db, sqlite } = await seededDatabase();
     try {

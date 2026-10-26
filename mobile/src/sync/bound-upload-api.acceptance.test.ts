@@ -11,8 +11,7 @@ import { readStoredPackage, setPackageAccessOwner } from "../packages/hosted/acc
 import { harness, hash } from "../packages/hosted/lifecycle.test-helper";
 import { PackageOperations } from "../packages/hosted/operations";
 import { saveObservation } from "../storage/observation-store";
-import { readSelected } from "../storage/package-catalog";
-import { adapter } from "../storage/package-store.fixture";
+import { adapter, installedFor } from "../storage/package-store.fixture";
 import { pendingObservations, retryAttention } from "../storage/sync-store";
 import { createBoundUpload } from "./bound-upload";
 import { scopeKey, syncScopeSchema } from "./contracts";
@@ -67,7 +66,7 @@ it.skipIf(!input)(
       if (!site) throw new Error("Published site missing");
       expect(await h.operations.download(scope.projectId, site, () => {})).toBe(true);
       const installed = readStoredPackage(fixture.packageId);
-      const selected = await readSelected(h.database, owner, scope.projectId, fixture.siteId);
+      const selected = await installedFor(h.database, owner, scope.projectId, fixture.siteId);
       if (!installed || !selected) throw new Error("Installed map missing");
       const zone = installed.manifest.zones.find(
         (candidate) => candidate.zone_id === fixture.zoneId,
