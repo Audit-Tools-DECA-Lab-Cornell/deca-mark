@@ -88,7 +88,10 @@ test("Data is one list that is a table from 768 px and cards below, with the pla
 		const card = (await recordRows(main)).first();
 		expect(await card.evaluate(row => getComputedStyle(row).display)).toBe("flex");
 		await expect(card.getByRole("link", { name: /^OBS-[0-9A-F]{6}$/ })).toBeVisible();
-		await expect(card).toContainText("Observer OB");
+		// The word "Observer" is drawn by the cell's ::before, so it is not in the text: read the style.
+		const observer = card.getByRole("cell").nth(6);
+		await expect(observer).toHaveText("OB");
+		expect(await observer.evaluate(cell => getComputedStyle(cell, "::before").content)).toContain("Observer");
 		await expect(card).toContainText(SEED.question.answerPrefix);
 		// The cards have no sideways scroll.
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
