@@ -9,6 +9,12 @@ export const AUTO_ADVANCE_MS = 160;
  */
 export const AUTO_ADVANCE_GUARD_MS = 350;
 
+/**
+ * A monotonic clock. The wall clock steps back when the phone corrects its time after an offline
+ * stretch, which would leave every tap inside the guard window until real time caught up.
+ */
+const now = () => performance.now();
+
 type Dispatch = (action: SessionAction) => SessionStep;
 
 /**
@@ -18,8 +24,9 @@ type Dispatch = (action: SessionAction) => SessionStep;
  * - A tap on the option whose move is pending is ignored: it neither un-chooses nor restarts the beat.
  * - A different option within the beat replaces the first and restarts it.
  * - A choice or toggle in the guard window after the move is ignored.
- * - Any other action (Back, Continue, a write, a jump) cancels a pending move first, as before. A
- *   re-tap of a chosen option long after the move still un-chooses it; that is deliberate.
+ * - Any other action (Back, Continue, a write, a jump) cancels a pending move first, as before, and
+ *   ends the guard window. A re-tap of a chosen option long after the move still un-chooses it;
+ *   that is deliberate.
  *
  * `onDestination` hears every `review` or `map` destination, from an action or from the move itself.
  */
@@ -37,10 +44,12 @@ export function useAutoAdvance(
   const pending = useRef<{ question: string; option: string } | null>(null);
   const advancedAt = useRef(Number.NEGATIVE_INFINITY);
 
+  /** Drops a pending move and the guard window: the observer chose to do something else. */
   const cancelAdvance = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     pending.current = null;
+    advancedAt.current = Number.NEGATIVE_INFINITY;
   }, []);
   useEffect(() => cancelAdvance, [cancelAdvance]);
 
@@ -55,7 +64,7 @@ export function useAutoAdvance(
           waiting.option === action.option
         )
           return;
-        if (Date.now() - advancedAt.current < AUTO_ADVANCE_GUARD_MS) return;
+        if (now() - advancedAt.current < AUTO_ADVANCE_GUARD_MS) return;
       }
       const result = dispatchRef.current(action);
       cancelAdvance();
@@ -64,7 +73,7 @@ export function useAutoAdvance(
         timer.current = setTimeout(() => {
           timer.current = null;
           pending.current = null;
-          advancedAt.current = Date.now();
+          advancedAt.current = now();
           const destination = dispatchRef.current({ kind: "next" }).destination;
           if (destination !== "stay") destinationRef.current(destination);
         }, AUTO_ADVANCE_MS);

@@ -172,19 +172,39 @@ describe("useAutoAdvance", () => {
   });
 
   it("the guard also ignores a toggle just after the move", () => {
+    // janet-test-v1 has no multi-select question, so this sends a toggle action to whichever question
+    // is on screen (single-choice play_type_1) and counts dispatches: it tests the guard, not the reducer.
     const rig = mount();
     rig.tap("age_3_5");
-    rig.wait(1000);
-    rig.tap("physical");
-    rig.wait(1000);
-    // Q3 asks the subtype; Q4 and later ask other things. Move to a multi-select question by jumping.
-    const toggles = rig.dispatches.filter((action) => action.kind === "toggle");
-    expect(toggles).toHaveLength(0);
-    rig.tap("vestibular");
     rig.wait(160 + 100);
+    expect(rig.question()?.id).toBe("play_type_1");
     const before = rig.dispatches.length;
-    rig.toggle("anything");
+    rig.toggle("exploratory");
     expect(rig.dispatches).toHaveLength(before);
+    rig.wait(300);
+    rig.toggle("exploratory");
+    expect(rig.dispatches).toHaveLength(before + 1);
+  });
+
+  it("a wall clock stepped back after the move does not freeze the tiles", () => {
+    const rig = mount();
+    rig.tap("age_3_5");
+    rig.wait(2000);
+    expect(rig.question()?.id).toBe("play_type_1");
+    vi.setSystemTime(Date.now() - 5000);
+    rig.tap("exploratory");
+    expect(rig.state().answers).toEqual({ age_range: "age_3_5", play_type_1: "exploratory" });
+  });
+
+  it("Back ends the guard window, so a tap right after Back counts", () => {
+    const rig = mount();
+    rig.tap("age_3_5");
+    rig.wait(160 + 100);
+    rig.back();
+    expect(rig.question()?.id).toBe("age_range");
+    rig.wait(50);
+    rig.tap("age_3_5");
+    expect(rig.state().answers).toEqual({});
   });
 
   it("un-choosing after Back still clears the answer", () => {
