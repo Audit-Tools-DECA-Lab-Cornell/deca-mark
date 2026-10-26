@@ -122,11 +122,10 @@ export default function SignOutScreen() {
             Signing out did not finish on this device. Try again.
           </Note>
         ) : null}
-        {warning ? (
+        {warning && work.unsent > 0 ? (
           <View style={s.lines}>
             <Text variant="body" tone="ink2">
-              Signing in to this account again shows them. This version does not upload yet, so they
-              wait here either way.
+              {`Signing out pauses their upload until ${email} signs in again on this device.`}
             </Text>
           </View>
         ) : null}

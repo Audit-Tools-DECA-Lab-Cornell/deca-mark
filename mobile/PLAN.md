@@ -651,7 +651,7 @@ Done when: a hook test with fake timers proves: re-tap at 120 ms keeps Q1 and st
 Verify: `pnpm mobile:test`; a manual double-tap check on one phone and one tablet.
 
 ### MOB-37: Say what the uploader really does at sign-out, deletion and Saved
-Status: todo · Phase 4 · Size S · Depends: none · Blocks: MOB-38, QA-08
+Status: done (2026-10-25; screen, queue, copy and provider tests; device check pending (owner)) · Phase 4 · Size S · Depends: none · Blocks: MOB-38, QA-08
 Added 2026-10-22 (audit C02). Takes over the copy and "Upload N records first" wiring that MOB-07's progress note lists as remaining, and step 6 of MOB-27. The uploader is live (MOB-29), yet Account (`account/index.tsx:135-138`, comment :36-41) and Sign out (`sign-out.tsx:125-131`) say "This version does not upload yet", Delete account (`delete-account.tsx:186-191`) says "This version cannot upload them first … can never upload", and practice records are called "held for the project" (`leaving.ts:35-40`, `SavedStep.tsx:115-120`, `guide/content.ts:84`), which is the contract word for "waiting on the project".
 Read first: the files above; `src/features/account/leaving.ts:83` (`uploadFirstLabel`, unused); `src/sync/provider.tsx` (`retry`, `wake`); `src/features/preview/queue.ts:9-14`; `account-screens.test.tsx:144` (pins the false copy); [MOB-07-HANDOFF.md](MOB-07-HANDOFF.md).
 Do:
@@ -661,6 +661,7 @@ Do:
 4. Remap `local-only` in `queue.ts STATUS_TO_STATE` away from "held" before any screen shares the map. (The `bundled.ts:107,180` meta strings that say "uploads to the API" are deleted with the file in MOB-43.)
 Done when: seeding one bound pending row with 7 attempts and a future `next_attempt_at`, one `shell-v1` practice row and one unbound `janet-inventory-v1` row: "Upload 1 first" uploads at once and the row reaches Uploaded only through a receipt; Account, Sign out and Delete account count 1 unsent and describe the two practice rows as never uploaded; a grep finds neither "does not upload yet" nor "cannot upload them first"; `account-screens.test.tsx:144` asserts the new copy.
 Verify: `pnpm mobile:check`, `pnpm mobile:test`.
+Verified 2026-10-25: Account, Sign out and Delete account no longer say uploading is missing (a grep finds neither false string); Sign out says "Signing out pauses their upload until {email} signs in again on this device."; Delete account with unsent records offers "Upload N first" (`sync.retry()`, which clears `next_attempt_at`), stays on the screen while the counts update, and its Alert offers "Delete anyway"; the queue counts unsent from bound rows only, counts unbound rows (the `shell-v1` row and the unbound `janet-inventory-v1` row alike) as practice "stays on this device and is never uploaded", and no longer maps `local-only` to Held; Saved and the guide say the same. Tests: `queue.test.tsx`, `leaving.test.ts`, `account-screens.test.tsx`, `SavedStep.practice.test.tsx`, and a provider test that `retry()` sends a record at 7 attempts at once while `wake()` leaves it waiting. Cross-lane edit: the practice sentence in lane A's `SavedStep.tsx`.
 
 ### MOB-38: Observations: one Contour list inside the app shell
 Status: todo · Phase 4 · Size M · Depends: MOB-37 · Blocks: QA-08

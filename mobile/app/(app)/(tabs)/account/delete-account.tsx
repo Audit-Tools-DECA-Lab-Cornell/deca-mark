@@ -9,11 +9,16 @@ import {
   finishingLine,
   runAccountDeletion,
 } from "../../../../src/features/account/deletion";
-import { deletionConsequences } from "../../../../src/features/account/leaving";
+import {
+  deleteAnywayAlert,
+  deletionConsequences,
+  uploadFirstLabel,
+} from "../../../../src/features/account/leaving";
 import { useLocalWork } from "../../../../src/features/account/use-local-work";
 import { useProfile } from "../../../../src/features/auth/profile-store";
 import { PageIntro } from "../../../../src/features/projects/parts";
 import { connection } from "../../../../src/platform/config";
+import { useSync } from "../../../../src/sync/provider";
 import {
   announce,
   Button,
@@ -89,7 +94,9 @@ function refusal(outcome: DeletionOutcome): { title: string; body: string } | nu
  * `DELETE /v1/me` for the account that confirmed, and only while it is the one signed in here (the web's
  * rule since PR 26). A 202 is tried again for about 30 seconds and then counts as recorded. Once deleted
  * or recorded, this device treats the account as deleted: its records stay here and can never upload,
- * and welcome says so. Removing them from the device is the data layer's routine, not built yet.
+ * and welcome says so. Removing them from the device is the data layer's routine, not built yet. While
+ * records are unsent, "Upload N first" sends them through `sync.retry()` (never `wake()`, which waits
+ * out a record's retry delay) and the observer stays on this screen while the counts update (MOB-37).
  */
 export default function DeleteAccountScreen() {
   const s = useStyles(deleteStyles);
@@ -98,6 +105,9 @@ export default function DeleteAccountScreen() {
   const me = useMe();
   const profile = useProfile();
   const work = useLocalWork();
+  const sync = useSync();
+  const [uploading, setUploading] = useState(false);
+  const [triedUpload, setTriedUpload] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [finishing, setFinishing] = useState<string | null>(null);
@@ -129,6 +139,19 @@ export default function DeleteAccountScreen() {
   // The consequences and the unsent-work question rest on the counts: never on a read still running or failed.
   const counted = !work.loading && work.error === null;
   const said = outcome ? refusal(outcome) : null;
+
+  async function uploadFirst() {
+    if (uploading || busy) return;
+    setUploading(true);
+    setTriedUpload(true);
+    try {
+      await sync.retry();
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+    } finally {
+      if (mounted.current) setUploading(false);
+    }
+  }
 
   async function run() {
     if (!api || !confirmedFor || busy) return;
@@ -177,22 +200,16 @@ export default function DeleteAccountScreen() {
   }
 
   function confirm() {
-    if (!ready || busy || !counted) return;
+    if (!ready || busy || uploading || !counted) return;
     if (work.unsent === 0 && work.drafts === 0) {
       void run();
       return;
     }
-    const left = work.unsent + work.drafts;
-    Alert.alert(
-      left === 1
-        ? "Delete with 1 record not uploaded?"
-        : `Delete with ${left} records not uploaded?`,
-      "This version cannot upload them first. They stay on this device and can never upload.",
-      [
-        { text: "Keep my account", style: "cancel" },
-        { text: "Delete account", style: "destructive", onPress: () => void run() },
-      ],
-    );
+    const asking = deleteAnywayAlert(work);
+    Alert.alert(asking.title, asking.body, [
+      { text: "Keep my account", style: "cancel" },
+      { text: "Delete anyway", style: "destructive", onPress: () => void run() },
+    ]);
   }
 
   return (
@@ -208,13 +225,15 @@ export default function DeleteAccountScreen() {
           busy={busy}
           busyLabel="Deleting account…"
           fullWidth
-          disabled={!ready || !api || !counted}
+          disabled={!ready || !api || !counted || uploading}
           disabledReason={
             !api
               ? "Sign in to this account again to delete it."
               : !counted
                 ? "The button turns on once the records on this device are counted."
-                : `The button turns on when ${CONFIRM_WORD} is typed.`
+                : uploading
+                  ? "The button turns on when the upload stops."
+                  : `The button turns on when ${CONFIRM_WORD} is typed.`
           }
           onPress={confirm}
           testID="account-delete-confirm"
@@ -248,6 +267,45 @@ export default function DeleteAccountScreen() {
             ))}
           </View>
         </Island>
+        {counted && work.unsent > 0 ? (
+          <Note
+            tone="waiting"
+            icon="upload"
+            title={
+              work.unsent === 1
+                ? "1 record has not been uploaded."
+                : `${work.unsent} records have not been uploaded.`
+            }
+            action={
+              <Button
+                variant="ink"
+                label={uploadFirstLabel(work.unsent)}
+                icon="upload"
+                busy={uploading}
+                busyLabel="Uploading…"
+                disabled={busy}
+                onPress={() => void uploadFirst()}
+                testID="account-delete-upload-first"
+              />
+            }
+            testID="account-delete-unsent"
+          >
+            Uploading first keeps them with their projects. Deleting without uploading leaves them
+            on this device for good.
+          </Note>
+        ) : null}
+        {counted && work.unsent > 0 && triedUpload && !uploading && sync.error ? (
+          <Note
+            tone="attention"
+            title="Uploading did not finish."
+            testID="account-delete-upload-failed"
+          >
+            {sync.error}
+          </Note>
+        ) : null}
+        {counted && work.unsent === 0 && triedUpload ? (
+          <Note tone="uploaded" title="Everything on this device is uploaded." live="polite" />
+        ) : null}
         {finishing && busy ? (
           <Note tone="waiting" title="Deletion is finishing." live="polite">
             {`Your profile and memberships are removed. ${finishing}`}

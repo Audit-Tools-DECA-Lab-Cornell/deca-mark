@@ -5,10 +5,12 @@
 
 /** What this account still has on this device that the server has not acknowledged. */
 export type LocalWork = {
-  /** Records not acknowledged by the server: on device, uploading, needs attention and held. */
+  /** Bound records not acknowledged by the server: on device, uploading, needs attention and held. */
   readonly unsent: number;
   /** Of those, held for the project (they wait on the project, not on the observer). */
   readonly held: number;
+  /** Practice records (no project binding): they stay on this device and are never uploaded. */
+  readonly practice: number;
   /** Of those, refused by the server with something to fix. */
   readonly attention: number;
   /** Unfinished observations: the open one and the ones kept for later. */
@@ -21,6 +23,14 @@ export function nothingWaits(work: LocalWork): boolean {
 
 function observations(count: number): string {
   return count === 1 ? "1 observation has" : `${count} observations have`;
+}
+
+/** "2 practice records stay on this device and are never uploaded." Null when there are none. */
+export function practiceLine(practice: number): string | null {
+  if (practice === 0) return null;
+  return practice === 1
+    ? "1 practice record stays on this device and is never uploaded."
+    : `${practice} practice records stay on this device and are never uploaded.`;
 }
 
 /**
@@ -44,13 +54,16 @@ export function signOutWarning(work: LocalWork, email: string): readonly string[
         ? "1 unfinished observation is kept."
         : `${work.drafts} unfinished observations are kept.`,
     );
+  const practice = practiceLine(work.practice);
+  if (practice) lines.push(practice);
   lines.push(`They remain on this device for ${email}. Another account cannot upload them.`);
   return lines;
 }
 
 /**
  * What deleting the account does, before it is confirmed. The records on this device are not removed
- * by this build: they stay, and can never upload, as for any account the server deleted.
+ * by this build: records that were not uploaded first stay, and can never upload, as for any account
+ * the server deleted.
  */
 export function deletionConsequences(
   work: LocalWork,
@@ -75,11 +88,41 @@ export function deletionConsequences(
         ? "Your unfinished observation stays on this device and can never be saved for upload."
         : `Your ${work.drafts} unfinished observations stay on this device and can never be saved for upload.`,
     );
+  const practice = practiceLine(work.practice);
+  if (practice) lines.push(practice);
   lines.push("This device signs out of the account.");
   return lines;
 }
 
-/** "Upload 5 records first", the way out of deleting with unsent records. */
+/** "Upload 5 first", the way out of deleting with unsent records. */
 export function uploadFirstLabel(unsent: number): string {
-  return unsent === 1 ? "Upload 1 record first" : `Upload ${unsent} records first`;
+  return `Upload ${unsent} first`;
+}
+
+/**
+ * The last question before deleting with work still on this device. Unsent records can still be
+ * uploaded first; unfinished observations cannot, so they are named as lost either way.
+ */
+export function deleteAnywayAlert(work: LocalWork): { title: string; body: string } {
+  const left = work.unsent + work.drafts;
+  const body: string[] = [];
+  if (work.unsent > 0)
+    body.push(
+      work.unsent === 1
+        ? "Upload it first, or it stays on this device and can never upload."
+        : "Upload them first, or they stay on this device and can never upload.",
+    );
+  if (work.drafts > 0)
+    body.push(
+      work.drafts === 1
+        ? "The unfinished observation can never be saved for upload."
+        : "The unfinished observations can never be saved for upload.",
+    );
+  return {
+    title:
+      left === 1
+        ? "Delete with 1 record not uploaded?"
+        : `Delete with ${left} records not uploaded?`,
+    body: body.join(" "),
+  };
 }
