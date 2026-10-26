@@ -232,12 +232,7 @@ export function ReviewStep({
         />
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20, alignItems: "center" }}>
           <TextLink label="Keep answering" arrow="left" disabled={saving} onPress={onBack} />
-          <TextLink
-            label="Discard observation"
-            tone="ink"
-            disabled={saving}
-            onPress={onDiscard}
-          />
+          <TextLink label="Discard observation" tone="ink" disabled={saving} onPress={onDiscard} />
         </View>
       </View>
     </View>

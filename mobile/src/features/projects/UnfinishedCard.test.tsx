@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Recovered } from "../../packages/zone-read-models";
 import { takeAlerts, takeAnnouncements, takeNavigation } from "../../ui/native.fixture";
 import { isDisabled, render } from "../../ui/screen.fixture";
-import { ParkedDrafts, UnfinishedCard, useUnfinished } from "./UnfinishedCard";
+import { ParkedDrafts, UnfinishedCard, UnreadableDraftCard, useUnfinished } from "./UnfinishedCard";
 
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
 vi.mock(
@@ -32,6 +32,10 @@ const data = vi.hoisted(() => ({
   restore: "reopens" as "reopens" | "keeps" | "throws",
   /** A practice draft recovered after a restart: it ships with the app, so it has no binding. */
   unbound: null as unknown,
+  /** A stored draft this build cannot read (MOB-41). */
+  unreadable: false,
+  /** Whether clearing the draft throws, as a storage error would. */
+  discardFails: false,
   /** The hosted downloads by site, as the data layer keeps their failures. */
   downloads: {} as Record<string, unknown>,
   calls: [] as string[],
@@ -82,6 +86,7 @@ vi.mock("../../session/provider", () => ({
   useFieldSession: () => ({
     recovered: data.unbound ?? (data.occupied ? { id: "draft-1", binding: {} } : null),
     inProgress: data.inProgress,
+    unreadableDraft: data.unreadable,
     parked: [],
     state: { answers: {} },
     resumeRecovered: async () => {
@@ -90,6 +95,8 @@ vi.mock("../../session/provider", () => ({
     },
     discardRecovered: async () => {
       data.calls.push("session discard");
+      if (data.discardFails) throw new Error("Storage is not available.");
+      data.unreadable = false;
     },
   }),
 }));
@@ -130,6 +137,8 @@ beforeEach(() => {
   data.inProgress = null;
   data.restore = "reopens";
   data.unbound = null;
+  data.unreadable = false;
+  data.discardFails = false;
   data.downloads = {};
   data.calls = [];
   takeAlerts();
@@ -250,6 +259,76 @@ describe("a practice draft after a restart", () => {
     alert?.buttons?.find((button) => button.text === "Discard draft")?.onPress?.();
     await vi.waitFor(() => expect(takeAnnouncements()).toContain("Draft discarded."));
     expect(data.calls).toEqual(["session discard"]);
+  });
+});
+
+describe("a stored draft this build cannot read (MOB-41, audit C08)", () => {
+  function Home() {
+    const unfinished = useUnfinished();
+    return unfinished ? <UnfinishedCard unfinished={unfinished} /> : null;
+  }
+
+  beforeEach(() => {
+    data.unreadable = true;
+  });
+
+  it("shows a card whose only action is Discard, on Projects", () => {
+    const screen = render(<Home />);
+    expect(screen.says("A draft this app cannot read")).toBe(true);
+    expect(screen.says("no new observation can be started")).toBe(true);
+    expect(screen.controls()).toEqual(["Discard draft"]);
+  });
+
+  it("asks before discarding, then discards it through the field session and says so", async () => {
+    const screen = render(<Home />);
+    await screen.press("Discard draft");
+    const [alert] = takeAlerts();
+    expect(alert?.title).toBe("Discard this draft?");
+    expect(alert?.buttons?.map((button) => button.text)).toEqual(["Keep draft", "Discard draft"]);
+    expect(data.calls).toEqual([]);
+    alert?.buttons?.find((button) => button.text === "Discard draft")?.onPress?.();
+    await vi.waitFor(() => expect(takeAnnouncements()).toContain("Draft discarded."));
+    expect(data.calls).toEqual(["session discard"]);
+    // The session no longer holds an unreadable draft, so nothing is offered any more.
+    expect(render(<Home />).controls()).toEqual([]);
+  });
+
+  it("keeps the draft when the observer declines, and says so when it cannot be discarded", async () => {
+    const screen = render(<Home />);
+    await screen.press("Discard draft");
+    takeAlerts()[0]
+      ?.buttons?.find((button) => button.text === "Keep draft")
+      ?.onPress?.();
+    expect(data.calls).toEqual([]);
+
+    data.discardFails = true;
+    await screen.press("Discard draft");
+    takeAlerts()[0]
+      ?.buttons?.find((button) => button.text === "Discard draft")
+      ?.onPress?.();
+    await vi.waitFor(() =>
+      expect(takeAnnouncements()).toContain(
+        "The draft could not be discarded. It stays on this device.",
+      ),
+    );
+    expect(data.unreadable).toBe(true);
+  });
+
+  it("gives way to the draft that can be read", () => {
+    data.unbound = {
+      id: "practice-1",
+      formVersion: "shell-v1",
+      context: { zoneLabel: "Practice lawn", roundType: "standard" },
+      coordinates: [0.5, 0.5],
+      answers: {},
+    };
+    expect(render(<Home />).says("A draft this app cannot read")).toBe(false);
+  });
+
+  it("is also the card on the site screen, and is gone once nothing is unreadable", () => {
+    expect(render(<UnreadableDraftCard />).controls()).toEqual(["Discard draft"]);
+    data.unreadable = false;
+    expect(render(<UnreadableDraftCard />).controls()).toEqual([]);
   });
 });
 

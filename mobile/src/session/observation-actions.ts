@@ -138,7 +138,8 @@ export function useObservationActions(input: ActionInput) {
 
   const dispatch = (action: SessionAction): SessionStep => {
     if (!current()) return { state: startSession(), destination: "stay", autoAdvance: false };
-    if (committing.current) return { state: stateRef.current, destination: "stay", autoAdvance: false };
+    if (committing.current)
+      return { state: stateRef.current, destination: "stay", autoAdvance: false };
     if (!form) return { state: stateRef.current, destination: "stay", autoAdvance: false };
     const reduced = reduceSession(form, stateRef.current, action);
     const step = {

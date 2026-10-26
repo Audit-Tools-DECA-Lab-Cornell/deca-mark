@@ -176,7 +176,9 @@ export function CollectScreen() {
       return;
     }
     Alert.alert(
-      draftFailed ? "Leave? This observation is not kept" : "Leave? Your draft stays on this device",
+      draftFailed
+        ? "Leave? This observation is not kept"
+        : "Leave? Your draft stays on this device",
       draftFailed
         ? "It is only in memory and is lost if the app closes. Save it first, or return to the site before closing the app."
         : "The point and every answer so far are kept. Return to the site to carry on.",

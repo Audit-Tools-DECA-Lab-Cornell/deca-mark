@@ -280,7 +280,13 @@ it("an unreadable draft can be discarded, and then a map opens again", async () 
     .prepare(
       "INSERT INTO observation_drafts (owner_scope, id, updated_at, payload, package_key) VALUES (?, ?, ?, ?, ?)",
     )
-    .run(owner, "62000000-0000-4000-8000-000000000002", "2026-10-24T10:00:00.000Z", "{ not json", "");
+    .run(
+      owner,
+      "62000000-0000-4000-8000-000000000002",
+      "2026-10-24T10:00:00.000Z",
+      "{ not json",
+      "",
+    );
   await mount();
   await settled();
 
