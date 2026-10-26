@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { saveObservation } from "../../storage/observation-store";
@@ -107,6 +108,19 @@ describe("The queue with one bound row in backoff and two practice rows (MOB-37)
       expect(byId.get(boundRecord.id)?.summary).toBe("Behaviour mapping");
       for (const id of [practiceShell.id, practiceInventory.id])
         expect(byId.get(id)?.state).not.toBe("held");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("words the practice record the way Saved does (lane A's file is only read, not edited)", async () => {
+    const sqlite = await open(() => {});
+    try {
+      const line = queue.records.find((record) => record.id === practiceShell.id)?.storage;
+      expect(line).toBe("Practice record: stays on this device and is never uploaded");
+      const saved = readFileSync(new URL("../collect/SavedStep.tsx", import.meta.url), "utf8");
+      expect(saved).toContain(line ?? "never");
+      expect(saved).not.toContain("is not published to the server yet");
     } finally {
       sqlite.close();
     }

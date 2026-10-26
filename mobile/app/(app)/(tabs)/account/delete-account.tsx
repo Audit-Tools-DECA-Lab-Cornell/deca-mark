@@ -32,6 +32,7 @@ import {
   TextLink,
   type Theme,
   useHaptics,
+  useOnline,
   useStyles,
 } from "../../../../src/ui";
 
@@ -106,6 +107,7 @@ export default function DeleteAccountScreen() {
   const profile = useProfile();
   const work = useLocalWork();
   const sync = useSync();
+  const online = useOnline();
   const [uploading, setUploading] = useState(false);
   const [triedUpload, setTriedUpload] = useState(false);
   const [typed, setTyped] = useState("");
@@ -294,7 +296,17 @@ export default function DeleteAccountScreen() {
             on this device for good.
           </Note>
         ) : null}
-        {counted && work.unsent > 0 && triedUpload && !uploading && sync.error ? (
+        {counted && work.unsent > 0 && online === false ? (
+          <Note tone="waiting" title="No connection." testID="account-delete-offline">
+            Records upload when the signal is back. Nothing is sent until then.
+          </Note>
+        ) : null}
+        {counted &&
+        work.unsent > 0 &&
+        online !== false &&
+        triedUpload &&
+        !uploading &&
+        sync.error ? (
           <Note
             tone="attention"
             title="Uploading did not finish."
@@ -304,7 +316,16 @@ export default function DeleteAccountScreen() {
           </Note>
         ) : null}
         {counted && work.unsent === 0 && triedUpload ? (
-          <Note tone="uploaded" title="Everything on this device is uploaded." live="polite" />
+          <Note
+            tone="uploaded"
+            title={
+              work.practice === 0 && work.drafts === 0
+                ? "Everything on this device is uploaded."
+                : "Every record that can upload is uploaded."
+            }
+            live="polite"
+            testID="account-delete-uploaded"
+          />
         ) : null}
         {finishing && busy ? (
           <Note tone="waiting" title="Deletion is finishing." live="polite">

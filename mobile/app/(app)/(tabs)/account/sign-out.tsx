@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useAccount } from "../../../../src/auth/provider";
-import { signOutWarning } from "../../../../src/features/account/leaving";
+import { practiceLine, signOutWarning } from "../../../../src/features/account/leaving";
 import { useLocalWork } from "../../../../src/features/account/use-local-work";
 import { useSignOutHere } from "../../../../src/features/account/use-sign-out";
 import { PageIntro } from "../../../../src/features/projects/parts";
@@ -45,6 +45,8 @@ export default function SignOutScreen() {
   const email = account?.email ?? "this account";
   const unread = !work.loading && work.error !== null;
   const warning = work.loading || unread ? null : signOutWarning(work, email);
+  // Practice records never wait to upload, but the observer is still told they stay here.
+  const practice = practiceLine(work.practice);
 
   async function signOut() {
     if (busy || work.loading) return;
@@ -91,7 +93,7 @@ export default function SignOutScreen() {
           lead={
             warning || unread
               ? undefined
-              : `Nothing is waiting on this device for ${email}. Signing out works without a connection.`
+              : `Nothing is waiting on this device for ${email}. Signing out works without a connection.${practice ? ` ${practice}` : ""}`
           }
         />
         {work.loading ? (

@@ -54,9 +54,10 @@ export function signOutWarning(work: LocalWork, email: string): readonly string[
         ? "1 unfinished observation is kept."
         : `${work.drafts} unfinished observations are kept.`,
     );
+  lines.push(`They remain on this device for ${email}. Another account cannot upload them.`);
+  // After the sentence about "them": practice records are not among the records it speaks of.
   const practice = practiceLine(work.practice);
   if (practice) lines.push(practice);
-  lines.push(`They remain on this device for ${email}. Another account cannot upload them.`);
   return lines;
 }
 
