@@ -6,6 +6,11 @@ Planning checkpoint: [current roadmap, 2026-10-15](../docs/plan/current-state.md
 
 ## Run locally
 
+For hosted migration commands, offline schema2 SQL preparation and release
+reminders, use the [database migration guide](../docs/Database-Migrations.md)
+or run `pnpm db:migrate:guide`. Existing schema1 forms need the dedicated schema2
+preflight/application workflow, rather than an ordinary CLI push.
+
 From the product root, with Docker Desktop, Node 24, pnpm 10.17.1 and uv installed:
 
 ```sh
