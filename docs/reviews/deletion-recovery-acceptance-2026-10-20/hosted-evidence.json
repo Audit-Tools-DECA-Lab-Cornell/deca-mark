@@ -1,0 +1,186 @@
+{
+  "record_date": "2026-10-20",
+  "timezone": "America/New_York",
+  "deployed_sha": "0279fd38f732eb3167fb174b9c2c19e177c273b1",
+  "deployment_id": "dep-dbbun21srm7s73d74ahg",
+  "scope": "One newly created disposable account; no hosted faults or other account deletions; no redeployment",
+  "account_id": "5bee300b-7ded-48ec-99ac-403908a82d1a",
+  "provisioning": "Transactional administrative SQL created this allowlisted auth.users row and its email identity; a genuine password grant and /auth/v1/user check followed; not signup/email-hook acceptance",
+  "login": {
+    "account_id": "5bee300b-7ded-48ec-99ac-403908a82d1a",
+    "action": "/login",
+    "status": 200,
+    "token_subject_matches": true,
+    "auth_user_status": 200,
+    "auth_user_matches": true
+  },
+  "bootstrap": {
+    "account_id": "5bee300b-7ded-48ec-99ac-403908a82d1a",
+    "action": "/bootstrap",
+    "get_me_status": 200,
+    "project_memberships": 1,
+    "organization_memberships": 0,
+    "patch_me_status": 200
+  },
+  "deletion": [
+    {
+      "account_id": "5bee300b-7ded-48ec-99ac-403908a82d1a",
+      "action": "/delete",
+      "status": 204,
+      "request_id": "cd03172a-da0a-4ac5-be5e-38c34340d3e5"
+    },
+    {
+      "account_id": "5bee300b-7ded-48ec-99ac-403908a82d1a",
+      "action": "/after",
+      "old_token_get_status": 403,
+      "old_token_get_error": "account_deleted",
+      "old_token_patch_status": 403,
+      "old_token_patch_error": "account_deleted",
+      "password_login_status": 400,
+      "password_login_error": "invalid_credentials"
+    }
+  ],
+  "before_research": {
+    "research": {
+      "count": 72,
+      "sha256": "f92bcd13d88d0e5d7b5336341edc63833ab936ac1643322a5ee0b1860e49944e"
+    },
+    "form_fingerprint": "c57433a007915ce8ac95e3097aa00ee38aba325fcb34e7c1ad567ad4fad164dc",
+    "package_fingerprint": "6075b5a8627740dc5057e8aab493bc297af5e0aabaa80b07aa8825d129e3edbc",
+    "packages": [
+      {
+        "id": "52a18aa1-5d4b-4919-9e34-5167542a1b24",
+        "archive_sha256": "844218ade3cb62298bf59a6a4e4d8739a74224035a8daf85919a6f9b79632db6",
+        "digest_matches": true
+      },
+      {
+        "id": "5ecc1e2d-a329-5c78-9d13-ae3e05761ee1",
+        "archive_sha256": "fb99a1b7947543dbe871d3bde30394abb8e6bec116f30b041f3bd11924f90815",
+        "digest_matches": true
+      },
+      {
+        "id": "a7c42ed9-fe70-56d0-a2b1-bd9cf4485be4",
+        "archive_sha256": "8320ba30fb24010d9f735071f0952416d2e8185aadf53a0a99cd710737c03e9a",
+        "digest_matches": true
+      }
+    ]
+  },
+  "before_account": {
+    "profile": {
+      "active": true,
+      "name_set": true,
+      "locale_set": true,
+      "initials_set": true
+    },
+    "account_id": "5bee300b-7ded-48ec-99ac-403908a82d1a",
+    "identity_count": 1,
+    "other_auth_ids": "81a67544ff422d3014094f274aa1038989ddde6d537054dfe371fc0ac902777e",
+    "other_profiles": "f0eaffa8f54208a529f0c560cc917da1f8136e1a6b0050b47c6a775ee9cfe710",
+    "auth_user_exists": true,
+    "own_observations": 0,
+    "other_memberships": "4aeac8075a11d7d0649c2d8d177dbb28e726006bed403bec16b4dd5c56b494a3",
+    "project_memberships": 1,
+    "organization_memberships": 0
+  },
+  "after": {
+    "packages": [
+      {
+        "id": "52a18aa1-5d4b-4919-9e34-5167542a1b24",
+        "archive_sha256": "844218ade3cb62298bf59a6a4e4d8739a74224035a8daf85919a6f9b79632db6",
+        "digest_matches": true
+      },
+      {
+        "id": "5ecc1e2d-a329-5c78-9d13-ae3e05761ee1",
+        "archive_sha256": "fb99a1b7947543dbe871d3bde30394abb8e6bec116f30b041f3bd11924f90815",
+        "digest_matches": true
+      },
+      {
+        "id": "a7c42ed9-fe70-56d0-a2b1-bd9cf4485be4",
+        "archive_sha256": "8320ba30fb24010d9f735071f0952416d2e8185aadf53a0a99cd710737c03e9a",
+        "digest_matches": true
+      }
+    ],
+    "profiles": 0,
+    "research": {
+      "count": 72,
+      "sha256": "f92bcd13d88d0e5d7b5336341edc63833ab936ac1643322a5ee0b1860e49944e"
+    },
+    "sessions": 0,
+    "account_id": "5bee300b-7ded-48ec-99ac-403908a82d1a",
+    "identities": 0,
+    "sampled_at": "2026-10-21T00:26:22.260456+00:00",
+    "total_backlog": 0,
+    "other_auth_ids": "81a67544ff422d3014094f274aa1038989ddde6d537054dfe371fc0ac902777e",
+    "other_profiles": "f0eaffa8f54208a529f0c560cc917da1f8136e1a6b0050b47c6a775ee9cfe710",
+    "auth_user_exists": false,
+    "form_fingerprint": "c57433a007915ce8ac95e3097aa00ee38aba325fcb34e7c1ad567ad4fad164dc",
+    "pending_deletion": 0,
+    "other_memberships": "4aeac8075a11d7d0649c2d8d177dbb28e726006bed403bec16b4dd5c56b494a3",
+    "package_fingerprint": "6075b5a8627740dc5057e8aab493bc297af5e0aabaa80b07aa8825d129e3edbc",
+    "project_memberships": 0,
+    "organization_memberships": 0
+  },
+  "render_preview": {
+    "generation": "automatic",
+    "enabled": "yes",
+    "deca_services_including_previews": [
+      {
+        "id": "srv-dapctm7f3r2c73c9mi50",
+        "name": "Decamark",
+        "branch": "master",
+        "isPreview": false,
+        "url": "https://field-maps.onrender.com"
+      }
+    ],
+    "pr31_title_guard": "[skip preview]",
+    "render_commit_guard": "[skip render]",
+    "vercel_branch_guard": "review/account-deletion-recovery disabled in both checked-in vercel.json files"
+  },
+  "request_log": {
+    "hasMore": false,
+    "logs": [
+      {
+        "id": "e620f73c-ea9f-4d59-bfed-d295b9b2d73b",
+        "labels": [
+          {
+            "name": "resource",
+            "value": "srv-dapctm7f3r2c73c9mi50"
+          },
+          {
+            "name": "instance",
+            "value": "srv-dapctm7f3r2c73c9mi50-dhfpk"
+          },
+          {
+            "name": "level",
+            "value": "info"
+          },
+          {
+            "name": "type",
+            "value": "app"
+          }
+        ],
+        "message": "{\"event\":\"http_response\",\"request_id\":\"cd03172a-da0a-4ac5-be5e-38c34340d3e5\",\"method\":\"DELETE\",\"status\":204,\"duration_ms\":616,\"operation\":\"delete_account\"}",
+        "timestamp": "2026-10-21T00:25:49.069803209Z"
+      }
+    ],
+    "nextEndTime": "2026-10-21T00:25:49.069803209Z",
+    "nextStartTime": "2026-10-21T00:20:00Z"
+  },
+  "error_window": {
+    "hasMore": false,
+    "logs": [],
+    "nextEndTime": "2026-10-21T00:33:27.578723844Z",
+    "nextStartTime": "2026-10-21T00:20:00Z"
+  },
+  "unchanged": true,
+  "public_health_after": {
+    "health": {"status": 200, "body": {"status": "running"}},
+    "ready": {"status": 200, "body": {"status": "ready"}},
+    "transport": "curl through configured workspace network proxy; direct egress unavailable"
+  },
+  "remaining_owners": {
+    "deletion_backlog": "unassigned deployment/Auth operator",
+    "device_census": "unassigned collection lead",
+    "unsatisfiable_queues": "unassigned research/data owner"
+  }
+}

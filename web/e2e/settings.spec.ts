@@ -15,6 +15,8 @@ test("a manager changes the project description and it is saved", async ({ page 
 	await field.fill(description);
 	await page.getByRole("button", { name: /^save/i }).first().click();
 
+	// The toast says the save finished. Polling the API or reloading first can race the save (WEB-46).
+	await expect(page.getByText("Project settings saved.", { exact: true })).toBeVisible();
 	await expect.poll(async () => (await getProject()).description, { timeout: 20_000 }).toBe(description);
 	await page.reload();
 	await expect(page.getByLabel(/^description/i).first()).toHaveValue(description);

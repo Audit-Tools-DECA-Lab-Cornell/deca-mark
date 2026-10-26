@@ -16,6 +16,7 @@ import { useToast } from "@/components/contour/Toast";
 import { projectHref } from "@/features/shell/navigation";
 import { useLeaveGuard } from "@/features/shell/useLeaveGuard";
 import type { VersionState } from "@/lib/api/types";
+import { validateFormDefinition } from "@/lib/forms";
 import { plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
 
@@ -23,7 +24,8 @@ import { ActionNote } from "./ActionNote";
 import { saveDraftAction, startDraftAction } from "./actions";
 import { AddQuestionDialog } from "./AddQuestionDialog";
 import { CollectorPreview, type PreviewDevice } from "./CollectorPreview";
-import { changedIds, isZoneForm, questionNumber, sameDefinition, toForm } from "./model";
+import { changedIds, isZoneForm, previousQuestion, questionNumber, sameDefinition, toForm } from "./model";
+import { moveQuestion, questionIdColumns, renameQuestion } from "./operations";
 import { draftProblems } from "./problems";
 import { QuestionList } from "./QuestionList";
 import { type QuestionPatch, QuestionSettings, saveProblem } from "./QuestionSettings";
@@ -38,6 +40,9 @@ export type CollectorContext = {
 	zoneName: string | null;
 	/** "v3"; null when no site has a map package. */
 	mapVersion: string | null;
+	timeZone?: string;
+	observer?: { userId: string; code: string };
+	captureInstant?: string;
 };
 
 export type EditorVersion = {
@@ -89,7 +94,7 @@ export function DraftEditorScreen({
 
 	const [etag, setEtag] = useState(version.etag);
 	const [saved, setSaved] = useState(definition);
-	const [raw, setRaw] = useState(definition);
+	const [raw, setRaw] = useState(() => (editable ? questionIdColumns(definition) : definition));
 	const [chosen, setChosen] = useState<string | null>(null);
 	const [device, setDevice] = useState<PreviewDevice>("phone");
 	const [failure, setFailure] = useState<FormActionFailure | null>(null);
@@ -117,8 +122,8 @@ export function DraftEditorScreen({
 			);
 			if (problem) return `Question ${questionNumber(index)}: ${problem}`;
 		}
-		return null;
-	}, [raw, baseRaw]);
+		return validateFormDefinition(form)[0] ?? null;
+	}, [raw, baseRaw, form]);
 
 	// Leaving with unsaved edits asks first: closing the tab gets the browser's question, and a link inside
 	// the workspace (Publish, a breadcrumb, a tab) is held until the manager saves, gives the edits up or stays.
@@ -135,11 +140,31 @@ export function DraftEditorScreen({
 
 	function change(patch: QuestionPatch) {
 		if (!selectedId || readOnly) return;
-		setRaw(current => patched(current, selectedId, patch));
+		setRaw(current => questionIdColumns(patched(current, selectedId, patch)));
 		setRefused(current => {
 			if (!(selectedId in current)) return current;
 			return Object.fromEntries(Object.entries(current).filter(([id]) => id !== selectedId));
 		});
+	}
+
+	function rename(nextId: string): string | null {
+		if (!selectedId || readOnly) return "Choose an editable question first.";
+		const result = renameQuestion(raw, selectedId, nextId);
+		if (!result.ok) return result.problem;
+		setRaw(result.raw);
+		setChosen(result.id);
+		setRefused({});
+		return null;
+	}
+
+	function move(id: string, target: number): string | null {
+		if (readOnly) return "Start a new draft to change the question order.";
+		const result = moveQuestion(raw, id, target);
+		if (!result.ok) return result.problem;
+		setRaw(result.raw);
+		setChosen(id);
+		setRefused({});
+		return null;
 	}
 
 	function save(afterwards?: () => void) {
@@ -183,7 +208,7 @@ export function DraftEditorScreen({
 	}
 
 	function add(label: string, kind: QuestionKind) {
-		const { raw: next, id } = addQuestion(raw, "Record", kind, label);
+		const { raw: next, id } = addQuestion(raw, "Record", kind, label, collector.timeZone ?? "UTC");
 		setRaw(next);
 		setChosen(id);
 	}
@@ -331,6 +356,8 @@ export function DraftEditorScreen({
 							unsaved={unsaved}
 							refused={refusedIds}
 							onSelect={setChosen}
+							readOnly={readOnly}
+							onMove={move}
 						/>
 					)}
 					{editable && (
@@ -352,11 +379,14 @@ export function DraftEditorScreen({
 						<QuestionSettings
 							key={selected.id}
 							question={selected}
-							base={baseRaw?.questions.find(question => question.id === selected.id)}
+							questions={questions}
+							base={previousQuestion(selected, baseRaw)}
 							baseVersion={base?.code ?? null}
 							readOnly={readOnly}
+							timeZone={collector.timeZone}
 							problems={refused[selected.id] ?? {}}
 							onChange={change}
+							onRename={rename}
 							onRemove={questions.length > 1 ? () => remove(selected.id) : undefined}
 						/>
 					) : (
@@ -398,6 +428,8 @@ export function DraftEditorScreen({
 						zoneName={collector.zoneName}
 						round={isZoneForm(raw) ? "Inventory round" : "Standard round"}
 						mapVersion={collector.mapVersion}
+						observer={collector.observer}
+						captureInstant={collector.captureInstant}
 					/>
 				</section>
 			</div>

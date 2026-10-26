@@ -21,7 +21,7 @@ import type { RawDefinition } from "@/features/forms/raw";
 import { projectHref } from "@/features/shell/navigation";
 import { errorCopy } from "@/lib/api/errors";
 import { getFormVersion, listForms, listSites, resolveProject } from "@/lib/api/workspace";
-import { loadDefinition } from "@/lib/forms";
+import { isUnknownSchemaVersion, loadDefinition, parseServedDefinition } from "@/lib/forms";
 import { readDefinition } from "@/lib/observations/answers";
 import { projectAbilities } from "@/lib/workspace/access";
 import { isNotFound, settle } from "@/lib/workspace/result";
@@ -102,6 +102,21 @@ export default async function PublishPage({ params }: { params: Promise<Params> 
 		formName: version.form_name
 	};
 	const versionsHref = projectHref(org, code, `forms/versions?form=${encodeURIComponent(version.form_code)}`);
+
+	try {
+		parseServedDefinition(version.schema_version, version.definition);
+	} catch (error) {
+		return (
+			<ScreenState
+				kind="error"
+				icon="file-text"
+				title={
+					isUnknownSchemaVersion(error) ? "Update DECA Mark to use this form" : "This form needs attention"
+				}
+				body="The saved definition has been kept. Ask a project manager to check the form before publishing it."
+			/>
+		);
+	}
 
 	if (version.state !== "draft" || !isCanonical(version.definition))
 		return (

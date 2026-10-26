@@ -15,6 +15,7 @@ import { controlFrame } from "./classes";
 import { cleanCode, type CodeKind } from "./code";
 import { useFieldControl } from "./Field";
 import { assignRef } from "./refs";
+import { useHydrated } from "./useHydrated";
 
 /* The code rules live in ./code so server components can use them; they stay importable from here too. */
 export { cleanCode, codeCounter, type CodeKind } from "./code";
@@ -38,7 +39,8 @@ export type CodeInputProps = Omit<
 /**
  * One wide field for a whole code, never a row of boxes: it takes a paste, a password manager or the
  * phone's one-time-code suggestion in one go, and reads as one value to a screen reader. The code is
- * cleaned as it is typed or pasted; the caret stays where the person put it.
+ * cleaned as it is typed or pasted; the caret stays where the person put it. It is read-only until the page
+ * has hydrated, so a code typed or pasted early is refused rather than shown and lost (useHydrated).
  */
 export function CodeInput({
 	ref,
@@ -51,10 +53,12 @@ export function CodeInput({
 	invalid,
 	className,
 	onPaste,
+	readOnly,
 	"aria-describedby": describedBy,
 	...props
 }: CodeInputProps) {
 	const field = useFieldControl({ id, invalid, describedBy });
+	const hydrated = useHydrated();
 	const inputRef = useRef<HTMLInputElement | null>(null);
 	const pendingCaret = useRef<number | null>(null);
 
@@ -103,6 +107,7 @@ export function CodeInput({
 			ref={setInput}
 			id={id}
 			type="text"
+			readOnly={readOnly || !hydrated}
 			value={value}
 			onChange={handleChange}
 			onPaste={handlePaste}

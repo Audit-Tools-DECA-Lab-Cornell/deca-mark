@@ -14,19 +14,35 @@ const INK_LINK = "py-2.5 text-ink underline decoration-1 underline-offset-4 hove
 /**
  * Who is signed in, on the invitation and join pages (Org 11, Org 12): the person's initials and email
  * address as the sign-in knows them, and a way out for someone who opened the link on another person's
- * account. "Not you?" signs out and returns to sign in, which comes back to this page.
+ * account. "Switch account" signs out and returns to sign in, which comes back to this page.
  */
-export function AccountChip({ account }: { account: AccountSummary }) {
+export function AccountChip({
+	account,
+	next,
+	onSwitch,
+	disabled = false
+}: {
+	account: AccountSummary;
+	next?: "/invite" | "/join";
+	onSwitch?: () => boolean;
+	disabled?: boolean;
+}) {
 	const pathname = usePathname();
 	return (
 		<div className="flex min-w-0 items-center gap-3">
 			<Avatar initials={account.initials} tone="ink" size="md" />
 			<div className="min-w-0 type-body text-ink wrap-anywhere">
-				{account.email ?? account.name} ·{" "}
-				<form action={switchAccount} className="inline">
-					<input type="hidden" name="next" value={isInvitationPath(pathname) ? pathname : "/o"} />
-					<button type="submit" className={INK_LINK}>
-						Not you?
+				<span className="block type-small text-ink-2">Signed in as</span>
+				<strong className="font-semibold">{account.email ?? account.name}</strong>{" "}
+				<form
+					action={switchAccount}
+					onSubmit={event => {
+						if (onSwitch && !onSwitch()) event.preventDefault();
+					}}
+					className="inline">
+					<input type="hidden" name="next" value={next ?? (isInvitationPath(pathname) ? pathname : "/o")} />
+					<button type="submit" className={INK_LINK} disabled={disabled}>
+						Switch account
 					</button>
 				</form>
 			</div>

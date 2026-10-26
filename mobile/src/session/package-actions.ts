@@ -6,7 +6,13 @@ import type { InstalledVersion } from "../packages/hosted/operations";
 import type { HostedSite } from "../packages/hosted/schemas";
 import { openSitePackage } from "../packages/open";
 import type { SitePackage } from "../packages/site-package";
-import { clearDraft, hasDraft, type ObservationDraft, readDraft } from "../storage/draft-store";
+import {
+  clearDraft,
+  DraftReadError,
+  hasDraft,
+  type ObservationDraft,
+  readDraft,
+} from "../storage/draft-store";
 import type { LocalDatabase } from "../storage/observation-store";
 import { SessionBindingError, sessionBinding } from "./bound-context";
 import type { OpenOutcome } from "./context";
@@ -62,9 +68,27 @@ export function packageActions(input: Input) {
     const open = identity.current;
     const blocked = packageSwitchProblem(open, id);
     if (blocked !== null) return { ok: false, reason: blocked };
-    const saved = await readDraft(database, key);
+    let saved: ObservationDraft | null;
+    try {
+      saved = await readDraft(database, key);
+    } catch (error) {
+      if (!(error instanceof DraftReadError)) throw error;
+      setUnreadableDraft(true);
+      setStatus(error.message);
+      return { ok: false, reason: "Resume or discard the unfinished observation first." };
+    }
     if ((!saved && (await hasDraft(database, key))) || (saved && saved.id !== open?.id))
       return { ok: false, reason: "Resume or discard the unfinished observation first." };
+    if (
+      installed.some(
+        (entry) => entry.identity.packageId === id && entry.status === "update_required",
+      )
+    )
+      return {
+        ok: false,
+        reason:
+          "Update DECA Mark to use this form. Its installed map and unfinished observations are retained.",
+      };
     const available = Object.entries(sites)
       .flatMap(([projectId, list]) => list.map((site) => ({ projectId, site })))
       .find(({ site }) => site.package?.package_id === id);
@@ -118,6 +142,17 @@ export function packageActions(input: Input) {
     if (wrongAccount !== null) {
       setRecovered(null);
       setStatus(wrongAccount);
+      return undefined;
+    }
+    if (
+      installed.some(
+        (entry) =>
+          entry.identity.packageId === draft.packageId && entry.status === "update_required",
+      )
+    ) {
+      setStatus(
+        "Update DECA Mark to resume this form. The exact map and unfinished observation remain on this device.",
+      );
       return undefined;
     }
     const result = await openSitePackage(draft.packageId);

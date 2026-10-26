@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
-import type { Act, FormDefinition } from "../../forms/definition";
+import { type Act, type FormDefinition, isObserverQuestion } from "../../forms/definition";
 import type { ResolvedQuestion } from "../../forms/engine";
 import type { SessionState } from "../../forms/session";
 import {
@@ -18,14 +18,13 @@ import {
   Mono,
   Note,
   Text,
-  Textarea,
-  TextInput,
   TextLink,
   type Theme,
   useHaptics,
   useStyles,
   useTheme,
 } from "../../ui";
+import { QuestionValueInput } from "./QuestionValueInput";
 
 type Props = {
   readonly form: FormDefinition;
@@ -145,7 +144,10 @@ export function QuestionStep({
   const fieldBottom = useRef(0);
   /** The height of the text box itself; it is the rows' minimum height until the text outgrows them. */
   const boxHeight = useRef(0);
-  const typing = question.kind === "text" || question.kind === "number";
+  const automatic = (question.valueSource ?? "manual") !== "manual";
+  const typing =
+    !automatic &&
+    (question.kind === "text" || question.kind === "number" || question.kind === "dateTime");
   const multiline = question.kind === "text" && (question.rows ?? 1) > 1;
   /** The current text, so `showField` reads it as of the latest render, not the one it was made in. */
   const typed = useRef(text);
@@ -168,18 +170,13 @@ export function QuestionStep({
     question.kind === "many"
       ? chosen.length > 0
       : question.kind === "one"
-        ? single !== ""
-        : text.trim() !== "";
+        ? single.trim() !== ""
+        : (automatic ? inputText : text).trim() !== "";
+  const observer = isObserverQuestion(question, form.columnNaming);
 
   function type(next: string) {
-    const cleaned =
-      question.kind === "number"
-        ? next.replace(/[^0-9]/g, "")
-        : question.exportColumn === "observer"
-          ? next.toUpperCase().replace(/\s+/g, "")
-          : next;
+    const cleaned = observer ? next.toUpperCase().replace(/\s+/g, "") : next;
     setText(cleaned);
-    // Straight to the draft: debouncing would lose what was typed just before a force quit.
     onWrite(cleaned);
   }
 
@@ -262,48 +259,27 @@ export function QuestionStep({
           </Note>
         ) : null}
 
-        {typing ? (
-          <View
-            testID="collect-field"
-            onLayout={(event: LayoutChangeEvent) => {
-              const { y, height } = event.nativeEvent.layout;
-              fieldTop.current = y;
-              fieldBottom.current = y + height;
-              showField();
-            }}
-          >
-            {multiline ? (
-              <Textarea
-                accessibilityLabel={question.label}
-                value={text}
-                onChangeText={type}
-                rows={rows}
-                onLayout={(event: LayoutChangeEvent) => {
-                  boxHeight.current = event.nativeEvent.layout.height;
-                  showField();
-                }}
-                disableFullscreenUI
-                showCount={!compactField}
-                maxLength={question.maxLength}
-                placeholder={question.placeholder}
-              />
-            ) : (
-              <TextInput
-                accessibilityLabel={question.label}
-                value={text}
-                onChangeText={type}
-                keyboardType={question.kind === "number" ? "number-pad" : "default"}
-                autoCapitalize={question.exportColumn === "observer" ? "characters" : "sentences"}
-                autoCorrect={question.kind === "text" && question.exportColumn !== "observer"}
-                maxLength={question.maxLength}
-                placeholder={question.placeholder}
-                disableFullscreenUI
-                returnKeyType="next"
-                onSubmitEditing={onAdvance}
-              />
-            )}
-          </View>
-        ) : null}
+        <QuestionValueInput
+          key={question.id}
+          question={question}
+          value={value}
+          text={text}
+          observer={observer}
+          rows={rows}
+          compactField={compactField}
+          onWrite={type}
+          onAdvance={onAdvance}
+          onFieldLayout={(event) => {
+            const { y, height } = event.nativeEvent.layout;
+            fieldTop.current = y;
+            fieldBottom.current = y + height;
+            showField();
+          }}
+          onInputLayout={(event) => {
+            boxHeight.current = event.nativeEvent.layout.height;
+            showField();
+          }}
+        />
 
         {question.protocolFlag ? (
           <Note tone="waiting" icon="flag" title="Protocol note.">

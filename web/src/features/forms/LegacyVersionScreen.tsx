@@ -16,6 +16,7 @@ const KIND: Record<FormQuestion["kind"], string> = {
 	many: "Several choices",
 	text: "Free text",
 	number: "Number",
+	dateTime: "Date/Time",
 	boolean: "Yes or no"
 };
 
