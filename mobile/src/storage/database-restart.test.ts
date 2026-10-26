@@ -12,18 +12,9 @@ import {
   packageFileResetPending,
   saveObservation,
 } from "./observation-store";
-import { installPackage, readSelected, removePackage } from "./package-catalog";
-import {
-  adapter,
-  boundDraft,
-  boundRecord,
-  entry,
-  identity,
-  owner,
-  session,
-} from "./package-store.fixture";
+import { installPackage, readCatalog, removePackage } from "./package-catalog";
+import { adapter, boundDraft, boundRecord, entry, identity, owner } from "./package-store.fixture";
 import { listParkedDrafts, parkDraft } from "./parked-drafts";
-import { readSession, saveSession } from "./session-store";
 
 describe("Current collection schema restart", () => {
   it("retains frozen records, upload state and every package reference on same-schema restart", async () => {
@@ -35,7 +26,6 @@ describe("Current collection schema restart", () => {
       await initializeDatabase(db);
       await completePackageFileReset(db);
       await installPackage(db, owner, entry);
-      await saveSession(db, owner, session);
       const parked = { ...boundDraft, id: "60000000-0000-4000-8000-000000000002" };
       await saveDraft(db, owner, parked);
       await parkDraft(db, owner, parked.id);
@@ -57,14 +47,13 @@ describe("Current collection schema restart", () => {
       ]);
       expect(await readDraft(db, owner)).toEqual(boundDraft);
       expect(await listParkedDrafts(db, owner)).toEqual([parked]);
-      expect(await readSession(db, owner)).toEqual(session);
-      expect(await readSelected(db, owner, identity.projectId, identity.siteId)).toEqual(entry);
+      expect(await readCatalog(db, owner, identity)).toEqual(entry);
       expect(await readAvailableCurrent(db, owner, identity.projectId, identity.siteId)).toEqual(
         available,
       );
       expect(await removePackage(db, owner, identity)).toMatchObject({
         removed: false,
-        reasons: { sessions: 1, drafts: 2, records: 1 },
+        reasons: { sessions: 0, drafts: 2, records: 1 },
       });
       expect(await packageFileResetPending(db)).toBe(false);
     } finally {

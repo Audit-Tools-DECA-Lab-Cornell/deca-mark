@@ -66,24 +66,3 @@ export function listCatalog(
     return rows.map((row) => catalogEntrySchema.parse(JSON.parse(row.payload)));
   });
 }
-
-export function readSelected(
-  db: LocalDatabase,
-  owner: string,
-  projectId: string,
-  siteId: string,
-): Promise<CatalogEntry | null> {
-  return databaseWrite(db, async () => {
-    const rows = payloadRows.parse(
-      await db.getAllAsync(
-        `SELECT c.payload FROM package_selections s JOIN package_contents c ON c.content_key = s.content_key
-       JOIN package_authorizations a ON a.owner_scope = s.owner_scope AND a.content_key = s.content_key
-       WHERE s.owner_scope = ? AND s.project_id = ? AND s.site_id = ?`,
-        owner,
-        projectId,
-        siteId,
-      ),
-    );
-    return rows[0] ? catalogEntrySchema.parse(JSON.parse(rows[0].payload)) : null;
-  });
-}

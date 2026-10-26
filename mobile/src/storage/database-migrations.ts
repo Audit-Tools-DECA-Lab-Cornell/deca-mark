@@ -37,16 +37,9 @@ const resetSchema = `
     owner_scope TEXT NOT NULL, content_key TEXT NOT NULL,
     PRIMARY KEY(owner_scope, content_key)
   );
-  CREATE TABLE package_selections (
-    owner_scope TEXT NOT NULL, project_id TEXT NOT NULL, site_id TEXT NOT NULL,
-    content_key TEXT NOT NULL, PRIMARY KEY(owner_scope, project_id, site_id)
-  );
   CREATE TABLE available_current_packages (
     owner_scope TEXT NOT NULL, project_id TEXT NOT NULL, site_id TEXT NOT NULL,
     payload TEXT NOT NULL, PRIMARY KEY(owner_scope, project_id, site_id)
-  );
-  CREATE TABLE active_sessions (
-    owner_scope TEXT PRIMARY KEY NOT NULL, package_key TEXT NOT NULL, payload TEXT NOT NULL
   );
   CREATE TABLE local_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
   INSERT INTO local_metadata VALUES ('package_files_need_reset', '1');

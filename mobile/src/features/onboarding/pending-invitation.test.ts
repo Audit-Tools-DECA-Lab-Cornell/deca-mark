@@ -36,7 +36,6 @@ describe("join codes from links", () => {
     expect(joinCodeFromLink("/join/deca-2026")).toBe("DECA2026");
     expect(joinCodeFromLink("join/DECA%202026")).toBe("DECA2026");
     expect(joinCodeFromLink("decamark://join?code=deca2026")).toBe("DECA2026");
-    expect(joinCodeFromLink("fieldmaps://join/DECA2026")).toBe("DECA2026");
     expect(joinCodeFromLink("/join?code=DECA2026#top")).toBe("DECA2026");
     expect(joinCodeFromLink("exp://192.168.0.2:8081/--/join/DECA2026")).toBe("DECA2026");
   });

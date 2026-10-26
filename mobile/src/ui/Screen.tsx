@@ -94,7 +94,7 @@ export function Screen({
 
   return (
     <View testID={testID} style={s.screen}>
-      {/* Dark glyphs on the Day ground, light on Dusk. The root layout keeps "light" for the legacy
+      {/* Dark glyphs on the Day ground, light on Dusk. The root layout keeps "light" for the old
           Nocturne screens; this one wins while a Contour screen is mounted. */}
       <StatusBar style={t.scheme === "dusk" ? "light" : "dark"} />
       {keyboard ? (

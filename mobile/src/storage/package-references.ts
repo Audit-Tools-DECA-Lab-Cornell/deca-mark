@@ -4,7 +4,6 @@ import type { LocalDatabase } from "./observation-store";
 
 const countSchema = z.array(z.object({ total: z.number().int().nonnegative() }));
 export type PackageReferences = {
-  readonly sessions: number;
   readonly drafts: number;
   readonly records: number;
 };
@@ -17,11 +16,6 @@ export async function packageReferences(
   const key = identityKey(identity);
   const count = async (sql: string, ...parameters: (string | number)[]) =>
     countSchema.parse(await db.getAllAsync(sql, ...parameters))[0]?.total ?? 0;
-  const sessions = await count(
-    "SELECT COUNT(*) total FROM active_sessions WHERE owner_scope = ? AND package_key = ?",
-    owner,
-    key,
-  );
   const drafts = await count(
     `SELECT COUNT(*) total FROM (
       SELECT id FROM observation_drafts WHERE owner_scope = ? AND package_key = ?
@@ -37,5 +31,5 @@ export async function packageReferences(
     owner,
     key,
   );
-  return { sessions, drafts, records };
+  return { drafts, records };
 }

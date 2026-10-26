@@ -57,15 +57,15 @@ import {
   cachedAccount,
   forgetAccount,
   rememberAccount,
-  sessionAccount,
   sessionIdentity,
 } from "../auth/cached-account";
-import { authStorage, legacyStorageKey, migrateLegacySession } from "./auth-storage";
+import { authStorage } from "./auth-storage";
 
-const issuer = "https://lezmqhuucfwqknspgcdy.supabase.co";
+const issuer = "https://auth.example.test";
 const account = { id: "50000000-0000-4000-8000-000000000001", email: "qa@example.test" };
 const largeSession = JSON.stringify({ user: account, access_token: "synthetic".repeat(600) });
-const filePath = `document/auth/${legacyStorageKey}`;
+const storageKey = "fieldmaps-auth-synthetic.supabase.co";
+const filePath = `document/auth/${storageKey}`;
 beforeEach(() => {
   mock.files.clear();
   mock.secure.clear();
@@ -74,16 +74,16 @@ beforeEach(() => {
 });
 
 it("round trips a >2KB session with only a 256-bit key in SecureStore", async () => {
-  await authStorage.setItem(legacyStorageKey, largeSession);
+  await authStorage.setItem(storageKey, largeSession);
   expect(largeSession.length).toBeGreaterThan(2048);
   expect(mock.secure.get("fieldmaps-auth-key")).toHaveLength(64);
   expect(mock.files.get(filePath)).not.toContain("synthetic");
-  expect(await authStorage.getItem(legacyStorageKey)).toBe(largeSession);
+  expect(await authStorage.getItem(storageKey)).toBe(largeSession);
 });
 it("uses a fresh nonce for every write and authenticates the storage key", async () => {
-  await authStorage.setItem(legacyStorageKey, largeSession);
+  await authStorage.setItem(storageKey, largeSession);
   const first = mock.files.get(filePath);
-  await authStorage.setItem(legacyStorageKey, largeSession);
+  await authStorage.setItem(storageKey, largeSession);
   expect(mock.files.get(filePath)).not.toBe(first);
   mock.files.set("document/auth/other", mock.files.get(filePath) ?? "");
   expect(await authStorage.getItem("other")).toBeNull();
@@ -95,75 +95,46 @@ it("serializes concurrent key creation, writes and removal", async () => {
   await Promise.all([authStorage.setItem("one", "{}"), authStorage.removeItem("one")]);
   expect(await authStorage.getItem("one")).toBeNull();
 });
-it("migrates the exact legacy key and retains its account before deleting it", async () => {
-  mock.secure.set(legacyStorageKey, largeSession);
-  await migrateLegacySession(legacyStorageKey, true, (value) => {
-    const migrated = sessionAccount(value);
-    if (migrated) rememberAccount(migrated, issuer);
-  });
-  expect(await authStorage.getItem(legacyStorageKey)).toBe(largeSession);
-  expect(mock.secure.has(legacyStorageKey)).toBe(false);
-  expect(cachedAccount(issuer)).toEqual(account);
-});
-it.each([
-  [false, legacyStorageKey],
-  [true, "fieldmaps-auth-localhost"],
-])("never migrates from a different bundle or issuer", async (legacy, key) => {
-  mock.secure.set(legacyStorageKey, largeSession);
-  await migrateLegacySession(key, legacy, vi.fn());
-  expect(mock.secure.get(legacyStorageKey)).toBe(largeSession);
-  expect(mock.files.size).toBe(0);
-});
-it("retries migration after a failed key write without losing the legacy session", async () => {
-  mock.secure.set(legacyStorageKey, largeSession);
+it("writes no session file when the encryption key cannot be saved", async () => {
   mock.failKey = true;
-  await expect(migrateLegacySession(legacyStorageKey, true, vi.fn())).rejects.toThrow(
+  await expect(authStorage.setItem(storageKey, largeSession)).rejects.toThrow(
     "SecureStore unavailable",
   );
-  expect(mock.secure.get(legacyStorageKey)).toBe(largeSession);
   expect(mock.files.size).toBe(0);
 });
-it("does not overwrite a newer session during migration", async () => {
-  await authStorage.setItem(legacyStorageKey, "{}");
-  mock.secure.set(legacyStorageKey, largeSession);
-  const retain = vi.fn();
-  await migrateLegacySession(legacyStorageKey, true, retain);
-  expect(await authStorage.getItem(legacyStorageKey)).toBe("{}");
-  expect(retain).toHaveBeenCalledWith("{}");
-});
 it("missing and malformed keys permit a fresh sign-in", async () => {
-  await authStorage.setItem(legacyStorageKey, largeSession);
+  await authStorage.setItem(storageKey, largeSession);
   mock.secure.clear();
-  expect(await authStorage.getItem(legacyStorageKey)).toBeNull();
-  await authStorage.setItem(legacyStorageKey, "{}");
-  expect(await authStorage.getItem(legacyStorageKey)).toBe("{}");
+  expect(await authStorage.getItem(storageKey)).toBeNull();
+  await authStorage.setItem(storageKey, "{}");
+  expect(await authStorage.getItem(storageKey)).toBe("{}");
   mock.secure.set("fieldmaps-auth-key", "bad-key");
-  expect(await authStorage.getItem(legacyStorageKey)).toBeNull();
-  await authStorage.setItem(legacyStorageKey, "{}");
-  expect(await authStorage.getItem(legacyStorageKey)).toBe("{}");
+  expect(await authStorage.getItem(storageKey)).toBeNull();
+  await authStorage.setItem(storageKey, "{}");
+  expect(await authStorage.getItem(storageKey)).toBe("{}");
 });
 it("does not replace a key or session when SecureStore read fails", async () => {
-  await authStorage.setItem(legacyStorageKey, largeSession);
+  await authStorage.setItem(storageKey, largeSession);
   const ciphertext = mock.files.get(filePath);
   const secure = await import("expo-secure-store");
   vi.mocked(secure.getItemAsync).mockRejectedValueOnce(new Error("Keychain locked"));
-  await expect(authStorage.setItem(legacyStorageKey, "{}")).rejects.toThrow("Keychain locked");
+  await expect(authStorage.setItem(storageKey, "{}")).rejects.toThrow("Keychain locked");
   expect(mock.files.get(filePath)).toBe(ciphertext);
-  expect(await authStorage.getItem(legacyStorageKey)).toBe(largeSession);
+  expect(await authStorage.getItem(storageKey)).toBe(largeSession);
 });
 it("corrupt or tampered files count as signed out", async () => {
-  await authStorage.setItem(legacyStorageKey, largeSession);
+  await authStorage.setItem(storageKey, largeSession);
   const envelope = JSON.parse(mock.files.get(filePath) ?? "{}");
   envelope.ciphertext = `${envelope.ciphertext[0] === "0" ? "1" : "0"}${envelope.ciphertext.slice(1)}`;
   mock.files.set(filePath, JSON.stringify(envelope));
-  expect(await authStorage.getItem(legacyStorageKey)).toBeNull();
+  expect(await authStorage.getItem(storageKey)).toBeNull();
   mock.files.set(filePath, "invalid JSON");
-  expect(await authStorage.getItem(legacyStorageKey)).toBeNull();
+  expect(await authStorage.getItem(storageKey)).toBeNull();
 });
 it("account identity survives Supabase session removal, including a module restart", async () => {
   rememberAccount(account, issuer);
-  await authStorage.setItem(legacyStorageKey, largeSession);
-  await authStorage.removeItem(legacyStorageKey);
+  await authStorage.setItem(storageKey, largeSession);
+  await authStorage.removeItem(storageKey);
   vi.resetModules();
   const restored = await import("../auth/cached-account");
   expect(restored.cachedAccount(issuer)).toEqual(account);

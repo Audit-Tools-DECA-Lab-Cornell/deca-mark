@@ -6,7 +6,6 @@ import * as SecureStore from "expo-secure-store";
 import { z } from "zod";
 
 const keyName = "fieldmaps-auth-key";
-export const legacyStorageKey = "fieldmaps-auth-lezmqhuucfwqknspgcdy.supabase.co";
 const envelopeSchema = z.object({
   version: z.literal(1),
   nonce: z.string().regex(/^[a-f0-9]{24}$/),
@@ -77,19 +76,3 @@ export const authStorage = {
       if (file.exists) file.delete();
     }),
 };
-
-export function migrateLegacySession(
-  storageKey: string,
-  legacyBundle: boolean,
-  retainAccount: (session: string) => void,
-): Promise<void> {
-  return serialize(async () => {
-    if (!legacyBundle || storageKey !== legacyStorageKey) return;
-    const legacy = await SecureStore.getItemAsync(legacyStorageKey);
-    if (!legacy) return;
-    const existing = await read(storageKey);
-    if (!existing) await write(storageKey, legacy);
-    retainAccount(existing ?? legacy);
-    await SecureStore.deleteItemAsync(legacyStorageKey);
-  });
-}

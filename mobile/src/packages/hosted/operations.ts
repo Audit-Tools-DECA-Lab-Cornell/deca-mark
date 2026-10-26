@@ -3,7 +3,7 @@ import type { PackageIdentity } from "../../domain/package-binding";
 import { isUnknownSchemaVersion } from "../../forms/definition";
 import { setAvailableCurrent } from "../../storage/available-current";
 import type { LocalDatabase } from "../../storage/observation-store";
-import { listCatalog, readSelected, removePackage } from "../../storage/package-catalog";
+import { listCatalog, removePackage } from "../../storage/package-catalog";
 import { packageReferences } from "../../storage/package-references";
 import { zoneReferences } from "../../storage/zone-references";
 import type { VersionReferences } from "../zone-model-types";
@@ -26,7 +26,6 @@ export type InstalledVersion = {
   readonly bytes: number;
   readonly counts: VersionReferences;
   readonly references: {
-    readonly sessions: number;
     readonly drafts: number;
     readonly records: number;
   };
@@ -214,8 +213,5 @@ export class PackageOperations {
     if (result.removed && this.runtime.current())
       forgetVerifiedPackage(this.runtime.owner, identity.packageId);
     return result;
-  }
-  selected(project: string, site: string) {
-    return readSelected(this.runtime.database, this.runtime.owner, project, site);
   }
 }

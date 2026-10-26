@@ -20,14 +20,14 @@ BE-22 and DB-19 now supply the current schema and sole `/v1` contract. The live 
 
 | Module | Interface and purpose |
 | --- | --- |
-| `storage/package-catalog.ts` | `installPackage`, `readCatalog`, `listCatalog`, `readSelected`, `selectPackage`, `removePackage`; removal returns reference reasons and `contentRetained` |
+| `storage/package-catalog.ts` | `installPackage`, `readCatalog`, `listCatalog`, `removePackage`; removal returns reference reasons and `contentRetained` |
 | `storage/available-current.ts` | Current server package is separate from downloaded selection; queued writes take a generation predicate |
-| `storage/{draft-store,observation-store,session-store}.ts` | Durable draft/record insertion and references share transactions; session lease primitives are ready without implementing automatic multi-visit sessions |
+| `storage/{draft-store,observation-store}.ts` | Durable draft/record insertion and references share transactions; an open collection is a foreground lease (`activeLease`), never a stored row |
 | `packages/hosted/operations.ts` | `PackageOperations.catalog/refresh/download/remove`; current or exact historical package download; verified/needs-redownload catalog values |
 | `packages/hosted/provider.tsx` | Existing provider plus `installed`, `download(project,site,packageId?)`, `removeVersion(identity)`; all visible state is account-gated |
 | `session/provider.tsx` | Existing session actions, exact recovery, `unreadableDraft`, generation-fenced callbacks and foreground lease |
 
-MOB-33 adapts these stores into `zone-read-models.ts`, with the selected **one collect visit plus durable unfinished observation** policy, parked drafts and atomic zone changes. The UI owner acknowledged that interface on 2026-10-14. The low-level `active_sessions` table does not imply a durable multi-visit product policy.
+MOB-33 adapts these stores into `zone-read-models.ts`, with the selected **one collect visit plus durable unfinished observation** policy, parked drafts and atomic zone changes. The UI owner acknowledged that interface on 2026-10-14.
 
 ## Reproduce acceptance
 

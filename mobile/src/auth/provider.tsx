@@ -272,7 +272,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
 export function useAccount() {
   const auth = useContext(AuthContext);
-  const { scope, key } = accountWorkspace(connection && auth.ready ? auth.account : null);
+  const { scope, key } = accountWorkspace(
+    connection && auth.ready ? auth.account : null,
+    connection,
+  );
   const current = useRef(key);
   current.current = key;
   // The gate opens welcome for a deleted account, in place of onboarding or the app.

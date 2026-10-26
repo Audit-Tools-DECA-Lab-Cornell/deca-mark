@@ -4,8 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import { expect, it } from "vitest";
 import { z } from "zod";
 import { createApiClient } from "../../data/api/client";
-import { readSelected } from "../../storage/package-catalog";
-import { adapter } from "../../storage/package-store.fixture";
+import { adapter, installedFor } from "../../storage/package-store.fixture";
 import { scopeKey, syncScopeSchema } from "../../sync/contracts";
 import { hasStoredPackage, readStoredPackage, setPackageAccessOwner } from "./access";
 import { harness, hash } from "./lifecycle.test-helper";
@@ -80,7 +79,7 @@ it.skipIf(!input)(
         { identity: { packageId: fixture.packageId }, status: "verified" },
       ]);
       expect(
-        (await readSelected(adapter(database), owner, scope.projectId, fixture.siteId))?.identity
+        (await installedFor(adapter(database), owner, scope.projectId, fixture.siteId))?.identity
           .packageId,
       ).toBe(fixture.packageId);
       expect(hasStoredPackage(fixture.packageId)).toBe(true);

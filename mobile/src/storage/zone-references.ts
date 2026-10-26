@@ -33,7 +33,8 @@ export function zoneReferences(
         .reduce((sum, row) => sum + row.total, 0),
       attention: rows.find((row) => row.sync_state === "needs-attention")?.total ?? 0,
       retained: rows.find((row) => row.sync_state === "synced")?.total ?? 0,
-      openSession: references.sessions > 0,
+      // An open collection is a lease the caller holds, not a stored row: callers add it.
+      openSession: false,
     };
   });
 }

@@ -189,7 +189,7 @@ const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function openRoute(options, device, route) {
   if (route === null) return;
   // Expo Router removes layout-group parentheses from external paths.
-  const deepLink = `fieldmaps:///${route.replace(/^\/+/, "")}`;
+  const deepLink = `decamark:///${route.replace(/^\/+/, "")}`;
   if (options.platform === "ios")
     run("xcrun", ["simctl", "openurl", device.id, deepLink]);
   else

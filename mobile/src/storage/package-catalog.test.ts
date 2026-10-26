@@ -2,26 +2,14 @@ import { describe, expect, it } from "vitest";
 import { identityKey } from "../domain/package-binding";
 import { readAvailableCurrent, setAvailableCurrent } from "./available-current";
 import { databaseWrite } from "./database-write";
-import {
-  installPackage,
-  listCatalog,
-  readCatalog,
-  readSelected,
-  removePackage,
-  selectPackage,
-} from "./package-catalog";
-import {
-  entry,
-  identity,
-  memoryDatabase,
-  otherOwner,
-  owner,
-  session,
-} from "./package-store.fixture";
-import { readSession, saveSession } from "./session-store";
+import { installPackage, listCatalog, readCatalog, removePackage } from "./package-catalog";
+import { entry, identity, memoryDatabase, otherOwner, owner } from "./package-store.fixture";
 
-describe("Verified package catalog selection and authorization", () => {
-  it("keeps an installed v7 selected when discovery announces v8 and a v8 install fails", async () => {
+const versions = async (db: Parameters<typeof listCatalog>[0]) =>
+  (await listCatalog(db, owner)).map((value) => value.identity.packageVersion);
+
+describe("Verified package catalog and authorization", () => {
+  it("keeps an installed v7 when discovery announces v8 and a v8 install fails", async () => {
     const { db, sqlite } = await memoryDatabase();
     try {
       await installPackage(db, owner, entry);
@@ -30,10 +18,7 @@ describe("Verified package catalog selection and authorization", () => {
       expect(await readAvailableCurrent(db, owner, identity.projectId, identity.siteId)).toEqual(
         available,
       );
-      expect(
-        (await readSelected(db, owner, identity.projectId, identity.siteId))?.identity
-          .packageVersion,
-      ).toBe(7);
+      expect(await versions(db)).toEqual([7]);
       sqlite.exec(
         "CREATE TRIGGER fail_grant BEFORE INSERT ON package_authorizations BEGIN SELECT RAISE(ABORT, 'quota failure'); END;",
       );
@@ -43,10 +28,7 @@ describe("Verified package catalog selection and authorization", () => {
           identity: { ...identity, ...available, packageSha256: "b".repeat(64) },
         }),
       ).rejects.toThrow("quota failure");
-      expect(
-        (await readSelected(db, owner, identity.projectId, identity.siteId))?.identity
-          .packageVersion,
-      ).toBe(7);
+      expect(await versions(db)).toEqual([7]);
       expect(await listCatalog(db, owner)).toHaveLength(1);
       expect(sqlite.prepare("SELECT COUNT(*) total FROM package_contents").get()).toEqual({
         total: 1,
@@ -61,16 +43,13 @@ describe("Verified package catalog selection and authorization", () => {
     try {
       await installPackage(db, owner, entry);
       expect(await readCatalog(db, otherOwner, identity)).toBeNull();
-      await expect(selectPackage(db, otherOwner, identity)).rejects.toThrow(/not installed/);
       await installPackage(db, otherOwner, entry);
-      await saveSession(db, otherOwner, session);
       expect(sqlite.prepare("SELECT COUNT(*) total FROM package_contents").get()).toEqual({
         total: 1,
       });
       expect((await removePackage(db, owner, identity)).removed).toBe(true);
       expect(await readCatalog(db, owner, identity)).toBeNull();
       expect(await readCatalog(db, otherOwner, identity)).toEqual(entry);
-      expect(await readSession(db, otherOwner)).toEqual(session);
       expect(sqlite.prepare("SELECT content_key FROM package_contents").get()).toEqual({
         content_key: identityKey(identity),
       });
@@ -99,9 +78,7 @@ describe("Verified package catalog selection and authorization", () => {
       };
       await installPackage(db, owner, repaired);
       expect(await readCatalog(db, owner, identity)).toEqual(repaired);
-      expect(
-        (await readSelected(db, owner, identity.projectId, identity.siteId))?.identity,
-      ).toEqual(identity);
+      expect(await versions(db)).toEqual([7]);
     } finally {
       sqlite.close();
     }
@@ -137,15 +114,11 @@ describe("Verified package catalog selection and authorization", () => {
           packageSha256: "b".repeat(64),
         },
       };
-      const install = installPackage(db, owner, next, true, () => current);
+      const install = installPackage(db, owner, next, () => current);
       current = false;
       gate.resolve();
       await queued;
       await expect(install).rejects.toThrow(/cancelled/);
-      expect(
-        (await readSelected(db, owner, identity.projectId, identity.siteId))?.identity
-          .packageVersion,
-      ).toBe(7);
       expect(await listCatalog(db, owner)).toEqual([entry]);
     } finally {
       gate.resolve();
@@ -153,7 +126,7 @@ describe("Verified package catalog selection and authorization", () => {
     }
   });
 
-  it("keeps v8 selected when the exact historical v7 is re-downloaded for recovery", async () => {
+  it("keeps v8 installed when the exact historical v7 is re-downloaded for recovery", async () => {
     const { db, sqlite } = await memoryDatabase();
     try {
       await installPackage(db, owner, entry);
@@ -168,16 +141,8 @@ describe("Verified package catalog selection and authorization", () => {
       };
       await installPackage(db, owner, successor);
       await installPackage(db, owner, entry);
-      expect(
-        (await readSelected(db, owner, identity.projectId, identity.siteId))?.identity
-          .packageVersion,
-      ).toBe(8);
+      expect(await versions(db)).toEqual([7, 8]);
       expect(await readCatalog(db, owner, identity)).toEqual(entry);
-      await selectPackage(db, owner, identity);
-      expect(
-        (await readSelected(db, owner, identity.projectId, identity.siteId))?.identity
-          .packageVersion,
-      ).toBe(7);
     } finally {
       sqlite.close();
     }

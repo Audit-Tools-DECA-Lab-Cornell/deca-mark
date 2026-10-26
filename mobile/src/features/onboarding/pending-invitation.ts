@@ -64,7 +64,7 @@ export function readPendingInvitationValue(
 
 /**
  * The join code an incoming link carries, if it is an invitation link with a whole code. Accepts the
- * forms the app is opened with: `decamark://join/DECA2026` (or the older `fieldmaps://`), `/join/DECA-2026`,
+ * forms the app is opened with: `decamark://join/DECA2026`, `/join/DECA-2026`,
  * `join?code=deca2026` and Expo's development form `exp://host/--/join/DECA2026`.
  */
 export function joinCodeFromLink(link: string): string | null {

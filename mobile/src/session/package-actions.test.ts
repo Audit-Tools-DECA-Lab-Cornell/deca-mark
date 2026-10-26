@@ -204,7 +204,7 @@ it("refuses unsupported installed forms with an update action and retains a reco
         installedAt: null,
         bytes: 1,
         counts: { unfinished: 0, unsent: 0, attention: 0, retained: 0, openSession: false },
-        references: { sessions: 0, drafts: 0, records: 0 },
+        references: { drafts: 0, records: 0 },
       },
     ],
   });
