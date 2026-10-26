@@ -37,6 +37,8 @@ test("lowercase observer initials match, and the Data breadcrumb returns to the 
 	const { baseline } = manifest();
 	await page.goto(projectPath("data"));
 	const main = page.getByRole("main");
+	// The filters are drawn with the page; choosing before they are there would find a plan marker instead.
+	await expect(main.getByRole("combobox", { name: /round/i })).toBeVisible();
 	await chooseFilter(main, /round/i, /reliability/i);
 	await expect(page).toHaveURL(/round=reliability/);
 
@@ -110,10 +112,12 @@ test("Data is one list that is a table from 768 px and cards below, with the pla
 				await top(rows.first())
 			);
 			const before = await page.evaluate(() => window.scrollY);
+			// Markers drawn at one spot stack, and a pointer click makes Playwright scroll the page to find a
+			// reachable point, which would hide what is measured. The click event goes to the marker itself.
 			await plan
 				.getByRole("button", { name: /^OBS-[0-9A-F]{6},/ })
-				.first()
-				.click();
+				.last()
+				.dispatchEvent("click");
 			await expect(plan).toContainText("Open observation");
 			expect(await page.evaluate(() => window.scrollY), `${width}x${height}: the page stays on the plan`).toBe(
 				before

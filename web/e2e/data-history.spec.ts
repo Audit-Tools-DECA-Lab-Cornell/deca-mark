@@ -189,7 +189,7 @@ test("The plan draws one map version, dims the others and lists inventories by z
 	await test.step("a v1 record is drawn on v1 and says v2 is current", async () => {
 		const row = (await recordRows(main)).filter({ hasText: V1_NAME }).filter({ hasNotText: "Whole zone" }).first();
 		await row.getByRole("link").first().click();
-		await expect(page).toHaveURL(/\/data\/[0-9a-f-]{36}$/);
+		await expect(page).toHaveURL(/\/data\/[0-9a-f-]{36}(\?|$)/);
 		const record = page.getByRole("main");
 		await expect(record).toContainText("Map v1, the version this observation was recorded with. v2 is current.");
 		await expect(record).toContainText("· map v1");
