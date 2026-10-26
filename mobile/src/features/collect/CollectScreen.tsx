@@ -34,13 +34,12 @@ import { QuestionStep } from "./QuestionStep";
 import { ReviewStep } from "./ReviewStep";
 import { inventoriedZones, lastSavedLine, mapRecords, nextZoneToInventory } from "./records";
 import { SavedStep } from "./SavedStep";
+import { useAutoAdvance } from "./use-auto-advance";
 import { ZoneStep } from "./ZoneStep";
 
 /** The internal steps of collecting. Play events start at Place; a zone inventory at Zone. */
 type Step = "place" | "zone" | "answer" | "review" | "saved";
 
-/** How long a chosen single answer shows before the next question (Contour `base`). */
-const AUTO_ADVANCE_MS = 160;
 /** The zoom "Zoom in to place" goes to: about 4 cm a point at a playground's latitude. */
 const PRECISE_ZOOM = 20.5;
 
@@ -104,7 +103,6 @@ export function CollectScreen() {
   const mapRef = useRef<CollectMapHandle>(null);
   /** The map's height while the slot is open: a shut slot keeps the map at this size, clipped. */
   const [mapHeight, setMapHeight] = useState(0);
-  const advance = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { sitePackage, form, zone, roundType, placed, placementSource, state, saves } = session;
   const inventory = !placesPoints(roundType);
 
@@ -133,13 +131,13 @@ export function CollectScreen() {
     }),
   );
 
-  // A chosen option moves on after a beat. Leaving the question by any other way first (Back, Review,
-  // Adjust point, a jump, the mode strip) cancels that pending move, so it cannot undo the observer.
-  const cancelAdvance = useCallback(() => {
-    if (advance.current) clearTimeout(advance.current);
-    advance.current = null;
-  }, []);
-  useEffect(() => cancelAdvance, [cancelAdvance]);
+  // A chosen option moves on after a beat, and a second tap cannot answer the next question (MOB-36).
+  // Leaving the question by any other way first (Back, Review, Adjust point, a jump, the mode strip)
+  // cancels that pending move, so it cannot undo the observer.
+  const { dispatchStep, cancelAdvance } = useAutoAdvance(session.dispatch, (destination) => {
+    if (destination === "review") setStep("review");
+    else setStep(inventory ? "zone" : "place");
+  });
 
   // The save is announced once its card shows, with the record's label.
   const savedId = step === "saved" ? (saves[0]?.id ?? null) : null;
@@ -237,21 +235,6 @@ export function CollectScreen() {
   const index = Math.min(state.index, Math.max(visible.length - 1, 0));
   const question = visible[index];
   const last = saves[0] ?? null;
-
-  function dispatchStep(action: Parameters<typeof session.dispatch>[0]) {
-    const result = session.dispatch(action);
-    cancelAdvance();
-    const go = (destination: "stay" | "review" | "map") => {
-      if (destination === "review") setStep("review");
-      if (destination === "map") setStep(inventory ? "zone" : "place");
-    };
-    if (result.autoAdvance)
-      advance.current = setTimeout(() => {
-        advance.current = null;
-        go(session.dispatch({ kind: "next" }).destination);
-      }, AUTO_ADVANCE_MS);
-    else go(result.destination);
-  }
 
   async function placeHere() {
     // The map's own centre, not the last camera event: the stored point is exactly under the ×.
