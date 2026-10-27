@@ -236,6 +236,7 @@ A summary omits `zones`.
   "coordinates": [-76.48, 42.44],
   "observer": "AB",
   "observed_at": "2026-10-10T14:00:00Z",
+  "started_at": "2026-10-10T13:59:00Z",
   "answers": {}
 }
 ```
@@ -244,13 +245,14 @@ A summary omits `zones`.
 
 - Inventory uses `round_type: inventory` and `placement: zone`, omits `coordinates` and `first_round`, and uses the package's inventory form.
 - Point variants (`standard`, `reliability`) require `placement: hand`, finite coordinates and a strict boolean `first_round`.
-- All shown fields are required, and none has a default. Extra fields are refused, including a null `coordinates` or `first_round` on Inventory. Answers live only in `answers`.
+- All shown fields except `started_at` are required. `started_at` may be omitted or null for older clients and records. Extra fields are refused, including a null `coordinates` or `first_round` on Inventory. Answers live only in `answers`.
 
 **Answers:** strings, finite JSON numbers (|x| ≤ 9,007,199,254,740,991) or arrays of strings, with at most 200 keys.
 
 - Booleans, nulls and objects are refused.
 - Duplicate JSON keys and invalid Unicode are refused at the boundary.
 - `observed_at` is an RFC 3339 string with a timezone and at most six fractional digits.
+- A non-null `started_at` has the same timestamp format. The collector captures it at first confirmed point placement or Inventory Start, preserving it through adjustment and recovery. `observed_at` remains Save time. No time-ordering or duration rule is imposed.
 
 **Server checks:** the server resolves tenant, site, package, zone and form. It checks that the package is ready, that the zone belongs to it, and that the point is covered (or that the inventory semantics hold). Then it stores the observation and its binding atomically before the receipt.
 
@@ -261,7 +263,7 @@ A summary omits `zones`.
 **Fingerprint:** SHA-256 over the [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785) JCS bytes of `{canonicalization_version: "observation-jcs-1", observation_id, project_id, user_id, payload}`.
 
 - The identities come from the path and the authenticated user.
-- Normalization: lowercase hyphenated UUIDs, trimmed observer only, `observed_at` as UTC `YYYY-MM-DDTHH:mm:ss.ffffffZ`, and answers unchanged (no trimming, Unicode normalization or pruning before hashing).
+- Normalization: lowercase hyphenated UUIDs, trimmed observer only, `observed_at` and a non-null `started_at` as UTC `YYYY-MM-DDTHH:mm:ss.ffffffZ`, and answers unchanged (no trimming, Unicode normalization or pruning before hashing). An omitted or null `started_at` stays absent from canonical bytes, preserving existing hashes and model serialization round trips. A known start participates in retry identity.
 - Key order, equivalent timezone notation, integer versus integral float and negative zero do not change the hash. Answers, array order, binding, owner, project and observation identity do.
 - The same UUID, owner and payload returns the original receipt; a different payload is 409 `conflict`. An existing receipt is checked before mutable publication state; authorization is still required.
 
@@ -296,7 +298,7 @@ Rules:
 - `site_id`, `site_code`, `site_name`;
 - the recorded binding: `zone_id`, `zone_code`, `zone_label` (from the recorded snapshot), `package_id`, `package_version`;
 - `spatial_support`; `geometry` (a Point for point events, null for inventories) and `display_anchor` (inventories only);
-- `answers`, `form_version`, `observer`, `observed_at`, `received_at`, `revision`, `round_type`, `placement`, `first_round`.
+- `answers`, `form_version`, `observer`, `started_at` (nullable), `observed_at`, `received_at`, `revision`, `round_type`, `placement`, `first_round`.
 
 Detail adds the stored form definition JSON. A label is never taken from the current package.
 
@@ -305,6 +307,8 @@ Detail adds the stored form definition JSON. A label is never taken from the cur
 **Summary:** `groups` are keyed by `{site_id, package_id, package_version, zone_id, zone_code, zone_label, round_type, spatial_support}`, each with a `count`. Empty results return empty groups and zero counts.
 
 **Export:**
+
+`started_at` is currently exposed in observation list/detail API reads only; exports and QGIS views keep their existing fields.
 
 - **Contents:** one `application/zip` holding `observations.csv` or `observations.geojson`, plus `codebook.csv`, `metadata.json`, `forms.json` and `historical-zones.geojson`, all from one authorized snapshot.
 - **Metadata:** the project timezone, the UTC interval interpretation, the normalized filters, the generation time, the matching count and the package versions in scope.

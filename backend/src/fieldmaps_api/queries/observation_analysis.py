@@ -37,7 +37,7 @@ ROW_DATA: Final = (
 jsonb_build_object(
  'observation_id',o.id,'project_id',o.project_id,'user_id',o.created_by,
  'site_code',s.code,'site_name',s.name,'observer',o.observer_code,
- 'observed_at',o.observed_at,'received_at',o.received_at,'revision',o.revision,
+ 'observed_at',o.observed_at,'started_at',o.started_at,'received_at',o.received_at,'revision',o.revision,
  'answers',o.answers,'form_version',f.code,'placement',o.placement_source,'first_round',o.first_round,
  'geometry',CASE WHEN o.round_type IS DISTINCT FROM 'inventory'
    THEN jsonb_build_object('type','Point','coordinates',

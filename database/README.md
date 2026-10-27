@@ -86,6 +86,18 @@ PostgreSQL 17/PostGIS image containing pg_cron. The default remains the pinned S
 image. Alternative-image runs use synthetic Auth tables and do not prove full Supabase
 Auth/Storage service behavior. See [form revision evidence](../docs/reviews/form-revisions-2026-10-16/README.md).
 
+## Observation start timestamp
+
+`20261026090000_observation_started_at.sql` adds nullable `fieldmaps.observations.started_at`,
+the restricted API role's INSERT grant, and immutability/finite-time checks. Existing records
+stay `NULL`; there is no backfill, duration column, or ordering constraint against `observed_at`.
+QGIS views keep their existing columns.
+
+Apply the migration before deploying the compatible API, then release the collector. Rehearse
+with `sh database/zone-api-rehearsal.sh tests/test_observation_timestamps_live.py` on an isolated
+local PostGIS database. Applying to an existing shared local or hosted installation requires
+that target's explicit authorization; ordinary checks do not migrate it.
+
 ## Durable account-deletion recovery
 
 `20261018030756_account_deletion_recovery.sql` follows the four current migrations.
