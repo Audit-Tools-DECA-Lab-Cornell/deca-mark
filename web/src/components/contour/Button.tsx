@@ -7,6 +7,7 @@ import { cx } from "@/lib/cx";
 
 import { buttonClasses, type ButtonSize, type ButtonVariant } from "./buttonClasses";
 import { Icon, type IconName } from "./Icon";
+import { LinkPending } from "./LinkPending";
 import { useHydrated } from "./useHydrated";
 
 export type { ButtonSize, ButtonVariant };
@@ -158,10 +159,11 @@ export function ButtonLink({
 			{...rest}
 			prefetch={prefetch}
 			data-variant={variant}
-			className={cx(buttonClasses({ variant, size, fullWidth }), className)}>
+			className={cx(buttonClasses({ variant, size, fullWidth }), "relative", className)}>
 			<ButtonContent icon={icon} iconRight={iconRight} size={size}>
 				{children}
 			</ButtonContent>
+			<LinkPending className="inset-x-5 bottom-1.5" />
 		</Link>
 	);
 }

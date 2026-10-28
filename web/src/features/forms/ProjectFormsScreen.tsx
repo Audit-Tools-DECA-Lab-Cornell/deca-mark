@@ -4,12 +4,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Island } from "@/components/contour/Island";
+import { LinkPending } from "@/components/contour/LinkPending";
 import { Mono } from "@/components/contour/Mono";
 import { Note } from "@/components/contour/Note";
 import { PageHeader } from "@/components/contour/PageHeader";
 import { ScreenState } from "@/components/contour/ScreenState";
 import { StateBadge } from "@/components/contour/StateBadge";
 import { projectHref } from "@/features/shell/navigation";
+import { cx } from "@/lib/cx";
 import { plural } from "@/lib/labels";
 import { clock } from "@/lib/time";
 
@@ -164,8 +166,9 @@ export function ProjectFormsScreen({
 																project,
 																`sites/${encodeURIComponent(use.code)}`
 															)}
-															className={LINK}>
+															className={cx("relative", LINK)}>
 															{use.name}
+															<LinkPending />
 														</Link>{" "}
 														<span className="text-ink-2">
 															· <Mono>v{use.version}</Mono>
