@@ -14,6 +14,7 @@ import { StateBadge } from "@/components/contour/StateBadge";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/contour/Table";
 import { useToast } from "@/components/contour/Toast";
 import { projectHref } from "@/features/shell/navigation";
+import { rejected } from "@/lib/action-rejection";
 import { plural } from "@/lib/labels";
 import { clock } from "@/lib/time";
 
@@ -98,7 +99,13 @@ export function FormVersionsScreen({
 		setFailure(null);
 		setStarting(form.code);
 		start(async () => {
-			const result = await startDraftAction({ org, project, form: form.code });
+			let result: Awaited<ReturnType<typeof startDraftAction>>;
+			try {
+				result = await startDraftAction({ org, project, form: form.code });
+			} catch (error) {
+				setStarting(null);
+				return setFailure(rejected(error, "reload", "Nothing was started."));
+			}
 			setStarting(null);
 			if (result.status === "failed") return setFailure(result);
 			toast({
@@ -340,7 +347,7 @@ function VersionsTable({
 						{form.versions.map(version => (
 							<Tr key={version.code}>
 								<Td nowrap>
-										<Link prefetch={false} href={editor(version.code)} className={LINK}>
+									<Link prefetch={false} href={editor(version.code)} className={LINK}>
 										<Mono>{version.code}</Mono>
 									</Link>
 								</Td>

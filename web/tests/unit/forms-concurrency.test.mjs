@@ -19,7 +19,7 @@ const src = new URL("../../src/", import.meta.url);
 const mocks = new Map([
 	[
 		"next/navigation",
-		'export const useRouter=()=>({push:p=>globalThis.__formFlowTest.pushes.push(p),refresh:()=>globalThis.__formFlowTest.refreshes++}); export const notFound=()=>{throw Error("not found")};'
+		'export const useRouter=()=>({push:p=>globalThis.__formFlowTest.pushes.push(p),refresh:()=>globalThis.__formFlowTest.refreshes++}); export const notFound=()=>{throw Error("not found")}; export const unstable_isUnrecognizedActionError=error=>error?.name==="UnrecognizedActionError";'
 	],
 	["next/cache", "export const revalidatePath=()=>{};"],
 	["server-only", ""],

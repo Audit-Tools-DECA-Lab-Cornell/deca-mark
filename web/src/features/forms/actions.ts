@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createDraft, createForm, discardDraft, publishVersion, retireVersion, saveDraft } from "@/lib/api/mutations";
+import type { VersionState } from "@/lib/api/types";
 import { getFormVersion, resolveProject } from "@/lib/api/workspace";
 import { projectAbilities } from "@/lib/workspace/access";
 
@@ -152,4 +153,29 @@ export async function retireVersionAction(input: z.input<typeof versionInput>): 
 		await retireVersion(projectId, version);
 		return {};
 	});
+}
+
+const readDraftInput = z.object({ ...place, version: versionCode });
+
+/**
+ * The draft as it is stored now. The editor asks when a Save met a refusal after an earlier Save whose
+ * reply never arrived: only the stored content can say whether that earlier Save landed. It changes
+ * nothing, so it does not refresh the project's pages under the editor.
+ */
+export async function readDraftAction(
+	input: z.input<typeof readDraftInput>
+): Promise<FormActionResult<{ etag: string; state: VersionState; definition: Record<string, unknown> }>> {
+	const nothing = "The draft could not be read.";
+	const parsed = readDraftInput.safeParse(input);
+	if (!parsed.success) return refused(nothing);
+	const { org, project, version } = parsed.data;
+	try {
+		const ref = await resolveProject(org, project);
+		if (!ref) return { status: "failed", message: `${nothing} This project is no longer there.` };
+		if (!projectAbilities(ref.role).manage) return { status: "failed", message: `${nothing} ${NOT_MANAGER}` };
+		const stored = await getFormVersion(ref.id, version);
+		return { status: "done", etag: stored.etag, state: stored.state, definition: stored.definition };
+	} catch (error) {
+		return failedChange(nothing, error);
+	}
 }

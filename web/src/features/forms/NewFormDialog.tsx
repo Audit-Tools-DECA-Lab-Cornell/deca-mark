@@ -11,6 +11,7 @@ import { RadioRows } from "@/components/contour/RadioRows";
 import { TextInput } from "@/components/contour/TextInput";
 import { useToast } from "@/components/contour/Toast";
 import { projectHref } from "@/features/shell/navigation";
+import { rejectedWith } from "@/lib/action-rejection";
 import { plural } from "@/lib/labels";
 
 import { createFormAction } from "./actions";
@@ -77,7 +78,14 @@ export function NewFormDialog({
 		if (problems.name) return nameRef.current?.focus();
 		if (problems.code) return codeRef.current?.focus();
 		start(async () => {
-			const result = await createFormAction({ org, project, template, code, name: name.trim() });
+			let result: Awaited<ReturnType<typeof createFormAction>>;
+			try {
+				result = await createFormAction({ org, project, template, code, name: name.trim() });
+			} catch (error) {
+				// A create may have landed: the typed name and code stay, and the reload shows whether it did.
+				setFailure(rejectedWith(error, "reload", "Nothing was created."));
+				return;
+			}
 			if (result.status === "failed") {
 				setFailure(result.message);
 				if (result.fields?.code) {
