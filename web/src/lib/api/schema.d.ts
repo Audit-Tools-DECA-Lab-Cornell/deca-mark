@@ -437,6 +437,14 @@ export interface paths {
         /**
          * Prepare
          * @description Validate and publish a zone-bound package from a QGIS export.
+         *
+         *     An online background map in the QGIS project (an XYZ or WMS layer) is left out of the
+         *     package only when the request names its layer in `leave_out_online_basemaps`. Otherwise
+         *     nothing is published and the answer is 422 `online_basemap_unconfirmed`, whose
+         *     `details.layers` lists every online background map the project uses as `{name, host}`
+         *     (`host` may be null). Send the request again, with the same `request_id`, naming those
+         *     layers to publish the package without them: the version then carries a warning
+         *     `imagery-licence` check that names each layer.
          */
         post: operations["createPackage"];
         delete?: never;
@@ -1111,7 +1119,7 @@ export interface components {
             schema_version: components["schemas"]["JsonValue"];
         };
         /** @enum {string} */
-        ErrorCode: "bad_request" | "unauthenticated" | "token_invalid" | "account_deleted" | "membership_required" | "role_required" | "limit_reached" | "not_found" | "method_not_allowed" | "invitation_invalid" | "conflict" | "sole_owner" | "invitation_expired" | "archive_unavailable" | "validation_failed" | "unsupported_operation" | "unknown_schema_version" | "rate_limited" | "internal" | "storage_unavailable" | "publication_conflict" | "idempotency_conflict" | "revision_conflict" | "precondition_required" | "payload_too_large";
+        ErrorCode: "bad_request" | "unauthenticated" | "token_invalid" | "account_deleted" | "membership_required" | "role_required" | "limit_reached" | "not_found" | "method_not_allowed" | "invitation_invalid" | "conflict" | "sole_owner" | "invitation_expired" | "archive_unavailable" | "validation_failed" | "unsupported_operation" | "unknown_schema_version" | "rate_limited" | "internal" | "storage_unavailable" | "publication_conflict" | "idempotency_conflict" | "revision_conflict" | "precondition_required" | "payload_too_large" | "online_basemap_unconfirmed";
         /** ErrorDetail */
         ErrorDetail: {
             code: components["schemas"]["ErrorCode"];
@@ -1473,6 +1481,16 @@ export interface components {
         };
         /** ImportIssue */
         ImportIssue: {
+            /**
+             * Host
+             * @description The tile service's host, for an online background map; null otherwise.
+             */
+            host?: string | null;
+            /**
+             * Kind
+             * @description `online_basemap` marks a layer drawn from a tile service on demand (an XYZ or WMS background map). A package leaves it out only once the manager agrees (D35): send its name in `leave_out_online_basemaps` when creating the package. Other issues carry no kind.
+             */
+            kind?: "online_basemap" | null;
             /** Layer */
             layer: string;
             /** Message */
@@ -1906,6 +1924,11 @@ export interface components {
             layers: {
                 [key: string]: components["schemas"]["JsonValue"];
             };
+            /**
+             * Leave Out Online Basemaps
+             * @description Layer names of the online background maps the manager agreed to leave out of the package (D35). Empty when omitted. A map the project uses that is not named here refuses the request with `online_basemap_unconfirmed`.
+             */
+            leave_out_online_basemaps?: string[];
             project_file?: components["schemas"]["ProjectFile"] | null;
             /**
              * Request Id
