@@ -6,8 +6,14 @@ Training is a separate platform project. The original practice project and its o
 | --- | --- |
 | Organization | `10000000-0000-4000-8000-000000000101` |
 | Project | `10000000-0000-4000-8000-000000000102` |
-| Site (`training-garden`) | `10000000-0000-4000-8000-000000000103` |
-| Form version (`training-v1`) | `10000000-0000-4000-8000-000000000104` |
+| Site (`training-garden`, named "Practice garden") | `10000000-0000-4000-8000-000000000103` |
+| Play form version (`training-v1`) | `10000000-0000-4000-8000-000000000104` |
+| Inventory form version (`training-inventory-v1`) | `10000000-0000-4000-8000-000000000105` |
+| Package v1 (current for the site) | `10000000-0000-4000-8000-000000000106` |
+| Zones A "Lawn bed" and B "Sand bed" | `10000000-0000-4000-8000-000000000107`, `…0108` |
+
+The migration `20261028090000_training_seed_and_form_templates.sql` (DB-20) seeds all of this; see the
+[database README](../database/README.md#training-and-form-templates).
 
 ## Retention and privacy
 
@@ -24,11 +30,11 @@ FROM cron.job WHERE jobname = 'fieldmaps_training_purge';
 
 No user receives membership in the platform organization. Do not grant an organization owner or administrator role to manage Training.
 
-## Uploading the Training site package
+## The Training site package
 
-The authenticated package-upload workflow is implemented separately in BE-13. Until it exists, seeding the Training site and form does not make a downloadable map package available.
-
-When that workflow is available:
+The Practice garden's package is seeded with the database, so no upload is needed for a fresh or rebuilt
+database, and an account that signs in joins Training and downloads it like any site. To publish a newer
+Training map, use the ordinary zone publication workflow (BE-22) with a temporary **project** manager account:
 
 1. Select the intended environment explicitly. Use an operator account that already has an Auth user and profile. Record its user ID in the operation log.
 2. As the database owner, give that account temporary **project** manager access. In `psql`, supply its ID at the prompt:
@@ -43,8 +49,8 @@ When that workflow is available:
    ON CONFLICT (user_id, project_id) DO UPDATE SET role = 'manager';
    ```
 
-3. Sign in as that operator and upload the package through BE-13. Record its version and validation result.
-4. Remove the temporary manager membership even if upload fails:
+3. Sign in as that operator and publish the next package through the API. Record its version and validation result.
+4. Remove the temporary manager membership even if publication fails:
 
    ```sql
    DELETE FROM fieldmaps.project_memberships

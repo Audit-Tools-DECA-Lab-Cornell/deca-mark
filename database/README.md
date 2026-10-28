@@ -115,11 +115,12 @@ delete pending rows or reset data to make deletion appear complete.
 
 ## Canonical synthetic forms and existing targets
 
-The baseline's fresh synthetic shell INSERT now authors canonical `questions`, preserving
-the original two IDs, bounds and export names. This edits initialization source only; do not
-reapply the baseline or change migration history on an existing installation. No forward
-migration mutates frozen forms. The original historical `fields` reader/validator is retained
-for existing packages, records and supported queued uploads. Publishing a canonical
+The baseline's two synthetic form rows are unchanged source: schema 2 embeds their hashes. Its practice
+shell INSERT authors canonical `questions`, preserving the original two IDs, bounds and export names. DB-20's
+migration removes both rows from a fresh build, and `supabase/seed.sql` supplies the practice form to local
+tests only. Do not reapply the baseline or change migration history on an existing installation. No forward
+migration mutates a frozen form that records already use. The backend's historical `fields` reader/validator
+is retained until BE-24 removes it, for existing packages, records and supported queued uploads. Publishing a canonical
 successor does not convert old package bindings. The read-only
 [inventory](fields-only-inventory.sql) reports exact form/package references on an explicitly
 selected target; it does not discover device queues or authorize hosted access.
@@ -131,8 +132,54 @@ observation/package/draft references. Run it only on an explicitly authorized ta
 inside a read-only transaction. It cannot account for offline devices. The
 [procedure and owner decisions](../docs/reviews/published-form-compatibility-2026-10-17/inventory.md)
 accompany the historical reader protection; no conversion migration is required or supplied.
-Training's canonical Janet definition, retention, creator isolation and immutable metadata
-remain unchanged.
+Training's retention, creator isolation and immutable metadata remain unchanged.
+
+## Training and form templates
+
+`20261028090000_training_seed_and_form_templates.sql` (DB-20, D4, D32) is a forward migration after schema 2.
+It is not a baseline edit because schema 2 embeds the SHA-256 of the two baseline form rows, refuses any other
+populated table and is already in the hosted history; new canonical rows have to follow it. Local, CI, the
+disposable rehearsals and the OPS-19 hosted rebuild all run the same chain. It refuses a database where records
+or packages already use the rows it replaces: reset first (D31). Do not apply it to the hosted database before
+OPS-19, which rebuilds that database from the migrations.
+
+It removes the baseline's `training-v1` (whose definition named itself `janet-test-v1` and `draft` while the
+row was published) and the legacy practice form `shell-v1`, which was seeded into the practice project. The
+practice organization, project and site stay (D13) until GIS-03 retires the sample view. It then seeds Training,
+whose fixed ids all start `10000000-0000-4000-8000-`:
+
+| Row | Id suffix | Value |
+| --- | --- | --- |
+| Organization, project | `…0101`, `…0102` | the platform organization and the Training project (unchanged) |
+| Site | `…0103` | code `training-garden`, named "Practice garden" |
+| Play form version | `…0104` | `training-v1`, form `training`; Janet's behaviour-mapping form, 12 questions |
+| Inventory form version | `…0105` | `training-inventory-v1`, form `training-inventory` (`…0109`); Janet's zone inventory, 18 questions |
+| Package | `…0106` | v1, `ready`, current for the site; names `…0104` as play and `…0105` as inventory |
+| Zones | `…0107`, `…0108` | `A` "Lawn bed" and `B` "Sand bed" |
+| Author of the seed | `…01ff` | a marker for `prepared_by`, `created_by` and `published_by`, not an account |
+
+Both form versions are published, at the current schema version, and stamped as the API stamps one: the
+definition's `version` is the row's code and its `status` is the row's state. The package is the rows the zone
+publication function writes for a first package (checks, zone identities and snapshots, a publication record
+and the current pointer), with the archive built in the migration as a stored zip of `manifest.json` and
+`layers/{ground,paths,trees,zones}.json`. The Practice garden's geometry is
+`contracts/fixtures/sites/practice-garden.json`; zone anchors, digests and shapes come from the same private
+functions the API's publication path uses. A new account that signs in joins Training as an observer
+(`ensure_profile`) and reads all of this through the existing policies.
+
+`fieldmaps.form_templates` holds the forms a manager can start from: `code` (primary key), `title`, `summary`,
+`definition` and `schema_version`. It is seeded with `behaviour-mapping` (`contracts/forms/janet-test-v1.json`)
+and `zone-inventory` (`janet-inventory-v1.json`), with the title and summary the web lists today. The definitions
+are the contract files as written (`version` and `status` are stamped when a draft starts from one). Row level
+security lets any signed-in API caller read it; the API has no write grant, so only a migration changes a
+template. A future schema version rewrites the templates in the same migration as every stored form (CON-07).
+
+`database/tests/seed-forms.sql` (part of `pnpm db:test`) asserts, with `pg_jsonschema` and the contract files
+copied into the container, that every form version and template validates against
+`contracts/form-definition.schema.json` at `currentSchemaVersion`, that Training has one site whose current
+package names its forms and zones, that the templates match `contracts/forms`, and that a new account joins
+Training and sees the site. `backend/tests/test_training_seed.py` does the same through the real API and the
+production archive reader. `database/hosted/verify.sql` checks the seed on a target without needing the extension.
 
 ## Schema and access
 
@@ -208,7 +255,7 @@ visibility; immutable records, upload grants and retry receipts remain intact. S
 
 Tenancy writes go through `fieldmaps_private` functions with a fixed empty search path, current-user authorization and organization locks. Invitation redemption checks the current Auth email, confirmation and use limit. Account forgetting removes memberships and leaves a durable anonymized profile marker until Auth deletion.
 
-Profile initialization now enrolls active users in the separate Training project. Training observations are visible only to their creator, including for temporary project managers. Platform organization memberships are forbidden. A daily pg_cron job purges observations received more than 30 days ago from the fixed Training project only. The original practice project is unchanged. See the [Training runbook](../docs/Training-Runbook.md) for retention checks and temporary package-upload access. The Training form is a frozen copy of the canonical Janet definition; its lifecycle and downloadable site package remain later tasks.
+Profile initialization now enrolls active users in the separate Training project. Training observations are visible only to their creator, including for temporary project managers. Platform organization memberships are forbidden. A daily pg_cron job purges observations received more than 30 days ago from the fixed Training project only. The original practice project is unchanged. See the [Training runbook](../docs/Training-Runbook.md) for retention checks and temporary package-upload access. Training's Practice garden, its package and its two forms are seeded by a migration (see [Training and form templates](#training-and-form-templates)).
 
 `gis.sample_observations` remains a fixed practice-project view, read-only to `fieldmaps_sample_reader`. Its readback tests exercise PostgreSQL, not QGIS Desktop.
 
