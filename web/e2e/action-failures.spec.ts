@@ -119,7 +119,8 @@ test.describe("a browser that is signed out", () => {
 
 		const page = await context.get(path);
 		expect(page.status()).toBe(307);
-		expect(new URL(page.headers()["location"]!).pathname).toBe("/sign-in");
+		// The address may be absolute or relative to this origin.
+		expect(new URL(page.headers()["location"] ?? "", baseURL).pathname).toBe("/sign-in");
 		await context.dispose();
 	});
 });
