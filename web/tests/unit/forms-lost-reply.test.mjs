@@ -220,7 +220,7 @@ test("another manager's save in between ends in the conflict choice with this pa
 });
 
 test("a page older than the server's build says nothing was saved, copy and reload, and reads nothing back later", async () => {
-	const { editor, edit, save, label, unsaved } = await openEditor();
+	const { editor, edit, save, label } = await openEditor();
 	await edit("My wording");
 	lost.rejectNext = new UnrecognizedActionError('Server Action "40ab" was not found');
 	// The fake server commits before it throws; a real unrecognised action never reaches it, so undo that.
@@ -241,7 +241,7 @@ test("a page older than the server's build says nothing was saved, copy and relo
 });
 
 test("the proxy's signed-out reply says so, and the wording stays", async () => {
-	const { editor, edit, save, label, unsaved } = await openEditor();
+	const { editor, edit, save, label } = await openEditor();
 	await edit("My wording");
 	lost.server.etag = "e1";
 	lost.rejectNext = new Error("Signed out");
