@@ -4,7 +4,13 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { SitePackage } from "../packages/site-package";
 import { hasDraft, readDraft } from "../storage/draft-store";
 import { initializeDatabase, type LocalDatabase } from "../storage/observation-store";
-import { adapter, owner } from "../storage/package-store.fixture";
+import { installPackage } from "../storage/package-catalog";
+import {
+  adapter,
+  entry,
+  owner,
+  identity as packageIdentity,
+} from "../storage/package-store.fixture";
 import type { FieldSessionValue } from "./context";
 import { FieldSessionProvider, useFieldSession } from "./provider";
 
@@ -80,6 +86,35 @@ const pkg: SitePackage = {
   ],
 };
 
+const other: SitePackage["zones"][number] = {
+  zoneId: "practice:B",
+  displayAnchor: [0.8, 0.8],
+  polygon: square,
+  id: "B",
+  label: "Other",
+  centre: [0.8, 0.8],
+  west: 0,
+  south: 0,
+  east: 1,
+  north: 1,
+};
+const twoZones: SitePackage = { ...pkg, zones: [...pkg.zones, other] };
+/** The same map as a managed package, whose zone is frozen into the observation's binding. */
+function managed(site: SitePackage): SitePackage {
+  return {
+    ...site,
+    id: packageIdentity.packageId,
+    siteId: packageIdentity.siteId,
+    packageIdentity,
+    projectId: packageIdentity.projectId,
+    zones: site.zones.map((zone, index) => ({
+      ...zone,
+      zoneId: `50000000-0000-4000-8000-00000000000${index + 1}`,
+      geometrySha256: "b".repeat(64),
+    })),
+  };
+}
+
 const snapshots: FieldSessionValue[] = [];
 let root: ReactTestRenderer | undefined;
 let sqlite: DatabaseSync;
@@ -145,6 +180,15 @@ async function settled() {
     await hasDraft(database(), owner);
   });
 }
+/** Makes the open observation's commit fail: a record with its id is already stored. */
+async function breakTheCommit() {
+  const draft = await readDraft(database(), owner);
+  sqlite
+    .prepare(
+      "INSERT INTO observations (owner_scope, id, created_at, payload, sync_state, sync_error) VALUES (?, ?, ?, ?, 'pending', '')",
+    )
+    .run(owner, draft?.id ?? "", "2026-10-24T10:00:00.000Z", "{}");
+}
 function plantDraftOfAnotherObservation() {
   sqlite
     .prepare(
@@ -206,19 +250,105 @@ it("a point nudged and a zone chosen while the save is in flight write nothing e
   expect(latest().draftWriteFailed).toBe(false);
 });
 
+it.each([
+  ["a practice map", false],
+  ["a managed map, whose zone is pinned in the binding", true],
+])("a zone chosen while the save is in flight is refused on %s, so a failed save leaves the screen and the draft agreeing", async (_name, pinned) => {
+  const site = pinned ? managed(twoZones) : twoZones;
+  if (pinned) await installPackage(database(), owner, entry);
+  mocks.open.mockResolvedValue(site);
+  const [first, second] = site.zones;
+  if (!first || !second) throw new Error("Zones missing");
+  await act(async () => {
+    expect(await latest().openPackage(site.id)).toMatchObject({ ok: true });
+  });
+  await act(async () => {
+    latest().place([0.5, 0.5]);
+  });
+  await answerEverything();
+  await settled();
+  const before = await readDraft(database(), owner);
+  expect(before?.context.zoneId).toBe(first.id);
+  expect(before?.binding?.zoneId).toBe(pinned ? first.zoneId : undefined);
+  await breakTheCommit();
+
+  await act(async () => {
+    const saving = latest().save();
+    // The observer taps Place in the step strip, moves the cross into the other zone and
+    // chooses "Switch to Other" while "Saving on this device…" shows.
+    latest().chooseZone(second);
+    expect(await saving).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("Could not save"),
+    });
+  });
+  await settled();
+
+  // The save failed, so the observation goes on exactly as it was: the screen and the stored draft agree.
+  expect(latest().zone?.id).toBe(first.id);
+  expect(latest().context?.zoneId).toBe(first.id);
+  expect(latest().inProgress?.binding?.zoneId).toBe(pinned ? first.zoneId : undefined);
+  expect(latest().pinned?.zone.id).toBe(pinned ? first.zoneId : undefined);
+  expect(latest().draftWriteFailed).toBe(false);
+  expect(await readDraft(database(), owner)).toEqual(before);
+
+  // The refusal ends with the commit: the observer can now choose the zone, and the draft follows.
+  await act(async () => {
+    latest().chooseZone(second);
+  });
+  await settled();
+  expect(latest().zone?.id).toBe(second.id);
+  expect(latest().inProgress?.binding?.zoneId).toBe(pinned ? second.zoneId : undefined);
+  expect(latest().draftWriteFailed).toBe(false);
+  const after = await readDraft(database(), owner);
+  expect(after?.context.zoneId).toBe(second.id);
+  expect(after?.binding?.zoneId).toBe(pinned ? second.zoneId : undefined);
+});
+
+it("nothing else the session offers changes the observation while the save is in flight", async () => {
+  mocks.open.mockResolvedValue(twoZones);
+  await act(async () => {
+    expect(await latest().openPackage(twoZones.id)).toMatchObject({ ok: true });
+  });
+  await act(async () => {
+    latest().place([0.5, 0.5]);
+  });
+  await answerEverything();
+  await settled();
+  const before = await readDraft(database(), owner);
+  const held = latest().inProgress;
+  await breakTheCommit();
+
+  await act(async () => {
+    const saving = latest().save();
+    latest().place([0.1, 0.1]);
+    latest().startZoneRecord();
+    latest().chooseRoundType("reliability");
+    latest().toggleFreshPeriod();
+    latest().discard();
+    expect(await saving).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("Could not save"),
+    });
+  });
+  await settled();
+
+  expect(latest().inProgress).toBe(held);
+  expect(latest().placed).toEqual([0.5, 0.5]);
+  expect(latest().placementSource).toBe("hand");
+  expect(latest().roundType).toBe("standard");
+  expect(latest().freshPeriod).toBe(false);
+  expect(latest().draftWriteFailed).toBe(false);
+  expect(await readDraft(database(), owner)).toEqual(before);
+});
+
 it("a save that fails lets the observer go on: the draft is kept and later writes work", async () => {
   await open();
   await act(async () => {
     latest().place([0.5, 0.5]);
   });
   await answerEverything();
-  // Break the commit: the record's id is already taken.
-  const draft = await readDraft(database(), owner);
-  sqlite
-    .prepare(
-      "INSERT INTO observations (owner_scope, id, created_at, payload, sync_state, sync_error) VALUES (?, ?, ?, ?, 'pending', '')",
-    )
-    .run(owner, draft?.id ?? "", "2026-10-24T10:00:00.000Z", "{}");
+  await breakTheCommit();
 
   await act(async () => {
     expect(await latest().save()).toMatchObject({ ok: false });
