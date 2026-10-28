@@ -12,6 +12,7 @@ from fieldmaps_api.domain import qgis_project
 from fieldmaps_api.domain.project_import import ProjectImportRequest
 from fieldmaps_api.errors import ValidationFailedError
 from fieldmaps_api.services.project_import import import_project
+from tests.package_fixtures import online_basemap, qgis_document
 
 type Json = dict[str, object]
 
@@ -292,3 +293,39 @@ def test_filtered_layers_are_not_silently_imported_with_extra_features() -> None
     )
     assert not result.layers
     assert "filter" in result.issues[0].message
+
+
+def test_online_background_maps_are_marked_with_their_host() -> None:
+    held = (
+        '<maplayer type="raster"><layername>Drone image</layername><provider>gdal</provider>'
+        "<datasource>./drone.tif</datasource></maplayer>"
+    )
+    project = qgis_document(
+        online_basemap("ESRI World Imagery", "https://server.arcgisonline.com/tiles/{z}/{y}/{x}"),
+        online_basemap("Street map", "https://tile.example.org/{z}/{x}/{y}.png", provider="xyz"),
+        held,
+    )
+    result = anyio.run(import_project, request({"site.qgs": project.encode()}))
+    marked = {
+        issue.layer: (issue.kind, issue.host) for issue in result.issues if issue.kind is not None
+    }
+    assert marked == {
+        "ESRI World Imagery": ("online_basemap", "server.arcgisonline.com"),
+        "Street map": ("online_basemap", "tile.example.org"),
+    }
+    # Every other unconverted layer keeps its plain message and no mark.
+    unmarked = [issue for issue in result.issues if issue.kind is None]
+    assert [issue.layer for issue in unmarked] == ["Drone image"]
+    assert unmarked[0].host is None
+    assert "not converted" in unmarked[0].message
+    for issue in result.issues:
+        if issue.kind == "online_basemap":
+            assert "online background map" in issue.message
+            assert "observers see the vector layers only" in issue.message
+
+
+def test_a_remote_vector_source_is_not_an_online_background_map() -> None:
+    result = anyio.run(
+        import_project, request({"site.qgs": document("http://127.0.0.1/private.geojson")})
+    )
+    assert all(issue.kind is None and issue.host is None for issue in result.issues)

@@ -10,8 +10,8 @@ from fieldmaps_api.identity_schemas import Identity
 from fieldmaps_api.schemas import PackageHistory
 from fieldmaps_api.site_schemas import Site
 from fieldmaps_api.tenancy_schemas import Project
-from fieldmaps_api.zone_response_schemas import Publication
-from tests.package_fixtures import qgz, submission
+from fieldmaps_api.zone_response_schemas import HistoricalZones, Publication
+from tests.package_fixtures import error_of, online_basemap, qgis_document, qgz, submission
 from tests.signing import Signer
 from tests.tenant_fixtures import (
     Tenant,
@@ -129,20 +129,33 @@ def test_invalid_new_source_does_not_replace_a_sites_ready_package(
     base = f"/v1/projects/{tenant.project}"
     first_id = create_package(api_client, signer, tenant)
     project_file = qgz(
-        '<qgis><projectlayers><maplayer type="raster"><layername>Unlicensed</layername>'
-        "<provider>wms</provider><datasource>type=xyz&amp;url=https://tiles.example.invalid/xyz</datasource>"
-        "</maplayer></projectlayers></qgis>"
+        qgis_document(online_basemap("Unlicensed", "https://tiles.example.invalid/xyz"))
     )
+    # The successor names the first version's zone, so the request reaches the package checks.
+    history = api_client.get(
+        f"{base}/sites/{tenant.site}/zones", params={"package_id": str(first_id)}
+    )
+    first_zone = HistoricalZones.model_validate_json(history.content).zones[0]
     refused = api_client.post(
         f"{base}/packages",
         json=submission(
             site_id=str(tenant.site),
             request_id=str(uuid4()),
             expected_current_package_id=str(first_id),
+            zone_identity_map=[
+                {
+                    "source_feature_id": "A",
+                    "zone_id": str(first_zone.zone_id),
+                    "zone_code": first_zone.zone_code,
+                }
+            ],
             project_file={"file_name": "blocked.qgz", "content": project_file},
         ),
     )
     assert refused.status_code == 422, refused.text
+    error = error_of(refused.content)
+    assert error.code == "online_basemap_unconfirmed"
+    assert error.details == {"layers": [{"name": "Unlicensed", "host": "tiles.example.invalid"}]}
     created = api_client.post(f"{base}/sites", json={"code": "second-site", "name": "Second site"})
     assert created.status_code == 201, created.text
     second = Site.model_validate_json(created.content)

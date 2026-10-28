@@ -1,6 +1,6 @@
 """The contract for a temporary QGIS import preview; importing never saves a site package."""
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,6 +26,19 @@ class ImportIssue(BaseModel):
 
     layer: str
     message: str
+    kind: Literal["online_basemap"] | None = Field(
+        default=None,
+        description=(
+            "`online_basemap` marks a layer drawn from a tile service on demand (an XYZ or WMS "
+            "background map). A package leaves it out only once the manager agrees (D35): send "
+            "its name in `leave_out_online_basemaps` when creating the package. Other issues "
+            "carry no kind."
+        ),
+    )
+    host: str | None = Field(
+        default=None,
+        description="The tile service's host, for an online background map; null otherwise.",
+    )
 
 
 class ProjectImportResult(BaseModel):

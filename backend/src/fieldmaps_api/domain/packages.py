@@ -7,23 +7,29 @@ records why it passed, warned or blocked rather than reducing to a boolean.
 
 Nothing here reaches the network or shells out to GDAL: the layers arrive as GeoJSON, which the
 models in `geojson` validate, and the project file is read only for provenance and for the two
-questions a GeoJSON export cannot answer — which layers the author meant to include, and whether
-the imagery under them may be redistributed offline.
+questions a GeoJSON export cannot answer — which layers the author meant to include, and which
+online background maps sit under them. A package never holds imagery, so the manager is asked
+before those maps are left out (D35) rather than blocked on a licence.
 """
 
 from __future__ import annotations
 
 import zipfile
-from typing import ClassVar, Final, Literal
+from typing import TYPE_CHECKING, ClassVar, Final, Literal
 
 from pydantic import Base64Bytes, BaseModel, ConfigDict, Field
 
 from fieldmaps_api.domain import qgis_project
 from fieldmaps_api.domain.geojson import FeatureCollection, declared_crs_is_wgs84
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 #: Tile hosts the lab has established it may redistribute offline. Empty until one is named:
 #: permission to repackage somebody else's imagery is granted, never assumed.
 NO_PERMITTED_HOSTS: Final[frozenset[str]] = frozenset()
+#: The online background maps no request has agreed to leave out.
+NO_LEAVE_OUT: Final[frozenset[str]] = frozenset()
 
 MAX_FEATURES_PER_LAYER: Final = 20_000
 MAX_PROJECT_BYTES: Final = 8 * 1024 * 1024
@@ -42,6 +48,42 @@ NETWORK_PROVIDERS: Final = frozenset(
 
 class PackageError(ValueError):
     """A submission that cannot become a package, with a reason worth showing the manager."""
+
+
+class InvalidShapeError(PackageError):
+    """A geometry the archive worker could not read, which has no reason of its own to show.
+
+    Only a malformed ring or coordinate lands here, so the manager is sent to the zones' shapes.
+    Every other `PackageError` carries its own sentence.
+    """
+
+
+class OnlineBasemap(BaseModel):
+    """A layer QGIS draws from a tile service on demand: an online background map (D35)."""
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+    name: str
+    host: str | None
+
+
+def describe_basemap(layer: OnlineBasemap) -> str:
+    return f"{layer.name} ({layer.host})" if layer.host else layer.name
+
+
+class OnlineBasemapError(PackageError):
+    """The project uses online background maps that the request has not agreed to leave out."""
+
+    def __init__(self, layers: Sequence[OnlineBasemap]) -> None:
+        self.layers: tuple[OnlineBasemap, ...] = tuple(layers)
+        names = ", ".join(describe_basemap(layer) for layer in self.layers)
+        one = len(self.layers) == 1
+        pronoun = "it" if one else "them"
+        super().__init__(
+            f"{names} {'is an online background map' if one else 'are online background maps'}. "
+            f"Observers see the vector layers only. Upload without {pronoun}, "
+            f"or remove {pronoun} from the project in QGIS."
+        )
 
 
 class SourceProject(BaseModel):
@@ -234,11 +276,36 @@ def _check_layer_sources(
     )
 
 
+def _is_online_basemap(source: RasterSource, permitted_tile_hosts: frozenset[str]) -> bool:
+    """Whether a raster layer is drawn from somebody else's tile server on demand."""
+    return source.provider in NETWORK_PROVIDERS and (
+        source.host is None or source.host.lower() not in permitted_tile_hosts
+    )
+
+
+def _online_basemaps(
+    project: SourceProject, permitted_tile_hosts: frozenset[str]
+) -> tuple[OnlineBasemap, ...]:
+    return tuple(
+        OnlineBasemap(name=source.layer_name, host=source.host)
+        for source in project.raster_layers
+        if _is_online_basemap(source, permitted_tile_hosts)
+    )
+
+
 def _check_imagery_licence(
     project: SourceProject | None,
     permitted_tile_hosts: frozenset[str],
     checks: list[PreparationCheck],
+    leave_out: frozenset[str] = NO_LEAVE_OUT,
 ) -> None:
+    """Record what the project's raster layers mean for the package.
+
+    A package never holds imagery and the collector never draws a background map, so an online
+    background map is not a licence block (D35): the manager is asked, and a map named in
+    `leave_out` is left out with a warning. One that was not named blocks the package, and the
+    caller turns that into the question. A file the institution holds keeps the check it had.
+    """
     if project is None:
         checks.append(
             PreparationCheck(
@@ -257,26 +324,30 @@ def _check_imagery_licence(
             )
         )
         return
-    # Permission to redistribute is granted, never assumed, so a network source blocks unless the
-    # lab has named its host. A file the institution holds is its own to package.
-    refused = [
-        source
-        for source in project.raster_layers
-        if source.provider in NETWORK_PROVIDERS
-        and (source.host is None or source.host.lower() not in permitted_tile_hosts)
-    ]
-    if refused:
-        names = ", ".join(
-            f"{source.layer_name} ({source.host or source.provider})" for source in refused
-        )
+    online = _online_basemaps(project, permitted_tile_hosts)
+    unconfirmed = [layer for layer in online if layer.name not in leave_out]
+    if unconfirmed:
         checks.append(
             PreparationCheck(
                 step="imagery-licence",
                 state="blocked",
-                detail=(
-                    f"{names} is fetched from a tile service on demand. Tiles a desktop may draw "
-                    "are not tiles an institution may render, store and redistribute inside an "
-                    "offline package. Supply institution-owned or openly licensed imagery."
+                detail=" ".join(
+                    f"{describe_basemap(layer)} is an online background map that was not "
+                    "confirmed as left out of the package."
+                    for layer in unconfirmed
+                ),
+            )
+        )
+        return
+    if online:
+        checks.append(
+            PreparationCheck(
+                step="imagery-licence",
+                state="warning",
+                detail=" ".join(
+                    f"{describe_basemap(layer)} is an online background map. It was not "
+                    "uploaded; observers see the vector layers only."
+                    for layer in online
                 ),
             )
         )
@@ -308,3 +379,5 @@ check_layer_sources = _check_layer_sources
 check_coordinate_reference = _check_coordinate_reference
 check_imagery_licence = _check_imagery_licence
 write_archive_entry = _write
+online_basemaps = _online_basemaps
+is_online_basemap = _is_online_basemap

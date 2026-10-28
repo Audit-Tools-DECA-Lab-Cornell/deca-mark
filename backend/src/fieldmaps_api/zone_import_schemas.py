@@ -23,6 +23,18 @@ class PackageRequest(BaseModel):
     ) = None
     layers: dict[LayerName, JsonValue]
     project_file: ProjectFile | None = None
+    leave_out_online_basemaps: Annotated[
+        tuple[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)], ...],
+        Field(
+            default_factory=tuple[str, ...],
+            max_length=64,
+            description=(
+                "Layer names of the online background maps the manager agreed to leave out of "
+                "the package (D35). Empty when omitted. A map the project uses that is not "
+                "named here refuses the request with `online_basemap_unconfirmed`."
+            ),
+        ),
+    ]
     request_id: UUID
     expected_current_package_id: UUID | None
     zone_identity_map: Annotated[tuple[ZoneIdentityMapping, ...], Field(max_length=250)]

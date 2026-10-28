@@ -5,6 +5,11 @@ from io import BytesIO
 from uuid import uuid4
 from zipfile import ZipFile
 
+from pydantic import TypeAdapter
+
+from fieldmaps_api.errors import ErrorDetail, ErrorEnvelope
+from fieldmaps_api.zone_response_schemas import ZoneIssue
+
 Json = dict[str, object]
 
 
@@ -57,3 +62,38 @@ def qgz(document: str) -> str:
     with ZipFile(buffer, "w") as archive:
         archive.writestr("site.qgs", document)
     return b64encode(buffer.getvalue()).decode()
+
+
+def online_basemap(name: str, url: str, provider: str = "wms") -> str:
+    """Write a QGIS raster layer fetched from a tile service on demand (an XYZ or WMS map)."""
+    return (
+        f'<maplayer type="raster"><layername>{name}</layername><provider>{provider}</provider>'
+        f"<datasource>type=xyz&amp;url={url}</datasource></maplayer>"
+    )
+
+
+def qgis_document(*layers: str) -> str:
+    return f"<qgis><projectlayers>{''.join(layers)}</projectlayers></qgis>"
+
+
+def error_of(body: bytes) -> ErrorDetail:
+    return ErrorEnvelope.model_validate_json(body).error
+
+
+def issue_codes(error: ErrorDetail) -> list[str]:
+    issues = TypeAdapter(list[ZoneIssue]).validate_python(error.details["issues"])
+    return [issue.code for issue in issues]
+
+
+def open_polygon(
+    west: float, south: float, east: float, north: float, **properties: object
+) -> Json:
+    """Build a polygon whose ring is not closed: its last position never returns to the first."""
+    return {
+        "type": "Feature",
+        "properties": properties,
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[west, south], [east, south], [east, north], [west, north]]],
+        },
+    }

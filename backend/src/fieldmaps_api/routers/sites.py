@@ -93,7 +93,16 @@ def create_router(
         response: Response,
         user_id: Annotated[UUID, Depends(authenticate)],
     ) -> Publication:
-        """Validate and publish a zone-bound package from a QGIS export."""
+        """Validate and publish a zone-bound package from a QGIS export.
+
+        An online background map in the QGIS project (an XYZ or WMS layer) is left out of the
+        package only when the request names its layer in `leave_out_online_basemaps`. Otherwise
+        nothing is published and the answer is 422 `online_basemap_unconfirmed`, whose
+        `details.layers` lists every online background map the project uses as `{name, host}`
+        (`host` may be null). Send the request again, with the same `request_id`, naming those
+        layers to publish the package without them: the version then carries a warning
+        `imagery-licence` check that names each layer.
+        """
         async with work.slot():
             result, status = await zone_publication.prepare_submission(
                 sessions, user_id, project_id, submission

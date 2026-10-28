@@ -14,12 +14,15 @@ from fieldmaps_api.domain.packages import (
     MAX_FEATURES_PER_LAYER,
     NO_PERMITTED_HOSTS,
     LayerName,
+    OnlineBasemapError,
     PackageError,
     PackageSubmission,
     PreparationCheck,
+    SourceProject,
     check_coordinate_reference,
     check_imagery_licence,
     check_layer_sources,
+    online_basemaps,
     read_source_project,
 )
 from fieldmaps_api.domain.zone_package_schemas import (
@@ -200,6 +203,24 @@ def extract_base_archive(archive: bytes, expected_sha256: str | None = None) -> 
     )
 
 
+def refuse_blocked(checks: list[PreparationCheck], project: SourceProject | None) -> None:
+    """Refuse the import with the reason a blocked check recorded, never a generic sentence.
+
+    A problem that confirmation cannot fix is reported first. An online background map the request
+    has not named is reported as such, with every online map the project uses, so a client can
+    ask once and send them all.
+    """
+    others = [
+        check.detail
+        for check in checks
+        if check.state == "blocked" and check.step != "imagery-licence"
+    ]
+    if others:
+        raise PackageError(" ".join(others))
+    if project is not None and any(check.state == "blocked" for check in checks):
+        raise OnlineBasemapError(online_basemaps(project, NO_PERMITTED_HOSTS))
+
+
 def prepare_import_base(
     submission: PackageRequest, site_code: str, forms: PackageForms
 ) -> BaseArchive:
@@ -225,10 +246,10 @@ def prepare_import_base(
     project = read_source_project(submission.project_file, checks)
     check_layer_sources(internal_submission, project, checks)
     check_coordinate_reference(internal_submission, project, checks)
-    check_imagery_licence(project, NO_PERMITTED_HOSTS, checks)
-    if any(check.state == "blocked" for check in checks):
-        message = "The imported sources did not pass package preparation"
-        raise PackageError(message)
+    check_imagery_licence(
+        project, NO_PERMITTED_HOSTS, checks, frozenset(submission.leave_out_online_basemaps)
+    )
+    refuse_blocked(checks, project)
     layers = tuple(
         _read_layer(name, collections[name].model_dump_json(exclude_none=True).encode())
         for name in LAYER_ORDER
