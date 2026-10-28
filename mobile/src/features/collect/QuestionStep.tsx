@@ -24,6 +24,7 @@ import {
   useStyles,
   useTheme,
 } from "../../ui";
+import { caretRow, type MeasuredLine } from "./caret-line";
 import { QuestionValueInput } from "./QuestionValueInput";
 
 type Props = {
@@ -57,19 +58,6 @@ type Props = {
 const FIELD_MARGIN = 8;
 /** The most rows a text field shows while `compactField` is on. */
 const COMPACT_ROWS = 2;
-
-/**
- * The row of the box a caret sits on, from 0, for a box of `lines` rows. Text that wraps nowhere puts
- * it after the line breaks before it; wrapped text is measured only by the box's height, so the row
- * is then taken in proportion to the characters before the caret, never above the breaks before it.
- */
-export function caretLine(text: string, caret: number, lines: number): number {
-  const before = text.slice(0, caret);
-  const breaks = before.split("\n").length - 1;
-  const hardLines = text.split("\n").length;
-  const row = lines > hardLines ? Math.floor((caret / Math.max(1, text.length)) * lines) : breaks;
-  return Math.min(lines - 1, Math.max(breaks, row));
-}
 
 /** The acts a form actually asks, in order: Child · Social · Play · Setting, or Climate · Inventory. */
 export function formActs(form: FormDefinition): readonly Act[] {
@@ -138,11 +126,14 @@ export function QuestionStep({
   const [shown, setShown] = useState(question.id);
   /** The caret's character offset in a multi-line answer; null until the observer has moved it. */
   const caretAt = useRef<number | null>(null);
+  /** The answer's wrapped lines as the hidden mirror last laid them out; used only if they fit the text. */
+  const measured = useRef<readonly MeasuredLine[]>([]);
   // Reload the field only when the question changes, not whenever the stored answer lands.
   if (shown !== question.id) {
     setShown(question.id);
     setText(inputText);
     caretAt.current = null;
+    measured.current = [];
   }
 
   // While the keyboard is up, a text or number answer is kept in view above the footer, and the
@@ -181,12 +172,17 @@ export function QuestionStep({
     const grown = multiline && typed.current !== "" && boxHeight.current > rowsHeight.current + 0.5;
     let y = grown ? foot : Math.min(foot, fieldTop.current);
     // The text box never scrolls itself, so an edit on an earlier line of a grown answer keeps that
-    // line in view, not the foot: a rotation with the keyboard open lays the field out again.
+    // line in view, not the foot: a rotation with the keyboard open lays the field out again. The
+    // line is the one the hidden mirror measured; until it has (or if it measured other text) only
+    // the breaks before the caret are known, which is the first row the caret can be on.
     const caret = caretAt.current;
     if (grown && caret !== null && caret < typed.current.length && lineHeight > 0) {
-      const lines = Math.max(1, Math.round((boxHeight.current - padding * 2) / lineHeight));
-      const line = caretLine(typed.current, caret, lines);
-      const lineBottom = fieldTop.current + boxTop.current + padding + (line + 1) * lineHeight;
+      const breaks = typed.current.slice(0, caret).split("\n").length - 1;
+      const row = caretRow(typed.current, caret, measured.current) ?? {
+        y: breaks * lineHeight,
+        height: lineHeight,
+      };
+      const lineBottom = fieldTop.current + boxTop.current + padding + row.y + row.height;
       y = Math.max(0, lineBottom + FIELD_MARGIN - viewport.current);
     }
     scroller.current?.scrollTo({ y, animated: false });
@@ -309,6 +305,10 @@ export function QuestionStep({
           }}
           onCaretChange={(caret) => {
             caretAt.current = caret;
+          }}
+          onLinesChange={(lines) => {
+            measured.current = lines;
+            showField();
           }}
         />
 
