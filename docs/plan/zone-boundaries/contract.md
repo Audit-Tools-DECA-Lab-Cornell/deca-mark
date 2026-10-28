@@ -119,6 +119,10 @@ A site has no zone versions until its first package. Two writers create packages
   - `inventory_form_version` selects a published inventory form; `null` disables Inventory, and omission inherits the current binding (none on a first upload).
   - The latest form is never chosen implicitly.
   - A form version still bound by a current package cannot be retired (409 `conflict`): publish a successor first.
+- **Online background maps (D35):**
+  - `leave_out_online_basemaps` (optional array of 1–64 layer names) names the QGIS project layers drawn from a tile service that the manager agreed to leave out of the package. Omitted means none.
+  - A project layer of that kind that is not named refuses the request with 422 `online_basemap_unconfirmed` and `details.layers: [{name, host}]` (`host` is null when the source names none), listing every such layer in the project. Nothing is published or stored under the `request_id`, so the retry that names them may reuse it.
+  - Named layers publish, and the version's `imagery-licence` check is a `warning` that names each. `POST /packages/import` marks the same layers in `issues` with `kind: "online_basemap"` and their `host`.
 
 ### Archive
 
@@ -342,7 +346,8 @@ Issue codes:
 | 409 `publication_conflict`, `idempotency_conflict`, `conflict` | Concurrent publication or a changed retry | Keep local work and show the conflict |
 | 412 `revision_conflict`, 428 `precondition_required` | Stale or missing write precondition | Reload metadata, keep edits |
 | 413 `payload_too_large` | Over a body limit | Show the size problem, keep data |
-| 422 `validation_failed` | Invalid shape, binding or filter | Show the issues; uploads become needs attention |
+| 422 `validation_failed` | Invalid shape, binding or filter; or a package refused with its own reason in `message` and no `issues` | Show the issues, or the reason; uploads become needs attention |
+| 422 `online_basemap_unconfirmed` | The project uses online background maps the request did not name | Ask the manager, then send again naming `details.layers` |
 | 429 `rate_limited`, 503 `storage_unavailable` | Temporary | Retry with backoff (`Retry-After`), keep data |
 
 Conflict details carry only authorized `draft_id`, `revision`, `etag`, `current_package_id` and `current_package_version`. Error copy is local UI text, never a discriminator. Logs never contain shapes or answers. Validate is limited to 30 requests a minute; publication and uploads of packages to 10 a minute.
