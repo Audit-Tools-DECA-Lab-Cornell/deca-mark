@@ -11,6 +11,7 @@ import { ScreenState } from "@/components/contour/ScreenState";
 import { useToast } from "@/components/contour/Toast";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { projectHref } from "@/features/shell/navigation";
+import { rejectedWith } from "@/lib/action-rejection";
 import { appendPage } from "@/lib/api/observations";
 import type { Observation, ObservationFilters, ObservationPage, RawDefinition } from "@/lib/api/types";
 import { scopeLines } from "@/lib/export/files";
@@ -200,6 +201,9 @@ export function DataScreen({
 			setGeneratedAt(next.generatedAt);
 			setDefinitions(known => ({ ...known, ...next.definitions }));
 			setMissingVersions(known => [...new Set([...known, ...next.missingVersions])]);
+		} catch (error) {
+			// The call itself rejected (offline, a dropped connection, a page older than the server's build).
+			setMoreProblem(rejectedWith(error, "read", "Nothing more was loaded."));
 		} finally {
 			setLoadingMore(false);
 		}
