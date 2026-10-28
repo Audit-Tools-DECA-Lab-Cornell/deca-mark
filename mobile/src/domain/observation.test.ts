@@ -29,6 +29,7 @@ describe("Observation boundaries", () => {
     },
     siteId: "sample-garden",
     createdAt: "2026-09-29T10:00:00.000Z",
+    startedAt: "2026-09-29T09:59:00.000Z",
   };
 
   it("builds the unchanged practice record from a numeric answer", () => {

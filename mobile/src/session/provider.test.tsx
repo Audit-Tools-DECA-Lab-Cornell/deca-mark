@@ -35,8 +35,8 @@ vi.mock("../packages/open", () => ({ openSitePackage: mocks.open }));
 
 const style: SitePackage["bases"]["day"] = { version: 8, sources: {}, layers: [] };
 const pkg: SitePackage = {
-  id: "legacy-shell-map",
-  name: "Synthetic legacy map",
+  id: "shell-map",
+  name: "Synthetic shell map",
   meta: "Synthetic",
   availability: "on-device",
   formVersion: "shell-v1",

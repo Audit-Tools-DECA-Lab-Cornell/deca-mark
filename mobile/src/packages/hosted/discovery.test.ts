@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 import { createApiClient } from "../../data/api/client";
 import { readAvailableCurrent } from "../../storage/available-current";
 import { databaseWrite } from "../../storage/database-write";
-import { readSelected } from "../../storage/package-catalog";
+import { installedFor } from "../../storage/package-store.fixture";
 import { boundFixture, ids } from "./bound-fixture";
 import { deferred, harness, nextFixture, owner } from "./lifecycle.test-helper";
 import { PackageOperations } from "./operations";
@@ -50,7 +50,7 @@ it("keeps v7 selected after a failed v8 archive request", async () => {
       "connection interrupted",
     );
     expect(
-      (await readSelected(h.database, owner, ids.project, ids.site))?.identity.packageVersion,
+      (await installedFor(h.database, owner, ids.project, ids.site))?.identity.packageVersion,
     ).toBe(7);
   } finally {
     h.close();

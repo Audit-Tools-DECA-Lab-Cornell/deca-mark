@@ -16,6 +16,7 @@ export function QuestionValueInput({
   onAdvance,
   onFieldLayout,
   onInputLayout,
+  onCaretChange,
 }: {
   readonly question: ResolvedQuestion;
   readonly value: AnswerValue | undefined;
@@ -27,6 +28,8 @@ export function QuestionValueInput({
   readonly onAdvance: () => void;
   readonly onFieldLayout: (event: LayoutChangeEvent) => void;
   readonly onInputLayout: (event: LayoutChangeEvent) => void;
+  /** Where the caret sits in a multi-line answer, as a character offset; `Textarea` never scrolls itself. */
+  readonly onCaretChange?: ((caret: number) => void) | undefined;
 }) {
   const automatic = (question.valueSource ?? "manual") !== "manual";
   const source = {
@@ -70,6 +73,7 @@ export function QuestionValueInput({
               onChangeText={onWrite}
               rows={rows}
               onLayout={onInputLayout}
+              onSelectionChange={(event) => onCaretChange?.(event.nativeEvent.selection.end)}
               disableFullscreenUI
               showCount={!compactField}
               maxLength={question.maxLength}

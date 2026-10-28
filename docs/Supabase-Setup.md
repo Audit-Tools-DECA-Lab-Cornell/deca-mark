@@ -1,5 +1,10 @@
 # Supabase development connection
 
+For current migration commands, use the [database migration guide](Database-Migrations.md)
+and `pnpm db:migrate:guide`. The historical three-file setup below is not the
+current upgrade procedure. Schema2 requires the dedicated validated transaction
+in the [production rollout](../database/hosted/form-schema2-rollout.md).
+
 > Historical hosted/setup observations in this guide are dated; they do not establish current Auth settings, API deployment health or schema compatibility. See [current position](plan/current-state.md), [email setup](Brevo-Email.md) and [the October 14 hosted diagnosis](reviews/ci-and-hosted-data-2026-10-14.md). Render/Vercel deployments exist; current readiness and matching schema/data acceptance require their own evidence.
 
 Project: **DECA Mark GIS** (named Field Maps GIS until October 11, 2026), `lezmqhuucfwqknspgcdy`, in AWS `us-east-1` (session pooler `aws-0-us-east-1.pooler.supabase.com:5432`). It replaced the earlier development project on September 22, 2026.

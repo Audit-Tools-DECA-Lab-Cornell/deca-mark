@@ -34,13 +34,12 @@ import { QuestionStep } from "./QuestionStep";
 import { ReviewStep } from "./ReviewStep";
 import { inventoriedZones, lastSavedLine, mapRecords, nextZoneToInventory } from "./records";
 import { SavedStep } from "./SavedStep";
+import { useAutoAdvance } from "./use-auto-advance";
 import { ZoneStep } from "./ZoneStep";
 
 /** The internal steps of collecting. Play events start at Place; a zone inventory at Zone. */
 type Step = "place" | "zone" | "answer" | "review" | "saved";
 
-/** How long a chosen single answer shows before the next question (Contour `base`). */
-const AUTO_ADVANCE_MS = 160;
 /** The zoom "Zoom in to place" goes to: about 4 cm a point at a playground's latitude. */
 const PRECISE_ZOOM = 20.5;
 
@@ -57,12 +56,20 @@ function collectStyles(t: Theme) {
     },
     titles: { flex: 1, minWidth: 0 },
     strip: { paddingHorizontal: t.space.s4, paddingBottom: t.space.s2 },
+    // One body for both arrangements (MOB-35): a row (tablets and phones in landscape, the panel on the
+    // preferred hand) or a column (portrait), changed by style only, so nothing below it remounts.
     body: { flex: 1, minHeight: 0 },
-    mapSlot: { padding: t.space.s3, paddingTop: 0 },
-    // The slot while the keyboard is up: no height and no padding, by style. It stays mounted, and its
-    // height changes at once, never by animation (DESIGN §8).
-    mapSlotShut: { height: 0, padding: 0, overflow: "hidden" },
-    mapOpen: { flex: 1 },
+    bodySide: { flexDirection: "row" },
+    bodySideReversed: { flexDirection: "row-reverse" },
+    // The map's column: the map slot, and in a row the status row under it. Beside the panel it takes
+    // the width that is left; stacked over it, a share of the height.
+    mapColumn: { flex: 1, minWidth: 0 },
+    mapStacked: { height: "46%" },
+    mapStackedFull: { height: "100%" },
+    // The slot while the keyboard is up: no height, by style. It stays mounted, and its height changes
+    // at once, never by animation (DESIGN §8).
+    mapSlotShut: { height: 0, overflow: "hidden" },
+    mapOpen: { flex: 1, marginHorizontal: t.space.s3, marginBottom: t.space.s3 },
     // Inside a shut slot the map keeps the height it had, clipped, so the GL view is never resized.
     mapKept: { position: "absolute", top: 0, left: t.space.s3, right: t.space.s3 },
     panel: { minHeight: 0, paddingHorizontal: t.space.s4, paddingBottom: t.space.s3 },
@@ -96,7 +103,6 @@ export function CollectScreen() {
   const mapRef = useRef<CollectMapHandle>(null);
   /** The map's height while the slot is open: a shut slot keeps the map at this size, clipped. */
   const [mapHeight, setMapHeight] = useState(0);
-  const advance = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { sitePackage, form, zone, roundType, placed, placementSource, state, saves } = session;
   const inventory = !placesPoints(roundType);
 
@@ -125,13 +131,13 @@ export function CollectScreen() {
     }),
   );
 
-  // A chosen option moves on after a beat. Leaving the question by any other way first (Back, Review,
-  // Adjust point, a jump, the mode strip) cancels that pending move, so it cannot undo the observer.
-  const cancelAdvance = useCallback(() => {
-    if (advance.current) clearTimeout(advance.current);
-    advance.current = null;
-  }, []);
-  useEffect(() => cancelAdvance, [cancelAdvance]);
+  // A chosen option moves on after a beat, and a second tap cannot answer the next question (MOB-36).
+  // Leaving the question by any other way first (Back, Review, Adjust point, a jump, the mode strip)
+  // cancels that pending move, so it cannot undo the observer.
+  const { dispatchStep, cancelAdvance } = useAutoAdvance(session.dispatch, (destination) => {
+    if (destination === "review") setStep("review");
+    else setStep(inventory ? "zone" : "place");
+  });
 
   // The save is announced once its card shows, with the record's label.
   const savedId = step === "saved" ? (saves[0]?.id ?? null) : null;
@@ -229,21 +235,6 @@ export function CollectScreen() {
   const index = Math.min(state.index, Math.max(visible.length - 1, 0));
   const question = visible[index];
   const last = saves[0] ?? null;
-
-  function dispatchStep(action: Parameters<typeof session.dispatch>[0]) {
-    const result = session.dispatch(action);
-    cancelAdvance();
-    const go = (destination: "stay" | "review" | "map") => {
-      if (destination === "review") setStep("review");
-      if (destination === "map") setStep(inventory ? "zone" : "place");
-    };
-    if (result.autoAdvance)
-      advance.current = setTimeout(() => {
-        advance.current = null;
-        go(session.dispatch({ kind: "next" }).destination);
-      }, AUTO_ADVANCE_MS);
-    else go(result.destination);
-  }
 
   async function placeHere() {
     // The map's own centre, not the last camera event: the stored point is exactly under the ×.
@@ -502,7 +493,11 @@ export function CollectScreen() {
     </>
   );
 
+  // One tree for both arrangements (MOB-35). Rotating changes styles, never the elements, so the map
+  // (camera and aim), the step panel and what is typed in it all stay mounted. In a row the status sits
+  // under the map; stacked it sits on top of the panel, which is where it falls between the two.
   const panelWidth = layout.tablet ? Math.round(layout.width * 0.42) : layout.panelWidth;
+  const statusRow = hideStatus ? null : <View style={s.status}>{status}</View>;
   const panelBlock = expanded ? null : (
     <View
       testID="collect-panel"
@@ -511,46 +506,41 @@ export function CollectScreen() {
         { paddingBottom: lift },
       ]}
     >
+      {side ? null : statusRow}
       <View style={[s.panel, { flex: 1 }]}>{panel}</View>
     </View>
   );
 
+  // Beside the panel the slot takes the width that is left; stacked it is a share of the height, none
+  // while the keyboard is up, the whole body when the map is expanded.
+  const stackedStyle = shut ? s.mapSlotShut : expanded ? s.mapStackedFull : s.mapStacked;
+  const slotStyle = side ? s.mapColumn : stackedStyle;
+
   return (
     <SafeAreaView style={s.root} edges={["top", "bottom", "left", "right"]}>
       {hideChrome ? null : header}
-      {side ? (
-        <View style={[s.body, { flexDirection: hand === "left" ? "row-reverse" : "row" }]}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <View testID="collect-map-slot" style={[s.mapSlot, { flex: 1 }]}>
-              {map}
-            </View>
-            {hideStatus ? null : <View style={s.status}>{status}</View>}
-          </View>
-          {panelBlock}
-        </View>
-      ) : (
-        <View style={s.body}>
-          {/* The GL view's height changes instantly, never by animation (DESIGN §8). */}
+      <View style={[s.body, side && (hand === "left" ? s.bodySideReversed : s.bodySide)]}>
+        {/* The GL view's height changes instantly, never by animation (DESIGN §8). */}
+        <View
+          testID="collect-map-slot"
+          style={slotStyle}
+          accessibilityElementsHidden={shut}
+          importantForAccessibility={shut ? "no-hide-descendants" : "auto"}
+        >
           <View
-            testID="collect-map-slot"
-            style={[s.mapSlot, shut ? s.mapSlotShut : { height: expanded ? "100%" : "46%" }]}
-            accessibilityElementsHidden={shut}
-            importantForAccessibility={shut ? "no-hide-descendants" : "auto"}
+            testID="collect-map-frame"
+            style={shut ? [s.mapKept, { height: mapHeight }] : s.mapOpen}
+            onLayout={(event) => {
+              // Only a stacked map is kept at its size inside a shut slot; side by side has no slot to shut.
+              if (!shut) setMapHeight(side ? 0 : event.nativeEvent.layout.height);
+            }}
           >
-            <View
-              testID="collect-map-frame"
-              style={shut ? [s.mapKept, { height: mapHeight }] : s.mapOpen}
-              onLayout={(event) => {
-                if (!shut) setMapHeight(event.nativeEvent.layout.height);
-              }}
-            >
-              {map}
-            </View>
+            {map}
           </View>
-          {expanded || hideStatus ? null : <View style={s.status}>{status}</View>}
-          {panelBlock}
+          {side ? statusRow : null}
         </View>
-      )}
+        {panelBlock}
+      </View>
     </SafeAreaView>
   );
 }

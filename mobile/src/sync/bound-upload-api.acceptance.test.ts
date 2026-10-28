@@ -11,8 +11,7 @@ import { readStoredPackage, setPackageAccessOwner } from "../packages/hosted/acc
 import { harness, hash } from "../packages/hosted/lifecycle.test-helper";
 import { PackageOperations } from "../packages/hosted/operations";
 import { saveObservation } from "../storage/observation-store";
-import { readSelected } from "../storage/package-catalog";
-import { adapter } from "../storage/package-store.fixture";
+import { adapter, installedFor } from "../storage/package-store.fixture";
 import { pendingObservations, retryAttention } from "../storage/sync-store";
 import { createBoundUpload } from "./bound-upload";
 import { scopeKey, syncScopeSchema } from "./contracts";
@@ -67,7 +66,7 @@ it.skipIf(!input)(
       if (!site) throw new Error("Published site missing");
       expect(await h.operations.download(scope.projectId, site, () => {})).toBe(true);
       const installed = readStoredPackage(fixture.packageId);
-      const selected = await readSelected(h.database, owner, scope.projectId, fixture.siteId);
+      const selected = await installedFor(h.database, owner, scope.projectId, fixture.siteId);
       if (!installed || !selected) throw new Error("Installed map missing");
       const zone = installed.manifest.zones.find(
         (candidate) => candidate.zone_id === fixture.zoneId,
@@ -98,6 +97,7 @@ it.skipIf(!input)(
         answers: { observer: "QA", people: 2, notes: "Synthetic MOB-29 offline point" },
         coordinates: zone.display_anchor,
         createdAt: "2026-10-15T15:00:00.000Z",
+        startedAt: "2026-10-15T14:58:00.000Z",
         storageStatus: "local-only",
         context,
         placement: { source: "hand", gpsAccuracyMetres: null },
@@ -112,6 +112,7 @@ it.skipIf(!input)(
         answers: { notes: "Synthetic whole-zone Inventory" },
         coordinates: zone.display_anchor,
         createdAt: "2026-10-15T15:01:00.000Z",
+        startedAt: "2026-10-15T15:00:30.000Z",
         storageStatus: "local-only",
         context: { ...context, roundType: "inventory" },
         placement: { source: "zone", gpsAccuracyMetres: null },
@@ -222,10 +223,18 @@ it.skipIf(!input)(
         );
         expect(response.status).toBe(200);
         const read = z
-          .object({ package_id: z.uuid(), zone_id: z.uuid(), geometry: z.unknown() })
+          .object({
+            package_id: z.uuid(),
+            zone_id: z.uuid(),
+            geometry: z.unknown(),
+            started_at: z.iso.datetime({ offset: true }),
+            observed_at: z.iso.datetime({ offset: true }),
+          })
           .parse(await response.json());
         expect(read.package_id).toBe(fixture.packageId);
         expect(read.zone_id).toBe(fixture.zoneId);
+        expect(Date.parse(read.started_at)).toBe(Date.parse(record.startedAt ?? ""));
+        expect(Date.parse(read.observed_at)).toBe(Date.parse(record.createdAt));
         if (record.id === inventory.id) expect(read.geometry).toBeNull();
       }
     } finally {

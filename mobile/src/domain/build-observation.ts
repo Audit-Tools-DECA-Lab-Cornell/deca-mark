@@ -26,6 +26,7 @@ export type ObservationInput = {
   /** The account's initials, for a form that asks no observer question of its own. */
   readonly observer?: string | undefined;
   readonly createdAt: string;
+  readonly startedAt: string;
   readonly binding?: PackageBinding | undefined;
 };
 
@@ -46,6 +47,7 @@ export function buildObservation(input: ObservationInput): BuildResult {
     id: input.id,
     coordinates: input.coordinates,
     createdAt: input.createdAt,
+    startedAt: input.startedAt,
     storageStatus: "local-only",
   };
   if (input.form.version === "shell-v1") {

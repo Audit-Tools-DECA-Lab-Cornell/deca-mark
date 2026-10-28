@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 from typing import Final, Literal
 
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
 from fieldmaps_api.form_schema_preflight import PreflightReport, PreflightRow, preflight
 
@@ -21,6 +21,9 @@ NAME: Final = "form_schema2"
 MAX_ARGUMENTS: Final = 2
 MIGRATION: Final = (
     Path(__file__).resolve().parents[3] / "supabase/migrations" / f"{VERSION}_{NAME}.sql"
+)
+PRESERVATION_MIGRATION: Final = (
+    MIGRATION.parents[1] / "repairs" / f"{VERSION}_form_schema2_preserve_legacy.sql"
 )
 SNAPSHOT_SQL: Final = """
 SELECT coalesce(json_agg(json_build_object('id',id,'schema_version',schema_version,
@@ -50,6 +53,14 @@ def psql(container: str, sql: str) -> str:
 def snapshot_report(container: str) -> PreflightReport:
     rows = TypeAdapter(list[PreflightRow]).validate_json(psql(container, SNAPSHOT_SQL))
     return preflight(rows)
+
+
+def migration_for(report: PreflightReport) -> Path:
+    legacy = any(row.definition_format == "legacy_fields" for row in report.rows)
+    if legacy != (report.format == "decamark-schema2-preflight-2"):
+        message = "Preflight report format does not match its legacy classification"
+        raise ValueError(message)
+    return PRESERVATION_MIGRATION if legacy else MIGRATION
 
 
 def sql_literal(value: str) -> str:
@@ -84,7 +95,7 @@ VALUES ({sql_literal(VERSION)},{sql_literal(NAME)},ARRAY[{sql_literal(source)}])
 def run(mode: Literal["preflight", "apply-local"], container: str) -> PreflightReport:
     report = snapshot_report(container)
     if mode == "apply-local":
-        psql(container, application_sql(report, MIGRATION.read_text()))
+        psql(container, application_sql(report, migration_for(report).read_text()))
     return report
 
 
@@ -94,15 +105,25 @@ def main() -> None:
         sys.stderr.write("Usage: sh database/form-schema2.sh preflight|apply-local [CONTAINER]\n")
         raise SystemExit(2)
     container = args[1] if len(args) == MAX_ARGUMENTS else "supabase_db_field-maps"
-    match args[0]:
-        case "preflight":
-            report = run("preflight", container)
-        case "apply-local":
-            report = run("apply-local", container)
-        case _:
-            raise SystemExit(2)
+    try:
+        report = run("preflight" if args[0] == "preflight" else "apply-local", container)
+    except ValidationError:
+        sys.stderr.write(
+            "Local schema2 preflight refused: invalid stored definition. "
+            "No migration was applied. Hosted Supabase was not changed.\n"
+        )
+        raise SystemExit(2) from None
+    except ValueError as error:
+        sys.stderr.write(
+            f"Local schema2 preflight refused: {error}.\n"
+            "If local history already includes 20261024090000 and rows are schema2, "
+            "the local upgrade is complete; do not reapply it.\n"
+            "No migration was applied. Hosted Supabase was not changed.\n"
+        )
+        raise SystemExit(2) from None
     sys.stdout.write(
-        f"{args[0]}: {len(report.rows)} canonical rows validated; schema2 report bound.\n"
+        f"{args[0]}: {len(report.rows)} stored rows validated; schema2 report bound; "
+        f"source {migration_for(report).name}.\n"
     )
 
 

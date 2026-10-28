@@ -1,9 +1,10 @@
 import { expect, it } from "vitest";
+import { installedFor } from "../../storage/package-store.fixture";
 import { boundFixture, boundManifest, ids } from "./bound-fixture";
 import { deferred, harness, nextFixture } from "./lifecycle.test-helper";
 import { PackageOperations } from "./operations";
 
-it("queues exact recovery behind a newer download and preserves newest selection", async () => {
+it("queues exact recovery behind a newer download and keeps the newest installed", async () => {
   const h = await harness();
   try {
     const newest = nextFixture();
@@ -38,7 +39,10 @@ it("queues exact recovery behind a newer download and preserves newest selection
     release.resolve();
     expect(await installing).toBe(true);
     expect(await recovering).toBe(true);
-    expect((await ops.selected(ids.project, ids.site))?.identity.packageVersion).toBe(8);
+    expect(
+      (await installedFor(h.database, h.runtime.owner, ids.project, ids.site))?.identity
+        .packageVersion,
+    ).toBe(8);
     expect((await ops.catalog()).map((entry) => entry.identity.packageVersion).sort()).toEqual([
       7, 8,
     ]);
