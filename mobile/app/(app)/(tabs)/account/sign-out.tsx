@@ -124,11 +124,19 @@ export default function SignOutScreen() {
             Signing out did not finish on this device. Try again.
           </Note>
         ) : null}
-        {warning && work.unsent > 0 ? (
+        {warning && (work.unsent > 0 || practice) ? (
           <View style={s.lines}>
-            <Text variant="body" tone="ink2">
-              {`Signing out pauses their upload until ${email} signs in again on this device.`}
-            </Text>
+            {work.unsent > 0 ? (
+              <Text variant="body" tone="ink2">
+                {`Signing out pauses their upload until ${email} signs in again on this device.`}
+              </Text>
+            ) : null}
+            {/* Last, so "their" above can only mean the unsent records. */}
+            {practice ? (
+              <Text variant="body" tone="ink2">
+                {practice}
+              </Text>
+            ) : null}
           </View>
         ) : null}
         <TextLink

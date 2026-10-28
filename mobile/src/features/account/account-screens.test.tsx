@@ -257,14 +257,23 @@ describe("Sign out? (MOB-07)", () => {
     expect(screen.says("held for the project")).toBe(false);
   });
 
-  it("puts the practice line after the sentence about where 'them' stays", () => {
+  it("puts the practice line last, so 'them' and 'their upload' can only mean the unsent records", () => {
     state.work = { ...state.work, unsent: 1, onDevice: 1, practice: 2 };
     const screen = render(<SignOutScreen />);
     const text = screen.texts().join(" ");
     const remain = text.indexOf("They remain on this device for observer@fieldmaps.test.");
+    const pauses = text.indexOf("Signing out pauses their upload until observer@fieldmaps.test");
     const practice = text.indexOf("2 practice records stay on this device");
     expect(remain).toBeGreaterThan(-1);
-    expect(practice).toBeGreaterThan(remain);
+    expect(pauses).toBeGreaterThan(remain);
+    expect(practice).toBeGreaterThan(pauses);
+  });
+
+  it("says the practice line after the warning when only an unfinished observation waits", () => {
+    state.work = { ...state.work, drafts: 1, practice: 1 };
+    const screen = render(<SignOutScreen />);
+    expect(screen.says("1 practice record stays on this device and is never uploaded.")).toBe(true);
+    expect(screen.says("Signing out pauses their upload")).toBe(false);
   });
 
   it("does not warn about practice records alone: nothing waits to upload", async () => {
@@ -383,6 +392,24 @@ describe("Delete account (MOB-07)", () => {
     expect(screen.says("2 practice records stay on this device and are never uploaded.")).toBe(
       true,
     );
+  });
+
+  it.each([
+    [
+      1,
+      "1 record has not been uploaded.",
+      "Uploading first keeps it with its project. Deleting without uploading leaves it on this device for good.",
+    ],
+    [
+      2,
+      "2 records have not been uploaded.",
+      "Uploading first keeps them with their projects. Deleting without uploading leaves them on this device for good.",
+    ],
+  ])("the unsent note agrees with %i unsent record(s)", (unsent, title, body) => {
+    state.work = { ...state.work, unsent, onDevice: unsent };
+    const screen = render(<DeleteAccountScreen />);
+    expect(screen.says(title)).toBe(true);
+    expect(screen.says(body)).toBe(true);
   });
 
   it("says everything is uploaded once the counts drop to none, and takes the button away", async () => {

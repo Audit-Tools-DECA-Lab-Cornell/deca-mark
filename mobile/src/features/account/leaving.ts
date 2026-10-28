@@ -36,7 +36,8 @@ export function practiceLine(practice: number): string | null {
 /**
  * Sign out? (PRODUCT.md): "Your unsent work needs a clear owner. 5 observations have not been
  * uploaded. They remain on this device for ps2245@cornell.edu. Another account cannot upload them."
- * Null when nothing waits.
+ * Null when nothing waits. Practice records are not in it: the screen says them last, with
+ * `practiceLine`, so that "them" and "their upload" before it can only mean the unsent records.
  */
 export function signOutWarning(work: LocalWork, email: string): readonly string[] | null {
   if (nothingWaits(work)) return null;
@@ -55,9 +56,6 @@ export function signOutWarning(work: LocalWork, email: string): readonly string[
         : `${work.drafts} unfinished observations are kept.`,
     );
   lines.push(`They remain on this device for ${email}. Another account cannot upload them.`);
-  // After the sentence about "them": practice records are not among the records it speaks of.
-  const practice = practiceLine(work.practice);
-  if (practice) lines.push(practice);
   return lines;
 }
 

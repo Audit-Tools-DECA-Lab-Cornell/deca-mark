@@ -25,10 +25,11 @@ describe("practice records in the words for leaving", () => {
     expect(signOutWarning({ ...none, practice: 2 }, "a@b.c")).toBeNull();
   });
 
-  it("names practice after the unsent count, not as 'held for the project'", () => {
+  it("names practice apart from the unsent count, never as 'held for the project'", () => {
+    // Sign out says the practice line itself, after "their upload", so the warning carries none.
     const lines = signOutWarning({ ...none, unsent: 1, practice: 2 }, "a@b.c") ?? [];
     expect(lines).toContain("1 observation has not been uploaded.");
-    expect(lines).toContain("2 practice records stay on this device and are never uploaded.");
+    expect(lines.join(" ")).not.toContain("practice");
     expect(lines.join(" ")).not.toContain("held for the project");
     expect(deletionConsequences({ ...none, unsent: 1, practice: 2 }, 1, null)).toContain(
       "2 practice records stay on this device and are never uploaded.",

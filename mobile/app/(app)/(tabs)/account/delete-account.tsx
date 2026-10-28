@@ -292,8 +292,9 @@ export default function DeleteAccountScreen() {
             }
             testID="account-delete-unsent"
           >
-            Uploading first keeps them with their projects. Deleting without uploading leaves them
-            on this device for good.
+            {work.unsent === 1
+              ? "Uploading first keeps it with its project. Deleting without uploading leaves it on this device for good."
+              : "Uploading first keeps them with their projects. Deleting without uploading leaves them on this device for good."}
           </Note>
         ) : null}
         {counted && work.unsent > 0 && online === false ? (
