@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { SIGNED_OUT_REPLY } from "@/lib/auth/signed-out-reply";
 import { supabaseConfig } from "@/lib/supabase/config";
 
 /**
@@ -9,6 +10,10 @@ import { supabaseConfig } from "@/lib/supabase/config";
  * who opens the home page goes straight to their workspace (`/o` picks the project). `/invite` and `/join`
  * are matched only so the sign-in cookie is refreshed there; they stay open to people who are signed out.
  * Without Supabase configured nobody is signed in, so the workspace stays closed.
+ *
+ * A Server Action POST from a signed-out browser is not redirected: it gets a fixed 401 (`SIGNED_OUT_REPLY`)
+ * before the action runs. The action runner cannot follow a redirect to a page, and the 401 lets the page
+ * that made the call say that the browser was signed out and nothing was changed (WEB-44).
  */
 export async function proxy(request: NextRequest) {
 	let response = NextResponse.next({ request });
@@ -30,6 +35,8 @@ export async function proxy(request: NextRequest) {
 		const { data, error } = await supabase.auth.getClaims();
 		authenticated = !error && Boolean(data?.claims.sub);
 	}
+	if (protectedRoute && !authenticated && request.method === "POST" && request.headers.has("next-action"))
+		return signedOut();
 	const destination =
 		protectedRoute && !authenticated
 			? signIn(request)
@@ -47,6 +54,18 @@ export async function proxy(request: NextRequest) {
 	response.headers.set("Cache-Control", "private, no-store");
 	response.headers.set("Referrer-Policy", "no-referrer");
 	return response;
+}
+
+/** The answer to an action POST from a signed-out browser. Exactly `text/plain`: the action runner reads only that. */
+function signedOut(): NextResponse {
+	return new NextResponse(SIGNED_OUT_REPLY, {
+		status: 401,
+		headers: {
+			"Content-Type": "text/plain",
+			"Cache-Control": "private, no-store",
+			"Referrer-Policy": "no-referrer"
+		}
+	});
 }
 
 function signIn(request: NextRequest): URL {
