@@ -61,6 +61,11 @@ The existing short aliases `pnpm lint`, `pnpm lint:fix`, `pnpm typecheck`, `pnpm
 
 ## API and database targets
 
+Run `pnpm db:migrate:guide` for migration shortcuts. The
+[database migration guide](Database-Migrations.md) separates local updates, hosted
+history checks and the special schema2 transaction. Deploying API/web code does
+not apply hosted migrations; check pending migrations before each release.
+
 The normal connected mobile development setup uses the local API on port 8000 with hosted Supabase Auth and PostGIS. `pnpm api:hosted:up` uses `database/compose.hosted.yaml`; its secret volume must already exist as described in [Supabase setup](Supabase-Setup.md). Credentials are not copied into root configuration.
 
 Local API development uses `pnpm db:start` and, from `backend/`, `uv run --frozen uvicorn fieldmaps_api.main:create_app_from_config --factory --app-dir src --port 8000`. Stop any API already on port 8000 first. The local API uses `config.local.json` and the generated `../database/.local/fieldmaps-api-password`; it connects to the local database, not hosted PostGIS. Its public identity-provider configuration is unchanged by DB-02; synthetic API tests inject their own JWT verifier.

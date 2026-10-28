@@ -139,7 +139,7 @@ def test_schema2_refusal_preserves_all_rows_default_trigger_and_history(
     )
     before = protected_state(container)
     # When the operational helper or its already-bound report is applied.
-    if failure == "missing-report":
+    if failure in {"missing-report", "legacy"}:
         with pytest.raises(subprocess.CalledProcessError):
             psql(container, source)
     elif failure in {"stale-report", "history-conflict"}:

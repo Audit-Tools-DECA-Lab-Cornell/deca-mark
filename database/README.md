@@ -6,6 +6,11 @@ Planning checkpoint: [current roadmap, 2026-10-15](../docs/plan/current-state.md
 
 ## Run locally
 
+For hosted migration commands, offline schema2 SQL preparation and release
+reminders, use the [database migration guide](../docs/Database-Migrations.md)
+or run `pnpm db:migrate:guide`. Existing schema1 forms need the dedicated schema2
+preflight/application workflow, rather than an ordinary CLI push.
+
 From the product root, with Docker Desktop, Node 24, pnpm 10.17.1 and uv installed:
 
 ```sh
@@ -80,6 +85,18 @@ Disposable rehearsals accept `DECAMARK_REHEARSAL_IMAGE` to select an available l
 PostgreSQL 17/PostGIS image containing pg_cron. The default remains the pinned Supabase
 image. Alternative-image runs use synthetic Auth tables and do not prove full Supabase
 Auth/Storage service behavior. See [form revision evidence](../docs/reviews/form-revisions-2026-10-16/README.md).
+
+## Observation start timestamp
+
+`20261026090000_observation_started_at.sql` adds nullable `fieldmaps.observations.started_at`,
+the restricted API role's INSERT grant, and immutability/finite-time checks. Existing records
+stay `NULL`; there is no backfill, duration column, or ordering constraint against `observed_at`.
+QGIS views keep their existing columns.
+
+Apply the migration before deploying the compatible API, then release the collector. Rehearse
+with `sh database/zone-api-rehearsal.sh tests/test_observation_timestamps_live.py` on an isolated
+local PostGIS database. Applying to an existing shared local or hosted installation requires
+that target's explicit authorization; ordinary checks do not migrate it.
 
 ## Durable account-deletion recovery
 
