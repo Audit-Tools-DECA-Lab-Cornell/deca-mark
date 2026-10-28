@@ -103,6 +103,7 @@ class HistoricalObservation(Frozen):
     site_name: str
     observer: str
     observed_at: datetime
+    started_at: datetime | None = None
     received_at: datetime
     revision: int
     answers: dict[str, JsonValue]

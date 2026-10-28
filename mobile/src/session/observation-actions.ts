@@ -206,6 +206,7 @@ export function useObservationActions(input: ActionInput) {
       projectId: sitePackage.projectId,
       observer: owner.capture?.observerCode ?? initials,
       createdAt: new Date().toISOString(),
+      startedAt: owner.startedAt,
       ...(owner.binding ? { binding: owner.binding } : {}),
     });
     if (!built.ok) return { ok: false, problems: [], message: built.message };

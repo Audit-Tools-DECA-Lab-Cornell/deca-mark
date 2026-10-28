@@ -95,7 +95,9 @@ def csv_bytes(lines: Sequence[Sequence[str | int | float]]) -> bytes:
 
 
 def record(row: HistoricalObservation) -> dict[str, JsonValue]:
-    values = row.model_dump(mode="json", exclude={"definition", "historical_geometry", "answers"})
+    values = row.model_dump(
+        mode="json", exclude={"definition", "historical_geometry", "answers", "started_at"}
+    )
     values["label"] = f"OBS-{str(row.observation_id)[:6]}"
     values["zone"] = row.zone_code
     values["zone_label_at_capture"] = values.pop("zone_label")

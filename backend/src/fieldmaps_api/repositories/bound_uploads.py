@@ -95,6 +95,7 @@ async def insert(session: AsyncSession, upload: BoundWrite) -> None:
             "form": upload.target.form_version_id,
             "observer": upload.payload.observer,
             "observed_at": upload.payload.observed_at,
+            "started_at": upload.payload.started_at,
             "longitude": longitude,
             "latitude": latitude,
             "first_round": first,

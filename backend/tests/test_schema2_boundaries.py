@@ -103,9 +103,8 @@ def test_preflight_refuses_formerly_ignored_semantic_properties(property_name: s
         preflight([row])
 
 
-@pytest.mark.parametrize("raw", [{"fields": []}, {"questions": []}])
-def test_preflight_refuses_legacy_or_invalid_definitions(raw: dict[str, JsonValue]) -> None:
-    # Given a legacy/malformed definition, when preflighting, then real schema2 parsing fails.
+@pytest.mark.parametrize("raw", [{"fields": "invalid"}, {"questions": []}])
+def test_preflight_refuses_invalid_stored_definitions(raw: dict[str, JsonValue]) -> None:
     row = PreflightRow(id=UUID(int=1), schema_version=1, definition_text=json.dumps(raw))
     with pytest.raises(ValidationError):
         preflight([row])

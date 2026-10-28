@@ -20,9 +20,9 @@ WHERE p.id = :package AND p.project_id = :project
 
 INSERT: Final = text("""
 INSERT INTO fieldmaps.observations (id, organization_id, project_id, site_id, form_version_id,
-  observer_code, observed_at, geom, answers, created_by, upload_hash,
+  observer_code, observed_at, started_at, geom, answers, created_by, upload_hash,
   round_type, first_round, placement_source, package_id, zone_id)
-VALUES (:id, :organization, :project, :site, :form, :observer, :observed_at,
+VALUES (:id, :organization, :project, :site, :form, :observer, :observed_at, :started_at,
   CASE WHEN CAST(:longitude AS double precision) IS NULL THEN NULL ELSE
     fieldmaps.make_point(:longitude, :latitude) END,
   CAST(:answers AS jsonb), :user_id, :fingerprint,

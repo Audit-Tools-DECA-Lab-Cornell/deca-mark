@@ -158,6 +158,7 @@ it("freezes managed UUID bindings at placement and persists an explicit zone swi
     expect(await latest().openPackage(managed.id)).toMatchObject({ ok: true });
   });
   await act(async () => latest().place([0.5, 0.5]));
+  const startedAt = latest().inProgress?.startedAt;
   expect(latest().pinned?.zone.id).toBe(zones[0]?.zoneId);
   expect((await readDraft(mocks.database, owner))?.binding).toMatchObject({
     packageId: managed.id,
@@ -180,6 +181,8 @@ it("freezes managed UUID bindings at placement and persists an explicit zone swi
     version: 7,
     zone: { id: other.zoneId, code: "B" },
   });
+  expect(startedAt).toBeDefined();
+  expect(latest().inProgress?.startedAt).toBe(startedAt);
 });
 
 it("retains an outside-zone point as a draft and refuses its local save", async () => {

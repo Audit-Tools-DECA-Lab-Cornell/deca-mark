@@ -97,6 +97,7 @@ it.skipIf(!input)(
         answers: { observer: "QA", people: 2, notes: "Synthetic MOB-29 offline point" },
         coordinates: zone.display_anchor,
         createdAt: "2026-10-15T15:00:00.000Z",
+        startedAt: "2026-10-15T14:58:00.000Z",
         storageStatus: "local-only",
         context,
         placement: { source: "hand", gpsAccuracyMetres: null },
@@ -111,6 +112,7 @@ it.skipIf(!input)(
         answers: { notes: "Synthetic whole-zone Inventory" },
         coordinates: zone.display_anchor,
         createdAt: "2026-10-15T15:01:00.000Z",
+        startedAt: "2026-10-15T15:00:30.000Z",
         storageStatus: "local-only",
         context: { ...context, roundType: "inventory" },
         placement: { source: "zone", gpsAccuracyMetres: null },
@@ -221,10 +223,18 @@ it.skipIf(!input)(
         );
         expect(response.status).toBe(200);
         const read = z
-          .object({ package_id: z.uuid(), zone_id: z.uuid(), geometry: z.unknown() })
+          .object({
+            package_id: z.uuid(),
+            zone_id: z.uuid(),
+            geometry: z.unknown(),
+            started_at: z.iso.datetime({ offset: true }),
+            observed_at: z.iso.datetime({ offset: true }),
+          })
           .parse(await response.json());
         expect(read.package_id).toBe(fixture.packageId);
         expect(read.zone_id).toBe(fixture.zoneId);
+        expect(Date.parse(read.started_at)).toBe(Date.parse(record.startedAt ?? ""));
+        expect(Date.parse(read.observed_at)).toBe(Date.parse(record.createdAt));
         if (record.id === inventory.id) expect(read.geometry).toBeNull();
       }
     } finally {
