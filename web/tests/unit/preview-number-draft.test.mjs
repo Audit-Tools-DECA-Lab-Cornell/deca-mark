@@ -27,7 +27,7 @@ registerHooks({
 			return {
 				format: "module",
 				shortCircuit: true,
-				source: 'import React from "react"; export default p=>React.createElement("a",p,p.children);'
+				source: 'import React from "react"; export const useLinkStatus=()=>({pending:false}); export default p=>React.createElement("a",p,p.children);'
 			};
 		if (url.startsWith(src.href) && url.endsWith(".tsx"))
 			return {
