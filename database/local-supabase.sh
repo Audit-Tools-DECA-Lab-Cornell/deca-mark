@@ -67,6 +67,9 @@ case "${1:-help}" in
     docker cp database/tests supabase_db_field-maps:/tmp/fieldmaps-tests/database/
     docker cp supabase/seed.sql supabase_db_field-maps:/tmp/fieldmaps-tests/supabase/seed.sql
     docker cp contracts/forms/janet-test-v1.json supabase_db_field-maps:/tmp/fieldmaps-tests/janet-test-v1.json
+    docker cp contracts/forms/janet-inventory-v1.json supabase_db_field-maps:/tmp/fieldmaps-tests/janet-inventory-v1.json
+    docker cp contracts/forms/definition.cases.json supabase_db_field-maps:/tmp/fieldmaps-tests/form-definition.cases.json
+    docker cp contracts/form-definition.schema.json supabase_db_field-maps:/tmp/fieldmaps-tests/form-definition.schema.json
     docker cp contracts/zones/geometry.cases.json supabase_db_field-maps:/tmp/fieldmaps-tests/zone-geometry.cases.json
     docker cp contracts/zones/publication.cases.json supabase_db_field-maps:/tmp/fieldmaps-tests/zone-publication.cases.json
     docker cp contracts/zones/upload.cases.json supabase_db_field-maps:/tmp/fieldmaps-tests/zone-upload.cases.json

@@ -10,6 +10,7 @@ GRANT EXECUTE ON FUNCTION pg_temp.assert_true(boolean, text),
 
 -- Given the sample project and another organization with its own site and form.
 \ir ../../supabase/seed.sql
+\ir seed-forms.sql
 INSERT INTO organizations (id, name, slug) VALUES ('20000000-0000-4000-8000-000000000001', 'Other team', 'other-team');
 INSERT INTO projects (id, organization_id, name, code) VALUES (
   '20000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000001', 'Other project', 'other-project'
