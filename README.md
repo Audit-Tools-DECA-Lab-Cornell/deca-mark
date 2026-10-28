@@ -41,10 +41,15 @@ pnpm dev
 | `pnpm api:hosted:up` / `pnpm api:hosted:stop` | Start/stop the local API connected to hosted Supabase               |
 | `pnpm check`                                  | Web and mobile type/lint checks, then Python Ruff/BasedPyright      |
 | `pnpm test`                                   | Web unit and mobile tests, local API integration tests, and local SQL assertions |
+| `pnpm db:migrate:guide`                       | Migration commands, hosted history check and schema2 rollout guide |
 
 Run `pnpm run help` for the command overview. Integration tests need the local databases started with `pnpm db:start`; they do not run against Supabase. The hosted API needs the already provisioned local credential volume. See [workspace operations](docs/Workspace.md) for prerequisites, individual checks, and deployment instructions.
 
 ## Current functionality
+
+For migration commands and the current Forms schema mismatch, start with the
+[database migration guide](docs/Database-Migrations.md). Hosted schema2 application
+requires its validated transaction; web/API deployment does not apply it.
 
 Start with [current position and next work](docs/plan/current-state.md), reconciled October 15, 2026. The [production plan](docs/plan/README.md) owns sequencing; each component plan owns its task status.
 

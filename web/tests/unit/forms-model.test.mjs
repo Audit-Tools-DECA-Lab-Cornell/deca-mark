@@ -185,7 +185,7 @@ test("draft changes name the field that changed, and a new question is new", () 
 	assert.deepEqual(
 		changes.map(c => [c.questionId, c.field]),
 		[
-			["age_range", "Question label"],
+			["age_range", "Question Text"],
 			["play_type_1", "Required"],
 			["added", "New question"]
 		]
@@ -209,14 +209,14 @@ test("draft changes name the field that changed, and a new question is new", () 
 	);
 });
 
-test("guidance that is only emptied reads as 'No guidance'", () => {
+test("emptied observer instructions are visible in the publication review", () => {
 	const base = { ...behaviour, questions: [{ ...behaviour.questions[0], hint: "Ask the parent" }] };
 	const draft = structuredClone(base);
 	delete draft.questions[0].hint;
 	const [change] = model.draftChanges(draft, base);
-	assert.equal(change.field, "Guidance");
+	assert.equal(change.field, "Instructions to Observers");
 	assert.equal(change.was, "Ask the parent");
-	assert.equal(change.now, "No guidance");
+	assert.equal(change.now, "No instructions");
 });
 
 test("two definitions are the same when only the order of their keys differs", () => {

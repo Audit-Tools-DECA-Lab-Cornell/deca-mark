@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { api, listProjectInvitations } from "./support/api";
+import { api, listProjectInvitations, revokeProjectInvitation } from "./support/api";
 import { authFile } from "./support/auth";
 import { projectPath, runStamp } from "./support/manifest";
 import { textWithValues } from "./support/ui";
@@ -18,6 +18,11 @@ test("a manager invites someone, sees the link and code once, and revokes the in
 	await page.getByRole("button", { name: "Invite", exact: true }).first().click();
 
 	const dialog = page.getByRole("dialog");
+	await expect(dialog.getByRole("spinbutton", { name: "Days until it expires" })).toHaveAttribute(
+		"aria-valuenow",
+		"14"
+	);
+	await expect(dialog.getByRole("spinbutton", { name: "How many people can use it" })).toHaveCount(0);
 	await dialog.getByLabel(/email/i).fill(email);
 	await dialog
 		.getByRole("button", { name: /^(invite|create|send)/i })
@@ -66,4 +71,38 @@ test("a manager invites someone, sees the link and code once, and revokes the in
 			{ message: "the invitation is revoked", timeout: 10_000 }
 		)
 		.toBe(true);
+});
+
+test("a batch deduplicates addresses and creates separate recipient-bound invitations", async ({ page }) => {
+	const first = `batch-first-${runStamp().toLowerCase()}@fieldmaps.test`;
+	const second = `batch-second-${runStamp().toLowerCase()}@fieldmaps.test`;
+	await page.goto(projectPath("team"));
+	await page.getByRole("button", { name: "Invite", exact: true }).first().click();
+	const dialog = page.getByRole("dialog");
+	try {
+		await dialog.getByLabel("Email addresses").fill(`${first},broken`);
+		await dialog.getByRole("button", { name: "Create invitations", exact: true }).click();
+		await expect(dialog.getByLabel("Email addresses")).toBeFocused();
+		await expect(dialog.getByLabel("Email addresses")).toHaveAttribute("aria-invalid", "true");
+		expect((await listProjectInvitations()).filter(item => item.email === first)).toHaveLength(0);
+		await dialog.getByLabel("Email addresses").fill(`${first},${first.toUpperCase()},${second}`);
+		await dialog.getByRole("button", { name: "Create invitations", exact: true }).click();
+		await expect(dialog.getByRole("button", { name: "Show sharing details" })).toHaveCount(2);
+		const rows = (await listProjectInvitations()).filter(item => item.email === first || item.email === second);
+		expect(rows).toHaveLength(2);
+		expect(rows.every(item => item.max_uses === 1)).toBe(true);
+		await dialog.getByRole("button", { name: "Done", exact: true }).click();
+		await page.getByRole("button", { name: "Invite", exact: true }).first().click();
+		await expect(dialog.getByRole("spinbutton", { name: "Days until it expires" })).toHaveAttribute(
+			"aria-valuenow",
+			"14"
+		);
+		await dialog.getByRole("radio", { name: "Shared join code" }).click();
+		await expect(dialog.getByRole("spinbutton", { name: "How many people can use it" })).toBeVisible();
+	} finally {
+		for (const invitation of (await listProjectInvitations()).filter(
+			item => item.email === first || item.email === second
+		))
+			await revokeProjectInvitation(invitation.id);
+	}
 });

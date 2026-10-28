@@ -47,11 +47,13 @@ import {
   listObservations,
   saveObservation,
 } from "../storage/observation-store";
+import { readOwnerScope } from "../sync/receipt";
 import { cachedAccount, forgetAccount, rememberAccount } from "./cached-account";
 import { persistDeliberateSignOut, restoreAccount } from "./deleted-session";
 import { accountWorkspace, sessionChange, signInRecovery } from "./session-retention";
 
 const issuer = "https://auth.example.test";
+const connection = { apiUrl: "https://api.example.test", supabaseUrl: issuer };
 const accountA = { id: "50000000-0000-4000-8000-000000000001", email: "a@example.test" };
 const accountB = { id: "50000000-0000-4000-8000-000000000002", email: "b@example.test" };
 const record = shellObservationSchema.parse({
@@ -86,19 +88,19 @@ it("keeps only account A's records after a failed refresh and an app restart", a
   let database = new DatabaseSync(filename);
   try {
     await initializeDatabase(adapter(database));
-    await saveObservation(adapter(database), record, accountWorkspace(accountA).key);
+    await saveObservation(adapter(database), record, accountWorkspace(accountA, connection).key);
     await saveObservation(
       adapter(database),
       { ...record, id: "93f254b5-8a7b-4b71-9591-a7ff880f4ad7" },
-      accountWorkspace(accountB).key,
+      accountWorkspace(accountB, connection).key,
     );
     rememberAccount(accountA, issuer);
     // When failed refresh emits SIGNED_OUT and both storage boundaries restart.
     const lost = sessionChange(accountA, "SIGNED_OUT", null, issuer, null);
     expect(lost.session).toBeNull();
-    expect(await listObservations(adapter(database), accountWorkspace(lost.account).key)).toEqual([
-      { ...record, storageStatus: "local-only" },
-    ]);
+    expect(
+      await listObservations(adapter(database), accountWorkspace(lost.account, connection).key),
+    ).toEqual([{ ...record, storageStatus: "local-only" }]);
     database.close();
     database = new DatabaseSync(filename);
     await initializeDatabase(adapter(database));
@@ -108,7 +110,10 @@ it("keeps only account A's records after a failed refresh and an app restart", a
     expect(restarted.session).toBeNull();
     expect(restarted.account).toEqual(accountA);
     expect(
-      await listObservations(adapter(database), accountWorkspace(restarted.account).key),
+      await listObservations(
+        adapter(database),
+        accountWorkspace(restarted.account, connection).key,
+      ),
     ).toEqual([{ ...record, storageStatus: "local-only" }]);
     expect(signInRecovery(restarted.account, restarted.session, restored.deletedUserId)).toEqual({
       email: accountA.email,
@@ -127,7 +132,7 @@ it("hides deliberately signed-out account records after restart but retains them
   let database = new DatabaseSync(filename);
   try {
     await initializeDatabase(adapter(database));
-    await saveObservation(adapter(database), record, accountWorkspace(accountA).key);
+    await saveObservation(adapter(database), record, accountWorkspace(accountA, connection).key);
     rememberAccount(accountA, issuer);
     // When sign-out refreshes an expired token before completing and the app restarts.
     await persistDeliberateSignOut(
@@ -160,11 +165,11 @@ it("hides deliberately signed-out account records after restart but retains them
     // Then the signed-out workspace hides A, and signing in again restores exactly A.
     expect(restored.account).toBeNull();
     expect(
-      await listObservations(adapter(database), accountWorkspace(restored.account).key),
+      await listObservations(adapter(database), accountWorkspace(restored.account, connection).key),
     ).toEqual([]);
     const signedIn = sessionChange(null, "SIGNED_IN", { user: accountA }, issuer, null);
     expect(
-      await listObservations(adapter(database), accountWorkspace(signedIn.account).key),
+      await listObservations(adapter(database), accountWorkspace(signedIn.account, connection).key),
     ).toEqual([{ ...record, storageStatus: "local-only" }]);
     expect(signInRecovery(signedIn.account, signedIn.session, null)).toBeNull();
   } finally {
@@ -253,4 +258,24 @@ it("preserves a real account-cache write failure across session loss until a dur
   } finally {
     rmSync(device.directory, { recursive: true });
   }
+});
+
+it("builds the owner scope from the configured connection and the account, not from a constant", () => {
+  // Given two different backends and two accounts.
+  const local = { apiUrl: "http://192.168.1.20:8000", supabaseUrl: "http://192.168.1.20:54321" };
+  // When the workspace is derived for each pair.
+  const here = accountWorkspace(accountA, local);
+  // Then the scope names that backend and that account, and no other pair shares its key.
+  expect(here.scope).toMatchObject({
+    apiUrl: local.apiUrl,
+    issuer: local.supabaseUrl,
+    userId: accountA.id,
+  });
+  expect(accountWorkspace(accountA, connection).key).not.toBe(here.key);
+  expect(accountWorkspace(accountB, local).key).not.toBe(here.key);
+  expect(here.key).not.toContain("127.0.0.1:8000");
+  expect(here.key).not.toContain("lezmq");
+  // And the stored key reads back as the scope the uploader checks rows against.
+  expect(readOwnerScope(here.key)).toEqual(here.scope);
+  expect(accountWorkspace(null, local)).toEqual({ scope: null, key: "local" });
 });

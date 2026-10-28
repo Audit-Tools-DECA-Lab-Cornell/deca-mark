@@ -1,4 +1,5 @@
 import type { Condition } from "@/lib/forms/definition";
+import { type DateTimeConfig, formatTemporalValue } from "@/lib/forms/temporal";
 
 /**
  * Reading a stored record's answers against the form version it was collected with. Definitions arrive as
@@ -14,7 +15,7 @@ import type { Condition } from "@/lib/forms/definition";
  * `form_version`, never with the newest version.
  */
 
-export type AnswerKind = "one" | "many" | "text" | "number" | "boolean";
+export type AnswerKind = "one" | "many" | "text" | "number" | "dateTime" | "boolean";
 export type FormOption = { readonly code: string; readonly label: string };
 export type OptionSet = {
 	readonly code: string;
@@ -37,6 +38,7 @@ export type FormQuestion = {
 	readonly dynamicFrom: { readonly question: string; readonly sets: Readonly<Record<string, OptionSet>> } | null;
 	readonly dependsOn: Condition | null;
 	readonly required: boolean;
+	readonly dateTime?: DateTimeConfig;
 };
 
 export type FormProtocolNote = { readonly id: string; readonly title: string; readonly detail: string };
@@ -113,7 +115,7 @@ function readSets(value: unknown): Record<string, OptionSet> {
 	return sets;
 }
 
-const KINDS = new Set<AnswerKind>(["one", "many", "text", "number"]);
+const KINDS = new Set<AnswerKind>(["one", "many", "text", "number", "dateTime"]);
 
 function readQuestion(value: unknown): FormQuestion | null {
 	if (!isRecord(value)) return null;
@@ -132,7 +134,22 @@ function readQuestion(value: unknown): FormQuestion | null {
 		options: readOptions(value.options),
 		dynamicFrom: dynamic && parent ? { question: parent, sets: readSets(dynamic.sets) } : null,
 		dependsOn: isRecord(value.dependsOn) ? (value.dependsOn as Condition) : null,
-		required: value.required === true
+		required: value.required === true,
+		...(isRecord(value.dateTime) &&
+		typeof value.dateTime.timeZone === "string" &&
+		["date", "time", "dateTime"].includes(String(value.dateTime.mode))
+			? {
+					dateTime: {
+						mode: value.dateTime.mode as DateTimeConfig["mode"],
+						timeZone: value.dateTime.timeZone,
+						dateFormat:
+							value.dateTime.dateFormat === "monthFirst" || value.dateTime.dateFormat === "dayFirst"
+								? value.dateTime.dateFormat
+								: "iso",
+						timeFormat: value.dateTime.timeFormat === "12h" ? "12h" : "24h"
+					}
+				}
+			: {})
 	};
 }
 
@@ -225,8 +242,6 @@ export function playTypeQuestion(definition: unknown): FormQuestion | undefined 
 
 /* ── Labelling answers ────────────────────────────────────────────────────── */
 
-const NUMBER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 6 });
-
 /** Whether a stored value is an answer at all: not missing, null, blank or an empty list. */
 export function isAnswered(value: unknown): boolean {
 	if (value === undefined || value === null) return false;
@@ -240,10 +255,12 @@ function labelOf(code: unknown, options: readonly FormOption[]): string {
 	return options.find(option => option.code === code)?.label ?? code;
 }
 
+const INTEGER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
 function formatScalar(value: unknown): string {
 	if (value === undefined || value === null) return NOT_ANSWERED;
 	if (typeof value === "boolean") return value ? "Yes" : "No";
-	if (typeof value === "number") return Number.isFinite(value) ? NUMBER.format(value) : String(value);
+	if (typeof value === "number") return Number.isSafeInteger(value) ? INTEGER.format(value) : String(value);
 	if (typeof value === "string") return value;
 	return JSON.stringify(value);
 }
@@ -269,7 +286,9 @@ export function answerLabel(
 	const question = findQuestion(definition, questionId);
 	if (!question) return formatValue(value, []);
 	const set = answers ? dynamicSet(question, answers) : undefined;
-	return formatValue(value, set ? set.options : allOptions(question));
+	return typeof value === "string" && question.dateTime
+		? formatTemporalValue(question.dateTime, value)
+		: formatValue(value, set ? set.options : allOptions(question));
 }
 
 function dynamicSet(question: FormQuestion, answers: Readonly<Record<string, unknown>>): OptionSet | undefined {
@@ -318,7 +337,10 @@ export function answerRows(definition: unknown, answers: Readonly<Record<string,
 		rows.push({
 			questionId: question.id,
 			label: set?.label ?? question.label,
-			value: formatValue(value, set ? set.options : allOptions(question)),
+			value:
+				typeof value === "string" && question.dateTime
+					? formatTemporalValue(question.dateTime, value)
+					: formatValue(value, set ? set.options : allOptions(question)),
 			raw: value,
 			act: question.act,
 			known: true

@@ -1,5 +1,5 @@
-import type { Answers, FormDefinition } from "../forms/definition";
-import { pruneAnswers, reviewProblems } from "../forms/engine";
+import { type Answers, type FormDefinition, isObserverQuestion } from "../forms/definition";
+import { pruneAnswers, reviewProblems, visibleQuestions } from "../forms/engine";
 import {
   boundShellObservationSchema,
   type Coordinate,
@@ -26,6 +26,7 @@ export type ObservationInput = {
   /** The account's initials, for a form that asks no observer question of its own. */
   readonly observer?: string | undefined;
   readonly createdAt: string;
+  readonly startedAt: string;
   readonly binding?: PackageBinding | undefined;
 };
 
@@ -46,6 +47,7 @@ export function buildObservation(input: ObservationInput): BuildResult {
     id: input.id,
     coordinates: input.coordinates,
     createdAt: input.createdAt,
+    startedAt: input.startedAt,
     storageStatus: "local-only",
   };
   if (input.form.version === "shell-v1") {
@@ -72,10 +74,16 @@ export function buildObservation(input: ObservationInput): BuildResult {
       : { ok: false, message: parsed.error.issues[0]?.message ?? "Check the answers." };
   }
   {
-    const observerQuestion = input.form.questions.find(
-      (question) => question.exportColumn === "observer" && question.kind === "text",
+    const active = visibleQuestions(input.form, answers);
+    const observerQuestion = active.find((question) =>
+      isObserverQuestion(question, input.form.columnNaming),
     );
-    const observer = observerQuestion ? text(answers, observerQuestion.id) : (input.observer ?? "");
+    const automaticObserver = active.some((question) => question.valueSource === "observerCode");
+    const observer = automaticObserver
+      ? (input.observer ?? "")
+      : observerQuestion
+        ? text(answers, observerQuestion.id)
+        : (input.observer ?? "");
     if (!observerQuestion && observer.trim() === "")
       return {
         ok: false,

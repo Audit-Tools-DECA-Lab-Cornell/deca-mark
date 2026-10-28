@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { SitePackage } from "../packages/site-package";
 import { hasDraft, observationDraftSchema, readDraft, saveDraft } from "../storage/draft-store";
 import { initializeDatabase, type LocalDatabase } from "../storage/observation-store";
-import { adapter, boundDraft, owner } from "../storage/package-store.fixture";
+import { adapter, boundDraft, identity, owner } from "../storage/package-store.fixture";
 import { packageActions } from "./package-actions";
 
 const mocks = vi.hoisted(() => ({
@@ -193,4 +193,28 @@ it("rejects an expired account generation while waiting for package open", async
     reason: "The account changed while opening the map.",
   });
   expect(flow.input.opened).not.toHaveBeenCalled();
+});
+
+it("refuses unsupported installed forms with an update action and retains a recovered draft", async () => {
+  const flow = actions({
+    installed: [
+      {
+        identity,
+        status: "update_required",
+        installedAt: null,
+        bytes: 1,
+        counts: { unfinished: 0, unsent: 0, attention: 0, retained: 0, openSession: false },
+        references: { drafts: 0, records: 0 },
+      },
+    ],
+  });
+  expect(await flow.openPackage(pkg.id)).toMatchObject({
+    ok: false,
+    reason: expect.stringMatching(/Update DECA Mark/),
+  });
+  await saveDraft(database, owner, draft);
+  expect(await flow.resumeRecovered(draft)).toBeUndefined();
+  expect(flow.input.setStatus).toHaveBeenCalledWith(expect.stringMatching(/Update DECA Mark/));
+  expect(await readDraft(database, owner)).toEqual(draft);
+  expect(mocks.open).not.toHaveBeenCalled();
 });

@@ -1,7 +1,7 @@
 import { isBoundObservation, type Observation } from "../domain/observation";
 import { receiptSchema, type SyncScope, syncScopeSchema } from "./contracts";
 
-/** owner_scope stays the legacy storage namespace; the binding supplies the destination project. */
+/** owner_scope is the account workspace on the configured backend; the binding supplies the destination project. */
 export function readOwnerScope(key: string): SyncScope | null {
   try {
     const value: unknown = JSON.parse(key);

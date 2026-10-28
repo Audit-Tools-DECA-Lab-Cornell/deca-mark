@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { databaseWrite } from "../../storage/database-write";
-import { readSelected } from "../../storage/package-catalog";
+import { installedFor } from "../../storage/package-store.fixture";
 import { hasStoredPackage, setPackageAccessOwner } from "./access";
 import { boundFixture, ids } from "./bound-fixture";
 import { deferred, harness, otherOwner, owner } from "./lifecycle.test-helper";
@@ -36,7 +36,7 @@ it("rolls back a stale account install queued after immutable file publication",
     setPackageAccessOwner(owner);
     release.resolve();
     expect(await pending).toBe(false);
-    expect(await readSelected(h.database, owner, ids.project, ids.site)).toBeNull();
+    expect(await installedFor(h.database, owner, ids.project, ids.site)).toBeNull();
     expect(hasStoredPackage(ids.package)).toBe(false);
     expect(h.files.staged()).toEqual([]);
     if (!published) throw new Error("File publication did not run");

@@ -3,6 +3,7 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import { buildObservation } from "../domain/build-observation";
 import { shortLabel } from "../domain/labels";
 import type { Coordinate, Placement, RoundContext } from "../domain/observation";
+import { capturedAnswers, captureProblem } from "../forms/capture";
 import type { Answers, FormDefinition } from "../forms/definition";
 import { reviewProblems } from "../forms/engine";
 import { carriedQuestionIds, isUploadableRecord } from "../forms/registry";
@@ -34,6 +35,7 @@ type ActionInput = {
   readonly recovered: ObservationDraft | null;
   readonly placed: Coordinate | null;
   readonly initials: string;
+  readonly accountId: string;
   readonly identity: RefObject<ObservationIdentity | null>;
   readonly stateRef: RefObject<SessionState>;
   readonly placementRef: RefObject<Placement["source"]>;
@@ -62,6 +64,7 @@ export function useObservationActions(input: ActionInput) {
     unreadableDraft,
     placed,
     initials,
+    accountId,
     identity,
     stateRef,
     placementRef,
@@ -85,10 +88,12 @@ export function useObservationActions(input: ActionInput) {
     }
     const fresh = identity.current === null;
     const binding = sessionBinding(sitePackage, zone);
+    const startedAt = identity.current?.startedAt ?? new Date().toISOString();
     identity.current ??= {
       id: randomUUID(),
-      startedAt: new Date().toISOString(),
+      startedAt,
       owner: key,
+      capture: { accountId, observerCode: initials, capturedAt: startedAt },
       packageId: sitePackage.id,
       packageName: sitePackage.name,
       ...(binding ? { binding } : {}),
@@ -102,8 +107,11 @@ export function useObservationActions(input: ActionInput) {
     const next = fresh
       ? startSession(stateRef.current.answers)
       : { ...stateRef.current, notice: null };
-    apply(next);
-    persist(next, coordinate);
+    const captured = form
+      ? { ...next, answers: capturedAnswers(form, next.answers, identity.current.capture) }
+      : next;
+    apply(captured);
+    persist(captured, coordinate);
     setStatus(
       source === "zone"
         ? "Zone inventory open. It is stored at the zone's centre; no point is placed."
@@ -128,7 +136,14 @@ export function useObservationActions(input: ActionInput) {
   const dispatch = (action: SessionAction): SessionStep => {
     if (!current()) return { state: startSession(), destination: "stay", autoAdvance: false };
     if (!form) return { state: stateRef.current, destination: "stay", autoAdvance: false };
-    const step = reduceSession(form, stateRef.current, action);
+    const reduced = reduceSession(form, stateRef.current, action);
+    const step = {
+      ...reduced,
+      state: {
+        ...reduced.state,
+        answers: capturedAnswers(form, reduced.state.answers, identity.current?.capture),
+      },
+    };
     apply(step.state);
     // Stepping back past the first question releases the point but not the observation: the
     // answers stay, and the draft keeps them without coordinates so a force quit still recovers.
@@ -168,6 +183,8 @@ export function useObservationActions(input: ActionInput) {
         message:
           "This point is outside the chosen zone on the pinned map. The unfinished observation is kept; move the point or choose a covering zone.",
       };
+    const sourceProblem = captureProblem(form, stateRef.current.answers, owner.capture, accountId);
+    if (sourceProblem) return { ok: false, problems: [], message: sourceProblem };
     const found = reviewProblems(form, stateRef.current.answers);
     if (found.length > 0) return { ok: false, problems: found };
     const placement: Placement = { source: placementRef.current, gpsAccuracyMetres: null };
@@ -180,8 +197,9 @@ export function useObservationActions(input: ActionInput) {
       context,
       siteId: sitePackage.siteId,
       projectId: sitePackage.projectId,
-      observer: initials,
+      observer: owner.capture?.observerCode ?? initials,
       createdAt: new Date().toISOString(),
+      startedAt: owner.startedAt,
       ...(owner.binding ? { binding: owner.binding } : {}),
     });
     if (!built.ok) return { ok: false, problems: [], message: built.message };

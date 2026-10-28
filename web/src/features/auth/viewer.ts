@@ -9,7 +9,10 @@ import type { AccountSummary, Failure } from "@/lib/workspace/types";
  * who still has to sign in, or a visitor whose sign-in could not be checked (DECA Mark is unreachable or
  * sign-in is off). Plain data, so a page can hand it to a client screen.
  */
-export type Viewer = { status: "signed-in" } | { status: "signed-out" } | { status: "unavailable"; failure: Failure };
+export type Viewer =
+	| { status: "signed-in"; account: AccountSummary }
+	| { status: "signed-out" }
+	| { status: "unavailable"; failure: Failure };
 
 const UNKNOWN: Failure = { code: "unknown", kind: "retry", message: UNKNOWN_ERROR_COPY };
 
@@ -20,7 +23,8 @@ const UNKNOWN: Failure = { code: "unknown", kind: "retry", message: UNKNOWN_ERRO
  */
 export async function readViewer(): Promise<{ viewer: Viewer; account: AccountSummary | null }> {
 	const workspace = await getWorkspace();
-	if (workspace.status === "ready") return { viewer: { status: "signed-in" }, account: workspace.account };
+	if (workspace.status === "ready")
+		return { viewer: { status: "signed-in", account: workspace.account }, account: workspace.account };
 	const failure = workspace.failure ?? UNKNOWN;
 	if (failure.kind === "sign-in") return { viewer: { status: "signed-out" }, account: null };
 	return {

@@ -10,23 +10,23 @@ import {
   memoryDatabase,
   otherOwner,
   owner,
-  session,
 } from "./package-store.fixture";
-import { clearSession, saveSession } from "./session-store";
 import { acknowledge, pendingObservations, retryAttention } from "./sync-store";
 
 describe("Durable package references", () => {
-  it("refuses an active session or unfinished draft, then retains a synced record's reference", async () => {
+  it("refuses an open collection or unfinished draft, then retains a synced record's reference", async () => {
     const { db, sqlite } = await memoryDatabase();
     try {
       await installPackage(db, owner, entry);
-      await saveSession(db, owner, session);
       await saveDraft(db, owner, boundDraft);
-      expect(await removePackage(db, owner, identity)).toMatchObject({
+      expect(await removePackage(db, owner, identity, () => true)).toMatchObject({
         removed: false,
         reasons: { sessions: 1, drafts: 1, records: 0 },
       });
-      await clearSession(db, owner);
+      expect(await removePackage(db, owner, identity)).toMatchObject({
+        removed: false,
+        reasons: { sessions: 0, drafts: 1, records: 0 },
+      });
       await commitObservation(db, boundRecord, owner);
       expect(await readDraft(db, owner)).toBeNull();
       sqlite.prepare("UPDATE observations SET sync_state = 'synced'").run();

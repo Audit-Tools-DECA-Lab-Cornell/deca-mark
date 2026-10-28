@@ -11,12 +11,18 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import { useAccount } from "../auth/provider";
-import { activateHeldObservations, retryAttention } from "../storage/sync-store";
+import { pendingRetries, retryAttention } from "../storage/sync-store";
 import { createBoundUpload } from "./bound-upload";
 import { connection } from "./config";
 import { type SyncScope, scopeKey } from "./contracts";
 import { createSyncCoordinator } from "./coordinator";
-import { createForegroundDrain } from "./foreground";
+import { createForegroundDrain, FailedAfterChange } from "./foreground";
+
+/** After a pass that threw (a locked database, say), try again once this many milliseconds have passed. */
+const FAILED_PASS_RETRY = 5000;
+
+/** The longest delay `setTimeout` takes; a longer one fires at once. A timer this long wakes early and sets the rest. */
+const LONGEST_TIMER = 2 ** 31 - 1;
 
 const SyncContext = createContext({
   revision: 0,
@@ -25,7 +31,12 @@ const SyncContext = createContext({
   retry: async () => {},
 });
 
-/** Foreground only: reconnect, save, explicit retry and resume wake the same fenced uploader. */
+/**
+ * Foreground only: reconnect, save, explicit retry and resume wake the same fenced uploader. A
+ * reconnect or a resume also makes records waiting out a retry delay due again (the coordinator
+ * keeps that from becoming a hot loop and keeps any `Retry-After`), and the only other wake-up is
+ * one timer set for the earliest delay that is still running: an idle queue does nothing.
+ */
 export function SyncProvider({ children }: PropsWithChildren) {
   const database = useSQLiteContext();
   const { key, scope, session, client, accountDeleted, ready, markAccountDeleted } = useAccount();
@@ -92,16 +103,83 @@ export function SyncProvider({ children }: PropsWithChildren) {
         if (result.kind !== "accepted" && result.code === "account_deleted") deleted.current();
       },
     });
+    // One timer, for the earliest moment a waiting record may be tried (or a failed pass tried again).
+    // A record that is already due when a pass ends (its delay ran out during a slower upload) is
+    // woken at once. If the same record is still due, at the same moment, after that wake, nothing
+    // could send it: it is "stuck", left alone (a save, reconnect, resume or new token wakes it
+    // again), and never hides another record's retry. Only that record is skipped; a different
+    // moment, or another record, is woken as usual. After a 401 nothing is sent until the token
+    // changes, so no timer is set at all.
+    const woken = new Map<string, number>();
+    const stuck = new Map<string, number>();
+    let timer: { readonly handle: ReturnType<typeof setTimeout>; readonly at: number } | undefined;
+    const wakeAt = (at: number) => {
+      if (!current() || drain.signInRequired() || (timer !== undefined && timer.at <= at)) return;
+      if (timer) clearTimeout(timer.handle);
+      const handle = setTimeout(
+        () => {
+          timer = undefined;
+          void queue.wake();
+        },
+        Math.min(LONGEST_TIMER, Math.max(0, at - Date.now())),
+      );
+      timer = { handle, at };
+    };
+    const waitForNext = async (afterFailure: boolean) => {
+      if (drain.signInRequired()) return;
+      const pending = await pendingRetries(database, key);
+      if (pending.length === 0) {
+        woken.clear();
+        stuck.clear();
+        return;
+      }
+      const at = Date.now();
+      const moments = new Map(pending.map((row) => [row.id, row.at]));
+      for (const known of [woken, stuck]) {
+        for (const [id, moment] of known) if (moments.get(id) !== moment) known.delete(id);
+      }
+      // A pass that threw is tried again by `failed`, not at once, and proves nothing about a record.
+      if (!afterFailure) {
+        for (const [id, moment] of woken) stuck.set(id, moment);
+        woken.clear();
+      }
+      const waiting = pending.filter((row) => stuck.get(row.id) !== row.at);
+      const due = waiting.filter((row) => row.at <= at);
+      if (due.length === 0) {
+        const [next] = waiting;
+        if (next) wakeAt(next.at);
+      } else if (!afterFailure) {
+        for (const row of due) woken.set(row.id, row.at);
+        wakeAt(at);
+      }
+    };
     const queue = createForegroundDrain({
       current,
       changed,
-      failed: (error) => setFailure({ owner: key, message: error.message }),
+      failed: (error) => {
+        setFailure({ owner: key, message: error.message });
+        wakeAt(Date.now() + FAILED_PASS_RETRY);
+      },
       drain: async () => {
-        await activateHeldObservations(database, key, currentScope, current);
-        if (canSend()) {
-          request = new AbortController();
-          await drain(request.signal);
+        if (!canSend()) return false;
+        request = new AbortController();
+        let updated = false;
+        let failure: unknown;
+        try {
+          updated = await drain(request.signal);
+        } catch (error) {
+          failure = error;
         }
+        try {
+          await waitForNext(failure !== undefined);
+        } catch (error) {
+          failure ??= error;
+        }
+        if (failure === undefined) return updated;
+        // The screens still read a change this pass stored before it failed.
+        throw updated && failure instanceof Error && !(failure instanceof FailedAfterChange)
+          ? new FailedAfterChange(failure)
+          : failure;
       },
     });
     run.current = queue.wake;
@@ -115,22 +193,23 @@ export function SyncProvider({ children }: PropsWithChildren) {
     };
     queue.foreground(foregroundActive);
     const foreground = AppState.addEventListener("change", (value) => {
+      const resumed = value === "active" && !foregroundActive;
       foregroundActive = value === "active";
       if (!foregroundActive) request.abort();
+      if (resumed) drain.regain();
       queue.foreground(foregroundActive);
     });
     const network = NetInfo.addEventListener((value) => {
+      const reconnected = !online;
       online = value.isConnected === true && value.isInternetReachable !== false;
       if (!online) request.abort();
+      if (online && reconnected) drain.regain();
       queue.connectivity(online);
     });
-    const timer = setInterval(() => {
-      void queue.wake();
-    }, 5000);
     return () => {
       controller.abort();
       request.abort();
-      clearInterval(timer);
+      if (timer) clearTimeout(timer.handle);
       foreground.remove();
       network();
       run.current = async () => {};

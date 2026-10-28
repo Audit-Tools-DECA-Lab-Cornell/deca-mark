@@ -14,6 +14,7 @@ const common = {
   form_version: z.string().min(1),
   observer: z.string().min(1).max(12),
   observed_at: z.iso.datetime({ offset: true }),
+  started_at: z.iso.datetime({ offset: true }).optional(),
   answers: z.record(z.string(), answerValueSchema),
 };
 export const wireBodySchema = z.discriminatedUnion("round_type", [
@@ -38,6 +39,7 @@ export function serializeBoundObservation(record: Observation): string {
     form_version: record.formVersion,
     observer: record.observer,
     observed_at: record.createdAt,
+    ...(record.startedAt ? { started_at: record.startedAt } : {}),
     answers: isShellObservation(record)
       ? { observer: record.observer, people: record.people, notes: record.notes }
       : record.answers,
@@ -80,6 +82,7 @@ export function uploadBodyMatches(body: string, record: Observation): boolean {
     wire.form_version !== record.formVersion ||
     wire.observer !== record.observer ||
     wire.observed_at !== record.createdAt ||
+    wire.started_at !== record.startedAt ||
     wire.round_type !== record.context.roundType ||
     wire.placement !== record.placement.source ||
     Object.keys(wire.answers).length !== Object.keys(answers).length ||

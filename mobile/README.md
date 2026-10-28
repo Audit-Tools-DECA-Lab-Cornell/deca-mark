@@ -75,6 +75,11 @@ both, and its content spans the full window width — a deliberate departure fro
 - **Drafts survive a force quit.** Every answer is written to its own SQLite table as it is
   tapped. A draft left behind is offered back as Resume or Discard above the assignments list.
   Drafts are account-scoped and never enter the upload queue.
+- **Observation timestamps.** First confirmed point placement, or Inventory Start, stamps the draft's
+  `startedAt`. Saving copies that original instant into the completed record and frozen upload body
+  as `started_at`; `createdAt` remains the Save time sent as `observed_at`. Adjustment and recovery
+  keep the original start. Older saved records have an unknown start and retain their exact queued
+  bodies. This adds a JSON payload field without changing the SQLite schema version or resetting data.
 - **Validation only at review.** The review sheet is act-ordered, jumps back to any question, and
   blocks the save while naming how many required answers are still empty.
 - **An offline field guide** (`app/(app)/(tabs)/account/field-guide.tsx`): placing a point, the
@@ -96,7 +101,7 @@ both, and its content spans the full window width — a deliberate departure fro
 - **Real sync, relabelled.** Records show the existing queue states — held, on device only,
   synced, needs attention — with no send button. Records are immutable and there is no
   bidirectional edit sync or contested-record workflow; API receipt revisions do not imply one.
-- Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
+- Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. A reconnect or a resume also makes records waiting out a retry delay due at once (spaced 5 s from the last upload attempt, and never before a server's `Retry-After`; a new coordinator right after an attempt (a token refresh, a sign-in or an app restart starts one with no memory of the last attempt), or a flap that aborts an upload in flight, can send sooner), and the drain sleeps otherwise: one timer waits for the earliest remaining delay, an empty queue does nothing, and a screen re-reads records only when one changed (MOB-39). Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
 
 ### What is deliberately not done
 
@@ -322,8 +327,8 @@ References: [MapLibre Expo setup](https://maplibre.org/maplibre-react-native/doc
 `app.config.ts` selects public `config/development.json`, `config/staging.json` or
 `config/production.json` through `APP_ENV` (development by default). EAS profiles set it explicitly
 and disable dotenv loading. Local development uses the local Supabase stack and
-`com.fieldmaps.collector.local`; staging keeps the lezmq Auth issuer and
-`com.fieldmaps.collector.dev` so existing test installs retain SQLite and their session.
+`com.fieldmaps.collector.local`; staging keeps the lezmq Auth project and
+`com.fieldmaps.collector.dev`. The only URI scheme is `decamark`.
 Production values are placeholders, not a deployable configuration. `powersyncUrl` stays null.
 
 ```bash
@@ -336,10 +341,12 @@ in the appropriate public JSON config. Never include database passwords or servi
 The validator accepts publishable keys and public anon JWTs, including the local stack's anon key.
 Expo exposes these values through `extra.connection`.
 
-Legacy SQLite `owner_scope` keys remain frozen at their original localhost URL, lezmq issuer,
-account UUID and seeded project UUID until MOB-11. Uploads use the configured API URL separately,
-and receipts must match the destination project, account and record. Changing the active project
-never changes this legacy key or claims prior local practice records.
+SQLite `owner_scope` keys are built from the configured connection and the signed-in account: the
+API URL, the Supabase URL (the issuer), the user id and a fixed placeholder project
+(`accountWorkspace` in `src/auth/session-retention.ts`). A build pointed at another backend, or
+another account on the same backend, sees none of those records. Uploads go to the configured API
+URL, and receipts must match the destination project, account and record. Changing the active
+project never changes this key.
 
 `MeProvider` fetches the typed `/v1/me` response on sign-in and foreground resume. `useMe()` exposes
 profile, project memberships, active project and refresh errors. The last verified response and

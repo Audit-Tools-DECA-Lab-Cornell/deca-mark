@@ -3,9 +3,10 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fieldmaps_api.domain.form_automatic import automatic_mismatches
 from fieldmaps_api.domain.form_engine import Answers
 from fieldmaps_api.domain.zone_upload_fingerprint import fingerprint
-from fieldmaps_api.errors import DomainError, NotFoundError
+from fieldmaps_api.errors import DomainError, NotFoundError, ValidationFailedError
 from fieldmaps_api.repositories import bound_uploads, upload_receipts
 from fieldmaps_api.repositories.upload_receipts import ReceiptIdentity
 from fieldmaps_api.schemas import UploadTarget
@@ -87,10 +88,15 @@ async def upload(
     if replay is not None:
         return replay.bound()
     target = validated_target(await bound_uploads.target(session, project_id, payload), payload)
+    answers = answer_values(payload)
+    mismatched = automatic_mismatches(target.definition, answers, user_id, payload.observer)
+    if mismatched:
+        message = f"Automatic identity answers do not match this record: {', '.join(mismatched)}"
+        raise ValidationFailedError(message, field="answers")
     await bound_uploads.insert(
         session,
         bound_uploads.BoundWrite(
-            identity, target, payload, validated_answers(target.definition, answer_values(payload))
+            identity, target, payload, validated_answers(target.definition, answers)
         ),
     )
     receipt = await upload_receipts.committed(session, identity)

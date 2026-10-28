@@ -29,6 +29,7 @@ const suite = z
       z.object({
         id: z.string(),
         patch: z.record(z.string(), z.unknown()),
+        definitionPatch: z.record(z.string(), z.unknown()).optional(),
         valid: z.boolean(),
         // A schema version is served beside the definition, never inside it.
         schemaVersion: z.unknown().optional(),
@@ -51,6 +52,7 @@ describe("shared canonical definition cases", () => {
       // Given the same authored input as Python.
       const input = {
         ...suite.definition,
+        ...scenario.definitionPatch,
         questions: [{ ...suite.question, ...scenario.patch }],
       };
       if ("schemaVersion" in scenario) {
@@ -133,6 +135,7 @@ describe("bounded canonical collection", () => {
         observer: "QA",
         coordinates: [-76.4857, 42.4482],
         createdAt: "2026-10-17T12:00:00.000Z",
+        startedAt: "2026-10-17T11:59:00.000Z",
         context: {
           packageId: binding.packageId,
           packageVersion: "v1",

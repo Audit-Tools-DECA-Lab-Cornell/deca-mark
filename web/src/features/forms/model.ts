@@ -141,6 +141,7 @@ export function isZoneForm(definition: Pick<RawDefinition, "questions">): boolea
 export function toForm(raw: RawDefinition): FormDefinition {
 	return {
 		version: raw.version,
+		columnNaming: raw.columnNaming,
 		title: raw.title,
 		summary: raw.summary,
 		source: raw.source,
@@ -151,6 +152,13 @@ export function toForm(raw: RawDefinition): FormDefinition {
 		questions: raw.questions.map(
 			(question): Question => ({
 				...question,
+				dateTime: question.dateTime
+					? {
+							...question.dateTime,
+							dateFormat: question.dateTime.dateFormat ?? "iso",
+							timeFormat: question.dateTime.timeFormat ?? "24h"
+						}
+					: undefined,
 				dependsOn: question.dependsOn as Condition | undefined,
 				hint: question.hint ? question.hint : undefined,
 				options: question.options ?? [],
@@ -171,7 +179,21 @@ export function flaggedQuestions(raw: Pick<RawDefinition, "questions">): { id: s
 
 /* ── Changes against the version before ───────────────────────────────────── */
 
-export type ChangeField = "Question label" | "Guidance" | "Required" | "Answer format" | "Options" | "New question";
+export type ChangeField =
+	| "Question Text"
+	| "Question ID"
+	| "Question order"
+	| "Instructions to Observers"
+	| "Required"
+	| "Answer format"
+	| "Options"
+	| "Display rules"
+	| "Number bounds"
+	| "Number type"
+	| "Date/time settings"
+	| "Value source"
+	| "Dataset column"
+	| "New question";
 
 export type QuestionChange = {
 	readonly questionId: string;
@@ -184,10 +206,11 @@ export type QuestionChange = {
 
 /** Answer formats in the words the forms screens use. */
 export const FORMAT_LABEL: Record<RawQuestion["kind"], string> = {
-	one: "Single choice",
-	many: "Several choices",
-	text: "Free text",
-	number: "Number"
+	one: "Allow single response only",
+	many: "Allow multiple responses",
+	text: "Open text field response",
+	number: "Number response",
+	dateTime: "Date/Time response"
 };
 
 function sameOptions(a: RawQuestion, b: RawQuestion): boolean {
@@ -206,6 +229,21 @@ export function changeDetail(question: RawQuestion, base?: RawQuestion): string 
 	return parts.join(" · ");
 }
 
+function temporalDetail(question: RawQuestion): string {
+	const config = question.dateTime;
+	return config
+		? `${config.mode} · ${config.dateFormat ?? "iso"} · ${config.timeFormat ?? "24h"} · ${config.timeZone}`
+		: "No date/time settings";
+}
+function sourceDetail(question: RawQuestion): string {
+	return {
+		manual: "Observer enters the answer",
+		accountId: "Observer account ID",
+		observerCode: "Captured observer initials/code",
+		captureTime: "Observation capture time"
+	}[question.valueSource ?? "manual"];
+}
+
 /** What changed on one question, field by field. An empty list means it is as the base has it. */
 export function questionChanges(question: RawQuestion, base: RawQuestion | undefined): QuestionChange[] {
 	const detail = changeDetail(question, base);
@@ -213,14 +251,15 @@ export function questionChanges(question: RawQuestion, base: RawQuestion | undef
 	const changes: QuestionChange[] = [];
 	const add = (field: ChangeField, was: string, now: string) =>
 		changes.push({ questionId: question.id, field, was, now, detail });
-	if (base.label !== question.label) add("Question label", base.label, question.label);
+	if (base.id !== question.id) add("Question ID", base.id, question.id);
+	if (base.label !== question.label) add("Question Text", base.label, question.label);
 	if ((base.hint ?? "") !== (question.hint ?? ""))
-		add("Guidance", base.hint || "No guidance", question.hint || "No guidance");
+		add("Instructions to Observers", base.hint || "No instructions", question.hint || "No instructions");
 	if ((base.required ?? false) !== (question.required ?? false))
 		add(
 			"Required",
-			base.required ? "Required when visible" : "Optional",
-			question.required ? "Required when visible" : "Optional"
+			base.required ? "Response required when question is visible" : "Optional",
+			question.required ? "Response required when question is visible" : "Optional"
 		);
 	if (base.kind !== question.kind) add("Answer format", FORMAT_LABEL[base.kind], FORMAT_LABEL[question.kind]);
 	if (!sameOptions(question, base))
@@ -229,14 +268,59 @@ export function questionChanges(question: RawQuestion, base: RawQuestion | undef
 			(base.options ?? []).map(option => option.label).join(", "),
 			(question.options ?? []).map(option => option.label).join(", ")
 		);
+	if (JSON.stringify(base.dependsOn) !== JSON.stringify(question.dependsOn))
+		add(
+			"Display rules",
+			base.dependsOn ? "Conditional" : "Always visible",
+			question.dependsOn ? "Conditional" : "Always visible"
+		);
+	if (JSON.stringify(base.dynamicFrom) !== JSON.stringify(question.dynamicFrom))
+		add("Options", "Earlier answer choices", "Changed answer choices");
+	if (base.min !== question.min || base.max !== question.max)
+		add(
+			"Number bounds",
+			`${base.min ?? "No minimum"} to ${base.max ?? "No maximum"}`,
+			`${question.min ?? "No minimum"} to ${question.max ?? "No maximum"}`
+		);
+	if ((base.numberMode ?? "integer") !== (question.numberMode ?? "integer"))
+		add(
+			"Number type",
+			base.numberMode === "decimal" ? "Decimal number" : "Whole number",
+			question.numberMode === "decimal" ? "Decimal number" : "Whole number"
+		);
+	if (JSON.stringify(base.dateTime) !== JSON.stringify(question.dateTime))
+		add("Date/time settings", temporalDetail(base), temporalDetail(question));
+	if ((base.valueSource ?? "manual") !== (question.valueSource ?? "manual"))
+		add("Value source", sourceDetail(base), sourceDetail(question));
+	if (base.exportColumn !== question.exportColumn)
+		add("Dataset column", base.exportColumn || base.id, question.exportColumn || question.id);
 	return changes;
+}
+
+export function previousQuestion(question: RawQuestion, base: RawDefinition | undefined): RawQuestion | undefined {
+	if (!base) return undefined;
+	const byId = base.questions.find(previous => previous.id === question.id);
+	if (byId?.code === question.code) return byId;
+	const byCode = base.questions.filter(previous => previous.code === question.code);
+	return byCode.length === 1 ? byCode[0] : byId;
 }
 
 /** Every change in a draft against its base, in question order. A first version has no base: none. */
 export function draftChanges(draft: RawDefinition, base: RawDefinition | undefined): QuestionChange[] {
 	if (!base) return [];
-	const old = new Map(base.questions.map(question => [question.id, question] as const));
-	return draft.questions.flatMap(question => questionChanges(question, old.get(question.id)));
+	return draft.questions.flatMap((question, index) => {
+		const previous = previousQuestion(question, base);
+		const changes = questionChanges(question, previous);
+		if (previous && base.questions.indexOf(previous) !== index)
+			changes.push({
+				questionId: question.id,
+				field: "Question order",
+				was: `Position ${base.questions.indexOf(previous) + 1}`,
+				now: `Position ${index + 1}`,
+				detail: changeDetail(question, previous)
+			});
+		return changes;
+	});
 }
 
 /** The ids of the questions that differ from the base. */
@@ -247,8 +331,10 @@ export function changedIds(draft: RawDefinition, base: RawDefinition | undefined
 /** Questions of the base that the draft no longer has. */
 export function removedQuestions(draft: RawDefinition, base: RawDefinition | undefined): RawQuestion[] {
 	if (!base) return [];
-	const kept = new Set(draft.questions.map(question => question.id));
-	return base.questions.filter(question => !kept.has(question.id));
+	const kept = new Set(
+		draft.questions.map(question => previousQuestion(question, base)).filter(question => question !== undefined)
+	);
+	return base.questions.filter(question => !kept.has(question));
 }
 
 /** Two digits, as the editor numbers questions: 01 … 12. */

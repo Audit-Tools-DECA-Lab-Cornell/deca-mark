@@ -72,6 +72,14 @@ test("maps an HTML 200 body to a retry error instead of leaking a JSON parse exc
 	assert.doesNotMatch(error.message, /upstream unavailable|Unexpected token/);
 });
 
+test("maps a form schema refusal through its stable code", async () => {
+	const { UnknownSchemaVersionError } = await import("../src/lib/forms/definition.ts");
+	const error = apiRequestError(new UnknownSchemaVersionError(3));
+	assert.equal(error.code, "unknown_schema_version");
+	assert.equal(error.kind, "rejected");
+	assert.equal(error.message, "Update DECA Mark to use this form");
+});
+
 test("a refused change says nothing changed, then why", () => {
 	for (const [status, code] of [
 		[401, "token_invalid"],

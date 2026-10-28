@@ -103,6 +103,7 @@ class HistoricalObservation(Frozen):
     site_name: str
     observer: str
     observed_at: datetime
+    started_at: datetime | None = None
     received_at: datetime
     revision: int
     answers: dict[str, JsonValue]
@@ -121,6 +122,7 @@ class HistoricalObservation(Frozen):
 
 
 class HistoricalObservationDetail(HistoricalObservation):
+    schema_version: int
     definition: dict[str, JsonValue]
 
 
@@ -162,6 +164,7 @@ class PageSnapshot(Frozen):
 class ExportSnapshot(Frozen):
     items: list[HistoricalObservation]
     forms: dict[str, dict[str, JsonValue]]
+    form_schema_versions: dict[str, int]
     historical_zones: dict[str, dict[str, JsonValue]]
     total_matching: int
     source_bytes: int

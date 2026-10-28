@@ -1,0 +1,10 @@
+/** Incomplete/rejected temporal input remains durable text, but can never be a canonical answer. */
+const INVALID_TEMPORAL_DRAFT = "[unfinished date/time] ";
+export function temporalDraftValue(text: string): string {
+  return text === "" ? "" : `${INVALID_TEMPORAL_DRAFT}${text}`;
+}
+export function temporalDraftText(value: string): string {
+  return value.startsWith(INVALID_TEMPORAL_DRAFT)
+    ? value.slice(INVALID_TEMPORAL_DRAFT.length)
+    : value;
+}

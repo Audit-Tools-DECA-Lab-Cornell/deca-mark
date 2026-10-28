@@ -26,7 +26,7 @@ it.each([
 it.each([
   null,
   [],
-  { detail: "legacy" },
+  { detail: "unrecognized" },
   { error: { code: "future_code", message: "secret", details: {} } },
 ])("preserves records when the response is unrecognized", (body) => {
   const error = parseApiError(400, body);
