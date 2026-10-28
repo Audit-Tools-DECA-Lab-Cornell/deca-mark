@@ -2,16 +2,17 @@ RESET ROLE;
 SET LOCAL ROLE fieldmaps_api;
 SELECT set_config('fieldmaps.user_id','53000000-0000-4000-8000-000000000002',true);
 SELECT (fieldmaps_private.create_zone_draft('10000000-0000-4000-8000-000000000102','10000000-0000-4000-8000-000000000103',
-  '88000000-0000-4000-8000-000000000003','91000000-0000-4000-8000-000000000003')).id AS training_draft \gset
-SELECT (pg_temp.zone_publish(:'training_draft',1,'88000000-0000-4000-8000-000000000004','91000000-0000-4000-8000-000000000003',
+  '88000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000106')).id AS training_draft \gset
+SELECT (pg_temp.zone_publish(:'training_draft',1,'88000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000106',
   '88000000-0000-4000-8000-000000000002',2)).id AS training_package \gset
-SELECT zone_id AS training_zone FROM fieldmaps.package_zones WHERE package_id = :'training_package' \gset
+SELECT z.zone_id AS training_zone FROM fieldmaps.package_zones z JOIN fieldmaps.zone_identities i ON i.id = z.zone_id
+WHERE z.package_id = :'training_package' AND i.code = 'A' \gset
 SELECT set_config('fieldmaps.user_id','53000000-0000-4000-8000-000000000001',true);
 INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,form_version_id,observer_code,observed_at,geom,answers,
   created_by,upload_hash,package_id,zone_id,round_type,first_round,placement_source)
 VALUES ('88000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-000000000101',
   '10000000-0000-4000-8000-000000000102','10000000-0000-4000-8000-000000000103',
-  '10000000-0000-4000-8000-000000000104','T1',now(),fieldmaps.make_point(-76.485,42.448),'{}',
+  '10000000-0000-4000-8000-000000000104','T1',now(),fieldmaps.make_point(-76.4869,42.4463),'{}',
   fieldmaps.request_user_id(),repeat('a',64),:'training_package',:'training_zone','standard',true,'hand');
 SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM fieldmaps.observations WHERE package_id = :'training_package'),
   'bound Training upload remains visible to its creator');
@@ -21,7 +22,16 @@ SELECT pg_temp.assert_rejected(format($q$INSERT INTO fieldmaps.observations
   VALUES (gen_random_uuid(),'10000000-0000-4000-8000-000000000101','10000000-0000-4000-8000-000000000102',
     '10000000-0000-4000-8000-000000000103','10000000-0000-4000-8000-000000000104','T1',now(),NULL,'{}',
     fieldmaps.request_user_id(),repeat('a',64),%L,%L,'inventory',NULL,'zone')$q$,:'training_package',:'training_zone'),
-  'ZB001','unavailable package inventory cannot search for a replacement form');
+  'ZB001','a Training inventory record cannot be bound to the play form');
+INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,form_version_id,observer_code,observed_at,geom,answers,
+  created_by,upload_hash,package_id,zone_id,round_type,first_round,placement_source)
+VALUES ('88000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-000000000101',
+  '10000000-0000-4000-8000-000000000102','10000000-0000-4000-8000-000000000103',
+  '10000000-0000-4000-8000-000000000105','T1',now(),NULL,'{}',
+  fieldmaps.request_user_id(),repeat('b',64),:'training_package',:'training_zone','inventory',NULL,'zone');
+SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM fieldmaps.observations
+  WHERE id = '88000000-0000-4000-8000-000000000006' AND round_type = 'inventory' AND geom IS NULL),
+  'Training takes an inventory record bound to its inventory form, as any site does');
 SELECT set_config('fieldmaps.user_id','53000000-0000-4000-8000-000000000002',true);
 SELECT pg_temp.assert_true(NOT EXISTS (SELECT FROM fieldmaps.observations WHERE package_id = :'training_package'),
   'Training manager cannot read another creator bound observations');

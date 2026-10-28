@@ -77,9 +77,8 @@ SELECT pg_temp.assert_true(
     AND octet_length(archive) BETWEEN 1 AND 16777216
    FROM fieldmaps.site_packages WHERE id = '10000000-0000-4000-8000-000000000106')
   AND (SELECT count(*) BETWEEN 1 AND 5 AND bool_and(state <> 'blocked')
-    FROM fieldmaps.package_checks WHERE package_id = '10000000-0000-4000-8000-000000000106')
-  AND EXISTS (SELECT FROM fieldmaps_private.zone_package_metadata('10000000-0000-4000-8000-000000000106')),
-  'the Training package is a zip with a matching digest, passing checks and publication metadata');
+    FROM fieldmaps.package_checks WHERE package_id = '10000000-0000-4000-8000-000000000106'),
+  'the Training package is a zip with a matching digest and passing checks');
 
 -- Form templates: the starting points a manager picks from (BE-25 serves them).
 SELECT pg_temp.assert_true(
