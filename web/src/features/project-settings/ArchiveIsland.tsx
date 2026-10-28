@@ -8,6 +8,7 @@ import { Island } from "@/components/contour/Island";
 import { Note } from "@/components/contour/Note";
 import { StateBadge } from "@/components/contour/StateBadge";
 import { useToast } from "@/components/contour/Toast";
+import { rejectedWith } from "@/lib/action-rejection";
 
 import { setProjectStatus } from "./actions";
 import type { ProjectStatus, SettingsContext } from "./rules";
@@ -47,7 +48,19 @@ export function ArchiveIsland({ context, projectName, status: initial }: Archive
 	function change(next: ProjectStatus) {
 		setFailure(null);
 		startChange(async () => {
-			const result = await setProjectStatus(context, next);
+			let result: Awaited<ReturnType<typeof setProjectStatus>>;
+			try {
+				result = await setProjectStatus(context, next);
+			} catch (error) {
+				setFailure(
+					rejectedWith(
+						error,
+						"reload",
+						next === "archived" ? "The project was not archived." : "The project was not unarchived."
+					)
+				);
+				return;
+			}
 			if (result.status === "failed") {
 				setFailure(result.message);
 				return;

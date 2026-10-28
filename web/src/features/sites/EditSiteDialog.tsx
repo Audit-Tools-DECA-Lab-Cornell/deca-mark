@@ -9,6 +9,7 @@ import { Note } from "@/components/contour/Note";
 import { Textarea } from "@/components/contour/Textarea";
 import { TextInput } from "@/components/contour/TextInput";
 import { useToast } from "@/components/contour/Toast";
+import { rejectedWith } from "@/lib/action-rejection";
 import { UNCONFIRMED_CHANGE_COPY } from "@/lib/api/errors";
 
 import { type SiteField, updateSiteAction } from "./actions";
@@ -42,6 +43,8 @@ export function EditSiteDialog({
 	const [description, setDescription] = useState(savedDescription ?? "");
 	const [problems, setProblems] = useState<Problems>({});
 	const [failure, setFailure] = useState<string | null>(null);
+	// The call itself rejected (offline, signed out, a page older than the server's build): see `rejectedWith`.
+	const [rejection, setRejection] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 
 	function start() {
@@ -49,6 +52,7 @@ export function EditSiteDialog({
 		setDescription(savedDescription ?? "");
 		setProblems({});
 		setFailure(null);
+		setRejection(null);
 	}
 
 	function focusFirst(found: Problems) {
@@ -66,6 +70,7 @@ export function EditSiteDialog({
 		if (descriptionProblem) found.description = descriptionProblem;
 		setProblems(found);
 		setFailure(null);
+		setRejection(null);
 		if (Object.keys(found).length > 0) {
 			focusFirst(found);
 			return;
@@ -82,6 +87,8 @@ export function EditSiteDialog({
 			}
 			setOpen(false);
 			toast({ title: "Site details saved.", tone: "saved" });
+		} catch (error) {
+			setRejection(rejectedWith(error, "kept", "Nothing was saved."));
 		} finally {
 			setBusy(false);
 		}
@@ -125,6 +132,11 @@ export function EditSiteDialog({
 						onChange={event => setDescription(event.target.value)}
 					/>
 				</Field>
+				{rejection && (
+					<Note tone="attention" live="assertive">
+						{rejection}
+					</Note>
+				)}
 				{failure &&
 					(failure === UNCONFIRMED_CHANGE_COPY ? (
 						<Note tone="attention" title="The details may not have been saved." live="assertive">

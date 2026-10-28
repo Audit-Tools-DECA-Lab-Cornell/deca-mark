@@ -7,6 +7,7 @@ import { Dialog, DialogClose } from "@/components/contour/Dialog";
 import { Island } from "@/components/contour/Island";
 import { Note } from "@/components/contour/Note";
 import { useToast } from "@/components/contour/Toast";
+import { rejectedWith } from "@/lib/action-rejection";
 import { stateOf } from "@/lib/contour";
 import { plural } from "@/lib/labels";
 import { clock } from "@/lib/time";
@@ -110,7 +111,13 @@ function RevokeDialog<R extends PeopleRole>({
 		if (!invitation) return;
 		setFailure(null);
 		startRevoke(async () => {
-			const result = await onRevoke(invitation.id);
+			let result: PeopleActionResult;
+			try {
+				result = await onRevoke(invitation.id);
+			} catch (error) {
+				setFailure(rejectedWith(error, "reload", "The invitation was not revoked."));
+				return;
+			}
 			if (result.status === "failed") {
 				setFailure(result.message);
 				return;

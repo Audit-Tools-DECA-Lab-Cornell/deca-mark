@@ -9,6 +9,7 @@ import { Island } from "@/components/contour/Island";
 import { Note } from "@/components/contour/Note";
 import { Select } from "@/components/contour/Select";
 import { useToast } from "@/components/contour/Toast";
+import { rejectedWith } from "@/lib/action-rejection";
 import { stateOf } from "@/lib/contour";
 import { plural } from "@/lib/labels";
 import { clock } from "@/lib/time";
@@ -133,7 +134,13 @@ function MemberRow<R extends PeopleRole>({
 		if (!onRoleChange || role === member.role) return;
 		setFailure(null);
 		startChange(async () => {
-			const result = await onRoleChange(member.user_id, role);
+			let result: PeopleActionResult;
+			try {
+				result = await onRoleChange(member.user_id, role);
+			} catch (error) {
+				setFailure(rejectedWith(error, "reload", "The role was not changed."));
+				return;
+			}
 			if (result.status === "failed") setFailure(result.message);
 			else
 				toast({
@@ -221,7 +228,14 @@ function RemoveDialog<R extends PeopleRole>({
 		if (!member) return;
 		setFailure(null);
 		startRemove(async () => {
-			const result = await onRemove(member.user_id);
+			let result: PeopleActionResult;
+			try {
+				result = await onRemove(member.user_id);
+			} catch (error) {
+				// Leaving an organization redirects, which `rejectedWith` rethrows so the page still leaves.
+				setFailure(rejectedWith(error, "reload", "Nobody was removed."));
+				return;
+			}
 			if (result.status === "failed") {
 				setFailure(result.message);
 				return;

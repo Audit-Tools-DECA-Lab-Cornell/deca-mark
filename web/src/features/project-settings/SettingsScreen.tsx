@@ -16,6 +16,7 @@ import { TextInput } from "@/components/contour/TextInput";
 import { useToast } from "@/components/contour/Toast";
 import { NotAvailable } from "@/components/shell/NotAvailable";
 import { useLeaveGuard } from "@/features/shell/useLeaveGuard";
+import { rejected } from "@/lib/action-rejection";
 
 import { saveSettings } from "./actions";
 import { ArchiveIsland } from "./ArchiveIsland";
@@ -118,7 +119,16 @@ export function SettingsScreen({
 		const active = document.activeElement;
 		refocus.current = active instanceof HTMLElement && event.currentTarget.contains(active) ? active : null;
 		startSave(async () => {
-			const result = await saveSettings(context, patchOf(saved, form));
+			let result: Awaited<ReturnType<typeof saveSettings>>;
+			try {
+				result = await saveSettings(context, patchOf(saved, form));
+			} catch (error) {
+				// The call itself rejected: the screen stays, the typed values stay in the fields, and a second
+				// Save sends the same changes again (a project change is a plain update, so that is safe).
+				setFailure(rejected(error, "kept", "Nothing was saved.").message);
+				setErrors({});
+				return;
+			}
 			if (result.status === "failed") {
 				setFailure(result.message);
 				setErrors(result.fields ?? {});

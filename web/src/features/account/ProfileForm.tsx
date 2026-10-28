@@ -8,6 +8,7 @@ import { Icon } from "@/components/contour/Icon";
 import { Island } from "@/components/contour/Island";
 import { Note } from "@/components/contour/Note";
 import { TextInput } from "@/components/contour/TextInput";
+import { rejectedWith } from "@/lib/action-rejection";
 
 import { saveProfile } from "./actions";
 import { IDLE, type ProfileAnswer, settleSave, shownAnswer } from "./answer";
@@ -49,7 +50,14 @@ export function ProfileForm({ displayName, initials, locale, email }: ProfileFor
 	const [errors, setErrors] = useState<ProfileErrors>({});
 	const [state, action, pending] = useActionState<ProfileAnswer, FormData>(async (previous, form) => {
 		const submitted = profileValues(form);
-		const result = await saveProfile(previous, form);
+		let result: Awaited<ReturnType<typeof saveProfile>>;
+		try {
+			result = await saveProfile(previous, form);
+		} catch (error) {
+			// The call itself rejected: a rejection in an action state reaches the error boundary and unmounts
+			// the form, so it is answered here like a refusal. The fields keep what was typed.
+			return { status: "failed", message: rejectedWith(error, "kept", "Nothing was saved.") };
+		}
 		// The fields show what the server kept (it trims the name and locale), unless they were edited while
 		// the save ran: then the newer edits stay, and the answer that no longer describes them is overtaken.
 		const settled = settleSave(result, submitted, latest.current);

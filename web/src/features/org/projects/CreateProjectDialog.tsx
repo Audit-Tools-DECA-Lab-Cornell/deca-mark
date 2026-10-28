@@ -8,6 +8,7 @@ import { Field } from "@/components/contour/Field";
 import { Note } from "@/components/contour/Note";
 import { Select } from "@/components/contour/Select";
 import { TextInput } from "@/components/contour/TextInput";
+import { rejectedWith } from "@/lib/action-rejection";
 import { isTimeZone, timeZones } from "@/lib/time";
 
 import { createProjectAction } from "../actions";
@@ -103,7 +104,14 @@ export function CreateProjectDialog({ orgId, orgSlug, defaultTimeZone, takenCode
 		}
 		startCreate(async () => {
 			// A created project opens straight away, so this only comes back when nothing was created.
-			const result = await createProjectAction({ orgId, orgSlug, name: name.trim(), code, timezone });
+			let result: Awaited<ReturnType<typeof createProjectAction>>;
+			try {
+				result = await createProjectAction({ orgId, orgSlug, name: name.trim(), code, timezone });
+			} catch (error) {
+				// A redirect to the new project is not a failure: `rejectedWith` rethrows it, so the page still leaves.
+				setFailure(rejectedWith(error, "reload", "Nothing was created."));
+				return;
+			}
 			setFailure(result.message);
 			const named: Problems = {};
 			for (const key of ["name", "code", "timezone"] as const) {

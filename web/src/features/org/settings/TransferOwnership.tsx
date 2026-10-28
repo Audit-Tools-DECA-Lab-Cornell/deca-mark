@@ -12,6 +12,7 @@ import { TextInput } from "@/components/contour/TextInput";
 import { TextLink } from "@/components/contour/TextLink";
 import { useToast } from "@/components/contour/Toast";
 import { LoadFailure } from "@/components/shell/LoadFailure";
+import { rejectedWith } from "@/lib/action-rejection";
 import { stateOf } from "@/lib/contour";
 import { clock } from "@/lib/time";
 import type { Failure, OrgRole } from "@/lib/workspace/types";
@@ -56,7 +57,13 @@ export function TransferOwnership({ org, candidates, failure, timeZone }: Transf
 		if (!person) return;
 		setProblem(null);
 		startTransfer(async () => {
-			const result = await transferOwnershipAction(org.id, person.userId);
+			let result: Awaited<ReturnType<typeof transferOwnershipAction>>;
+			try {
+				result = await transferOwnershipAction(org.id, person.userId);
+			} catch (error) {
+				setProblem(rejectedWith(error, "reload", "Ownership was not transferred."));
+				return;
+			}
 			if (result.status === "failed") {
 				setProblem(result.message);
 				return;

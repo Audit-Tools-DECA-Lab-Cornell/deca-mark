@@ -4,6 +4,7 @@ import { type ReactNode, type RefObject, useActionState, useEffect, useId, useRe
 
 import { Note, type NoteTone } from "@/components/contour/Note";
 import { TextLink } from "@/components/contour/TextLink";
+import { authRejectionCopy } from "@/lib/action-rejection";
 import { authenticate, type AuthState } from "@/lib/auth/actions";
 
 /** A form's state before the server has answered. */
@@ -56,7 +57,14 @@ export type AuthActionOptions = {
  */
 export function useAuthAction({ fields, onRetryAfter }: AuthActionOptions = {}) {
 	const [state, action, pending] = useActionState<AuthState, FormData>(async (previous, form) => {
-		const result = await authenticate(previous, form);
+		let result: Awaited<ReturnType<typeof authenticate>>;
+		try {
+			result = await authenticate(previous, form);
+		} catch (error) {
+			// A redirect (signed in, on to the next page) is rethrown by `authRejectionCopy`. Anything else rejected
+			// the call itself: the form stays mounted with what was typed.
+			return { message: authRejectionCopy(error) };
+		}
 		if (!result) return previous;
 		if (result.retryAfter) onRetryAfter?.(result.retryAfter);
 		return result;

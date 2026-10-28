@@ -14,6 +14,7 @@ import { TextInput } from "@/components/contour/TextInput";
 import { useToast } from "@/components/contour/Toast";
 import { NotAvailable } from "@/components/shell/NotAvailable";
 import { useLeaveGuard } from "@/features/shell/useLeaveGuard";
+import { rejectedWith } from "@/lib/action-rejection";
 import { clock } from "@/lib/time";
 import type { Failure, OrgRole } from "@/lib/workspace/types";
 
@@ -96,12 +97,21 @@ export function SettingsScreen({
 		const active = document.activeElement;
 		refocus.current = active instanceof HTMLElement && event.currentTarget.contains(active) ? active : null;
 		startSave(async () => {
-			const result = await saveOrganizationAction({
-				orgId: org.id,
-				currentSlug: saved.slug,
-				...(changedName ? { name: name.trim() } : {}),
-				...(changedSlug ? { slug } : {})
-			});
+			let result: Awaited<ReturnType<typeof saveOrganizationAction>>;
+			try {
+				result = await saveOrganizationAction({
+					orgId: org.id,
+					currentSlug: saved.slug,
+					...(changedName ? { name: name.trim() } : {}),
+					...(changedSlug ? { slug } : {})
+				});
+			} catch (error) {
+				// A redirect (the web address changed) is rethrown by `rejectedWith`. Anything else rejected the
+				// call itself: the typed name and address stay in their fields.
+				setFailure(rejectedWith(error, "kept", "Nothing was saved."));
+				setProblems({});
+				return;
+			}
 			if (result.status === "failed") {
 				setFailure(result.message);
 				const named: Problems = {};
