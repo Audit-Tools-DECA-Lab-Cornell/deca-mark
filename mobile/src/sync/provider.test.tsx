@@ -390,6 +390,29 @@ describe("Retry timing in the SyncProvider (MOB-39)", () => {
     }
   });
 
+  it("'Upload 1 first' (retry) sends a record at 7 attempts at once; wake leaves it waiting (MOB-37)", async () => {
+    const { sqlite } = await mountOnline();
+    let healthy = false;
+    const sent = serve(() => (healthy ? answer() : new Response("", { status: 503 })));
+    try {
+      await start();
+      expect(sent).toHaveLength(1);
+      sqlite.exec(`UPDATE observations SET attempts = 7, next_attempt_at = ${Date.now() + 300000}`);
+      healthy = true;
+      await act(async () => sync.wake());
+      await settle();
+      expect(sent).toHaveLength(1);
+      expect(state(sqlite).state).toBe("pending");
+      await act(async () => sync.retry());
+      await settle();
+      expect(sent).toHaveLength(2);
+      // Uploaded only through the server's receipt for this record.
+      expect(state(sqlite).state).toBe("synced");
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("never retries a failed record more than once per 5 s however often the network flaps", async () => {
     const { sqlite } = await mountOnline();
     const sent = serve(() => new Response("", { status: 503 }));

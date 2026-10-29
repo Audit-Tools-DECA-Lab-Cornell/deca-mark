@@ -1,5 +1,6 @@
 """Real PostgreSQL migration acceptance on newly created, isolated Docker containers only."""
 
+import itertools
 import os
 import re
 import subprocess
@@ -23,6 +24,7 @@ from fieldmaps_api.form_schema_upgrade import (
 
 ROOT = Path(__file__).resolve().parents[2]
 pytestmark = pytest.mark.integration
+_CONTAINER_SEQUENCE = itertools.count()
 
 
 def docker(*args: str) -> str:
@@ -39,7 +41,9 @@ def docker(*args: str) -> str:
 @pytest.fixture
 def schema2_container() -> Iterator[str]:
     """No existing stack, credentials, TCP port, volume or configuration is used."""
-    container = f"decamark-schema2-{os.getpid()}"
+    # Each test gets its own name: `docker stop` returns before `--rm` has removed the previous
+    # container, so reusing one name per process made the next `docker run` fail (exit 125).
+    container = f"decamark-schema2-{os.getpid()}{next(_CONTAINER_SEQUENCE):04d}"
     identity = docker(
         "run",
         "--rm",

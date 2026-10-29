@@ -40,6 +40,8 @@ export type QueueRecord = {
   roundType: RoundType;
   time: string;
   state: QueueState;
+  /** A practice record: no project binding, stays on this device, never uploads (MOB-37). */
+  practice?: boolean | undefined;
   summary: string;
   /** What the server said, for a record that needs attention. */
   problem?: string | undefined;

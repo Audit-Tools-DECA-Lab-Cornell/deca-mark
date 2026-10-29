@@ -82,6 +82,7 @@ export const GUIDE: readonly GuideSection[] = [
       "Every tap is kept on this device as you go. If the app closes, the unfinished observation is offered back on the Projects screen.",
       "Save on this device stores the record locally first. It uploads by itself whenever the app is open and online. There is no upload button to remember.",
       "On device: stored here, not sent yet. Uploaded: the server has it. Held: the project has not published this form version yet, so the record waits safely here. Needs attention: the server turned it away; the record shows why.",
+      "A practice record stays on this device and is never uploaded.",
     ],
   },
   {
