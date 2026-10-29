@@ -125,7 +125,7 @@ export function SavedStep({
                 {
                   label: "Upload",
                   value: save.heldOnly
-                    ? `Held on this device: form ${formVersion} is not published to the server yet`
+                    ? "Practice record: stays on this device and is never uploaded"
                     : "Uploads by itself whenever the app is open and online",
                 },
               ]}
