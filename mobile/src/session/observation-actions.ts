@@ -38,6 +38,8 @@ type ActionInput = {
   readonly accountId: string;
   readonly identity: RefObject<ObservationIdentity | null>;
   readonly stateRef: RefObject<SessionState>;
+  /** True while a save is committing: nothing may change or write the observation then (MOB-41). */
+  readonly committing: RefObject<boolean>;
   readonly placementRef: RefObject<Placement["source"]>;
   readonly holdIdentity: (identity: ObservationIdentity | null) => void;
   readonly setPlaced: (coordinate: Coordinate | null) => void;
@@ -67,6 +69,7 @@ export function useObservationActions(input: ActionInput) {
     accountId,
     identity,
     stateRef,
+    committing,
     placementRef,
     holdIdentity,
     setPlaced,
@@ -81,7 +84,7 @@ export function useObservationActions(input: ActionInput) {
     current,
   } = input;
   const begin = (coordinate: Coordinate, source: Placement["source"]) => {
-    if (!current() || !sitePackage || !zone || packageOwner !== key) return;
+    if (!current() || committing.current || !sitePackage || !zone || packageOwner !== key) return;
     if (recovered || unreadableDraft) {
       setStatus("Resume or discard the unfinished observation first.");
       return;
@@ -128,13 +131,15 @@ export function useObservationActions(input: ActionInput) {
   };
 
   const nudgeTo = (coordinate: Coordinate) => {
-    if (!current()) return;
+    if (!current() || committing.current) return;
     setPlaced(coordinate);
     persist(stateRef.current, coordinate);
   };
 
   const dispatch = (action: SessionAction): SessionStep => {
     if (!current()) return { state: startSession(), destination: "stay", autoAdvance: false };
+    if (committing.current)
+      return { state: stateRef.current, destination: "stay", autoAdvance: false };
     if (!form) return { state: stateRef.current, destination: "stay", autoAdvance: false };
     const reduced = reduceSession(form, stateRef.current, action);
     const step = {
@@ -171,6 +176,8 @@ export function useObservationActions(input: ActionInput) {
   const save = async (): Promise<SaveOutcome> => {
     if (!current())
       return { ok: false, problems: [], message: "The account changed. Local work is retained." };
+    if (committing.current)
+      return { ok: false, problems: [], message: "This observation is already being saved." };
     const owner = identity.current;
     if (!form || !sitePackage || !context || !placed || !owner)
       return { ok: false, problems: [], message: "Place a point before saving." };
@@ -203,46 +210,51 @@ export function useObservationActions(input: ActionInput) {
       ...(owner.binding ? { binding: owner.binding } : {}),
     });
     if (!built.ok) return { ok: false, problems: [], message: built.message };
+    committing.current = true;
     try {
-      // One transaction: a record can never be stored while its draft survives to be offered
-      // back under an identifier the observations table already holds.
-      await commitObservation(database, built.record, key);
-    } catch (cause) {
-      return {
-        ok: false,
-        problems: [],
-        message:
-          cause instanceof Error
-            ? `Could not save: ${cause.message}`
-            : "Could not save. Your answers are still here; try again.",
-      };
+      try {
+        // One transaction: a record can never be stored while its draft survives to be offered
+        // back under an identifier the observations table already holds.
+        await commitObservation(database, built.record, key);
+      } catch (cause) {
+        return {
+          ok: false,
+          problems: [],
+          message:
+            cause instanceof Error
+              ? `Could not save: ${cause.message}`
+              : "Could not save. Your answers are still here; try again.",
+        };
+      }
+      const heldOnly = key === "local" || !isUploadableRecord(built.record);
+      if (!current()) return { ok: true, heldOnly };
+      const carried: Record<string, Answers[string]> = {};
+      for (const id of carriedQuestionIds(form)) {
+        const value = stateRef.current.answers[id];
+        if (value !== undefined) carried[id] = value;
+      }
+      setSaves((current) => [
+        {
+          id: built.record.id,
+          zoneId: context.zoneId,
+          zoneLabel: context.zoneLabel,
+          roundType: context.roundType,
+          savedAt: built.record.createdAt,
+          heldOnly,
+        },
+        ...current,
+      ]);
+      setStatus(`${shortLabel(built.record.id)} written to device storage.`);
+      reset(carried);
+      wake();
+      return { ok: true, heldOnly };
+    } finally {
+      committing.current = false;
     }
-    const heldOnly = key === "local" || !isUploadableRecord(built.record);
-    if (!current()) return { ok: true, heldOnly };
-    const carried: Record<string, Answers[string]> = {};
-    for (const id of carriedQuestionIds(form)) {
-      const value = stateRef.current.answers[id];
-      if (value !== undefined) carried[id] = value;
-    }
-    setSaves((current) => [
-      {
-        id: built.record.id,
-        zoneId: context.zoneId,
-        zoneLabel: context.zoneLabel,
-        roundType: context.roundType,
-        savedAt: built.record.createdAt,
-        heldOnly,
-      },
-      ...current,
-    ]);
-    setStatus(`${shortLabel(built.record.id)} written to device storage.`);
-    reset(carried);
-    wake();
-    return { ok: true, heldOnly };
   };
 
   const discard = () => {
-    if (!current()) return;
+    if (!current() || committing.current) return;
     void clearDraft(database, key)
       .then(() => {
         if (!current()) return;

@@ -37,6 +37,11 @@ type Unfinished =
    * the field session resumes or discards it as it is.
    */
   | { readonly kind: "unbound"; readonly title: string; readonly sentence: string }
+  /**
+   * A stored draft this build cannot read (MOB-41): it blocks every new observation, so the card
+   * offers the one way out, a confirmed discard.
+   */
+  | { readonly kind: "unreadable" }
   /** An observation still open in this session. */
   | { readonly kind: "open"; readonly title: string; readonly sentence: string }
   | { readonly kind: "sample"; readonly title: string; readonly sentence: string };
@@ -66,6 +71,7 @@ export function useUnfinished(): Unfinished | null {
   const { mode } = useDataSource();
   const { recovered, inProgress } = session;
 
+  if (session.unreadableDraft && !recovered && !inProgress) return { kind: "unreadable" };
   if (recovered && !recovered.binding) {
     const form = formFor(recovered.formVersion);
     return {
@@ -122,10 +128,54 @@ function cardStyles(t: Theme) {
  */
 export function UnfinishedCard({ unfinished }: { unfinished: Unfinished }) {
   if (unfinished.kind === "recovered") return <RecoveredCard unfinished={unfinished} />;
+  if (unfinished.kind === "unreadable") return <UnreadableDraftCard />;
   return <OpenCard unfinished={unfinished} />;
 }
 
-function OpenCard({ unfinished }: { unfinished: Exclude<Unfinished, { kind: "recovered" }> }) {
+/**
+ * The card for a stored draft that cannot be read (MOB-41). Nothing can be resumed or kept for later,
+ * and until it goes no map can be set up, so the only action is "Discard draft", which asks first and
+ * then clears it through the field session; the card disappears once the session no longer holds it.
+ */
+export function UnreadableDraftCard() {
+  const s = useStyles(cardStyles);
+  const session = useFieldSession();
+  const haptics = useHaptics();
+  if (!session.unreadableDraft) return null;
+  return (
+    <Island tone="accent" eyebrow="Unfinished observation" title="A draft this app cannot read">
+      <View style={s.body}>
+        <Text tone="ink2">
+          An unfinished observation is stored on this device, but this version of DECA Mark cannot
+          open it. Until it is discarded, no new observation can be started.
+        </Text>
+        <View style={s.actions}>
+          <TextLink
+            label="Discard draft"
+            tone="ink"
+            onPress={() =>
+              confirmDiscard(() => {
+                haptics.warning();
+                discardKept(session.discardRecovered);
+              }, UNREADABLE_BODY)
+            }
+            accessibilityHint="Asks before removing the draft from this device."
+            testID="projects-discard"
+          />
+        </View>
+      </View>
+    </Island>
+  );
+}
+
+const UNREADABLE_BODY =
+  "This version of DECA Mark cannot read these answers, and an update might. Discarding deletes them from this device. Nothing was uploaded.";
+
+function OpenCard({
+  unfinished,
+}: {
+  unfinished: Exclude<Unfinished, { kind: "recovered" | "unreadable" }>;
+}) {
   const s = useStyles(cardStyles);
   const session = useFieldSession();
   const haptics = useHaptics();
@@ -206,15 +256,14 @@ function OpenCard({ unfinished }: { unfinished: Exclude<Unfinished, { kind: "rec
   );
 }
 
-function confirmDiscard(onDiscard: () => void) {
-  Alert.alert(
-    "Discard this draft?",
-    "The point and answers in this unfinished observation are removed from this device. Nothing was uploaded.",
-    [
-      { text: "Keep draft", style: "cancel" },
-      { text: "Discard draft", style: "destructive", onPress: onDiscard },
-    ],
-  );
+function confirmDiscard(
+  onDiscard: () => void,
+  body = "The point and answers in this unfinished observation are removed from this device. Nothing was uploaded.",
+) {
+  Alert.alert("Discard this draft?", body, [
+    { text: "Keep draft", style: "cancel" },
+    { text: "Discard draft", style: "destructive", onPress: onDiscard },
+  ]);
 }
 
 function RecoveredCard({ unfinished }: { unfinished: Extract<Unfinished, { kind: "recovered" }> }) {

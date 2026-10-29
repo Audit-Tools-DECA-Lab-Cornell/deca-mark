@@ -55,6 +55,11 @@ export function useDraftRecovery(input: {
     };
   }, [input.database, input.key, input.ready]);
 }
+/**
+ * Writes the open observation's draft and says whether it was kept (MOB-41): `true` once the write
+ * landed, `false` when it could not be built or stored, and `null` when there is nothing to write.
+ * The draft stays on screen either way; the caller shows the observer which of the two it is.
+ */
 export function persistDraft(input: {
   readonly database: LocalDatabase;
   readonly key: string;
@@ -66,8 +71,7 @@ export function persistDraft(input: {
   readonly placement: Placement["source"];
   readonly next: SessionState;
   readonly coordinate: Coordinate | null;
-  readonly failed: () => void;
-}): void {
+}): Promise<boolean> | null {
   const { site, context, owner, next, coordinate } = input;
   if (
     !input.ready ||
@@ -76,7 +80,7 @@ export function persistDraft(input: {
     !owner ||
     ownershipProblem(owner, input.key, site.id) !== null
   )
-    return;
+    return null;
   const draft = observationDraftSchema.safeParse({
     schemaVersion: 2,
     ...(owner.capture ? { capture: owner.capture } : {}),
@@ -94,12 +98,12 @@ export function persistDraft(input: {
     startedAt: owner.startedAt,
     updatedAt: new Date().toISOString(),
   });
-  if (!draft.success) {
-    input.failed();
-    return;
-  }
-  void saveDraft(input.database, input.key, draft.data).catch((error: unknown) => {
-    if (error instanceof Error) input.failed();
-    else throw error;
-  });
+  if (!draft.success) return Promise.resolve(false);
+  return saveDraft(input.database, input.key, draft.data).then(
+    () => true,
+    (error: unknown) => {
+      if (error instanceof Error) return false;
+      throw error;
+    },
+  );
 }

@@ -40,6 +40,9 @@ import { ZoneStep } from "./ZoneStep";
 /** The internal steps of collecting. Play events start at Place; a zone inventory at Zone. */
 type Step = "place" | "zone" | "answer" | "review" | "saved";
 
+/** What the status line says while the last write of the draft failed (MOB-41). */
+const DRAFT_NOT_KEPT = "Not kept: this observation is only in memory. Save it now.";
+
 /** The zoom "Zoom in to place" goes to: about 4 cm a point at a playground's latitude. */
 const PRECISE_ZOOM = 20.5;
 
@@ -121,6 +124,12 @@ export function CollectScreen() {
   // its size inside a shut slot: arriving with the keyboard up leaves the slot open until it is measured.
   const shut = keyboardUp && !side && !expanded && step === "answer" && mapHeight > 0;
   const typing = keyboardUp && step === "answer";
+  // A draft that could not be written shows in the status line, on Review and in the Leave alert (MOB-41).
+  // While a phone's keyboard is up the row stays hidden all the same: it is two lines and a count, which
+  // would leave the question and the field a sliver, and in landscape it sits in the map column, behind
+  // the keyboard. The field and Continue above the keyboard come first (MOB-34); the row is back as soon
+  // as the keyboard drops.
+  const draftFailed = session.draftWriteFailed && session.inProgress !== null;
   const hideStatus = shut || (typing && !layout.tablet);
   const hideChrome = typing && !layout.tablet && side;
   const [aim] = useState(() =>
@@ -171,14 +180,18 @@ export function CollectScreen() {
       return;
     }
     Alert.alert(
-      "Leave? Your draft stays on this device",
-      "The point and every answer so far are kept. Return to the site to carry on.",
+      draftFailed
+        ? "Leave? This observation is not kept"
+        : "Leave? Your draft stays on this device",
+      draftFailed
+        ? "It is only in memory and is lost if the app closes. Save it first, or come back to this observation before closing the app."
+        : "The point and every answer so far are kept. Return to the site to carry on.",
       [
         { text: "Keep collecting", style: "cancel" },
         { text: "Leave", onPress: goBack },
       ],
     );
-  }, [session.inProgress]);
+  }, [session.inProgress, draftFailed]);
 
   const stepBack = useCallback((): boolean => {
     cancelAdvance();
@@ -445,14 +458,16 @@ export function CollectScreen() {
   const status = (
     <StatusLine
       live
-      tone={last ? "saved" : "neutral"}
-      icon={last ? "check" : placed ? "smartphone" : "map-pin"}
+      tone={draftFailed ? "attention" : last ? "saved" : "neutral"}
+      icon={draftFailed ? "triangle-alert" : last ? "check" : placed ? "smartphone" : "map-pin"}
       text={
         last && step === "saved"
           ? `${shortLabel(last.id)} saved on this device`
-          : placed && step !== "place"
-            ? "Draft kept on this device as you answer"
-            : `${sitePackage.name} · ready offline`
+          : draftFailed
+            ? DRAFT_NOT_KEPT
+            : placed && step !== "place"
+              ? "Draft kept on this device as you answer"
+              : `${sitePackage.name} · ready offline`
       }
       trailing={<Text variant="monoData" tone="ink2">{`${unsent} on device`}</Text>}
     />
