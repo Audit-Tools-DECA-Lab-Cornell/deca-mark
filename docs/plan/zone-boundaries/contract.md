@@ -120,7 +120,7 @@ A site has no zone versions until its first package. Two writers create packages
   - The latest form is never chosen implicitly.
   - A form version still bound by a current package cannot be retired (409 `conflict`): publish a successor first.
 - **Online background maps (D35):**
-  - `leave_out_online_basemaps` (optional array of 1–64 layer names) names the QGIS project layers drawn from a tile service that the manager agreed to leave out of the package. Omitted means none.
+  - `leave_out_online_basemaps` (optional array of 0–64 layer names) names the QGIS project layers drawn from a tile service that the manager agreed to leave out of the package. Omitted means none.
   - A project layer of that kind that is not named refuses the request with 422 `online_basemap_unconfirmed` and `details.layers: [{name, host}]` (`host` is null when the source names none), listing every such layer in the project. Nothing is published or stored under the `request_id`, so the retry that names them may reuse it.
   - Named layers publish, and the version's `imagery-licence` check is a `warning` that names each. `POST /packages/import` marks the same layers in `issues` with `kind: "online_basemap"` and their `host`.
 

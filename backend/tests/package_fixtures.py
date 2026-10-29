@@ -26,6 +26,20 @@ def polygon(west: float, south: float, east: float, north: float, **properties: 
     }
 
 
+def base_layers() -> dict[str, Json]:
+    """Build the two required layers of a first package: a site outline and one zone, `A`."""
+    return {
+        "ground": {
+            "type": "FeatureCollection",
+            "features": [polygon(-76.4865, 42.447, -76.4835, 42.449, kind="site")],
+        },
+        "zones": {
+            "type": "FeatureCollection",
+            "features": [polygon(-76.4864, 42.4478, -76.485, 42.4489, id="A", name="Lawn")],
+        },
+    }
+
+
 def submission(**overrides: object) -> Json:
     payload: Json = {
         "site_id": "10000000-0000-4000-8000-000000000003",
@@ -33,18 +47,7 @@ def submission(**overrides: object) -> Json:
         "expected_current_package_id": None,
         "form_version": "shell-v1",
         "change_note": "Initial zone package",
-        "layers": {
-            "ground": {
-                "type": "FeatureCollection",
-                "features": [polygon(-76.4865, 42.447, -76.4835, 42.449, kind="site")],
-            },
-            "zones": {
-                "type": "FeatureCollection",
-                "features": [
-                    polygon(-76.4864, 42.4478, -76.485, 42.4489, id="A", name="Lawn")
-                ],
-            },
-        },
+        "layers": base_layers(),
         "zone_identity_map": [
             {
                 "source_feature_id": "A",
@@ -97,3 +100,21 @@ def open_polygon(
             "coordinates": [[[west, south], [east, south], [east, north], [west, north]]],
         },
     }
+
+
+def collection_of(*geometries: object) -> Json:
+    """Build a feature collection with one featureless-property feature per geometry."""
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "properties": {}, "geometry": geometry} for geometry in geometries
+        ],
+    }
+
+
+def line(*positions: list[float]) -> Json:
+    return {"type": "LineString", "coordinates": list(positions)}
+
+
+def point(*coordinates: float) -> Json:
+    return {"type": "Point", "coordinates": list(coordinates)}

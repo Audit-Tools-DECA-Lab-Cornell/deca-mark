@@ -329,3 +329,14 @@ def test_a_remote_vector_source_is_not_an_online_background_map() -> None:
         import_project, request({"site.qgs": document("http://127.0.0.1/private.geojson")})
     )
     assert all(issue.kind is None and issue.host is None for issue in result.issues)
+
+
+def test_a_tile_url_urlparse_rejects_is_an_online_background_map_with_no_host() -> None:
+    # OpenStreetMap's own subdomain pattern is not a valid bracketed host.
+    project = qgis_document(
+        online_basemap("OpenStreetMap", "https://[abc].tile.openstreetmap.org/{z}/{x}/{y}.png")
+    )
+    result = anyio.run(import_project, request({"site.qgs": project.encode()}))
+    assert [(issue.layer, issue.kind, issue.host) for issue in result.issues] == [
+        ("OpenStreetMap", "online_basemap", None)
+    ]

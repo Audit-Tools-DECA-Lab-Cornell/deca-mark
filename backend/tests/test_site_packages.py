@@ -11,10 +11,15 @@ from fieldmaps_api.schemas import PackageDetail, PackageHistory
 from fieldmaps_api.zone_response_schemas import HistoricalZones, Publication
 from tests.local_database import admin_sql
 from tests.package_fixtures import (
+    Json,
+    base_layers,
+    collection_of,
     error_of,
     issue_codes,
+    line,
     online_basemap,
     open_polygon,
+    point,
     polygon,
     qgis_document,
     qgz,
@@ -313,6 +318,67 @@ def test_a_project_file_the_worker_cannot_read_is_refused_with_its_own_reason(
     assert error.message.startswith(message)
     assert "issues" not in error.details
     assert "ring" not in refused.text
+    assert publications_stored_under(payload["request_id"]) == "0"
+
+
+def test_a_tile_url_urlparse_rejects_is_asked_about_with_no_host(
+    api_client: TestClient, tenant: "Tenant"
+) -> None:
+    url = f"/v1/projects/{tenant.project}/packages"
+    payload = basemap_request(
+        tenant,
+        online_basemap("OpenStreetMap", "https://[abc].tile.openstreetmap.org/{z}/{x}/{y}.png"),
+    )
+    refused = api_client.post(url, json=payload)
+    assert refused.status_code == 422, refused.text
+    error = error_of(refused.content)
+    assert error.code == "online_basemap_unconfirmed"
+    assert error.details == {"layers": [{"name": "OpenStreetMap", "host": None}]}
+    payload["leave_out_online_basemaps"] = ["OpenStreetMap"]
+    created = api_client.post(url, json=payload)
+    assert created.status_code == 201, created.text
+    package_id = Publication.model_validate_json(created.content).package.package_id
+    package = PackageDetail.model_validate_json(
+        api_client.get(f"{url}/{package_id}").content
+    )
+    imagery = next(check for check in package.checks if check.step == "imagery-licence")
+    assert imagery.state == "warning"
+    assert "OpenStreetMap is an online background map." in imagery.detail
+
+
+@pytest.mark.parametrize(
+    ("layer", "collection", "fragments"),
+    [
+        (
+            "paths",
+            collection_of(line([500000, 4700000], [500010, 4700010])),
+            ["paths layer has coordinates", "EPSG:4326"],
+        ),
+        ("trees", collection_of(point(-76.4857)), ["Feature 1 of the trees layer"]),
+        (
+            "trees",
+            collection_of(point(-76.4857, 42.4481), None),
+            ["Feature 2 of the trees layer"],
+        ),
+    ],
+    ids=["projected paths", "bad trees point", "trees feature with no shape"],
+)
+def test_a_paths_or_trees_layer_the_worker_cannot_read_is_refused_by_name(
+    api_client: TestClient,
+    tenant: "Tenant",
+    layer: str,
+    collection: Json,
+    fragments: list[str],
+) -> None:
+    payload = submission(site_id=str(tenant.site), layers={**base_layers(), layer: collection})
+    refused = api_client.post(f"/v1/projects/{tenant.project}/packages", json=payload)
+    assert refused.status_code == 422, refused.text
+    error = error_of(refused.content)
+    assert error.code == "validation_failed"
+    assert "issues" not in error.details
+    assert "invalid_structure" not in refused.text
+    for fragment in fragments:
+        assert fragment in error.message
     assert publications_stored_under(payload["request_id"]) == "0"
 
 

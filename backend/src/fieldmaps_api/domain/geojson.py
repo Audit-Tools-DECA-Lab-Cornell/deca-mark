@@ -17,6 +17,9 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 MAX_LONGITUDE = 180.0
 MAX_LATITUDE = 90.0
 POSITION_LENGTH = (2, 3)
+#: The phrase of the range messages below, which `zone_archive` reads to tell a layer exported in a
+#: projected CRS from a layer with a malformed shape.
+OUTSIDE_WGS84 = "is outside WGS 84"
 
 
 def _wgs84_position(value: list[float]) -> list[float]:
@@ -25,10 +28,10 @@ def _wgs84_position(value: list[float]) -> list[float]:
         raise ValueError(message)
     longitude, latitude = value[0], value[1]
     if not -MAX_LONGITUDE <= longitude <= MAX_LONGITUDE:
-        message = f"Longitude {longitude} is outside WGS 84; export with CRS EPSG:4326"
+        message = f"Longitude {longitude} {OUTSIDE_WGS84}; export with CRS EPSG:4326"
         raise ValueError(message)
     if not -MAX_LATITUDE <= latitude <= MAX_LATITUDE:
-        message = f"Latitude {latitude} is outside WGS 84; export with CRS EPSG:4326"
+        message = f"Latitude {latitude} {OUTSIDE_WGS84}; export with CRS EPSG:4326"
         raise ValueError(message)
     # Elevation is dropped: the collector draws a plan, and a third ordinal would travel to
     # devices unread and unstored.

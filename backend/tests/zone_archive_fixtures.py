@@ -51,3 +51,9 @@ def wide_ground() -> PackageRequest:
 
 def unclosed_ground() -> PackageRequest:
     return with_ground([[0, 0], [0.8, 0], [0.8, 0.8], [0, 0.8]])
+
+
+def with_layer(name: str, collection: object) -> PackageRequest:
+    """Replace one layer of the synthetic package with the given GeoJSON collection."""
+    request = source()
+    return request.model_copy(update={"layers": {**request.layers, name: collection}})

@@ -7,7 +7,7 @@ from typing import Final, assert_never
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
-from fieldmaps_api.domain.geojson import FeatureCollection, Geometry, positions
+from fieldmaps_api.domain.geojson import OUTSIDE_WGS84, FeatureCollection, Geometry, positions
 from fieldmaps_api.domain.packages import (
     LAYER_ORDER,
     MAX_ARCHIVE_BYTES,
@@ -52,6 +52,34 @@ def _text(value: JsonValue) -> str | None:
         case None | bool() | int() | float() | list() | dict():
             return None
     assert_never(value)
+
+
+def _layer_problem(name: LayerName, error: ValidationError) -> str:
+    """Say in a manager's words which layer could not be read, and what to do about it."""
+    problems = error.errors(include_input=False, include_url=False, include_context=False)
+    if any(OUTSIDE_WGS84 in problem["msg"] for problem in problems):
+        return (
+            f"The {name} layer has coordinates that are not longitude and latitude, so nothing "
+            "was uploaded. In QGIS, export it as GeoJSON with CRS EPSG:4326 and choose it again."
+        )
+    location = problems[0]["loc"] if problems else ()
+    if len(location) > 1 and location[0] == "features" and isinstance(location[1], int):
+        return (
+            f"Feature {location[1] + 1} of the {name} layer has a shape that could not be read, "
+            "so nothing was uploaded. Give every feature a point, line or polygon with a "
+            "longitude and latitude, then export the layer again."
+        )
+    return (
+        f"The {name} layer is not a GeoJSON feature collection, so nothing was uploaded. "
+        "Export it from QGIS as GeoJSON and choose it again."
+    )
+
+
+def _read_collection(name: LayerName, payload: JsonValue) -> FeatureCollection:
+    try:
+        return _COLLECTION.validate_python(payload)
+    except ValidationError as error:
+        raise PackageError(_layer_problem(name, error)) from error
 
 
 def _read_layer(name: LayerName, payload: bytes) -> ArchiveLayer:
@@ -228,7 +256,7 @@ def prepare_import_base(
         message = "A package needs a ground and a zones layer"
         raise PackageError(message)
     collections: dict[LayerName, FeatureCollection] = {
-        name: _COLLECTION.validate_python(payload) for name, payload in submission.layers.items()
+        name: _read_collection(name, payload) for name, payload in submission.layers.items()
     }
     if any(len(layer.features) > MAX_FEATURES_PER_LAYER for layer in collections.values()):
         message = "A layer exceeds the feature count ceiling"
