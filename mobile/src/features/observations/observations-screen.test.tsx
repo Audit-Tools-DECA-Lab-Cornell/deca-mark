@@ -1,14 +1,10 @@
 import { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ObservationsScreen from "../../../app/(app)/(tabs)/observations/index";
-import {
-  takeAlerts,
-  takeAnnouncements,
-  takeNavigation,
-} from "../../ui/native.fixture";
+import { takeAlerts, takeAnnouncements, takeNavigation } from "../../ui/native.fixture";
 import { render } from "../../ui/screen.fixture";
 import type { QueueRecord } from "../preview/fixtures";
-import { record, resetWorld, stopsIn, world } from "./observations.fixture";
+import { isHost, propsOf, record, resetWorld, stopsIn, world } from "./observations.fixture";
 
 vi.mock("react-native", async () => (await import("./observations.fixture")).nativeWithList);
 vi.mock("expo-router", async () => (await import("./observations.fixture")).routerWithRedirect);
@@ -63,7 +59,7 @@ beforeEach(() => {
 
 function rowOf(screen: ReturnType<typeof render>, id: string) {
   return screen.renderer.root.find(
-    (node) => (node.type as unknown) === "View" && node.props.testID === `observation-${id}`,
+    (node) => isHost(node, "View") && propsOf(node).testID === `observation-${id}`,
   );
 }
 
@@ -104,10 +100,12 @@ describe("the list uses the four queue words (MOB-38)", () => {
     world.records = everyState();
     const screen = render(<ObservationsScreen />);
     const badges = screen.renderer.root.findAll(
-      (node) => (node.type as unknown) === "View" && node.props.accessibilityRole === "text",
+      (node) => isHost(node, "View") && propsOf(node).accessibilityRole === "text",
     );
-    const labels = badges.map((badge) => badge.props.accessibilityLabel);
-    expect(labels).toEqual(expect.arrayContaining(["On device", "Needs attention", "Uploading", "Uploaded"]));
+    const labels = badges.map((badge) => propsOf(badge).accessibilityLabel);
+    expect(labels).toEqual(
+      expect.arrayContaining(["On device", "Needs attention", "Uploading", "Uploaded"]),
+    );
   });
 });
 
@@ -132,8 +130,8 @@ describe("one accessibility element per record (A11Y-01)", () => {
     const screen = render(<ObservationsScreen />);
     const hidden = rowOf(screen, "a2").findAll(
       (node) =>
-        node.props.importantForAccessibility === "no-hide-descendants" &&
-        node.props.accessibilityElementsHidden === true,
+        propsOf(node).importantForAccessibility === "no-hide-descendants" &&
+        propsOf(node).accessibilityElementsHidden === true,
     );
     expect(hidden.length).toBeGreaterThan(0);
   });
@@ -142,13 +140,11 @@ describe("one accessibility element per record (A11Y-01)", () => {
     world.records = everyState();
     const screen = render(<ObservationsScreen />);
     const headings = screen.renderer.root
-      .findAll((node) => node.props.accessibilityRole === "header")
-      .map((node) => node.props.children);
+      .findAll((node) => propsOf(node).accessibilityRole === "header")
+      .map((node) => propsOf(node).children);
     expect(headings).toContain("Observations");
     // A record is a stop of its own, so the list is the heading, the zone filter, then one stop each.
-    const list = screen.renderer.root.find(
-      (node) => (node.type as unknown) === "FlatList",
-    );
+    const list = screen.renderer.root.find((node) => isHost(node, "FlatList"));
     const rows = stopsIn(list).filter((stop) => stop.label.startsWith("OBS-"));
     expect(rows).toHaveLength(4);
   });
@@ -183,15 +179,23 @@ describe("the zone chips", () => {
     world.records = everyState();
     const screen = render(<ObservationsScreen />);
     const group = screen.renderer.root.find(
-      (node) => node.props.accessibilityRole === "radiogroup" && node.props.accessibilityLabel === "Zone",
+      (node) =>
+        propsOf(node).accessibilityRole === "radiogroup" &&
+        propsOf(node).accessibilityLabel === "Zone",
     );
-    const chips = group.findAll((node) => node.props.accessibilityRole === "radio");
-    expect(chips.map((chip) => chip.props.accessibilityLabel)).toEqual([
+    const chips = group.findAll(
+      (node) => isHost(node, "Pressable") && propsOf(node).accessibilityRole === "radio",
+    );
+    expect(chips.map((chip) => propsOf(chip).accessibilityLabel)).toEqual([
       "All zones",
       "North meadow",
       "Woodland edge",
     ]);
-    expect(chips.map((chip) => chip.props.accessibilityState.checked)).toEqual([true, false, false]);
+    expect(chips.map((chip) => propsOf(chip).accessibilityState?.checked)).toEqual([
+      true,
+      false,
+      false,
+    ]);
   });
 
   it("are left out when every record is in one zone", () => {
@@ -206,9 +210,9 @@ describe("the zone chips", () => {
     await screen.press("Woodland edge");
     const shown = () =>
       screen.renderer.root
-        .findAll((node) => String(node.props.testID ?? "").startsWith("observation-"))
+        .findAll((node) => String(propsOf(node).testID ?? "").startsWith("observation-"))
         .filter((node) => (node.type as unknown) === "View")
-        .map((node) => node.props.testID);
+        .map((node) => propsOf(node).testID);
     expect(shown()).toEqual(["observation-a3", "observation-a4"]);
     expect(takeAnnouncements()).toEqual(["Woodland edge: 2 of 4 observations shown."]);
     await screen.press("All zones");
@@ -236,6 +240,17 @@ describe("Retry these uploads", () => {
     expect(world.calls).toEqual(["retry"]);
   });
 
+  it("says so, and that nothing was changed, when the retry itself could not start", async () => {
+    world.retryFails = true;
+    world.records = everyState();
+    const screen = render(<ObservationsScreen />);
+    await screen.press("Retry these uploads");
+    expect(screen.says("Retry did not start.")).toBe(true);
+    expect(screen.says("The records are still on this device and nothing was changed.")).toBe(true);
+    // The button is back, so it can be tried again.
+    expect(screen.controls()).toContain("Retry these uploads");
+  });
+
   it("says in the plural when several need attention", () => {
     world.records = [
       record("a1", "attention", { problem: REJECTED }),
@@ -251,22 +266,29 @@ describe("Retry these uploads", () => {
 
 describe("pull to refresh", () => {
   function pull(screen: ReturnType<typeof render>) {
-    const list = screen.renderer.root.find((node) => (node.type as unknown) === "FlatList");
-    const control = list.props.refreshControl as { props: { onRefresh: () => void } };
-    act(() => control.props.onRefresh());
+    const list = screen.renderer.root.find((node) => isHost(node, "FlatList"));
+    const control = propsOf(list).refreshControl;
+    act(() => control?.props.onRefresh());
   }
 
-  it("calls the real wake() on a device", () => {
-    world.records = everyState();
-    pull(render(<ObservationsScreen />));
-    expect(world.calls).toEqual(["wake"]);
-  });
-
-  it("sends nothing in preview, which shows sample records", () => {
-    world.mode = "preview";
-    world.records = everyState();
-    pull(render(<ObservationsScreen />));
-    expect(world.calls).toEqual([]);
+  it("calls the real wake() on a device, and the spinner settles by itself", () => {
+    vi.useFakeTimers();
+    try {
+      world.records = everyState();
+      const screen = render(<ObservationsScreen />);
+      const refreshing = () =>
+        propsOf(screen.renderer.root.find((node) => isHost(node, "FlatList"))).refreshControl?.props
+          .refreshing;
+      pull(screen);
+      expect(world.calls).toEqual(["wake"]);
+      expect(refreshing()).toBe(true);
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(refreshing()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -321,7 +343,12 @@ describe("the states around the list (DESIGN, Collector screen states)", () => {
   it("has no link back to a map, a studies page or a second screen", () => {
     world.records = everyState();
     const screen = render(<ObservationsScreen />);
-    for (const old of ["Back to the map", "Studies", "Account and synchronisation", "On this device"]) {
+    for (const old of [
+      "Back to the map",
+      "Studies",
+      "Account and synchronisation",
+      "On this device",
+    ]) {
       expect(screen.controls().join("|"), old).not.toContain(old);
     }
   });

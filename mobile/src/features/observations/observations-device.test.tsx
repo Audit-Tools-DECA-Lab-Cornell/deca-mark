@@ -12,7 +12,7 @@ import {
 } from "../../storage/package-store.fixture";
 import { PreferencesProvider } from "../../ui/preferences";
 import { ThemeProvider } from "../../ui/theme";
-import { stopsIn } from "./observations.fixture";
+import { isHost, propsOf, stopsIn } from "./observations.fixture";
 
 vi.mock("react-native", async () => (await import("./observations.fixture")).nativeWithList);
 vi.mock("expo-router", async () => (await import("./observations.fixture")).routerWithRedirect);
@@ -142,7 +142,7 @@ async function open() {
 
 function stop(id: string) {
   const row = view?.root.find(
-    (node) => (node.type as unknown) === "View" && node.props.testID === `observation-${id}`,
+    (node) => isHost(node, "View") && propsOf(node).testID === `observation-${id}`,
   );
   if (!row) throw new Error(`No row for ${id}`);
   const stops = stopsIn(row);
@@ -154,7 +154,9 @@ describe("the Observations list over the device's own records (MOB-38)", () => {
   it("reads each stored state in the contract's words, from MOB-37's map", async () => {
     const sqlite = await open();
     try {
-      expect(stop(ID.waiting)).toMatch(/^OBS-600000\. Old label, Standard round, .+\. On device\.$/);
+      expect(stop(ID.waiting)).toMatch(
+        /^OBS-600000\. Old label, Standard round, .+\. On device\.$/,
+      );
       expect(stop(ID.uploaded)).toMatch(/\. Uploaded\.$/);
       expect(stop(ID.refused)).toMatch(/\. Needs attention\. DECA Mark did not accept Old label/);
       expect(stop(ID.practice)).toContain(
@@ -191,9 +193,9 @@ describe("the Observations list over the device's own records (MOB-38)", () => {
         .findAll(
           (node) =>
             (node.type as unknown) === "View" &&
-            String(node.props.testID ?? "").startsWith("observation-"),
+            String(propsOf(node).testID ?? "").startsWith("observation-"),
         )
-        .map((node) => node.props.testID);
+        .map((node) => propsOf(node).testID);
       expect(ids).toHaveLength(4);
       expect(ids).not.toContain(`observation-${ID.elsewhere}`);
     } finally {
@@ -207,10 +209,10 @@ describe("the Observations list over the device's own records (MOB-38)", () => {
       const retry = view?.root.find(
         (node) =>
           (node.type as unknown) === "Pressable" &&
-          node.props.accessibilityLabel === "Retry these uploads",
+          propsOf(node).accessibilityLabel === "Retry these uploads",
       );
       await act(async () => {
-        retry?.props.onPress();
+        if (retry) propsOf(retry).onPress?.();
       });
       expect(world.calls).toEqual(["retry"]);
     } finally {

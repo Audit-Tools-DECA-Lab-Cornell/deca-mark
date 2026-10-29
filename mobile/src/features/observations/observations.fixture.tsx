@@ -30,6 +30,8 @@ export const world = {
   online: true as boolean | null,
   mode: "device" as "device" | "preview",
   syncError: "",
+  /** Makes `retry()` fail, as a database that cannot be written does. */
+  retryFails: false,
   /** What the screen asked of the sync provider and the queue, in order. */
   calls: [] as string[],
   /** Where `<Redirect>` was asked to go. */
@@ -43,6 +45,7 @@ export function resetWorld(): void {
   world.online = true;
   world.mode = "device";
   world.syncError = "";
+  world.retryFails = false;
   world.calls = [];
   world.redirects = [];
 }
@@ -99,6 +102,7 @@ export const sync = {
     },
     retry: async () => {
       world.calls.push("retry");
+      if (world.retryFails) throw new Error("The database is locked.");
     },
   }),
 };
@@ -175,7 +179,25 @@ export const tabsBar: { current: unknown } = { current: null };
 export const tabScreens: string[] = [];
 
 type Node = ReactTestInstance;
-const props = (node: Node) => node.props as Record<string, unknown>;
+
+/** The props of a host stand-in that these tests read. */
+export type HostProps = {
+  readonly testID?: string | undefined;
+  readonly accessible?: boolean | undefined;
+  readonly accessibilityRole?: string | undefined;
+  readonly accessibilityLabel?: string | undefined;
+  readonly accessibilityState?: { readonly checked?: boolean; readonly disabled?: boolean };
+  readonly accessibilityElementsHidden?: boolean | undefined;
+  readonly importantForAccessibility?: string | undefined;
+  readonly children?: unknown;
+  readonly onPress?: (() => void) | undefined;
+  readonly refreshControl?: { props: { refreshing: boolean; onRefresh: () => void } };
+};
+
+export const propsOf = (node: Node) => node.props as HostProps;
+
+/** Whether the node is the host stand-in of this name (a View, a Pressable, a FlatList). */
+export const isHost = (node: Node, name: string) => (node.type as unknown) === name;
 
 /**
  * The stops a screen reader makes inside one part of the screen. An accessible element groups
@@ -185,16 +207,21 @@ const props = (node: Node) => node.props as Record<string, unknown>;
 export function stopsIn(root: Node): { label: string }[] {
   const stops: { label: string }[] = [];
   const walk = (node: Node) => {
-    const own = props(node);
-    if (own.accessibilityElementsHidden === true || own.importantForAccessibility === "no-hide-descendants")
+    const own = propsOf(node);
+    if (
+      own.accessibilityElementsHidden === true ||
+      own.importantForAccessibility === "no-hide-descendants"
+    )
       return;
     const host = typeof node.type === "string";
     if (host && own.accessible === true) {
       stops.push({ label: String(own.accessibilityLabel ?? "") });
       return;
     }
-    if (host && node.type === "Text") {
-      stops.push({ label: node.children.map((child) => (typeof child === "string" ? child : "")).join("") });
+    if (host && isHost(node, "Text")) {
+      stops.push({
+        label: node.children.map((child) => (typeof child === "string" ? child : "")).join(""),
+      });
       return;
     }
     for (const child of node.children) if (typeof child !== "string") walk(child);

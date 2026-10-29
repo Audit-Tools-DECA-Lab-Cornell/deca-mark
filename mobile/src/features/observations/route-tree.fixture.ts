@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join, posix } from "node:path";
-import { getExactRoutes } from "expo-router/build/getRoutes";
 import { getReactNavigationConfig } from "expo-router/build/getReactNavigationConfig";
+import { getExactRoutes } from "expo-router/build/getRoutes";
 import { inMemoryContext } from "expo-router/build/testing-library/context-stubs";
 
 /**
@@ -39,7 +39,10 @@ function flatten(
   return Object.entries(screens).flatMap(([name, screen]) => {
     const here = [...chain, name];
     // A group's own path is its name in parentheses; it never shows in a url.
-    const segments = [...base, ...screen.path.split("/").filter((part) => part && !/^\(.*\)$/.test(part))];
+    const segments = [
+      ...base,
+      ...screen.path.split("/").filter((part) => part && !/^\(.*\)$/.test(part)),
+    ];
     const children = flatten(screen.screens, here, segments);
     return Object.keys(screen.screens).length > 0
       ? children
@@ -67,7 +70,8 @@ export function realRouteTree(): RouteTree {
   const routes = flatten(config.screens);
   const resolve = (href: string): Route | null => {
     const want = `/${href.split(/[?#]/)[0]?.split("/").filter(Boolean).join("/")}`.split("/");
-    const dynamic = (route: Route) => route.url.split("/").filter((part) => part.startsWith(":")).length;
+    const dynamic = (route: Route) =>
+      route.url.split("/").filter((part) => part.startsWith(":")).length;
     const matches = routes
       .filter((route) => {
         const have = route.url.split("/");

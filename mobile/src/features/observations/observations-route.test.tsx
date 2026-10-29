@@ -108,15 +108,19 @@ describe("no second, legacy records screen is left outside the tabs", () => {
     expect(names.filter((name) => !name.includes(" > "))).toEqual(["+not-found"]);
   });
 
-  it("has no /records route and no records.tsx", () => {
-    expect(tree.resolve("/records")).toBeNull();
+  it("has no records route and no records.tsx", () => {
+    // "/records" is now only the dynamic project route's way to read "a project called records".
+    expect(tree.routes.some((route) => route.chain.at(-1) === "records")).toBe(false);
     expect(tree.files).not.toContain("./records.tsx");
   });
 
   it("declares in the root layout only routes that exist", () => {
     const layout = readFileSync(new URL("../../../app/_layout.tsx", import.meta.url), "utf8");
-    const declared = [...layout.matchAll(/<Stack\.Screen name="([^"]+)"/g)].map((match) => match[1]);
+    const declared = [...layout.matchAll(/<Stack\.Screen name="([^"]+)"/g)].map(
+      (match) => match[1],
+    );
     const topLevel = new Set(tree.routes.map((route) => route.chain[0]));
-    for (const name of declared) expect(topLevel.has(name ?? ""), `${name} has no route`).toBe(true);
+    for (const name of declared)
+      expect(topLevel.has(name ?? ""), `${name} has no route`).toBe(true);
   });
 });

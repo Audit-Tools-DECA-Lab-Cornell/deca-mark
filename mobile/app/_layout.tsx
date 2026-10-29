@@ -209,8 +209,6 @@ function GuardedRoutes({
       <Stack.Protected guard={signedIn && !needsOnboarding}>
         {/* The tabs (Projects, Observations, Account), collect and the Explain sheet. */}
         <Stack.Screen name="(app)" />
-        {/* The old Nocturne records screen, until the Observations tab (phase 8) replaces it. */}
-        <Stack.Screen name="records" />
       </Stack.Protected>
       <Stack.Protected guard={signedIn && needsOnboarding}>
         <Stack.Screen name="(onboarding)" />
