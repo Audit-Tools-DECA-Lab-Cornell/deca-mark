@@ -124,9 +124,13 @@ export function CollectScreen() {
   // its size inside a shut slot: arriving with the keyboard up leaves the slot open until it is measured.
   const shut = keyboardUp && !side && !expanded && step === "answer" && mapHeight > 0;
   const typing = keyboardUp && step === "answer";
-  // A draft that could not be written is the one thing the status line must keep saying (MOB-41).
+  // A draft that could not be written shows in the status line, on Review and in the Leave alert (MOB-41).
+  // While a phone's keyboard is up the row stays hidden all the same: it is two lines and a count, which
+  // would leave the question and the field a sliver, and in landscape it sits in the map column, behind
+  // the keyboard. The field and Continue above the keyboard come first (MOB-34); the row is back as soon
+  // as the keyboard drops.
   const draftFailed = session.draftWriteFailed && session.inProgress !== null;
-  const hideStatus = !draftFailed && (shut || (typing && !layout.tablet));
+  const hideStatus = shut || (typing && !layout.tablet);
   const hideChrome = typing && !layout.tablet && side;
   const [aim] = useState(() =>
     createAimStore({
@@ -180,7 +184,7 @@ export function CollectScreen() {
         ? "Leave? This observation is not kept"
         : "Leave? Your draft stays on this device",
       draftFailed
-        ? "It is only in memory and is lost if the app closes. Save it first, or return to the site before closing the app."
+        ? "It is only in memory and is lost if the app closes. Save it first, or come back to this observation before closing the app."
         : "The point and every answer so far are kept. Return to the site to carry on.",
       [
         { text: "Keep collecting", style: "cancel" },

@@ -8,6 +8,7 @@ import { startSession } from "../../forms/session";
 import { siteZones } from "../../maps/sample-site";
 import type { SitePackage } from "../../packages/site-package";
 import { FieldSessionContext, type FieldSessionValue } from "../../session/context";
+import { takeAlerts } from "../../ui/native.fixture";
 import { PreferencesProvider } from "../../ui/preferences";
 import { render, type Screen } from "../../ui/screen.fixture";
 import { ThemeProvider } from "../../ui/theme";
@@ -195,9 +196,9 @@ function sessionAtSummary(): FieldSessionValue {
 }
 
 /** Collect on the play-event summary, the 4-row required text answer of `janet-test-v1`, with a word typed. */
-function open(): Screen {
+function open(session: FieldSessionValue = sessionAtSummary()): Screen {
   const element: ReactElement = (
-    <FieldSessionContext.Provider value={sessionAtSummary()}>
+    <FieldSessionContext.Provider value={session}>
       <CollectScreen />
     </FieldSessionContext.Provider>
   );
@@ -775,12 +776,60 @@ describe("the status line tells the truth about the draft (MOB-41, audit C08)", 
     expect(screen.says(KEPT)).toBe(false);
   });
 
-  it("keeps saying it on a phone while the keyboard is up, when the status row is otherwise hidden", () => {
-    use(PILOT_DEVICES[0] as Pilot);
-    const screen = openWithKeyboardUp({ ...sessionAtSummary(), draftWriteFailed: true });
-    expect(screen.says(NOT_KEPT)).toBe(true);
-    const quiet = openWithKeyboardUp(sessionAtSummary());
-    expect(quiet.says(KEPT)).toBe(false);
+  describe("when the last draft write failed", () => {
+    const failed = (): FieldSessionValue => ({ ...sessionAtSummary(), draftWriteFailed: true });
+    const SE_LANDSCAPE: Pilot = {
+      name: "iPhone SE, landscape",
+      os: "ios",
+      width: 667,
+      height: 375,
+      inset: 0,
+      keyboard: 200,
+    };
+
+    // The status row (two lines of "Not kept" and the count) would leave an iPhone SE about 20 pt for
+    // the question and its field, and in landscape it sits in the map column, which has no keyboard
+    // lift: MOB-34's rule that the field and Continue stay above the keyboard wins.
+    it.each([
+      ["iPhone SE, portrait", PILOT_DEVICES[1] as Pilot],
+      ["iPhone SE, landscape", SE_LANDSCAPE],
+    ])("%s: the status row stays hidden while the keyboard is up, and says it is not kept once it drops", async (_name, pilot) => {
+      use(pilot);
+      const screen = open(failed());
+      expect(screen.says(NOT_KEPT)).toBe(true);
+      await keyboard(true);
+      expect(screen.says(NOT_KEPT)).toBe(false);
+      expect(screen.says("on device")).toBe(false);
+      expect(screen.controls()).toContain("Continue");
+      await keyboard(false);
+      expect(screen.says(NOT_KEPT)).toBe(true);
+    });
+
+    it("a phone that opens with the keyboard already up hides it too", async () => {
+      use(PILOT_DEVICES[1] as Pilot);
+      const screen = openWithKeyboardUp(failed());
+      expect(screen.says(NOT_KEPT)).toBe(false);
+      await keyboard(false);
+      expect(screen.says(NOT_KEPT)).toBe(true);
+    });
+
+    it("a tablet in landscape has room to keep saying it with the keyboard up", async () => {
+      use(PILOT_DEVICES[6] as Pilot);
+      const screen = open(failed());
+      await keyboard(true);
+      expect(screen.says(NOT_KEPT)).toBe(true);
+    });
+
+    it("the Leave alert says it as well, and tells the observer to come back to the observation", async () => {
+      use(PILOT_DEVICES[1] as Pilot);
+      const screen = open(failed());
+      takeAlerts();
+      await screen.press("Leave collecting");
+      const [alert] = takeAlerts();
+      expect(alert?.title).toBe("Leave? This observation is not kept");
+      expect(alert?.message).toContain("come back to this observation before closing the app");
+      expect(alert?.message).not.toContain("return to the site");
+    });
   });
 
   it("does not warn when nothing is open, whatever the last write did", () => {

@@ -284,6 +284,11 @@ describe("a stored draft this build cannot read (MOB-41, audit C08)", () => {
     await screen.press("Discard draft");
     const [alert] = takeAlerts();
     expect(alert?.title).toBe("Discard this draft?");
+    // Honest about what is lost: this version cannot read the draft, an update might.
+    expect(alert?.message).toBe(
+      "This version of DECA Mark cannot read these answers, and an update might. Discarding deletes them from this device. Nothing was uploaded.",
+    );
+    expect(alert?.message).not.toContain("cannot be recovered");
     expect(alert?.buttons?.map((button) => button.text)).toEqual(["Keep draft", "Discard draft"]);
     expect(data.calls).toEqual([]);
     alert?.buttons?.find((button) => button.text === "Discard draft")?.onPress?.();

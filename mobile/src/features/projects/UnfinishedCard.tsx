@@ -169,7 +169,7 @@ export function UnreadableDraftCard() {
 }
 
 const UNREADABLE_BODY =
-  "The draft cannot be opened, so its point and answers cannot be recovered. It is removed from this device. Nothing was uploaded.";
+  "This version of DECA Mark cannot read these answers, and an update might. Discarding deletes them from this device. Nothing was uploaded.";
 
 function OpenCard({
   unfinished,
