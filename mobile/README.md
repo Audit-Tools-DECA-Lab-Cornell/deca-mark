@@ -296,13 +296,14 @@ was removed afterward; this does not establish the rest of the product acceptanc
 
 | Path | Responsibility |
 | --- | --- |
-| `app/` | Routes: assignments, site brief, field, review, saved, records, account |
+| `app/` | Routes: assignments, site brief, field, review, saved, observations, account |
 | `src/forms/` | Form definitions, validation, the visibility engine, and the question-stack reducer |
 | `src/forms/fixtures/` | Thin imports of the canonical JSON definitions in `../contracts/forms/` |
 | `scripts/contracts-forms.mts` | Generates the shared input JSON Schema from the mobile Zod definition |
 | `src/packages/` | The site package interface and the bundled fixture provider |
 | `src/session/` | The observation period: package, zone, round type, draft persistence, and saving |
 | `src/features/collect/` | The collect route's steps, the Contour field map, the crosshair and pin, and the aim store |
+| `src/features/observations/` | The Observations tab's rows, zone chips and words (MOB-38) |
 | `src/features/guide/` | The offline field guide's content and its search |
 | `src/maps/` | Bundled training geometry, the generated Fall Creek site, base styles, clustering and zone geometry |
 | `src/domain/` | Observation contracts, round types and the record builder for each form version |
@@ -311,8 +312,8 @@ was removed afterward; this does not establish the rest of the product acceptanc
 | `src/sync/` | Upload protocol, scheduling, and verified receipts |
 | `src/layout/` | The observer's orientation choice, its storage, and the tablet/phone layout decisions |
 | `src/ui/` | Contour, from MOB-23: tokens read from `../contracts/contour.json`, theme, preferences, and the primitives that share their names with `web/src/components/contour/` |
-| `src/components/` | Screen frames and the previous chrome primitives, which MOB-27 removes once every screen uses `src/ui/` |
-| `src/theme.ts` | The previous chrome tokens, kept so unmoved screens compile; MOB-27 removes them |
+| `src/components/` | `screen-message.tsx`, the last screen on the previous chrome, which MOB-27 removes once it uses `src/ui/` |
+| `src/theme.ts` | The previous chrome tokens, kept for `screen-message.tsx`; MOB-27 removes them |
 | `assets/` | App icon, Android adaptive and themed layers, Play Store icon; sources in `assets/icon-source/` |
 | `plugins/` | Local config plugins: the Android 16 large-screen orientation opt-out |
 
