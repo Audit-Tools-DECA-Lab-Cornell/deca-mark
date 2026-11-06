@@ -19,7 +19,14 @@ export function sessionControls(input: {
   const { memory: m, key, current, visit } = input;
   return {
     chooseZone(next: SiteZone) {
-      if (!current() || (m.identity.current !== null && m.placementSource === "zone")) return;
+      // While a save commits nothing may change the observation: the zone and its binding would move in
+      // memory while the write that records them is dropped, and a failed save would leave them apart (MOB-41).
+      if (
+        !current() ||
+        m.committing.current ||
+        (m.identity.current !== null && m.placementSource === "zone")
+      )
+        return;
       const selected = m.sitePackage?.zones.find((entry) => entry.id === next.id);
       if (!selected || !m.sitePackage) return;
       const owner = m.identity.current;
