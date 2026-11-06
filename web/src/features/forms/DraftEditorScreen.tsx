@@ -107,6 +107,11 @@ export function DraftEditorScreen({
 	// The wording of each Save whose outcome is unknown (the reply never arrived) since the page last heard
 	// from the draft. Any of them may have been committed, so a later refusal is checked against them.
 	const unconfirmed = useRef<RawDefinition[]>([]);
+	// What the editor holds now, and whether a Save and leave is still wanted: a Save that is in flight
+	// answers later, after the manager may have typed more or chosen Keep editing.
+	const latest = useRef(raw);
+	latest.current = raw;
+	const leaveWanted = useRef(false);
 
 	const dirty = useMemo(() => editable && !sameDefinition(raw, saved), [editable, raw, saved]);
 	const form = useMemo(() => toForm(raw), [raw]);
@@ -195,6 +200,7 @@ export function DraftEditorScreen({
 	function save(afterwards?: () => void) {
 		if (!editable || pending || blocker || failure?.conflict) return;
 		const sent = raw;
+		leaveWanted.current = afterwards !== undefined;
 		setFailure(null);
 		start(async () => {
 			let result: Awaited<ReturnType<typeof saveDraftAction>>;
@@ -234,7 +240,7 @@ export function DraftEditorScreen({
 				if (landed) {
 					// Leaving is right only when nothing was typed since that save. Otherwise the newer edits stay
 					// unsaved, and the toast says so rather than letting "went through" cover them.
-					const nothingNewer = sameDefinition(landed, sent);
+					const nothingNewer = sameDefinition(landed, latest.current);
 					toast(
 						nothingNewer
 							? {
@@ -248,7 +254,7 @@ export function DraftEditorScreen({
 									tone: "waiting"
 								}
 					);
-					if (nothingNewer) afterwards?.();
+					if (nothingNewer && leaveWanted.current) afterwards?.();
 					return;
 				}
 			}
@@ -501,7 +507,10 @@ export function DraftEditorScreen({
 			<Dialog
 				open={guard.leavingTo !== null}
 				onOpenChange={open => {
-					if (!open) guard.stay();
+					if (!open) {
+						leaveWanted.current = false;
+						guard.stay();
+					}
 				}}
 				title="Save your changes first?"
 				description="This draft has edits that are not saved. If you leave without saving, they are lost and the draft keeps its earlier wording."

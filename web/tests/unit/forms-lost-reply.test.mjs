@@ -22,7 +22,7 @@ import { load } from "./support.mjs";
  * normal conflict choice. `e2e/action-failures.spec.ts` drives the same cases through a browser.
  */
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-const lost = { toasts: [], left: 0, reads: 0, server: null, rejectNext: null, leavingTo: null };
+const lost = { toasts: [], left: 0, reads: 0, server: null, rejectNext: null, leavingTo: null, hold: null };
 globalThis.__lostReply = lost;
 const src = new URL("../../src/", import.meta.url);
 
@@ -45,6 +45,7 @@ const mocks = new Map([
 	[
 		"features/forms/actions.ts",
 		`export const saveDraftAction = async input => {
+			if (globalThis.__lostReply.hold) await globalThis.__lostReply.hold;
 			const { server } = globalThis.__lostReply;
 			if (input.etag !== server.etag) return ${JSON.stringify(CONFLICT)};
 			server.definition = input.definition;
@@ -138,6 +139,7 @@ async function openEditor() {
 	lost.reads = 0;
 	lost.rejectNext = null;
 	lost.leavingTo = null;
+	lost.hold = null;
 	let editor;
 	await act(async () => {
 		editor = create(
@@ -293,4 +295,44 @@ test("a lost save that landed while newer edits were typed says both, and keeps 
 	assert.ok(unsaved());
 	assert.ok(!button(editor, "Save draft").props.disabled, "the newer edits can be saved");
 	await act(async () => editor.unmount());
+});
+
+/** Save and leave is pressed after a lost reply and held in flight; "Keep editing" closes the dialog meanwhile. */
+async function leaveThenKeepEditing(typeMore) {
+	const page = await openEditor();
+	lost.leavingTo = "/o/org/p/project/forms";
+	await page.edit("My wording");
+	lost.rejectNext = new TypeError("Failed to fetch");
+	await page.save();
+	let release;
+	lost.hold = new Promise(resolve => (release = resolve));
+	await act(async () => button(page.editor, "Save and leave").props.onClick());
+	await act(async () => find(page.editor, "Dialog").props.onOpenChange(false));
+	if (typeMore) await page.edit("My wording, and more");
+	lost.hold = null;
+	await act(async () => {
+		release();
+		await new Promise(resolve => setTimeout(resolve, 0));
+	});
+	return page;
+}
+
+test("Keep editing while Save and leave is in flight, then typing more: the read-back neither leaves nor loses the newer wording", async () => {
+	const page = await leaveThenKeepEditing(true);
+	assert.equal(lost.reads, 1);
+	assert.equal(lost.left, 0, "the cancelled leave is honoured");
+	assert.equal(page.label(), "My wording, and more");
+	assert.ok(page.unsaved());
+	assert.equal(lost.toasts.at(-1).title, "Your earlier save went through.");
+	assert.equal(lost.toasts.at(-1).description, "Your newer edits are not saved yet.");
+	await act(async () => page.editor.unmount());
+});
+
+test("Keep editing while Save and leave is in flight, with nothing typed: the cancelled leave is still honoured", async () => {
+	const page = await leaveThenKeepEditing(false);
+	assert.equal(lost.reads, 1);
+	assert.equal(lost.left, 0);
+	assert.ok(!page.unsaved());
+	assert.equal(lost.toasts.at(-1).description, "version check-v1 has the wording you saved.".replace("version ", ""));
+	await act(async () => page.editor.unmount());
 });
