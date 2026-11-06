@@ -32,9 +32,10 @@ export function capturedLabel(created: Date, now: Date = new Date()): string {
     created.getFullYear() === now.getFullYear() &&
     created.getMonth() === now.getMonth() &&
     created.getDate() === now.getDate();
-  return today
-    ? `Today ${time}`
-    : `${MONTHS[created.getMonth()]} ${two(created.getDate())} · ${time}`;
+  if (today) return `Today ${time}`;
+  // The list keeps records without a date cutoff, so another year's record says which year.
+  const year = created.getFullYear() === now.getFullYear() ? "" : ` ${created.getFullYear()}`;
+  return `${MONTHS[created.getMonth()]} ${two(created.getDate())}${year} · ${time}`;
 }
 
 function fromDevice(record: Observation): QueueRecord {

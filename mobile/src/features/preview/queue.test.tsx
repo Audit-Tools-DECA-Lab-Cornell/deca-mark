@@ -163,6 +163,12 @@ describe("When a record was captured (MOB-38)", () => {
     expect(capturedLabel(new Date(2026, 9, 27, 23, 59), now)).toBe("Oct 27 · 23:59");
   });
 
+  it("adds the year only for a record from another year", () => {
+    expect(capturedLabel(new Date(2026, 0, 3, 8, 0), now)).toBe("Jan 03 · 08:00");
+    expect(capturedLabel(new Date(2025, 9, 2, 11, 32), now)).toBe("Oct 02 2025 · 11:32");
+    expect(capturedLabel(new Date(2025, 9, 28, 15, 0), now)).toBe("Oct 28 2025 · 15:00");
+  });
+
   it("does not print NaN for a time that cannot be read", () => {
     expect(capturedLabel(new Date("not a date"), now)).toBe("Time not recorded");
   });
@@ -172,7 +178,9 @@ describe("When a record was captured (MOB-38)", () => {
     try {
       expect(queue.records.length).toBeGreaterThan(0);
       for (const record of queue.records)
-        expect(record.captured).toMatch(/^(Today \d\d:\d\d|[A-Z][a-z]{2} \d\d · \d\d:\d\d)$/);
+        expect(record.captured).toMatch(
+          /^(Today \d\d:\d\d|[A-Z][a-z]{2} \d\d( \d{4})? · \d\d:\d\d)$/,
+        );
     } finally {
       sqlite.close();
     }
