@@ -336,3 +336,37 @@ test("Keep editing while Save and leave is in flight, with nothing typed: the ca
 	assert.equal(lost.toasts.at(-1).description, "version check-v1 has the wording you saved.".replace("version ", ""));
 	await act(async () => page.editor.unmount());
 });
+
+/** An ordinary Save and leave (no lost reply) held in flight; Keep editing closes the dialog meanwhile. */
+async function plainLeaveThenKeepEditing(typeMore) {
+	const page = await openEditor();
+	lost.leavingTo = "/o/org/p/project/forms";
+	await page.edit("My wording");
+	let release;
+	lost.hold = new Promise(resolve => (release = resolve));
+	await act(async () => button(page.editor, "Save and leave").props.onClick());
+	await act(async () => find(page.editor, "Dialog").props.onOpenChange(false));
+	if (typeMore) await page.edit("My wording, and more");
+	lost.hold = null;
+	await act(async () => {
+		release();
+		await new Promise(resolve => setTimeout(resolve, 0));
+	});
+	return page;
+}
+
+test("an ordinary Save and leave cancelled with Keep editing and more typed neither leaves nor claims the newer wording", async () => {
+	const page = await plainLeaveThenKeepEditing(true);
+	assert.equal(lost.left, 0);
+	assert.equal(page.label(), "My wording, and more");
+	assert.ok(page.unsaved());
+	assert.equal(lost.toasts.at(-1).description, "Your newer edits are not saved yet.");
+	await act(async () => page.editor.unmount());
+});
+
+test("an ordinary Save and leave cancelled with Keep editing stays on the page", async () => {
+	const page = await plainLeaveThenKeepEditing(false);
+	assert.equal(lost.left, 0);
+	assert.ok(!page.unsaved());
+	await act(async () => page.editor.unmount());
+});

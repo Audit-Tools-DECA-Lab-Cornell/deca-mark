@@ -229,12 +229,22 @@ export function DraftEditorScreen({
 				setRefused({});
 				setGeneral([]);
 				setSavedOnce(true);
-				toast({
-					title: "Draft saved",
-					description: `${version.code} has the wording you see here.`,
-					tone: "saved"
-				});
-				afterwards?.();
+				// More may have been typed, or the leave cancelled, while this Save was in flight.
+				const nothingNewer = sameDefinition(sent, latest.current);
+				toast(
+					nothingNewer
+						? {
+								title: "Draft saved",
+								description: `${version.code} has the wording you see here.`,
+								tone: "saved"
+							}
+						: {
+								title: "Draft saved",
+								description: "Your newer edits are not saved yet.",
+								tone: "waiting"
+							}
+				);
+				if (nothingNewer && leaveWanted.current) afterwards?.();
 				return;
 			}
 			if (result.conflict && unconfirmed.current.length > 0) {
