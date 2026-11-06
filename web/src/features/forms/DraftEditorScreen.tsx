@@ -232,13 +232,23 @@ export function DraftEditorScreen({
 			if (result.conflict && unconfirmed.current.length > 0) {
 				const landed = await readBack();
 				if (landed) {
-					toast({
-						title: "Your earlier save went through.",
-						description: `${version.code} has the wording you saved.`,
-						tone: "saved"
-					});
-					// Leaving is right only when nothing was typed since that save.
-					if (sameDefinition(landed, sent)) afterwards?.();
+					// Leaving is right only when nothing was typed since that save. Otherwise the newer edits stay
+					// unsaved, and the toast says so rather than letting "went through" cover them.
+					const nothingNewer = sameDefinition(landed, sent);
+					toast(
+						nothingNewer
+							? {
+									title: "Your earlier save went through.",
+									description: `${version.code} has the wording you saved.`,
+									tone: "saved"
+								}
+							: {
+									title: "Your earlier save went through.",
+									description: "Your newer edits are not saved yet.",
+									tone: "waiting"
+								}
+					);
+					if (nothingNewer) afterwards?.();
 					return;
 				}
 			}

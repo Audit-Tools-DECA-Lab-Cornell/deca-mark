@@ -276,3 +276,21 @@ test("Save and leave after a lost reply leaves only when nothing was typed since
 	assert.ok(page.unsaved());
 	await act(async () => page.editor.unmount());
 });
+
+test("a lost save that landed while newer edits were typed says both, and keeps the newer edits unsaved", async () => {
+	const { editor, edit, save, label, unsaved } = await openEditor();
+	await edit("My wording");
+	lost.rejectNext = new TypeError("Failed to fetch");
+	await save();
+	await edit("My wording, edited");
+	await save();
+	assert.equal(lost.reads, 1);
+	assert.equal(lost.toasts.length, 1);
+	assert.equal(lost.toasts[0].title, "Your earlier save went through.");
+	assert.equal(lost.toasts[0].description, "Your newer edits are not saved yet.");
+	assert.notEqual(lost.toasts[0].tone, "saved");
+	assert.equal(label(), "My wording, edited");
+	assert.ok(unsaved());
+	assert.ok(!button(editor, "Save draft").props.disabled, "the newer edits can be saved");
+	await act(async () => editor.unmount());
+});
