@@ -6,6 +6,8 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { cx } from "@/lib/cx";
 
+import { LinkPending } from "./LinkPending";
+
 export type InkTab = {
 	href: string;
 	label: string;
@@ -177,6 +179,7 @@ export function InkTabs({ items, label, current, className }: InkTabsProps) {
 												: "text-on-nav hover:bg-on-nav/12 active:bg-on-nav/20"
 										)}>
 										{item.label}
+										<LinkPending className="inset-x-5 bottom-1.5" />
 										{badge > 0 && (
 											<>
 												<span
