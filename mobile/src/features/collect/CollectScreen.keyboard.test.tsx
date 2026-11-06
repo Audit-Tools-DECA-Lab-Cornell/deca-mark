@@ -813,7 +813,7 @@ describe("the status line tells the truth about the draft (MOB-41, audit C08)", 
       expect(screen.says(NOT_KEPT)).toBe(true);
     });
 
-    it("a tablet in landscape has room to keep saying it with the keyboard up", async () => {
+    it("a tablet in landscape still renders it with the keyboard up (in the map column, which has no keyboard lift, as on master)", async () => {
       use(PILOT_DEVICES[6] as Pilot);
       const screen = open(failed());
       await keyboard(true);
