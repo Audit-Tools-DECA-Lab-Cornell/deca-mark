@@ -35,10 +35,12 @@ describe("field guide", () => {
   it("explains the queue words the screens use", () => {
     const saving = GUIDE.find((section) => section.id === "saving");
     const text = saving?.body.join(" ") ?? "";
-    for (const word of ["On device", "Uploading", "Uploaded", "Needs attention"])
+    for (const word of ["On device", "Uploaded", "Needs attention"])
       expect(text).toContain(word);
-    // A record is never "held" on a device (MOB-37, MOB-38): the guide names no state the list cannot show.
+    // The guide names only the states a device shows (MOB-37, MOB-38): never "held", and no "Uploading"
+    // until a record is marked in flight (MOB-50).
     expect(text).not.toContain("Held");
+    expect(text).not.toContain("Uploading");
     expect(text).toContain("Retry these uploads");
     expect(text).toContain("sends the same record again and does not change it");
   });

@@ -91,13 +91,11 @@ describe("the Observations tab sits inside the tab navigator that draws the dock
     expect(bar.type).toBe(TabDock);
   });
 
-  it("goes nowhere when it opens: whatever it navigates to is still inside (tabs)", () => {
+  it("goes nowhere when it opens: it makes no move at all", () => {
     world.records = [record("a1", "onDevice")];
     mount(createElement(ObservationsTab));
-    const moves = [...world.redirects, ...takeNavigation()];
-    for (const href of moves) {
-      expect(insideTabs(tree.resolve(href)), `opening Observations went to ${href}`).toBe(true);
-    }
+    // Not even a move that stays inside (tabs): a redirect to "/records" would now land on a project.
+    expect([...world.redirects, ...takeNavigation()]).toEqual([]);
   });
 });
 

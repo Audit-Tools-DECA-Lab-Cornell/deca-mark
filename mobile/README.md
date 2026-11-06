@@ -98,8 +98,9 @@ both, and its content spans the full window width — a deliberate departure fro
   Layers menu); permission is asked then, foreground only. A dot and an accuracy circle in the map
   palette; the button centres on the observer or, while placing, brings their position under the
   cross. The fix is never stored, uploaded or kept, and placement stays by hand.
-- **Real sync, relabelled.** Records show the existing queue states — held, on device only,
-  synced, needs attention — with no send button. Records are immutable and there is no
+- **Real sync, relabelled.** The Observations tab lists every record on this device in the queue
+  words — On device, Uploaded, Needs attention (and Uploading where the queue says so) — with no
+  send button; "Retry these uploads" sends a refused record again unchanged. Records are immutable and there is no
   bidirectional edit sync or contested-record workflow; API receipt revisions do not imply one.
 - Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. A reconnect or a resume also makes records waiting out a retry delay due at once (spaced 5 s from the last upload attempt, and never before a server's `Retry-After`; a new coordinator right after an attempt (a token refresh, a sign-in or an app restart starts one with no memory of the last attempt), or a flap that aborts an upload in flight, can send sooner), and the drain sleeps otherwise: one timer waits for the earliest remaining delay, an empty queue does nothing, and a screen re-reads records only when one changed (MOB-39). Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
 

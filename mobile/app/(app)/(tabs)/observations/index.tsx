@@ -36,7 +36,6 @@ function observationsStyles(t: Theme) {
     // The list pads its own bottom, so rows scroll under the floating dock instead of stopping above it.
     screen: { paddingBottom: 0 },
     head: { gap: t.space.s6, marginBottom: t.space.s6 },
-    separator: { height: t.space.s4 },
     footer: { gap: t.space.s2, paddingTop: t.space.s6, paddingHorizontal: t.space.s1 },
   });
 }
@@ -189,7 +188,7 @@ export default function ObservationsScreen() {
       kind="empty"
       action={
         <Button
-          variant="ink"
+          variant="primary"
           label="Go to projects"
           iconRight="arrow-right"
           onPress={() => router.navigate("/")}
@@ -219,8 +218,9 @@ export default function ObservationsScreen() {
         testID="observations-list"
         data={shown}
         keyExtractor={(record) => record.id}
-        renderItem={({ item }) => <ObservationRow record={item} />}
-        ItemSeparatorComponent={Separator}
+        renderItem={({ item, index }) => (
+          <ObservationRow record={item} first={index === 0} last={index === shown.length - 1} />
+        )}
         ListHeaderComponent={head}
         ListEmptyComponent={empty}
         ListFooterComponent={foot}
@@ -240,9 +240,4 @@ export default function ObservationsScreen() {
       />
     </Screen>
   );
-}
-
-function Separator() {
-  const s = useStyles(observationsStyles);
-  return <View style={s.separator} />;
 }
