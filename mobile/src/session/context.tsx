@@ -54,6 +54,11 @@ export type FieldSessionValue = {
   readonly armed: boolean;
   readonly state: SessionState;
   readonly status: string;
+  /**
+   * True when the last write of the open observation's draft failed: its point and answers are then
+   * only in memory, and Collect says so instead of "Draft kept on this device" (MOB-41).
+   */
+  readonly draftWriteFailed: boolean;
   readonly recovered: ObservationDraft | null;
   readonly unreadableDraft: boolean;
   readonly context: RoundContext | null;
@@ -100,6 +105,7 @@ const missing: FieldSessionValue = {
   armed: false,
   state: startSession(),
   status: "",
+  draftWriteFailed: false,
   recovered: null,
   unreadableDraft: false,
   context: null,

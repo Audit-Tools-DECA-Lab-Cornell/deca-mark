@@ -53,6 +53,7 @@ async function harness(roundType: RoundContext["roundType"]) {
   };
   const identity: RefObject<ObservationIdentity | null> = { current: null };
   const stateRef: RefObject<SessionState> = { current: startSession() };
+  const committing: RefObject<boolean> = { current: false };
   const placementRef: RefObject<Placement["source"]> = { current: "hand" };
   let placed: Coordinate | null = null;
   const actions = () =>
@@ -71,6 +72,7 @@ async function harness(roundType: RoundContext["roundType"]) {
       accountId: "local",
       identity,
       stateRef,
+      committing,
       placementRef,
       holdIdentity: (value) => {
         identity.current = value;
@@ -100,7 +102,6 @@ async function harness(roundType: RoundContext["roundType"]) {
           placement: placementRef.current,
           next,
           coordinate,
-          failed: vi.fn(),
         }),
       wake: vi.fn(),
       current: () => true,

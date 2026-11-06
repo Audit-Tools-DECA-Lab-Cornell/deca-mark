@@ -75,6 +75,8 @@ function reviewStyles(t: Theme) {
  * Review, before saving (MOB-26): every visible answer, grouped by act, each row a way back to its
  * question. Validation happens here and only here: missing answers are named on their rows and the
  * save says how many remain. Saving stores the record on this device; uploading follows on its own.
+ * While it stores, nothing else on the step answers a tap (MOB-41): a row, "Keep answering" or
+ * "Discard observation" would change the observation that is being written.
  */
 export function ReviewStep({
   form,
@@ -172,7 +174,9 @@ export function ReviewStep({
                   accessibilityRole="button"
                   accessibilityLabel={`${question.label}. ${reason ? `${REASON[reason]}. ` : ""}${shown}.`}
                   accessibilityHint="Answers this question again."
-                  onPress={() => onJump(index)}
+                  accessibilityState={{ disabled: saving }}
+                  disabled={saving}
+                  onPress={saving ? undefined : () => onJump(index)}
                   style={({ pressed }) => [s.row, pressed ? { backgroundColor: t.c.well } : null]}
                 >
                   <Text variant="small" tone="ink2" style={s.question}>
@@ -227,8 +231,8 @@ export function ReviewStep({
           testID="collect-save"
         />
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20, alignItems: "center" }}>
-          <TextLink label="Keep answering" arrow="left" onPress={onBack} />
-          <TextLink label="Discard observation" tone="ink" onPress={onDiscard} />
+          <TextLink label="Keep answering" arrow="left" disabled={saving} onPress={onBack} />
+          <TextLink label="Discard observation" tone="ink" disabled={saving} onPress={onDiscard} />
         </View>
       </View>
     </View>

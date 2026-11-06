@@ -111,8 +111,11 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
         }
       : null;
 
-  const persist = (next: SessionState, coordinate: Coordinate | null) =>
-    persistDraft({
+  const persist = (next: SessionState, coordinate: Coordinate | null) => {
+    // While a save commits, its draft is retired with it: a write queued now would outlive the commit
+    // and put a draft carrying the committed id back (MOB-41).
+    if (memory.committing.current) return;
+    const written = persistDraft({
       database,
       key,
       ready,
@@ -123,11 +126,16 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
       placement: placementRef.current,
       next,
       coordinate,
-      failed: () => {
-        if (current())
-          setStatus("The draft could not be written to storage. Answers stay on screen.");
-      },
     });
+    if (!written) return;
+    const sequence = ++memory.draftWrites.current;
+    void written.then((kept) => {
+      // Only the newest write speaks, and only while its account and observation are the open ones.
+      if (!current() || memory.draftWrites.current !== sequence) return;
+      memory.setDraftWriteFailed(!kept);
+      if (!kept) setStatus("The draft could not be written to storage. Answers stay on screen.");
+    });
+  };
   useDraftRecovery({ database, key, ready, setRecovered, setUnreadableDraft, setStatus });
   const parking = useParkedActions({
     database,
@@ -203,6 +211,7 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
     accountId: account?.id ?? key,
     identity,
     stateRef,
+    committing: memory.committing,
     placementRef,
     holdIdentity,
     setPlaced,
