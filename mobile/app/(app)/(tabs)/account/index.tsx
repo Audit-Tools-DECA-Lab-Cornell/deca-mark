@@ -36,8 +36,8 @@ function accountStyles(t: Theme) {
 /**
  * Account (MOB-07): who is signed in and their observer code, what this account has on this device,
  * the screen orientation, the field guide, and the two ways to leave: sign out (records wait here for
- * this account) and delete the account. Nothing here claims an upload: this build does not upload yet
- * (MOB-29 connects the uploader), and the screen says so.
+ * this account) and delete the account. Records upload by themselves while the app is open and online
+ * (MOB-29); practice records never do, and the screen says so (MOB-37).
  */
 export default function AccountScreen() {
   const s = useStyles(accountStyles);
@@ -129,13 +129,19 @@ export default function AccountScreen() {
                 title="Unfinished observations"
                 trailing={<Text variant="monoData">{`${work.drafts}`}</Text>}
               />
+              {work.practice > 0 ? (
+                <ListRow
+                  divider
+                  title="Practice records"
+                  subtitle="Stay on this device and are never uploaded."
+                  trailing={<Text variant="monoData">{`${work.practice}`}</Text>}
+                  accessibilityLabel={`Practice records: ${work.practice}. They stay on this device and are never uploaded.`}
+                  testID="account-practice"
+                />
+              ) : null}
             </>
           )}
         </Island>
-        <Note tone="neutral" title="This version does not upload yet." testID="account-no-upload">
-          Records stay on this device until an update of DECA Mark connects uploading. Nothing is
-          lost by waiting.
-        </Note>
 
         <Island title="Screen orientation">
           <RadioRows

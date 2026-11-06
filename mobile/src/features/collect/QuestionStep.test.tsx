@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { StyleSheet } from "react-native";
 import { act, create, type ReactTestInstance } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
 import { type FormDefinition, parseFormDefinition } from "../../forms/definition";
@@ -7,7 +8,8 @@ import { janetTestV1 } from "../../forms/fixtures/janet-test-v1";
 import { startSession } from "../../forms/session";
 import { PreferencesProvider } from "../../ui/preferences";
 import { ThemeProvider } from "../../ui/theme";
-import { caretLine, QuestionStep } from "./QuestionStep";
+import { caretRow, type MeasuredLine } from "./caret-line";
+import { QuestionStep } from "./QuestionStep";
 
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
 vi.mock(
@@ -46,6 +48,11 @@ const hostProps = (node: ReactTestInstance) =>
     keyboardShouldPersistTaps?: string;
     value?: string;
     onSelectionChange?: (event: unknown) => void;
+    onTextLayout?: (event: unknown) => void;
+    pointerEvents?: string;
+    importantForAccessibility?: string;
+    accessibilityElementsHidden?: boolean;
+    style?: unknown;
   };
 
 function mount(
@@ -113,6 +120,14 @@ function mount(
           nativeEvent: { selection: { start, end } },
         }),
       ),
+    /** The hidden text the step measures its wrapped lines with, when it renders one. */
+    mirror: () => hosts("Text").find((node) => hostProps(node).onTextLayout),
+    /** Reports the lines the hidden text laid out, as the native text does after a layout. */
+    measure: (lines: readonly MeasuredLine[]) =>
+      act(() => {
+        const mirror = hosts("Text").find((node) => hostProps(node).onTextLayout);
+        mirror && hostProps(mirror).onTextLayout?.({ nativeEvent: { lines } });
+      }),
     /** The minimum height the answer field is drawn at, and whether it carries a character counter. */
     drawn: () => {
       const input = hosts("TextInput")[0];
@@ -384,15 +399,13 @@ describe("the question step on a keyboard (MOB-34)", () => {
       expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP + 195 + 8 - 89, animated: false });
     });
 
-    it("reads the caret's row from the line breaks, and from the characters once lines wrap", () => {
-      expect(caretLine(SIX, 0, 6)).toBe(0);
-      expect(caretLine(SIX, 10, 6)).toBe(2);
-      expect(caretLine("a\nb\nc", 2, 3)).toBe(1);
-      // A wrapped paragraph after one break: the caret is never taken above the break before it.
-      expect(caretLine(`a\n${"x".repeat(98)}`, 2, 5)).toBe(1);
-      // One long paragraph wrapped into five rows: a caret halfway through sits near the middle row.
-      expect(caretLine("x".repeat(100), 50, 5)).toBe(2);
-      expect(caretLine("x".repeat(100), 100, 5)).toBe(4);
+    it("falls back to the line breaks before the caret until the lines are measured", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(SIX);
+      m.select(10);
+      lay(m);
+      // Line 3 begins after "One.\nTwo.\n"; with no measured lines the breaks are all that is known.
+      shows(m, 2, VIEW);
     });
 
     it("follows the foot again when the caret returns to the end", () => {
@@ -403,6 +416,140 @@ describe("the question step on a keyboard (MOB-34)", () => {
       m.select(SIX.length);
       lay(m);
       expect(m.scrollTo).toHaveBeenLastCalledWith({ y: TOP + 195 + 8 - VIEW, animated: false });
+    });
+  });
+
+  // MOB-35 follow-up (Greptile): the caret's row comes from the measured lines, not from a ratio of characters.
+  describe("a caret among wrapped and short lines", () => {
+    const TOP = 80;
+    const LINE = 22;
+    /** What the native text reports for `text` wrapped at `width` characters: each hard-ended line keeps its break. */
+    const wrapAt = (text: string, width: number): MeasuredLine[] => {
+      const lines: string[] = [];
+      const paragraphs = text.split("\n");
+      paragraphs.forEach((paragraph, index) => {
+        const end = index < paragraphs.length - 1 ? "\n" : "";
+        if (paragraph === "") {
+          lines.push(end);
+          return;
+        }
+        for (let at = 0; at < paragraph.length; at += width) {
+          const last = at + width >= paragraph.length;
+          lines.push(paragraph.slice(at, at + width) + (last ? end : ""));
+        }
+      });
+      return lines.map((line, row) => ({ text: line, y: row * LINE, height: LINE }));
+    };
+    /** 200 characters that wrap into ten rows, then eight one-character lines: 18 rows in all. */
+    const MIXED = `${"x".repeat(200)}\n${[..."abcdefgh"].join("\n")}`;
+    const lay = (m: ReturnType<typeof mount>, view: number, rowsInBox: number) => {
+      m.layout(m.scroll, 0, view);
+      m.layout(m.field, TOP, rowsInBox * LINE + 32 + 31);
+      m.layout(m.input, 2, rowsInBox * LINE + 32);
+    };
+    const lineTop = (row: number) => TOP + 2 + 16 + row * LINE;
+    const shows = (m: ReturnType<typeof mount>, row: number, view: number) => {
+      const [{ y }] = m.scrollTo.mock.calls.at(-1) as [{ y: number }];
+      expect(lineTop(row)).toBeGreaterThanOrEqual(y);
+      expect(lineTop(row) + LINE).toBeLessThanOrEqual(y + view);
+    };
+
+    it("keeps the row of a caret at the end of a long wrapped paragraph in view (a phone in landscape)", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(MIXED);
+      m.measure(wrapAt(MIXED, 20));
+      // Offset 199 is the last character of the wrapped paragraph: row 9 of 18, not row 16.
+      m.select(199);
+      lay(m, 89, 18);
+      shows(m, 9, 89);
+    });
+
+    it("keeps the caret's row in view after a rotation lays the text out again at another width", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(MIXED);
+      m.measure(wrapAt(MIXED, 20));
+      m.select(199);
+      lay(m, 114, 18);
+      shows(m, 9, 114);
+      // The phone turns: the text is wider, so the paragraph wraps into five rows and the text has 13.
+      m.measure(wrapAt(MIXED, 40));
+      lay(m, 89, 13);
+      shows(m, 4, 89);
+    });
+
+    it("keeps a caret on a short line after a wrapped paragraph on its row", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(MIXED);
+      m.measure(wrapAt(MIXED, 20));
+      // The "c" is the third short line: after the 201 characters of the paragraph and "a\nb\n".
+      m.select(201 + 4);
+      lay(m, 89, 18);
+      shows(m, 12, 89);
+    });
+
+    it("still follows the foot with the caret at the end of the mixed answer", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(MIXED);
+      m.measure(wrapAt(MIXED, 20));
+      m.select(MIXED.length);
+      lay(m, 89, 18);
+      expect(m.scrollTo).toHaveBeenLastCalledWith({
+        y: TOP + (18 * LINE + 32 + 31) + 8 - 89,
+        animated: false,
+      });
+    });
+
+    it("ignores lines measured for other text and falls back to the line breaks", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText("One.\nTwo.\nThree.\nFour.\nFive.\nSix.");
+      m.measure(wrapAt("a very different answer", 10));
+      m.select(10);
+      lay(m, 89, 6);
+      shows(m, 2, 89);
+    });
+
+    it("measures with a hidden, untouchable text that adds nothing to the layout", () => {
+      const m = mount("play_event_summary", { keyboardUp: true });
+      m.typeText(MIXED);
+      const mirror = m.mirror();
+      expect(mirror).toBeDefined();
+      let holder = (mirror as ReactTestInstance).parent;
+      while (holder && (holder.type as unknown) !== "View") holder = holder.parent;
+      const holderProps = hostProps(holder as ReactTestInstance);
+      expect(holderProps.pointerEvents).toBe("none");
+      expect(holderProps.importantForAccessibility).toBe("no-hide-descendants");
+      expect(holderProps.accessibilityElementsHidden).toBe(true);
+      expect(StyleSheet.flatten(holderProps.style as never)).toMatchObject({
+        position: "absolute",
+        opacity: 0,
+      });
+      // It mirrors the answer so its wrapping is the field's; an empty answer renders none.
+      expect((mirror as ReactTestInstance).children.join("")).toBe(MIXED);
+      expect(mount("play_event_summary", { keyboardUp: true }).mirror()).toBeUndefined();
+    });
+  });
+
+  describe("the caret's measured row", () => {
+    const lines: MeasuredLine[] = [
+      { text: "xxxx", y: 0, height: 20 },
+      { text: "xx\n", y: 20, height: 20 },
+      { text: "a\n", y: 40, height: 20 },
+      { text: "b", y: 60, height: 20 },
+    ];
+    const text = "xxxxxx\na\nb";
+
+    it("walks the line texts to the caret's offset", () => {
+      expect(caretRow(text, 0, lines)).toEqual({ y: 0, height: 20 });
+      expect(caretRow(text, 3, lines)).toEqual({ y: 0, height: 20 });
+      expect(caretRow(text, 5, lines)).toEqual({ y: 20, height: 20 });
+      expect(caretRow(text, 7, lines)).toEqual({ y: 40, height: 20 });
+      expect(caretRow(text, 10, lines)).toEqual({ y: 60, height: 20 });
+    });
+
+    it("tells nothing when the lines do not belong to the text", () => {
+      expect(caretRow("something else", 3, lines)).toBeNull();
+      expect(caretRow(`${text} and more`, 3, lines)).toBeNull();
+      expect(caretRow(text, 3, [])).toBeNull();
     });
   });
 

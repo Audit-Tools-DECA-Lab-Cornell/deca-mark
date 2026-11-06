@@ -3,6 +3,8 @@ import type { AnswerValue } from "../../forms/definition";
 import type { ResolvedQuestion } from "../../forms/engine";
 import { formatTemporalValue } from "../../forms/temporal";
 import { Note, Text, Textarea, TextInput } from "../../ui";
+import { CaretMirror } from "./CaretMirror";
+import type { MeasuredLine } from "./caret-line";
 import { TemporalInput } from "./TemporalInput";
 
 export function QuestionValueInput({
@@ -17,6 +19,7 @@ export function QuestionValueInput({
   onFieldLayout,
   onInputLayout,
   onCaretChange,
+  onLinesChange,
 }: {
   readonly question: ResolvedQuestion;
   readonly value: AnswerValue | undefined;
@@ -30,6 +33,8 @@ export function QuestionValueInput({
   readonly onInputLayout: (event: LayoutChangeEvent) => void;
   /** Where the caret sits in a multi-line answer, as a character offset; `Textarea` never scrolls itself. */
   readonly onCaretChange?: ((caret: number) => void) | undefined;
+  /** The wrapped lines of the answer as laid out at the field's width, for `caretRow`. */
+  readonly onLinesChange?: ((lines: readonly MeasuredLine[]) => void) | undefined;
 }) {
   const automatic = (question.valueSource ?? "manual") !== "manual";
   const source = {
@@ -79,6 +84,9 @@ export function QuestionValueInput({
               maxLength={question.maxLength}
               placeholder={question.placeholder}
             />
+          ) : null}
+          {question.kind === "text" && (question.rows ?? 1) > 1 && text !== "" && onLinesChange ? (
+            <CaretMirror text={text} onLines={onLinesChange} />
           ) : null}
           {(question.kind === "text" && (question.rows ?? 1) <= 1) || question.kind === "number" ? (
             <TextInput
