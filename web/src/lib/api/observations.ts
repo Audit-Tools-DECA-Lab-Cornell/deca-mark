@@ -20,6 +20,7 @@ export const historicalObservationSchema = z.object({
 	site_name: z.string(),
 	observer: z.string(),
 	observed_at: z.string(),
+	started_at: z.string().nullable().default(null),
 	received_at: z.string(),
 	revision: z.number().int(),
 	answers: z.record(z.string(), z.unknown()),

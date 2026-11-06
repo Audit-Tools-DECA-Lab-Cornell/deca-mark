@@ -69,6 +69,18 @@
             "title": "Site Id",
             "type": "string"
           },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
           "zone_id": {
             "format": "uuid",
             "title": "Zone Id",
@@ -147,6 +159,18 @@
             "format": "uuid",
             "title": "Site Id",
             "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
           },
           "zone_id": {
             "format": "uuid",
@@ -1327,6 +1351,18 @@
           "spatial_support": {
             "$ref": "#/components/schemas/SpatialSupport"
           },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
           "user_id": {
             "format": "uuid",
             "title": "User Id",
@@ -1493,6 +1529,18 @@
           },
           "spatial_support": {
             "$ref": "#/components/schemas/SpatialSupport"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
           },
           "user_id": {
             "format": "uuid",

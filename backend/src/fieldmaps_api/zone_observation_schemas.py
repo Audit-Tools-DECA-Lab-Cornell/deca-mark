@@ -47,6 +47,7 @@ class BoundObservationBase(BaseModel):
     form_version: Code
     observer: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=12)]
     observed_at: AwareDatetime
+    started_at: AwareDatetime | None = None
     answers: Annotated[dict[str, AnswerValue], Field(max_length=200)]
 
     @field_validator("answers")
@@ -66,14 +67,16 @@ class BoundObservationBase(BaseModel):
             normalized[key] = value
         return normalized
 
-    @field_validator("observed_at", mode="before")
+    @field_validator("observed_at", "started_at", mode="before")
     @classmethod
-    def capture_time_format(cls, value: JsonValue) -> str:
-        return CAPTURE_TIME_TEXT.validate_python(value)
+    def capture_time_format(cls, value: JsonValue) -> str | None:
+        return None if value is None else CAPTURE_TIME_TEXT.validate_python(value)
 
-    @field_validator("observed_at")
+    @field_validator("observed_at", "started_at")
     @classmethod
-    def utc_capture_time(cls, value: datetime) -> datetime:
+    def utc_capture_time(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return None
         try:
             return value.astimezone(UTC)
         except OverflowError as error:

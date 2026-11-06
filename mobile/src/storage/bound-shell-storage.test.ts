@@ -36,6 +36,7 @@ const input: ObservationInput = {
   projectId: identity.projectId,
   siteId: identity.siteId,
   createdAt: boundRecord.createdAt,
+  startedAt: "2026-10-11T09:59:00.000Z",
   binding,
 };
 

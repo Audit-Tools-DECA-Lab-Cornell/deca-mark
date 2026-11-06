@@ -23,6 +23,7 @@ const identity = {
   id: z.uuid(),
   coordinates: coordinateSchema,
   createdAt: z.iso.datetime(),
+  startedAt: z.iso.datetime().optional(),
   storageStatus: storageStatusSchema,
   syncError: z.string().default(""),
   syncRejectionCode: z.string().optional(),

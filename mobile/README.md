@@ -75,6 +75,11 @@ both, and its content spans the full window width — a deliberate departure fro
 - **Drafts survive a force quit.** Every answer is written to its own SQLite table as it is
   tapped. A draft left behind is offered back as Resume or Discard above the assignments list.
   Drafts are account-scoped and never enter the upload queue.
+- **Observation timestamps.** First confirmed point placement, or Inventory Start, stamps the draft's
+  `startedAt`. Saving copies that original instant into the completed record and frozen upload body
+  as `started_at`; `createdAt` remains the Save time sent as `observed_at`. Adjustment and recovery
+  keep the original start. Older saved records have an unknown start and retain their exact queued
+  bodies. This adds a JSON payload field without changing the SQLite schema version or resetting data.
 - **Validation only at review.** The review sheet is act-ordered, jumps back to any question, and
   blocks the save while naming how many required answers are still empty.
 - **An offline field guide** (`app/(app)/(tabs)/account/field-guide.tsx`): placing a point, the

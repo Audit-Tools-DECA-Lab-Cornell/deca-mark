@@ -135,6 +135,7 @@ describe("bounded canonical collection", () => {
         observer: "QA",
         coordinates: [-76.4857, 42.4482],
         createdAt: "2026-10-17T12:00:00.000Z",
+        startedAt: "2026-10-17T11:59:00.000Z",
         context: {
           packageId: binding.packageId,
           packageVersion: "v1",

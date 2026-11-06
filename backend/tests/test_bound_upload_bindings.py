@@ -138,6 +138,7 @@ def test_inventory_uses_explicit_package_role_and_projects_its_zone_anchor(
         round_type="inventory",
         placement="zone",
         answers={"notes": "Synthetic zone inventory"},
+        started_at="2026-10-10T11:59:00Z",
     )
     del payload["coordinates"]
     del payload["first_round"]
@@ -157,6 +158,8 @@ def test_inventory_uses_explicit_package_role_and_projects_its_zone_anchor(
     detail = api_client.get(f"/v1/projects/{site.tenant.project}/observations/{observation}")
     assert detail.status_code == 200, detail.text
     historical = HistoricalObservationDetail.model_validate_json(detail.content)
+    assert historical.started_at is not None
+    assert historical.started_at.isoformat() == "2026-10-10T11:59:00+00:00"
     assert historical.geometry is None
     assert historical.display_anchor is not None
     zone_history = api_client.get(f"{site.url}/zones", params={"package_id": package})

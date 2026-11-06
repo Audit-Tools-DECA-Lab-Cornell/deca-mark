@@ -64,6 +64,7 @@ describe("Manual observer role", () => {
           siteId: "sample-garden",
           observer,
           createdAt: "2026-10-25T10:00:00.000Z",
+          startedAt: "2026-10-25T09:59:00.000Z",
         });
         expect(result, JSON.stringify(result)).toMatchObject({
           ok: true,
@@ -98,6 +99,7 @@ describe("Manual observer role", () => {
       siteId: "sample-garden",
       observer: "AC",
       createdAt: "2026-10-25T10:00:00.000Z",
+      startedAt: "2026-10-25T09:59:00.000Z",
     });
     expect(result).toMatchObject({ ok: true, record: { observer: "JL" } });
   });
@@ -195,6 +197,7 @@ describe("Active observer fields", () => {
     context,
     siteId: "sample-garden",
     createdAt: "2026-10-25T10:00:00.000Z",
+    startedAt: "2026-10-25T09:59:00.000Z",
   } satisfies Omit<ObservationInput, "answers" | "observer">;
 
   it.each([

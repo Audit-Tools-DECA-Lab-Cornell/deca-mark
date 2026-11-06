@@ -61,6 +61,15 @@ Regenerate OpenAPI and both TypeScript declarations with `pnpm contracts:generat
 
 The runtime requires the controlled schema-2 transition before serving stored forms. The migration locks/preflights every row, rejects formerly ignored properties that would acquire meaning, preserves definition JSON/IDs/columns/bindings and restores the published trigger. Follow the [rollout procedure](../database/hosted/form-schema2-rollout.md) before application.
 
+The [reviewed fields-only preservation exception](../docs/decisions/0002-schema2-legacy-preservation.md)
+qualifies the canonical-only migration rule below for existing historical
+instruments. Those raw definitions are validated by the retained historical
+reader and advance their stored schema metadata to 2 without conversion. A
+separate reviewed execution source records its actual SQL under the same pending
+migration version. The current served/written schema number remains 2; new
+authoring remains canonical-only. This exception does not add legacy collector
+installation or rewrite retained upload bodies.
+
 Every party follows one rule:
 
 1. **The API validates writes against the current version and serves only it.** Every form write is checked against the current schema and stored with `schema_version` equal to it; no response carries another number. A write may omit the number, which means the current version; a write that names another number, or `null`, is refused with a typed error (BE-24). After a future schema change, a stale client that omits the number gets the schema's validation error rather than `unknown_schema_version`. The current version is a JSON number equal to it: the clients' JSON readers cannot tell `1.0` from `1`, so the API accepts both and never a boolean or a string.

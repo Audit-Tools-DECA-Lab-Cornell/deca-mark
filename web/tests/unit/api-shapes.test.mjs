@@ -9,6 +9,17 @@ const { boundFormVersions, packageHistorySchema, publicationSchema, siteByCode, 
 const { appendPage, filterQuery, observationPageSchema, observationSummarySchema, pointOf } =
 	await load("lib/api/observations.ts");
 
+test("observation API parsing retains a known or unknown start", () => {
+	const page = observationPageSchema.parse({
+		items: [observation({ started_at: "2026-10-07T13:59:00Z" }), observation({ started_at: null })],
+		next_cursor: null,
+		total_matching: 2,
+		generated_at: "2026-10-08T15:00:00Z"
+	});
+	assert.equal(page.items[0].started_at, "2026-10-07T13:59:00Z");
+	assert.equal(page.items[1].started_at, null);
+});
+
 test("sites, histories and publications are read in the shapes the API serves", () => {
 	const sites = siteListSchema.parse([site(), site({ site_id: uuid(2), code: "empty", package: null })]);
 	assert.equal(sites[0].current_package_id, uuid(100));

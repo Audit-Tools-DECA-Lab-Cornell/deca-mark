@@ -12,7 +12,11 @@ HASH_VERSION: Final = "observation-jcs-1"
 def canonical_bytes(
     project_id: UUID, observation_id: UUID, user_id: UUID, payload: BoundObservationUpload
 ) -> bytes:
-    document = payload.model_dump(mode="json")
+    document = payload.model_dump(mode="json", exclude={"started_at"})
+    if payload.started_at is not None:
+        document["started_at"] = payload.started_at.isoformat(timespec="microseconds").replace(
+            "+00:00", "Z"
+        )
     document["observed_at"] = payload.observed_at.isoformat(timespec="microseconds").replace(
         "+00:00", "Z"
     )

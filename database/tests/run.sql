@@ -47,6 +47,7 @@ SELECT pg_temp.assert_true(
 SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['0001_current_baseline','20261018030756'] FROM fieldmaps_meta.schema_migrations),
   'current baseline and deletion recovery migration are recorded');
 \ir constraints.sql
+\ir observation-started-at.sql
 \ir access.sql
 \ir rls_coverage.sql
 \ir tenancy.sql

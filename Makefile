@@ -12,6 +12,7 @@ help:
 	  'pnpm check          Web + mobile + backend static checks' \
 	  'pnpm test           Web unit + mobile + local API + local SQL tests (Docker required)' \
 	  'pnpm db:start       Start local Supabase for development/testing' \
+	  'pnpm db:migrate:guide Migration commands and hosted schema2 release procedure' \
 	  'pnpm api:hosted:up   Start the local API connected to hosted Supabase' \
 	  'See docs/Workspace.md for setup, database targets, and deployment.'
 

@@ -795,6 +795,8 @@ export interface components {
              * Format: uuid
              */
             site_id: string;
+            /** Started At */
+            started_at?: string | null;
             /**
              * Zone Id
              * Format: uuid
@@ -839,6 +841,8 @@ export interface components {
              * Format: uuid
              */
             site_id: string;
+            /** Started At */
+            started_at?: string | null;
             /**
              * Zone Id
              * Format: uuid
@@ -1343,6 +1347,8 @@ export interface components {
             /** Site Name */
             site_name: string;
             spatial_support: components["schemas"]["SpatialSupport"];
+            /** Started At */
+            started_at?: string | null;
             /**
              * User Id
              * Format: uuid
@@ -1423,6 +1429,8 @@ export interface components {
             /** Site Name */
             site_name: string;
             spatial_support: components["schemas"]["SpatialSupport"];
+            /** Started At */
+            started_at?: string | null;
             /**
              * User Id
              * Format: uuid
