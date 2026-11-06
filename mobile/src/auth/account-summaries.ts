@@ -15,10 +15,8 @@ const summarySchema = z.object({
   userId: z.uuid(),
   email: z.string().nullable(),
   issuer: z.url(),
-  /** Records the server has not acknowledged: on device, needs attention and held. */
+  /** Records the server has not acknowledged: on device, uploading and needs attention. */
   unsent: z.number().int().nonnegative(),
-  /** Of those, held for the project. */
-  held: z.number().int().nonnegative(),
   /** An observation still being answered. */
   drafts: z.number().int().nonnegative(),
   signedOutAt: z.string(),

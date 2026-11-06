@@ -26,7 +26,6 @@ export function useSignOutHere(): (work: LocalWork | null) => Promise<boolean> {
           email: account.email ?? null,
           issuer,
           unsent: work.unsent,
-          held: work.held,
           drafts: work.drafts,
           signedOutAt: new Date().toISOString(),
         });

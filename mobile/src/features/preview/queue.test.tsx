@@ -4,17 +4,24 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { saveObservation } from "../../storage/observation-store";
 import { installPackage } from "../../storage/package-catalog";
 import { boundRecord, entry, memoryDatabase, owner } from "../../storage/package-store.fixture";
-import { type Queue, useQueueForMode } from "./queue";
+import { capturedLabel, type Queue, useQueueForMode } from "./queue";
 
 vi.mock("expo-router", async () => (await import("../../ui/native.fixture")).router);
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
 
-const world = vi.hoisted(() => ({ database: null as unknown, owner: "" }));
+const world = vi.hoisted(() => ({ database: null as unknown, owner: "", wakes: 0 }));
 vi.mock("expo-sqlite", () => ({ useSQLiteContext: () => world.database }));
 vi.mock("../../auth/provider", () => ({
   useAccount: () => ({ key: world.owner, ready: true }),
 }));
-vi.mock("../../sync/provider", () => ({ useSync: () => ({ revision: 0, wake: () => {} }) }));
+vi.mock("../../sync/provider", () => ({
+  useSync: () => ({
+    revision: 0,
+    wake: () => {
+      world.wakes += 1;
+    },
+  }),
+}));
 vi.mock("../../session/provider", () => ({ shortLabel: (id: string) => id.slice(-4) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -49,13 +56,16 @@ const practiceInventory = {
 
 let view: ReactTestRenderer | undefined;
 let queue: Queue;
+let mode: "device" | "preview" = "device";
 function Probe() {
-  queue = useQueueForMode("device");
+  queue = useQueueForMode(mode);
   return null;
 }
 afterEach(async () => {
   await act(async () => view?.unmount());
   view = undefined;
+  mode = "device";
+  world.wakes = 0;
 });
 
 async function open(seed: (sqlite: { exec: (sql: string) => void }) => void) {
@@ -134,6 +144,54 @@ describe("The queue with one bound row in backoff and two practice rows (MOB-37)
       expect(queue.unsent).toBe(0);
       expect(queue.practice).toBe(2);
       expect(queue.counts.uploaded).toBe(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+});
+
+describe("When a record was captured (MOB-38)", () => {
+  const now = new Date(2026, 9, 28, 15, 0);
+
+  it("says Today for this day and the date for an earlier one, in local time", () => {
+    expect(capturedLabel(new Date(2026, 9, 28, 11, 25), now)).toBe("Today 11:25");
+    expect(capturedLabel(new Date(2026, 9, 2, 9, 5), now)).toBe("Oct 02 · 09:05");
+    expect(capturedLabel(new Date(2026, 9, 27, 23, 59), now)).toBe("Oct 27 · 23:59");
+  });
+
+  it("does not print NaN for a time that cannot be read", () => {
+    expect(capturedLabel(new Date("not a date"), now)).toBe("Time not recorded");
+  });
+
+  it("is on every record the device lists", async () => {
+    const sqlite = await open(() => {});
+    try {
+      expect(queue.records.length).toBeGreaterThan(0);
+      for (const record of queue.records)
+        expect(record.captured).toMatch(/^(Today \d\d:\d\d|[A-Z][a-z]{2} \d\d · \d\d:\d\d)$/);
+    } finally {
+      sqlite.close();
+    }
+  });
+});
+
+describe("Pulling the list to refresh wakes the uploader (MOB-38)", () => {
+  it("calls the sync provider's wake() on a device", async () => {
+    const sqlite = await open(() => {});
+    try {
+      queue.uploadNow();
+      expect(world.wakes).toBe(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("sends nothing in preview, which shows sample records", async () => {
+    mode = "preview";
+    const sqlite = await open(() => {});
+    try {
+      queue.uploadNow();
+      expect(world.wakes).toBe(0);
     } finally {
       sqlite.close();
     }

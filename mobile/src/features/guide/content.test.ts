@@ -35,7 +35,11 @@ describe("field guide", () => {
   it("explains the queue words the screens use", () => {
     const saving = GUIDE.find((section) => section.id === "saving");
     const text = saving?.body.join(" ") ?? "";
-    for (const word of ["On device", "Uploaded", "Held", "Needs attention"])
+    for (const word of ["On device", "Uploading", "Uploaded", "Needs attention"])
       expect(text).toContain(word);
+    // A record is never "held" on a device (MOB-37, MOB-38): the guide names no state the list cannot show.
+    expect(text).not.toContain("Held");
+    expect(text).toContain("Retry these uploads");
+    expect(text).toContain("sends the same record again and does not change it");
   });
 });

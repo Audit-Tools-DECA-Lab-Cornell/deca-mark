@@ -1,7 +1,7 @@
 /**
  * The offline field guide (MOB-27 step 5): what an observer needs in the field, readable with no
  * signal. Each section is plain sentences, kept short enough to read between observations. The words
- * follow the screens: "Place point here", "Saved on this device", "Held", "Needs attention".
+ * follow the screens: "Place point here", "Saved on this device", "Uploading", "Needs attention".
  */
 export type GuideSection = {
   readonly id: string;
@@ -81,7 +81,8 @@ export const GUIDE: readonly GuideSection[] = [
     body: [
       "Every tap is kept on this device as you go. If the app closes, the unfinished observation is offered back on the Projects screen.",
       "Save on this device stores the record locally first. It uploads by itself whenever the app is open and online. There is no upload button to remember.",
-      "On device: stored here, not sent yet. Uploaded: the server has it. Held: the project has not published this form version yet, so the record waits safely here. Needs attention: the server turned it away; the record shows why.",
+      "On device: stored here, not sent yet. Uploading: being sent now. Uploaded: the server has it. Needs attention: the server turned it away; the record shows why. The Observations tab lists every record on this device with its state.",
+      "Retry these uploads, on the Observations tab, sends the same record again and does not change it. It is accepted only once the reason on its row is fixed.",
       "A practice record stays on this device and is never uploaded.",
     ],
   },

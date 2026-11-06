@@ -24,7 +24,6 @@ export function useLocalWork(): LocalWork & {
     onDevice: queue.counts.onDevice + queue.counts.uploading,
     uploaded: queue.counts.uploaded,
     unsent: queue.unsent,
-    held: queue.counts.held,
     practice: queue.practice,
     attention: queue.counts.attention,
     drafts: open + session.parked.length,
