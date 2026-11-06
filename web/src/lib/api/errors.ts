@@ -29,6 +29,8 @@ export const errorCopy = {
 	revision_conflict: "Someone else changed this draft. Reload it before saving again.",
 	precondition_required: "Nothing was saved. Reload the site to get the current map package and draft.",
 	payload_too_large: "Nothing was saved. The file is too large. Reduce its size and try again.",
+	online_basemap_unconfirmed:
+		"Nothing was uploaded. The project has an online background map, which observers do not see. Confirm that it is left out, then upload again.",
 	sole_owner: "Give another person this role first. An organization needs an owner and a project needs a manager.",
 	invitation_expired: "This invitation has expired. Ask your project manager for a new one.",
 	archive_unavailable: "This map package is unavailable. Ask the project manager to prepare it again.",
@@ -254,6 +256,7 @@ export function parseApiError(status: number, body: unknown, headers?: HeaderSou
 		case "revision_conflict":
 		case "precondition_required":
 		case "payload_too_large":
+		case "online_basemap_unconfirmed":
 		case "sole_owner":
 		case "invitation_expired":
 		case "archive_unavailable":

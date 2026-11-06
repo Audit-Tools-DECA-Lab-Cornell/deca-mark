@@ -25,6 +25,8 @@ export const errorCopy = {
     "Refresh the project before trying this action again. Your local record is preserved.",
   payload_too_large:
     "This upload is too large. Contact the project manager. Your local record is preserved.",
+  online_basemap_unconfirmed:
+    "A manager has to confirm this map before it is published. Contact the project manager.",
   sole_owner: "Assign another owner before leaving or removing this owner.",
   invitation_expired: "This invitation has expired. Ask for a new invitation.",
   archive_unavailable: "This map package is unavailable. Ask the manager to prepare it again.",
@@ -112,6 +114,7 @@ export function parseApiError(status: number, body: unknown): ApiError {
     case "revision_conflict":
     case "precondition_required":
     case "payload_too_large":
+    case "online_basemap_unconfirmed":
     case "sole_owner":
     case "invitation_expired":
     case "archive_unavailable":

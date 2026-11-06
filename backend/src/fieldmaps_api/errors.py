@@ -43,6 +43,7 @@ type ErrorCode = Literal[
     "revision_conflict",
     "precondition_required",
     "payload_too_large",
+    "online_basemap_unconfirmed",
 ]
 
 

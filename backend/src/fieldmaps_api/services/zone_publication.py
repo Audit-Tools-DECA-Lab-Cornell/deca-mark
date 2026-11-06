@@ -4,10 +4,10 @@ from uuid import UUID, uuid4
 import orjson
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from fieldmaps_api.domain.packages import PackageError
+from fieldmaps_api.domain.packages import InvalidShapeError, OnlineBasemapError, PackageError
 from fieldmaps_api.domain.zone_archive_jobs import ImportJob, PublishJob
 from fieldmaps_api.domain.zone_package_schemas import PackageIdentity, PreparedZonePackage
-from fieldmaps_api.errors import DomainError, RoleRequiredError
+from fieldmaps_api.errors import DomainError, RoleRequiredError, ValidationFailedError
 from fieldmaps_api.queries import zones as q
 from fieldmaps_api.repositories import zones as db
 from fieldmaps_api.services import zone_archives, zones
@@ -81,6 +81,38 @@ async def replay(
     return await finalize(session, request, None) if found is not None else None
 
 
+def refusal(error: PackageError) -> DomainError:
+    """Answer a refused package with the reason the worker gave, not a guess at its cause.
+
+    Only a shape the worker could not read is the zone-ring issue. An online background map the
+    request has not agreed to leave out is a question the client turns into a confirmation.
+    """
+    if isinstance(error, OnlineBasemapError):
+        return DomainError(
+            "online_basemap_unconfirmed",
+            str(error),
+            422,
+            {"layers": [{"name": layer.name, "host": layer.host} for layer in error.layers]},
+        )
+    if isinstance(error, InvalidShapeError):
+        return zones.issue("invalid_structure")
+    return ValidationFailedError(str(error))
+
+
+def request_body(payload: PackageRequest) -> str:
+    """Serialize the import as the idempotency record keeps it.
+
+    A field left out stays out, so a retry across a release that added it still matches the
+    record of a package published before it existed.
+    """
+    omitted = set[str]()
+    if "inventory_form_version" not in payload.model_fields_set:
+        omitted.add("inventory_form_version")
+    if not payload.leave_out_online_basemaps:
+        omitted.add("leave_out_online_basemaps")
+    return payload.model_dump_json(exclude=omitted or None)
+
+
 def require_ready(validation: ImportValidation) -> None:
     if not validation.ready:
         message = "validation_failed"
@@ -149,8 +181,7 @@ async def publish(
             archive,
         )
     except PackageError as error:
-        message = "invalid_structure"
-        raise zones.issue(message) from error
+        raise refusal(error) from error
     async with zones.transaction(sessions, user) as session:
         return await finalize(session, request, prepared)
 
@@ -182,11 +213,7 @@ async def import_package(
             payload.expected_current_package_id,
             None,
             None,
-            payload.model_dump_json(
-                exclude={"inventory_form_version"}
-                if "inventory_form_version" not in payload.model_fields_set
-                else None
-            ),
+            request_body(payload),
         )
         previous = await replay(session, request)
         if previous is not None:
@@ -222,8 +249,7 @@ async def import_package(
             ImportJob(identity=identity, forms=forms, validation=validation, submission=payload)
         )
     except PackageError as error:
-        message = "invalid_structure"
-        raise zones.issue(message) from error
+        raise refusal(error) from error
     async with zones.transaction(sessions, user) as session:
         return await finalize(session, request, prepared)
 

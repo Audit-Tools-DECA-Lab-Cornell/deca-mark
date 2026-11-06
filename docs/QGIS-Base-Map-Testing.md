@@ -59,6 +59,8 @@ Other sources:
 
 **Terms of use:** these tile services are for viewing and tracing in QGIS. Do not bulk-download them to ship inside the app. Check each provider's terms before using their imagery in a publication.
 
+These background maps never reach the package or the phones. Uploading a project that uses one needs the manager's confirmation that it is left out (the API refuses the upload until the request names the layer); the version then records a warning that names the map, and observers see the vector layers only.
+
 ### Set the project coordinate system
 
 1. Click the CRS button at the bottom right of the QGIS window.
@@ -125,10 +127,10 @@ This stores your site as a prepared, versioned package the API can serve. It doe
    | Layers present       | `ground` and `zones` are there and parse as GeoJSON                                                                                                                                                       |
    | Layer sources        | every layer the project file names has geometry in the upload                                                                                                                                             |
    | Coordinate reference | every position is inside WGS 84, and no layer declares another CRS. The project's own CRS is reported, not enforced: Part 1 has you draw over Web Mercator tiles, and what ships is the exported geometry |
-   | Imagery licence      | a network tile source blocks unless its host is allow-listed; institution-held files pass                                                                                                                 |
+   | Imagery licence      | an online background map (an XYZ or WMS layer) is left out only when you confirm it, and the version then carries a warning naming it; an unconfirmed one refuses the upload; institution-held files pass |
    | Derived geometry     | zones become boxes and the site gets a padded extent                                                                                                                                                      |
 
-   A blocked package is still stored with its reasons; it just will not download.
+   A package that fails a check is refused with its reason and nothing is stored: the site keeps its current version, and no blocked version appears in the history.
 
 5. `GET /v1/projects/{project}/packages` lists versions, and `.../packages/{id}/archive` returns the zip. The archive is deterministic: the same submission yields the same `sha256`, which is also the ETag.
 

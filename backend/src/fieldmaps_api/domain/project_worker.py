@@ -12,7 +12,12 @@ from fiona.errors import FionaError
 from pydantic import ValidationError
 
 from fieldmaps_api.domain import qgis_project
-from fieldmaps_api.domain.packages import ProjectFile
+from fieldmaps_api.domain.packages import (
+    NO_PERMITTED_HOSTS,
+    ProjectFile,
+    RasterSource,
+    is_online_basemap,
+)
 from fieldmaps_api.domain.project_files import resolve_source, unpack
 from fieldmaps_api.domain.project_import import (
     ImportedLayer,
@@ -25,6 +30,35 @@ from fieldmaps_api.domain.project_vectors import convert_vector
 from fieldmaps_api.domain.qgis_project import ProjectFileError
 
 MAX_LAYERS: Final = 64
+
+
+def unconverted_issue(item: Element, name: str, provider: str) -> ImportIssue | None:
+    """Explain a layer that is not a file-based vector layer, or return None for one that is.
+
+    An online background map (a tile service drawn on demand) is marked as such, so the web can ask
+    before it is left out (D35).
+    """
+    host = qgis_project.datasource_host(item)
+    source = RasterSource(layer_name=name, provider=provider, host=host)
+    if qgis_project.layer_kind(item) == "raster" and is_online_basemap(source, NO_PERMITTED_HOSTS):
+        return ImportIssue(
+            layer=name,
+            message=(
+                "This is an online background map. It is not converted or uploaded; "
+                "observers see the vector layers only."
+            ),
+            kind="online_basemap",
+            host=host,
+        )
+    if qgis_project.layer_kind(item) != "vector" or provider != "ogr":
+        return ImportIssue(
+            layer=name,
+            message=(
+                "This layer was not converted. Only file-based vector layers are "
+                "supported; imagery and remote layers remain in QGIS."
+            ),
+        )
+    return None
 
 
 def import_layers(
@@ -44,16 +78,9 @@ def import_layers(
     for item in candidates:
         name = qgis_project.layer_name(item) or "Unnamed layer"
         provider = qgis_project.layer_provider(item)
-        if qgis_project.layer_kind(item) != "vector" or provider != "ogr":
-            issues.append(
-                ImportIssue(
-                    layer=name,
-                    message=(
-                        "This layer was not converted. Only file-based vector layers are "
-                        "supported; imagery and remote layers remain in QGIS."
-                    ),
-                )
-            )
+        unconverted = unconverted_issue(item, name, provider)
+        if unconverted is not None:
+            issues.append(unconverted)
             continue
         source, *options = (item.findtext("datasource") or "").split("|")
         options_map = dict(option.split("=", 1) for option in options if "=" in option)

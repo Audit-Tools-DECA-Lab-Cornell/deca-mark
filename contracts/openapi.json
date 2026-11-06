@@ -791,7 +791,8 @@
           "idempotency_conflict",
           "revision_conflict",
           "precondition_required",
-          "payload_too_large"
+          "payload_too_large",
+          "online_basemap_unconfirmed"
         ],
         "type": "string"
       },
@@ -1654,6 +1655,31 @@
       },
       "ImportIssue": {
         "properties": {
+          "host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The tile service's host, for an online background map; null otherwise.",
+            "title": "Host"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "const": "online_basemap",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`online_basemap` marks a layer drawn from a tile service on demand (an XYZ or WMS background map). A package leaves it out only once the manager agrees (D35): send its name in `leave_out_online_basemaps` when creating the package. Other issues carry no kind.",
+            "title": "Kind"
+          },
           "layer": {
             "title": "Layer",
             "type": "string"
@@ -2782,6 +2808,16 @@
             },
             "title": "Layers",
             "type": "object"
+          },
+          "leave_out_online_basemaps": {
+            "description": "Layer names of the online background maps the manager agreed to leave out of the package (D35). Empty when omitted. A map the project uses that is not named here refuses the request with `online_basemap_unconfirmed`.",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 64,
+            "title": "Leave Out Online Basemaps",
+            "type": "array"
           },
           "project_file": {
             "anyOf": [
@@ -11035,7 +11071,7 @@
         "summary": "Packages"
       },
       "post": {
-        "description": "Validate and publish a zone-bound package from a QGIS export.",
+        "description": "Validate and publish a zone-bound package from a QGIS export.\n\nAn online background map in the QGIS project (an XYZ or WMS layer) is left out of the\npackage only when the request names its layer in `leave_out_online_basemaps`. Otherwise\nnothing is published and the answer is 422 `online_basemap_unconfirmed`, whose\n`details.layers` lists every online background map the project uses as `{name, host}`\n(`host` may be null). Send the request again, with the same `request_id`, naming those\nlayers to publish the package without them: the version then carries a warning\n`imagery-licence` check that names each layer.",
         "operationId": "createPackage",
         "parameters": [
           {

@@ -81,6 +81,7 @@ The package pins form and zone meaning. Retries send identical immutable payload
 | `rate_limited` | 429 | |
 | `internal` | 500 | |
 | `storage_unavailable` | 503 | transient classes (BE-02) |
+| `online_basemap_unconfirmed` | 422 | |
 
 `validation_failed` carries `details.fields: [{ "id": "<question id or field>", "problem": "…" }]`.
 
