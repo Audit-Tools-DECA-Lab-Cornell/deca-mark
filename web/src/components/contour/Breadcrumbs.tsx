@@ -3,7 +3,6 @@ import Link from "next/link";
 import { cx } from "@/lib/cx";
 
 import { Icon } from "./Icon";
-import { LinkPending } from "./LinkPending";
 
 export type Crumb = {
 	label: string;
@@ -47,7 +46,6 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
 										"before:absolute before:inset-x-0 before:-inset-y-3"
 									)}>
 									{item.label}
-									<LinkPending />
 								</Link>
 							) : (
 								<span className="text-ink-2">{item.label}</span>
