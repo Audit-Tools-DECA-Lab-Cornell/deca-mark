@@ -240,6 +240,14 @@ describe("Retry these uploads", () => {
     expect(world.calls).toEqual(["retry"]);
   });
 
+  it("offers no retry in preview, whose sample records are not the device's", () => {
+    world.mode = "preview";
+    world.records = everyState();
+    const screen = render(<ObservationsScreen />);
+    expect(screen.controls()).not.toContain("Retry these uploads");
+    expect(world.calls).toEqual([]);
+  });
+
   it("says so, and that nothing was changed, when the retry itself could not start", async () => {
     world.retryFails = true;
     world.records = everyState();

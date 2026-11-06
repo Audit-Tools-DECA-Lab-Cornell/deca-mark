@@ -85,6 +85,10 @@ function queue(): Queue {
     uploadNow: () => {
       world.calls.push("wake");
     },
+    retryUploads: async () => {
+      world.calls.push("retry");
+      if (world.retryFails) throw new Error("The database is locked.");
+    },
   };
 }
 
@@ -100,9 +104,9 @@ export const sync = {
     wake: () => {
       world.calls.push("wake");
     },
+    // The screen must go through the queue (which gates preview), never straight to the provider.
     retry: async () => {
-      world.calls.push("retry");
-      if (world.retryFails) throw new Error("The database is locked.");
+      world.calls.push("sync.retry called directly");
     },
   }),
 };

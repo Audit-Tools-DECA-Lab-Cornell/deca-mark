@@ -9,7 +9,7 @@ import { capturedLabel, type Queue, useQueueForMode } from "./queue";
 vi.mock("expo-router", async () => (await import("../../ui/native.fixture")).router);
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
 
-const world = vi.hoisted(() => ({ database: null as unknown, owner: "", wakes: 0 }));
+const world = vi.hoisted(() => ({ database: null as unknown, owner: "", wakes: 0, retries: 0 }));
 vi.mock("expo-sqlite", () => ({ useSQLiteContext: () => world.database }));
 vi.mock("../../auth/provider", () => ({
   useAccount: () => ({ key: world.owner, ready: true }),
@@ -19,6 +19,9 @@ vi.mock("../../sync/provider", () => ({
     revision: 0,
     wake: () => {
       world.wakes += 1;
+    },
+    retry: async () => {
+      world.retries += 1;
     },
   }),
 }));
@@ -66,6 +69,7 @@ afterEach(async () => {
   view = undefined;
   mode = "device";
   world.wakes = 0;
+  world.retries = 0;
 });
 
 async function open(seed: (sqlite: { exec: (sql: string) => void }) => void) {
@@ -192,6 +196,29 @@ describe("Pulling the list to refresh wakes the uploader (MOB-38)", () => {
     try {
       queue.uploadNow();
       expect(world.wakes).toBe(0);
+    } finally {
+      sqlite.close();
+    }
+  });
+});
+
+describe("Retrying uploads goes through the queue, which sends nothing in preview (MOB-38)", () => {
+  it("calls the sync provider's retry() on a device", async () => {
+    const sqlite = await open(() => {});
+    try {
+      await queue.retryUploads();
+      expect(world.retries).toBe(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("does not touch the device's real records in preview", async () => {
+    mode = "preview";
+    const sqlite = await open(() => {});
+    try {
+      await queue.retryUploads();
+      expect(world.retries).toBe(0);
     } finally {
       sqlite.close();
     }

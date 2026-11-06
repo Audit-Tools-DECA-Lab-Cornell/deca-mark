@@ -84,6 +84,8 @@ export type Queue = {
   retry: () => void;
   /** Wakes the uploader (pull to refresh). Preview shows sample records and sends nothing. */
   uploadNow: () => void;
+  /** Sends refused records again, unchanged (sync.retry()). Preview does nothing: its records are samples. */
+  retryUploads: () => Promise<void>;
 };
 
 function countStates(records: QueueRecord[]): QueueCounts {
@@ -112,5 +114,6 @@ export function useQueueForMode(mode: DataMode): Queue {
     error: mode === "preview" ? null : device.error,
     retry: device.retry,
     uploadNow: mode === "preview" ? () => {} : sync.wake,
+    retryUploads: mode === "preview" ? async () => {} : sync.retry,
   };
 }

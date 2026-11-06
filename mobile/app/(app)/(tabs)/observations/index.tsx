@@ -13,7 +13,7 @@ import {
   zonesOf,
 } from "../../../../src/features/observations/rows";
 import { ZoneChips } from "../../../../src/features/observations/ZoneChips";
-import { useQueue } from "../../../../src/features/preview/data-source";
+import { useDataSource, useQueue } from "../../../../src/features/preview/data-source";
 import { AccountMark, PageIntro, PreviewData } from "../../../../src/features/projects/parts";
 import { useSync } from "../../../../src/sync/provider";
 import {
@@ -59,7 +59,8 @@ export default function ObservationsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const queue = useQueue();
-  const { retry: retryUploads, error: syncError } = useSync();
+  const { error: syncError } = useSync();
+  const { mode } = useDataSource();
   const online = useOnline();
   const [zone, chooseZone] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
@@ -75,7 +76,7 @@ export default function ObservationsScreen() {
     [],
   );
 
-  const { records, counts, uploadNow } = queue;
+  const { records, counts, uploadNow, retryUploads } = queue;
   const zones = useMemo(() => zonesOf(records), [records]);
   // A zone that no record is in any more (another account's records, say) is no filter at all.
   const chosen = zone !== null && zones.includes(zone) ? zone : null;
@@ -156,15 +157,18 @@ export default function ObservationsScreen() {
             tone="attention"
             title={note.title}
             action={
-              <Button
-                variant="ink"
-                label="Retry these uploads"
-                icon="rotate-cw"
-                busy={retrying}
-                busyLabel="Retrying uploads…"
-                onPress={() => void retryAll()}
-                testID="observations-retry"
-              />
+              // Sample records are not the device's: a retry there would touch real records.
+              mode === "preview" ? undefined : (
+                <Button
+                  variant="ink"
+                  label="Retry these uploads"
+                  icon="rotate-cw"
+                  busy={retrying}
+                  busyLabel="Retrying uploads…"
+                  onPress={() => void retryAll()}
+                  testID="observations-retry"
+                />
+              )
             }
             testID="observations-attention"
           >
