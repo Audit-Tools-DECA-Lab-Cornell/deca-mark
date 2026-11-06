@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/contour/PageHeader";
 import { TextLink } from "@/components/contour/TextLink";
 import { useToast } from "@/components/contour/Toast";
 import { projectHref } from "@/features/shell/navigation";
+import { rejected } from "@/lib/action-rejection";
 import { plural } from "@/lib/labels";
 
 import { ActionNote } from "./ActionNote";
@@ -77,7 +78,12 @@ export function PublishScreen({
 		if (blocked) return;
 		setFailure(null);
 		start(async () => {
-			const result = await publishVersionAction({ org, project, version: version.code, etag: version.etag });
+			let result: Awaited<ReturnType<typeof publishVersionAction>>;
+			try {
+				result = await publishVersionAction({ org, project, version: version.code, etag: version.etag });
+			} catch (error) {
+				return setFailure(rejected(error, "reload", "Nothing was published."));
+			}
 			if (result.status === "failed") {
 				setFailure(result);
 				if (result.conflict) setConfirmed(false);

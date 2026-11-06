@@ -3,6 +3,7 @@
 import { type RefObject, useActionState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/contour/Button";
+import { authRejectionCopy } from "@/lib/action-rejection";
 import { authenticate, type AuthState } from "@/lib/auth/actions";
 
 import { NO_MESSAGE, ResendMessage } from "./useAuthAction";
@@ -29,7 +30,12 @@ export function ResendCodeForm({
 }) {
 	const cooldown = useCooldown(cooldownSeconds);
 	const [state, action, pending] = useActionState<AuthState, FormData>(async (previous, form) => {
-		const result = await authenticate(previous, form);
+		let result: Awaited<ReturnType<typeof authenticate>>;
+		try {
+			result = await authenticate(previous, form);
+		} catch (error) {
+			return { message: authRejectionCopy(error) };
+		}
 		if (!result) return previous;
 		if (result.retryAfter) cooldown.start(result.retryAfter);
 		return result;

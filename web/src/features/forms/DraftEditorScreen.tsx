@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { Button, ButtonLink } from "@/components/contour/Button";
 import { Dialog, DialogClose } from "@/components/contour/Dialog";
@@ -15,15 +15,17 @@ import { StateBadge } from "@/components/contour/StateBadge";
 import { useToast } from "@/components/contour/Toast";
 import { projectHref } from "@/features/shell/navigation";
 import { useLeaveGuard } from "@/features/shell/useLeaveGuard";
+import { causeOf, rejected, rejectionCopy } from "@/lib/action-rejection";
 import type { VersionState } from "@/lib/api/types";
 import { validateFormDefinition } from "@/lib/forms";
 import { plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
 
 import { ActionNote } from "./ActionNote";
-import { saveDraftAction, startDraftAction } from "./actions";
+import { readDraftAction, saveDraftAction, startDraftAction } from "./actions";
 import { AddQuestionDialog } from "./AddQuestionDialog";
 import { CollectorPreview, type PreviewDevice } from "./CollectorPreview";
+import { landedSave } from "./lost-reply";
 import { changedIds, isZoneForm, previousQuestion, questionNumber, sameDefinition, toForm } from "./model";
 import { moveQuestion, questionIdColumns, renameQuestion } from "./operations";
 import { draftProblems } from "./problems";
@@ -102,6 +104,16 @@ export function DraftEditorScreen({
 	const [general, setGeneral] = useState<readonly string[]>([]);
 	const [savedOnce, setSavedOnce] = useState(false);
 	const [pending, start] = useTransition();
+	// The wording of each Save whose outcome is unknown (the reply never arrived) since the page last heard
+	// from the draft. Any of them may have been committed, so a later refusal is checked against them.
+	const unconfirmed = useRef<RawDefinition[]>([]);
+	// What the editor holds now, and whether a Save and leave is still wanted: a Save that is in flight
+	// answers later, after the manager may have typed more or chosen Keep editing.
+	const latest = useRef(raw);
+	useEffect(() => {
+		latest.current = raw;
+	}, [raw]);
+	const leaveWanted = useRef(false);
 
 	const dirty = useMemo(() => editable && !sameDefinition(raw, saved), [editable, raw, saved]);
 	const form = useMemo(() => toForm(raw), [raw]);
@@ -167,31 +179,96 @@ export function DraftEditorScreen({
 		return null;
 	}
 
+	/** A Save met a conflict while an earlier Save's outcome was unknown: read the draft back to tell them apart. */
+	async function readBack(): Promise<RawDefinition | null> {
+		try {
+			const stored = await readDraftAction({ org, project, version: version.code });
+			if (stored.status !== "done") return null;
+			const landed = landedSave(stored, unconfirmed.current);
+			if (!landed) return null;
+			unconfirmed.current = [];
+			setSaved(landed);
+			setEtag(stored.etag);
+			setRefused({});
+			setGeneral([]);
+			setSavedOnce(true);
+			return landed;
+		} catch {
+			// The read-back is not answered either: the normal conflict choice is the honest way on.
+			return null;
+		}
+	}
+
 	function save(afterwards?: () => void) {
 		if (!editable || pending || blocker || failure?.conflict) return;
 		const sent = raw;
+		leaveWanted.current = afterwards !== undefined;
 		setFailure(null);
 		start(async () => {
-			const result = await saveDraftAction({
-				org,
-				project,
-				version: version.code,
-				etag,
-				definition: JSON.parse(JSON.stringify(sent)) as Record<string, unknown>
-			});
+			let result: Awaited<ReturnType<typeof saveDraftAction>>;
+			try {
+				result = await saveDraftAction({
+					org,
+					project,
+					version: version.code,
+					etag,
+					definition: JSON.parse(JSON.stringify(sent)) as Record<string, unknown>
+				});
+			} catch (error) {
+				// The call itself rejected, so the screen stays and the wording stays in it. Unless the action
+				// is known not to have run, this Save may have been committed: remember what it sent.
+				const cause = causeOf(error);
+				if (cause === "unknown") unconfirmed.current = [...unconfirmed.current, sent];
+				setFailure({ status: "failed", message: rejectionCopy(cause, "kept", "Nothing was saved.") });
+				return;
+			}
 			if (result.status === "done") {
+				unconfirmed.current = [];
 				setSaved(sent);
 				setEtag(result.etag);
 				setRefused({});
 				setGeneral([]);
 				setSavedOnce(true);
-				toast({
-					title: "Draft saved",
-					description: `${version.code} has the wording you see here.`,
-					tone: "saved"
-				});
-				afterwards?.();
+				// More may have been typed, or the leave cancelled, while this Save was in flight.
+				const nothingNewer = sameDefinition(sent, latest.current);
+				toast(
+					nothingNewer
+						? {
+								title: "Draft saved",
+								description: `${version.code} has the wording you see here.`,
+								tone: "saved"
+							}
+						: {
+								title: "Draft saved",
+								description: "Your newer edits are not saved yet.",
+								tone: "waiting"
+							}
+				);
+				if (nothingNewer && leaveWanted.current) afterwards?.();
 				return;
+			}
+			if (result.conflict && unconfirmed.current.length > 0) {
+				const landed = await readBack();
+				if (landed) {
+					// Leaving is right only when nothing was typed since that save. Otherwise the newer edits stay
+					// unsaved, and the toast says so rather than letting "went through" cover them.
+					const nothingNewer = sameDefinition(landed, latest.current);
+					toast(
+						nothingNewer
+							? {
+									title: "Your earlier save went through.",
+									description: `${version.code} has the wording you saved.`,
+									tone: "saved"
+								}
+							: {
+									title: "Your earlier save went through.",
+									description: "Your newer edits are not saved yet.",
+									tone: "waiting"
+								}
+					);
+					if (nothingNewer && leaveWanted.current) afterwards?.();
+					return;
+				}
 			}
 			setFailure(result);
 			const placed = draftProblems(result.fields);
@@ -221,7 +298,12 @@ export function DraftEditorScreen({
 	function startFromThis() {
 		setFailure(null);
 		start(async () => {
-			const result = await startDraftAction({ org, project, form: version.formCode, from: version.code });
+			let result: Awaited<ReturnType<typeof startDraftAction>>;
+			try {
+				result = await startDraftAction({ org, project, form: version.formCode, from: version.code });
+			} catch (error) {
+				return setFailure(rejected(error, "reload", "Nothing was started."));
+			}
 			if (result.status === "failed") return setFailure(result);
 			toast({
 				title: `${result.version} is a new draft`,
@@ -437,7 +519,10 @@ export function DraftEditorScreen({
 			<Dialog
 				open={guard.leavingTo !== null}
 				onOpenChange={open => {
-					if (!open) guard.stay();
+					if (!open) {
+						leaveWanted.current = false;
+						guard.stay();
+					}
 				}}
 				title="Save your changes first?"
 				description="This draft has edits that are not saved. If you leave without saving, they are lost and the draft keeps its earlier wording."

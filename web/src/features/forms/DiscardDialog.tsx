@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Button, type ButtonProps } from "@/components/contour/Button";
 import { Dialog, DialogClose } from "@/components/contour/Dialog";
 import { useToast } from "@/components/contour/Toast";
+import { rejected } from "@/lib/action-rejection";
 import { plural } from "@/lib/labels";
 
 import { ActionNote } from "./ActionNote";
@@ -39,7 +40,12 @@ export function DiscardDialog({
 
 	function discard() {
 		start(async () => {
-			const result = await discardDraftAction({ org, project, version: version.code, etag: version.etag });
+			let result: Awaited<ReturnType<typeof discardDraftAction>>;
+			try {
+				result = await discardDraftAction({ org, project, version: version.code, etag: version.etag });
+			} catch (error) {
+				return setFailure(rejected(error, "reload", "Nothing was discarded."));
+			}
 			if (result.status === "failed") return setFailure(result);
 			setOpen(false);
 			toast({ title: `${version.code} is discarded`, description: "The draft is deleted.", tone: "saved" });
