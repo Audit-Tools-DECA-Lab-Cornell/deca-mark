@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { act, create, type ReactTestInstance } from "react-test-renderer";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { type FormDefinition, parseFormDefinition } from "../../forms/definition";
 import { type ResolvedQuestion, visibleQuestions } from "../../forms/engine";
 import { janetTestV1 } from "../../forms/fixtures/janet-test-v1";
@@ -62,13 +62,13 @@ function mount(
 ) {
   const scrollTo = vi.fn();
   const write = vi.fn();
-  const element: ReactElement = (
+  const element = (current: string): ReactElement => (
     <PreferencesProvider>
       <ThemeProvider>
         <QuestionStep
           form={form}
           state={startSession()}
-          question={question(id, form)}
+          question={question(current, form)}
           position={1}
           total={12}
           columns={2}
@@ -86,12 +86,13 @@ function mount(
   );
   let renderer: ReturnType<typeof create> | undefined;
   act(() => {
-    renderer = create(element, {
+    renderer = create(element(id), {
       createNodeMock: (node) => (node.type === "ScrollView" ? { scrollTo } : null),
     });
   });
   if (!renderer) throw new Error("The step did not render.");
-  const root = renderer.root;
+  const live = renderer;
+  const root = live.root;
   const hosts = (name: string) => root.findAll((node) => (node.type as unknown) === name);
   const [scroll] = hosts("ScrollView");
   if (!scroll) throw new Error("The step has no scrolling area.");
@@ -105,6 +106,9 @@ function mount(
   const input = hosts("TextInput")[0];
   return {
     write,
+    hosts,
+    /** The observer moves on: the same step renders another question, as the collect screen does. */
+    show: (next: string) => act(() => live.update(element(next))),
     scrollTo,
     scroll,
     field,
@@ -561,5 +565,127 @@ describe("the question step on a keyboard (MOB-34)", () => {
     expect(
       hostProps(mount("observer_initials").input as ReactTestInstance)?.disableFullscreenUI,
     ).toBe(true);
+  });
+});
+
+/**
+ * The heading panel and the value input are siblings in one scrolling area, and each is keyed by the
+ * question so it mounts again for the next one: the panel replays its fade and hands the screen
+ * reader's focus to the new heading, and the input drops the last question's text field, caret and
+ * date draft. Both once used the bare question id, so React reported "Encountered two children with
+ * the same key" for every question (a LogBox toast in development that swallowed taps on Continue
+ * and Save until dismissed, and a risk of keeping or dropping the wrong element between questions).
+ */
+describe("the keys of the question step", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  /** Starts listening for React's duplicate-key report; the returned function lists what it has said. */
+  function watchKeys() {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    return () =>
+      spy.mock.calls
+        .map((call) => call.map(String).join(" "))
+        .filter((message) => message.includes("same key"));
+  }
+
+  const seed = question("observer_initials");
+  const mixed = parseFormDefinition({
+    ...janetTestV1,
+    questions: [
+      ...janetTestV1.questions,
+      {
+        ...seed,
+        id: "seen_on",
+        exportColumn: "seen_on",
+        kind: "dateTime",
+        dateTime: { mode: "date", timeZone: "UTC" },
+      },
+      { ...seed, id: "second_initials", exportColumn: "second_initials" },
+      {
+        ...seed,
+        id: "recorded_at_code",
+        exportColumn: "recorded_at_code",
+        valueSource: "observerCode",
+      },
+    ],
+  });
+
+  it("gives no two siblings the same key on a text, a choice, a date and an automatic question", () => {
+    const duplicates = watchKeys();
+    for (const id of ["play_event_summary", "age_range", "seen_on", "recorded_at_code"]) {
+      mount(id, {}, mixed);
+    }
+    expect(duplicates()).toEqual([]);
+  });
+
+  it("gives no two siblings the same key on any question, nor when the step moves from one to the next", () => {
+    const duplicates = watchKeys();
+    const ids = visibleQuestions(mixed, {}).map((entry) => entry.id);
+    const m = mount(ids[0] as string, {}, mixed);
+    for (const id of ids) m.show(id);
+    for (const id of [...ids].reverse()) m.show(id);
+    expect(ids).toEqual(
+      expect.arrayContaining(["age_range", "play_event_summary", "seen_on", "recorded_at_code"]),
+    );
+    expect(duplicates()).toEqual([]);
+  });
+
+  it("reports a duplicate key when two siblings share one, so the checks above can fail", () => {
+    const duplicates = watchKeys();
+    act(() => {
+      create(<View>{[<View key="q" />, <View key="q" />]}</View>);
+    });
+    expect(duplicates()).toHaveLength(1);
+  });
+
+  it("mounts the heading panel and the value input again for every question", () => {
+    // Text to text: the panel and the field are the same kinds of element, so only their keys tell
+    // React to start them again.
+    const m = mount("observer_initials", {}, mixed);
+    const header = () =>
+      m
+        .hosts("View")
+        .find(
+          (node) => (node.props as { accessibilityRole?: string }).accessibilityRole === "header",
+        );
+    const field = () => m.hosts("View").find((node) => hostProps(node).testID === "collect-field");
+    const panel = () => header()?.parent?.parent;
+    const [heading, box, area] = [header(), field(), panel()];
+    expect(heading && box && area).toBeTruthy();
+    m.show("second_initials");
+    expect(header()).toBeDefined();
+    expect(header()).not.toBe(heading);
+    expect(panel()).not.toBe(area);
+    expect(field()).toBeDefined();
+    expect(field()).not.toBe(box);
+    expect(m.hosts("TextInput")[0]).not.toBe(m.input);
+  });
+
+  it("does not mount the rest of the step again: the scrolling area, the footer and the act strip stay", () => {
+    const m = mount("observer_initials", {}, mixed);
+    const scroll = m.hosts("ScrollView")[0];
+    const pressables = m.hosts("Pressable");
+    const strip = m
+      .hosts("View")
+      .find((node) =>
+        /^Part \d+ of \d+/.test(
+          String((node.props as { accessibilityLabel?: string }).accessibilityLabel),
+        ),
+      );
+    expect(scroll && pressables.length > 0 && strip).toBeTruthy();
+    m.show("second_initials");
+    expect(m.hosts("ScrollView")[0]).toBe(scroll);
+    expect(m.hosts("Pressable").filter((node) => pressables.includes(node))).toHaveLength(
+      pressables.length,
+    );
+    expect(
+      m
+        .hosts("View")
+        .find((node) =>
+          /^Part \d+ of \d+/.test(
+            String((node.props as { accessibilityLabel?: string }).accessibilityLabel),
+          ),
+        ),
+    ).toBe(strip);
   });
 });
