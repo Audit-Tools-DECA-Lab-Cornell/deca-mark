@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { Button, ButtonLink } from "@/components/contour/Button";
 import { Dialog, DialogClose } from "@/components/contour/Dialog";
@@ -110,7 +110,9 @@ export function DraftEditorScreen({
 	// What the editor holds now, and whether a Save and leave is still wanted: a Save that is in flight
 	// answers later, after the manager may have typed more or chosen Keep editing.
 	const latest = useRef(raw);
-	latest.current = raw;
+	useEffect(() => {
+		latest.current = raw;
+	}, [raw]);
 	const leaveWanted = useRef(false);
 
 	const dirty = useMemo(() => editable && !sameDefinition(raw, saved), [editable, raw, saved]);
