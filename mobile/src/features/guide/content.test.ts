@@ -35,8 +35,7 @@ describe("field guide", () => {
   it("explains the queue words the screens use", () => {
     const saving = GUIDE.find((section) => section.id === "saving");
     const text = saving?.body.join(" ") ?? "";
-    for (const word of ["On device", "Uploaded", "Needs attention"])
-      expect(text).toContain(word);
+    for (const word of ["On device", "Uploaded", "Needs attention"]) expect(text).toContain(word);
     // The guide names only the states a device shows (MOB-37, MOB-38): never "held", and no "Uploading"
     // until a record is marked in flight (MOB-50).
     expect(text).not.toContain("Held");
