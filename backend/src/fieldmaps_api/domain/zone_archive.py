@@ -64,6 +64,12 @@ def _layer_problem(name: LayerName, error: ValidationError) -> str:
         )
     location = problems[0]["loc"] if problems else ()
     if len(location) > 1 and location[0] == "features" and isinstance(location[1], int):
+        if len(location) > 2 and location[2] == "properties":  # noqa: PLR2004 - loc index
+            return (
+                f"Feature {location[1] + 1} of the {name} layer has an attribute that is a list "
+                "or a nested value, so nothing was uploaded. Make each attribute text or a number "
+                "in QGIS, then export the layer again."
+            )
         return (
             f"Feature {location[1] + 1} of the {name} layer has a shape that could not be read, "
             "so nothing was uploaded. Give every feature a point, line or polygon with a "

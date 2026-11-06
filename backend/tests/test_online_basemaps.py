@@ -137,8 +137,22 @@ def test_a_layer_that_is_not_in_longitude_and_latitude_is_refused_by_name() -> N
         ("trees", collection_of(point(-1.5)), "Feature 1 of the trees layer"),
         ("trees", collection_of(point(0.1, 0.1), None), "Feature 2 of the trees layer"),
         ("paths", {"type": "Feature"}, "The paths layer is not a GeoJSON feature collection"),
+        (
+            "trees",
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {"tags": ["a", "b"]},
+                        "geometry": point(0.1, 0.1),
+                    }
+                ],
+            },
+            "Feature 1 of the trees layer has an attribute",
+        ),
     ],
-    ids=["one coordinate", "no geometry", "not a collection"],
+    ids=["one coordinate", "no geometry", "not a collection", "list attribute"],
 )
 def test_a_layer_with_a_shape_that_cannot_be_read_is_refused_by_name(
     layer: str, collection: object, fragment: str
