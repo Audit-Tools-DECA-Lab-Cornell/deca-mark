@@ -35,6 +35,7 @@ export function sessionView(
     armed: visible && memory.armed,
     state: visible ? memory.state : startSession(),
     status: visible ? memory.status : "Loading this account's local work.",
+    draftWriteFailed: visible && memory.draftWriteFailed,
     recovered: memory.recovered?.owner === key ? memory.recovered : null,
     unreadableDraft: visible && memory.unreadableDraft,
     context: visible ? context : null,
