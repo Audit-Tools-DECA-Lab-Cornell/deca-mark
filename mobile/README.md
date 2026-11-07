@@ -98,8 +98,9 @@ both, and its content spans the full window width — a deliberate departure fro
   Layers menu); permission is asked then, foreground only. A dot and an accuracy circle in the map
   palette; the button centres on the observer or, while placing, brings their position under the
   cross. The fix is never stored, uploaded or kept, and placement stays by hand.
-- **Real sync, relabelled.** Records show the existing queue states — held, on device only,
-  synced, needs attention — with no send button. Records are immutable and there is no
+- **Real sync, relabelled.** The Observations tab lists every record on this device in the queue
+  words — On device, Uploaded, Needs attention (and Uploading where the queue says so) — with no
+  send button; "Retry these uploads" sends a refused record again unchanged. Records are immutable and there is no
   bidirectional edit sync or contested-record workflow; API receipt revisions do not imply one.
 - Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. A reconnect or a resume also makes records waiting out a retry delay due at once (spaced 5 s from the last upload attempt, and never before a server's `Retry-After`; a new coordinator right after an attempt (a token refresh, a sign-in or an app restart starts one with no memory of the last attempt), or a flap that aborts an upload in flight, can send sooner), and the drain sleeps otherwise: one timer waits for the earliest remaining delay, an empty queue does nothing, and a screen re-reads records only when one changed (MOB-39). Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
 
@@ -296,13 +297,14 @@ was removed afterward; this does not establish the rest of the product acceptanc
 
 | Path | Responsibility |
 | --- | --- |
-| `app/` | Routes: assignments, site brief, field, review, saved, records, account |
+| `app/` | Routes: assignments, site brief, field, review, saved, observations, account |
 | `src/forms/` | Form definitions, validation, the visibility engine, and the question-stack reducer |
 | `src/forms/fixtures/` | Thin imports of the canonical JSON definitions in `../contracts/forms/` |
 | `scripts/contracts-forms.mts` | Generates the shared input JSON Schema from the mobile Zod definition |
 | `src/packages/` | The site package interface and the bundled fixture provider |
 | `src/session/` | The observation period: package, zone, round type, draft persistence, and saving |
 | `src/features/collect/` | The collect route's steps, the Contour field map, the crosshair and pin, and the aim store |
+| `src/features/observations/` | The Observations tab's rows, zone chips and words (MOB-38) |
 | `src/features/guide/` | The offline field guide's content and its search |
 | `src/maps/` | Bundled training geometry, the generated Fall Creek site, base styles, clustering and zone geometry |
 | `src/domain/` | Observation contracts, round types and the record builder for each form version |
@@ -311,8 +313,8 @@ was removed afterward; this does not establish the rest of the product acceptanc
 | `src/sync/` | Upload protocol, scheduling, and verified receipts |
 | `src/layout/` | The observer's orientation choice, its storage, and the tablet/phone layout decisions |
 | `src/ui/` | Contour, from MOB-23: tokens read from `../contracts/contour.json`, theme, preferences, and the primitives that share their names with `web/src/components/contour/` |
-| `src/components/` | Screen frames and the previous chrome primitives, which MOB-27 removes once every screen uses `src/ui/` |
-| `src/theme.ts` | The previous chrome tokens, kept so unmoved screens compile; MOB-27 removes them |
+| `src/components/` | `screen-message.tsx`, the last screen on the previous chrome, which MOB-27 removes once it uses `src/ui/` |
+| `src/theme.ts` | The previous chrome tokens, kept for `screen-message.tsx`; MOB-27 removes them |
 | `assets/` | App icon, Android adaptive and themed layers, Play Store icon; sources in `assets/icon-source/` |
 | `plugins/` | Local config plugins: the Android 16 large-screen orientation opt-out |
 

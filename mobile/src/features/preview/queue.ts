@@ -17,9 +17,30 @@ const STATUS_TO_STATE: Record<Observation["storageStatus"], QueueState> = {
   "needs-attention": "attention",
 };
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const two = (value: number) => String(value).padStart(2, "0");
+
+/**
+ * When a record was captured, with its context (PRODUCT.md): "Today 11:25", or "Oct 02 · 11:32" for an
+ * earlier day, so a list that spans days never reads as one day. Local time, as the observer's clock.
+ */
+export function capturedLabel(created: Date, now: Date = new Date()): string {
+  if (Number.isNaN(created.getTime())) return "Time not recorded";
+  const time = `${two(created.getHours())}:${two(created.getMinutes())}`;
+  const today =
+    created.getFullYear() === now.getFullYear() &&
+    created.getMonth() === now.getMonth() &&
+    created.getDate() === now.getDate();
+  if (today) return `Today ${time}`;
+  // The list keeps records without a date cutoff, so another year's record says which year.
+  const year = created.getFullYear() === now.getFullYear() ? "" : ` ${created.getFullYear()}`;
+  return `${MONTHS[created.getMonth()]} ${two(created.getDate())}${year} · ${time}`;
+}
+
 function fromDevice(record: Observation): QueueRecord {
   const created = new Date(record.createdAt);
-  const time = `${String(created.getHours()).padStart(2, "0")}:${String(created.getMinutes()).padStart(2, "0")}`;
+  const time = `${two(created.getHours())}:${two(created.getMinutes())}`;
   // Practice is a record with no project binding: it never uploads. The shell form is only one kind of it.
   const practice = !isBoundObservation(record);
   const shell = isShellObservation(record);
@@ -31,6 +52,7 @@ function fromDevice(record: Observation): QueueRecord {
     zone,
     roundType,
     time,
+    captured: capturedLabel(created),
     state: STATUS_TO_STATE[record.storageStatus],
     practice,
     summary: practice
@@ -61,7 +83,10 @@ export type Queue = {
   loading: boolean;
   error: string | null;
   retry: () => void;
+  /** Wakes the uploader (pull to refresh). Preview shows sample records and sends nothing. */
   uploadNow: () => void;
+  /** Sends refused records again, unchanged (sync.retry()). Preview does nothing: its records are samples. */
+  retryUploads: () => Promise<void>;
 };
 
 function countStates(records: QueueRecord[]): QueueCounts {
@@ -89,6 +114,7 @@ export function useQueueForMode(mode: DataMode): Queue {
     loading: mode === "preview" ? false : device.loading,
     error: mode === "preview" ? null : device.error,
     retry: device.retry,
-    uploadNow: sync.wake,
+    uploadNow: mode === "preview" ? () => {} : sync.wake,
+    retryUploads: mode === "preview" ? async () => {} : sync.retry,
   };
 }

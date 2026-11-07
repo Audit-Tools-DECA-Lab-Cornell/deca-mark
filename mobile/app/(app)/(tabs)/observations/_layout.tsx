@@ -1,6 +1,10 @@
 import { Stack } from "expo-router";
+import { useTheme } from "../../../../src/ui";
 
-/** The Observations tab's stack. The Contour observations screens replace the current index in Phase 8. */
+/** The Observations tab's stack: the list of every record on this device. The dock stays. */
 export default function ObservationsLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  const { c } = useTheme();
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.ground } }} />
+  );
 }
