@@ -20,6 +20,8 @@ export type DialogProps = {
 	/** An element that opens the dialog, usually a Button. Focus returns to it on close. */
 	trigger?: ReactNode;
 	className?: string;
+	/** Where focus goes when the dialog has closed, for a dialog without a `trigger`. Call `preventDefault()` to take over. */
+	onCloseAutoFocus?: (event: Event) => void;
 };
 
 const WIDTH = {
@@ -44,7 +46,8 @@ export function Dialog({
 	footer,
 	size = "md",
 	trigger,
-	className
+	className,
+	onCloseAutoFocus
 }: DialogProps) {
 	// Without a description the dialog is named by its title alone; say so, rather than point at nothing.
 	const describedBy = description == null ? { "aria-describedby": undefined } : {};
@@ -56,6 +59,7 @@ export function Dialog({
 				<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in" />
 				<DialogPrimitive.Content
 					{...describedBy}
+					onCloseAutoFocus={onCloseAutoFocus}
 					className={cx(
 						"fixed inset-0 z-50 m-auto h-fit max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto",
 						"rounded-island border border-line bg-island p-6 text-ink shadow-ledge",
