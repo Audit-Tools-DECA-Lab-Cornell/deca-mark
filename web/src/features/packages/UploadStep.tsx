@@ -437,6 +437,8 @@ export function UploadStep({
 		setResult(null);
 		const requestId = refusedRequestId.current ?? newId();
 		refusedRequestId.current = null;
+		// The id DECA Mark actually received: a resend replays the unanswered request with its own id.
+		let sentRequestId = requestId;
 		try {
 			const layers = submissionLayers(slots);
 			const submission: PackageSubmission =
@@ -462,6 +464,7 @@ export function UploadStep({
 								? { project_file: await readProjectFile(projectSlot.file) }
 								: {})
 						};
+			sentRequestId = submission.request_id;
 			// The attempt (and the zones its mapping was made against) is kept until DECA Mark answers it: a
 			// resend that is also lost keeps the same one, so the next resend still replays it.
 			let prepared: Publication;
@@ -490,7 +493,7 @@ export function UploadStep({
 		} catch (raised) {
 			const refusal = raised instanceof LayerReadError ? null : apiRequestError(raised);
 			if (refusal?.code === "online_basemap_unconfirmed" && refusal.onlineMaps.length > 0) {
-				refusedRequestId.current = requestId;
+				refusedRequestId.current = sentRequestId;
 				// The project names maps Read project did not mark: ask the same question from this answer.
 				setAsking(refusal.onlineMaps);
 				return;
