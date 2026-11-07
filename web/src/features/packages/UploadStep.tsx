@@ -55,6 +55,8 @@ import {
 	namedZonesLayer,
 	sourceZones
 } from "./identity";
+import { markedOnlineMaps, ONLINE_MAP_CANCELLED, type OnlineMap } from "./online-maps";
+import { OnlineMapDialog } from "./OnlineMapDialog";
 import { importedFiles, importedProject, normalizeImportedLayer } from "./project-import";
 import { ProjectImport } from "./ProjectImport";
 import { previewPlan } from "./upload-preview";
@@ -245,6 +247,10 @@ export function UploadStep({
 	const convertedFiles = useRef(new WeakSet<File>());
 	const [error, setError] = useState<string | null>(null);
 	const [uncertain, setUncertain] = useState(false);
+	// The online background maps Read project marked, for the project file it read (a different file starts over).
+	const [marked, setMarked] = useState<{ file: File; maps: OnlineMap[] } | null>(null);
+	// The question being asked: the maps to leave out, from Read project or from DECA Mark's answer.
+	const [asking, setAsking] = useState<readonly OnlineMap[] | null>(null);
 	const [formVersionProblem, setFormVersionProblem] = useState<string | null>(null);
 	const [result, setResult] = useState<Publication | null>(null);
 	const [changeNote, setChangeNote] = useState("");
@@ -339,7 +345,9 @@ export function UploadStep({
 		}
 		setSlots(nextSlots);
 		setUnassigned(parked);
-		setProjectSlot({ kind: "ready", file: importedProject(imported) });
+		const projectFile = importedProject(imported);
+		setProjectSlot({ kind: "ready", file: projectFile });
+		setMarked({ file: projectFile, maps: markedOnlineMaps(imported) });
 		setResult(null);
 		setError(null);
 	}
@@ -409,7 +417,16 @@ export function UploadStep({
 							? "Choose which zone each zone in the file is."
 							: "Choose a form version.";
 
-	async function send() {
+	const leaveOut = projectSlot.kind === "ready" && marked?.file === projectSlot.file ? marked.maps : [];
+
+	/** The Upload button: a project with online background maps asks first, unless this resends a confirmed request. */
+	function startUpload() {
+		if (leaveOut.length > 0 && !(resending && unanswered)) setAsking(leaveOut);
+		else void send();
+	}
+
+	async function send(leftOut: readonly OnlineMap[] = []) {
+		setAsking(null);
 		setBusy(true);
 		setError(null);
 		setUncertain(false);
@@ -435,6 +452,7 @@ export function UploadStep({
 							},
 							zone_identity_map: identityMap(rows, current),
 							change_note: changeNote.trim(),
+							...(leftOut.length > 0 ? { leave_out_online_basemaps: leftOut.map(map => map.name) } : {}),
 							...(projectSlot.kind === "ready"
 								? { project_file: await readProjectFile(projectSlot.file) }
 								: {})
@@ -458,12 +476,19 @@ export function UploadStep({
 			// The files are uploaded: clear them so one press cannot make the same version twice.
 			setSlots(EMPTY_SLOTS);
 			setProjectSlot({ kind: "empty" });
+			setMarked(null);
 			setUnassigned([]);
 			setImportReset(current => current + 1);
 			// Everything that shows this site's current package refreshes, then this page does.
 			await packageUploaded({ org, project }).catch(() => undefined);
 			router.refresh();
 		} catch (raised) {
+			const refusal = apiRequestError(raised);
+			if (refusal.code === "online_basemap_unconfirmed" && refusal.onlineMaps.length > 0) {
+				// The project names maps Read project did not mark: ask the same question from this answer.
+				setAsking(refusal.onlineMaps);
+				return;
+			}
 			const problem = uploadProblem(raised, rows, current);
 			setError(problem.message);
 			setUncertain(!problem.confirmed);
@@ -761,7 +786,7 @@ export function UploadStep({
 							busyLabel="Uploading…"
 							disabled={reason !== null}
 							disabledReason={reason ?? undefined}
-							onClick={() => void send()}>
+							onClick={startUpload}>
 							{resending ? "Upload package again" : "Upload package"}
 						</Button>
 						<p className="type-small text-ink-2">
@@ -770,6 +795,17 @@ export function UploadStep({
 								: "The package is sent to DECA Mark as you. It becomes the site’s next version once its checks pass."}
 						</p>
 					</div>
+
+					<OnlineMapDialog
+						maps={asking}
+						busy={uploading}
+						onConfirm={maps => void send(maps)}
+						onCancel={() => {
+							setAsking(null);
+							setError(ONLINE_MAP_CANCELLED);
+							setUncertain(false);
+						}}
+					/>
 
 					{error && (
 						<Note

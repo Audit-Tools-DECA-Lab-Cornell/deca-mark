@@ -119,3 +119,30 @@ test("a change DECA Mark failed on, or did not answer, is not reported as not ma
 	assert.equal(failedWrite("Nothing was saved.", new Error("bug")), UNCONFIRMED_CHANGE_COPY);
 	assert.doesNotMatch(UNCONFIRMED_CHANGE_COPY, /nothing|not saved|not made|\b(session|server|token|API|endpoint)\b/i);
 });
+
+test("an unconfirmed online background map names its layers, and nothing else does", () => {
+	const body = {
+		error: {
+			code: "online_basemap_unconfirmed",
+			message: "x",
+			details: {
+				layers: [
+					{ name: "Satellite", host: "mt1.google.com" },
+					{ name: "Streets", host: null },
+					{ host: "bad" }
+				]
+			}
+		}
+	};
+	const refused = parseApiError(422, body);
+	assert.equal(refused.kind, "rejected");
+	assert.deepEqual(refused.onlineMaps, [
+		{ name: "Satellite", host: "mt1.google.com" },
+		{ name: "Streets", host: null }
+	]);
+	assert.deepEqual(
+		parseApiError(422, { error: { code: "validation_failed", message: "x", details: body.error.details } })
+			.onlineMaps,
+		[]
+	);
+});

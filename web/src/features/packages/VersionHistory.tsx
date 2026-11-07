@@ -7,6 +7,7 @@ import { TextLink } from "@/components/contour/TextLink";
 import { RowsTable } from "@/features/sites/parts";
 import { plural } from "@/lib/labels";
 
+import { CheckBadge } from "./CheckBadge";
 import type { HistoryRow } from "./history";
 
 function StateOf({ row }: { row: HistoryRow }) {
@@ -16,6 +17,24 @@ function StateOf({ row }: { row: HistoryRow }) {
 }
 
 function Notes({ row, currentVersion }: { row: HistoryRow; currentVersion: number | null }) {
+	return (
+		<>
+			<NoteText row={row} currentVersion={currentVersion} />
+			{row.warnings.length > 0 && (
+				<ul aria-label={`Warnings for v${row.version}`} className="mt-1 flex flex-col gap-1">
+					{row.warnings.map(warning => (
+						<li key={warning} className="flex flex-wrap items-start gap-2">
+							<CheckBadge state="warning" />
+							<span className="min-w-0 flex-1 break-words">{warning}</span>
+						</li>
+					))}
+				</ul>
+			)}
+		</>
+	);
+}
+
+function NoteText({ row, currentVersion }: { row: HistoryRow; currentVersion: number | null }) {
 	const origin = row.source === "draft" ? "Published from a draft on the web." : "Uploaded from QGIS.";
 	const note = row.changeNote ? ` ${row.changeNote}` : "";
 	if (row.state === "current")

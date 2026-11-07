@@ -30,7 +30,23 @@ export type HistoryRow = {
 	changeNote: string;
 	/** For a blocked package: the first check that blocked it, when it has been read. */
 	blockedDetail: string | null;
+	/** What its warning checks say, such as each online background map left out. */
+	warnings: string[];
 };
+
+/** What a package's warning checks say, in the order the checks ran. */
+export function warningDetails(checks: readonly PreparationCheck[]): string[] {
+	return checks.filter(check => check.state === "warning").map(check => check.detail);
+}
+
+/** The newest ready packages whose checks the history reads for warnings, at most `limit`. */
+export function readyToExplain(packages: readonly PackageSummary[], limit = 8): string[] {
+	return packages
+		.filter(item => item.state !== "blocked")
+		.sort((a, b) => b.package_version - a.package_version)
+		.slice(0, limit)
+		.map(item => item.package_id);
+}
 
 /** The first check that blocked a package, in the order the checks ran. */
 export function firstBlockedDetail(checks: readonly PreparationCheck[]): string | null {
@@ -54,7 +70,8 @@ export function blockedToExplain(packages: readonly PackageSummary[], limit = 8)
 export function historyRows(
 	history: PackageHistory,
 	clock: Clock,
-	blockedDetails: Readonly<Record<string, string | null | undefined>> = {}
+	blockedDetails: Readonly<Record<string, string | null | undefined>> = {},
+	warnings: Readonly<Record<string, readonly string[] | undefined>> = {}
 ): HistoryRow[] {
 	return [...history.packages]
 		.sort((a, b) => b.package_version - a.package_version)
@@ -74,6 +91,7 @@ export function historyRows(
 			inventoryFormVersion: item.forms.inventory?.form_version ?? null,
 			source: item.source,
 			changeNote: item.change_note.trim(),
-			blockedDetail: item.state === "blocked" ? (blockedDetails[item.package_id] ?? null) : null
+			blockedDetail: item.state === "blocked" ? (blockedDetails[item.package_id] ?? null) : null,
+			warnings: [...(warnings[item.package_id] ?? [])]
 		}));
 }

@@ -16,7 +16,13 @@ import {
 	newerPublished,
 	publishedVersions
 } from "@/features/packages/forms";
-import { blockedToExplain, firstBlockedDetail, historyRows } from "@/features/packages/history";
+import {
+	blockedToExplain,
+	firstBlockedDetail,
+	historyRows,
+	readyToExplain,
+	warningDetails
+} from "@/features/packages/history";
 import { type InspectedPackage, InspectPackage } from "@/features/packages/InspectPackage";
 import { readManifest } from "@/features/packages/manifest";
 import { UploadStep } from "@/features/packages/UploadStep";
@@ -99,15 +105,21 @@ export default async function PackagesPage({
 	const uploading = one(query.step) === "upload";
 
 	// Why each blocked package was blocked: the first check that blocked it.
+	// And what the warning checks of the newest ready ones say (a background map left out of the upload).
 	const explained: Record<string, string | null> = {};
+	const warned: Record<string, string[]> = {};
 	if (packages.ok)
-		await Promise.all(
-			blockedToExplain(packages.data.packages).map(async id => {
+		await Promise.all([
+			...blockedToExplain(packages.data.packages).map(async id => {
 				const detail = await settle(getPackage(ref.id, id));
 				explained[id] = detail.ok ? firstBlockedDetail(detail.data.checks) : null;
+			}),
+			...readyToExplain(packages.data.packages).map(async id => {
+				const detail = await settle(getPackage(ref.id, id));
+				warned[id] = detail.ok ? warningDetails(detail.data.checks) : [];
 			})
-		);
-	const rows = packages.ok ? historyRows(packages.data, timezone, explained) : [];
+		]);
+	const rows = packages.ok ? historyRows(packages.data, timezone, explained, warned) : [];
 
 	// Inspect: the package the address names, if it is one of this site's.
 	const wanted = uploading ? undefined : one(query.package);

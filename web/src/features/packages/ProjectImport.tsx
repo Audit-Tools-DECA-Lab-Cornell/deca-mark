@@ -10,6 +10,7 @@ import { apiRequestError } from "@/lib/api/errors";
 import type { ProjectImportResult } from "@/lib/api/types";
 import { LayerReadError } from "@/lib/packages";
 
+import { onlineMapLine } from "./online-maps";
 import { importSubmission } from "./project-import";
 
 export function ProjectImport({
@@ -129,7 +130,13 @@ export function ProjectImport({
 						<ul className="mt-2 list-disc pl-5">
 							{result.issues.map((issue, index) => (
 								<li key={`${issue.layer}-${index}`}>
-									<strong>{issue.layer}:</strong> {issue.message}
+									{issue.kind === "online_basemap" ? (
+										onlineMapLine({ name: issue.layer, host: issue.host ?? null })
+									) : (
+										<>
+											<strong>{issue.layer}:</strong> {issue.message}
+										</>
+									)}
 								</li>
 							))}
 						</ul>
