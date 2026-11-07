@@ -4,13 +4,13 @@ from fieldmaps_api.domain.form_engine import Answers
 from fieldmaps_api.domain.forms import (
     AnswerError,
     PublishedFormBoundsError,
-    StoredFormDefinition,
+    StoredCanonicalDefinition,
     validate_answers,
 )
 from fieldmaps_api.errors import ValidationFailedError
 
 
-def validated_answers(definition: StoredFormDefinition, answers: Answers) -> str:
+def validated_answers(definition: StoredCanonicalDefinition, answers: Answers) -> str:
     try:
         normalized = validate_answers(definition, answers)
     except PublishedFormBoundsError as error:

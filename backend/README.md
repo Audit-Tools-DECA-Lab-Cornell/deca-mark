@@ -336,11 +336,12 @@ retains `people` (required integer 0–999) and `notes` (optional text, at most 
 without adding an observer answer; observer remains envelope metadata. Practice forms can
 be copied through the normal revision-protected draft lifecycle. The separate collector
 practice definition in `contracts/forms/shell-v1.json` retains its authored observer question.
-Existing immutable `fields` definitions retain the original stored-form validator and
-export reader. Exact bound uploads and receipt retries remain supported within the current
-wire contract; this does not add legacy form installation to the collector or allow new
-fields-only authoring. An explicit canonical successor applies to new packages only.
-See the [compatibility resolution and removal gates](../docs/reviews/fields-only-transition-2026-10-17/README.md).
+The API reads, serves, validates and exports only canonical definitions (BE-24, D32). A
+stored definition that is not canonical is refused with `422 validation_failed`, never served
+or parsed on a guess; the only code that still recognises the old fields-only format is the
+schema-2 operator preflight (`form_schema_fields_only_parser.py`), which no API module
+imports and which goes after OPS-19 removes the hosted rows. Exact bound uploads and receipt
+retries remain supported within the current wire contract.
 
 Stored canonical definitions use structural validation for historical interpretation;
 new creation, editing and publication additionally enforce current authoring eligibility.

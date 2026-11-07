@@ -4,7 +4,6 @@ from collections.abc import Sequence
 
 from pydantic import JsonValue
 
-from fieldmaps_api.domain.forms import StoredCanonicalDefinition
 from fieldmaps_api.domain.observation_export_columns import (
     Column,
     ExportQuestion,
@@ -104,9 +103,7 @@ def plan(
         version_sources: list[Source] = []
         omitted: set[str] = set()
         parsed = historical_definition(definition, schema_versions[version])
-        id_columns = (
-            isinstance(parsed, StoredCanonicalDefinition) and parsed.column_naming == "questionId"
-        )
+        id_columns = parsed.column_naming == "questionId"
         for question in questions(definition, schema_versions[version]):
             if (
                 not id_columns

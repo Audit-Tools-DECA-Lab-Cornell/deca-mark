@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
 
 from fieldmaps_api.domain.form_definition import FORM_SCHEMA_VERSION
 from fieldmaps_api.domain.forms import FormDefinition
-from fieldmaps_api.domain.legacy_forms import FormDefinition as LegacyFormDefinition
+from fieldmaps_api.form_schema_fields_only_parser import FieldsOnlyDefinition
 
 NEW_PROPERTIES: Final = frozenset({"numberMode", "valueSource", "dateTime", "columnNaming", "role"})
 
@@ -80,7 +80,7 @@ def preflight(rows: list[PreflightRow]) -> PreflightReport:
             raise ValueError(message)
         definition_format: Literal["canonical", "legacy_fields"] = "canonical"
         if isinstance(raw, dict) and "fields" in raw and "questions" not in raw:
-            LegacyFormDefinition.model_validate(raw)
+            FieldsOnlyDefinition.model_validate(raw)
             definition_format = "legacy_fields"
         else:
             FormDefinition.model_validate(raw)

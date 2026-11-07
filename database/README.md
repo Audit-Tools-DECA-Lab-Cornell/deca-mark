@@ -119,8 +119,8 @@ The baseline's two synthetic form rows are unchanged source: schema 2 embeds the
 shell INSERT authors canonical `questions`, preserving the original two IDs, bounds and export names. DB-20's
 migration removes both rows from a fresh build, and `supabase/seed.sql` supplies the practice form to local
 tests only. Do not reapply the baseline or change migration history on an existing installation. No forward
-migration mutates a frozen form that records already use. The backend's historical `fields` reader/validator
-is retained until BE-24 removes it, for existing packages, records and supported queued uploads. Publishing a canonical
+migration mutates a frozen form that records already use. The API no longer reads fields-only definitions
+(BE-24, D32); only the schema-2 operator preflight recognises them, until OPS-19's reset removes the hosted rows. Publishing a canonical
 successor does not convert old package bindings. The read-only
 [inventory](fields-only-inventory.sql) reports exact form/package references on an explicitly
 selected target; it does not discover device queues or authorize hosted access.

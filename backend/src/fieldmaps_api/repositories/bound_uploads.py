@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationInfo, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fieldmaps_api.domain.forms import StoredFormDefinition
+from fieldmaps_api.domain.forms import StoredCanonicalDefinition
 from fieldmaps_api.domain.stored_form_versions import historical_definition
 from fieldmaps_api.queries import bound_uploads as queries
 from fieldmaps_api.repositories.upload_receipts import ReceiptIdentity
@@ -29,14 +29,14 @@ class BoundTarget(BaseModel):
     form_version_id: UUID | None
     form_version: str | None
     schema_version: int | None
-    definition: StoredFormDefinition | None
+    definition: StoredCanonicalDefinition | None
     point_covered: bool
 
     @field_validator("definition", mode="before")
     @classmethod
     def historical_parser(
         cls, value: JsonValue, info: ValidationInfo
-    ) -> StoredFormDefinition | None:
+    ) -> StoredCanonicalDefinition | None:
         if value is None:
             return None
         version = info.data.get("schema_version")
