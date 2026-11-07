@@ -22,7 +22,8 @@
 --
 -- The Practice garden's geometry is contracts/fixtures/sites/practice-garden.json; the form definitions
 -- are contracts/forms/janet-test-v1.json and janet-inventory-v1.json. database/tests/seed-forms.sql keeps
--- the three equal. Fixed ids (the 0101-0103 family is Training's): 0104 play form version, 0105 inventory
+-- the forms and templates equal to them, and backend/tests/test_training_seed.py keeps the package's layers
+-- and zones equal to the fixture. Fixed ids (the 0101-0103 family is Training's): 0104 play form version, 0105 inventory
 -- form version, 0106 package, 0107 and 0108 zones A and B, 0109 inventory form, 01ff the author of the
 -- seed (a marker, not an account).
 
@@ -1479,6 +1480,12 @@ DECLARE
   digest text; ground extensions.geometry; zones jsonb := '[]'; manifest_zones jsonb := '[]'; features jsonb := '[]';
   manifest jsonb; zone_layer jsonb; archive bytea; request jsonb; checks jsonb;
 BEGIN
+  -- A database that still holds a fields-only form is one OPS-19's reset has not rebuilt yet: refuse before
+  -- anything is deleted, so the hosted forms stay as they are until that reset.
+  IF EXISTS (SELECT FROM fieldmaps.form_versions WHERE definition ? 'fields') THEN
+    RAISE EXCEPTION 'DB-20 refuses a database that still holds a fields-only form version; the OPS-19 reset rebuilds it from the migrations'
+      USING ERRCODE = '23514';
+  END IF;
   -- Only a database that has not been used against the old seed. A used one is reset first (D31, OPS-19).
   IF EXISTS (SELECT FROM fieldmaps.observations WHERE form_version_id IN (old_shell, play))
     OR EXISTS (SELECT FROM fieldmaps.site_packages WHERE form_version_id IN (old_shell, play)

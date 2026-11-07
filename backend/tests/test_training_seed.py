@@ -59,6 +59,26 @@ def layer_features(payload: bytes) -> list[JsonValue]:
     return TypeAdapter(list[JsonValue]).validate_python(collection["features"])
 
 
+def zone_summaries(
+    features: list[JsonValue],
+) -> list[tuple[str, str, frozenset[tuple[float, float]]]]:
+    """Code, name and the vertex set of each zone's outer ring: the seed normalizes ring order."""
+    feature_type = TypeAdapter(dict[str, JsonValue])
+    summaries: list[tuple[str, str, frozenset[tuple[float, float]]]] = []
+    for feature in features:
+        parsed = feature_type.validate_python(feature)
+        properties = feature_type.validate_python(parsed["properties"])
+        geometry = feature_type.validate_python(parsed["geometry"])
+        rings = TypeAdapter(list[list[tuple[float, float]]]).validate_python(
+            geometry["coordinates"]
+            if geometry["type"] == "Polygon"
+            else TypeAdapter(list[JsonValue]).validate_python(geometry["coordinates"])[0]
+        )
+        code = properties.get("zone_code", properties.get("code"))
+        summaries.append((str(code), str(properties["name"]), frozenset(rings[0][:-1])))
+    return sorted(summaries, key=lambda summary: summary[0])
+
+
 @pytest.mark.integration
 def test_new_account_sees_the_training_site_and_downloads_its_verified_package(
     api_client: TestClient, signer: Signer, new_user: UUID
@@ -105,7 +125,7 @@ def test_new_account_sees_the_training_site_and_downloads_its_verified_package(
     assert layers["ground"] == fixture_features(*GROUND_KINDS)
     assert layers["paths"] == fixture_features("path")
     assert layers["trees"] == fixture_features("tree")
-    assert len(layers["zones"]) == 2
+    assert zone_summaries(layers["zones"]) == zone_summaries(fixture_features("zone"))
 
     # And both forms are published, canonical and at the current schema version
     for code, version_id in (("training-v1", PLAY), ("training-inventory-v1", INVENTORY)):

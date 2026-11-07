@@ -33,7 +33,7 @@ No user receives membership in the platform organization. Do not grant an organi
 ## The Training site package
 
 The Practice garden's package is seeded with the database, so no upload is needed for a fresh or rebuilt
-database, and an account that signs in joins Training and downloads it like any site. To publish a newer
+database, and an account that signs in joins Training. From MOB-43 the collector downloads it like any site; until then it still filters Training out. To publish a newer
 Training map, use the ordinary zone publication workflow (BE-22) with a temporary **project** manager account:
 
 1. Select the intended environment explicitly. Use an operator account that already has an Auth user and profile. Record its user ID in the operation log.
