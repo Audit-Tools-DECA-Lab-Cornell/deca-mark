@@ -70,11 +70,12 @@ def test_export_refuses_a_form_it_cannot_read_with_that_form_s_own_error(
     # Given an observation recorded against a published version the API cannot read.
     assert disposable_database_selected(), "Seeding raw definitions requires a disposable database"
     admin_sql(
-        "ALTER TABLE fieldmaps.form_versions DISABLE TRIGGER immutable_form_version; "
+        # One transaction: if the UPDATE failed, the trigger would not stay disabled for later tests.
+        "BEGIN; ALTER TABLE fieldmaps.form_versions DISABLE TRIGGER immutable_form_version; "
         "UPDATE fieldmaps.form_versions SET definition=:'definition'::jsonb,"
         "schema_version=:schema_version WHERE id=(SELECT form_version_id "
         "FROM fieldmaps.observations WHERE id=:'point'); "
-        "ALTER TABLE fieldmaps.form_versions ENABLE TRIGGER immutable_form_version;",
+        "ALTER TABLE fieldmaps.form_versions ENABLE TRIGGER immutable_form_version; COMMIT;",
         *analysis_site.bound.site.tenant.variables(),
         f"definition={json.dumps(definition)}",
         f"schema_version={schema_version}",
