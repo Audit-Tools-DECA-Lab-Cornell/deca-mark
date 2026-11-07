@@ -11,6 +11,7 @@ import { Textarea } from "@/components/contour/Textarea";
 import { TextInput } from "@/components/contour/TextInput";
 import { useToast } from "@/components/contour/Toast";
 import { projectHref } from "@/features/shell/navigation";
+import { rejectedWith } from "@/lib/action-rejection";
 import { UNCONFIRMED_CHANGE_COPY } from "@/lib/api/errors";
 
 import { createSiteAction, type SiteField } from "./actions";
@@ -48,6 +49,8 @@ export function CreateSiteDialog({ org, project, canManage }: { org: string; pro
 	const [description, setDescription] = useState("");
 	const [problems, setProblems] = useState<Problems>({});
 	const [failure, setFailure] = useState<string | null>(null);
+	// The call itself rejected (offline, signed out, a page older than the server's build): see `rejectedWith`.
+	const [rejection, setRejection] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 
 	if (!canManage)
@@ -64,6 +67,7 @@ export function CreateSiteDialog({ org, project, canManage }: { org: string; pro
 		setDescription("");
 		setProblems({});
 		setFailure(null);
+		setRejection(null);
 	}
 
 	function focusFirst(found: Problems) {
@@ -84,6 +88,7 @@ export function CreateSiteDialog({ org, project, canManage }: { org: string; pro
 		if (descriptionProblem) found.description = descriptionProblem;
 		setProblems(found);
 		setFailure(null);
+		setRejection(null);
 		if (Object.keys(found).length > 0) {
 			focusFirst(found);
 			return;
@@ -111,6 +116,8 @@ export function CreateSiteDialog({ org, project, canManage }: { org: string; pro
 					onClick: () => router.push(projectHref(org, project, `sites/${createdCode}`))
 				}
 			});
+		} catch (error) {
+			setRejection(rejectedWith(error, "reload", "Nothing was created."));
 		} finally {
 			setBusy(false);
 		}
@@ -183,6 +190,11 @@ export function CreateSiteDialog({ org, project, canManage }: { org: string; pro
 						onChange={event => setDescription(event.target.value)}
 					/>
 				</Field>
+				{rejection && (
+					<Note tone="attention" live="assertive">
+						{rejection}
+					</Note>
+				)}
 				{failure &&
 					(failure === UNCONFIRMED_CHANGE_COPY ? (
 						<Note tone="attention" title="The site may not have been created." live="assertive">

@@ -112,7 +112,9 @@ def datasource_host(layer: ElementTree.Element) -> str | None:
     """Read the host a network raster layer fetches from, out of its datasource string.
 
     QGIS stores a tile or WMS source as `&`-joined key/value pairs with the service URL under
-    `url`. Anything without one is a file on disk, which has no host.
+    `url`. Anything without one is a file on disk, which has no host. A URL that cannot be parsed
+    is a tile service whose host is unknown: OpenStreetMap's own `https://[abc].tile...` subdomain
+    pattern reads as a malformed IPv6 address, and that must not stop the project being read.
     """
     source = _text(layer.find("datasource"))
     if source is None:
@@ -121,8 +123,10 @@ def datasource_host(layer: ElementTree.Element) -> str | None:
     urls = fields.get("url") or fields.get("URL")
     if not urls:
         return None
-    parsed = urlparse(urls[0].strip())
-    return parsed.hostname
+    try:
+        return urlparse(urls[0].strip()).hostname
+    except ValueError:
+        return None
 
 
 def _text(element: ElementTree.Element | None) -> str | None:

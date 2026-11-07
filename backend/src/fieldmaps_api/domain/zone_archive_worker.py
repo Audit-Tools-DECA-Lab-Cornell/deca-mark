@@ -6,14 +6,24 @@ from typing import assert_never
 import orjson
 from pydantic import ValidationError
 
-from fieldmaps_api.domain.packages import PackageError
+from fieldmaps_api.domain.packages import OnlineBasemapError, PackageError
 from fieldmaps_api.domain.zone_archive import extract_base_archive, prepare_import_base
 from fieldmaps_api.domain.zone_archive_jobs import (
+    BASEMAPS,
     JOBS,
+    ONLINE_BASEMAPS_FILE,
+    REASON_FILE,
     ImportJob,
     PublishJob,
 )
 from fieldmaps_api.domain.zone_packages import prepare_zone_package
+
+
+def refuse(directory: Path, error: PackageError) -> None:
+    """Leave the refusal's own sentence, and the online maps it names, for the caller to read."""
+    (directory / REASON_FILE).write_text(str(error), encoding="utf-8")
+    if isinstance(error, OnlineBasemapError):
+        (directory / ONLINE_BASEMAPS_FILE).write_bytes(BASEMAPS.dump_json(error.layers))
 
 
 def resource_limits() -> None:
@@ -43,9 +53,13 @@ def process(directory: Path) -> None:
 
 if __name__ == "__main__":
     resource_limits()
+    work = Path(sys.argv[1])
     try:
-        process(Path(sys.argv[1]))
-    except (PackageError, ValidationError):
+        process(work)
+    except PackageError as error:
+        refuse(work, error)
+        sys.exit(2)
+    except ValidationError:
         sys.exit(2)
     except (OSError, MemoryError):
         sys.exit(3)

@@ -7,6 +7,7 @@ import { Button } from "@/components/contour/Button";
 import { Dialog, DialogClose } from "@/components/contour/Dialog";
 import { Note } from "@/components/contour/Note";
 import { useToast } from "@/components/contour/Toast";
+import { rejected } from "@/lib/action-rejection";
 import { plural } from "@/lib/labels";
 
 import { ActionNote } from "./ActionNote";
@@ -35,7 +36,12 @@ export function RetireDialog({
 
 	function retire() {
 		start(async () => {
-			const result = await retireVersionAction({ org, project, version: version.code });
+			let result: Awaited<ReturnType<typeof retireVersionAction>>;
+			try {
+				result = await retireVersionAction({ org, project, version: version.code });
+			} catch (error) {
+				return setFailure(rejected(error, "reload", "Nothing was retired."));
+			}
 			if (result.status === "failed") return setFailure(result);
 			setOpen(false);
 			toast({ title: `${version.code} is retired`, description: "It can still be read.", tone: "saved" });

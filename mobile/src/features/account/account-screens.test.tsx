@@ -39,7 +39,6 @@ const state = vi.hoisted(() => ({
   afterRetry: null as (() => void) | null,
   work: {
     unsent: 0,
-    held: 0,
     practice: 0,
     attention: 0,
     drafts: 0,
@@ -144,7 +143,6 @@ beforeEach(() => {
   state.online = null;
   state.work = {
     unsent: 0,
-    held: 0,
     practice: 0,
     attention: 0,
     drafts: 0,
@@ -164,12 +162,16 @@ beforeEach(() => {
 
 describe("Account (MOB-07)", () => {
   it("shows the profile and what is on this device, and no longer says uploading is missing", () => {
-    state.work = { ...state.work, unsent: 3, onDevice: 2, held: 1, uploaded: 4, drafts: 1 };
+    state.work = { ...state.work, unsent: 3, onDevice: 2, uploaded: 4, drafts: 1 };
     const screen = render(<AccountScreen />);
     expect(screen.says("observer@fieldmaps.test")).toBe(true);
     expect(screen.says("MO")).toBe(true);
     expect(screen.says("upload yet")).toBe(false);
     expect(screen.says("until an update of DECA Mark connects uploading")).toBe(false);
+    // The states a device can show: no "Held" row for a state that cannot occur (MOB-38).
+    for (const word of ["On device", "Needs attention", "Uploaded"])
+      expect(screen.says(word)).toBe(true);
+    expect(screen.says("Held")).toBe(false);
     expect(screen.controls()).not.toContain("Upload now");
     expect(screen.controls()).toContain("Sign out");
     expect(screen.controls()).toContain("Review account deletion");

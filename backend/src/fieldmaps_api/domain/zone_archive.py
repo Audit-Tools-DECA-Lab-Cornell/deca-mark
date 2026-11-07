@@ -7,19 +7,22 @@ from typing import Final, assert_never
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
-from fieldmaps_api.domain.geojson import FeatureCollection, Geometry, positions
+from fieldmaps_api.domain.geojson import OUTSIDE_WGS84, FeatureCollection, Geometry, positions
 from fieldmaps_api.domain.packages import (
     LAYER_ORDER,
     MAX_ARCHIVE_BYTES,
     MAX_FEATURES_PER_LAYER,
     NO_PERMITTED_HOSTS,
     LayerName,
+    OnlineBasemapError,
     PackageError,
     PackageSubmission,
     PreparationCheck,
+    SourceProject,
     check_coordinate_reference,
     check_imagery_licence,
     check_layer_sources,
+    online_basemaps,
     read_source_project,
 )
 from fieldmaps_api.domain.zone_package_schemas import (
@@ -49,6 +52,40 @@ def _text(value: JsonValue) -> str | None:
         case None | bool() | int() | float() | list() | dict():
             return None
     assert_never(value)
+
+
+def _layer_problem(name: LayerName, error: ValidationError) -> str:
+    """Say in a manager's words which layer could not be read, and what to do about it."""
+    problems = error.errors(include_input=False, include_url=False, include_context=False)
+    if any(OUTSIDE_WGS84 in problem["msg"] for problem in problems):
+        return (
+            f"The {name} layer has coordinates that are not longitude and latitude, so nothing "
+            "was uploaded. In QGIS, export it as GeoJSON with CRS EPSG:4326 and choose it again."
+        )
+    location = problems[0]["loc"] if problems else ()
+    if len(location) > 1 and location[0] == "features" and isinstance(location[1], int):
+        if len(location) > 2 and location[2] == "properties":  # noqa: PLR2004 - loc index
+            return (
+                f"Feature {location[1] + 1} of the {name} layer has an attribute that is a list "
+                "or a nested value, so nothing was uploaded. Make each attribute text or a number "
+                "in QGIS, then export the layer again."
+            )
+        return (
+            f"Feature {location[1] + 1} of the {name} layer has a shape that could not be read, "
+            "so nothing was uploaded. Give every feature a point, line or polygon with a "
+            "longitude and latitude, then export the layer again."
+        )
+    return (
+        f"The {name} layer is not a GeoJSON feature collection, so nothing was uploaded. "
+        "Export it from QGIS as GeoJSON and choose it again."
+    )
+
+
+def _read_collection(name: LayerName, payload: JsonValue) -> FeatureCollection:
+    try:
+        return _COLLECTION.validate_python(payload)
+    except ValidationError as error:
+        raise PackageError(_layer_problem(name, error)) from error
 
 
 def _read_layer(name: LayerName, payload: bytes) -> ArchiveLayer:
@@ -200,6 +237,24 @@ def extract_base_archive(archive: bytes, expected_sha256: str | None = None) -> 
     )
 
 
+def refuse_blocked(checks: list[PreparationCheck], project: SourceProject | None) -> None:
+    """Refuse the import with the reason a blocked check recorded, never a generic sentence.
+
+    A problem that confirmation cannot fix is reported first. An online background map the request
+    has not named is reported as such, with every online map the project uses, so a client can
+    ask once and send them all.
+    """
+    others = [
+        check.detail
+        for check in checks
+        if check.state == "blocked" and check.step != "imagery-licence"
+    ]
+    if others:
+        raise PackageError(" ".join(others))
+    if project is not None and any(check.state == "blocked" for check in checks):
+        raise OnlineBasemapError(online_basemaps(project, NO_PERMITTED_HOSTS))
+
+
 def prepare_import_base(
     submission: PackageRequest, site_code: str, forms: PackageForms
 ) -> BaseArchive:
@@ -207,7 +262,7 @@ def prepare_import_base(
         message = "A package needs a ground and a zones layer"
         raise PackageError(message)
     collections: dict[LayerName, FeatureCollection] = {
-        name: _COLLECTION.validate_python(payload) for name, payload in submission.layers.items()
+        name: _read_collection(name, payload) for name, payload in submission.layers.items()
     }
     if any(len(layer.features) > MAX_FEATURES_PER_LAYER for layer in collections.values()):
         message = "A layer exceeds the feature count ceiling"
@@ -225,10 +280,10 @@ def prepare_import_base(
     project = read_source_project(submission.project_file, checks)
     check_layer_sources(internal_submission, project, checks)
     check_coordinate_reference(internal_submission, project, checks)
-    check_imagery_licence(project, NO_PERMITTED_HOSTS, checks)
-    if any(check.state == "blocked" for check in checks):
-        message = "The imported sources did not pass package preparation"
-        raise PackageError(message)
+    check_imagery_licence(
+        project, NO_PERMITTED_HOSTS, checks, frozenset(submission.leave_out_online_basemaps)
+    )
+    refuse_blocked(checks, project)
     layers = tuple(
         _read_layer(name, collections[name].model_dump_json(exclude_none=True).encode())
         for name in LAYER_ORDER

@@ -1,3 +1,4 @@
+import { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
 import { shellV1 } from "../../forms/fixtures/shell-v1";
 import { startSession } from "../../forms/session";
@@ -63,5 +64,62 @@ describe("ReviewStep's save gate on a map from DECA Mark (MUI-4)", () => {
     expect(screen.says("Not saved yet.")).toBe(false);
     expect(isDisabled(screen.control("Save on this device"))).toBe(false);
     expect(screen.controls()).not.toContain("Adjust point");
+  });
+});
+
+describe("ReviewStep while the record is being stored (MOB-41)", () => {
+  function savingReview() {
+    let finish: (outcome: { problems: never[] } | null) => void = () => {};
+    const onSave = vi.fn(
+      () =>
+        new Promise<{ problems: never[] } | null>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const onJump = vi.fn();
+    const onBack = vi.fn();
+    const onDiscard = vi.fn();
+    const screen = render(
+      <ReviewStep
+        form={shellV1}
+        state={startSession()}
+        summary="OBS-3F2A1B · North meadow · Standard round · map v3"
+        onJump={onJump}
+        onBack={onBack}
+        onSave={onSave}
+        onDiscard={onDiscard}
+      />,
+    );
+    return {
+      screen,
+      onJump,
+      onBack,
+      onDiscard,
+      finish: (outcome: { problems: never[] } | null) => finish(outcome),
+    };
+  }
+
+  it("answers no tap on a row, Keep answering or Discard until the save has finished", async () => {
+    const { screen, onJump, onBack, onDiscard, finish } = savingReview();
+    const [firstRow] = screen.controls().filter((label) => label.endsWith("."));
+    expect(firstRow).toBeDefined();
+    expect(isDisabled(screen.control(firstRow ?? ""))).toBe(false);
+
+    await screen.press("Save on this device");
+    for (const label of [firstRow ?? "", "Keep answering", "Discard observation"])
+      expect(isDisabled(screen.control(label))).toBe(true);
+    await screen.press(firstRow ?? "");
+    await screen.press("Keep answering");
+    await screen.press("Discard observation");
+    expect(onJump).not.toHaveBeenCalled();
+    expect(onBack).not.toHaveBeenCalled();
+    expect(onDiscard).not.toHaveBeenCalled();
+
+    // A save that did not go through hands everything back.
+    await act(async () => finish({ problems: [] }));
+    expect(isDisabled(screen.control(firstRow ?? ""))).toBe(false);
+    expect(isDisabled(screen.control("Keep answering"))).toBe(false);
+    await screen.press("Discard observation");
+    expect(onDiscard).toHaveBeenCalledOnce();
   });
 });

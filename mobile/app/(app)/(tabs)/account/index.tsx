@@ -114,12 +114,6 @@ export default function AccountScreen() {
               />
               <ListRow
                 divider
-                title={<StateBadge kind="queue" state="held" />}
-                trailing={<Text variant="monoData">{`${work.held}`}</Text>}
-                accessibilityLabel={`Held: ${work.held}`}
-              />
-              <ListRow
-                divider
                 title={<StateBadge kind="queue" state="uploaded" />}
                 trailing={<Text variant="monoData">{`${work.uploaded}`}</Text>}
                 accessibilityLabel={`Uploaded: ${work.uploaded}`}

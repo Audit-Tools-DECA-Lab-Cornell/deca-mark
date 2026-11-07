@@ -11,6 +11,7 @@ import { Note } from "@/components/contour/Note";
 import { TextInput } from "@/components/contour/TextInput";
 import { TextLink } from "@/components/contour/TextLink";
 import { clearFlash, leaveFlash } from "@/features/auth/flash";
+import { isRedirect, rejectedWith } from "@/lib/action-rejection";
 import { signOut } from "@/lib/auth/actions";
 
 import { type DeletionState, requestAccountDeletion } from "./actions";
@@ -27,17 +28,6 @@ const DELETED_FLASH = {
 	title: "Account deleted",
 	description: "Your profile and memberships were removed. Observations stay with their projects."
 };
-
-/** A redirect from the Server Action, which is how a finished deletion leaves this page. */
-function isRedirect(error: unknown): boolean {
-	return (
-		typeof error === "object" &&
-		error !== null &&
-		"digest" in error &&
-		typeof error.digest === "string" &&
-		error.digest.startsWith("NEXT_REDIRECT")
-	);
-}
 
 export type DeleteAccountProps = {
 	/** The signed-in account this page shows. Every try names it, and deletes nothing if another is signed in. */
@@ -82,8 +72,19 @@ export function DeleteAccount({ accountId, organizations, projects, blockers }: 
 				? { ...result, tries }
 				: { status: "pending", tries, gaveUp: true, otherAccount: result?.otherAccount };
 		} catch (error) {
-			if (!isRedirect(error)) clearFlash();
-			throw error;
+			if (isRedirect(error)) throw error;
+			clearFlash();
+			// The call itself rejected (offline, signed out, a page older than the server's build), so the
+			// dialog stays. The deletion may have gone through: it says so, and never "Nothing was deleted"
+			// unless the call is known not to have run. After a 202 the deletion is already recorded.
+			if (retry)
+				return {
+					status: "pending",
+					tries: (previous.tries ?? 0) + 1,
+					gaveUp: true,
+					otherAccount: previous.otherAccount
+				};
+			return { status: "failed", message: rejectedWith(error, "reload", "Nothing was deleted.") };
 		}
 	}, IDLE);
 	const messageRef = useRef<HTMLDivElement>(null);

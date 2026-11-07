@@ -17,6 +17,7 @@ import {
   zonesSentence,
 } from "../../../../../src/features/projects/readiness";
 import { SitePlanFrame } from "../../../../../src/features/projects/SitePlan";
+import { UnreadableDraftCard } from "../../../../../src/features/projects/UnfinishedCard";
 import { bundledPackage } from "../../../../../src/packages/bundled";
 import { packageFacts } from "../../../../../src/packages/open";
 import { useSiteVersions } from "../../../../../src/packages/zone-read-models";
@@ -220,6 +221,8 @@ export default function SiteScreen() {
             </Text>
           </InnerPanel>
         )}
+
+        <UnreadableDraftCard />
 
         {hosted ? (
           <HostedPackageIsland

@@ -11,7 +11,7 @@ import {
 
 /** MOB-37: the words for leaving say what the uploader does, and keep practice apart from unsent work. */
 
-const none: LocalWork = { unsent: 0, held: 0, practice: 0, attention: 0, drafts: 0 };
+const none: LocalWork = { unsent: 0, practice: 0, attention: 0, drafts: 0 };
 
 describe("practice records in the words for leaving", () => {
   it("says practice records stay and are never uploaded", () => {
@@ -34,6 +34,19 @@ describe("practice records in the words for leaving", () => {
     expect(deletionConsequences({ ...none, unsent: 1, practice: 2 }, 1, null)).toContain(
       "2 practice records stay on this device and are never uploaded.",
     );
+  });
+});
+
+describe("no record is ever held on a device (MOB-37, MOB-38)", () => {
+  it("never says held, for any mix of work", () => {
+    const work = { unsent: 4, practice: 2, attention: 1, drafts: 2 };
+    const said = [
+      ...(signOutWarning(work, "a@b.c") ?? []),
+      ...deletionConsequences(work, 2, "MO"),
+      deleteAnywayAlert(work).title,
+      deleteAnywayAlert(work).body,
+    ].join(" ");
+    expect(said).not.toMatch(/held/i);
   });
 });
 

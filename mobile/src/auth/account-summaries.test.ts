@@ -55,7 +55,6 @@ function summary(userId: string, unsent: number, signedOutAt: string) {
     email: `${userId.slice(-1)}@fieldmaps.test`,
     issuer: ISSUER,
     unsent,
-    held: 0,
     drafts: 0,
     signedOutAt,
   };
@@ -78,13 +77,25 @@ describe("signed-out account summaries (MOB-05, MOB-07)", () => {
     expect([...files.keys()]).toEqual([`documents/accounts/${A}.json`]);
     expect(
       Object.keys(JSON.parse(files.get(`documents/accounts/${A}.json`) ?? "{}")).sort(),
-    ).toEqual(["drafts", "email", "held", "issuer", "signedOutAt", "unsent", "userId"]);
+    ).toEqual(["drafts", "email", "issuer", "signedOutAt", "unsent", "userId"]);
   });
 
   it("forgets an account that signs in again", () => {
     writeAccountSummary(summary(A, 5, "2026-10-15T10:00:00Z"));
     removeAccountSummary(A);
     expect(readAccountSummaries(ISSUER)).toEqual([]);
+  });
+
+  it("still reads a summary an earlier build wrote with a count of held records", () => {
+    // Nothing is held on a device any more (MOB-37, MOB-38); the old field is read past, not shown.
+    files.set(
+      `documents/accounts/${A}.json`,
+      JSON.stringify({ ...summary(A, 3, "2026-10-15T10:00:00Z"), held: 1 }),
+    );
+    expect(readAccountSummaries(ISSUER).map((s) => [s.email, s.unsent])).toEqual([
+      ["a@fieldmaps.test", 3],
+    ]);
+    expect(Object.keys(readAccountSummaries(ISSUER)[0] ?? {})).not.toContain("held");
   });
 
   it("skips another sign-in service, empty accounts and unreadable files", () => {

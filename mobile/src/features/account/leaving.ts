@@ -5,10 +5,8 @@
 
 /** What this account still has on this device that the server has not acknowledged. */
 export type LocalWork = {
-  /** Bound records not acknowledged by the server: on device, uploading, needs attention and held. */
+  /** Bound records not acknowledged by the server: on device, uploading and needs attention. */
   readonly unsent: number;
-  /** Of those, held for the project (they wait on the project, not on the observer). */
-  readonly held: number;
   /** Practice records (no project binding): they stay on this device and are never uploaded. */
   readonly practice: number;
   /** Of those, refused by the server with something to fix. */
@@ -43,12 +41,6 @@ export function signOutWarning(work: LocalWork, email: string): readonly string[
   if (nothingWaits(work)) return null;
   const lines = ["Your unsent work needs a clear owner."];
   if (work.unsent > 0) lines.push(`${observations(work.unsent)} not been uploaded.`);
-  if (work.held > 0)
-    lines.push(
-      work.held === 1
-        ? "1 of them is held for the project."
-        : `${work.held} of them are held for the project.`,
-    );
   if (work.drafts > 0)
     lines.push(
       work.drafts === 1
