@@ -255,4 +255,6 @@ test("an answer that names the background map opens the same question, and the r
 	expect(sent).toHaveLength(2);
 	expect(sent[0]?.leave_out_online_basemaps).toBeUndefined();
 	expect(sent[1]?.leave_out_online_basemaps).toEqual([BASEMAP.name]);
+	// The refused request stored nothing, so the confirmed retry is the same request.
+	expect(sent[1]?.request_id).toBe(sent[0]?.request_id);
 });

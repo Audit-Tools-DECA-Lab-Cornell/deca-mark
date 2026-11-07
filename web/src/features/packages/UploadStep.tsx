@@ -235,6 +235,8 @@ export function UploadStep({
 	const fieldId = useId();
 	const nextId = useRef(0);
 	const uploadButton = useRef<HTMLButtonElement>(null);
+	// The request a 422 online_basemap_unconfirmed refused. It stored nothing, so the confirmed retry reuses its ID.
+	const refusedRequestId = useRef<string | null>(null);
 
 	const [formVersion, setFormVersion] = useState(defaultFormVersion);
 	const [slots, setSlots] = useState<Record<LayerName, LayerSlotState>>(EMPTY_SLOTS);
@@ -433,6 +435,8 @@ export function UploadStep({
 		setUncertain(false);
 		setFormVersionProblem(null);
 		setResult(null);
+		const requestId = refusedRequestId.current ?? newId();
+		refusedRequestId.current = null;
 		try {
 			const layers = submissionLayers(slots);
 			const submission: PackageSubmission =
@@ -440,7 +444,7 @@ export function UploadStep({
 					? unanswered.submission
 					: {
 							site_id: siteId,
-							request_id: newId(),
+							request_id: requestId,
 							expected_current_package_id: expectedPackageId,
 							form_version: formVersion,
 							// Left out, the current map's inventory form carries over (none on a site's first map).
@@ -484,8 +488,9 @@ export function UploadStep({
 			await packageUploaded({ org, project }).catch(() => undefined);
 			router.refresh();
 		} catch (raised) {
-			const refusal = apiRequestError(raised);
-			if (refusal.code === "online_basemap_unconfirmed" && refusal.onlineMaps.length > 0) {
+			const refusal = raised instanceof LayerReadError ? null : apiRequestError(raised);
+			if (refusal?.code === "online_basemap_unconfirmed" && refusal.onlineMaps.length > 0) {
+				refusedRequestId.current = requestId;
 				// The project names maps Read project did not mark: ask the same question from this answer.
 				setAsking(refusal.onlineMaps);
 				return;
@@ -806,9 +811,9 @@ export function UploadStep({
 							setAsking(null);
 							setError(ONLINE_MAP_CANCELLED);
 							setUncertain(false);
-							// Focus goes back to Upload once the dialog has left (it has no trigger to return to).
-							window.setTimeout(() => uploadButton.current?.focus(), 100);
+							refusedRequestId.current = null;
 						}}
+						onClosed={() => uploadButton.current?.focus()}
 					/>
 
 					{error && (

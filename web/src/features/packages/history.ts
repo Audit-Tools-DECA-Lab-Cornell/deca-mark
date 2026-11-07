@@ -32,6 +32,8 @@ export type HistoryRow = {
 	blockedDetail: string | null;
 	/** What its warning checks say, such as each online background map left out. */
 	warnings: string[];
+	/** The checks of this ready version could not be read, which is not the same as having no warnings. */
+	warningsUnreadable: boolean;
 };
 
 /** What a package's warning checks say, in the order the checks ran. */
@@ -71,7 +73,8 @@ export function historyRows(
 	history: PackageHistory,
 	clock: Clock,
 	blockedDetails: Readonly<Record<string, string | null | undefined>> = {},
-	warnings: Readonly<Record<string, readonly string[] | undefined>> = {}
+	/** By package: its warnings, or null when its checks could not be read. A package left out was not read. */
+	warnings: Readonly<Record<string, readonly string[] | null | undefined>> = {}
 ): HistoryRow[] {
 	return [...history.packages]
 		.sort((a, b) => b.package_version - a.package_version)
@@ -92,6 +95,7 @@ export function historyRows(
 			source: item.source,
 			changeNote: item.change_note.trim(),
 			blockedDetail: item.state === "blocked" ? (blockedDetails[item.package_id] ?? null) : null,
-			warnings: [...(warnings[item.package_id] ?? [])]
+			warnings: [...(warnings[item.package_id] ?? [])],
+			warningsUnreadable: warnings[item.package_id] === null
 		}));
 }

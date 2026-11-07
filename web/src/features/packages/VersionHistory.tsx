@@ -20,10 +20,15 @@ function Notes({ row, currentVersion }: { row: HistoryRow; currentVersion: numbe
 	return (
 		<>
 			<NoteText row={row} currentVersion={currentVersion} />
+			{row.warningsUnreadable && (
+				<p className="mt-1 text-ink-2">
+					The checks for this version could not be read. Reload the page to try again.
+				</p>
+			)}
 			{row.warnings.length > 0 && (
 				<ul aria-label={`Warnings for v${row.version}`} className="mt-1 flex flex-col gap-1">
-					{row.warnings.map(warning => (
-						<li key={warning} className="flex flex-wrap items-start gap-2">
+					{row.warnings.map((warning, index) => (
+						<li key={`${index}-${warning}`} className="flex flex-wrap items-start gap-2">
 							<CheckBadge state="warning" />
 							<span className="min-w-0 flex-1 break-words">{warning}</span>
 						</li>

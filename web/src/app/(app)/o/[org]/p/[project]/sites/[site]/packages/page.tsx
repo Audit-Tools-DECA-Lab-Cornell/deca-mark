@@ -107,7 +107,7 @@ export default async function PackagesPage({
 	// Why each blocked package was blocked: the first check that blocked it.
 	// And what the warning checks of the newest ready ones say (a background map left out of the upload).
 	const explained: Record<string, string | null> = {};
-	const warned: Record<string, string[]> = {};
+	const warned: Record<string, string[] | null> = {};
 	if (packages.ok)
 		await Promise.all([
 			...blockedToExplain(packages.data.packages).map(async id => {
@@ -116,7 +116,8 @@ export default async function PackagesPage({
 			}),
 			...readyToExplain(packages.data.packages).map(async id => {
 				const detail = await settle(getPackage(ref.id, id));
-				warned[id] = detail.ok ? warningDetails(detail.data.checks) : [];
+				// A failed read is not "no warnings": the row says its checks could not be read.
+				warned[id] = detail.ok ? warningDetails(detail.data.checks) : null;
 			})
 		]);
 	const rows = packages.ok ? historyRows(packages.data, timezone, explained, warned) : [];

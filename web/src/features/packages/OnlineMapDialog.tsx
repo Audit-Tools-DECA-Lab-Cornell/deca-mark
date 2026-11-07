@@ -13,19 +13,26 @@ export function OnlineMapDialog({
 	maps,
 	busy,
 	onConfirm,
-	onCancel
+	onCancel,
+	onClosed
 }: {
 	/** The maps to leave out, or null while the question is closed. */
 	maps: readonly OnlineMap[] | null;
 	busy: boolean;
 	onConfirm: (maps: readonly OnlineMap[]) => void;
 	onCancel: () => void;
+	/** Focus has to go somewhere once the dialog has closed: the caller puts it back on Upload. */
+	onClosed: () => void;
 }) {
 	return (
 		<Dialog
 			open={maps !== null}
 			onOpenChange={next => {
 				if (!next) onCancel();
+			}}
+			onCloseAutoFocus={event => {
+				event.preventDefault();
+				onClosed();
 			}}
 			title="Upload without the background map?"
 			description="Observers see the vector layers only. A background map is not part of the map package."
@@ -47,8 +54,8 @@ export function OnlineMapDialog({
 				{maps && maps.length === 1 ? "This map will not be uploaded:" : "These maps will not be uploaded:"}
 			</p>
 			<ul className="mt-2 list-disc pl-5 type-body text-ink">
-				{maps?.map(map => (
-					<li key={map.name} className="wrap-break-word">
+				{maps?.map((map, index) => (
+					<li key={`${map.name}-${index}`} className="wrap-break-word">
 						{onlineMapName(map)}
 					</li>
 				))}
