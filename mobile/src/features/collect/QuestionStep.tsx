@@ -230,8 +230,10 @@ export function QuestionStep({
           showField();
         }}
       >
+        {/* Both keyed by the question (so each mounts again for the next one), and by a suffix of their
+            own: two siblings with one key make React keep or drop the wrong element. */}
         <Animated.View
-          key={question.id}
+          key={`${question.id}:panel`}
           {...(reduceMotion ? {} : { entering: FadeIn.duration(120) })}
           style={{ gap: 12 }}
         >
@@ -283,7 +285,7 @@ export function QuestionStep({
         ) : null}
 
         <QuestionValueInput
-          key={question.id}
+          key={`${question.id}:input`}
           question={question}
           value={value}
           text={text}
