@@ -118,9 +118,9 @@ delete pending rows or reset data to make deletion appear complete.
 The baseline's fresh synthetic shell INSERT now authors canonical `questions`, preserving
 the original two IDs, bounds and export names. This edits initialization source only; do not
 reapply the baseline or change migration history on an existing installation. No forward
-migration mutates frozen forms. The original historical `fields` reader/validator is retained
-for existing packages, records and supported queued uploads. Publishing a canonical
-successor does not convert old package bindings. The read-only
+migration mutates frozen forms. The API no longer reads fields-only definitions (BE-24, D32);
+only the schema-2 operator preflight recognises them, until OPS-19's reset removes the hosted
+rows. Publishing a canonical successor does not convert old package bindings. The read-only
 [inventory](fields-only-inventory.sql) reports exact form/package references on an explicitly
 selected target; it does not discover device queues or authorize hosted access.
 See the [compatibility resolution and exact remaining steps](../docs/reviews/fields-only-transition-2026-10-17/README.md).

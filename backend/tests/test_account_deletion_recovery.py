@@ -22,8 +22,8 @@ from fieldmaps_api.errors import StorageUnavailableError
 from fieldmaps_api.main import create_app
 from fieldmaps_api.repositories import account_deletions
 from fieldmaps_api.repositories.account_deletions import Claim
-from tests.fields_only_fixtures import seed_history
 from tests.local_database import admin_sql, database_settings, disposable_database_selected
+from tests.record_history_fixtures import seed_history
 from tests.signing import ISSUER, Signer
 from tests.test_account_deletion import deletion_user
 from tests.test_consolidated_audit import audit_api, live_api

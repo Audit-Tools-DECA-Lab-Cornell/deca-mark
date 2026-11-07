@@ -5,13 +5,22 @@ from uuid import UUID
 import pytest
 from pydantic import JsonValue, ValidationError
 
-from fieldmaps_api.domain.forms import FormDefinition, normalize_answers
+from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.domain.stored_form_versions import historical_definition
+from fieldmaps_api.errors import ValidationFailedError
 from fieldmaps_api.form_schema_bundle import prepare_sql
 from fieldmaps_api.form_schema_preflight import PreflightRow, preflight
 from fieldmaps_api.form_schema_upgrade import MIGRATION
-from tests.fields_only_fixtures import FIELDS_ONLY
 from tests.test_observation_analysis_domain import canonical, question
+
+# The operator preflight is the one place that still recognises fields-only rows (before OPS-19).
+FIELDS_ONLY: dict[str, JsonValue] = {
+    "fields": [
+        {"code": "people", "type": "integer", "minimum": 0, "maximum": 999, "required": True},
+        {"code": "notes", "type": "text", "required": False, "maxLength": 1000},
+    ],
+    "status": "practice-only",
+}
 
 
 def stored_row(definition: dict[str, JsonValue], identity: int) -> PreflightRow:
@@ -41,25 +50,25 @@ def test_legacy_bundle_selects_preservation_source_without_editing_original() ->
 
 
 @pytest.mark.parametrize(
-    ("field", "answer"),
+    "field",
     [
-        ({"code": "answer", "type": "number", "required": True}, 1.5),
-        ({"code": "answer", "type": "text", "required": True}, ""),
-        ({"code": "answer", "type": "boolean"}, False),
-        ({"code": "answer", "type": "multi-choice", "options": ["a"]}, ["a", "a"]),
+        {"code": "answer", "type": "number", "required": True},
+        {"code": "answer", "type": "text", "required": True},
+        {"code": "answer", "type": "boolean"},
+        {"code": "answer", "type": "multi-choice", "options": ["a"]},
     ],
 )
-def test_preserved_legacy_keeps_historical_semantics_and_stays_unauthorable(
-    field: dict[str, JsonValue], answer: JsonValue
+def test_preflight_recognises_each_historical_field_type_that_the_api_refuses(
+    field: dict[str, JsonValue],
 ) -> None:
     raw: dict[str, JsonValue] = {"fields": [field]}
-    preflight([stored_row(raw, 1)])
-    before = normalize_answers(historical_definition(raw, 1), {"answer": answer})
-    after = normalize_answers(historical_definition(raw, 2), {"answer": answer})
-    assert before == after
-    assert after.answers == {"answer": answer}
+    report = preflight([stored_row(raw, 1)])
+    assert [row.definition_format for row in report.rows] == ["legacy_fields"]
+    # The API's one format refuses it: authoring and every stored-definition reader.
     with pytest.raises(ValidationError):
         FormDefinition.model_validate(raw)
+    with pytest.raises(ValidationFailedError):
+        historical_definition(raw, 2)
 
 
 @pytest.mark.parametrize(

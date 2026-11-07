@@ -11,7 +11,7 @@ Backend tasks in [backend/PLAN.md](../../backend/PLAN.md) implement these shapes
 
 ## Current contract authority (reconciled 2026-10-15)
 
-CON-01 to CON-06 establish the canonical shared form, generated OpenAPI/client types and authored parity cases. The earlier mobile/server form mismatch and handwritten API-shape duplication motivated that work; they are not current blockers. The one canonical format is `contracts/form-definition.schema.json` at form schema version 1 (CON-07); `contracts/forms/*.json` are seed and test data (D32), and both runtimes execute shared cases.
+CON-01 to CON-06 establish the canonical shared form, generated OpenAPI/client types and authored parity cases. The earlier mobile/server form mismatch and handwritten API-shape duplication motivated that work; they are not current blockers. The one canonical format is `contracts/form-definition.schema.json` at form schema version 2 (CON-07); `contracts/forms/*.json` are seed and test data (D32), and both runtimes execute shared cases.
 
 For zone-bound observations, site/package identity, paginated reads, publication and exports, the [zone contract](zone-boundaries/contract.md) is authoritative. BE-22 implements its sole `/v1` path; MOB-29 remains the collector serializer/receipt integration gate. PowerSync batch semantics later in this file are a gated future interface, not the current upload implementation.
 
@@ -82,8 +82,11 @@ The package pins form and zone meaning. Retries send identical immutable payload
 | `internal` | 500 | |
 | `storage_unavailable` | 503 | transient classes (BE-02) |
 | `online_basemap_unconfirmed` | 422 | |
+| `unknown_schema_version` | 422 | |
 
 `validation_failed` carries `details.fields: [{ "id": "<question id or field>", "problem": "…" }]`.
+
+`unknown_schema_version` (BE-24, CON-07) refuses a form write that names a schema version other than the current JSON number (a boolean, a string, `null` or another number), with `details.schema_version` echoing the refused value and the message "Update DECA Mark to use this form" (both clients' `errors.ts` carry the copy). A write that omits the number means the current version. A stored definition that is not in the current canonical format is refused with `validation_failed` (`details.fields[0].id` is `definition`) wherever the API would serve or read it.
 
 ## API endpoint catalog (v1)
 

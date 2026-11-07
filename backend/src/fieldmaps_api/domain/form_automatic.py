@@ -3,14 +3,12 @@
 from uuid import UUID
 
 from fieldmaps_api.domain.form_engine import Answers, visible_questions
-from fieldmaps_api.domain.forms import StoredCanonicalDefinition, StoredFormDefinition
+from fieldmaps_api.domain.forms import StoredCanonicalDefinition
 
 
 def automatic_mismatches(
-    definition: StoredFormDefinition, answers: Answers, user_id: UUID, observer: str
+    definition: StoredCanonicalDefinition, answers: Answers, user_id: UUID, observer: str
 ) -> list[str]:
-    if not isinstance(definition, StoredCanonicalDefinition):
-        return []
     expected = {"accountId": str(user_id), "observerCode": observer}
     return [
         question.id

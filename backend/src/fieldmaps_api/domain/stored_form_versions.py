@@ -1,17 +1,22 @@
-"""Historical interpretation never activates properties ignored by an older schema."""
+"""Stored definitions are read in the one canonical format, and nothing else is served."""
 
 from typing import Final
 
-from pydantic import JsonValue, TypeAdapter
+from pydantic import JsonValue, ValidationError
 
-from fieldmaps_api.domain.forms import StoredFormDefinition
+from fieldmaps_api.domain.forms import StoredCanonicalDefinition
+from fieldmaps_api.errors import ValidationFailedError
 from fieldmaps_api.form_schema_version import require_current_schema
 
-ADAPTER: Final[TypeAdapter[StoredFormDefinition]] = TypeAdapter(StoredFormDefinition)
 NEW_QUESTION_PROPERTIES: Final = frozenset({"numberMode", "valueSource", "dateTime", "role"})
+UNREADABLE: Final = (
+    "This form is not stored in the current format, so DECA Mark cannot use it. "
+    "Ask the project coordinator to publish it again."
+)
 
 
-def historical_definition(raw: JsonValue, schema_version: int) -> StoredFormDefinition:
+def historical_definition(raw: JsonValue, schema_version: int) -> StoredCanonicalDefinition:
+    """Parse a stored definition as canonical, or refuse it with a typed 422 (never a 500)."""
     if schema_version != 1:
         require_current_schema(schema_version)
     legacy_questions = raw.get("questions") if isinstance(raw, dict) else None
@@ -26,4 +31,7 @@ def historical_definition(raw: JsonValue, schema_version: int) -> StoredFormDefi
             for question in legacy_questions
         ]
         raw = cleaned
-    return ADAPTER.validate_python(raw)
+    try:
+        return StoredCanonicalDefinition.model_validate(raw)
+    except ValidationError as error:
+        raise ValidationFailedError(UNREADABLE, field="definition") from error

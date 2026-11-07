@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 from tests.conftest import signer
-from tests.fields_only_fixtures import seed_history
+from tests.record_history_fixtures import seed_history
 from tests.local_database import admin_sql, disposable_database_selected
 from tests.test_account_deletion_recovery import application, eventually, forget, state
 from tests.test_consolidated_audit import audit_api, live_api

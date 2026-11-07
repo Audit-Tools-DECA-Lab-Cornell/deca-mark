@@ -27,8 +27,8 @@ already provisioned.
 
 The October 25 hosted check confirmed schema2 was pending. Its original preflight
 accepted seven forms and rejected legacy `shell-v1`. The local compatibility
-repair now validates that format with the retained historical reader and selects
-a preservation transaction. It changes only schema-version metadata/defaults;
+repair now validates that format with the operator preflight's own minimal parser
+(the API no longer reads fields-only definitions) and selects a preservation transaction. It changes only schema-version metadata/defaults;
 published definitions and historical answers remain unchanged.
 
 Use the [production procedure](../database/hosted/form-schema2-rollout.md) to capture

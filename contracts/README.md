@@ -12,15 +12,13 @@ Language-neutral JSON shared by the independently managed mobile, web and API ap
 | `openapi.json` | Generated from FastAPI with `make -C backend openapi`; never edit by hand. | Separate generated TypeScript declarations in web and mobile |
 | `zones/*.cases.json` | Authored synthetic geometry, publication, upload and fingerprint expectations. Never regenerate expectations from implementation. See [zone contracts](zones/README.md). | Current SQL/API and mobile coverage/immutable serializer/receipt adapters; MOB-29 has disposable HTTP/SQLite acceptance, with native QGIS readback verified; physical iPad/Android collector acceptance pending |
 
-The backend authors canonical `questions` definitions only. Its narrow historical
-`fields` reader/validator remains available for existing records and exact bound uploads.
+The backend authors, reads, serves and exports canonical `questions` definitions only
+(BE-24); it no longer reads fields-only definitions.
 The fresh database's synthetic
 shell initializer preserves its original two answer IDs, `people` and `notes`, bounds,
 requiredness and export names. It deliberately differs from the collector practice file,
 which also authors an observer question. No golden upload JSON, canonical bytes or
-fingerprints changed. Removing the historical reader requires the concrete inventory,
-device-queue and data-retention gates in the
-[compatibility resolution](../docs/reviews/fields-only-transition-2026-10-17/README.md).
+fingerprints changed.
 
 ## Generate and verify
 
@@ -61,18 +59,19 @@ Regenerate OpenAPI and both TypeScript declarations with `pnpm contracts:generat
 
 The runtime requires the controlled schema-2 transition before serving stored forms. The migration locks/preflights every row, rejects formerly ignored properties that would acquire meaning, preserves definition JSON/IDs/columns/bindings and restores the published trigger. Follow the [rollout procedure](../database/hosted/form-schema2-rollout.md) before application.
 
-The [reviewed fields-only preservation exception](../docs/decisions/0002-schema2-legacy-preservation.md)
-qualifies the canonical-only migration rule below for existing historical
-instruments. Those raw definitions are validated by the retained historical
-reader and advance their stored schema metadata to 2 without conversion. A
-separate reviewed execution source records its actual SQL under the same pending
-migration version. The current served/written schema number remains 2; new
-authoring remains canonical-only. This exception does not add legacy collector
-installation or rewrite retained upload bodies.
+The API no longer reads fields-only definitions (BE-24, D32; the owner confirmed D32 over
+[decision 0002](../docs/decisions/0002-schema2-legacy-preservation.md) on 2026-10-28). The
+[reviewed fields-only preservation exception](../docs/decisions/0002-schema2-legacy-preservation.md)
+now applies only to the schema-2 operator preflight: it is the one remaining place that
+recognises a fields-only row, so the interim hosted schema-2 migration can advance the stored
+metadata of those rows to 2 without conversion before OPS-19. OPS-19's reset removes the hosted
+fields-only rows, and the preflight's parser goes after it. The served and written schema number
+remains 2, new authoring is canonical-only, and a stored definition that is not canonical is
+refused with `422 validation_failed` on every API path.
 
 Every party follows one rule:
 
-1. **The API validates writes against the current version and serves only it.** Every form write is checked against the current schema and stored with `schema_version` equal to it; no response carries another number. A write may omit the number, which means the current version; a write that names another number, or `null`, is refused with a typed error (BE-24). After a future schema change, a stale client that omits the number gets the schema's validation error rather than `unknown_schema_version`. The current version is a JSON number equal to it: the clients' JSON readers cannot tell `1.0` from `1`, so the API accepts both and never a boolean or a string.
+1. **The API validates writes against the current version and serves only it.** Every form write is checked against the current schema and stored with `schema_version` equal to it; no response carries another number. A write may omit the number, which means the current version; a write that names another number, or `null`, is refused with a typed error (BE-24). After a future schema change, a stale client that omits the number gets the schema's validation error rather than `unknown_schema_version`. The current version is a JSON number equal to it: the clients' JSON readers cannot tell `2.0` from `2`, so the API accepts both and never a boolean or a string.
 2. **A client that receives a schema version it does not know refuses that site or form.** It reads a served definition through `parseServedDefinition(schemaVersion, definition)`. Any number other than `FORM_SCHEMA_VERSION`, or none, throws `UnknownSchemaVersionError`, whose stable `code` is `unknown_schema_version` (`isUnknownSchemaVersion` tests the code, not the class, so an API error with that code matches too; read `schemaVersion` only from an `UnknownSchemaVersionError` instance). The screen maps that code to "Update DECA Mark to use this form" and does not open the site or form. It never parses on a guess, retries with an older reader or drops the properties it does not recognise.
 3. **A new schema version is a forward migration of stored definitions, never a dual format.** One migration rewrites every stored definition and template to the new shape and sets the new `schema_version`, keeping question IDs, option codes and export columns so collected answers keep their meaning. The schema file, `FORM_SCHEMA_VERSION` in both engine copies, the API validator and `currentSchemaVersion` in the shared cases change in that same release. No reader and no API path accepts two versions. From the pilot launch on (D31), hosted data is never reset to get there, and a build that predates the migration refuses the migrated forms with the sentence above. Published versions are otherwise immutable (the published-version trigger freezes `definition` and `schema_version`); that schema migration is the one sanctioned exception and must say so where it lifts the trigger.
 

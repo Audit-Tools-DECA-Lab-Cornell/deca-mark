@@ -2,13 +2,11 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Final, assert_never
+from typing import Final
 
 from pydantic import JsonValue
 
 from fieldmaps_api.domain.form_definition import Option, Question
-from fieldmaps_api.domain.forms import StoredCanonicalDefinition
-from fieldmaps_api.domain.legacy_forms import FormDefinition as LegacyDefinition
 from fieldmaps_api.domain.stored_form_versions import historical_definition
 
 RECORD_COLUMNS: Final = (
@@ -118,18 +116,7 @@ def canonical_question(question: Question) -> ExportQuestion:
 
 def questions(raw: dict[str, JsonValue], schema_version: int) -> tuple[ExportQuestion, ...]:
     definition = historical_definition(raw, schema_version)
-    match definition:
-        case StoredCanonicalDefinition():
-            return tuple(canonical_question(question) for question in definition.questions)
-        case LegacyDefinition():
-            return tuple(
-                ExportQuestion(
-                    field.code, field.code, field.code, field.type, "; ".join(field.options)
-                )
-                for field in definition.fields
-            )
-        case _:
-            assert_never(definition)
+    return tuple(canonical_question(question) for question in definition.questions)
 
 
 def repeated(question_id: str) -> bool:

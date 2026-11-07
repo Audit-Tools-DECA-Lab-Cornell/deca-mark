@@ -1,5 +1,13 @@
 # Schema2 transition: retain historical fields-only instruments
 
+> **Note, 2026-10-28.** The owner confirmed D32 over this decision
+> ([docs/plan/decisions.md](../plan/decisions.md), D32): this record covers only the interim
+> schema-2 migration of hosted rows before OPS-19. The API no longer reads, serves or exports
+> fields-only definitions (BE-24); the operator preflight is the one place that still
+> recognises them, and OPS-19's reset removes the hosted fields-only rows. Where the text below
+> says the historical reader, API upload validation, readback or exports keep fields-only
+> dispatch, that no longer holds.
+
 Date: October 26, 2026. Scope: local preparation and verification; no hosted
 migration, deployment, Git commit or push is authorized by this decision.
 

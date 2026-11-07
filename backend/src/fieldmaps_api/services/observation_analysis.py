@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fieldmaps_api.domain.observation_filters import decode_cursor, encode_cursor
+from fieldmaps_api.domain.stored_form_versions import historical_definition
 from fieldmaps_api.errors import NotFoundError
 from fieldmaps_api.form_schema_version import require_current_schema
 from fieldmaps_api.observation_analysis_schemas import (
@@ -47,6 +48,7 @@ async def detail(
         message = "Observation not found"
         raise NotFoundError(message)
     require_current_schema(result.schema_version)
+    historical_definition(result.definition, result.schema_version)
     return result
 
 
