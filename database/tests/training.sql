@@ -1,7 +1,8 @@
 \set training_definition `cat /tmp/fieldmaps-tests/janet-test-v1.json`
-SELECT pg_temp.assert_true((SELECT definition = :'training_definition'::jsonb
+SELECT pg_temp.assert_true((SELECT definition - 'version' - 'status' = :'training_definition'::jsonb - 'version' - 'status'
+    AND definition ->> 'version' = code AND definition ->> 'status' = state
   FROM fieldmaps.form_versions WHERE id = '10000000-0000-4000-8000-000000000104'),
-  'Training definition matches the complete canonical Janet form');
+  'Training definition matches the complete canonical Janet form, named for its own version');
 SELECT pg_temp.assert_true(
   EXISTS (SELECT FROM fieldmaps.organizations WHERE id = '10000000-0000-4000-8000-000000000101'
     AND name = 'FieldMaps Training' AND slug = 'fieldmaps-training' AND is_platform)
@@ -11,7 +12,7 @@ SELECT pg_temp.assert_true(
     AND project_id = '10000000-0000-4000-8000-000000000102' AND code = 'training-garden')
   AND EXISTS (SELECT FROM fieldmaps.form_versions WHERE id = '10000000-0000-4000-8000-000000000104'
     AND project_id = '10000000-0000-4000-8000-000000000102' AND code = 'training-v1'
-    AND definition->>'version' = 'janet-test-v1' AND jsonb_array_length(definition->'questions') = 12),
+    AND definition->>'version' = 'training-v1' AND jsonb_array_length(definition->'questions') = 12),
   'Training has its own fixed organization, project, site and Janet form');
 SELECT pg_temp.assert_true(
   EXISTS (SELECT FROM fieldmaps.projects WHERE id = '10000000-0000-4000-8000-000000000002' AND NOT is_training)
@@ -36,9 +37,9 @@ INSERT INTO fieldmaps.observations(id, organization_id, project_id, site_id, for
 VALUES ('53000000-0000-4000-8000-000000000011', '10000000-0000-4000-8000-000000000101',
   '10000000-0000-4000-8000-000000000102', '10000000-0000-4000-8000-000000000103',
   '10000000-0000-4000-8000-000000000104', 'T1', now(),
-  extensions.ST_SetSRID(extensions.ST_MakePoint(-76.485,42.448),4326), '{}',
-  fieldmaps.request_user_id(), repeat('a',64),'91000000-0000-4000-8000-000000000003',
-  '92000000-0000-4000-8000-000000000003','standard',true,'hand');
+  extensions.ST_SetSRID(extensions.ST_MakePoint(-76.4869,42.4463),4326), '{}',
+  fieldmaps.request_user_id(), repeat('a',64),'10000000-0000-4000-8000-000000000106',
+  '10000000-0000-4000-8000-000000000107','standard',true,'hand');
 SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM fieldmaps.observations
   WHERE project_id = '10000000-0000-4000-8000-000000000102'), 'trainee reads own upload');
 SELECT set_config('fieldmaps.user_id', '53000000-0000-4000-8000-000000000002', true);
@@ -90,12 +91,12 @@ SELECT pg_temp.fixture_package('53000000-0000-4000-8000-000000000103','91000000-
 INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,form_version_id,
   observer_code,observed_at,received_at,geom,answers,created_by,upload_hash,package_id,zone_id,round_type,first_round,placement_source)
 SELECT id, org, project, site, form, 'QA', now()-interval '90 days', received,
-  extensions.ST_SetSRID(extensions.ST_MakePoint(-76.485,42.448),4326), '{}',
+  extensions.ST_SetSRID(extensions.ST_MakePoint(-76.4869,42.4463),4326), '{}',
   '50000000-0000-4000-8000-000000000001',repeat('a',64),
-  CASE WHEN site='10000000-0000-4000-8000-000000000103' THEN '91000000-0000-4000-8000-000000000003'::uuid
+  CASE WHEN site='10000000-0000-4000-8000-000000000103' THEN '10000000-0000-4000-8000-000000000106'::uuid
     WHEN site='10000000-0000-4000-8000-000000000003' THEN '91000000-0000-4000-8000-000000000001'::uuid
     ELSE '91000000-0000-4000-8000-000000000004'::uuid END,
-  CASE WHEN site='10000000-0000-4000-8000-000000000103' THEN '92000000-0000-4000-8000-000000000003'::uuid
+  CASE WHEN site='10000000-0000-4000-8000-000000000103' THEN '10000000-0000-4000-8000-000000000107'::uuid
     WHEN site='10000000-0000-4000-8000-000000000003' THEN '92000000-0000-4000-8000-000000000001'::uuid
     ELSE '92000000-0000-4000-8000-000000000004'::uuid END,'standard',true,'hand'
 FROM (VALUES

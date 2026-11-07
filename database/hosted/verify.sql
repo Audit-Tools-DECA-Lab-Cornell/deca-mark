@@ -40,14 +40,40 @@ VALUES ('50000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000002', 'observer') ON CONFLICT (user_id, project_id) DO NOTHING;
 
+-- A hosted database has no practice form (DB-20): this one exists only inside this rolled-back transaction.
+INSERT INTO fieldmaps.forms (id, organization_id, project_id, code, name)
+VALUES ('77f41d15-b653-465a-abb9-39f19f606851', '10000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000002', 'shell', 'shell') ON CONFLICT DO NOTHING;
+INSERT INTO fieldmaps.form_versions (id, organization_id, project_id, code, definition, form_id, version, state, published_at)
+VALUES ('10000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000002', 'shell-v1',
+  '{"version":"shell-v1","title":"Verification form","summary":"A form that exists only while this script runs.","source":"database/hosted/verify.sql","status":"published","inclusion":"Synthetic verification only.","questions":[{"id":"people","code":"people","exportColumn":"people","act":"Social","label":"people","kind":"number","required":true,"min":0,"max":999,"source":"database/hosted/verify.sql"},{"id":"notes","code":"notes","exportColumn":"notes","act":"Record","label":"notes","kind":"text","required":false,"maxLength":1000,"source":"database/hosted/verify.sql"}]}',
+  '77f41d15-b653-465a-abb9-39f19f606851', 1, 'published', now()) ON CONFLICT DO NOTHING;
+
+-- What the migrations seed: Training's site, its current package and forms, and the form templates.
+SELECT pg_temp.assert_true(
+  (SELECT count(*) = 1 FROM fieldmaps.sites WHERE project_id = '10000000-0000-4000-8000-000000000102')
+  AND EXISTS (SELECT FROM fieldmaps.site_zone_state st
+    JOIN fieldmaps.site_packages p ON p.id = st.current_package_id
+    WHERE st.site_id = '10000000-0000-4000-8000-000000000103' AND p.state = 'ready'
+      AND p.form_version_id = '10000000-0000-4000-8000-000000000104'
+      AND p.inventory_form_version_id = '10000000-0000-4000-8000-000000000105'
+      AND octet_length(p.archive) > 0 AND p.archive_sha256 = encode(sha256(p.archive), 'hex')
+      AND (SELECT count(*) = 2 FROM fieldmaps.package_zones z WHERE z.package_id = p.id))
+  AND (SELECT count(*) = 2 AND bool_and(state = 'published' AND schema_version = 2
+        AND definition ? 'questions' AND NOT definition ? 'fields'
+        AND definition ->> 'version' = code AND definition ->> 'status' = 'published')
+      FROM fieldmaps.form_versions WHERE project_id = '10000000-0000-4000-8000-000000000102')
+  AND (SELECT count(*) = 2 AND bool_and(schema_version = 2 AND definition ? 'questions')
+      FROM fieldmaps.form_templates),
+  'migrations seed Training with a current package, its two forms and the form templates');
+
 \ir ../tests/current-fixture-helper.sql
 INSERT INTO fieldmaps.sites(id,organization_id,project_id,code,name)
 VALUES('50000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-000000000001',
  '10000000-0000-4000-8000-000000000002','verification','Synthetic verification site');
 SELECT pg_temp.fixture_package('50000000-0000-4000-8000-000000000006','50000000-0000-4000-8000-000000000005',
  '50000000-0000-4000-8000-000000000008','10000000-0000-4000-8000-000000000004');
-SELECT pg_temp.fixture_package('10000000-0000-4000-8000-000000000103','50000000-0000-4000-8000-000000000012',
- '50000000-0000-4000-8000-000000000013','10000000-0000-4000-8000-000000000104');
 SET LOCAL ROLE fieldmaps_api;
 SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM fieldmaps.projects), 'no identity sees no projects');
 SELECT set_config('fieldmaps.user_id', '50000000-0000-4000-8000-000000000001', true);
@@ -149,9 +175,9 @@ INSERT INTO fieldmaps.observations
 VALUES ('50000000-0000-4000-8000-000000000011',
   '10000000-0000-4000-8000-000000000101', '10000000-0000-4000-8000-000000000102',
   '10000000-0000-4000-8000-000000000103', '10000000-0000-4000-8000-000000000104',
-  'QA', now(), fieldmaps.make_point(-76.485, 42.448), '{}',
-  fieldmaps.request_user_id(), repeat('c',64),'50000000-0000-4000-8000-000000000012',
- '50000000-0000-4000-8000-000000000013','standard',true,'hand');
+  'QA', now(), fieldmaps.make_point(-76.4869, 42.4463), '{}',
+  fieldmaps.request_user_id(), repeat('c',64),'10000000-0000-4000-8000-000000000106',
+ '10000000-0000-4000-8000-000000000107','standard',true,'hand');
 SELECT pg_temp.assert_true(EXISTS (
   SELECT FROM fieldmaps.observations WHERE id = '50000000-0000-4000-8000-000000000011'
 ), 'trainee reads their own observation');
