@@ -67,7 +67,7 @@ recognises a fields-only row, so the interim hosted schema-2 migration can advan
 metadata of those rows to 2 without conversion before OPS-19. OPS-19's reset removes the hosted
 fields-only rows, and the preflight's parser goes after it. The served and written schema number
 remains 2, new authoring is canonical-only, and a stored definition that is not canonical is
-refused with `422 validation_failed` on every API path.
+refused with `422 validation_failed` wherever the API serves, reads or exports it (a stored version at another schema number is refused with `unknown_schema_version`). The one exception is a replay of an upload accepted earlier: it returns its stored receipt, by design, before the target is validated again.
 
 Every party follows one rule:
 

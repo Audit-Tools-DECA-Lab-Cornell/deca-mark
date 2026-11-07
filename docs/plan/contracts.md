@@ -86,7 +86,7 @@ The package pins form and zone meaning. Retries send identical immutable payload
 
 `validation_failed` carries `details.fields: [{ "id": "<question id or field>", "problem": "…" }]`.
 
-`unknown_schema_version` (BE-24, CON-07) refuses a form write that names a schema version other than the current JSON number (a boolean, a string, `null` or another number), with `details.schema_version` echoing the refused value and the message "Update DECA Mark to use this form" (both clients' `errors.ts` carry the copy). A write that omits the number means the current version. A stored definition that is not in the current canonical format is refused with `validation_failed` (`details.fields[0].id` is `definition`) wherever the API would serve or read it.
+`unknown_schema_version` (BE-24, CON-07) refuses a form write that names a schema version other than the current JSON number (a boolean, a string, `null` or another number), with `details.schema_version` echoing the refused value and the message "Update DECA Mark to use this form" (both clients' `errors.ts` carry the copy). A write that omits the number means the current version. A stored definition that is not in the current canonical format is refused with `validation_failed` (`details.fields[0].id` is `definition`) wherever the API serves, reads or exports it, and a stored version at another schema number with `unknown_schema_version`; the one exception is a replay of an upload accepted earlier, which returns its stored receipt before the target is validated again.
 
 ## API endpoint catalog (v1)
 
