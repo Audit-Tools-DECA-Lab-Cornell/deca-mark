@@ -234,6 +234,7 @@ export function UploadStep({
 	const router = useRouter();
 	const fieldId = useId();
 	const nextId = useRef(0);
+	const uploadButton = useRef<HTMLButtonElement>(null);
 
 	const [formVersion, setFormVersion] = useState(defaultFormVersion);
 	const [slots, setSlots] = useState<Record<LayerName, LayerSlotState>>(EMPTY_SLOTS);
@@ -780,6 +781,7 @@ export function UploadStep({
 					</Field>
 					<div className="flex flex-col items-start gap-2">
 						<Button
+							ref={uploadButton}
 							variant="primary"
 							icon="upload"
 							busy={uploading}
@@ -804,6 +806,8 @@ export function UploadStep({
 							setAsking(null);
 							setError(ONLINE_MAP_CANCELLED);
 							setUncertain(false);
+							// Focus goes back to Upload once the dialog has left (it has no trigger to return to).
+							window.setTimeout(() => uploadButton.current?.focus(), 100);
 						}}
 					/>
 

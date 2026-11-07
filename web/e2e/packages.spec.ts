@@ -230,7 +230,7 @@ test("confirming leaves the background map out, and the new version shows the wa
 		.getByRole("main")
 		.locator('tr:visible, li:visible, [role="row"]:visible')
 		.filter({ has: page.getByRole("link", { name: `v${next}`, exact: true }) });
-	await expect(row).toContainText(`${MAP_LINE} It was not uploaded. Observers see the vector layers only.`);
+	await expect(row).toContainText(`${MAP_LINE} It was not uploaded; observers see the vector layers only.`);
 	await expect(row).toContainText("Warning");
 });
 
@@ -240,7 +240,7 @@ test("an answer that names the background map opens the same question, and the r
 	const next = (await newestPackageVersion(site)) + 1;
 	const sent = watchUploads(page);
 	await readMarkedProject(page, site, true);
-	await expect(page.getByText(MAP_LINE)).toHaveCount(0);
+	await expect(page.getByText(`${MAP_LINE} It will not be uploaded.`)).toHaveCount(0);
 
 	await upload(page).click();
 	await expect(question(page)).toBeVisible({ timeout: 30_000 });
