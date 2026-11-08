@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { binding } from "../storage/package-store.fixture";
 import {
   type ObservationIdentity,
   ownershipProblem,
@@ -9,6 +10,7 @@ import {
 const started: ObservationIdentity = {
   id: "1f0a2b3c-4d5e-4f60-8a9b-0c1d2e3f4a5b",
   startedAt: "2026-09-22T14:31:00.000Z",
+  binding,
   owner: "account-a",
   packageId: "riverside-play-study",
   packageName: "Riverside Play Study",
@@ -34,14 +36,6 @@ describe("An observation belongs to the account that started it", () => {
     const problem = ownershipProblem(started, "account-a", "sample-garden");
     // Then its answers cannot be stamped with another package's form.
     expect(problem).not.toBeNull();
-  });
-
-  it("treats the practice scope as an account like any other", () => {
-    // Given an observation started before signing in.
-    const practice = { ...started, owner: "local" };
-    // Then signing in does not sweep it into the account's queue.
-    expect(ownershipProblem(practice, "account-a", "riverside-play-study")).not.toBeNull();
-    expect(ownershipProblem(practice, "local", "riverside-play-study")).toBeNull();
   });
 });
 
@@ -79,13 +73,5 @@ describe("Resuming a recovered draft", () => {
     // Then resuming it cannot bind A's answers to B, and says how to get them back.
     expect(problem).toMatch(/different account/i);
     expect(problem).toMatch(/sign back into/i);
-  });
-
-  it("keeps practice drafts out of an account, and account drafts out of practice", () => {
-    // Given a draft started before signing in, and one started while signed in.
-    // Then neither is offered to the other side of that boundary.
-    expect(recoveryProblem("local", "account-a")).not.toBeNull();
-    expect(recoveryProblem("account-a", "local")).not.toBeNull();
-    expect(recoveryProblem("local", "local")).toBeNull();
   });
 });

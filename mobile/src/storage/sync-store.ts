@@ -1,17 +1,15 @@
 import { z } from "zod";
-import { isBoundObservation } from "../domain/observation";
-import { isUploadableRecord } from "../forms/registry";
-import { receiptSchema, type SyncScope } from "../sync/contracts";
+import { receiptSchema } from "../sync/contracts";
 import { readOwnerScope, receiptMatches } from "../sync/receipt";
-import { databaseTransaction, databaseWrite } from "./database-write";
+import { databaseWrite } from "./database-write";
 import type { LocalDatabase } from "./observation-store";
-import { encodeUploadPayload, readUploadPayload } from "./upload-payload";
+import { readUploadPayload } from "./upload-payload";
 
 const storedRows = z.array(z.object({ payload: z.string(), attempts: z.number().int() }));
 function sendable(rows: z.infer<typeof storedRows>) {
   return rows.flatMap((row) => {
     const item = readUploadPayload(row.payload);
-    return isUploadableRecord(item.record) && item.body !== undefined
+    return item.body !== undefined
       ? [{ record: item.record, body: item.body, attempts: row.attempts }]
       : [];
   });
@@ -41,7 +39,7 @@ const cursorRows = z.array(
 
 /**
  * The oldest due pending records that can be sent, at most one page of them. A pending record that
- * cannot be sent (no frozen body, or not uploadable) is skipped here and never counts toward the page,
+ * cannot be sent (no frozen body) is skipped here and never counts toward the page,
  * so a page shorter than a full one really means that no other sendable record is due: the drain
  * stops on that, and a stuck record cannot keep the sendable ones behind it from being sent.
  */
@@ -65,50 +63,6 @@ export function pendingObservations(db: LocalDatabase, scope: string, now: numbe
       if (found.length >= PAGE || rows.length < PAGE || !last) return found.slice(0, PAGE);
       after = { createdAt: last.created_at, id: last.id };
     }
-  });
-}
-
-/**
- * Existing schema-six records were held by MOB-28. Freeze their own saved body once, atomically.
- * True when a held record became pending, so the screens that list records read them again.
- */
-export function activateHeldObservations(
-  db: LocalDatabase,
-  owner: string,
-  scope: SyncScope,
-  current: () => boolean = () => true,
-): Promise<boolean> {
-  const storedOwner = readOwnerScope(owner);
-  if (
-    !storedOwner ||
-    storedOwner.issuer !== scope.issuer ||
-    storedOwner.userId !== scope.userId ||
-    storedOwner.projectId !== scope.projectId
-  )
-    return Promise.resolve(false);
-  return databaseTransaction(db, async () => {
-    let activated = false;
-    const rows = z
-      .array(z.object({ payload: z.string() }))
-      .parse(
-        await db.getAllAsync(
-          "SELECT payload FROM observations WHERE owner_scope = ? AND sync_state = 'local-only'",
-          owner,
-        ),
-      );
-    for (const row of rows) {
-      if (!current()) return activated;
-      const { record, body } = readUploadPayload(row.payload);
-      if (!isBoundObservation(record) || record.binding.issuer !== scope.issuer) continue;
-      await db.runAsync(
-        "UPDATE observations SET payload = ?, sync_state = 'pending' WHERE owner_scope = ? AND id = ? AND sync_state = 'local-only'",
-        body === undefined ? encodeUploadPayload(record) : row.payload,
-        owner,
-        record.id,
-      );
-      activated = true;
-    }
-    return activated;
   });
 }
 

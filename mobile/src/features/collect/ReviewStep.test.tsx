@@ -1,6 +1,6 @@
 import { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
-import { shellV1 } from "../../forms/fixtures/shell-v1";
+import { janetTestV1 } from "../../forms/janet-test-v1.test-helper";
 import { startSession } from "../../forms/session";
 import { isDisabled, render } from "../../ui/screen.fixture";
 import { ReviewStep } from "./ReviewStep";
@@ -27,7 +27,7 @@ function review(placementBlock: string | null) {
   const onSave = vi.fn(async () => null);
   const screen = render(
     <ReviewStep
-      form={shellV1}
+      form={janetTestV1}
       state={startSession()}
       summary="OBS-3F2A1B · North meadow · Standard round · map v3"
       onJump={() => {}}
@@ -81,7 +81,7 @@ describe("ReviewStep while the record is being stored (MOB-41)", () => {
     const onDiscard = vi.fn();
     const screen = render(
       <ReviewStep
-        form={shellV1}
+        form={janetTestV1}
         state={startSession()}
         summary="OBS-3F2A1B · North meadow · Standard round · map v3"
         onJump={onJump}

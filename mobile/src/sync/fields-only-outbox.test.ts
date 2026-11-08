@@ -72,7 +72,7 @@ it("retains a historical fields-only outbox body across SQLite restart and exact
     answers: { people: 0, notes: "" },
     coordinates: [-76.485, 42.448],
     createdAt: "2026-09-17T12:00:00.000Z",
-    storageStatus: "local-only",
+    storageStatus: "pending",
     context: {
       packageId: fixture.packageId,
       packageVersion: "v1",

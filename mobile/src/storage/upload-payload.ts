@@ -1,13 +1,12 @@
 import { z } from "zod";
 import { type Observation, observationSchema } from "../domain/observation";
-import { isUploadableRecord } from "../forms/registry";
 import { serializeBoundObservation } from "../sync/wire-body";
 
 const storedBody = z.object({ uploadBody: z.string().optional() });
 export function encodeUploadPayload(record: Observation): string {
   return JSON.stringify({
     ...record,
-    ...(isUploadableRecord(record) ? { uploadBody: serializeBoundObservation(record) } : {}),
+    uploadBody: serializeBoundObservation(record),
   });
 }
 export function readUploadPayload(payload: string) {

@@ -1,32 +1,18 @@
 import type { RoundType } from "../domain/rounds";
 import type { FormDefinition } from "../forms/definition";
-import { formFor } from "../forms/registry";
 import type { SitePackage } from "../packages/site-package";
 
-type RoundForms = Pick<SitePackage, "formVersion" | "inventoryFormVersion" | "forms">;
+type RoundForms = Pick<SitePackage, "forms">;
 
 /**
- * The form a round asks: the zone inventory in an Inventory round, the site's own form otherwise. A
- * hosted site carries the forms its project published; a bundled site names versions the app carries.
+ * The form a round asks: the zone inventory in an Inventory round, the site's own form otherwise. Both
+ * come from the package the site was installed with; nothing is looked up in the app.
  */
 export function formForRound(sitePackage: RoundForms, roundType: RoundType): FormDefinition | null {
-  if (sitePackage.forms)
-    return roundType === "inventory" ? sitePackage.forms.inventory : sitePackage.forms.play;
-  return (
-    formFor(
-      roundType === "inventory" ? sitePackage.inventoryFormVersion : sitePackage.formVersion,
-    ) ?? null
-  );
+  return roundType === "inventory" ? sitePackage.forms.inventory : sitePackage.forms.play;
 }
 
-/**
- * Whether a site can offer a round: the round's form is on this device, and the record that form
- * writes keeps the round. The practice form (`shell-v1`) writes its three fixed columns and nothing
- * else, so a Reliability record made with it would be indistinguishable from a Standard one; a
- * practice site offers the Standard round only.
- */
+/** Whether a site can offer a round: the package carries that round's form. */
 export function offersRound(sitePackage: RoundForms, roundType: RoundType): boolean {
-  const form = formForRound(sitePackage, roundType);
-  if (!form) return false;
-  return roundType === "standard" || form.version !== "shell-v1";
+  return formForRound(sitePackage, roundType) !== null;
 }

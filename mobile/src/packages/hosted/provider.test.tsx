@@ -5,7 +5,7 @@ import type { MeSnapshot } from "../../data/api/me-cache";
 import { MeProvider, useMe } from "../../data/api/me-provider";
 import { initializeDatabase, type LocalDatabase } from "../../storage/observation-store";
 import { adapter } from "../../storage/package-store.fixture";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import { HostedSitesProvider, useHostedSites } from "./provider";
 import type { HostedSite } from "./schemas";
 

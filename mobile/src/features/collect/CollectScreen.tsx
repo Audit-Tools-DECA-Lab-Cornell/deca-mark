@@ -168,9 +168,7 @@ export function CollectScreen() {
   );
   const sessionIds = useMemo(() => new Set(saves.map((save) => save.id)), [saves]);
   const doneZones = useMemo(() => inventoriedZones(saves), [saves]);
-  const unsent = records.filter(
-    (record) => record.storageStatus === "pending" || record.storageStatus === "local-only",
-  ).length;
+  const unsent = records.filter((record) => record.storageStatus === "pending").length;
 
   const leave = useCallback(() => {
     const open = session.inProgress !== null;

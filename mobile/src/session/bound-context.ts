@@ -7,10 +7,9 @@ export class SessionBindingError extends Error {
   readonly name = "SessionBindingError";
 }
 
-/** Practice stays local; managed collection freezes only verified package/zone identities. */
-export function sessionBinding(site: SitePackage, zone: SiteZone): PackageBinding | undefined {
-  if (!site.projectId) return undefined;
-  if (!site.packageIdentity || !zone.polygon || !zone.displayAnchor || !zone.geometrySha256)
+/** Every observation freezes the verified package and zone identities it was made against. */
+export function sessionBinding(site: SitePackage, zone: SiteZone): PackageBinding {
+  if (!zone.polygon || !zone.displayAnchor || !zone.geometrySha256)
     throw new SessionBindingError(
       "This map has no verified package, zone boundary or display anchor.",
     );

@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { ApiError } from "../data/api/errors";
 import { boundDraft } from "../storage/package-store.fixture";
-import { boundFixture, ids } from "./hosted/bound-fixture";
+import { boundFixture, ids } from "./hosted/bound-fixture.test-helper";
 import type { HostedValue } from "./hosted/context";
 import { downloadFailure } from "./hosted/download-failure";
 import { recoveryAvailability } from "./recovery-availability";
@@ -10,7 +10,7 @@ const draft = {
   ...boundDraft,
   siteId: ids.site,
   packageId: ids.package,
-  binding: boundDraft.binding ? { ...boundDraft.binding, projectId: ids.project } : undefined,
+  binding: { ...boundDraft.binding, projectId: ids.project },
 };
 const hosted: HostedValue = {
   sites: { [ids.project]: [boundFixture().site] },

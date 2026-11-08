@@ -40,13 +40,15 @@ vi.mock("expo-file-system", () => ({
   },
 }));
 
-import { shellObservationSchema } from "../domain/observation";
+import { instrumentObservationSchema } from "../domain/observation";
 import {
   initializeDatabase,
   type LocalDatabase,
   listObservations,
   saveObservation,
 } from "../storage/observation-store";
+import { catalogEntrySchema, installPackage } from "../storage/package-catalog";
+import { boundRecord, entry } from "../storage/package-store.fixture";
 import { readOwnerScope } from "../sync/receipt";
 import { cachedAccount, forgetAccount, rememberAccount } from "./cached-account";
 import { persistDeliberateSignOut, restoreAccount } from "./deleted-session";
@@ -56,17 +58,11 @@ const issuer = "https://auth.example.test";
 const connection = { apiUrl: "https://api.example.test", supabaseUrl: issuer };
 const accountA = { id: "50000000-0000-4000-8000-000000000001", email: "a@example.test" };
 const accountB = { id: "50000000-0000-4000-8000-000000000002", email: "b@example.test" };
-const record = shellObservationSchema.parse({
-  id: "83f254b5-8a7b-4b71-9591-a7ff880f4ad7",
-  siteId: "sample-garden",
-  formVersion: "shell-v1",
-  coordinates: [-76.485, 42.448],
-  observer: "JL",
-  people: 2,
-  notes: "retained",
-  createdAt: "2026-09-17T10:00:00.000Z",
-  storageStatus: "local-only",
+const record = instrumentObservationSchema.parse({
+  ...boundRecord,
+  binding: { ...boundRecord.binding, issuer },
 });
+const installed = catalogEntrySchema.parse({ ...entry, identity: { ...entry.identity, issuer } });
 function adapter(database: DatabaseSync): LocalDatabase {
   return {
     async execAsync(sql) {
@@ -88,6 +84,8 @@ it("keeps only account A's records after a failed refresh and an app restart", a
   let database = new DatabaseSync(filename);
   try {
     await initializeDatabase(adapter(database));
+    await installPackage(adapter(database), accountWorkspace(accountA, connection).key, installed);
+    await installPackage(adapter(database), accountWorkspace(accountB, connection).key, installed);
     await saveObservation(adapter(database), record, accountWorkspace(accountA, connection).key);
     await saveObservation(
       adapter(database),
@@ -100,7 +98,7 @@ it("keeps only account A's records after a failed refresh and an app restart", a
     expect(lost.session).toBeNull();
     expect(
       await listObservations(adapter(database), accountWorkspace(lost.account, connection).key),
-    ).toEqual([{ ...record, storageStatus: "local-only" }]);
+    ).toEqual([record]);
     database.close();
     database = new DatabaseSync(filename);
     await initializeDatabase(adapter(database));
@@ -114,7 +112,7 @@ it("keeps only account A's records after a failed refresh and an app restart", a
         adapter(database),
         accountWorkspace(restarted.account, connection).key,
       ),
-    ).toEqual([{ ...record, storageStatus: "local-only" }]);
+    ).toEqual([record]);
     expect(signInRecovery(restarted.account, restarted.session, restored.deletedUserId)).toEqual({
       email: accountA.email,
     });
@@ -132,6 +130,7 @@ it("hides deliberately signed-out account records after restart but retains them
   let database = new DatabaseSync(filename);
   try {
     await initializeDatabase(adapter(database));
+    await installPackage(adapter(database), accountWorkspace(accountA, connection).key, installed);
     await saveObservation(adapter(database), record, accountWorkspace(accountA, connection).key);
     rememberAccount(accountA, issuer);
     // When sign-out refreshes an expired token before completing and the app restarts.
@@ -170,7 +169,7 @@ it("hides deliberately signed-out account records after restart but retains them
     const signedIn = sessionChange(null, "SIGNED_IN", { user: accountA }, issuer, null);
     expect(
       await listObservations(adapter(database), accountWorkspace(signedIn.account, connection).key),
-    ).toEqual([{ ...record, storageStatus: "local-only" }]);
+    ).toEqual([record]);
     expect(signInRecovery(signedIn.account, signedIn.session, null)).toBeNull();
   } finally {
     database.close();

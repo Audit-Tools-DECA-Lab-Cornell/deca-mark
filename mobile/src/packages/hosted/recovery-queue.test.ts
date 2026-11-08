@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { installedFor } from "../../storage/package-store.fixture";
-import { boundFixture, boundManifest, ids } from "./bound-fixture";
+import { boundFixture, boundManifest, ids } from "./bound-fixture.test-helper";
 import { deferred, harness, nextFixture } from "./lifecycle.test-helper";
 import { PackageOperations } from "./operations";
 

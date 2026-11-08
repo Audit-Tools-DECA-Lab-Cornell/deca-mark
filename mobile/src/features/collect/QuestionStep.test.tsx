@@ -4,7 +4,7 @@ import { act, create, type ReactTestInstance } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { type FormDefinition, parseFormDefinition } from "../../forms/definition";
 import { type ResolvedQuestion, visibleQuestions } from "../../forms/engine";
-import { janetTestV1 } from "../../forms/fixtures/janet-test-v1";
+import { janetTestV1 } from "../../forms/janet-test-v1.test-helper";
 import { startSession } from "../../forms/session";
 import { PreferencesProvider } from "../../ui/preferences";
 import { ThemeProvider } from "../../ui/theme";

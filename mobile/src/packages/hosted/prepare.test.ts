@@ -3,7 +3,7 @@ import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 import { pointInZone, zoneBounds, zoneFeature } from "../../maps/geometry";
 import { readArchive } from "./archive";
-import { boundFixture, boundLayers, boundManifest, ids } from "./bound-fixture";
+import { boundFixture, boundLayers, boundManifest, ids } from "./bound-fixture.test-helper";
 import { hostedSitePackage } from "./build";
 import { packageIdentity } from "./installation";
 import { preparePackage, storedForms } from "./prepare";
@@ -122,7 +122,11 @@ describe("Full package shape on the collector map", () => {
     };
     const f = boundFixture(manifest, layers);
     const stored = await preparePackage(ids.project, f.site, f.source);
-    const zone = hostedSitePackage(stored, storedForms(stored)).zones[0];
+    const zone = hostedSitePackage(
+      stored,
+      storedForms(stored),
+      packageIdentity("https://auth.example.test", stored),
+    ).zones[0];
     if (!zone) throw new Error("Zone missing");
     expect(pointInZone([0.05, 0.5], zone)).toBe(true);
     expect(pointInZone([0.8, 0.5], zone)).toBe(true);

@@ -90,7 +90,7 @@ export function persistDraft(input: {
     packageId: site.id,
     siteId: site.siteId,
     context,
-    ...(owner.binding ? { binding: owner.binding } : {}),
+    binding: owner.binding,
     coordinates: coordinate,
     placement: coordinate ? { source: input.placement, gpsAccuracyMetres: null } : null,
     answers: next.answers,

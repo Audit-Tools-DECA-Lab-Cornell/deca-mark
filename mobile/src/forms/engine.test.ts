@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { countForm } from "./count-form.test-helper";
 import {
   answerSummary,
   exportAnswers,
@@ -6,8 +7,7 @@ import {
   reviewProblems,
   visibleQuestions,
 } from "./engine";
-import { janetTestV1 } from "./fixtures/janet-test-v1";
-import { shellV1 } from "./fixtures/shell-v1";
+import { janetTestV1 } from "./janet-test-v1.test-helper";
 
 const ids = (answers: Record<string, string | string[]>) =>
   visibleQuestions(janetTestV1, answers).map((question) => question.id);
@@ -123,8 +123,8 @@ describe("Validation at review", () => {
   });
 
   it("reports a number outside its supplied bounds", () => {
-    // Given a practice record with an impossible count.
-    const problems = reviewProblems(shellV1, { observer: "JL", people: 1000 });
+    // Given a record with an impossible count.
+    const problems = reviewProblems(countForm, { people: 1000 });
     // Then the range is reported rather than stored.
     expect(problems.map((problem) => [problem.question.id, problem.reason])).toEqual([
       ["people", "range"],

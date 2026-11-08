@@ -15,7 +15,7 @@ import type { Pinned } from "../packages/zone-model-types";
 import type { ObservationDraft } from "../storage/draft-store";
 import type { ObservationIdentity } from "./ownership";
 export type SaveOutcome =
-  | { readonly ok: true; readonly heldOnly: boolean }
+  | { readonly ok: true }
   | { readonly ok: false; readonly problems: readonly ReviewProblem[]; readonly message?: string };
 
 export type OpenOutcome =
@@ -29,7 +29,6 @@ export type SessionSave = {
   readonly zoneLabel: string;
   readonly roundType: RoundType;
   readonly savedAt: string;
-  readonly heldOnly: boolean;
 };
 
 /** Why the round or zone cannot change now, or null. */

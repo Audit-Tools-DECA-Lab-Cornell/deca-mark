@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
 import { forgetVerifiedPackage, rememberVerifiedPackage, setPackageAccessOwner } from "./access";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import { isStored } from "./context";
 import { packageIdentity } from "./installation";
 import { preparePackage } from "./prepare";

@@ -1,6 +1,6 @@
 import { observationSummary } from "../../domain/build-observation";
 import { shortLabel } from "../../domain/labels";
-import { isShellObservation, type Observation } from "../../domain/observation";
+import type { Observation } from "../../domain/observation";
 import { roundLabel } from "../../domain/rounds";
 import type { SiteZone } from "../../maps/sample-site";
 import type { SessionSave } from "../../session/provider";
@@ -13,8 +13,7 @@ function clock(iso: string): string {
 
 /**
  * The play events on this device for one site, as the collect map draws them. A site code is unique
- * only within its project, so the project is matched too: a hosted site and a bundled one may share a
- * code. Whole-zone inventory records are left out: their stored point is the zone's centre, not a place
+ * only within its project, so the project is matched too. Whole-zone inventory records are left out: their stored point is the zone's centre, not a place
  * where play happened, and drawing it would read as an observation that never occurred.
  */
 export function mapRecords(
@@ -24,15 +23,15 @@ export function mapRecords(
 ): readonly MapRecord[] {
   return records
     .filter((record) => record.siteId === siteId)
-    .filter((record) => (isShellObservation(record) ? undefined : record.projectId) === projectId)
-    .filter((record) => isShellObservation(record) || record.placement.source === "hand")
+    .filter((record) => record.projectId === projectId)
+    .filter((record) => record.placement.source === "hand")
     .map((record) => ({
       id: record.id,
       coordinates: record.coordinates,
       label: shortLabel(record.id),
       time: clock(record.createdAt),
       summary: observationSummary(record),
-      round: isShellObservation(record) ? "Practice form" : roundLabel(record.context.roundType),
+      round: roundLabel(record.context.roundType),
     }));
 }
 

@@ -1,11 +1,5 @@
 import { z } from "zod";
-import {
-  answerValueSchema,
-  coordinateSchema,
-  isBoundObservation,
-  isShellObservation,
-  type Observation,
-} from "../domain/observation";
+import { answerValueSchema, coordinateSchema, type Observation } from "../domain/observation";
 
 const common = {
   site_id: z.uuid(),
@@ -28,10 +22,8 @@ export const wireBodySchema = z.discriminatedUnion("round_type", [
   z.strictObject({ ...common, round_type: z.literal("inventory"), placement: z.literal("zone") }),
 ]);
 
-/** Only the record's frozen context contributes; never read today's package or form registry. */
+/** Only the record's frozen context contributes; never read today's package or its forms. */
 export function serializeBoundObservation(record: Observation): string {
-  if (!isBoundObservation(record) || !("context" in record))
-    throw new TypeError("Only bound records have an upload body.");
   const commonBody = {
     site_id: record.binding.siteId,
     package_id: record.binding.packageId,
@@ -40,9 +32,7 @@ export function serializeBoundObservation(record: Observation): string {
     observer: record.observer,
     observed_at: record.createdAt,
     ...(record.startedAt ? { started_at: record.startedAt } : {}),
-    answers: isShellObservation(record)
-      ? { observer: record.observer, people: record.people, notes: record.notes }
-      : record.answers,
+    answers: record.answers,
   };
   return JSON.stringify(
     wireBodySchema.parse(
@@ -61,7 +51,6 @@ export function serializeBoundObservation(record: Observation): string {
 
 /** Verify persisted wire data without replacing it or consulting mutable package state. */
 export function uploadBodyMatches(body: string, record: Observation): boolean {
-  if (!isBoundObservation(record) || !("context" in record)) return false;
   let value: unknown;
   try {
     value = JSON.parse(body);
@@ -72,9 +61,7 @@ export function uploadBodyMatches(body: string, record: Observation): boolean {
   const parsed = wireBodySchema.safeParse(value);
   if (!parsed.success) return false;
   const wire = parsed.data;
-  const answers = isShellObservation(record)
-    ? { observer: record.observer, people: record.people, notes: record.notes }
-    : record.answers;
+  const { answers } = record;
   if (
     wire.site_id !== record.binding.siteId ||
     wire.package_id !== record.binding.packageId ||

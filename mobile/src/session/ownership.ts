@@ -10,7 +10,7 @@ import type { CaptureContext } from "../forms/capture";
  */
 
 export type ObservationIdentity = {
-  readonly binding?: PackageBinding;
+  readonly binding: PackageBinding;
   readonly capture?: CaptureContext;
   readonly id: string;
   readonly startedAt: string;

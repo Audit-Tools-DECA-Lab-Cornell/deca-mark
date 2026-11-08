@@ -3,11 +3,12 @@ import type { ReactElement } from "react";
 import { act, type ReactTestInstance } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { visibleQuestions } from "../../forms/engine";
-import { janetTestV1 } from "../../forms/fixtures/janet-test-v1";
+import { janetTestV1 } from "../../forms/janet-test-v1.test-helper";
 import { startSession } from "../../forms/session";
 import { siteZones } from "../../maps/sample-site";
 import type { SitePackage } from "../../packages/site-package";
 import { FieldSessionContext, type FieldSessionValue } from "../../session/context";
+import { binding as boundBinding } from "../../storage/package-store.fixture";
 import { takeAlerts } from "../../ui/native.fixture";
 import { PreferencesProvider } from "../../ui/preferences";
 import { render, type Screen } from "../../ui/screen.fixture";
@@ -174,6 +175,7 @@ function sessionAtSummary(): FieldSessionValue {
       owner: "account",
       packageId: sitePackage.id,
       packageName: sitePackage.name,
+      binding: boundBinding,
     },
     saves: [],
     roundBlock: null,

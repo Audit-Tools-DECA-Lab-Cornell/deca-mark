@@ -6,7 +6,7 @@ import type { Coordinate, Placement, RoundContext } from "../domain/observation"
 import { capturedAnswers, captureProblem } from "../forms/capture";
 import type { Answers, FormDefinition } from "../forms/definition";
 import { reviewProblems } from "../forms/engine";
-import { carriedQuestionIds, isUploadableRecord } from "../forms/registry";
+import { carriedQuestionIds } from "../forms/registry";
 import {
   reduceSession,
   type SessionAction,
@@ -99,7 +99,7 @@ export function useObservationActions(input: ActionInput) {
       capture: { accountId, observerCode: initials, capturedAt: startedAt },
       packageId: sitePackage.id,
       packageName: sitePackage.name,
-      ...(binding ? { binding } : {}),
+      binding,
     };
     holdIdentity(identity.current);
     setPlaced(coordinate);
@@ -183,7 +183,7 @@ export function useObservationActions(input: ActionInput) {
       return { ok: false, problems: [], message: "Place a point before saving." };
     const mismatch = ownershipProblem(owner, key, sitePackage.id);
     if (mismatch !== null) return { ok: false, problems: [], message: mismatch };
-    if (owner.binding && placementRef.current === "hand" && (!zone || !zoneCovers(placed, zone)))
+    if (placementRef.current === "hand" && (!zone || !zoneCovers(placed, zone)))
       return {
         ok: false,
         problems: [],
@@ -207,7 +207,7 @@ export function useObservationActions(input: ActionInput) {
       observer: owner.capture?.observerCode ?? initials,
       createdAt: new Date().toISOString(),
       startedAt: owner.startedAt,
-      ...(owner.binding ? { binding: owner.binding } : {}),
+      binding: owner.binding,
     });
     if (!built.ok) return { ok: false, problems: [], message: built.message };
     committing.current = true;
@@ -226,8 +226,7 @@ export function useObservationActions(input: ActionInput) {
               : "Could not save. Your answers are still here; try again.",
         };
       }
-      const heldOnly = key === "local" || !isUploadableRecord(built.record);
-      if (!current()) return { ok: true, heldOnly };
+      if (!current()) return { ok: true };
       const carried: Record<string, Answers[string]> = {};
       for (const id of carriedQuestionIds(form)) {
         const value = stateRef.current.answers[id];
@@ -240,14 +239,13 @@ export function useObservationActions(input: ActionInput) {
           zoneLabel: context.zoneLabel,
           roundType: context.roundType,
           savedAt: built.record.createdAt,
-          heldOnly,
         },
         ...current,
       ]);
       setStatus(`${shortLabel(built.record.id)} written to device storage.`);
       reset(carried);
       wake();
-      return { ok: true, heldOnly };
+      return { ok: true };
     } finally {
       committing.current = false;
     }

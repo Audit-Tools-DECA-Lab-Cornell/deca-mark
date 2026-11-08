@@ -98,7 +98,7 @@ it.skipIf(!input)(
         coordinates: zone.display_anchor,
         createdAt: "2026-10-15T15:00:00.000Z",
         startedAt: "2026-10-15T14:58:00.000Z",
-        storageStatus: "local-only",
+        storageStatus: "pending",
         context,
         placement: { source: "hand", gpsAccuracyMetres: null },
       });
@@ -113,7 +113,7 @@ it.skipIf(!input)(
         coordinates: zone.display_anchor,
         createdAt: "2026-10-15T15:01:00.000Z",
         startedAt: "2026-10-15T15:00:30.000Z",
-        storageStatus: "local-only",
+        storageStatus: "pending",
         context: { ...context, roundType: "inventory" },
         placement: { source: "zone", gpsAccuracyMetres: null },
       });

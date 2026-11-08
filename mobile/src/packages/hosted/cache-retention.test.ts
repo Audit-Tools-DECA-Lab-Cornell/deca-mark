@@ -1,7 +1,7 @@
 import { strToU8 } from "fflate";
 import { expect, it } from "vitest";
 import { installPackage, readCatalog } from "../../storage/package-catalog";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import { packageIdentity, readInstalledPackage } from "./installation";
 import { harness, hash, issuer, owner } from "./lifecycle.test-helper";
 import { preparePackage } from "./prepare";

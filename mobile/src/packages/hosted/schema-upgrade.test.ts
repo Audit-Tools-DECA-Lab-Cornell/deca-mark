@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import playDefinition from "../../../../contracts/forms/janet-test-v1.json";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import { cachedForm } from "./form-upgrade";
 import { preparePackage, storedForms } from "./prepare";
 

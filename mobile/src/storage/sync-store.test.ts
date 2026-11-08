@@ -1,13 +1,6 @@
-import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { shellObservationSchema } from "../domain/observation";
 import { syncScopeSchema } from "../sync/contracts";
-import {
-  initializeDatabase,
-  type LocalDatabase,
-  listObservations,
-  saveObservation,
-} from "./observation-store";
+import { listObservations, saveObservation } from "./observation-store";
 import { installPackage } from "./package-catalog";
 import {
   binding,
@@ -20,7 +13,6 @@ import {
 } from "./package-store.fixture";
 import {
   acknowledge,
-  activateHeldObservations,
   deferObservation,
   pendingObservations,
   pendingRetries,
@@ -29,32 +21,6 @@ import {
   releaseBackoff,
   retryAttention,
 } from "./sync-store";
-
-function adapter(database: DatabaseSync): LocalDatabase {
-  return {
-    async execAsync(sql) {
-      database.exec(sql);
-    },
-    async runAsync(sql, ...parameters) {
-      return database.prepare(sql).run(...parameters);
-    },
-    async getAllAsync(sql, ...parameters) {
-      return database.prepare(sql).all(...parameters);
-    },
-  };
-}
-
-const record = shellObservationSchema.parse({
-  id: "83f254b5-8a7b-4b71-9591-a7ff880f4ad7",
-  siteId: "sample-garden",
-  formVersion: "shell-v1",
-  coordinates: [-76.485, 42.448],
-  observer: "QA",
-  people: 3,
-  notes: "Offline",
-  createdAt: "2026-09-17T12:00:00.000Z",
-  storageStatus: "local-only",
-});
 
 describe("Account-scoped local work", () => {
   it("a full page counts only sendable records, so unsendable ones in front never shorten it", async () => {
@@ -117,17 +83,15 @@ describe("Account-scoped local work", () => {
     }
   });
 
-  it("atomically holds a signed-in save and hides it from other accounts", async () => {
-    const sqlite = new DatabaseSync(":memory:");
-    const db = adapter(sqlite);
+  it("queues a saved record for upload and hides it from other accounts", async () => {
+    const { sqlite, db } = await memoryDatabase();
     try {
-      await initializeDatabase(db);
-      await saveObservation(db, record, "account-a");
-      expect(await listObservations(db, "account-a")).toEqual([
-        { ...record, storageStatus: "local-only" },
-      ]);
-      expect(await listObservations(db, "account-b")).toEqual([]);
-      expect(await listObservations(db)).toEqual([]);
+      await installPackage(db, owner, entry);
+      await saveObservation(db, boundRecord, owner);
+      expect(await listObservations(db, owner)).toEqual([boundRecord]);
+      expect(await listObservations(db, otherOwner)).toEqual([]);
+      expect(await pendingObservations(db, owner, Date.now())).toHaveLength(1);
+      expect(await pendingObservations(db, otherOwner, Date.now())).toEqual([]);
     } finally {
       sqlite.close();
     }
@@ -259,7 +223,7 @@ describe("Retry timing in the store (MOB-39)", () => {
     }
   });
 
-  it("says whether a receipt, a failure or an activation changed a stored record", async () => {
+  it("says whether a receipt or a failure changed a stored record", async () => {
     const { db, sqlite } = await memoryDatabase();
     try {
       await installPackage(db, owner, entry);
@@ -274,12 +238,6 @@ describe("Retry timing in the store (MOB-39)", () => {
       await retryAttention(db, owner);
       expect(await acknowledge(db, owner, receipt, boundRecord.id)).toBe(true);
       expect(await acknowledge(db, owner, receipt, boundRecord.id)).toBe(false);
-
-      expect(await activateHeldObservations(db, owner, scope)).toBe(false);
-      sqlite.exec("UPDATE observations SET sync_state = 'local-only'");
-      sqlite.prepare("UPDATE observations SET payload = ?").run(JSON.stringify(boundRecord));
-      expect(await activateHeldObservations(db, owner, scope)).toBe(true);
-      expect(await activateHeldObservations(db, owner, scope)).toBe(false);
     } finally {
       sqlite.close();
     }

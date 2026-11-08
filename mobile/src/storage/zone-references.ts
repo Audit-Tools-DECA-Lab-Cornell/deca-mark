@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { storageStatusSchema } from "../domain/observation";
 import { identityKey, type PackageIdentity } from "../domain/package-binding";
 import type { VersionReferences } from "../packages/zone-model-types";
 import { databaseWrite } from "./database-write";
@@ -15,7 +16,7 @@ export function zoneReferences(
     const rows = z
       .array(
         z.object({
-          sync_state: z.enum(["local-only", "pending", "synced", "needs-attention"]),
+          sync_state: storageStatusSchema,
           total: z.number().int().nonnegative(),
         }),
       )
@@ -29,7 +30,7 @@ export function zoneReferences(
     return {
       unfinished: references.drafts,
       unsent: rows
-        .filter((row) => row.sync_state === "local-only" || row.sync_state === "pending")
+        .filter((row) => row.sync_state === "pending")
         .reduce((sum, row) => sum + row.total, 0),
       attention: rows.find((row) => row.sync_state === "needs-attention")?.total ?? 0,
       retained: rows.find((row) => row.sync_state === "synced")?.total ?? 0,

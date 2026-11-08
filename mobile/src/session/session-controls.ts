@@ -32,7 +32,7 @@ export function sessionControls(input: {
       const owner = m.identity.current;
       if (owner) {
         const binding = sessionBinding(m.sitePackage, selected);
-        m.holdIdentity({ ...owner, ...(binding ? { binding } : {}) });
+        m.holdIdentity({ ...owner, binding });
       }
       m.setZone(selected);
       input.persist(m.stateRef.current, m.placed);

@@ -67,7 +67,7 @@ describe("lastReceivedAt", () => {
         user_id: "40000000-0000-4000-8000-000000000002",
         received_at: "2026-10-16T11:00:00Z",
       });
-      for (const [index, state] of ["pending", "needs-attention", "local-only"].entries()) {
+      for (const [index, state] of ["pending", "needs-attention"].entries()) {
         await db.runAsync(
           "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state, server_receipt) VALUES (?, '', '{}', ?, ?, ?)",
           `synthetic-${index}`,

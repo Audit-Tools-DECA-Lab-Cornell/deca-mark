@@ -3,7 +3,7 @@ import { createApiClient } from "../../data/api/client";
 import { readAvailableCurrent } from "../../storage/available-current";
 import { databaseWrite } from "../../storage/database-write";
 import { installedFor } from "../../storage/package-store.fixture";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import { deferred, harness, nextFixture, owner } from "./lifecycle.test-helper";
 import { PackageOperations } from "./operations";
 

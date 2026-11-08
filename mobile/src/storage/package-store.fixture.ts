@@ -56,7 +56,7 @@ export const boundRecord = instrumentObservationSchema.parse({
   context,
   placement: { source: "hand", gpsAccuracyMetres: null },
   createdAt: "2026-10-11T10:00:00.000Z",
-  storageStatus: "local-only",
+  storageStatus: "pending",
   binding,
 });
 export const boundDraft = observationDraftSchema.parse({
