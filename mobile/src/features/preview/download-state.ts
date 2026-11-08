@@ -1,5 +1,3 @@
-import { bundledPackage } from "../../packages/bundled";
-import type { SitePackage } from "../../packages/site-package";
 import { PACKAGE_ASSETS, PREVIEW_SITES, type PreviewSite } from "./fixtures";
 
 export type DownloadState = "notDownloaded" | "downloading" | "ready";
@@ -36,27 +34,6 @@ export function readyDownload(site: PreviewSite): SiteDownload {
 
 export function notDownloaded(site: PreviewSite): SiteDownload {
   return { state: "notDownloaded", receivedMb: 0, totalMb: site.sizeMb, assets: waitingAssets() };
-}
-
-/** The package that really exists on this phone for a site, if any. */
-function devicePackage(site: PreviewSite): SitePackage | undefined {
-  const found = bundledPackage(site.packageId);
-  return found?.availability === "on-device" ? found : undefined;
-}
-
-/** A site as the device knows it: the real package version, and ready only if that package is here. */
-export function deviceSite(site: PreviewSite): PreviewSite & { download: SiteDownload } {
-  const found = devicePackage(site);
-  const onDevice: PreviewSite = found
-    ? {
-        ...site,
-        packageVersion: found.version,
-        sizeMb: 0,
-        verifiedLabel: "ships with the app",
-        bundled: true,
-      }
-    : { ...site, verifiedLabel: "" };
-  return { ...onDevice, download: found ? readyDownload(onDevice) : notDownloaded(onDevice) };
 }
 
 export function waitingAssets(): SiteDownload["assets"] {

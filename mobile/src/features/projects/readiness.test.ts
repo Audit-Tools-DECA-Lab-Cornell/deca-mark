@@ -29,25 +29,23 @@ const practice = site("practice-garden", "ready");
 
 describe("project readiness (Mobile 10)", () => {
   it("counts the sites ready offline", () => {
-    expect(projectReadiness({ training: false }, [riverside, fallCreek])).toEqual({
+    expect(projectReadiness([riverside, fallCreek])).toEqual({
       state: "readyOffline",
       label: "1 site ready offline",
     });
-    expect(projectReadiness({ training: false }, [riverside, riverside])).toMatchObject({
+    expect(projectReadiness([riverside, riverside])).toMatchObject({
       label: "2 sites ready offline",
     });
   });
 
-  it("calls Training always available, and says when nothing is here yet", () => {
-    expect(projectReadiness({ training: true }, [practice]).label).toBe("Always available");
-    expect(projectReadiness({ training: false }, [])).toEqual({
+  it("calls Training ready offline once Practice garden is downloaded, like any project, and says when nothing is here yet", () => {
+    expect(projectReadiness([practice]).label).toBe("1 site ready offline");
+    expect(projectReadiness([])).toEqual({
       state: "unknown",
       label: "No sites on this device yet",
     });
-    expect(projectReadiness({ training: false }, [fallCreek]).state).toBe("notDownloaded");
-    expect(
-      projectReadiness({ training: false }, [site("fall-creek", "downloading", 60)]).state,
-    ).toBe("downloading");
+    expect(projectReadiness([fallCreek]).state).toBe("notDownloaded");
+    expect(projectReadiness([site("fall-creek", "downloading", 60)]).state).toBe("downloading");
   });
 });
 
@@ -55,16 +53,16 @@ describe("site rows (Mobile 11)", () => {
   it("reads as designed", () => {
     expect(siteSubtitle(riverside)).toBe("3 zones · map v3 · 84.0 MB");
     expect(siteSubtitle(fallCreek)).toBe("Whole playground · 126.0 MB");
-    expect(siteSubtitle(practice)).toBe("2 zones · map bundled");
+    expect(siteSubtitle(practice)).toBe("2 zones · map v1 · 2.0 MB");
     expect(siteReadiness(riverside).label).toBe("Ready offline");
     expect(siteReadiness(fallCreek).label).toBe("Not downloaded");
     expect(siteReadiness(site("fall-creek", "downloading", 60)).label).toBe("Downloading · 48%");
-    expect(siteReadiness(practice).label).toBe("Ships with the app");
+    expect(siteReadiness(practice).label).toBe("Ready offline");
   });
 
   it("totals what is on this device", () => {
     expect(downloadsSummary([riverside, fallCreek])).toBe("1 of 2 · 84.0 MB");
-    expect(downloadsSummary([practice])).toBe("1 of 1");
+    expect(downloadsSummary([practice])).toBe("1 of 1 · 2.0 MB");
     expect(downloadsSummary([])).toBe("0 of 0");
   });
 

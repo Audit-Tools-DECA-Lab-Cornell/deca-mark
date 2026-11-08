@@ -22,13 +22,12 @@ export type PreviewSite = {
   projectId: string;
   name: string;
   zones: string[];
-  /** The bundled package this site opens in the collector (src/packages/bundled.ts). */
+  /** The hosted package a site downloads; empty until a project manager prepares one. */
   packageId: string;
   packageVersion: string;
   sizeMb: number;
   initialDownload: "ready" | "notDownloaded";
   verifiedLabel: string;
-  bundled: boolean;
 };
 
 export type QueueState = "onDevice" | "uploading" | "uploaded" | "attention" | "held";
@@ -40,8 +39,6 @@ export type QueueRecord = {
   roundType: RoundType;
   time: string;
   state: QueueState;
-  /** A practice record: no project binding, stays on this device, never uploads (MOB-37). */
-  practice?: boolean | undefined;
   summary: string;
   /** What the server said, for a record that needs attention. */
   problem?: string | undefined;
@@ -89,7 +86,6 @@ export const PREVIEW_SITES: PreviewSite[] = [
     sizeMb: 84,
     initialDownload: "ready",
     verifiedLabel: "verified today 11:25",
-    bundled: false,
   },
   {
     id: "fall-creek",
@@ -101,19 +97,17 @@ export const PREVIEW_SITES: PreviewSite[] = [
     sizeMb: 126,
     initialDownload: "notDownloaded",
     verifiedLabel: "",
-    bundled: false,
   },
   {
     id: "practice-garden",
     projectId: "training",
     name: "Practice garden",
     zones: ["Beds", "Lawn"],
-    packageId: "sample-garden",
-    packageVersion: "bundled",
-    sizeMb: 0,
-    initialDownload: "ready",
-    verifiedLabel: "ships with the app",
-    bundled: true,
+    packageId: "training-garden-package",
+    packageVersion: "v1",
+    sizeMb: 2,
+    initialDownload: "notDownloaded",
+    verifiedLabel: "",
   },
 ];
 

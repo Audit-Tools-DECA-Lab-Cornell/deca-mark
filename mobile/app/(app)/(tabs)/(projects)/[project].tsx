@@ -139,8 +139,7 @@ function SiteRow({
   const { mode } = useDataSource();
   const hostedSites = useHostedSites();
   // A hosted site's state and versions come from the verified catalog, not the site list's package.
-  const versions =
-    mode === "device" && !site.bundled ? siteVersionSnapshot(hostedSites, site.id) : null;
+  const versions = mode === "device" ? siteVersionSnapshot(hostedSites, site.id) : null;
   const readiness = versions ? hostedReadiness(versions) : siteReadiness(site);
   const ready = versions ? versions.nextSessionPackageId !== null : site.download.state === "ready";
   const subtitle = versions ? siteVersionLine(site.zones.length, versions) : siteSubtitle(site);

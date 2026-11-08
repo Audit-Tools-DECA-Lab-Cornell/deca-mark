@@ -36,7 +36,6 @@ export function hostedPreviewSite(projectId: string, site: HostedSite): PreviewS
     sizeMb: site.package ? megabytes(site.package.archive_bytes) : 0,
     initialDownload: "notDownloaded",
     verifiedLabel: "checked against the server's digest",
-    bundled: false,
   };
 }
 

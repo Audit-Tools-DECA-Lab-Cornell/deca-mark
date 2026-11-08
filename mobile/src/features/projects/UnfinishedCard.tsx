@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import type { Answers } from "../../forms/definition";
 import { isAnswered, visibleQuestions } from "../../forms/engine";
-import { formFor } from "../../forms/registry";
 import { useHostedSites } from "../../packages/hosted/context";
 import { type Recovered, useRecoveredDraft } from "../../packages/zone-read-models";
 import { useFieldSession } from "../../session/provider";
@@ -22,9 +21,6 @@ import { useDataSource } from "../preview/data-source";
 import { unfinishedSentence, unfinishedTitle } from "./readiness";
 import { type RecoveryAction, recoveryCard, redownloadProblem } from "./recovery";
 
-/** The bundled package the preview's sample draft belongs to (Riverside, as Mobile 10 draws it). */
-const PREVIEW_PACKAGE = "riverside-play-study";
-
 type Unfinished =
   /** A draft left by a force quit or a restart, with its exact map and zone (MUI-7). */
   | {
@@ -32,11 +28,6 @@ type Unfinished =
       readonly model: Recovered | null;
       readonly problem: string | null;
     }
-  /**
-   * A recovered draft from a map that ships with the app (practice): it has no hosted map to pin, so
-   * the field session resumes or discards it as it is.
-   */
-  | { readonly kind: "unbound"; readonly title: string; readonly sentence: string }
   /**
    * A stored draft this build cannot read (MOB-41): it blocks every new observation, so the card
    * offers the one way out, a confirmed discard.
@@ -51,6 +42,7 @@ function countAnswered(answers: Answers): number {
 }
 
 const NOT_REOPENED = "This draft could not be reopened here. It stays on this device.";
+const SAMPLE_ONLY = "This is sample data. Switch to device data to collect.";
 
 /** Discards a kept draft and says whether it went: a failed discard leaves it on this device. */
 function discardKept(discard: () => Promise<void>) {
@@ -72,18 +64,6 @@ export function useUnfinished(): Unfinished | null {
   const { recovered, inProgress } = session;
 
   if (session.unreadableDraft && !recovered && !inProgress) return { kind: "unreadable" };
-  if (recovered && !recovered.binding) {
-    const form = formFor(recovered.formVersion);
-    return {
-      kind: "unbound",
-      title: unfinishedTitle(recovered.context.zoneLabel, recovered.context.roundType),
-      sentence: unfinishedSentence({
-        placed: recovered.coordinates !== null,
-        answered: countAnswered(recovered.answers),
-        asked: form ? visibleQuestions(form, recovered.answers).length : 0,
-      }),
-    };
-  }
   if (recovered) return { kind: "recovered", model: recovery.active, problem: recovery.problem };
   if (inProgress) {
     const answers = session.state.answers;
@@ -194,22 +174,9 @@ function OpenCard({
     }
     setBusy(true);
     try {
-      if (unfinished.kind === "unbound") {
-        const opened = await session.resumeRecovered();
-        if (opened) router.push("/collect");
-        else {
-          setProblem(NOT_REOPENED);
-          announce(NOT_REOPENED);
-        }
-        return;
-      }
-      // Preview: the sample has no answers to restore, so collect opens on its bundled package.
-      const outcome = await session.openPackage(PREVIEW_PACKAGE);
-      if (outcome.ok) router.push("/collect");
-      else {
-        setProblem(outcome.reason);
-        announce(outcome.reason);
-      }
+      // Preview: the sample has no answers to restore and no package on this device to open.
+      setProblem(SAMPLE_ONLY);
+      announce(SAMPLE_ONLY);
     } finally {
       setBusy(false);
     }
@@ -218,10 +185,6 @@ function OpenCard({
   function discard() {
     confirmDiscard(() => {
       haptics.warning();
-      if (unfinished.kind === "unbound") {
-        discardKept(session.discardRecovered);
-        return;
-      }
       if (unfinished.kind === "open") session.discard();
       else setHidden(true);
       announce("Draft discarded.");

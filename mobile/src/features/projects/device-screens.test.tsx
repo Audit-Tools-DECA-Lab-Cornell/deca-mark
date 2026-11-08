@@ -3,10 +3,12 @@ import ProjectScreen from "../../../app/(app)/(tabs)/(projects)/[project]";
 import SiteScreen from "../../../app/(app)/(tabs)/(projects)/[project]/[site]";
 import BriefScreen from "../../../app/(app)/(tabs)/(projects)/[project]/[site]/brief";
 import ProjectsHome from "../../../app/(app)/(tabs)/(projects)/index";
-import { shellV1 } from "../../forms/fixtures/shell-v1";
+import { janetInventoryV1 } from "../../forms/janet-inventory-v1.test-helper";
+import { janetTestV1 } from "../../forms/janet-test-v1.test-helper";
 import { startSession } from "../../forms/session";
 import type { SitePackage } from "../../packages/site-package";
 import type { Recovered, SiteVersions } from "../../packages/zone-read-models";
+import { identity } from "../../storage/package-store.fixture";
 import { isDisabled, render } from "../../ui/screen.fixture";
 
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
@@ -57,7 +59,6 @@ const site = {
   sizeMb: 12,
   initialDownload: "notDownloaded" as const,
   verifiedLabel: "",
-  bundled: false,
   download: { state: "notDownloaded" as const, receivedMb: 0, totalMb: 12, assets: [] },
 };
 vi.mock("../preview", () => ({
@@ -106,8 +107,6 @@ vi.mock("../../packages/zone-read-models", () => ({
   }),
 }));
 vi.mock("../../session/provider", () => ({ useFieldSession: () => data.session }));
-// The bundled sample maps load images; no bundled site is drawn here.
-vi.mock("../../packages/bundled", () => ({ bundledPackage: () => undefined }));
 vi.mock("../../packages/open", () => ({ packageFacts: () => null }));
 
 const MB = 1024 * 1024;
@@ -157,8 +156,11 @@ const v1: SitePackage = {
   name: "Fall Creek",
   meta: "Synthetic",
   availability: "on-device",
-  formVersion: shellV1.version,
-  inventoryFormVersion: "janet-inventory-v1",
+  formVersion: janetTestV1.version,
+  inventoryFormVersion: janetInventoryV1.version,
+  packageIdentity: identity,
+  projectId: identity.projectId,
+  forms: { play: janetTestV1, inventory: janetInventoryV1 },
   version: "v1",
   siteId: "site-1",
   sizeOnDevice: "11.0 MB",
@@ -175,7 +177,7 @@ function brief(active: Recovered | null) {
   data.active = active;
   data.session = {
     sitePackage: v1,
-    form: shellV1,
+    form: janetTestV1,
     zone: v1.zones[0],
     roundType: "standard",
     freshPeriod: false,

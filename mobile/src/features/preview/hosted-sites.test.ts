@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boundFixture } from "../../packages/hosted/bound-fixture";
+import { boundFixture } from "../../packages/hosted/bound-fixture.test-helper";
 import { siteSchema } from "../../packages/hosted/schemas";
 import { downloadsSummary, siteSubtitle } from "../projects/readiness";
 import { hostedDownload, hostedPreviewSite } from "./hosted-sites";
@@ -23,7 +23,6 @@ describe("A hosted site on the Project and Site screens", () => {
       packageVersion: "v3",
       sizeMb: 2.5,
       zones: ["Zone A"],
-      bundled: false,
     });
   });
 

@@ -11,7 +11,7 @@ import type { LayerData, StoredPackage } from "./schemas";
 
 /**
  * A downloaded site as the field map draws it. The plan is built from the package's own layers in the
- * shared map palette (`contracts/map-palettes.json`), as the bundled sites are: the ground layer by
+ * shared map palette (`contracts/map-palettes.json`): the ground layer by
  * each feature's `kind` (the site outline, surfaces such as grass or mulch, equipment and structures),
  * then paths, trees and the zones over it. Hosted packages carry no imagery, so Aerial is not offered.
  */
@@ -134,7 +134,7 @@ function megabytes(bytes: number): string {
 export function hostedSitePackage(
   stored: StoredPackage,
   forms: { readonly play: FormDefinition; readonly inventory: FormDefinition | null },
-  identity?: PackageIdentity,
+  identity: PackageIdentity,
 ): SitePackage {
   const { manifest, layers } = stored;
   const camera = packageCamera(layers);
@@ -142,7 +142,7 @@ export function hostedSitePackage(
   const count = `${zones.length} ${zones.length === 1 ? "zone" : "zones"}`;
   return {
     id: stored.packageId,
-    ...(identity ? { packageIdentity: identity } : {}),
+    packageIdentity: identity,
     name: stored.siteName,
     meta: `${count} · package v${stored.packageVersion}`,
     availability: "on-device",

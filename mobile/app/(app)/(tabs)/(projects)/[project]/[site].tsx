@@ -18,7 +18,6 @@ import {
 } from "../../../../../src/features/projects/readiness";
 import { SitePlanFrame } from "../../../../../src/features/projects/SitePlan";
 import { UnreadableDraftCard } from "../../../../../src/features/projects/UnfinishedCard";
-import { bundledPackage } from "../../../../../src/packages/bundled";
 import { packageFacts } from "../../../../../src/packages/open";
 import { useSiteVersions } from "../../../../../src/packages/zone-read-models";
 import { useFieldSession } from "../../../../../src/session/provider";
@@ -81,8 +80,8 @@ function siteStyles(t: Theme) {
  * offline. "Set up this session" turns on once all four parts verify, opens the package in the field
  * session, and continues to "Before you begin".
  *
- * On device data a site is ready only when its package is on this phone, shipped with the app or
- * downloaded from the DECA Mark API (MOB-14), and the four parts are checked against that package. A
+ * On device data a site is ready only when its package is on this phone, downloaded from the DECA Mark
+ * API (MOB-14), and the four parts are checked against that package. A
  * hosted download is checked against the digest the server recorded before anything is kept. Preview
  * data simulates the designed download and removal.
  */
@@ -146,7 +145,7 @@ export default function SiteScreen() {
 
   // A hosted site opens the newest verified map on this device, which may be older than the one
   // published (MUI-1): the site list's current package is not the session's.
-  const hosted = device && !site.bundled;
+  const hosted = device;
   // On this device: for a hosted site, any verified map (the catalog's), not only the published one.
   const onDevice = hosted
     ? versions.nextSessionPackageId !== null
@@ -286,7 +285,6 @@ function PackageIsland({
   const s = useStyles(siteStyles);
   const { download } = site;
   const title = `Map package ${site.packageVersion}`;
-  const found = device ? bundledPackage(site.packageId) : undefined;
 
   const meta =
     download.state === "ready" ? (
@@ -297,12 +295,10 @@ function PackageIsland({
       <StateBadge kind="readiness" state="notDownloaded" />
     );
 
-  const hasPackage = !device || site.bundled || site.packageId !== "";
+  const hasPackage = !device || site.packageId !== "";
   const description =
     download.state === "ready"
-      ? device && site.bundled
-        ? `${found?.sizeOnDevice ?? "On this device"} · checked on this device`
-        : `${site.sizeMb} MB on this device · ${site.verifiedLabel}`
+      ? `${site.sizeMb} MB on this device · ${site.verifiedLabel}`
       : download.state === "notDownloaded"
         ? hasPackage
           ? `${site.sizeMb} MB · needs a connection`
@@ -377,7 +373,7 @@ function PackageIsland({
           )}
           {download.state === "downloading" ? (
             <TextLink label="Cancel download" tone="ink" onPress={onCancel} style={s.link} />
-          ) : download.state === "ready" && !site.bundled ? (
+          ) : download.state === "ready" ? (
             <TextLink
               label="Remove this download"
               tone="ink"
@@ -385,10 +381,6 @@ function PackageIsland({
               accessibilityHint="Asks before removing the package."
               style={s.link}
             />
-          ) : download.state === "ready" ? (
-            <Text variant="small" tone="ink2" align="center">
-              This package ships with the app, so it stays on this device.
-            </Text>
           ) : null}
         </View>
       </View>

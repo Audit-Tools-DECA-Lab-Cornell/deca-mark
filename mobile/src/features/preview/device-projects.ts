@@ -1,5 +1,5 @@
 import type { Identity } from "../../data/api/identity";
-import { PREVIEW_PROJECTS, type PreviewProject } from "./fixtures";
+import type { PreviewProject } from "./fixtures";
 
 /**
  * The collector's projects on device data, from the account's `/v1/me` (D24). Memberships carry the
@@ -7,17 +7,14 @@ import { PREVIEW_PROJECTS, type PreviewProject } from "./fixtures";
  * account's organization memberships. Training belongs to an organization the observer is not a member
  * of, so its name falls back to "DECA Mark".
  *
- * Training opens the practice sites that ship with the app. Every other project lists the sites its
- * managers created, read from the DECA Mark API (MOB-14); it never claims bundled sites as its own.
+ * Every project, Training included, lists the sites its managers created, read from the DECA Mark API
+ * (MOB-14). Training's Practice garden downloads like any other site and its records upload to Training.
  */
 
 /** The organization name when the account is not a member of the project's organization. */
 export const FALLBACK_ORG = "DECA Mark";
 
-const TRAINING_FIXTURE = PREVIEW_PROJECTS.find((project) => project.training);
-const TRAINING_SUMMARY =
-  TRAINING_FIXTURE?.summary ?? "Practice every step · never in research exports";
-const TRAINING_SITE_IDS = TRAINING_FIXTURE?.siteIds ?? [];
+const TRAINING_SUMMARY = "Practice every step · never in research exports";
 
 export function deviceProjects(
   projects: Identity["project_memberships"],
@@ -33,9 +30,7 @@ export function deviceProjects(
       name: membership.name,
       org,
       summary: membership.is_training ? TRAINING_SUMMARY : `${org} · ${membership.role} access`,
-      siteIds: membership.is_training
-        ? [...TRAINING_SITE_IDS]
-        : hostedSiteIds(membership.project_id),
+      siteIds: hostedSiteIds(membership.project_id),
       training: membership.is_training,
     };
   });
