@@ -76,7 +76,8 @@ export const instrumentObservationSchema = z
     siteId: z.string().min(1),
     /** The version a project published (`training-v1`, or any other code the server serves). */
     formVersion: z.string().min(1),
-    observer: z.string().trim().min(1).max(10),
+    // 12, like the wire body and the API: a shell-v1 form allowed 12, so its saved records stay readable.
+    observer: z.string().trim().min(1).max(12),
     answers: z.record(z.string(), answerValueSchema),
     context: roundContextSchema,
     placement: placementSchema,

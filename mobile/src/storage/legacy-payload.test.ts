@@ -109,15 +109,19 @@ describe("records written by a build before MOB-43", () => {
     }
   });
 
-  it("reads a bound record of a form coded shell-v1 as the answers its frozen body carries", async () => {
+  // A shell-v1 form allowed a 12-character observer code, as do the wire body and the API.
+  it.each([
+    "JL",
+    "ABCDEFGHIJKL",
+  ])("reads a bound record of a form coded shell-v1 as the answers its frozen body carries (observer %s)", async (observer) => {
     // Master's bound-shell branch: people and notes beside the observer, no `answers`.
     const shellId = "83f254b5-8a7b-4b71-9591-a7ff880f4ad8";
-    const answers = { observer: "JL", people: 2, notes: "Café — 遊び" };
+    const answers = { observer, people: 2, notes: "Café — 遊び" };
     const frozen = serializeBoundObservation({
       ...boundRecord,
       id: shellId,
       formVersion: "shell-v1",
-      observer: "JL",
+      observer,
       answers,
     });
     const {
@@ -131,7 +135,7 @@ describe("records written by a build before MOB-43", () => {
       ...shared,
       id: shellId,
       formVersion: "shell-v1",
-      observer: "JL",
+      observer,
       people: 2,
       notes: "Café — 遊び",
       storageStatus: "local-only",
