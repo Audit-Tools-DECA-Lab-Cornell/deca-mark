@@ -3,7 +3,7 @@ import { type Observation, observationSchema, storageStatusSchema } from "../dom
 import { identityKey } from "../domain/package-binding";
 import { databaseTransaction, databaseWrite } from "./database-write";
 import { requireAuthorizedPackage } from "./package-catalog-read";
-import { encodeUploadPayload, readSyncFailure } from "./upload-payload";
+import { encodeUploadPayload, readSyncFailure, readUploadPayload } from "./upload-payload";
 
 export interface LocalDatabase {
   execAsync(sql: string): Promise<void>;
@@ -70,7 +70,7 @@ export function listObservations(db: LocalDatabase, scope: string): Promise<Obse
       .array(
         z.object({
           payload: z.string(),
-          sync_state: storageStatusSchema,
+          sync_state: z.string(),
           sync_error: z.string(),
         }),
       )
@@ -80,10 +80,19 @@ export function listObservations(db: LocalDatabase, scope: string): Promise<Obse
           scope,
         ),
       );
-    return rows.map((row) => ({
-      ...observationSchema.parse(JSON.parse(row.payload)),
-      storageStatus: row.sync_state,
-      ...readSyncFailure(row.sync_error),
-    }));
+    // A row left in the retired `local-only` state is a practice record from before MOB-43: it can
+    // never upload, so it stays stored (MOB-44's reset removes it) and is not listed.
+    return rows.flatMap((row) => {
+      const state = storageStatusSchema.safeParse(row.sync_state);
+      return state.success
+        ? [
+            {
+              ...readUploadPayload(row.payload).record,
+              storageStatus: state.data,
+              ...readSyncFailure(row.sync_error),
+            },
+          ]
+        : [];
+    });
   });
 }

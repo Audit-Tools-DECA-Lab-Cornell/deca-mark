@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { storageStatusSchema } from "../domain/observation";
 import { identityKey, type PackageIdentity } from "../domain/package-binding";
 import type { VersionReferences } from "../packages/zone-model-types";
 import { databaseWrite } from "./database-write";
@@ -16,7 +15,7 @@ export function zoneReferences(
     const rows = z
       .array(
         z.object({
-          sync_state: storageStatusSchema,
+          sync_state: z.string(),
           total: z.number().int().nonnegative(),
         }),
       )
