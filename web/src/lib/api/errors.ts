@@ -124,6 +124,7 @@ export type ApiErrorOptions = {
 	readonly detail?: string;
 	readonly issues?: readonly ZoneIssue[];
 	readonly conflict?: ConflictDetails | null;
+	readonly onlineMaps?: readonly OnlineMap[];
 	/** DECA Mark's `X-Request-Id` for the answer, for a report. */
 	readonly requestId?: string;
 };
@@ -151,6 +152,21 @@ export function zoneIssues(details: unknown): ZoneIssue[] {
 		return parsed.success
 			? [{ code: parsed.data.code, zoneIds: parsed.data.zone_ids, path: parsed.data.path }]
 			: [];
+	});
+}
+
+/** An online background map of a QGIS project: the layer's name, and the tile service's host when known. */
+export type OnlineMap = { readonly name: string; readonly host: string | null };
+
+const onlineMapSchema = z.object({ name: z.string().min(1), host: z.string().nullable().default(null) });
+
+/** The online background maps an `online_basemap_unconfirmed` refusal names (`details.layers`), read leniently. */
+export function onlineMaps(details: unknown): OnlineMap[] {
+	const list = (details as { layers?: unknown } | undefined)?.layers;
+	if (!Array.isArray(list)) return [];
+	return list.flatMap(entry => {
+		const parsed = onlineMapSchema.safeParse(entry);
+		return parsed.success ? [parsed.data] : [];
 	});
 }
 
@@ -188,6 +204,8 @@ export class ApiError extends Error {
 	readonly issues: readonly ZoneIssue[];
 	/** What a conflict says about the current state, when it says anything. */
 	readonly conflict: ConflictDetails | null;
+	/** The online background maps an `online_basemap_unconfirmed` refusal names. Empty otherwise. */
+	readonly onlineMaps: readonly OnlineMap[];
 	/** DECA Mark's `X-Request-Id` for the answer, when it sent one. */
 	readonly requestId: string | undefined;
 
@@ -201,6 +219,7 @@ export class ApiError extends Error {
 		this.detail = code === "validation_failed" ? options.detail : undefined;
 		this.issues = options.issues ?? [];
 		this.conflict = options.conflict ?? null;
+		this.onlineMaps = options.onlineMaps ?? [];
 		this.requestId = options.requestId;
 	}
 }
@@ -222,6 +241,10 @@ export function parseApiError(status: number, body: unknown, headers?: HeaderSou
 		issues: parsed.success ? zoneIssues(parsed.data.error.details) : [],
 		conflict:
 			parsed.success && (status === 409 || status === 412) ? conflictDetails(parsed.data.error.details) : null,
+		onlineMaps:
+			parsed.success && parsed.data.error.code === "online_basemap_unconfirmed"
+				? onlineMaps(parsed.data.error.details)
+				: [],
 		requestId: headers?.get("X-Request-Id") ?? undefined
 	};
 	if (status === 401)
