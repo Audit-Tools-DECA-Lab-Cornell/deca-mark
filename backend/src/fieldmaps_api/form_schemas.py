@@ -50,6 +50,18 @@ class FormVersionDetail(FormVersionSummary):
     definition: dict[str, JsonValue]
 
 
+class FormTemplate(BaseModel):
+    """A ready-made form to start from: a canonical definition with its schema number beside it."""
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+
+    code: str
+    title: str
+    summary: str
+    schema_version: int
+    definition: dict[str, JsonValue]
+
+
 class FormCreate(Input):
     """A new form and its first draft. The definition is checked as the collector will read it."""
 

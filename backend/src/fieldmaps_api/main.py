@@ -28,6 +28,7 @@ from fieldmaps_api.observability import (
 from fieldmaps_api.routers import (
     collection,
     emails,
+    form_templates,
     forms,
     identity,
     observation_analysis,
@@ -153,6 +154,7 @@ def create_app(  # noqa: PLR0915 - explicit lifecycle and router wiring
     )
     app.include_router(zones.create_router(sessions, authenticate, work=zone_work))
     app.include_router(forms.create_router(sessions, authenticate))
+    app.include_router(form_templates.create_router(sessions, authenticate))
     return app
 
 

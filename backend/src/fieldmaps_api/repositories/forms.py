@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fieldmaps_api.domain.form_definition import FORM_SCHEMA_VERSION
 from fieldmaps_api.errors import StorageUnavailableError
 from fieldmaps_api.form_schema_version import require_current_schema
-from fieldmaps_api.form_schemas import FormSummary, FormVersionDetail
+from fieldmaps_api.form_schemas import FormSummary, FormTemplate, FormVersionDetail
 from fieldmaps_api.queries import forms as queries
 
 if TYPE_CHECKING:
@@ -35,6 +35,16 @@ class FormRef(BaseModel):
 async def list_forms(session: AsyncSession, project_id: UUID) -> list[FormSummary]:
     result: Result[tuple[str]] = await session.execute(queries.FORMS, {"project": project_id})
     return [FormSummary.model_validate_json(row) for row in result.scalars()]
+
+
+async def manages_anything(session: AsyncSession) -> bool:
+    result: Result[tuple[bool]] = await session.execute(queries.MANAGES_ANYTHING)
+    return result.scalar_one()
+
+
+async def list_templates(session: AsyncSession) -> list[FormTemplate]:
+    result: Result[tuple[str]] = await session.execute(queries.TEMPLATES)
+    return [FormTemplate.model_validate_json(row) for row in result.scalars()]
 
 
 async def get_version(

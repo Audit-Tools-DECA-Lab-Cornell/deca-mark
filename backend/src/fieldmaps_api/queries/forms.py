@@ -81,3 +81,19 @@ FROM pg_catalog.pg_attrdef d
 JOIN pg_catalog.pg_attribute a ON a.attrelid=d.adrelid AND a.attnum=d.adnum
 WHERE d.adrelid='fieldmaps.form_versions'::regclass AND a.attname='schema_version'
 """)
+
+#: Whether the caller manages anything: an owner or admin of an organization, or a manager of a
+#: project. A template list belongs to no organization, so this is its role check; the role
+#: functions apply the same rules as the project routes.
+MANAGES_ANYTHING: Final = text("""
+SELECT EXISTS (SELECT FROM fieldmaps.organizations o
+    WHERE fieldmaps_private.has_org_role(o.id, ARRAY['owner','admin']))
+  OR EXISTS (SELECT FROM fieldmaps.projects p
+    WHERE fieldmaps_private.has_project_role(p.id, ARRAY['manager']))
+""")
+
+TEMPLATES: Final = text("""
+SELECT json_build_object('code', t.code, 'title', t.title, 'summary', t.summary,
+  'schema_version', t.schema_version, 'definition', t.definition)::text
+FROM fieldmaps.form_templates t ORDER BY t.title, t.code
+""")
