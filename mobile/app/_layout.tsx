@@ -18,42 +18,22 @@ import { FieldSessionProvider } from "../src/session/provider";
 import { initializeCollectorDatabase } from "../src/storage/initialize-collector";
 import { SyncProvider } from "../src/sync/provider";
 import { interFonts } from "../src/theme-fonts";
-import {
-  Button,
-  Logo,
-  Screen,
-  ScreenState,
-  Text,
-  type Theme,
-  useStyles,
-  useTheme,
-} from "../src/ui";
+import { Logo, Text, type Theme, useStyles, useTheme } from "../src/ui";
 import { contourFonts } from "../src/ui/fonts";
 import { PreferencesProvider } from "../src/ui/preferences";
+import { ScreenFailure } from "../src/ui/ScreenFailure";
 import { ThemeProvider } from "../src/ui/theme";
 
 /** Inter stays until the last old Nocturne screen is replaced; Contour screens use Geologica. */
 const FONTS = { ...interFonts, ...contourFonts };
 
 /**
- * When a screen throws: the collector's error state (Contour, screen states). Its first line says the
- * work is safe, and "Try again" reloads the screen. It renders outside the root providers, so it brings
- * its own preferences and theme.
+ * When a screen throws, or the collector's database cannot be read by this build (the sentence "This
+ * version cannot read the records on this device. Update DECA Mark; nothing was deleted."): the
+ * collector's error state, in `ScreenFailure`.
  */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  return (
-    <PreferencesProvider>
-      <ThemeProvider>
-        <Screen scroll>
-          <ScreenState
-            kind="error"
-            body={`The screen could not load, but the point and answers you entered are kept. ${error.message}`}
-            action={<Button variant="ink" icon="rotate-cw" label="Try again" onPress={retry} />}
-          />
-        </Screen>
-      </ThemeProvider>
-    </PreferencesProvider>
-  );
+  return <ScreenFailure error={error} retry={retry} />;
 }
 
 function splashStyles(t: Theme) {

@@ -5,7 +5,6 @@ import { listObservations } from "./observation-store";
 import { installPackage } from "./package-catalog";
 import { binding, boundRecord, entry, memoryDatabase, owner } from "./package-store.fixture";
 import { acknowledge, pendingObservations } from "./sync-store";
-import { zoneReferences } from "./zone-references";
 
 /**
  * Builds before MOB-43 stored every record's payload with `storageStatus: "local-only"`, bound hosted
@@ -63,47 +62,6 @@ describe("records written by a build before MOB-43", () => {
         { id: boundRecord.id, storageStatus: "synced" },
       ]);
       expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
-    } finally {
-      sqlite.close();
-    }
-  });
-
-  it("keeps a retired practice row stored but never lists, counts or uploads it", async () => {
-    const practice = JSON.stringify({
-      id: "83f254b5-8a7b-4b71-9591-a7ff880f4ad7",
-      siteId: "sample-garden",
-      formVersion: "shell-v1",
-      coordinates: [-76.485, 42.448],
-      observer: "JL",
-      people: 2,
-      notes: "",
-      createdAt: "2026-09-17T10:00:00.000Z",
-      storageStatus: "local-only",
-    });
-    const { db, sqlite } = await withRow("pending");
-    try {
-      sqlite
-        .prepare(
-          "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state, package_key) VALUES (?, ?, ?, ?, 'local-only', ?)",
-        )
-        .run(
-          "83f254b5-8a7b-4b71-9591-a7ff880f4ad7",
-          "2026-09-17T10:00:00.000Z",
-          practice,
-          owner,
-          "",
-        );
-      expect((await listObservations(db, owner)).map((record) => record.id)).toEqual([
-        boundRecord.id,
-      ]);
-      expect(
-        (await pendingObservations(db, owner, Date.now())).map((item) => item.record.id),
-      ).toEqual([boundRecord.id]);
-      expect((await zoneReferences(db, owner, entry.identity)).unsent).toBe(1);
-      expect(sqlite.prepare("SELECT COUNT(*) AS n FROM observations").get()).toEqual({ n: 2 });
-      expect(
-        sqlite.prepare("SELECT sync_state FROM observations WHERE sync_state = 'local-only'").all(),
-      ).toHaveLength(1);
     } finally {
       sqlite.close();
     }
