@@ -80,8 +80,8 @@ export function listObservations(db: LocalDatabase, scope: string): Promise<Obse
           scope,
         ),
       );
-    // A row left in the retired `local-only` state is a practice record from before MOB-43: it can
-    // never upload, so it stays stored (MOB-44's reset removes it) and is not listed.
+    // The pilot schema (MOB-44) holds no row in the retired `local-only` state; a state this build does
+    // not know is never listed as a record.
     return rows.flatMap((row) => {
       const state = storageStatusSchema.safeParse(row.sync_state);
       return state.success
