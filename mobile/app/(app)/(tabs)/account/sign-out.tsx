@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useAccount } from "../../../../src/auth/provider";
-import { practiceLine, signOutWarning } from "../../../../src/features/account/leaving";
+import { signOutWarning } from "../../../../src/features/account/leaving";
 import { useLocalWork } from "../../../../src/features/account/use-local-work";
 import { useSignOutHere } from "../../../../src/features/account/use-sign-out";
 import { PageIntro } from "../../../../src/features/projects/parts";
@@ -45,8 +45,6 @@ export default function SignOutScreen() {
   const email = account?.email ?? "this account";
   const unread = !work.loading && work.error !== null;
   const warning = work.loading || unread ? null : signOutWarning(work, email);
-  // Practice records never wait to upload, but the observer is still told they stay here.
-  const practice = practiceLine(work.practice);
 
   async function signOut() {
     if (busy || work.loading) return;
@@ -93,7 +91,7 @@ export default function SignOutScreen() {
           lead={
             warning || unread
               ? undefined
-              : `Nothing is waiting on this device for ${email}. Signing out works without a connection.${practice ? ` ${practice}` : ""}`
+              : `Nothing is waiting on this device for ${email}. Signing out works without a connection.`
           }
         />
         {work.loading ? (
@@ -124,19 +122,11 @@ export default function SignOutScreen() {
             Signing out did not finish on this device. Try again.
           </Note>
         ) : null}
-        {warning && (work.unsent > 0 || practice) ? (
+        {warning && work.unsent > 0 ? (
           <View style={s.lines}>
-            {work.unsent > 0 ? (
-              <Text variant="body" tone="ink2">
-                {`Signing out pauses their upload until ${email} signs in again on this device.`}
-              </Text>
-            ) : null}
-            {/* Last, so "their" above can only mean the unsent records. */}
-            {practice ? (
-              <Text variant="body" tone="ink2">
-                {practice}
-              </Text>
-            ) : null}
+            <Text variant="body" tone="ink2">
+              {`Signing out pauses their upload until ${email} signs in again on this device.`}
+            </Text>
           </View>
         ) : null}
         <TextLink

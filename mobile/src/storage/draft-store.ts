@@ -31,7 +31,7 @@ export const observationDraftSchema = z
     packageId: z.string().min(1),
     siteId: z.string().min(1),
     context: roundContextSchema,
-    binding: packageBindingSchema.optional(),
+    binding: packageBindingSchema,
     coordinates: coordinateSchema.nullable(),
     placement: placementSchema.nullable(),
     answers: z.record(z.string(), answerValueSchema),
@@ -42,10 +42,9 @@ export const observationDraftSchema = z
   .strict()
   .refine(
     (draft) =>
-      !draft.binding ||
-      (draft.siteId === draft.binding.siteId &&
-        draft.packageId === draft.binding.packageId &&
-        bindingMatchesContext(draft.binding, draft.context)),
+      draft.siteId === draft.binding.siteId &&
+      draft.packageId === draft.binding.packageId &&
+      bindingMatchesContext(draft.binding, draft.context),
     "The frozen package binding must match the draft context.",
   );
 export type ObservationDraft = Readonly<z.infer<typeof observationDraftSchema>>;
@@ -64,7 +63,7 @@ export function saveDraft(
         await db.getAllAsync("SELECT id FROM observation_drafts WHERE owner_scope = ?", scope),
       );
     if (rows[0] && rows[0].id !== parsed.id) throw new DraftConflictError();
-    if (parsed.binding) await requireAuthorizedPackage(db, scope, parsed.binding);
+    await requireAuthorizedPackage(db, scope, parsed.binding);
     await db.runAsync(
       `INSERT INTO observation_drafts (owner_scope, id, updated_at, payload, package_key) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(owner_scope) DO UPDATE SET
@@ -73,7 +72,7 @@ export function saveDraft(
       draft.id,
       draft.updatedAt,
       JSON.stringify(parsed),
-      parsed.binding ? identityKey(parsed.binding) : "",
+      identityKey(parsed.binding),
     );
   });
 }

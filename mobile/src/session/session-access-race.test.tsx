@@ -12,6 +12,7 @@ import {
 } from "../storage/package-store.fixture";
 import type { FieldSessionValue } from "./context";
 import { FieldSessionProvider, useFieldSession } from "./provider";
+import { boundSitePackage } from "./site-package.test-helper";
 
 const mocks = vi.hoisted(() => {
   const state: { key: string; database: LocalDatabase | null; counter: number; blocked: boolean } =
@@ -45,65 +46,7 @@ vi.mock("../packages/hosted/provider", () => ({
 }));
 vi.mock("../packages/open", () => ({ openSitePackage: mocks.open }));
 
-const style: SitePackage["bases"]["day"] = { version: 8, sources: {}, layers: [] };
-const pkg: SitePackage = {
-  id: "shell-map",
-  name: "Synthetic shell map",
-  meta: "Synthetic",
-  availability: "on-device",
-  formVersion: "shell-v1",
-  inventoryFormVersion: "janet-inventory-v1",
-  version: "v7",
-  siteId: "sample-garden",
-  sizeOnDevice: "Synthetic",
-  inheritedContext: "",
-  centre: [0.5, 0.5],
-  bounds: [0, 0, 1, 1],
-  bases: { day: style, night: style, aerial: style },
-  layers: [],
-  zones: [
-    {
-      zoneId: "practice:A",
-      displayAnchor: [0.5, 0.5],
-      polygon: [
-        [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-        ],
-      ],
-      id: "A",
-      label: "Original",
-      centre: [0.5, 0.5],
-      west: 0,
-      south: 0,
-      east: 1,
-      north: 1,
-    },
-    {
-      zoneId: "practice:B",
-      displayAnchor: [0.8, 0.8],
-      polygon: [
-        [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-        ],
-      ],
-      id: "B",
-      label: "Other",
-      centre: [0.8, 0.8],
-      west: 0,
-      south: 0,
-      east: 1,
-      north: 1,
-    },
-  ],
-};
+const pkg = boundSitePackage();
 const snapshots: FieldSessionValue[] = [];
 let root: ReactTestRenderer | undefined;
 let sqlite: DatabaseSync;

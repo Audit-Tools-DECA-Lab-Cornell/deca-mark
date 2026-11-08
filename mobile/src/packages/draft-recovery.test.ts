@@ -1,4 +1,6 @@
 import { expect, it } from "vitest";
+import { janetInventoryV1 } from "../forms/janet-inventory-v1.test-helper";
+import { janetTestV1 } from "../forms/janet-test-v1.test-helper";
 import { boundDraft, identity } from "../storage/package-store.fixture";
 import { recoveredDraftModel } from "./draft-recovery";
 import type { SitePackage } from "./site-package";
@@ -15,6 +17,8 @@ const pkg: SitePackage = {
   version: "v7",
   siteId: boundDraft.siteId,
   packageIdentity: identity,
+  projectId: identity.projectId,
+  forms: { play: janetTestV1, inventory: janetInventoryV1 },
   sizeOnDevice: "Synthetic",
   inheritedContext: "",
   centre: [0.5, 0.5],

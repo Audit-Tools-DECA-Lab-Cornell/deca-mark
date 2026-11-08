@@ -17,13 +17,7 @@ import {
   memoryDatabase,
   owner,
 } from "./package-store.fixture";
-import {
-  acknowledge,
-  activateHeldObservations,
-  deferObservation,
-  pendingObservations,
-  retryAttention,
-} from "./sync-store";
+import { acknowledge, deferObservation, pendingObservations, retryAttention } from "./sync-store";
 
 const scope = syncScopeSchema.parse({
   apiUrl: "https://api.synthetic.invalid",
@@ -73,44 +67,6 @@ describe("Durable exact upload body", () => {
     } finally {
       sqlite.close();
       rmSync(directory, { recursive: true });
-    }
-  });
-  it("activates pre-MOB29 held records once from their own preserved binding", async () => {
-    const { db, sqlite } = await memoryDatabase();
-    try {
-      await installPackage(db, owner, entry);
-      await saveObservation(db, boundRecord, owner);
-      await db.runAsync(
-        "UPDATE observations SET payload = ?, sync_state = 'local-only'",
-        JSON.stringify(boundRecord),
-      );
-      await activateHeldObservations(db, owner, scope);
-      expect((await pendingObservations(db, owner, Date.now()))[0]?.body).toBe(
-        serializeBoundObservation(boundRecord),
-      );
-    } finally {
-      sqlite.close();
-    }
-  });
-  it("does not activate another account or issuer's held rows", async () => {
-    const { db, sqlite } = await memoryDatabase();
-    try {
-      await installPackage(db, owner, entry);
-      await saveObservation(db, boundRecord, owner);
-      await db.runAsync(
-        "UPDATE observations SET payload = ?, sync_state = 'local-only'",
-        JSON.stringify(boundRecord),
-      );
-      await activateHeldObservations(db, owner, {
-        ...scope,
-        userId: syncScopeSchema.parse({ ...scope, userId: "40000000-0000-4000-8000-000000000002" })
-          .userId,
-      });
-      expect(sqlite.prepare("SELECT sync_state FROM observations").get()?.["sync_state"]).toBe(
-        "local-only",
-      );
-    } finally {
-      sqlite.close();
     }
   });
   it.each([

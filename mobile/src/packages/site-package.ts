@@ -6,9 +6,9 @@ import type { FormDefinition } from "../forms/definition";
 import type { SiteZone } from "../maps/sample-site";
 
 /**
- * A site as the field map and the session read it: geometry, zones and the form versions the site
- * collects. It comes either with the app (`bundled.ts`) or from a project's hosted package, downloaded
- * and kept on the device (`hosted/`); the field flow treats both alike.
+ * A site as the field map and the session read it: geometry, zones and the forms the site collects.
+ * It comes from a project's hosted package, downloaded, verified and kept on the device (`hosted/`).
+ * Training's Practice garden is one of these like any other.
  */
 
 export type PackageAvailability = "on-device" | "not-downloaded" | "archived";
@@ -42,14 +42,15 @@ export type PackageSummary = {
 };
 
 export type SitePackage = PackageSummary & {
-  readonly packageIdentity?: PackageIdentity;
+  /** The verified package this site was installed from; every record is bound to it. */
+  readonly packageIdentity: PackageIdentity;
   readonly version: string;
   readonly siteId: string;
   readonly sizeOnDevice: string;
   readonly zones: readonly SiteZone[];
   /**
-   * The form an Inventory round collects on this site, once per zone. Standard and Reliability rounds
-   * collect {@link PackageSummary.formVersion}. Every project offers all three rounds.
+   * The form an Inventory round collects on this site, once per zone; empty when the project has none.
+   * Standard and Reliability rounds collect {@link PackageSummary.formVersion}.
    */
   readonly inventoryFormVersion: string;
   /** What a round inherits when the observer has not declared a fresh period. */
@@ -62,28 +63,13 @@ export type SitePackage = PackageSummary & {
     readonly aerial: StyleSpecification;
   };
   readonly layers: readonly PackageLayer[];
-  /**
-   * The project a hosted site belongs to: its records upload there. Bundled sites have none; their
-   * practice and instrument records remain local preview data.
-   */
-  readonly projectId?: string;
-  /**
-   * The forms a hosted site collects, as its project published them. Bundled sites name versions the
-   * app carries instead ({@link PackageSummary.formVersion}, {@link SitePackage.inventoryFormVersion}).
-   */
-  readonly forms?: {
+  /** The project the site belongs to: its records upload there. */
+  readonly projectId: string;
+  /** The forms the site collects, as its project published them and the package carried them. */
+  readonly forms: {
     readonly play: FormDefinition;
     readonly inventory: FormDefinition | null;
   };
   /** False when the package carries no imagery, so Aerial is not offered. Defaults to true. */
   readonly aerialAvailable?: boolean;
 };
-
-/**
- * Where packages come from. Only the bundled fixture provider exists today; a hosted provider
- * implements the same two calls without the field flow changing.
- */
-export interface PackageProvider {
-  list(): Promise<readonly PackageSummary[]>;
-  open(id: string): Promise<SitePackage | undefined>;
-}

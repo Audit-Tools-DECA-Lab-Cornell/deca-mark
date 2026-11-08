@@ -9,8 +9,7 @@ import { type PlanPoint, RIVERSIDE_PLAN } from "../auth/plan";
 /**
  * A still drawing of a site's plan for the Project and Site screens (Mobile 11 and 13): the thumbnail in
  * a site row, and the frame above a ready package with its scale and version chip. It is the shared
- * Riverside fixture (`contracts/fixtures/sites/riverside.json`), the plan the bundled Riverside and
- * practice packages are drawn from, in the map palette the observer chose (never the screen theme).
+ * Riverside fixture (`contracts/fixtures/sites/riverside.json`) in the map palette the observer chose (never the screen theme).
  * The field map itself is MapLibre on the collect screen.
  */
 

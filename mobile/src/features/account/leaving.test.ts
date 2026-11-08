@@ -4,42 +4,37 @@ import {
   deletionConsequences,
   type LocalWork,
   nothingWaits,
-  practiceLine,
   signOutWarning,
   uploadFirstLabel,
 } from "./leaving";
 
-/** MOB-37: the words for leaving say what the uploader does, and keep practice apart from unsent work. */
+/** MOB-37, MOB-43: the words for leaving say what the uploader does; every saved record is one that uploads. */
 
-const none: LocalWork = { unsent: 0, practice: 0, attention: 0, drafts: 0 };
+const none: LocalWork = { unsent: 0, attention: 0, drafts: 0 };
 
-describe("practice records in the words for leaving", () => {
-  it("says practice records stay and are never uploaded", () => {
-    expect(practiceLine(0)).toBeNull();
-    expect(practiceLine(1)).toBe("1 practice record stays on this device and is never uploaded.");
-    expect(practiceLine(2)).toBe("2 practice records stay on this device and are never uploaded.");
+describe("work that waits in the words for leaving", () => {
+  it("says nothing waits when no record is unsent and no draft is kept", () => {
+    expect(nothingWaits(none)).toBe(true);
+    expect(signOutWarning(none, "a@b.c")).toBeNull();
   });
 
-  it("does not count practice as work that waits", () => {
-    expect(nothingWaits({ ...none, practice: 2 })).toBe(true);
-    expect(signOutWarning({ ...none, practice: 2 }, "a@b.c")).toBeNull();
-  });
-
-  it("names practice apart from the unsent count, never as 'held for the project'", () => {
-    // Sign out says the practice line itself, after "their upload", so the warning carries none.
-    const lines = signOutWarning({ ...none, unsent: 1, practice: 2 }, "a@b.c") ?? [];
+  it("never says a record stays on the device for good: practice records upload like any other", () => {
+    const lines = signOutWarning({ ...none, unsent: 1 }, "a@b.c") ?? [];
     expect(lines).toContain("1 observation has not been uploaded.");
-    expect(lines.join(" ")).not.toContain("practice");
-    expect(lines.join(" ")).not.toContain("held for the project");
-    expect(deletionConsequences({ ...none, unsent: 1, practice: 2 }, 1, null)).toContain(
-      "2 practice records stay on this device and are never uploaded.",
-    );
+    const said = [
+      ...lines,
+      ...deletionConsequences({ ...none, unsent: 1 }, 1, null),
+      deleteAnywayAlert({ ...none, unsent: 1 }).body,
+    ].join(" ");
+    expect(said).not.toMatch(/practice/i);
+    expect(said).not.toContain("never uploaded");
+    expect(said).not.toContain("held for the project");
   });
 });
 
 describe("no record is ever held on a device (MOB-37, MOB-38)", () => {
   it("never says held, for any mix of work", () => {
-    const work = { unsent: 4, practice: 2, attention: 1, drafts: 2 };
+    const work = { unsent: 4, attention: 1, drafts: 2 };
     const said = [
       ...(signOutWarning(work, "a@b.c") ?? []),
       ...deletionConsequences(work, 2, "MO"),

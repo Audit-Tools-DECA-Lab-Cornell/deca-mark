@@ -1,7 +1,7 @@
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { LocalDatabase } from "../../storage/observation-store";
-import { boundFixture, boundManifest, ids } from "./bound-fixture";
+import { boundFixture, boundManifest, ids } from "./bound-fixture.test-helper";
 import type { HostedValue } from "./context";
 import type { ImmutablePackageFiles } from "./installation";
 import {

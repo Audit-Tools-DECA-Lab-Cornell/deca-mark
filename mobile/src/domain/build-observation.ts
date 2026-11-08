@@ -1,14 +1,11 @@
 import { type Answers, type FormDefinition, isObserverQuestion } from "../forms/definition";
 import { pruneAnswers, reviewProblems, visibleQuestions } from "../forms/engine";
 import {
-  boundShellObservationSchema,
   type Coordinate,
   instrumentObservationSchema,
-  isShellObservation,
   type Observation,
   type Placement,
   type RoundContext,
-  shellObservationSchema,
 } from "./observation";
 import type { PackageBinding } from "./package-binding";
 import { roundLabel } from "./rounds";
@@ -21,13 +18,14 @@ export type ObservationInput = {
   readonly placement: Placement;
   readonly context: RoundContext;
   readonly siteId: string;
-  /** The project a hosted site belongs to, so the record uploads there. */
-  readonly projectId?: string | undefined;
+  /** The project the site belongs to, so the record uploads there. */
+  readonly projectId: string;
   /** The account's initials, for a form that asks no observer question of its own. */
   readonly observer?: string | undefined;
   readonly createdAt: string;
   readonly startedAt: string;
-  readonly binding?: PackageBinding | undefined;
+  /** The package the observation is bound to; a record is never made without one. */
+  readonly binding: PackageBinding;
 };
 
 export type BuildResult =
@@ -48,72 +46,43 @@ export function buildObservation(input: ObservationInput): BuildResult {
     coordinates: input.coordinates,
     createdAt: input.createdAt,
     startedAt: input.startedAt,
-    storageStatus: "local-only",
+    storageStatus: "pending",
   };
-  if (input.form.version === "shell-v1") {
-    const { people } = answers;
-    const shell = {
-      ...shared,
-      formVersion: "shell-v1",
-      observer: text(answers, "observer"),
-      people,
-      notes: text(answers, "notes"),
+  const active = visibleQuestions(input.form, answers);
+  const observerQuestion = active.find((question) =>
+    isObserverQuestion(question, input.form.columnNaming),
+  );
+  const automaticObserver = active.some((question) => question.valueSource === "observerCode");
+  const observer = automaticObserver
+    ? (input.observer ?? "")
+    : observerQuestion
+      ? text(answers, observerQuestion.id)
+      : (input.observer ?? "");
+  if (!observerQuestion && observer.trim() === "")
+    return {
+      ok: false,
+      message: "Add your initials under Account; this form does not ask for them.",
     };
-    const parsed = input.binding
-      ? boundShellObservationSchema.safeParse({
-          ...shell,
-          binding: input.binding,
-          projectId: input.projectId,
-          siteId: input.siteId,
-          context: input.context,
-          placement: input.placement,
-        })
-      : shellObservationSchema.safeParse({ ...shell, siteId: "sample-garden" });
-    return parsed.success
-      ? { ok: true, record: parsed.data }
-      : { ok: false, message: parsed.error.issues[0]?.message ?? "Check the answers." };
-  }
-  {
-    const active = visibleQuestions(input.form, answers);
-    const observerQuestion = active.find((question) =>
-      isObserverQuestion(question, input.form.columnNaming),
-    );
-    const automaticObserver = active.some((question) => question.valueSource === "observerCode");
-    const observer = automaticObserver
-      ? (input.observer ?? "")
-      : observerQuestion
-        ? text(answers, observerQuestion.id)
-        : (input.observer ?? "");
-    if (!observerQuestion && observer.trim() === "")
-      return {
-        ok: false,
-        message: "Add your initials under Account; this form does not ask for them.",
-      };
-    const parsed = instrumentObservationSchema.safeParse({
-      ...shared,
-      ...(input.projectId ? { projectId: input.projectId } : {}),
-      siteId: input.siteId,
-      formVersion: input.form.version,
-      observer,
-      answers,
-      context: input.context,
-      ...(input.binding ? { binding: input.binding } : {}),
-      placement: input.placement,
-    });
-    return parsed.success
-      ? { ok: true, record: parsed.data }
-      : { ok: false, message: parsed.error.issues[0]?.message ?? "Check the answers." };
-  }
+  const parsed = instrumentObservationSchema.safeParse({
+    ...shared,
+    projectId: input.projectId,
+    siteId: input.siteId,
+    formVersion: input.form.version,
+    observer,
+    answers,
+    context: input.context,
+    binding: input.binding,
+    placement: input.placement,
+  });
+  return parsed.success
+    ? { ok: true, record: parsed.data }
+    : { ok: false, message: parsed.error.issues[0]?.message ?? "Check the answers." };
 }
 
 const SUMMARY_QUESTION = "play_event_summary";
 
 /** The single line a record shows in the device list and in a map callout. */
 export function observationSummary(record: Observation): string {
-  if (isShellObservation(record))
-    return record.notes !== ""
-      ? record.notes
-      : `${record.people} ${record.people === 1 ? "person" : "people"} observed`;
   const summary = record.answers[SUMMARY_QUESTION];
   return typeof summary === "string" && summary !== ""
     ? summary

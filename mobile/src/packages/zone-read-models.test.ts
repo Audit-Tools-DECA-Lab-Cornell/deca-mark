@@ -4,7 +4,7 @@ import { saveDraft } from "../storage/draft-store";
 import { commitObservation } from "../storage/observation-store";
 import { boundDraft, boundRecord } from "../storage/package-store.fixture";
 import { parkDraft } from "../storage/parked-drafts";
-import { boundFixture, ids } from "./hosted/bound-fixture";
+import { boundFixture, ids } from "./hosted/bound-fixture.test-helper";
 import { discoveryProblem } from "./hosted/discovery-state";
 import { harness, nextFixture, owner } from "./hosted/lifecycle.test-helper";
 import { emptyReferences, siteVersionSnapshot } from "./site-version-snapshot";

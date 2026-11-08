@@ -31,7 +31,6 @@ const data = vi.hoisted(() => ({
   /** What the session's restoreParked does: reopen the draft, leave it kept, or fail. */
   restore: "reopens" as "reopens" | "keeps" | "throws",
   /** A practice draft recovered after a restart: it ships with the app, so it has no binding. */
-  unbound: null as unknown,
   /** A stored draft this build cannot read (MOB-41). */
   unreadable: false,
   /** Whether clearing the draft throws, as a storage error would. */
@@ -84,7 +83,7 @@ vi.mock("../../packages/zone-read-models", () => ({
 }));
 vi.mock("../../session/provider", () => ({
   useFieldSession: () => ({
-    recovered: data.unbound ?? (data.occupied ? { id: "draft-1", binding: {} } : null),
+    recovered: data.occupied ? { id: "draft-1", binding: {} } : null,
     inProgress: data.inProgress,
     unreadableDraft: data.unreadable,
     parked: [],
@@ -136,7 +135,6 @@ beforeEach(() => {
   data.occupied = false;
   data.inProgress = null;
   data.restore = "reopens";
-  data.unbound = null;
   data.unreadable = false;
   data.discardFails = false;
   data.downloads = {};
@@ -227,41 +225,6 @@ describe("an unfinished observation after a restart (MUI-7)", () => {
   });
 });
 
-describe("a practice draft after a restart", () => {
-  function Home() {
-    const unfinished = useUnfinished();
-    return unfinished ? <UnfinishedCard unfinished={unfinished} /> : null;
-  }
-
-  beforeEach(() => {
-    data.unbound = {
-      id: "practice-1",
-      formVersion: "shell-v1",
-      context: { zoneLabel: "Practice lawn", roundType: "standard" },
-      coordinates: [0.5, 0.5],
-      answers: {},
-    };
-  });
-
-  it("keeps its Resume and Discard, through the field session, though it has no hosted map", async () => {
-    const screen = render(<Home />);
-    expect(screen.says("Reading the map and zone")).toBe(false);
-    expect(screen.controls()).toEqual(["Resume", "Discard draft"]);
-    await screen.press("Resume");
-    expect(data.calls).toEqual(["session resume"]);
-    expect(takeNavigation()).toEqual(["/collect"]);
-  });
-
-  it("discards it only when confirmed, and says so", async () => {
-    const screen = render(<Home />);
-    await screen.press("Discard draft");
-    const [alert] = takeAlerts();
-    alert?.buttons?.find((button) => button.text === "Discard draft")?.onPress?.();
-    await vi.waitFor(() => expect(takeAnnouncements()).toContain("Draft discarded."));
-    expect(data.calls).toEqual(["session discard"]);
-  });
-});
-
 describe("a stored draft this build cannot read (MOB-41, audit C08)", () => {
   function Home() {
     const unfinished = useUnfinished();
@@ -320,13 +283,7 @@ describe("a stored draft this build cannot read (MOB-41, audit C08)", () => {
   });
 
   it("gives way to the draft that can be read", () => {
-    data.unbound = {
-      id: "practice-1",
-      formVersion: "shell-v1",
-      context: { zoneLabel: "Practice lawn", roundType: "standard" },
-      coordinates: [0.5, 0.5],
-      answers: {},
-    };
+    data.occupied = true;
     expect(render(<Home />).says("A draft this app cannot read")).toBe(false);
   });
 

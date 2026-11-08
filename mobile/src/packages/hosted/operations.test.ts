@@ -3,7 +3,7 @@ import { readAvailableCurrent } from "../../storage/available-current";
 import { readCatalog } from "../../storage/package-catalog";
 import { installedFor } from "../../storage/package-store.fixture";
 import { hasStoredPackage, setActivePackage, setPackageAccessOwner } from "./access";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import { packageIdentity, readInstalledPackage } from "./installation";
 import {
   deferred,

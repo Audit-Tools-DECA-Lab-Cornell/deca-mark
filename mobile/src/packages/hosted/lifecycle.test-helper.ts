@@ -15,7 +15,7 @@ import { DatabaseSync } from "node:sqlite";
 import { createApiClient } from "../../data/api/client";
 import { initializeDatabase } from "../../storage/observation-store";
 import { adapter } from "../../storage/package-store.fixture";
-import { boundFixture, boundManifest, ids } from "./bound-fixture";
+import { boundFixture, boundManifest, ids } from "./bound-fixture.test-helper";
 import type { ImmutablePackageFiles } from "./installation";
 import { PackageOperations, type PackageRuntime } from "./operations";
 

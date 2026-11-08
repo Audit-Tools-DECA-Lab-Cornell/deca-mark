@@ -67,16 +67,14 @@ export function record(
   };
 }
 
-/** The queue the screen reads, counted the way `useQueueForMode` counts: bound rows only. */
+/** The queue the screen reads, counted the way `useQueueForMode` counts. */
 function queue(): Queue {
-  const bound = world.records.filter((entry) => entry.practice !== true);
   const counts: QueueCounts = { onDevice: 0, uploading: 0, uploaded: 0, attention: 0, held: 0 };
-  for (const entry of bound) counts[entry.state] += 1;
+  for (const entry of world.records) counts[entry.state] += 1;
   return {
     records: world.records,
     counts,
-    unsent: bound.length - counts.uploaded,
-    practice: world.records.length - bound.length,
+    unsent: world.records.length - counts.uploaded,
     loading: world.loading,
     error: world.error,
     retry: () => {

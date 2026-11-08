@@ -1,19 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { buildObservation, type ObservationInput } from "../domain/build-observation";
+import { binding, context as boundContext, identity } from "../storage/package-store.fixture";
 import { type Answers, parseFormDefinition } from "./definition";
-import { janetInventoryV1 } from "./fixtures/janet-inventory-v1";
-import { janetTestV1 } from "./fixtures/janet-test-v1";
+import { janetInventoryV1 } from "./janet-inventory-v1.test-helper";
+import { janetTestV1 } from "./janet-test-v1.test-helper";
 import { carriedQuestionIds } from "./registry";
 
-const context: ObservationInput["context"] = {
-  packageId: "test",
-  packageVersion: "v1",
-  zoneId: "A",
-  zoneLabel: "Zone A",
-  roundType: "standard",
-  freshPeriod: true,
-  inheritedFrom: "",
-};
+const context: ObservationInput["context"] = { ...boundContext, freshPeriod: true };
 
 describe("Manual observer role", () => {
   for (const template of [janetTestV1, janetInventoryV1]) {
@@ -61,7 +54,9 @@ describe("Manual observer role", () => {
           coordinates: [-76.485, 42.448],
           placement: { source: "hand", gpsAccuracyMetres: null },
           context,
-          siteId: "sample-garden",
+          siteId: identity.siteId,
+          projectId: identity.projectId,
+          binding,
           observer,
           createdAt: "2026-10-25T10:00:00.000Z",
           startedAt: "2026-10-25T09:59:00.000Z",
@@ -96,7 +91,9 @@ describe("Manual observer role", () => {
       coordinates: [-76.485, 42.448],
       placement: { source: "hand", gpsAccuracyMetres: null },
       context,
-      siteId: "sample-garden",
+      siteId: identity.siteId,
+      projectId: identity.projectId,
+      binding,
       observer: "AC",
       createdAt: "2026-10-25T10:00:00.000Z",
       startedAt: "2026-10-25T09:59:00.000Z",
@@ -195,7 +192,9 @@ describe("Active observer fields", () => {
     coordinates: [-76.485, 42.448],
     placement: { source: "hand", gpsAccuracyMetres: null },
     context,
-    siteId: "sample-garden",
+    siteId: identity.siteId,
+    projectId: identity.projectId,
+    binding,
     createdAt: "2026-10-25T10:00:00.000Z",
     startedAt: "2026-10-25T09:59:00.000Z",
   } satisfies Omit<ObservationInput, "answers" | "observer">;

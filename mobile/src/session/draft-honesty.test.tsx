@@ -4,15 +4,10 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { SitePackage } from "../packages/site-package";
 import { hasDraft, readDraft } from "../storage/draft-store";
 import { initializeDatabase, type LocalDatabase } from "../storage/observation-store";
-import { installPackage } from "../storage/package-catalog";
-import {
-  adapter,
-  entry,
-  owner,
-  identity as packageIdentity,
-} from "../storage/package-store.fixture";
+import { adapter, owner } from "../storage/package-store.fixture";
 import type { FieldSessionValue } from "./context";
 import { FieldSessionProvider, useFieldSession } from "./provider";
+import { boundSitePackage, installBound, standardAnswers } from "./site-package.test-helper";
 
 /**
  * MOB-41 (audit C08), with the real draft and observation stores: a tap that lands while a save is in
@@ -45,75 +40,8 @@ vi.mock("../packages/hosted/provider", () => ({
 }));
 vi.mock("../packages/open", () => ({ openSitePackage: mocks.open }));
 
-const style: SitePackage["bases"]["day"] = { version: 8, sources: {}, layers: [] };
-const square = [
-  [
-    [0, 0],
-    [1, 0],
-    [1, 1],
-    [0, 1],
-    [0, 0],
-  ],
-] as SitePackage["zones"][number]["polygon"];
-const pkg: SitePackage = {
-  id: "draft-honesty-map",
-  name: "Synthetic map",
-  meta: "Synthetic",
-  availability: "on-device",
-  formVersion: "shell-v1",
-  inventoryFormVersion: "janet-inventory-v1",
-  version: "v7",
-  siteId: "sample-garden",
-  sizeOnDevice: "Synthetic",
-  inheritedContext: "",
-  centre: [0.5, 0.5],
-  bounds: [0, 0, 1, 1],
-  bases: { day: style, night: style, aerial: style },
-  layers: [],
-  zones: [
-    {
-      zoneId: "practice:A",
-      displayAnchor: [0.5, 0.5],
-      polygon: square,
-      id: "A",
-      label: "Original",
-      centre: [0.5, 0.5],
-      west: 0,
-      south: 0,
-      east: 1,
-      north: 1,
-    },
-  ],
-};
-
-const other: SitePackage["zones"][number] = {
-  zoneId: "practice:B",
-  displayAnchor: [0.8, 0.8],
-  polygon: square,
-  id: "B",
-  label: "Other",
-  centre: [0.8, 0.8],
-  west: 0,
-  south: 0,
-  east: 1,
-  north: 1,
-};
-const twoZones: SitePackage = { ...pkg, zones: [...pkg.zones, other] };
-/** The same map as a managed package, whose zone is frozen into the observation's binding. */
-function managed(site: SitePackage): SitePackage {
-  return {
-    ...site,
-    id: packageIdentity.packageId,
-    siteId: packageIdentity.siteId,
-    packageIdentity,
-    projectId: packageIdentity.projectId,
-    zones: site.zones.map((zone, index) => ({
-      ...zone,
-      zoneId: `50000000-0000-4000-8000-00000000000${index + 1}`,
-      geometrySha256: "b".repeat(64),
-    })),
-  };
-}
+const pkg = boundSitePackage();
+const twoZones = pkg;
 
 const snapshots: FieldSessionValue[] = [];
 let root: ReactTestRenderer | undefined;
@@ -153,6 +81,7 @@ beforeEach(async () => {
   sqlite = new DatabaseSync(":memory:");
   mocks.database = adapter(sqlite);
   await initializeDatabase(mocks.database);
+  await installBound(mocks.database, owner);
   await mount();
 });
 afterEach(async () => {
@@ -169,9 +98,8 @@ async function open() {
 }
 async function answerEverything() {
   await act(async () => {
-    latest().dispatch({ kind: "write", question: "observer", value: "AA" });
-    latest().dispatch({ kind: "write", question: "people", value: "2" });
-    latest().dispatch({ kind: "write", question: "notes", value: "Synthetic observation" });
+    for (const [question, value] of Object.entries(standardAnswers))
+      latest().dispatch({ kind: "write", question, value });
   });
 }
 /** Lets every queued draft write finish, then lets the session see the results. */
@@ -242,7 +170,11 @@ it("a point nudged and a zone chosen while the save is in flight write nothing e
     const saving = latest().save();
     latest().nudgeTo([0.6, 0.6]);
     latest().chooseZone(zone);
-    latest().dispatch({ kind: "write", question: "notes", value: "Edited while saving" });
+    latest().dispatch({
+      kind: "write",
+      question: "play_event_summary",
+      value: "Edited while saving",
+    });
     expect(await saving).toMatchObject({ ok: true });
   });
 
@@ -250,12 +182,8 @@ it("a point nudged and a zone chosen while the save is in flight write nothing e
   expect(latest().draftWriteFailed).toBe(false);
 });
 
-it.each([
-  ["a practice map", false],
-  ["a managed map, whose zone is pinned in the binding", true],
-])("a zone chosen while the save is in flight is refused on %s, so a failed save leaves the screen and the draft agreeing", async (_name, pinned) => {
-  const site = pinned ? managed(twoZones) : twoZones;
-  if (pinned) await installPackage(database(), owner, entry);
+it("a zone chosen while the save is in flight is refused, so a failed save leaves the screen and the draft agreeing", async () => {
+  const site = twoZones;
   mocks.open.mockResolvedValue(site);
   const [first, second] = site.zones;
   if (!first || !second) throw new Error("Zones missing");
@@ -269,7 +197,7 @@ it.each([
   await settled();
   const before = await readDraft(database(), owner);
   expect(before?.context.zoneId).toBe(first.id);
-  expect(before?.binding?.zoneId).toBe(pinned ? first.zoneId : undefined);
+  expect(before?.binding.zoneId).toBe(first.zoneId);
   await breakTheCommit();
 
   await act(async () => {
@@ -287,8 +215,8 @@ it.each([
   // The save failed, so the observation goes on exactly as it was: the screen and the stored draft agree.
   expect(latest().zone?.id).toBe(first.id);
   expect(latest().context?.zoneId).toBe(first.id);
-  expect(latest().inProgress?.binding?.zoneId).toBe(pinned ? first.zoneId : undefined);
-  expect(latest().pinned?.zone.id).toBe(pinned ? first.zoneId : undefined);
+  expect(latest().inProgress?.binding.zoneId).toBe(first.zoneId);
+  expect(latest().pinned?.zone.id).toBe(first.zoneId);
   expect(latest().draftWriteFailed).toBe(false);
   expect(await readDraft(database(), owner)).toEqual(before);
 
@@ -298,11 +226,11 @@ it.each([
   });
   await settled();
   expect(latest().zone?.id).toBe(second.id);
-  expect(latest().inProgress?.binding?.zoneId).toBe(pinned ? second.zoneId : undefined);
+  expect(latest().inProgress?.binding.zoneId).toBe(second.zoneId);
   expect(latest().draftWriteFailed).toBe(false);
   const after = await readDraft(database(), owner);
   expect(after?.context.zoneId).toBe(second.id);
-  expect(after?.binding?.zoneId).toBe(pinned ? second.zoneId : undefined);
+  expect(after?.binding.zoneId).toBe(second.zoneId);
 });
 
 it("nothing else the session offers changes the observation while the save is in flight", async () => {
@@ -356,12 +284,16 @@ it("a save that fails lets the observer go on: the draft is kept and later write
   expect(latest().inProgress).not.toBeNull();
 
   await act(async () => {
-    latest().dispatch({ kind: "write", question: "notes", value: "After the failed save" });
+    latest().dispatch({
+      kind: "write",
+      question: "play_event_summary",
+      value: "After the failed save",
+    });
   });
   await settled();
   expect(latest().draftWriteFailed).toBe(false);
   expect(await readDraft(database(), owner)).toMatchObject({
-    answers: { notes: "After the failed save" },
+    answers: { play_event_summary: "After the failed save" },
   });
 });
 
@@ -379,11 +311,13 @@ it("reports a draft write that failed, and clears the report once a write succee
 
   sqlite.prepare("DELETE FROM observation_drafts WHERE owner_scope = ?").run(owner);
   await act(async () => {
-    latest().dispatch({ kind: "write", question: "observer", value: "AA" });
+    latest().dispatch({ kind: "write", question: "observer_initials", value: "AA" });
   });
   await settled();
   expect(latest().draftWriteFailed).toBe(false);
-  expect(await readDraft(database(), owner)).toMatchObject({ answers: { observer: "AA" } });
+  expect(await readDraft(database(), owner)).toMatchObject({
+    answers: { observer_initials: "AA" },
+  });
 });
 
 it("does not carry a failed write over to the next observation", async () => {

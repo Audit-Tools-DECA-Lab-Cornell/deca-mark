@@ -1,7 +1,7 @@
 import { type RoundType, roundLabel } from "../../domain/rounds";
 import type { PackageFacts } from "../../packages/open";
 import type { AssetState, SiteDownload } from "../preview/data-source";
-import { PACKAGE_ASSETS, type PreviewProject, type PreviewSite } from "../preview/fixtures";
+import { PACKAGE_ASSETS, type PreviewSite } from "../preview/fixtures";
 import { sizeLabel } from "./package-size";
 
 /**
@@ -14,17 +14,12 @@ export type SiteWithDownload = PreviewSite & { download: SiteDownload };
 
 /** A contract readiness state with the words adapted to the line it sits on. */
 export type ReadinessLine = {
-  state: "readyOffline" | "alwaysAvailable" | "notDownloaded" | "downloading" | "unknown";
+  state: "readyOffline" | "notDownloaded" | "downloading" | "unknown";
   label: string;
 };
 
 /** The project row's state line on Projects (Mobile 10). */
-export function projectReadiness(
-  project: Pick<PreviewProject, "training">,
-  sites: readonly SiteWithDownload[],
-): ReadinessLine {
-  if (project.training && sites.some((site) => site.download.state === "ready"))
-    return { state: "alwaysAvailable", label: "Always available" };
+export function projectReadiness(sites: readonly SiteWithDownload[]): ReadinessLine {
   if (sites.length === 0) return { state: "unknown", label: "No sites on this device yet" };
   const ready = sites.filter((site) => site.download.state === "ready").length;
   if (ready > 0)
@@ -41,9 +36,7 @@ export function projectReadiness(
 export function siteReadiness(site: SiteWithDownload): ReadinessLine {
   switch (site.download.state) {
     case "ready":
-      return site.bundled
-        ? { state: "alwaysAvailable", label: "Ships with the app" }
-        : { state: "readyOffline", label: "Ready offline" };
+      return { state: "readyOffline", label: "Ready offline" };
     case "downloading":
       // A hosted download says which of the four parts it is on; it never estimates a percentage.
       return {
@@ -63,10 +56,9 @@ export function zonesPhrase(zones: readonly string[]): string {
   return `${zones.length} zones`;
 }
 
-/** A site's zones, version and measured download size, or its bundled/unprepared state. */
+/** A site's zones, version and measured download size, or its unprepared state. */
 export function siteSubtitle(site: SiteWithDownload): string {
   const zones = zonesPhrase(site.zones);
-  if (site.bundled) return `${zones} · map ${site.packageVersion}`;
   if (site.packageId === "") return `${zones} · No map package yet`;
   const size = sizeLabel(site.sizeMb * 1024 * 1024);
   if (site.download.state === "ready") return `${zones} · map ${site.packageVersion} · ${size}`;
@@ -89,7 +81,7 @@ export function percentOf(download: Pick<SiteDownload, "receivedMb" | "totalMb">
 /** The ready-site count and total archive size, rounded only after summing. */
 export function downloadsSummary(sites: readonly SiteWithDownload[]): string {
   const ready = sites.filter((site) => site.download.state === "ready");
-  const megabytes = ready.reduce((total, site) => total + (site.bundled ? 0 : site.sizeMb), 0);
+  const megabytes = ready.reduce((total, site) => total + site.sizeMb, 0);
   const count = `${ready.length} of ${sites.length}`;
   return megabytes > 0 ? `${count} · ${sizeLabel(megabytes * 1024 * 1024)}` : count;
 }

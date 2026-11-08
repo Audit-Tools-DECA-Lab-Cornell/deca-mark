@@ -1,15 +1,9 @@
 import { z } from "zod";
-import {
-  isBoundObservation,
-  type Observation,
-  observationSchema,
-  storageStatusSchema,
-} from "../domain/observation";
+import { type Observation, observationSchema, storageStatusSchema } from "../domain/observation";
 import { identityKey } from "../domain/package-binding";
-import { isUploadableRecord } from "../forms/registry";
 import { databaseTransaction, databaseWrite } from "./database-write";
 import { requireAuthorizedPackage } from "./package-catalog-read";
-import { encodeUploadPayload, readSyncFailure } from "./upload-payload";
+import { encodeUploadPayload, readSyncFailure, readUploadPayload } from "./upload-payload";
 
 export interface LocalDatabase {
   execAsync(sql: string): Promise<void>;
@@ -24,30 +18,24 @@ export {
   SCHEMA_VERSION,
 } from "./database-migrations";
 
-export function initialSyncState(record: Observation, scope: string) {
-  return scope === "local" || !isBoundObservation(record) || !isUploadableRecord(record)
-    ? "local-only"
-    : "pending";
-}
-
 async function insertObservation(db: LocalDatabase, record: Observation, scope: string) {
-  const binding = isBoundObservation(record) ? record.binding : null;
-  if (binding) await requireAuthorizedPackage(db, scope, binding);
+  const { binding } = record;
+  await requireAuthorizedPackage(db, scope, binding);
   await db.runAsync(
     "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state, package_key) VALUES (?, ?, ?, ?, ?, ?)",
     record.id,
     record.createdAt,
     encodeUploadPayload(record),
     scope,
-    initialSyncState(record, scope),
-    binding ? identityKey(binding) : "",
+    "pending",
+    identityKey(binding),
   );
 }
 
 export function saveObservation(
   db: LocalDatabase,
   record: Observation,
-  scope = "local",
+  scope: string,
 ): Promise<void> {
   const snapshot = observationSchema.parse(record);
   return databaseTransaction(db, () => insertObservation(db, snapshot, scope));
@@ -63,7 +51,7 @@ export function saveObservation(
 export function commitObservation(
   db: LocalDatabase,
   record: Observation,
-  scope = "local",
+  scope: string,
 ): Promise<void> {
   const snapshot = observationSchema.parse(record);
   return databaseTransaction(db, async () => {
@@ -76,13 +64,13 @@ export function commitObservation(
   });
 }
 
-export function listObservations(db: LocalDatabase, scope = "local"): Promise<Observation[]> {
+export function listObservations(db: LocalDatabase, scope: string): Promise<Observation[]> {
   return databaseWrite(db, async () => {
     const rows = z
       .array(
         z.object({
           payload: z.string(),
-          sync_state: storageStatusSchema,
+          sync_state: z.string(),
           sync_error: z.string(),
         }),
       )
@@ -92,10 +80,19 @@ export function listObservations(db: LocalDatabase, scope = "local"): Promise<Ob
           scope,
         ),
       );
-    return rows.map((row) => ({
-      ...observationSchema.parse(JSON.parse(row.payload)),
-      storageStatus: row.sync_state,
-      ...readSyncFailure(row.sync_error),
-    }));
+    // A row left in the retired `local-only` state is a practice record from before MOB-43: it can
+    // never upload, so it stays stored (MOB-44's reset removes it) and is not listed.
+    return rows.flatMap((row) => {
+      const state = storageStatusSchema.safeParse(row.sync_state);
+      return state.success
+        ? [
+            {
+              ...readUploadPayload(row.payload).record,
+              storageStatus: state.data,
+              ...readSyncFailure(row.sync_error),
+            },
+          ]
+        : [];
+    });
   });
 }

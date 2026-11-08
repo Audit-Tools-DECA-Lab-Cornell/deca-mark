@@ -30,7 +30,6 @@ const save: SessionSave = {
   zoneLabel: "Zone A · West lawn",
   roundType: "standard",
   savedAt: "2026-10-24T10:00:00.000Z",
-  heldOnly: false,
 };
 
 function show(
@@ -64,6 +63,13 @@ describe("Saved pins its forward action outside the scrolling card", () => {
     expect(scrolls(screen.control("Change zone or round"))).toBe(true);
     expect(scrolls(screen.control("Records on this device"))).toBe(true);
     expect(screen.says("Saved on this device")).toBe(true);
+  });
+
+  it("says every saved record uploads by itself, practice included (MOB-43)", () => {
+    const screen = show();
+    expect(screen.says("Uploads by itself whenever the app is open and online")).toBe(true);
+    expect(screen.says("never uploaded")).toBe(false);
+    expect(screen.says("Practice record")).toBe(false);
   });
 
   it("pins the inventory's next zone", () => {

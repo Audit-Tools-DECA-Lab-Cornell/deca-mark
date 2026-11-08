@@ -144,7 +144,7 @@ function ProjectRow({ project, first }: { project: PreviewProject; first: boolea
   // Hosted sites are ready while a verified map is on this device, even after a newer one is
   // published; the row also counts the sites with a newer map to download (MUI-10).
   const catalog = listed.map((site) =>
-    mode === "device" && !site.bundled ? siteVersionSnapshot(hosted, site.id) : null,
+    mode === "device" ? siteVersionSnapshot(hosted, site.id) : null,
   );
   const sites = listed.map((site, index) => {
     const versions = catalog[index];
@@ -153,7 +153,7 @@ function ProjectRow({ project, first }: { project: PreviewProject; first: boolea
       : site;
   });
   const updates = catalog.filter((versions) => versions !== null && hasUpdate(versions)).length;
-  const base = projectReadiness(project, sites);
+  const base = projectReadiness(sites);
   const readiness = { ...base, label: `${base.label}${updatesPhrase(updates)}` };
   return (
     <ListRow

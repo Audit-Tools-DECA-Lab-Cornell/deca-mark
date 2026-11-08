@@ -71,7 +71,7 @@ const DATA_OPTIONS: readonly SegmentedOption<DataMode>[] = [
 
 const DATA_NOTES: Record<DataMode, string> = {
   device:
-    "Screens read the account and this phone: projects and the profile from /v1/me, join codes and profile edits through the DECA Mark API, and the SQLite queue, sync and the packages that ship with the app. Without a session or a connection, they say so.",
+    "Screens read the account and this phone: projects and the profile from /v1/me, join codes and profile edits through the DECA Mark API, and the SQLite queue, sync and the packages downloaded to this phone. Without a session or a connection, they say so.",
   preview:
     "Screens show the designed fixtures, including states the device cannot produce yet, such as Uploading or a download in progress. The join code DECA2026 opens the Play Study invitation. Nothing is sent to the server.",
 };

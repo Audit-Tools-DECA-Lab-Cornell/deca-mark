@@ -15,7 +15,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { initializeDatabase, type LocalDatabase } from "../../storage/observation-store";
 import { installedFor } from "../../storage/package-store.fixture";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import {
   type ImmutablePackageFiles,
   installVerifiedPackage,

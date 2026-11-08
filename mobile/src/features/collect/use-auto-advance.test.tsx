@@ -1,7 +1,7 @@
 import { act, create } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type ResolvedQuestion, visibleQuestions } from "../../forms/engine";
-import { janetTestV1 as form } from "../../forms/fixtures/janet-test-v1";
+import { janetTestV1 as form } from "../../forms/janet-test-v1.test-helper";
 import {
   reduceSession,
   type SessionAction,

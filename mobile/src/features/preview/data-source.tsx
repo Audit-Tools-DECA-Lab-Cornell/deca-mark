@@ -4,7 +4,7 @@ import { useMe } from "../../data/api/me-provider";
 import { isStored, useHostedSites } from "../../packages/hosted/provider";
 import { type DataMode, MODE_KEY, readDataMode } from "./data-mode";
 import { deviceProjects } from "./device-projects";
-import { deviceSite, notDownloaded, type SiteDownload } from "./download-state";
+import { notDownloaded, type SiteDownload } from "./download-state";
 import {
   PREVIEW_PROJECTS,
   PREVIEW_SITES,
@@ -19,7 +19,7 @@ import { usePreviewDownloads } from "./use-preview-downloads";
 /**
  * Where the collector's screens read from. `device` uses the account and this phone: projects and the
  * profile from `/v1/me` (D24), join codes through the DECA Mark API, and the SQLite queue, sync and
- * bundled packages; it says plainly when something needs the server. `preview` shows the designed
+ * downloaded packages; it says plainly when something needs the server. `preview` shows the designed
  * fixtures, including the states the device cannot produce yet ("Uploading", a download in progress),
  * and sends nothing. Preview is a review tool: release builds always read the device.
  */
@@ -40,7 +40,7 @@ type DataSourceValue = {
   downloads: Record<string, SiteDownload>;
   /**
    * Whether this mode can fetch a package: preview simulates one; on the device a project's hosted
-   * site downloads from the DECA Mark API while signed in, and a bundled site is always on the device.
+   * site downloads from the DECA Mark API while signed in.
    */
   canDownload: boolean;
   startDownload: (siteId: string) => void;
@@ -76,18 +76,17 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
     if (preview) return simulated;
     // `revision` changes whenever a package is saved or removed, so what is stored is read again.
     void hosted.revision;
-    return Object.fromEntries([
-      ...PREVIEW_SITES.map((site) => [site.id, deviceSite(site).download]),
-      ...Object.values(hosted.sites)
+    return Object.fromEntries(
+      Object.values(hosted.sites)
         .flat()
         .map((site) => [
           site.site_id,
           hostedDownload(site, isStored(site), hosted.downloads[site.site_id]),
         ]),
-    ]);
+    );
   }, [preview, simulated, hosted.sites, hosted.downloads, hosted.revision]);
 
-  /** The project a hosted site belongs to, or undefined for a bundled one. */
+  /** The project a hosted site belongs to. */
   const hostedProject = useCallback(
     (siteId: string) =>
       Object.entries(hosted.sites).find(([, sites]) =>
@@ -189,13 +188,19 @@ export function useActiveProject(): PreviewProject | undefined {
 
 type SiteWithDownload = PreviewSite & { download: SiteDownload };
 
-function withDownload(
-  site: PreviewSite,
-  mode: DataMode,
-  downloads: Record<string, SiteDownload>,
-): SiteWithDownload {
-  if (mode === "device") return deviceSite(site);
-  return { ...site, download: downloads[site.id] ?? notDownloaded(site) };
+/** The preview's designed sites, with the simulated download state. Device data never shows them. */
+function usePreviewSiteList(): SiteWithDownload[] {
+  const { mode, downloads } = useDataSource();
+  return useMemo(
+    () =>
+      mode === "preview"
+        ? PREVIEW_SITES.map((site) => ({
+            ...site,
+            download: downloads[site.id] ?? notDownloaded(site),
+          }))
+        : [],
+    [mode, downloads],
+  );
 }
 
 /** The hosted sites this account has read, with the download state this device knows. */
@@ -217,28 +222,26 @@ function useHostedSiteList(): SiteWithDownload[] {
 }
 
 /**
- * A project's sites: on device data, Training's practice sites ship with the app and every other
- * project's come from the DECA Mark API (MOB-14); preview shows the designed fixtures.
+ * A project's sites: on device data every project's, Training's included, come from the DECA Mark API
+ * (MOB-14); preview shows the designed fixtures.
  */
 export function useSites(projectId: string): SiteWithDownload[] {
-  const { mode, downloads } = useDataSource();
   const siteIds = useProject(projectId)?.siteIds ?? [];
+  const previewSites = usePreviewSiteList();
   const hostedSites = useHostedSiteList();
   return [
-    ...PREVIEW_SITES.filter((site) => siteIds.includes(site.id)).map((site) =>
-      withDownload(site, mode, downloads),
-    ),
+    ...previewSites.filter((site) => siteIds.includes(site.id)),
     ...hostedSites.filter((site) => site.projectId === projectId),
   ];
 }
 
 export function useSite(siteId: string): SiteWithDownload | undefined {
-  const { mode, downloads } = useDataSource();
+  const previewSites = usePreviewSiteList();
   const hostedSites = useHostedSiteList();
-  const site = PREVIEW_SITES.find((entry) => entry.id === siteId);
-  return site
-    ? withDownload(site, mode, downloads)
-    : hostedSites.find((entry) => entry.id === siteId);
+  return (
+    previewSites.find((entry) => entry.id === siteId) ??
+    hostedSites.find((entry) => entry.id === siteId)
+  );
 }
 
 /** The upload queue in the five Contour states, newest first. */

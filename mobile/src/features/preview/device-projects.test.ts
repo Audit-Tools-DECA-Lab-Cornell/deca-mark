@@ -62,11 +62,16 @@ describe("device projects from /v1/me", () => {
     expect(training?.org).toBe("DECA Mark");
   });
 
-  it("opens the bundled practice site for Training and claims no bundled site for a joined project", () => {
-    const fixtureTraining = PREVIEW_PROJECTS.find((project) => project.training);
-    expect(training?.siteIds).toEqual(fixtureTraining?.siteIds);
-    expect(training?.summary).toBe(fixtureTraining?.summary);
+  it("lists Training's sites from the server like any other project's, never a bundled one", () => {
+    const listed = deviceProjects(
+      identity.project_memberships,
+      identity.organization_memberships,
+      (projectId) => [`site-of-${projectId.slice(-1)}`],
+    );
+    expect(listed.map((project) => project.siteIds)).toEqual([["site-of-3"], ["site-of-2"]]);
+    expect(training?.siteIds).toEqual([]);
     expect(study?.siteIds).toEqual([]);
+    expect(training?.summary).toBe(PREVIEW_PROJECTS.find((project) => project.training)?.summary);
   });
 
   it("lists nothing for an account with no memberships", () => {

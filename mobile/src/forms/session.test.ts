@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { countForm } from "./count-form.test-helper";
 import { visibleQuestions } from "./engine";
-import { janetTestV1 } from "./fixtures/janet-test-v1";
-import { shellV1 } from "./fixtures/shell-v1";
+import { janetTestV1 } from "./janet-test-v1.test-helper";
 import { questionAt, reduceSession, startSession } from "./session";
 
 const at = (state: Parameters<typeof questionAt>[1]) => questionAt(janetTestV1, state)?.id;
 
 describe("Answering one question at a time", () => {
   it("stores numeric input as a number and distinguishes blank from zero", () => {
-    const zero = reduceSession(shellV1, startSession(), {
+    const zero = reduceSession(countForm, startSession(), {
       kind: "write",
       question: "people",
       value: "0",
     });
     expect(zero.state.answers).toEqual({ people: 0 });
-    const blank = reduceSession(shellV1, zero.state, {
+    const blank = reduceSession(countForm, zero.state, {
       kind: "write",
       question: "people",
       value: "",

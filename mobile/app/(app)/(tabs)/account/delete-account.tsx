@@ -320,9 +320,9 @@ export default function DeleteAccountScreen() {
           <Note
             tone="uploaded"
             title={
-              work.practice === 0 && work.drafts === 0
-                ? "Everything on this device is uploaded."
-                : "Every record that can upload is uploaded."
+              work.drafts === 0
+                ? "Every record that can upload is uploaded."
+                : "Every saved record is uploaded."
             }
             live="polite"
             testID="account-delete-uploaded"

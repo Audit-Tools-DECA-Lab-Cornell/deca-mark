@@ -3,10 +3,12 @@ import ProjectScreen from "../../../app/(app)/(tabs)/(projects)/[project]";
 import SiteScreen from "../../../app/(app)/(tabs)/(projects)/[project]/[site]";
 import BriefScreen from "../../../app/(app)/(tabs)/(projects)/[project]/[site]/brief";
 import ProjectsHome from "../../../app/(app)/(tabs)/(projects)/index";
-import { shellV1 } from "../../forms/fixtures/shell-v1";
+import { janetInventoryV1 } from "../../forms/janet-inventory-v1.test-helper";
+import { janetTestV1 } from "../../forms/janet-test-v1.test-helper";
 import { startSession } from "../../forms/session";
 import type { SitePackage } from "../../packages/site-package";
 import type { Recovered, SiteVersions } from "../../packages/zone-read-models";
+import { identity } from "../../storage/package-store.fixture";
 import { isDisabled, render } from "../../ui/screen.fixture";
 
 vi.mock("react-native", async () => (await import("../../ui/native.fixture")).reactNative);
@@ -33,6 +35,8 @@ const data = vi.hoisted(() => ({
   versions: null as unknown,
   active: null as unknown,
   session: null as unknown,
+  mode: "device" as "device" | "preview",
+  opened: [] as string[],
 }));
 vi.mock("expo-router", async () => ({
   ...(await import("../../ui/native.fixture")).router,
@@ -57,18 +61,17 @@ const site = {
   sizeMb: 12,
   initialDownload: "notDownloaded" as const,
   verifiedLabel: "",
-  bundled: false,
   download: { state: "notDownloaded" as const, receivedMb: 0, totalMb: 12, assets: [] },
 };
 vi.mock("../preview", () => ({
   PREVIEW_ACCOUNT: { name: "Preview", initials: "PV" },
-  useDataSource: () => ({ mode: "device" }),
+  useDataSource: () => ({ mode: data.mode }),
   useProjects: () => [project],
   useProject: (id: string) => (id === project.id ? project : undefined),
   useSites: (id: string) => (id === project.id ? [site] : []),
   useSite: (id: string) => (id === site.id ? site : undefined),
 }));
-vi.mock("../preview/data-source", () => ({ useDataSource: () => ({ mode: "device" }) }));
+vi.mock("../preview/data-source", () => ({ useDataSource: () => ({ mode: data.mode }) }));
 vi.mock("../../data/api/me-provider", () => ({
   useMe: () => ({ ready: true, error: null, profile: null }),
 }));
@@ -106,8 +109,6 @@ vi.mock("../../packages/zone-read-models", () => ({
   }),
 }));
 vi.mock("../../session/provider", () => ({ useFieldSession: () => data.session }));
-// The bundled sample maps load images; no bundled site is drawn here.
-vi.mock("../../packages/bundled", () => ({ bundledPackage: () => undefined }));
 vi.mock("../../packages/open", () => ({ packageFacts: () => null }));
 
 const MB = 1024 * 1024;
@@ -157,8 +158,11 @@ const v1: SitePackage = {
   name: "Fall Creek",
   meta: "Synthetic",
   availability: "on-device",
-  formVersion: shellV1.version,
-  inventoryFormVersion: "janet-inventory-v1",
+  formVersion: janetTestV1.version,
+  inventoryFormVersion: janetInventoryV1.version,
+  packageIdentity: identity,
+  projectId: identity.projectId,
+  forms: { play: janetTestV1, inventory: janetInventoryV1 },
   version: "v1",
   siteId: "site-1",
   sizeOnDevice: "11.0 MB",
@@ -175,7 +179,7 @@ function brief(active: Recovered | null) {
   data.active = active;
   data.session = {
     sitePackage: v1,
-    form: shellV1,
+    form: janetTestV1,
     zone: v1.zones[0],
     roundType: "standard",
     freshPeriod: false,
@@ -201,6 +205,8 @@ function brief(active: Recovered | null) {
 }
 
 beforeEach(() => {
+  data.mode = "device";
+  data.opened = [];
   data.versions = v1InstalledV2Published;
   data.active = null;
   data.session = {
@@ -208,6 +214,10 @@ beforeEach(() => {
     inProgress: null,
     parked: [],
     state: startSession(),
+    openPackage: async (id: string) => {
+      data.opened.push(id);
+      return { ok: false, reason: "That exact package could not be opened." };
+    },
   };
 });
 
@@ -233,6 +243,40 @@ describe("map v1 installed and map v2 published, on device data (UI plan 4.1 to 
     expect(screen.says("Download once. Verify here. Collect without signal.")).toBe(false);
     expect(screen.says("Map package v1")).toBe(true);
     expect(isDisabled(screen.control("Set up this session"))).toBe(false);
+  });
+
+  it("Site in preview: Set up says the data is sample data, not that a package failed to open", async () => {
+    data.mode = "preview";
+    data.params = { project: "proj-1", site: "site-1" };
+    const original = site.download as unknown;
+    (site as { download: unknown }).download = {
+      state: "ready" as never,
+      receivedMb: 12,
+      totalMb: 12,
+      assets: [
+        "Site map and geometry",
+        "Zone boundaries",
+        "Assigned form definition",
+        "Offline field guide",
+      ].map((label) => ({ label, state: "verified" as const })),
+    };
+    try {
+      const screen = render(<SiteScreen />);
+      await screen.press("Set up this session");
+      expect(screen.says("This is sample data. Switch to device data to collect.")).toBe(true);
+      expect(screen.says("That exact package could not be opened.")).toBe(false);
+      expect(data.opened).toEqual([]);
+    } finally {
+      (site as { download: unknown }).download = original;
+    }
+  });
+
+  it("Site on device data: a package that cannot be opened is still reported as such", async () => {
+    data.params = { project: "proj-1", site: "site-1" };
+    const screen = render(<SiteScreen />);
+    await screen.press("Set up this session");
+    expect(screen.says("That exact package could not be opened.")).toBe(true);
+    expect(data.opened).toEqual(["pkg-v1"]);
   });
 
   it("Brief: says which map this session uses, beside the published one", () => {

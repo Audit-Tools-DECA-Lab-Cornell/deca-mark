@@ -35,10 +35,7 @@ export function HostedSitesProvider({ children }: PropsWithChildren) {
   const currentOwner = useRef(owner);
   currentOwner.current = owner;
   setPackageAccessOwner(owner);
-  const projectIds = useMemo(
-    () => projects.filter((project) => !project.is_training).map((project) => project.project_id),
-    [projects],
-  );
+  const projectIds = useMemo(() => projects.map((project) => project.project_id), [projects]);
   const allowed = useRef(projectIds);
   allowed.current = projectIds;
   const [viewOwner, setViewOwner] = useState(owner);

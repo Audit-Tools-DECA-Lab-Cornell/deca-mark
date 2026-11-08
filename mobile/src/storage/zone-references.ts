@@ -15,7 +15,7 @@ export function zoneReferences(
     const rows = z
       .array(
         z.object({
-          sync_state: z.enum(["local-only", "pending", "synced", "needs-attention"]),
+          sync_state: z.string(),
           total: z.number().int().nonnegative(),
         }),
       )
@@ -29,7 +29,7 @@ export function zoneReferences(
     return {
       unfinished: references.drafts,
       unsent: rows
-        .filter((row) => row.sync_state === "local-only" || row.sync_state === "pending")
+        .filter((row) => row.sync_state === "pending")
         .reduce((sum, row) => sum + row.total, 0),
       attention: rows.find((row) => row.sync_state === "needs-attention")?.total ?? 0,
       retained: rows.find((row) => row.sync_state === "synced")?.total ?? 0,

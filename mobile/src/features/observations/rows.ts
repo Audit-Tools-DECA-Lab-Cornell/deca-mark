@@ -6,7 +6,7 @@ import type { Queue } from "../preview/queue";
 /**
  * The words of the Observations list (MOB-38), kept apart from the screen so the tests hold them to
  * PRODUCT.md: the queue words come from the contract and are never rephrased; "Uploaded" is only what
- * the queue says it is (a receipt); practice is a record that never uploads.
+ * the queue says it is (a receipt).
  */
 
 /** The chip that clears the zone filter. */
@@ -48,18 +48,13 @@ export function reasonOf(record: QueueRecord): string | null {
   return rest.length > 0 ? rest : null;
 }
 
-/** The practice line, for a record that has no project binding and so never uploads. */
-export function practiceOf(record: QueueRecord): string | null {
-  return record.practice === true ? (record.storage ?? null) : null;
-}
-
 function sentence(text: string): string {
   return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
 /**
  * The one thing a screen reader says for a record: its number, where and when, its state, why it has
- * not uploaded and, for practice, that it never will. The row's parts are hidden from the reader, so
+ * not uploaded. The row's parts are hidden from the reader, so
  * this is the whole row.
  */
 export function rowLabel(record: QueueRecord): string {
@@ -70,12 +65,10 @@ export function rowLabel(record: QueueRecord): string {
   ];
   const reason = reasonOf(record);
   if (reason) parts.push(sentence(reason));
-  const practice = practiceOf(record);
-  if (practice) parts.push(sentence(practice));
   return parts.join(" ");
 }
 
-/** "1 not uploaded · 5 uploaded": the bound records only, so practice is never counted as waiting. */
+/** "1 not uploaded · 5 uploaded". */
 export function summaryLine(queue: Pick<Queue, "unsent" | "counts">): string | null {
   const { unsent, counts } = queue;
   if (unsent + counts.uploaded === 0) return null;

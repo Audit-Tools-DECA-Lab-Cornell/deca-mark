@@ -22,7 +22,7 @@ function instrument(
     id,
     coordinates: [-76.4843, 42.44845],
     createdAt: "2026-10-07T15:34:00.000Z",
-    storageStatus: "local-only",
+    storageStatus: "pending",
     syncError: "",
     siteId: "riverside-north-playground",
     formVersion: "janet-test-v1",
@@ -91,7 +91,6 @@ describe("inventory progress", () => {
     zoneLabel: `Zone ${zoneId}`,
     roundType,
     savedAt: "2026-10-07T15:34:00.000Z",
-    heldOnly: true,
   });
   const [zoneA, zoneB, zoneC] = siteZones;
 

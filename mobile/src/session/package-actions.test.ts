@@ -5,62 +5,22 @@ import { hasDraft, observationDraftSchema, readDraft, saveDraft } from "../stora
 import { initializeDatabase, type LocalDatabase } from "../storage/observation-store";
 import { adapter, boundDraft, identity, owner } from "../storage/package-store.fixture";
 import { packageActions } from "./package-actions";
+import { boundSitePackage, installBound, zoneUuids } from "./site-package.test-helper";
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn<(_id: string) => Promise<SitePackage | undefined>>(),
 }));
 vi.mock("../packages/open", () => ({ openSitePackage: mocks.open }));
 
-const draft = observationDraftSchema.parse({
-  ...boundDraft,
-  binding: undefined,
-  formVersion: "janet-test-v1",
-});
-const style: SitePackage["bases"]["day"] = { version: 8, sources: {}, layers: [] };
-const pkg: SitePackage = {
-  id: draft.packageId,
-  name: "Synthetic map v7",
-  meta: "Synthetic",
-  availability: "on-device",
-  formVersion: draft.formVersion,
-  inventoryFormVersion: "janet-inventory-v1",
-  version: "v7",
-  siteId: draft.siteId,
-  sizeOnDevice: "Synthetic",
-  inheritedContext: "",
-  centre: [0.5, 0.5],
-  bounds: [0, 0, 1, 1],
-  bases: { day: style, night: style, aerial: style },
-  layers: [],
-  zones: [
-    {
-      zoneId: "practice:A",
-      displayAnchor: [0.5, 0.5],
-      polygon: [
-        [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-        ],
-      ],
-      id: "A",
-      label: "Old label",
-      centre: [0.5, 0.5],
-      west: 0,
-      south: 0,
-      east: 1,
-      north: 1,
-    },
-  ],
-};
+const draft = observationDraftSchema.parse({ ...boundDraft, formVersion: "janet-test-v1" });
+const pkg = boundSitePackage({ name: "Synthetic map v7" });
 let sqlite: DatabaseSync;
 let database: LocalDatabase;
 beforeEach(async () => {
   sqlite = new DatabaseSync(":memory:");
   database = adapter(sqlite);
   await initializeDatabase(database);
+  await installBound(database, owner);
   mocks.open.mockReset();
   mocks.open.mockResolvedValue(pkg);
 });
@@ -117,7 +77,8 @@ const missingVersions: readonly (SitePackage | undefined)[] = [
     ...pkg,
     zones: [
       {
-        zoneId: "practice:B",
+        zoneId: zoneUuids.B,
+        geometrySha256: "b".repeat(64),
         displayAnchor: [0.5, 0.5],
         polygon: [
           [
@@ -161,8 +122,11 @@ it.each(
   expect(await readDraft(database, owner)).toEqual(draft);
 });
 
-it("refuses managed collection without verified identity or full geometry", async () => {
-  mocks.open.mockResolvedValue({ ...pkg, projectId: "10000000-0000-4000-8000-000000000001" });
+it("refuses collection without a verified zone boundary", async () => {
+  mocks.open.mockResolvedValue({
+    ...pkg,
+    zones: pkg.zones.map(({ geometrySha256: _unverified, ...zone }) => zone),
+  });
   const flow = actions();
   expect(await flow.openPackage(pkg.id)).toMatchObject({
     ok: false,

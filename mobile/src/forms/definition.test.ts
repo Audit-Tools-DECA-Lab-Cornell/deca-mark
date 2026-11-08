@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { countForm } from "./count-form.test-helper";
 import { parseFormDefinition, validateFormDefinition } from "./definition";
-import { janetTestV1 } from "./fixtures/janet-test-v1";
-import { shellV1 } from "./fixtures/shell-v1";
+import { janetTestV1 } from "./janet-test-v1.test-helper";
 
 function form(questions: readonly unknown[], extra: Record<string, unknown> = {}) {
   return {
@@ -36,7 +36,7 @@ describe("Form definition validation", () => {
     // Given the definitions the collector renders.
     // When they are parsed at module load.
     // Then both are structurally sound.
-    expect(validateFormDefinition(shellV1)).toEqual([]);
+    expect(validateFormDefinition(countForm)).toEqual([]);
     expect(validateFormDefinition(janetTestV1)).toEqual([]);
     expect(janetTestV1.questions.map((question) => question.id)).toContain("wildlife_interaction");
   });

@@ -5,42 +5,14 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { instrumentObservationSchema } from "../domain/observation";
 import { clearDraft, type ObservationDraft, readDraft, saveDraft } from "./draft-store";
-import {
-  commitObservation,
-  initializeDatabase,
-  type LocalDatabase,
-  listObservations,
-} from "./observation-store";
-
-function adapter(database: DatabaseSync): LocalDatabase {
-  return {
-    async execAsync(sql) {
-      database.exec(sql);
-    },
-    async runAsync(sql, ...parameters) {
-      return database.prepare(sql).run(...parameters);
-    },
-    async getAllAsync(sql, ...parameters) {
-      return database.prepare(sql).all(...parameters);
-    },
-  };
-}
+import { commitObservation, initializeDatabase, listObservations } from "./observation-store";
+import { installPackage } from "./package-catalog";
+import { adapter, binding, boundDraft, entry, owner } from "./package-store.fixture";
 
 const draft: ObservationDraft = {
-  id: "0c1bd9be-9d3a-4a4b-9b0a-1f9a1b2c3d4e",
-  owner: "local",
+  ...boundDraft,
   formVersion: "janet-test-v1",
-  packageId: "riverside-play-study",
-  siteId: "riverside-north-playground",
-  context: {
-    packageId: "riverside-play-study",
-    packageVersion: "v4",
-    zoneId: "B",
-    zoneLabel: "Zone B · North playground",
-    roundType: "reliability",
-    freshPeriod: false,
-    inheritedFrom: "Round context inherited.",
-  },
+  context: { ...boundDraft.context, roundType: "reliability" },
   coordinates: [-76.4843, 42.44845],
   placement: { source: "hand", gpsAccuracyMetres: null },
   answers: { age_range: "age_6_8" },
@@ -48,6 +20,17 @@ const draft: ObservationDraft = {
   startedAt: "2026-09-22T14:31:00.000Z",
   updatedAt: "2026-09-22T14:31:05.000Z",
 };
+
+/** A device with the package installed for each of the given accounts. */
+async function deviceFor(...accounts: string[]) {
+  const sqlite = new DatabaseSync(":memory:");
+  const db = adapter(sqlite);
+  await initializeDatabase(db);
+  for (const account of accounts) await installPackage(db, account, entry);
+  return { sqlite, db };
+}
+
+const mine = { ...draft, owner };
 
 describe("Unfinished observations", () => {
   it("survives closing and reopening the database, so a force quit costs nothing", async () => {
@@ -57,18 +40,14 @@ describe("Unfinished observations", () => {
     let database = new DatabaseSync(filename);
     try {
       await initializeDatabase(adapter(database));
-      const numericDraft = {
-        ...draft,
-        formVersion: "shell-v1",
-        answers: { observer: "JL", people: 0 },
-      };
-      await saveDraft(adapter(database), "local", numericDraft);
+      await installPackage(adapter(database), owner, entry);
+      await saveDraft(adapter(database), owner, mine);
       database.close();
       // When the app reopens the file.
       database = new DatabaseSync(filename);
       await initializeDatabase(adapter(database));
-      // Then the point, the answers and the place in the stack all come back.
-      expect(await readDraft(adapter(database), "local")).toEqual(numericDraft);
+      // Then the point, the answers, the binding and the place in the stack all come back.
+      expect(await readDraft(adapter(database), owner)).toEqual(mine);
     } finally {
       database.close();
       rmSync(directory, { recursive: true });
@@ -77,106 +56,110 @@ describe("Unfinished observations", () => {
 
   it("keeps one draft per account and replaces it as answers are added", async () => {
     // Given a draft that grows another answer.
-    const database = new DatabaseSync(":memory:");
+    const { sqlite, db } = await deviceFor(owner);
     try {
-      await initializeDatabase(adapter(database));
-      const theirs = { ...draft, owner: "account-a" };
-      await saveDraft(adapter(database), "account-a", theirs);
-      await saveDraft(adapter(database), "account-a", {
-        ...theirs,
-        answers: { ...theirs.answers, play_type_1: "physical" },
+      await saveDraft(db, owner, mine);
+      await saveDraft(db, owner, {
+        ...mine,
+        answers: { ...mine.answers, play_type_1: "physical" },
         questionIndex: 2,
       });
       // When it is read back.
-      const stored = await readDraft(adapter(database), "account-a");
+      const stored = await readDraft(db, owner);
       // Then the latest state is there once, not twice.
       expect(stored?.answers).toEqual({ age_range: "age_6_8", play_type_1: "physical" });
       expect(stored?.questionIndex).toBe(2);
     } finally {
-      database.close();
+      sqlite.close();
     }
   });
 
   it("never offers one account's draft to another", async () => {
     // Given a draft saved while signed into one account.
-    const database = new DatabaseSync(":memory:");
+    const { sqlite, db } = await deviceFor(owner);
     try {
-      await initializeDatabase(adapter(database));
-      await saveDraft(adapter(database), "account-a", { ...draft, owner: "account-a" });
+      await saveDraft(db, owner, mine);
       // When a different account opens the app.
       // Then nothing is offered for recovery, and the original is untouched.
-      expect(await readDraft(adapter(database), "account-b")).toBeNull();
-      expect(await readDraft(adapter(database), "account-a")).not.toBeNull();
+      expect(await readDraft(db, "account-b")).toBeNull();
+      expect(await readDraft(db, owner)).not.toBeNull();
     } finally {
-      database.close();
+      sqlite.close();
+    }
+  });
+
+  it("refuses to store a draft that carries no package binding", async () => {
+    // Given a draft with no frozen binding: nothing can say which package its answers belong to.
+    const { sqlite, db } = await deviceFor(owner);
+    try {
+      const { binding: _binding, ...unbound } = mine;
+      // When it is saved.
+      // Then it is refused rather than kept for an upload that could never name its package.
+      expect(() => saveDraft(db, owner, unbound as ObservationDraft)).toThrow();
+      expect(await readDraft(db, owner)).toBeNull();
+    } finally {
+      sqlite.close();
     }
   });
 
   it("preserves an unreadable draft for recovery without restoring it into the wrong form", async () => {
     // Given a draft written by a version whose shape no longer parses.
-    const database = new DatabaseSync(":memory:");
+    const { sqlite, db } = await deviceFor(owner);
     try {
-      await initializeDatabase(adapter(database));
-      database
+      sqlite
         .prepare(
           "INSERT INTO observation_drafts (owner_scope, id, updated_at, payload) VALUES (?, ?, ?, ?)",
         )
-        .run("local", draft.id, draft.updatedAt, JSON.stringify({ answers: "not a record" }));
+        .run(owner, draft.id, draft.updatedAt, JSON.stringify({ answers: "not a record" }));
       // When recovery runs.
       // Then it declines resume but preserves the original answers for recovery.
-      await expect(readDraft(adapter(database), "local")).rejects.toThrow(/retained/);
-      expect(database.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
+      await expect(readDraft(db, owner)).rejects.toThrow(/retained/);
+      expect(sqlite.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
         total: 1,
       });
     } finally {
-      database.close();
+      sqlite.close();
     }
   });
 
   it("refuses a draft whose payload names an account other than the row it sits in", async () => {
     // Given a draft row whose stored owner disagrees with its account scope.
-    const database = new DatabaseSync(":memory:");
+    const { sqlite, db } = await deviceFor(owner);
     try {
-      await initializeDatabase(adapter(database));
-      database
+      sqlite
         .prepare(
           "INSERT INTO observation_drafts (owner_scope, id, updated_at, payload) VALUES (?, ?, ?, ?)",
         )
-        .run(
-          "account-b",
-          draft.id,
-          draft.updatedAt,
-          JSON.stringify({ ...draft, owner: "account-a" }),
-        );
+        .run("account-b", draft.id, draft.updatedAt, JSON.stringify({ ...mine, owner }));
       // When that account opens the app.
       // Then the draft is refused and preserved, so one observer's answers cannot change hands.
-      await expect(readDraft(adapter(database), "account-b")).rejects.toThrow(/retained/);
-      expect(database.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
+      await expect(readDraft(db, "account-b")).rejects.toThrow(/retained/);
+      expect(sqlite.prepare("SELECT COUNT(*) AS total FROM observation_drafts").get()).toEqual({
         total: 1,
       });
     } finally {
-      database.close();
+      sqlite.close();
     }
   });
 
   it("clears the draft when the observation is saved or discarded", async () => {
     // Given a stored draft.
-    const database = new DatabaseSync(":memory:");
+    const { sqlite, db } = await deviceFor(owner);
     try {
-      await initializeDatabase(adapter(database));
-      await saveDraft(adapter(database), "local", draft);
+      await saveDraft(db, owner, mine);
       // When it is cleared.
-      await clearDraft(adapter(database), "local");
+      await clearDraft(db, owner);
       // Then nothing remains to be offered on the next launch.
-      expect(await readDraft(adapter(database), "local")).toBeNull();
+      expect(await readDraft(db, owner)).toBeNull();
     } finally {
-      database.close();
+      sqlite.close();
     }
   });
 });
 
 const finished = instrumentObservationSchema.parse({
   id: draft.id,
+  projectId: binding.projectId,
   siteId: draft.siteId,
   formVersion: "janet-test-v1",
   coordinates: draft.coordinates,
@@ -185,42 +168,41 @@ const finished = instrumentObservationSchema.parse({
   context: draft.context,
   placement: { source: "hand", gpsAccuracyMetres: null },
   createdAt: "2026-09-22T14:32:00.000Z",
-  storageStatus: "local-only",
+  storageStatus: "pending",
+  binding,
 });
 
 describe("Finishing an observation", () => {
   it("stores the record and retires its draft in one step", async () => {
     // Given an observation in progress.
-    const database = new DatabaseSync(":memory:");
+    const { sqlite, db } = await deviceFor(owner);
     try {
-      await initializeDatabase(adapter(database));
-      await saveDraft(adapter(database), "local", draft);
+      await saveDraft(db, owner, mine);
       // When it is saved.
-      await commitObservation(adapter(database), finished, "local");
+      await commitObservation(db, finished, owner);
       // Then the record exists and nothing is left to be offered back on the next launch.
-      expect(await listObservations(adapter(database), "local")).toHaveLength(1);
-      expect(await readDraft(adapter(database), "local")).toBeNull();
+      expect(await listObservations(db, owner)).toHaveLength(1);
+      expect(await readDraft(db, owner)).toBeNull();
     } finally {
-      database.close();
+      sqlite.close();
     }
   });
 
   it("keeps the draft when the record cannot be stored", async () => {
     // Given a record identifier that is already taken, so the insert must fail.
-    const database = new DatabaseSync(":memory:");
+    const { sqlite, db } = await deviceFor(owner);
     try {
-      await initializeDatabase(adapter(database));
-      await commitObservation(adapter(database), finished, "local");
-      await saveDraft(adapter(database), "local", draft);
+      await commitObservation(db, finished, owner);
+      await saveDraft(db, owner, mine);
       // When the same observation is committed a second time.
-      const second = commitObservation(adapter(database), finished, "local");
+      const second = commitObservation(db, finished, owner);
       // Then the whole step rolls back: no duplicate record, and the draft is still recoverable
       // rather than deleted against a save that never happened.
       await expect(second).rejects.toThrow();
-      expect(await listObservations(adapter(database), "local")).toHaveLength(1);
-      expect(await readDraft(adapter(database), "local")).not.toBeNull();
+      expect(await listObservations(db, owner)).toHaveLength(1);
+      expect(await readDraft(db, owner)).not.toBeNull();
     } finally {
-      database.close();
+      sqlite.close();
     }
   });
 });

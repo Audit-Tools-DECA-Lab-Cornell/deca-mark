@@ -72,7 +72,7 @@ it("retains a rejected published-form body and binding across restart and explic
     answers: { people: 5, round_type: 7 },
     coordinates: [-76.485, 42.448],
     createdAt: "2026-09-17T12:00:00.000Z",
-    storageStatus: "local-only",
+    storageStatus: "pending",
     context: {
       packageId: fixture.packageId,
       packageVersion: "v1",

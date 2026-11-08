@@ -181,7 +181,7 @@ export function FieldSessionProvider({ children }: PropsWithChildren) {
           owner: key,
           packageId: opened.id,
           packageName: opened.name,
-          ...(draft.binding ? { binding: draft.binding } : {}),
+          binding: draft.binding,
           ...(draft.capture ? { capture: draft.capture } : {}),
         });
         const recoveredForm = formForRound(opened, savedContext.roundType);

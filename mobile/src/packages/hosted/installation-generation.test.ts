@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { databaseWrite } from "../../storage/database-write";
 import { installedFor } from "../../storage/package-store.fixture";
 import { hasStoredPackage, setPackageAccessOwner } from "./access";
-import { boundFixture, ids } from "./bound-fixture";
+import { boundFixture, ids } from "./bound-fixture.test-helper";
 import { deferred, harness, otherOwner, owner } from "./lifecycle.test-helper";
 import { PackageOperations } from "./operations";
 

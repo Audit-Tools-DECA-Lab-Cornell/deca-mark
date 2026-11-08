@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import inventoryDefinition from "../../../../contracts/forms/janet-inventory-v1.json";
-import { boundFixture, boundLayers, boundManifest, ids } from "./bound-fixture";
+import { boundFixture, boundLayers, boundManifest, ids } from "./bound-fixture.test-helper";
 import { preparePackage } from "./prepare";
 
 describe("Exact bound package preparation", () => {
