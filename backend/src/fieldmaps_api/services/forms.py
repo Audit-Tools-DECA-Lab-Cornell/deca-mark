@@ -14,7 +14,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fieldmaps_api.domain.form_authoring import normalize_draft_columns
 from fieldmaps_api.domain.forms import FormDefinition
 from fieldmaps_api.domain.stored_form_versions import historical_definition
-from fieldmaps_api.errors import ConflictError, NotFoundError, ValidationFailedError
+from fieldmaps_api.errors import (
+    ConflictError,
+    NotFoundError,
+    RoleRequiredError,
+    ValidationFailedError,
+)
 from fieldmaps_api.form_preconditions import require_form_etag, revision_conflict
 from fieldmaps_api.form_schema_version import require_current_schema
 from fieldmaps_api.form_schemas import (
@@ -22,6 +27,7 @@ from fieldmaps_api.form_schemas import (
     DraftUpdate,
     FormCreate,
     FormSummary,
+    FormTemplate,
     FormVersionDetail,
 )
 from fieldmaps_api.queries import tenancy as tenancy_queries
@@ -56,6 +62,19 @@ def checked_definition(
 async def list_forms(session: AsyncSession, project_id: UUID) -> list[FormSummary]:
     await project(session, project_id)
     return await forms.list_forms(session, project_id)
+
+
+async def list_templates(session: AsyncSession) -> list[FormTemplate]:
+    """Return the ready-made forms to a manager of any organization or project (others: 403)."""
+    if not await forms.manages_anything(session):
+        message = "Manager access required"
+        raise RoleRequiredError(message)
+    templates = await forms.list_templates(session)
+    for template in templates:
+        # Served only if the row is current and reads in the canonical format.
+        require_current_schema(template.schema_version)
+        historical_definition(template.definition, template.schema_version)
+    return templates
 
 
 async def get_version(session: AsyncSession, project_id: UUID, code: str) -> FormVersionDetail:
