@@ -5,13 +5,15 @@ Not collected by any suite. Run it against a disposable database with the rehear
     DECAMARK_REHEARSAL_IMAGE=<postgres image> sh database/zone-api-rehearsal.sh \
         -c pyproject.toml "$PWD/mobile/scripts/training-api-acceptance.py"
 
-The runner builds every migration (DB-20's Training seed included) into a throwaway Postgres and runs
-this file with the backend's pytest. It starts the API on a loopback port, signs a new account in, and
-runs `mobile/src/packages/hosted/training-api.acceptance.test.ts` with that account. The account joins
-Training, downloads the Practice garden, collects in the Standard, Reliability and Inventory rounds and
-uploads them. This file then reads the three rows back from the database.
+The runner builds every migration (DB-20's Training seed included) into a throwaway Postgres
+and runs this file with the backend's pytest. It starts the API on a loopback port, signs a new
+account in, and runs `mobile/src/packages/hosted/training-api.acceptance.test.ts` with that
+account. The account joins Training, downloads the Practice garden, collects in the Standard,
+Reliability and Inventory rounds and uploads them. This file then reads the three rows back
+from the database.
 """
 
+# ruff: noqa: S101, INP001  (a pytest file outside backend/tests: asserts and no package)
 import json
 import shutil
 import socket
@@ -83,7 +85,8 @@ def test_fresh_account_collects_three_rounds_in_training_and_uploads_them(
         },
         "token": signer.issue(user),
     }
-    result = subprocess.run(  # noqa: S603 - repository Vitest, argv only, synthetic loopback fixture
+    # Repository Vitest, argv only, synthetic loopback fixture.
+    result = subprocess.run(  # noqa: S603
         [
             node,
             str(ROOT / "mobile/node_modules/vitest/vitest.mjs"),

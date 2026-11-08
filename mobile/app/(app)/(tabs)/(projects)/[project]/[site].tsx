@@ -156,6 +156,13 @@ export default function SiteScreen() {
     setOpening(true);
     setProblem(null);
     try {
+      if (data.mode === "preview") {
+        // Preview shows designed screens: there is no package on this device to open.
+        const sample = "This is sample data. Switch to device data to collect.";
+        setProblem(sample);
+        announce(sample);
+        return;
+      }
       const outcome = await session.openPackage(packageId);
       if (!outcome.ok) {
         haptics.warning();

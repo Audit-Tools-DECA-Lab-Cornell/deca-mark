@@ -44,7 +44,7 @@ Authorization lives in the database and is checked on every request (D12).
 | Project      | **Viewer**       | "Read data and reports; export the permitted scope". Team and Settings are hidden.                                                         |
 | Project      | GIS reader grant | A per-project read-only login for QGIS (D10). This is not a user role.                                                                     |
 
-- **Training.** Every new account joins the server Training project as an observer (D4, D13). It is for practising every step offline. Training observations are visible only to their creator, purged after 30 days, and never in research exports. On mobile it is "Always available".
+- **Training.** Every new account joins the server Training project as an observer (D4, D13). It is for practising every step offline. Training observations are visible only to their creator, purged after 30 days, and never in research exports. On mobile its Practice garden is downloaded like any site.
 - **The role is always visible.** The web header shows it in mono (MANAGER, ADMIN, OBSERVER). An observer who signs in on the web gets "You collect in the app".
 - **Settings sit at three levels:** `/account` for everyone, org settings for owners and admins, and project settings for managers.
 
