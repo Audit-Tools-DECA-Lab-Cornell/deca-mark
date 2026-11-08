@@ -20,7 +20,7 @@ describe("what the root error screen says when collection cannot start", () => {
     expect(screen.texts()).toContain(
       "This version cannot read the records on this device. Update DECA Mark; nothing was deleted.",
     );
-    expect(screen.texts()).toContain("Update DECA Mark");
+    expect(screen.texts()).toContain("Your records are still on this device");
     expect(screen.says("point and answers")).toBe(false);
     expect(screen.controls()).toEqual([]);
     expect(UNREADABLE_VERSION_MESSAGE).toBe(new CollectorVersionError().message);

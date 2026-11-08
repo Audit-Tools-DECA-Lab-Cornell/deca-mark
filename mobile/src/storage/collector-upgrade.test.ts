@@ -5,11 +5,13 @@ import { serializeBoundObservation, uploadBodyMatches } from "../sync/wire-body"
 import { initializeDatabase, packageFileResetPending, SCHEMA_VERSION } from "./database-migrations";
 import { readDraft } from "./draft-store";
 import { MASTER_USER_VERSION, masterSchemaV6 } from "./master-v6.fixture";
+import { preMob42SchemaV6 } from "./master-v6-before-mob42.fixture";
 import { listObservations } from "./observation-store";
 import { installPackage, listCatalog } from "./package-catalog";
 import { adapter, binding, boundDraft, boundRecord, entry, owner } from "./package-store.fixture";
 import { listParkedDrafts } from "./parked-drafts";
 import { acknowledge, pendingObservations } from "./sync-store";
+import { readSyncFailure } from "./upload-payload";
 
 /** What a device in the field holds: origin/master's schema at user_version 6, filled by master's writers. */
 const key = identityKey(entry.identity);
@@ -239,6 +241,89 @@ describe("a version this build cannot read", () => {
         before.tables,
       );
       expect(sqlite.prepare("PRAGMA user_version").get()).toEqual({ user_version: 99 });
+    } finally {
+      sqlite.close();
+    }
+  });
+});
+
+const schemaOf = (sqlite: DatabaseSync) =>
+  sqlite
+    .prepare(
+      "SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT GLOB 'sqlite_*' ORDER BY type, name",
+    )
+    .all();
+
+describe("a device that reached version 6 before MOB-42", () => {
+  it("loses the two unused tables and ends with the schema of a fresh install", async () => {
+    const old = new DatabaseSync(":memory:");
+    const fresh = new DatabaseSync(":memory:");
+    try {
+      old.exec(`${preMob42SchemaV6} PRAGMA user_version = 6;
+        INSERT INTO active_sessions VALUES ('o', 'k', 'leftover');
+        INSERT INTO package_selections VALUES ('o', 'p', 's', 'k');
+        INSERT INTO observations (id, created_at, payload, sync_state, package_key) VALUES ('a', 'a', 'raw', 'pending', 'k');`);
+      await initializeDatabase(adapter(old));
+      await initializeDatabase(adapter(fresh));
+      expect(
+        old
+          .prepare(
+            "SELECT name FROM sqlite_master WHERE name IN ('active_sessions', 'package_selections')",
+          )
+          .all(),
+      ).toEqual([]);
+      expect(schemaOf(old)).toEqual(schemaOf(fresh));
+      expect(old.prepare("SELECT payload FROM observations").all()).toEqual([{ payload: "raw" }]);
+    } finally {
+      old.close();
+      fresh.close();
+    }
+  });
+});
+
+describe("bound records held in the retired local-only state", () => {
+  it("sends one with a frozen body, and keeps one without as needs-attention", async () => {
+    const { sqlite, db } = await masterDevice();
+    try {
+      const withBody = "60000000-0000-4000-8000-000000000010";
+      const withoutBody = "60000000-0000-4000-8000-000000000011";
+      const bare = JSON.stringify({ ...boundRecord, id: withoutBody, storageStatus: "local-only" });
+      const insert = sqlite.prepare(
+        "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state, package_key) VALUES (?, ?, ?, ?, 'local-only', ?)",
+      );
+      insert.run(withBody, "2026-10-11T10:00:04.000Z", masterPayload(withBody), owner, key);
+      insert.run(withoutBody, "2026-10-11T10:00:05.000Z", bare, owner, key);
+      await initializeDatabase(db);
+      const rows = sqlite
+        .prepare(
+          "SELECT id, payload, sync_state, sync_error FROM observations WHERE id IN (?, ?) ORDER BY id",
+        )
+        .all(withBody, withoutBody);
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toMatchObject({
+        id: withBody,
+        sync_state: "pending",
+        sync_error: "",
+        payload: masterPayload(withBody),
+      });
+      expect(rows[1]).toMatchObject({
+        id: withoutBody,
+        sync_state: "needs-attention",
+        payload: bare,
+      });
+      expect(readSyncFailure(String(rows[1]?.["sync_error"]))).toMatchObject({
+        syncError: expect.stringContaining("cannot send it"),
+        syncRejectionCode: "saved-by-older-version",
+      });
+      expect(
+        (await pendingObservations(db, owner, Date.now())).map((item) => item.record.id),
+      ).toContain(withBody);
+      expect(
+        (await pendingObservations(db, owner, Date.now())).map((item) => item.record.id),
+      ).not.toContain(withoutBody);
+      expect(
+        (await listObservations(db, owner)).find((item) => item.id === withoutBody)?.storageStatus,
+      ).toBe("needs-attention");
     } finally {
       sqlite.close();
     }

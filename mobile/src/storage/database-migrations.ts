@@ -50,6 +50,13 @@ const observationIndexes = `
   CREATE INDEX observations_pending ON observations(owner_scope, sync_state, next_attempt_at);
   CREATE INDEX observations_package_reference ON observations(package_key);`;
 
+/** The failure shown on a held bound record with no frozen body, which no build can send. */
+const heldWithoutBody = JSON.stringify({
+  message:
+    "An older version of DECA Mark saved this record and this version cannot send it. It stays on this device.",
+  code: "saved-by-older-version",
+}).replaceAll("'", "''");
+
 const pilotSchema = `
   ${observationsTable}
   ${observationIndexes}
@@ -84,11 +91,14 @@ const pilotSchema = `
  * `observations` table changes shape (the retired `local-only` state leaves its CHECK and DEFAULT), so
  * it is rebuilt and every other table stays as it is:
  * - every bound observation moves with its payload, frozen `uploadBody`, state, error, receipt, attempt
- *   counters, scope and package key untouched; one held in `local-only` that is bound (master
- *   activated these on sign-in) becomes `pending`, which is what master would have made it;
+ *   counters, scope and package key untouched. A bound row held in `local-only` (builds before MOB-42
+ *   activated these on sign-in, freezing a body and checking the scope) becomes `pending` when its
+ *   payload carries a frozen `uploadBody`; builds before MOB-29 saved none, so such a row becomes
+ *   `needs-attention` with a plain failure and is kept, never deleted;
  * - the retired unbound practice rows and the practice drafts (no package key) are the only rows removed;
  * - installed packages, their authorizations and the file-reset marker are not touched, so a verified
- *   install stays installed.
+ *   install stays installed. The tables a version-6 build made before MOB-42 and nothing reads,
+ *   `active_sessions` and `package_selections`, are dropped: they hold no observation or draft.
  */
 async function upgradeFromMaster(db: LocalDatabase): Promise<void> {
   await db.execAsync(`
@@ -100,11 +110,18 @@ async function upgradeFromMaster(db: LocalDatabase): Promise<void> {
     INSERT INTO observations
       (id, created_at, payload, owner_scope, sync_state, sync_error, server_receipt, attempts, next_attempt_at, package_key)
       SELECT id, created_at, payload, owner_scope,
-        CASE sync_state WHEN 'local-only' THEN 'pending' ELSE sync_state END,
-        sync_error, server_receipt, attempts, next_attempt_at, package_key
+        CASE WHEN sync_state <> 'local-only' THEN sync_state
+          WHEN json_valid(payload) AND json_extract(payload, '$.uploadBody') IS NOT NULL THEN 'pending'
+          ELSE 'needs-attention' END,
+        CASE WHEN sync_state = 'local-only'
+            AND NOT (json_valid(payload) AND json_extract(payload, '$.uploadBody') IS NOT NULL)
+          THEN '${heldWithoutBody}' ELSE sync_error END,
+        server_receipt, attempts, next_attempt_at, package_key
       FROM observations_master
       WHERE NOT (sync_state = 'local-only' AND package_key = '');
     DROP TABLE observations_master;
+    DROP TABLE IF EXISTS active_sessions;
+    DROP TABLE IF EXISTS package_selections;
     ${observationIndexes}
     DELETE FROM observation_drafts WHERE package_key = '';
     DELETE FROM parked_observation_drafts WHERE package_key = '';
@@ -128,7 +145,7 @@ async function inTransaction(db: LocalDatabase, version: number, step: () => Pro
  * - master's schema (6) takes the one-time step above;
  * - a pilot schema or later takes the forward migrations it has not yet had, each in its own
  *   transaction;
- * - any other version (older than master's, which no build in the field holds, or newer than this build)
+ * - any other version (older than master's, or newer than this build)
  *   throws `CollectorVersionError` before anything is written.
  * `steps` is the migration list; only tests pass another.
  */

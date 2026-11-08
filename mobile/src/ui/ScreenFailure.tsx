@@ -20,7 +20,7 @@ export function ScreenFailure({ error, retry }: { error: Error; retry: () => voi
           {error instanceof CollectorVersionError ? (
             <ScreenState
               kind="error"
-              title="Update DECA Mark"
+              title="Your records are still on this device"
               body={error.message}
               icon="download"
               testID="collector-version-refused"
