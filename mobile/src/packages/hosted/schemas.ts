@@ -85,7 +85,12 @@ export const formSummarySchema = z.object({
 export const formSummariesSchema = z.array(formSummarySchema);
 export type FormSummary = z.infer<typeof formSummarySchema>;
 export const formVersionSchema = z.object({
-  schema_version: z.number().int().positive(),
+  /**
+   * The schema version the server served beside the definition. One that is missing or unreadable is
+   * carried as 0, a version no build reads, so `parseServedDefinition` refuses the form as one this
+   * build cannot read ("Update DECA Mark to use this form") instead of as a response that failed.
+   */
+  schema_version: z.number().int().positive().catch(0),
   code: z.string().min(1),
   state: versionStateSchema,
   form_code: z.string().min(1),
