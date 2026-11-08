@@ -77,10 +77,8 @@ def test_shared_cases(path: Path) -> None:
                 assert normalized.pruned == step.expected.dropped, label
 
 
-@pytest.mark.parametrize(
-    "definition", [{"fields": []}, {"questions": []}, {"questions": [], "fields": []}]
-)
-def test_obsolete_or_incomplete_definitions_are_rejected(definition: dict[str, JsonValue]) -> None:
+@pytest.mark.parametrize("definition", [{}, {"questions": []}])
+def test_incomplete_definitions_are_rejected(definition: dict[str, JsonValue]) -> None:
     with pytest.raises(ValidationError):
         FormDefinition.model_validate(definition)
 

@@ -1,9 +1,10 @@
-"""Synthetic existing-installation state; never rewrite an initialized form."""
+"""Synthetic existing-record state (a published form, its package and one observation)."""
 
 import json
 from dataclasses import dataclass
 from hashlib import sha256
 from io import BytesIO
+from pathlib import Path
 from typing import Final
 from uuid import UUID, uuid4
 from zipfile import ZipFile
@@ -18,18 +19,22 @@ from tests.tenant_fixtures import observation_payload
 from tests.test_zone_api_live import LiveApi
 from tests.zone_api_fixtures import document
 
-# The exact two fields from the pre-cleanup baseline, including optional blank text.
-FIELDS_ONLY: Final[dict[str, JsonValue]] = {
-    "fields": [
-        {"code": "people", "type": "integer", "minimum": 0, "maximum": 999, "required": True},
-        {"code": "notes", "type": "text", "required": False, "maxLength": 1000},
-    ],
-    "status": "practice-only",
-}
+CONTRACTS: Final = Path(__file__).resolve().parents[2] / "contracts/forms"
+
+
+def history_definition() -> dict[str, JsonValue]:
+    """Return the people and notes questions of shell-v1 as a published definition."""
+    shell = document((CONTRACTS / "shell-v1.json").read_bytes())
+    questions = shell["questions"]
+    assert isinstance(questions, list)
+    kept: list[JsonValue] = [
+        q for q in questions if isinstance(q, dict) and q["id"] in {"people", "notes"}
+    ]
+    return {**shell, "version": "historic-v1", "questions": kept}
 
 
 @dataclass(frozen=True)
-class FieldsHistory:
+class RecordHistory:
     api: LiveApi
     form: UUID
     package: UUID
@@ -62,7 +67,7 @@ class FieldsHistory:
         )
 
 
-def seed_history(api: LiveApi) -> FieldsHistory:
+def seed_history(api: LiveApi) -> RecordHistory:
     assert disposable_database_selected(), "Existing-record fixture requires disposable selection"
     form, observation = uuid4(), uuid4()
     tenant = api.tenant
@@ -71,7 +76,7 @@ def seed_history(api: LiveApi) -> FieldsHistory:
         "VALUES (:'legacy',:'org',:'project','historic-v1',:'definition'::jsonb);",
         *tenant.variables(),
         f"legacy={form}",
-        f"definition={json.dumps(FIELDS_ONLY)}",
+        f"definition={json.dumps(history_definition())}",
     )
     project = f"/v1/projects/{tenant.project}"
     with api.client() as manager:
@@ -104,7 +109,7 @@ def seed_history(api: LiveApi) -> FieldsHistory:
                 "form_version_id": str(form),
                 "form_version": "historic-v1",
             }
-    history = FieldsHistory(api, form, package.package_id, zone, observation, archive.content)
+    history = RecordHistory(api, form, package.package_id, zone, observation, archive.content)
     body = history.body()
     # An independently authored JCS document seeds the pre-existing retry receipt.
     # Do not use production fingerprint/normalization to manufacture the expectation.

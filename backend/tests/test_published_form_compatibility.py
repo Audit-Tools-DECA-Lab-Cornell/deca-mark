@@ -12,15 +12,16 @@ from uuid import uuid4
 
 import pytest
 import rfc8785
-from pydantic import JsonValue, TypeAdapter, ValidationError
+from pydantic import JsonValue, ValidationError
 
 from fieldmaps_api.domain.forms import (
     FormDefinition,
     PublishedFormBoundsError,
-    StoredFormDefinition,
+    StoredCanonicalDefinition,
     normalize_answers,
 )
 from fieldmaps_api.domain.observation_export_columns import questions
+from fieldmaps_api.errors import ValidationFailedError
 from fieldmaps_api.zone_response_schemas import HistoricalZones, Publication
 from tests.local_database import admin_sql
 from tests.package_fixtures import submission
@@ -33,7 +34,7 @@ from tests.zone_api_fixtures import document
 
 __all__ = ["audit_api", "live_api"]
 ROOT = Path(__file__).resolve().parents[2]
-STORED = TypeAdapter[StoredFormDefinition](StoredFormDefinition)
+STORED = StoredCanonicalDefinition
 
 
 def historical_definition(*, required: bool = False, hidden: bool = False) -> dict[str, JsonValue]:
@@ -56,7 +57,7 @@ def test_stored_bounds_are_not_authoring_eligibility_or_answer_permission() -> N
         raw = historical_definition(required=required, hidden=hidden)
         with pytest.raises(ValidationError, match="minimum greater"):
             FormDefinition.model_validate(raw)
-        stored = STORED.validate_python(raw)
+        stored = STORED.model_validate(raw)
         assert questions(raw, 1)[0].id == ("notes" if hidden else "people")
         answers: dict[str, JsonValue] = {"round_type": 7}
         if not required or hidden:
@@ -89,8 +90,8 @@ def test_stored_reader_keeps_structural_safety(patch: dict[str, JsonValue]) -> N
     assert isinstance(authored[0], dict)
     raw["questions"] = [authored[0] | patch, *authored[1:]]
     with pytest.raises(ValidationError):
-        STORED.validate_python(raw)
-    with pytest.raises(ValidationError):
+        STORED.model_validate(raw)
+    with pytest.raises(ValidationFailedError):
         questions(raw, 1)
 
 

@@ -17,6 +17,7 @@ from fieldmaps_api.domain.observation_export import (
     TIME_LIMIT,
     too_large,
 )
+from fieldmaps_api.domain.stored_form_versions import historical_definition
 from fieldmaps_api.errors import DomainError, RoleRequiredError
 from fieldmaps_api.observation_analysis_schemas import ObservationExportQuery
 from fieldmaps_api.repositories import observation_analysis as db
@@ -61,6 +62,10 @@ async def export(
                     )
                 if snapshot.total_matching > ROW_LIMIT or snapshot.source_bytes > SOURCE_BYTE_LIMIT:
                     raise too_large()
+                # Refuse a definition the API cannot read here, with its own typed error: the
+                # worker process only reports failure, which would surface as "too large".
+                for form_code, definition in snapshot.forms.items():
+                    historical_definition(definition, snapshot.form_schema_versions[form_code])
                 with TemporaryDirectory(prefix="decamark-export-") as temporary:
                     directory = Path(temporary)
                     (directory / "snapshot.json").write_text(

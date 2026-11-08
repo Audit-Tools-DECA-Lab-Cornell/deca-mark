@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fieldmaps_api.domain.form_authoring import normalize_draft_columns
 from fieldmaps_api.domain.forms import FormDefinition
+from fieldmaps_api.domain.stored_form_versions import historical_definition
 from fieldmaps_api.errors import ConflictError, NotFoundError, ValidationFailedError
 from fieldmaps_api.form_preconditions import require_form_etag, revision_conflict
 from fieldmaps_api.form_schema_version import require_current_schema
@@ -63,6 +64,8 @@ async def get_version(session: AsyncSession, project_id: UUID, code: str) -> For
         message = "Form version not found"
         raise NotFoundError(message)
     require_current_schema(version.schema_version)
+    # A definition is served only if it reads in the current canonical format.
+    historical_definition(version.definition, version.schema_version)
     return version
 
 

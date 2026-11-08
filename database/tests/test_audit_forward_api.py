@@ -42,38 +42,47 @@ def frozen_state(tenant: Tenant) -> dict[str, JsonValue]:
     )
 
 
+def decimal_definition() -> dict[str, JsonValue]:
+    canonical_questions = instrument()["questions"]
+    assert isinstance(canonical_questions, list)
+    decimal_form = instrument()
+    decimal_form["version"] = "forward-decimal-v1"
+    decimal_form["status"] = "published"
+    decimal_form["questions"] = [
+        {
+            **canonical_questions[0],
+            "id": "ratio",
+            "code": "ratio",
+            "exportColumn": "ratio",
+            "label": "Ratio",
+            "numberMode": "decimal",
+            "min": 0,
+            "max": 5,
+        },
+        {**canonical_questions[1], "maxLength": 1000},
+    ]
+    return decimal_form
+
+
 def seed_versions(tenant: Tenant) -> tuple[UUID, UUID, str]:
-    published, draft, legacy = uuid4(), uuid4(), uuid4()
+    published, draft, decimal = uuid4(), uuid4(), uuid4()
     canonical = instrument()
     canonical_questions = canonical["questions"]
     assert isinstance(canonical_questions, list)
     canonical["questions"] = canonical_questions[:2]
-    definition = {
-        "fields": [
-            {
-                "code": "ratio",
-                "type": "number",
-                "required": True,
-                "minimum": 0,
-                "maximum": 5,
-            },
-            {"code": "supervised", "type": "boolean"},
-            {"code": "notes", "type": "text", "maxLength": 1000},
-        ]
-    }
     admin_sql(
         "INSERT INTO fieldmaps.form_versions(id,organization_id,project_id,code,definition,state) VALUES "
         "(:'published',:'org',:'project','forward-v1',:'canonical'::jsonb||'{\"version\":\"forward-v1\",\"status\":\"published\"}','published'),"
         "(:'draft',:'org',:'project','forward-v2',:'canonical'::jsonb||'{\"version\":\"forward-v2\"}','draft'),"
-        "(:'legacy',:'org',:'project','forward-legacy-v1',:'legacy_definition'::jsonb,'published');",
+        "(:'decimal_id',:'org',:'project','forward-decimal-v1',:'decimal_definition'::jsonb,'published');",
         *tenant.variables(),
         f"published={published}",
         f"draft={draft}",
-        f"legacy={legacy}",
+        f"decimal_id={decimal}",
         f"canonical={json.dumps(canonical)}",
-        f"legacy_definition={json.dumps(definition)}",
+        f"decimal_definition={json.dumps(decimal_definition())}",
     )
-    return published, draft, str(legacy)
+    return published, draft, str(decimal)
 
 
 def pre_migration_records(api: LiveApi) -> tuple[str, dict[str, JsonValue], bytes]:
@@ -105,7 +114,7 @@ def pre_migration_records(api: LiveApi) -> tuple[str, dict[str, JsonValue], byte
 
 
 def seed_decimal_boolean_history(
-    api: LiveApi, body: dict[str, JsonValue], legacy: str
+    api: LiveApi, body: dict[str, JsonValue], decimal_form_id: str
 ) -> UUID:
     project = f"/v1/projects/{api.tenant.project}"
     with api.client() as manager:
@@ -114,7 +123,7 @@ def seed_decimal_boolean_history(
             json=submission(
                 site_id=str(api.tenant.site),
                 expected_current_package_id=body["package_id"],
-                form_version="forward-legacy-v1",
+                form_version="forward-decimal-v1",
                 zone_identity_map=[
                     {
                         "source_feature_id": "A",
@@ -130,12 +139,12 @@ def seed_decimal_boolean_history(
         "BEGIN; SET LOCAL ROLE fieldmaps_api; SELECT set_config('fieldmaps.user_id',:'observer',true); "
         "INSERT INTO fieldmaps.observations(id,organization_id,project_id,site_id,form_version_id,"
         "observer_code,observed_at,geom,answers,created_by,upload_hash,package_id,zone_id,round_type,first_round,placement_source) "
-        "VALUES (:'id',:'org',:'project',:'site',:'legacy','QA','2026-10-10T12:00:00Z',"
+        "VALUES (:'id',:'org',:'project',:'site',:'decimal_id','QA','2026-10-10T12:00:00Z',"
         'fieldmaps.make_point(-76.485,42.448),\'{"ratio":1.25,"supervised":false,"notes":""}\','
         ":'observer',repeat('b',64),:'package',:'zone','standard',true,'hand'); COMMIT;",
         *api.tenant.variables(),
         f"id={uuid4()}",
-        f"legacy={legacy}",
+        f"decimal_id={decimal_form_id}",
         f"package={package}",
         f"zone={body['zone_id']}",
     )
@@ -215,9 +224,9 @@ def test_pending_audit_migrations_preserve_existing_data_and_permissions(
         == "0"
     ), "Run the explicit pre-audit-schema harness"
     api = cast("LiveApi", request.getfixturevalue("audit_api"))
-    published, draft, legacy = seed_versions(api.tenant)
+    published, draft, decimal_form_id = seed_versions(api.tenant)
     url, queued, receipt = pre_migration_records(api)
-    decimal_package = seed_decimal_boolean_history(api, queued, legacy)
+    decimal_package = seed_decimal_boolean_history(api, queued, decimal_form_id)
     invalid_record, invalid_package = seed_previously_publishable_inverted_history(
         api, queued, decimal_package
     )
@@ -292,8 +301,8 @@ def test_pending_audit_migrations_preserve_existing_data_and_permissions(
         )
         assert manager.post(current_url + "/publish").status_code == 428
     with api.client("viewer") as viewer:
-        # Stored interpretation retains the immutable pre-fix instrument, while
-        # new authoring still rejects it. No historical definition is rewritten.
+        # Stored interpretation reads the published decimal instrument as stored.
+        # No historical definition is rewritten.
         whole = viewer.get(f"{project}/observations/export")
         assert whole.status_code == 200, whole.text
         assert viewer.get(f"{project}/observations/{invalid_record}").status_code == 200
@@ -304,19 +313,7 @@ def test_pending_audit_migrations_preserve_existing_data_and_permissions(
             )
             assert exported.status_code == 200, exported.text
             assets = files(exported.content)
-            assert document(assets["forms.json"])["forward-legacy-v1"] == {
-                "fields": [
-                    {
-                        "code": "ratio",
-                        "type": "number",
-                        "required": True,
-                        "minimum": 0,
-                        "maximum": 5,
-                    },
-                    {"code": "supervised", "type": "boolean"},
-                    {"code": "notes", "type": "text", "maxLength": 1000},
-                ]
-            }
+            assert document(assets["forms.json"])["forward-decimal-v1"] == decimal_definition()
             (tmp_path / f"{format_name}.zip").write_bytes(exported.content)
         blocked = viewer.get(
             f"{project}/observations/export",

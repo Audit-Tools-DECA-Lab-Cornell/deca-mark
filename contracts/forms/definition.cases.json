@@ -266,6 +266,12 @@
       "valid": true
     },
     {
+      "id": "schema-version-current-written-as-float",
+      "schemaVersion": 2.0,
+      "patch": {},
+      "valid": true
+    },
+    {
       "id": "unknown-schema-version-next",
       "schemaVersion": 3,
       "patch": {},
@@ -296,6 +302,34 @@
     {
       "id": "unknown-schema-version-boolean",
       "schemaVersion": true,
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-previous",
+      "schemaVersion": 1,
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-fraction",
+      "schemaVersion": 2.5,
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-text-current",
+      "schemaVersion": "2",
+      "patch": {},
+      "valid": false,
+      "refusal": "unknown_schema_version"
+    },
+    {
+      "id": "unknown-schema-version-boolean-false",
+      "schemaVersion": false,
       "patch": {},
       "valid": false,
       "refusal": "unknown_schema_version"
