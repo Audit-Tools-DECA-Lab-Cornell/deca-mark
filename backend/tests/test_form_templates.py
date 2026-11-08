@@ -127,3 +127,28 @@ def test_a_template_row_that_is_not_canonical_is_a_typed_422_never_a_500(
     assert error.code == "validation_failed"
     assert "people" not in response.text
     assert error.details["fields"] == [{"id": "definition", "problem": error.message}]
+
+
+def test_a_template_row_at_another_schema_version_is_unknown_schema_version(
+    api_client: TestClient, signer: Signer, tenant: Tenant
+) -> None:
+    # Given a canonical template stored at a schema version this API does not serve.
+    assert disposable_database_selected(), "Seeding raw templates requires a disposable database"
+    future = SUITE.current_schema_version + 1
+    admin_sql(
+        "INSERT INTO fieldmaps.form_templates(code,title,summary,definition,schema_version) "
+        "SELECT 'future-version','Future','Future version',definition,:'schema' "
+        "FROM fieldmaps.form_templates WHERE code='zone-inventory';",
+        f"schema={future}",
+    )
+    try:
+        sign_in(api_client, signer, tenant.users["manager"])
+        # When a manager lists the templates.
+        response = api_client.get(URL)
+    finally:
+        admin_sql("DELETE FROM fieldmaps.form_templates WHERE code='future-version';")
+    # Then the whole list is refused with the typed version error, never a 500.
+    assert response.status_code == 422, response.text
+    error = ErrorEnvelope.model_validate_json(response.content).error
+    assert error.code == "unknown_schema_version"
+    assert error.details["schema_version"] == future
