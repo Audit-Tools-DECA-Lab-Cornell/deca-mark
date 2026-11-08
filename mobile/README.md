@@ -63,10 +63,13 @@ both, and its content spans the full window width — a deliberate departure fro
   option identifiers, a restricted declarative condition format, dynamic option sets, and
   validation of duplicate export columns, dangling references and dependency cycles. Workbook
   rule text is carried as provenance and never executed.
-- **Shared JSON contracts** in [`../contracts/`](../contracts/README.md). The fixture modules import the canonical definitions; `pnpm contracts:forms` generates their input JSON Schema. Python and mobile tests share cases for visibility, hidden-answer pruning, types, duplicate selections, options, numeric ranges, text limits and Unicode whitespace. Numeric answers remain numbers in session state, drafts, exports and stored observations. BE-10's local database upload/readback acceptance passed on 2026-10-03.
+- **Shared JSON contracts** in [`../contracts/`](../contracts/README.md). The janet form test helpers import the canonical definitions; `pnpm contracts:forms` generates their input JSON Schema. Python and mobile tests share cases for visibility, hidden-answer pruning, types, duplicate selections, options, numeric ranges, text limits and Unicode whitespace. Numeric answers remain numbers in session state, drafts, exports and stored observations. BE-10's local database upload/readback acceptance passed on 2026-10-03.
 - **Generated API types and typed errors.** `pnpm api:types` reads the backend OpenAPI contract. The shared client maps coded failures through `src/data/api/errors.ts`; MOB-29’s bound receipt/rejection integration is implemented with local automated/disposable API/QGIS acceptance. Unknown or malformed errors remain retryable with the local record preserved.
-- **Two form versions side by side.** The original practice form is now the `shell-v1`
-  definition for local practice; bundled practice records do not upload. `janet-test-v1` implements the
+- **Forms come from the server.** No form is bundled with the app: a site's forms arrive with its
+  package, are read through `parseServedDefinition(schema_version, definition)` and are refused as
+  "Update DECA Mark to use this form" when the served schema version is one this build does not read, or
+  is missing (MOB-43). Training's Practice garden is downloaded like any other site, and what is recorded
+  there uploads to the Training project. `janet-test-v1` implements the
   candidate subset in [the Janet scope](../docs/Janet-Test-Form-Scope.md) — timestamp and
   initials, play event summary, child age range, both play type slots with their subtypes, CARS
   intensity, and the wildlife branch — excluding all 16 hidden workbook rows.
@@ -90,7 +93,7 @@ both, and its content spans the full window width — a deliberate departure fro
   fetches its package archive, checks it against the digest the server recorded, and keeps its
   manifest, layers and forms (`src/packages/hosted/`); nothing is kept unless every part checks. The
   map draws it from its own layers in the map palette; hosted packages carry no imagery, so Aerial is
-  not offered. Its records freeze the exact project/site/package/zone/form bindings; the locally verified MOB-29 foreground flow persists that body and validates exact receipts, with local automated/disposable API/QGIS acceptance and physical-device acceptance pending. Training keeps the practice sites bundled with the app.
+  not offered. Its records freeze the exact project/site/package/zone/form bindings; the locally verified MOB-29 foreground flow persists that body and validates exact receipts, with local automated/disposable API/QGIS acceptance and physical-device acceptance pending. Training's Practice garden downloads like any other site.
   All builds default to real device/account data. Development and review builds show sample data
   only after explicitly selecting Preview in the developer tools. Hosted package sizes come from
   the API's measured archive bytes, displayed in KB or MB; totals are summed before rounding.
@@ -102,7 +105,7 @@ both, and its content spans the full window width — a deliberate departure fro
   words — On device, Uploaded, Needs attention (and Uploading where the queue says so) — with no
   send button; "Retry these uploads" sends a refused record again unchanged. Records are immutable and there is no
   bidirectional edit sync or contested-record workflow; API receipt revisions do not imply one.
-- Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; bundled practice stays local-only. A reconnect or a resume also makes records waiting out a retry delay due at once (spaced 5 s from the last upload attempt, and never before a server's `Retry-After`; a new coordinator right after an attempt (a token refresh, a sign-in or an app restart starts one with no memory of the last attempt), or a flap that aborts an upload in flight, can send sooner), and the drain sleeps otherwise: one timer waits for the earliest remaining delay, an empty queue does nothing, and a screen re-reads records only when one changed (MOB-39). Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
+- Supabase email/password sign-in and secure session storage. MOB-29 connects the foreground scheduler to the immutable bound serializer and exact receipt checks. Save, reconnect, resume and explicit retry wake the current-account drain; a record made on the Practice garden uploads like any other. A reconnect or a resume also makes records waiting out a retry delay due at once (spaced 5 s from the last upload attempt, and never before a server's `Retry-After`; a new coordinator right after an attempt (a token refresh, a sign-in or an app restart starts one with no memory of the last attempt), or a flap that aborts an upload in flight, can send sooner), and the drain sleeps otherwise: one timer waits for the earliest remaining delay, an empty queue does nothing, and a screen re-reads records only when one changed (MOB-39). Local automated and disposable API/QGIS acceptance passes; physical-device acceptance remains pending.
 
 ### What is deliberately not done
 
@@ -116,7 +119,7 @@ both, and its content spans the full window width — a deliberate departure fro
 - Option codes are provisional implementation identifiers, distinct from export column names.
 - Hosted site packages download over the existing upload path, not PowerSync (D2 remains the
   plan). There is no cellular policy yet: a download runs on any connection, and its size is shown
-  first. The Training project keeps the three packages bundled with the app.
+  first. Training's Practice garden is one of them.
 - "Show my location" draws the observer's position on the field map only. Permission is asked
   when the observer turns it on, foreground only; background location is blocked in
   `app.config.ts`. The fix is never stored with a record, uploaded or kept, so `gpsAccuracyMetres`
@@ -269,9 +272,8 @@ The sample map is hand-authored training geometry and is not a real QGIS export 
 aerial base is a fixture style, not imagery. The Fall Creek Elementary package is the exception:
 its bases and layers are the QGIS drawings and drone orthomosaic, generated into
 `src/maps/sites/fall-creek/` by `qgis/fall-creek/build.sh` (regenerate, don't edit). It has one
-whole-playground zone and collects locally as bundled practice; those records do not enter the bound upload queue. A project's own sites arrive as hosted packages
-(`src/packages/hosted/`, D27); `src/packages/open.ts` opens either kind, so the field flow is the
-same for both. Nothing on the field screen touches the network.
+whole-playground zone; the app no longer bundles it as a site. Every site, Training's included, arrives
+as a hosted package (`src/packages/hosted/`, D27) and `src/packages/open.ts` opens it. Nothing on the field screen touches the network.
 
 The current `expo-sqlite` store implements an append-only upload queue, not a full bidirectional
 sync protocol. If PowerSync is selected later, migrate the queue rather than adding a second
@@ -299,14 +301,14 @@ was removed afterward; this does not establish the rest of the product acceptanc
 | --- | --- |
 | `app/` | Routes: assignments, site brief, field, review, saved, observations, account |
 | `src/forms/` | Form definitions, validation, the visibility engine, and the question-stack reducer |
-| `src/forms/fixtures/` | Thin imports of the canonical JSON definitions in `../contracts/forms/` |
+| `src/forms/*.test-helper.ts` | Test-only imports of the canonical JSON definitions in `../contracts/forms/` |
 | `scripts/contracts-forms.mts` | Generates the shared input JSON Schema from the mobile Zod definition |
-| `src/packages/` | The site package interface and the bundled fixture provider |
+| `src/packages/` | The site package interface, opening a downloaded package, and the hosted download and install |
 | `src/session/` | The observation period: package, zone, round type, draft persistence, and saving |
 | `src/features/collect/` | The collect route's steps, the Contour field map, the crosshair and pin, and the aim store |
 | `src/features/observations/` | The Observations tab's rows, zone chips and words (MOB-38) |
 | `src/features/guide/` | The offline field guide's content and its search |
-| `src/maps/` | Bundled training geometry, the generated Fall Creek site, base styles, clustering and zone geometry |
+| `src/maps/` | Sample-site zone types, the generated Fall Creek geometry (no longer a site), base styles, clustering and zone geometry |
 | `src/domain/` | Observation contracts, round types and the record builder for each form version |
 | `src/storage/` | SQLite schema, observation repository, draft store, and focused-screen reads |
 | `src/auth/` | Secure session persistence and offline account identity |
