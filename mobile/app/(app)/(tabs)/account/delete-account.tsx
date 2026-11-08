@@ -321,7 +321,7 @@ export default function DeleteAccountScreen() {
             tone="uploaded"
             title={
               work.drafts === 0
-                ? "Everything on this device is uploaded."
+                ? "Every record that can upload is uploaded."
                 : "Every saved record is uploaded."
             }
             live="polite"

@@ -400,7 +400,7 @@ describe("Delete account (MOB-07)", () => {
     const screen = render(<DeleteAccountScreen />);
     await screen.press("Upload 2 first");
     expect(screen.controls()).not.toContain("Upload 2 first");
-    expect(screen.says("Everything on this device is uploaded.")).toBe(true);
+    expect(screen.says("Every record that can upload is uploaded.")).toBe(true);
     expect(screen.says("Delete your account?")).toBe(true);
   });
 
@@ -411,7 +411,7 @@ describe("Delete account (MOB-07)", () => {
     };
     const screen = render(<DeleteAccountScreen />);
     await screen.press("Upload 1 first");
-    expect(screen.says("Everything on this device is uploaded.")).toBe(false);
+    expect(screen.says("Every record that can upload is uploaded.")).toBe(false);
     expect(screen.says("Every saved record is uploaded.")).toBe(true);
     expect(screen.says("Your unfinished observation stays on this device")).toBe(true);
   });

@@ -10,23 +10,28 @@ export function encodeUploadPayload(record: Observation): string {
   });
 }
 /**
- * The one place a stored `observations.payload` is parsed. Builds before MOB-43 wrote the retired
- * `"local-only"` into the payload's `storageStatus` of every record, bound ones included; the
- * `sync_state` column is authoritative, so that legacy value is read as "pending" and never trusted.
- * The frozen `uploadBody` is read as it was written.
+ * The one place a stored `observations.payload` is parsed. Two shapes written by builds before MOB-43
+ * are read as the current record; `sync_state` and the frozen `uploadBody` are never changed:
+ * - the retired `"local-only"` in `storageStatus`, written into every record including bound ones. The
+ *   `sync_state` column is authoritative, so it is read as "pending" and never trusted;
+ * - a bound record of a form whose code was `shell-v1`, stored with `people` and `notes` beside the
+ *   observer and no `answers`. Those three are exactly the answers that build froze into the body.
  */
 export function readUploadPayload(payload: string) {
   const raw: unknown = JSON.parse(payload);
-  const normalized =
-    typeof raw === "object" &&
-    raw !== null &&
-    "storageStatus" in raw &&
-    raw.storageStatus === "local-only"
-      ? { ...raw, storageStatus: "pending" }
-      : raw;
-  const record = observationSchema.parse(normalized);
+  const record = observationSchema.parse(normalizeLegacy(raw));
   const { uploadBody } = storedBody.parse(raw);
   return { record, body: uploadBody };
+}
+function normalizeLegacy(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  let value: Record<string, unknown> = { ...raw };
+  if (value["storageStatus"] === "local-only") value = { ...value, storageStatus: "pending" };
+  if (value["formVersion"] === "shell-v1" && "people" in value && !("answers" in value)) {
+    const { observer, people, notes, ...rest } = value;
+    value = { ...rest, observer, answers: { observer, people, notes } };
+  }
+  return value;
 }
 const failureSchema = z.object({
   message: z.string(),

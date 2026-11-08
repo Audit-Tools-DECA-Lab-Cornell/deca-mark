@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { identityKey } from "../domain/package-binding";
-import { serializeBoundObservation } from "../sync/wire-body";
+import { serializeBoundObservation, uploadBodyMatches } from "../sync/wire-body";
 import { listObservations } from "./observation-store";
 import { installPackage } from "./package-catalog";
 import { binding, boundRecord, entry, memoryDatabase, owner } from "./package-store.fixture";
@@ -104,6 +104,64 @@ describe("records written by a build before MOB-43", () => {
       expect(
         sqlite.prepare("SELECT sync_state FROM observations WHERE sync_state = 'local-only'").all(),
       ).toHaveLength(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("reads a bound record of a form coded shell-v1 as the answers its frozen body carries", async () => {
+    // Master's bound-shell branch: people and notes beside the observer, no `answers`.
+    const shellId = "83f254b5-8a7b-4b71-9591-a7ff880f4ad8";
+    const answers = { observer: "JL", people: 2, notes: "Café — 遊び" };
+    const frozen = serializeBoundObservation({
+      ...boundRecord,
+      id: shellId,
+      formVersion: "shell-v1",
+      observer: "JL",
+      answers,
+    });
+    const {
+      id: _id,
+      formVersion: _form,
+      observer: _observer,
+      answers: _answers,
+      ...shared
+    } = boundRecord;
+    const shellPayload = JSON.stringify({
+      ...shared,
+      id: shellId,
+      formVersion: "shell-v1",
+      observer: "JL",
+      people: 2,
+      notes: "Café — 遊び",
+      storageStatus: "local-only",
+      uploadBody: frozen,
+    });
+    const { db, sqlite } = await withRow("pending");
+    try {
+      sqlite
+        .prepare(
+          "INSERT INTO observations (id, created_at, payload, owner_scope, sync_state, package_key) VALUES (?, ?, ?, ?, 'pending', ?)",
+        )
+        .run(shellId, "2026-10-11T11:00:00.000Z", shellPayload, owner, identityKey(entry.identity));
+      const listed = await listObservations(db, owner);
+      expect(listed.map((record) => [record.id, record.storageStatus])).toEqual([
+        [shellId, "pending"],
+        [boundRecord.id, "pending"],
+      ]);
+      const queued = await pendingObservations(db, owner, Date.now());
+      expect(queued.map((item) => item.body).sort()).toEqual(
+        [frozen, serializeBoundObservation(boundRecord)].sort(),
+      );
+      for (const item of queued) expect(uploadBodyMatches(item.body, item.record)).toBe(true);
+      expect(sqlite.prepare("SELECT payload FROM observations WHERE id = ?").get(shellId)).toEqual({
+        payload: shellPayload,
+      });
+      expect(await acknowledge(db, owner, { ...receipt, observation_id: shellId }, shellId)).toBe(
+        true,
+      );
+      expect(await acknowledge(db, owner, receipt, boundRecord.id)).toBe(true);
+      expect(await pendingObservations(db, owner, Date.now())).toEqual([]);
     } finally {
       sqlite.close();
     }
