@@ -83,7 +83,7 @@ export const GUIDE: readonly GuideSection[] = [
       "Save on this device stores the record locally first. It uploads by itself whenever the app is open and online. There is no upload button to remember.",
       "On device: stored here, not sent yet. Uploaded: the server has it. Needs attention: the server turned it away; the record shows why. The Observations tab lists every record on this device with its state.",
       "Retry these uploads, on the Observations tab, sends the same record again and does not change it. It is accepted only once the reason on its row is fixed.",
-      "A practice record stays on this device and is never uploaded.",
+      "Records made on the Practice garden in Training upload like any other, to the Training project, and stay out of research exports.",
     ],
   },
   {

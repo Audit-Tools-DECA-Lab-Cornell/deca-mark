@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { practiceLine } from "../../../../src/features/account/leaving";
 import { ResumeUploadsNote } from "../../../../src/features/auth/ResumeUploadsNote";
 import { ObservationRow } from "../../../../src/features/observations/ObservationRow";
 import {
@@ -47,7 +46,7 @@ const PULL_MS = 700;
  * Observations (MOB-38): every record on this device, one list inside the tab stack so the dock stays.
  * Each record says where it is in the contract's words (On device, Uploading, Uploaded, Needs attention),
  * as one stop for a screen reader. Records the server turned away say why and can be sent again as they
- * are; a pull calls the real `wake()`. Practice records are listed too and say they never upload.
+ * are; a pull calls the real `wake()`.
  *
  * Words come from the queue (`features/preview/queue.ts`), which maps what the device stores to the five
  * states: "Uploaded" only for a record with a validated receipt. On a device nothing marks a record as
@@ -83,7 +82,6 @@ export default function ObservationsScreen() {
   const shown = useMemo(() => inZone(records, chosen), [records, chosen]);
   const attention = counts.attention;
   const summary = summaryLine(queue);
-  const practice = practiceLine(queue.practice);
 
   const pick = useCallback(
     (next: string | null) => {
@@ -208,11 +206,6 @@ export default function ObservationsScreen() {
           Records upload by themselves while the app is open and online. Closing the app pauses
           uploads until it opens again.
         </Text>
-        {practice ? (
-          <Text variant="small" tone="ink2">
-            {practice}
-          </Text>
-        ) : null}
       </View>
     ) : null;
 

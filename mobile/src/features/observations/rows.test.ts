@@ -6,7 +6,6 @@ import {
   filterAnnouncement,
   inZone,
   placeLine,
-  practiceOf,
   reasonOf,
   rowLabel,
   summaryLine,
@@ -58,14 +57,7 @@ describe("the words of a row", () => {
     ).toBe("Server unavailable. Your record is saved and will retry.");
   });
 
-  it("names practice only for a record with no project binding", () => {
-    const line = "Practice record: stays on this device and is never uploaded";
-    expect(practiceOf(made({ practice: true, storage: line }))).toBe(line);
-    expect(practiceOf(made({ storage: line }))).toBeNull();
-    expect(practiceOf(base)).toBeNull();
-  });
-
-  it("reads a record as one sentence per fact: number, place, state, reason, practice", () => {
+  it("reads a record as one sentence per fact: number, place, state, reason", () => {
     expect(rowLabel(base)).toBe("OBS-A1. North meadow, Standard round, 11:34. On device.");
     expect(
       rowLabel(
@@ -77,11 +69,6 @@ describe("the words of a row", () => {
       ),
     ).toBe(
       "OBS-A1. North meadow, Standard round, Today 11:32. Needs attention. Tell your coordinator.",
-    );
-    expect(
-      rowLabel(made({ practice: true, storage: "Practice record: stays on this device" })),
-    ).toBe(
-      "OBS-A1. North meadow, Standard round, 11:34. On device. Practice record: stays on this device.",
     );
   });
 
@@ -126,7 +113,7 @@ describe("the zone filter", () => {
 describe("the summary and the note above the list", () => {
   const counts = { onDevice: 0, uploading: 0, uploaded: 0, attention: 0, held: 0 };
 
-  it("counts the bound records only, in two numbers", () => {
+  it("counts the records not uploaded and the records uploaded, in two numbers", () => {
     expect(summaryLine({ unsent: 3, counts: { ...counts, uploaded: 5 } })).toBe(
       "3 not uploaded · 5 uploaded",
     );
@@ -135,7 +122,7 @@ describe("the summary and the note above the list", () => {
     );
   });
 
-  it("says nothing when no record can upload, so practice is never counted as waiting", () => {
+  it("says nothing when there are no records", () => {
     expect(summaryLine({ unsent: 0, counts })).toBeNull();
   });
 

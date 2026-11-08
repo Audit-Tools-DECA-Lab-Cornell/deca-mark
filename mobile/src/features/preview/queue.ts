@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { isBoundObservation, isShellObservation, type Observation } from "../../domain/observation";
+import type { Observation } from "../../domain/observation";
 import { shortLabel } from "../../session/provider";
 import { useObservations } from "../../storage/use-observations";
 import { useSync } from "../../sync/provider";
@@ -7,11 +7,11 @@ import type { DataMode } from "./data-mode";
 import { PREVIEW_QUEUE, type QueueRecord, type QueueState } from "./fixtures";
 
 /**
- * `local-only` is stored here and never sent (a practice record, or a record kept without an account).
- * It is not "held": that word is the contract's for a record waiting on the project (PRODUCT.md).
+ * Every stored record is on its way to its project: a record not yet acknowledged is "on device", and
+ * "held" is the contract's word for a record waiting on the project (PRODUCT.md), which no stored
+ * record is.
  */
 const STATUS_TO_STATE: Record<Observation["storageStatus"], QueueState> = {
-  "local-only": "onDevice",
   pending: "onDevice",
   synced: "uploaded",
   "needs-attention": "attention",
@@ -41,31 +41,18 @@ export function capturedLabel(created: Date, now: Date = new Date()): string {
 function fromDevice(record: Observation): QueueRecord {
   const created = new Date(record.createdAt);
   const time = `${two(created.getHours())}:${two(created.getMinutes())}`;
-  // Practice is a record with no project binding: it never uploads. The shell form is only one kind of it.
-  const practice = !isBoundObservation(record);
-  const shell = isShellObservation(record);
-  const zone = shell ? "Practice garden" : record.context.zoneLabel;
-  const roundType = shell ? "standard" : record.context.roundType;
+  const { roundType } = record.context;
   return {
     id: record.id,
     label: shortLabel(record.id),
-    zone,
+    zone: record.context.zoneLabel,
     roundType,
     time,
     captured: capturedLabel(created),
     state: STATUS_TO_STATE[record.storageStatus],
-    practice,
-    summary: practice
-      ? "Practice record"
-      : roundType === "inventory"
-        ? "Zone inventory"
-        : "Behaviour mapping",
+    summary: roundType === "inventory" ? "Zone inventory" : "Behaviour mapping",
     problem: record.syncError || undefined,
-    storage: practice
-      ? "Practice record: stays on this device and is never uploaded"
-      : record.storageStatus === "synced"
-        ? "Uploaded"
-        : "On this device",
+    storage: record.storageStatus === "synced" ? "Uploaded" : "On this device",
     observer: record.observer,
     form: record.formVersion,
   };
@@ -76,10 +63,8 @@ export type QueueCounts = Record<QueueState, number>;
 export type Queue = {
   records: QueueRecord[];
   counts: QueueCounts;
-  /** Records that have not been acknowledged by the server. Practice records are not among them. */
+  /** Records that have not been acknowledged by the server. */
   unsent: number;
-  /** Practice records (no project binding): they stay on this device and are never uploaded. */
-  practice: number;
   loading: boolean;
   error: string | null;
   retry: () => void;
@@ -103,14 +88,11 @@ export function useQueueForMode(mode: DataMode): Queue {
     () => (mode === "preview" ? PREVIEW_QUEUE : device.records.map(fromDevice)),
     [mode, device.records],
   );
-  // The states and "unsent" describe what can still upload; practice rows are counted on their own.
-  const bound = records.filter((record) => record.practice !== true);
-  const counts = countStates(bound);
+  const counts = countStates(records);
   return {
     records,
     counts,
-    unsent: bound.length - counts.uploaded,
-    practice: records.length - bound.length,
+    unsent: records.length - counts.uploaded,
     loading: mode === "preview" ? false : device.loading,
     error: mode === "preview" ? null : device.error,
     retry: device.retry,

@@ -38,7 +38,6 @@ vi.mock("../auth/ResumeUploadsNote", () => ({ ResumeUploadsNote: () => null }));
 
 const REJECTED =
   "Needs attention. DECA Mark did not accept North meadow for this point on map v1. The record keeps its number and stays on this device. Tell your coordinator.";
-const PRACTICE = "Practice record: stays on this device and is never uploaded";
 
 /** One record in every state the list can draw, across two zones, newest first. */
 function everyState(): QueueRecord[] {
@@ -150,27 +149,28 @@ describe("one accessibility element per record (A11Y-01)", () => {
   });
 });
 
-describe("practice records (MOB-37's words, until MOB-43)", () => {
-  it("says a practice record stays on this device and is never uploaded, in its one stop", () => {
+describe("a record made on the Practice garden (MOB-43)", () => {
+  it("reads like any other record: it uploads, so no row says it never will", () => {
     world.records = [
-      record("b1", "onDevice", { practice: true, zone: "Practice garden", storage: PRACTICE }),
+      record("b1", "onDevice", { zone: "Practice garden" }),
       record("b2", "onDevice"),
     ];
     const screen = render(<ObservationsScreen />);
     const [stop] = stopsIn(rowOf(screen, "b1"));
-    expect(stop?.label).toContain(`${PRACTICE}.`);
-    expect(screen.says(PRACTICE)).toBe(true);
-    expect(stopsIn(rowOf(screen, "b2"))[0]?.label).not.toContain("Practice");
+    expect(stop?.label).toContain("Practice garden");
+    expect(stop?.label).toContain("On device.");
+    expect(stop?.label).not.toMatch(/practice record|never uploaded/i);
+    expect(screen.says("never uploaded")).toBe(false);
   });
 
-  it("counts only the records that can upload as not uploaded", () => {
+  it("counts every record that has not uploaded as not uploaded", () => {
     world.records = [
-      record("b1", "onDevice", { practice: true, zone: "Practice garden", storage: PRACTICE }),
+      record("b1", "onDevice", { zone: "Practice garden" }),
       record("b2", "onDevice"),
       record("b3", "uploaded"),
     ];
     const screen = render(<ObservationsScreen />);
-    expect(screen.says("1 not uploaded · 1 uploaded")).toBe(true);
+    expect(screen.says("2 not uploaded · 1 uploaded")).toBe(true);
   });
 });
 

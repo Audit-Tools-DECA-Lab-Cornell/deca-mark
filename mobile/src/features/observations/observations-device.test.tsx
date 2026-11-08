@@ -84,24 +84,23 @@ const ID = {
   waiting: "60000000-0000-4000-8000-0000000000b1",
   uploaded: "60000000-0000-4000-8000-0000000000b2",
   refused: "60000000-0000-4000-8000-0000000000b3",
-  practice: "60000000-0000-4000-8000-0000000000b4",
+  inventory: "60000000-0000-4000-8000-0000000000b4",
   elsewhere: "60000000-0000-4000-8000-0000000000b5",
 };
 const REFUSED =
   "Needs attention. DECA Mark did not accept Old label for this point on map v7. The record keeps its number and stays on this device. Tell your coordinator.";
 
 const bound = (id: string, createdAt: string) => ({ ...boundRecord, id, createdAt });
-const practice = {
-  id: ID.practice,
-  coordinates: [-76.485, 42.448],
+/** A whole-zone inventory: a bound record of its own kind, listed with the others. */
+const inventory = {
+  ...boundRecord,
+  id: ID.inventory,
+  formVersion: "janet-inventory-v1",
+  answers: {},
+  context: { ...boundRecord.context, roundType: "inventory" },
+  placement: { source: "zone", gpsAccuracyMetres: null },
   createdAt: "2026-10-11T09:00:00.000Z",
-  storageStatus: "local-only",
-  siteId: "sample-garden",
-  formVersion: "shell-v1",
-  observer: "QA",
-  people: 3,
-  notes: "",
-};
+} as const;
 
 let view: ReactTestRenderer | undefined;
 afterEach(async () => {
@@ -116,7 +115,7 @@ async function open() {
   await saveObservation(db, bound(ID.waiting, "2026-10-11T12:00:00.000Z"), owner);
   await saveObservation(db, bound(ID.uploaded, "2026-10-11T11:00:00.000Z"), owner);
   await saveObservation(db, bound(ID.refused, "2026-10-11T10:00:00.000Z"), owner);
-  await saveObservation(db, practice as never, owner);
+  await saveObservation(db, inventory, owner);
   await installPackage(db, otherOwner, entry);
   await saveObservation(db, bound(ID.elsewhere, "2026-10-11T13:00:00.000Z"), otherOwner);
   sqlite.exec(`UPDATE observations SET sync_state = 'synced' WHERE id = '${ID.uploaded}'`);
@@ -159,9 +158,7 @@ describe("the Observations list over the device's own records (MOB-38)", () => {
       );
       expect(stop(ID.uploaded)).toMatch(/\. Uploaded\.$/);
       expect(stop(ID.refused)).toMatch(/\. Needs attention\. DECA Mark did not accept Old label/);
-      expect(stop(ID.practice)).toContain(
-        "On device. Practice record: stays on this device and is never uploaded.",
-      );
+      expect(stop(ID.inventory)).toMatch(/Inventory round, .+\. On device\.$/);
     } finally {
       sqlite.close();
     }
@@ -179,7 +176,7 @@ describe("the Observations list over the device's own records (MOB-38)", () => {
   it("never reads Uploaded for a record the device has no receipt for", async () => {
     const sqlite = await open();
     try {
-      const words = [ID.waiting, ID.refused, ID.practice].map(stop);
+      const words = [ID.waiting, ID.refused, ID.inventory].map(stop);
       for (const label of words) expect(label).not.toMatch(/Uploaded\./);
     } finally {
       sqlite.close();

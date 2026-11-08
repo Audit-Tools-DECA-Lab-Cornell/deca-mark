@@ -7,8 +7,6 @@
 export type LocalWork = {
   /** Bound records not acknowledged by the server: on device, uploading and needs attention. */
   readonly unsent: number;
-  /** Practice records (no project binding): they stay on this device and are never uploaded. */
-  readonly practice: number;
   /** Of those, refused by the server with something to fix. */
   readonly attention: number;
   /** Unfinished observations: the open one and the ones kept for later. */
@@ -23,19 +21,10 @@ function observations(count: number): string {
   return count === 1 ? "1 observation has" : `${count} observations have`;
 }
 
-/** "2 practice records stay on this device and are never uploaded." Null when there are none. */
-export function practiceLine(practice: number): string | null {
-  if (practice === 0) return null;
-  return practice === 1
-    ? "1 practice record stays on this device and is never uploaded."
-    : `${practice} practice records stay on this device and are never uploaded.`;
-}
-
 /**
  * Sign out? (PRODUCT.md): "Your unsent work needs a clear owner. 5 observations have not been
  * uploaded. They remain on this device for ps2245@cornell.edu. Another account cannot upload them."
- * Null when nothing waits. Practice records are not in it: the screen says them last, with
- * `practiceLine`, so that "them" and "their upload" before it can only mean the unsent records.
+ * Null when nothing waits.
  */
 export function signOutWarning(work: LocalWork, email: string): readonly string[] | null {
   if (nothingWaits(work)) return null;
@@ -79,8 +68,6 @@ export function deletionConsequences(
         ? "Your unfinished observation stays on this device and can never be saved for upload."
         : `Your ${work.drafts} unfinished observations stay on this device and can never be saved for upload.`,
     );
-  const practice = practiceLine(work.practice);
-  if (practice) lines.push(practice);
   lines.push("This device signs out of the account.");
   return lines;
 }

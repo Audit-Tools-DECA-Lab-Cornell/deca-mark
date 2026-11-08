@@ -124,9 +124,7 @@ export function SavedStep({
                 },
                 {
                   label: "Upload",
-                  value: save.heldOnly
-                    ? "Practice record: stays on this device and is never uploaded"
-                    : "Uploads by itself whenever the app is open and online",
+                  value: "Uploads by itself whenever the app is open and online",
                 },
               ]}
             />

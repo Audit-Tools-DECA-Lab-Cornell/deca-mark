@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { saveObservation } from "../../storage/observation-store";
@@ -29,32 +28,17 @@ vi.mock("../../session/provider", () => ({ shortLabel: (id: string) => id.slice(
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-/** MOB-37: the queue counts bound rows only as unsent, and keeps practice rows apart from them. */
+/** MOB-37, MOB-43: every stored record is on its way to its project, so every unacknowledged one is unsent. */
 
-const practiceShell = {
-  id: "60000000-0000-4000-8000-0000000000a1",
-  coordinates: [-76.485, 42.448],
-  createdAt: "2026-10-11T11:00:00.000Z",
-  storageStatus: "local-only",
-  siteId: "sample-garden",
-  formVersion: "shell-v1",
-  observer: "QA",
-  people: 3,
-  notes: "",
-};
-/** Made on a Practice-garden zone: an instrument form, but no package binding. */
-const practiceInventory = {
+/** A whole-zone inventory made on the Practice garden: an ordinary bound record of the Training project. */
+const inventory = {
+  ...boundRecord,
   id: "60000000-0000-4000-8000-0000000000a2",
-  projectId: boundRecord.projectId,
-  siteId: boundRecord.siteId,
   formVersion: "janet-inventory-v1",
-  observer: "QA",
-  coordinates: [-76.485, 42.448],
   answers: {},
   context: { ...boundRecord.context, roundType: "inventory" },
   placement: { source: "zone", gpsAccuracyMetres: null },
   createdAt: "2026-10-11T12:00:00.000Z",
-  storageStatus: "local-only",
 } as const;
 
 let view: ReactTestRenderer | undefined;
@@ -76,8 +60,7 @@ async function open(seed: (sqlite: { exec: (sql: string) => void }) => void) {
   const { db, sqlite } = await memoryDatabase();
   await installPackage(db, owner, entry);
   await saveObservation(db, boundRecord, owner);
-  await saveObservation(db, practiceShell as never, owner);
-  await saveObservation(db, practiceInventory as never, owner);
+  await saveObservation(db, inventory, owner);
   seed(sqlite);
   world.database = db;
   world.owner = owner;
@@ -90,8 +73,8 @@ async function open(seed: (sqlite: { exec: (sql: string) => void }) => void) {
   return sqlite;
 }
 
-describe("The queue with one bound row in backoff and two practice rows (MOB-37)", () => {
-  it("counts 1 unsent and 2 practice, and nothing as held", async () => {
+describe("The queue with one standard row in backoff and one inventory row (MOB-37, MOB-43)", () => {
+  it("counts both as unsent, and nothing as held", async () => {
     const sqlite = await open((db) =>
       db.exec(
         `UPDATE observations SET attempts = 7, next_attempt_at = ${Date.now() + 300000} WHERE id = '${boundRecord.id}'`,
@@ -99,10 +82,9 @@ describe("The queue with one bound row in backoff and two practice rows (MOB-37)
     );
     try {
       expect(queue.loading).toBe(false);
-      expect(queue.unsent).toBe(1);
-      expect(queue.practice).toBe(2);
+      expect(queue.unsent).toBe(2);
       expect(queue.counts).toEqual({
-        onDevice: 1,
+        onDevice: 2,
         uploading: 0,
         uploaded: 0,
         attention: 0,
@@ -113,40 +95,28 @@ describe("The queue with one bound row in backoff and two practice rows (MOB-37)
     }
   });
 
-  it("decides practice by the missing binding, so the unbound inventory row is practice too", async () => {
+  it("words every row as a record that uploads, with no practice or never-uploaded line", async () => {
     const sqlite = await open(() => {});
     try {
       const byId = new Map(queue.records.map((record) => [record.id, record]));
-      expect(byId.get(practiceShell.id)?.summary).toBe("Practice record");
-      expect(byId.get(practiceInventory.id)?.summary).toBe("Practice record");
       expect(byId.get(boundRecord.id)?.summary).toBe("Behaviour mapping");
-      for (const id of [practiceShell.id, practiceInventory.id])
-        expect(byId.get(id)?.state).not.toBe("held");
+      expect(byId.get(inventory.id)?.summary).toBe("Zone inventory");
+      for (const record of queue.records) {
+        expect(record.storage).toBe("On this device");
+        expect(record.state).toBe("onDevice");
+        expect(JSON.stringify(record)).not.toMatch(/practice|never uploaded/i);
+      }
     } finally {
       sqlite.close();
     }
   });
 
-  it("words the practice record the way Saved does (lane A's file is only read, not edited)", async () => {
-    const sqlite = await open(() => {});
-    try {
-      const line = queue.records.find((record) => record.id === practiceShell.id)?.storage;
-      expect(line).toBe("Practice record: stays on this device and is never uploaded");
-      const saved = readFileSync(new URL("../collect/SavedStep.tsx", import.meta.url), "utf8");
-      expect(saved).toContain(line ?? "never");
-      expect(saved).not.toContain("is not published to the server yet");
-    } finally {
-      sqlite.close();
-    }
-  });
-
-  it("does not count a practice row as unsent once the bound row is uploaded", async () => {
+  it("stops counting a row as unsent once it is uploaded", async () => {
     const sqlite = await open((db) =>
       db.exec(`UPDATE observations SET sync_state = 'synced' WHERE id = '${boundRecord.id}'`),
     );
     try {
-      expect(queue.unsent).toBe(0);
-      expect(queue.practice).toBe(2);
+      expect(queue.unsent).toBe(1);
       expect(queue.counts.uploaded).toBe(1);
     } finally {
       sqlite.close();

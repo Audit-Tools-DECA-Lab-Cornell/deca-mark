@@ -39,7 +39,6 @@ const state = vi.hoisted(() => ({
   afterRetry: null as (() => void) | null,
   work: {
     unsent: 0,
-    practice: 0,
     attention: 0,
     drafts: 0,
     onDevice: 0,
@@ -143,7 +142,6 @@ beforeEach(() => {
   state.online = null;
   state.work = {
     unsent: 0,
-    practice: 0,
     attention: 0,
     drafts: 0,
     onDevice: 0,
@@ -178,14 +176,12 @@ describe("Account (MOB-07)", () => {
   });
 });
 
-describe("Account counts practice records apart from unsent ones (MOB-37)", () => {
-  it("names the practice records as never uploaded, and only when there are some", () => {
-    state.work = { ...state.work, unsent: 1, onDevice: 1, practice: 2 };
+describe("Account counts every record the same way (MOB-43)", () => {
+  it("has no practice line: records made on the Practice garden upload like any other", () => {
+    state.work = { ...state.work, unsent: 3, onDevice: 3 };
     const screen = render(<AccountScreen />);
-    expect(screen.says("Practice records")).toBe(true);
-    expect(screen.says("Stay on this device and are never uploaded.")).toBe(true);
-    state.work = { ...state.work, practice: 0 };
-    expect(render(<AccountScreen />).says("Practice records")).toBe(false);
+    expect(screen.says("Practice records")).toBe(false);
+    expect(screen.says("never uploaded")).toBe(false);
   });
 });
 
@@ -249,46 +245,30 @@ describe("Sign out? (MOB-07)", () => {
     expect(screen.says("upload yet")).toBe(false);
   });
 
-  it("counts 1 unsent and describes the practice records as never uploaded", () => {
-    state.work = { ...state.work, unsent: 1, onDevice: 1, practice: 2 };
+  it("counts 1 unsent and says nothing about practice or records that never upload", () => {
+    state.work = { ...state.work, unsent: 1, onDevice: 1 };
     const screen = render(<SignOutScreen />);
     expect(screen.says("1 observation has not been uploaded.")).toBe(true);
-    expect(screen.says("2 practice records stay on this device and are never uploaded.")).toBe(
-      true,
-    );
+    expect(screen.says("practice")).toBe(false);
+    expect(screen.says("never uploaded")).toBe(false);
     expect(screen.says("held for the project")).toBe(false);
   });
 
-  it("puts the practice line last, so 'them' and 'their upload' can only mean the unsent records", () => {
-    state.work = { ...state.work, unsent: 1, onDevice: 1, practice: 2 };
+  it("says 'their upload' only after the warning about the unsent records", () => {
+    state.work = { ...state.work, unsent: 1, onDevice: 1 };
     const screen = render(<SignOutScreen />);
     const text = screen.texts().join(" ");
     const remain = text.indexOf("They remain on this device for observer@fieldmaps.test.");
     const pauses = text.indexOf("Signing out pauses their upload until observer@fieldmaps.test");
-    const practice = text.indexOf("2 practice records stay on this device");
     expect(remain).toBeGreaterThan(-1);
     expect(pauses).toBeGreaterThan(remain);
-    expect(practice).toBeGreaterThan(pauses);
   });
 
-  it("says the practice line after the warning when only an unfinished observation waits", () => {
-    state.work = { ...state.work, drafts: 1, practice: 1 };
+  it("keeps an unfinished observation in the warning and does not pause an upload for it", () => {
+    state.work = { ...state.work, drafts: 1 };
     const screen = render(<SignOutScreen />);
-    expect(screen.says("1 practice record stays on this device and is never uploaded.")).toBe(true);
+    expect(screen.says("1 unfinished observation is kept.")).toBe(true);
     expect(screen.says("Signing out pauses their upload")).toBe(false);
-  });
-
-  it("does not warn about practice records alone: nothing waits to upload", async () => {
-    state.work = { ...state.work, practice: 2 };
-    const screen = render(<SignOutScreen />);
-    expect(screen.says("Nothing is waiting on this device for observer@fieldmaps.test.")).toBe(
-      true,
-    );
-    expect(screen.says("2 practice records stay on this device and are never uploaded.")).toBe(
-      true,
-    );
-    await screen.press("Sign out of this device");
-    expect(state.summaries).toEqual([]);
   });
 
   it("writes no note when nothing waits, and says so", async () => {
@@ -384,16 +364,14 @@ describe("Delete account (MOB-07)", () => {
   });
 
   it("offers 'Upload 1 first', wired to retry (never wake), and stays on the screen", async () => {
-    state.work = { ...state.work, unsent: 1, onDevice: 1, practice: 2 };
+    state.work = { ...state.work, unsent: 1, onDevice: 1 };
     const screen = render(<DeleteAccountScreen />);
     expect(screen.says("1 record has not been uploaded.")).toBe(true);
     await screen.press("Upload 1 first");
     expect(state.calls).toEqual(["retry"]);
     expect(takeNavigation()).toEqual([]);
     expect(screen.says("Delete your account?")).toBe(true);
-    expect(screen.says("2 practice records stay on this device and are never uploaded.")).toBe(
-      true,
-    );
+    expect(screen.says("practice")).toBe(false);
   });
 
   it.each([
@@ -426,20 +404,6 @@ describe("Delete account (MOB-07)", () => {
     expect(screen.says("Delete your account?")).toBe(true);
   });
 
-  it("never says everything is uploaded while practice records stay on the device", async () => {
-    state.work = { ...state.work, unsent: 1, onDevice: 1, practice: 2 };
-    state.afterRetry = () => {
-      state.work = { ...state.work, unsent: 0, onDevice: 0, uploaded: 1 };
-    };
-    const screen = render(<DeleteAccountScreen />);
-    await screen.press("Upload 1 first");
-    expect(screen.says("Everything on this device is uploaded.")).toBe(false);
-    expect(screen.says("Every record that can upload is uploaded.")).toBe(true);
-    expect(screen.says("2 practice records stay on this device and are never uploaded.")).toBe(
-      true,
-    );
-  });
-
   it("never says everything is uploaded while an unfinished observation stays on the device", async () => {
     state.work = { ...state.work, unsent: 1, onDevice: 1, drafts: 1 };
     state.afterRetry = () => {
@@ -448,7 +412,7 @@ describe("Delete account (MOB-07)", () => {
     const screen = render(<DeleteAccountScreen />);
     await screen.press("Upload 1 first");
     expect(screen.says("Everything on this device is uploaded.")).toBe(false);
-    expect(screen.says("Every record that can upload is uploaded.")).toBe(true);
+    expect(screen.says("Every saved record is uploaded.")).toBe(true);
     expect(screen.says("Your unfinished observation stays on this device")).toBe(true);
   });
 
@@ -478,14 +442,5 @@ describe("Delete account (MOB-07)", () => {
     await screen.press("Upload 1 first");
     expect(screen.says("Uploading did not finish.")).toBe(true);
     expect(screen.says("We could not reach DECA Mark.")).toBe(true);
-  });
-
-  it("offers no upload when only practice records and nothing unsent are on the device", () => {
-    state.work = { ...state.work, practice: 3 };
-    const screen = render(<DeleteAccountScreen />);
-    expect(screen.controls().some((label) => label.startsWith("Upload "))).toBe(false);
-    expect(screen.says("3 practice records stay on this device and are never uploaded.")).toBe(
-      true,
-    );
   });
 });
