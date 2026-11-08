@@ -25,7 +25,7 @@ both, and its content spans the full window width — a deliberate departure fro
 
 ## What is implemented
 
-- **Offline package lifecycle (MOB-28).** Verified immutable installs, account grants, selected versus available versions, exact recovery and reference-checked removal. Pre-launch schema changes reset incompatible collection data and package caches; same-schema restarts preserve current work. See [the data handoff](PACKAGE-LIFECYCLE.md). MOB-33 now provides bound collection/read models and parked recovery; bound uploads remain MOB-29. See [the UI handoff](MOB-33-HANDOFF.md).
+- **Offline package lifecycle (MOB-28).** Verified immutable installs, account grants, selected versus available versions, exact recovery and reference-checked removal. Schema changes are forward migrations that keep unsent records and drafts (see [Collector database versions](#collector-database-versions-d31-mob-44)); same-schema restarts preserve current work. See [the data handoff](PACKAGE-LIFECYCLE.md). MOB-33 now provides bound collection/read models and parked recovery; bound uploads remain MOB-29. See [the UI handoff](MOB-33-HANDOFF.md).
 
 - **Collect on Contour (MOB-26), one route with internal steps.** `app/(app)/collect.tsx` and
   `src/features/collect/` run Place → Answer → Review → Saved for play events, and Zone → Answer →
@@ -320,7 +320,16 @@ was removed afterward; this does not establish the rest of the product acceptanc
 | `assets/` | App icon, Android adaptive and themed layers, Play Store icon; sources in `assets/icon-source/` |
 | `plugins/` | Local config plugins: the Android 16 large-screen orientation opt-out |
 
-The collector uses local schema version 6, including exact package references and parked drafts. MOB-28’s pre-launch policy resets incompatible schema data/cache; ordinary same-schema restarts preserve current work. See [the package lifecycle](PACKAGE-LIFECYCLE.md) for retention and recovery boundaries.
+The collector uses local schema version 7, the pilot schema, including exact package references and parked drafts. Ordinary same-schema restarts preserve current work. See [the package lifecycle](PACKAGE-LIFECYCLE.md) for retention and recovery boundaries, and the next section for how the schema may change.
+
+### Collector database versions (D31, MOB-44)
+
+Version 7 is the last schema ever created by a reset. From the first pilot build the rule is:
+
+- **A change that touches the collector's SQLite adds a forward migration.** Append one function to `migrations` in `src/storage/database-migrations.ts`. Entry `i` moves `user_version` 7+`i` to 7+`i`+1 and runs in its own transaction, so a failure leaves the earlier steps and every row as they were, and the next start resumes at the failed step. `SCHEMA_VERSION` follows the list. Never edit the pilot schema text or an earlier entry, and never `DROP` a table, or `DELETE` rows, that hold observations, drafts or installed packages. A new install gets the pilot schema and then every migration.
+- **A version this build cannot read refuses to start collection.** A `user_version` newer than this build (or older than master's 6) throws `CollectorVersionError` before anything is written, and the root error screen (`src/ui/ScreenFailure.tsx`) says "This version cannot read the records on this device. Update DECA Mark; nothing was deleted." Nothing is dropped, cleaned or rewritten: such a device keeps its data and needs a build that adds a step for its version.
+- **The one-time step from master's schema (6) is not a migration in the list.** `upgradeFromMaster` rebuilds only the `observations` table (the retired `local-only` state leaves its CHECK and DEFAULT) inside one transaction. Every bound observation (pending, needs attention, synced) keeps its payload and frozen `uploadBody`, state, error, receipt, owner scope and package key; a bound row held in the retired `local-only` state becomes pending when it carries a frozen body and needs attention (kept, never deleted) when it does not; drafts, parked drafts, installed packages and their files are kept; only the retired unbound practice rows, practice drafts and the unused `active_sessions` and `package_selections` tables (left by version-6 builds before MOB-42) are removed. Keep it for as long as a device may still hold version 6.
+- **A test for every migration.** Write it the way `database-migrations.test.ts` writes its sample (a step passed to `initializeDatabase`, never shipped): pending rows and drafts come out byte-identical. `master-v6.fixture.ts` is the schema a device in the field holds; `collector-upgrade.test.ts` upgrades it and drains its pending record.
 
 Native `ios/` and `android/` directories are generated and ignored. Use `app.config.ts` and config plugins for repeatable native configuration. The mobile package has its own dependency lockfile, TypeScript checks, and Biome checks; Next.js tooling is scoped to the separate `web/` directory.
 

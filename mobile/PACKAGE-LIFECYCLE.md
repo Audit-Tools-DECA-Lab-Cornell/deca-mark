@@ -4,7 +4,7 @@ MOB-28 owns this foundation. [Product-wide pre-launch policy](../docs/plan/READM
 
 ## Current behavior
 
-The current SQLite collection schema is created directly. A version mismatch resets every user table in the collector database in a transaction. A durable marker requires clearing the `hosted/` package/cache directory before the collector mounts; failed cleanup retries on restart. Current-schema restarts preserve records, drafts, grants, selections and references. Auth/session files live outside this directory and are not an authentication-reset mechanism.
+The current SQLite collection schema is created directly. A new install gets the pilot schema; an older schema is moved forward by a migration that keeps records, drafts and installs, and a version this build cannot read refuses to start collection and deletes nothing (README, "Collector database versions"). A new install sets a durable marker that requires clearing the `hosted/` package/cache directory before the collector mounts; failed cleanup retries on restart. Current-schema restarts preserve records, drafts, grants, selections and references. Auth/session files live outside this directory and are not an authentication-reset mechanism.
 
 Catalog content is immutable by issuer/project/package/archive digest. SQLite stores separate account grants and per-site downloaded selection; server current metadata never replaces an open package. Installation validates archive digest, manifest, complete zone geometry/digests and exact form identities, stages unique files, publishes immutable content, and commits the catalog/grant/selection transaction. Cancellation is checked inside the queued transaction. Partial installs cannot displace the last verified selection.
 
