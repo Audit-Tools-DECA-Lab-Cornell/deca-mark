@@ -10,16 +10,16 @@ Read first: [the plan index](README.md) (conventions), decisions D31–D36 in [d
 |---|---|---|
 | D31 | The pre-launch reset policy ends when the pilot launches. | One last sanctioned reset (OPS-19 hosted, MOB-44 collector). After it, collector schema changes are forward migrations and never drop unsent work; hosted migrations preserve data. Everything that deletes compatibility code or changes the collector's tables must land **before** MOB-44. |
 | D32 | Forms live only in the database, in one canonical format. | Fields-only forms are reset; no app compiles a form in; Training comes from the server and its practice records upload to the Training project (D4). |
-| D33 | The pilot uses iPhones, Android phones, Samsung Galaxy tablets and iPads. | Every collector layout, keyboard, rotation or touch change is checked on all four families, portrait and landscape. |
+| D33, D37 | The pilot uses iPhones, Android phones, Samsung Galaxy tablets and iPads (D33). Device checks and QA-08 run on one iPhone and one Android tablet (D37, 2026-11-08). | Every collector layout, keyboard, rotation or touch change is checked on the iPhone and the Android tablet, portrait and landscape. |
 | D34 | The web stays on Vercel's free plan, without Skew Protection. | The page handles an unrecognised Server Action (WEB-44); a fixed `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` keeps action ids stable (OPS-20). |
 | D35 (2026-10-23) | An online background map in a QGIS project asks the manager before uploading. | Confirming uploads the vector layers with a warning; cancelling uploads nothing (BE-23 in the API, WEB-60 on the web). |
 | D36 (2026-10-24) | Until OPS-19 the hosted API stays on the code from before BE-24; the web keeps following master. | From BE-24's own commit until OPS-19, every commit to master carries `[skip render]` and nobody deploys the API by hand ("Deploys before OPS-19" below). |
 
 ## The launch gate
 
-The pilot launches when **QA-08** passes on the four device families with the build the pilot ships. QA-08 depends on the correctness tasks below; it does not wait for PowerSync, store listings or the polish waves. QA-05 remains the full pilot walkthrough for later.
+The pilot launches when **QA-08** passes on one iPhone and one Android tablet (D37) with the build the pilot ships. QA-08 depends on the correctness tasks below; it does not wait for PowerSync, store listings or the polish waves. QA-05 remains the full pilot walkthrough for later.
 
-Launch also needs work this guide does not own. Check it before the launch day: installable builds for the four device families (MOB-20, or an internal-distribution build), the hosted API and web deployed from the same commit as the pilot build (OPS-04, OPS-05), Janet's published forms and first maps on the hosted target (OPS-19), and MOB-29's physical-device acceptance.
+Launch also needs work this guide does not own. Check it before the launch day: installable builds for the iPhone and the Android tablet (MOB-20, or an internal-distribution build), the hosted API and web deployed from the same commit as the pilot build (OPS-04, OPS-05), Janet's published forms and first maps on the hosted target (OPS-19), and MOB-29's physical-device acceptance.
 
 ## Waves and lanes
 
@@ -62,7 +62,7 @@ Cross-lane edits that are known in advance (each is allowed only after the tasks
 |---|---|
 | Owner | OPS-19 (authorize the final reset and the deploys once everything else in QA-08 is ready); OPS-20's check that two deploys keep the action ids (it needs a browser signed in to Vercel) |
 | Lane G | MOB-49 (Maestro flows for the queue era), run on iOS and Android |
-| Owner with an agent | QA-08 on the four device families, recorded in its task |
+| Owner with an agent | QA-08 on one iPhone and one Android tablet (D37), recorded in its task |
 
 ### Wave 3: during the pilot (no destructive schema change after D31)
 
