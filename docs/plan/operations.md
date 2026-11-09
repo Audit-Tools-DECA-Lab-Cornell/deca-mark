@@ -266,10 +266,11 @@ Done when: the hosted API answers `/ready`, every hosted `form_versions` row val
 Verify: `verify.sql` on the target; a sign-up, join and download on one phone.
 
 ### OPS-20: Stable Server Action ids across Vercel deploys
-Status: doing · Phase 4 · Size S · Depends: none · Blocks: QA-08
+Status: done (2026-11-09; production redeploy without build cache compared, action id unchanged) · Phase 4 · Size S · Depends: none · Blocks: QA-08
 Added 2026-10-22 (D34). The web runs on Vercel's free plan, which has no Skew Protection. In Next 16.2.7 every build salts Server Action ids with an encryption key (`build/webpack-config.js` `serverReferenceHashSalt: encryptionKey`; the Turbopack build passes the same key); without `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` it is a random key cached for 14 days in `.next/cache`, so ids change on rotation or an uncached build, and an open tab's next save then calls an id the server no longer knows (audit C03).
 Read first: D34; `web/vercel.json`; OPS-05.
 Do: generate a key (`openssl rand -base64 32`) and set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` for Production and Preview in the Vercel project (never in a tracked file); note the rule "deploy outside manager editing sessions during the pilot" in `docs/Launch-Runbook.md`.
 Progress 2026-10-23: the owner set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in Vercel; the runbook has the variable and the deploy rule. Open: the header comparison. Preview deployments sit behind Vercel login, so it needs a signed-in browser or the production domain.
 Done when: two consecutive deploys of the same commit produce the same action ids (compare the `Next-Action` header of one save before and after), and the runbook has the rule.
 Verify: the header comparison, recorded here.
+Verified 2026-11-09: the owner redeployed the production deployment on Vercel with the build cache unticked; before and after, the orchestrator read the Server Action id that the production sign-in page's client bundle sends as the `Next-Action` header. The page's build id changed (`e67bfb13…` to `9dc11dbd…`, so the second read came from the new build) and the action id stayed `603adca3f8c88d1e10b1be9c9e535e19fcbc66aa15`, in the same chunk file. The key set on 2026-10-23 therefore keeps action ids stable across builds of one commit; the runbook already has the variable and the "deploy outside manager editing sessions" rule. Read from the public page, not from a signed-in save; a renamed or moved action still changes its id, which WEB-44 handles.
