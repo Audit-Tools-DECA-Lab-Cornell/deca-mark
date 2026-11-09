@@ -13,7 +13,7 @@ const connection = publicConfigSchema.parse(
 const base = {
   name: "DECA Mark",
   slug: "fieldmaps-mobile",
-  version: "0.2.2",
+  version: "0.3.0",
   scheme: "decamark",
   orientation: "default",
   userInterfaceStyle: "automatic",
