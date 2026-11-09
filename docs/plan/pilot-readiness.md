@@ -56,6 +56,8 @@ Cross-lane edits that are known in advance (each is allowed only after the tasks
 
 **Deploys before OPS-19.** Render builds the API from master's head on every commit that reaches master without `[skip render]` in its message, and on every manual deploy. Vercel deploys the web on every master commit. From BE-24's own squash commit until OPS-19 deploys, two rules hold. (1) Every commit that reaches master carries `[skip render]` in its first line: a squash merge (the only merge style allowed in that window) or a direct push, the owner's included. (2) Nobody deploys the API by hand: no "Deploy latest commit", and an environment-variable or Secret File change is saved without deploying. Any of these would build master's head, which includes BE-24. A config change that needs a redeploy waits for OPS-19. That way the hosted API keeps the code from before BE-24, and keeps serving the hosted fields-only forms, until the reset removes them. In that window the hosted web may run ahead of the hosted API (D36). For example, WEB-60's confirmation relies on BE-23, which the hosted API lacks until OPS-19. A commit that reaches master without the tag deploys BE-24 early: tell the owner at once, so they can roll Render back to the previous deploy.
 
+OPS-19 deployed master to the API and the web on 2026-11-09, so this window has ended: commits to master no longer need `[skip render]`, and Render deploys master's head again as usual.
+
 ### Wave 2: the gate (days 3–5)
 
 | Who | Tasks |
