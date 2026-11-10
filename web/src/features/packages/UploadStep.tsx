@@ -869,7 +869,9 @@ export function UploadStep({
 									className="flex items-start justify-between gap-4 border-b border-rule px-island-pad py-3 last:border-b-0">
 									<span className="min-w-0">
 										<span className="block type-body font-semibold text-ink">{check.label}</span>
-										<span className="block type-small break-words text-ink-2">{check.detail}</span>
+										<span className="block type-small wrap-break-word text-ink-2">
+											{check.detail}
+										</span>
 									</span>
 									<CheckBadge state={check.state} />
 								</li>

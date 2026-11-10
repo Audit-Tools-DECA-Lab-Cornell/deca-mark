@@ -100,7 +100,11 @@ async function publishReviewedSetup(page: Page): Promise<void> {
 
 /** Waits for project conversion to finish and the layer-review step to become actionable. */
 async function awaitLayerReview(page: Page): Promise<void> {
-	await expect(page.getByText("Reading project…", { exact: true }).or(page.getByRole("heading", { name: "Review the map layers" }))).toBeVisible({
+	await expect(
+		page
+			.getByText("Reading project…", { exact: true })
+			.or(page.getByRole("heading", { name: "Review the map layers" }))
+	).toBeVisible({
 		timeout: 30000
 	});
 	const review = page.getByRole("heading", { name: "Review the map layers" });
@@ -228,7 +232,7 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	await page.getByRole("option").filter({ hasText: "Z1" }).click();
 	await expect(page.getByLabel("Code", { exact: true })).toBeEditable();
 	await expectNoViolations(page);
-	let releaseSave: () => void = () => { };
+	let releaseSave: () => void = () => {};
 	const heldSave = new Promise<void>(resolve => {
 		releaseSave = resolve;
 	});
