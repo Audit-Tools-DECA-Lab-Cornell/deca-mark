@@ -92,7 +92,7 @@ function SiteRow({ site, href, plan }: { site: SiteView; href: string; plan: Pro
 			) : (
 				<span
 					aria-hidden="true"
-					className="grid aspect-[36/25] w-20 place-items-center rounded-thumb border border-dashed border-edge text-ink-2 md:w-39">
+					className="grid aspect-36/25 w-20 place-items-center rounded-thumb border border-dashed border-edge text-ink-2 md:w-39">
 					<Icon name="layers" size={20} />
 				</span>
 			)}
@@ -100,7 +100,7 @@ function SiteRow({ site, href, plan }: { site: SiteView; href: string; plan: Pro
 			<div className="min-w-0">
 				<h3 className="type-island text-ink sm:type-section">
 					{/* The whole row opens the site; the name is the link a keyboard or screen reader finds. */}
-					<Link prefetch={false} href={href} className="break-words after:absolute after:inset-0">
+					<Link prefetch={false} href={href} className="wrap-break-word after:absolute after:inset-0">
 						{site.name}
 					</Link>
 				</h3>

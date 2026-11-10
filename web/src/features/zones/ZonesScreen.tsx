@@ -217,7 +217,7 @@ export function ZonesScreen(props: ZonesScreenProps) {
 									{
 										label: "Change note",
 										value: shown.changeNote ? (
-											<span className="break-words whitespace-pre-line">{shown.changeNote}</span>
+											<span className="wrap-break-word whitespace-pre-line">{shown.changeNote}</span>
 										) : (
 											<span className="text-ink-2">No note</span>
 										)
@@ -322,7 +322,7 @@ export function ZonesScreen(props: ZonesScreenProps) {
 										{row.published} · {row.madeBy}
 									</p>
 									{row.changeNote && (
-										<p className="type-small break-words whitespace-pre-line text-ink">
+										<p className="type-small wrap-break-word whitespace-pre-line text-ink">
 											{row.changeNote}
 										</p>
 									)}
