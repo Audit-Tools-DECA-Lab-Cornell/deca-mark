@@ -10,14 +10,102 @@ import { EMPTY_SITE, FRESH, signInToZones, ZONE_MANIFEST, zoneApi, type ZoneCall
 
 test.skip(!ZONE_MANIFEST, "Needs local synthetic zone project");
 
+/** Builds a QGIS project archive from named GeoJSON feature collections. */
+function projectArchive(layers: Record<string, unknown>): Buffer {
+	const projectLayers = Object.keys(layers)
+		.map(
+			name =>
+				`<maplayer type="vector"><id>${name}</id><layername>${name}</layername><provider>ogr</provider><datasource>${name}.geojson</datasource></maplayer>`
+		)
+		.join("");
+	const files: Record<string, Uint8Array> = {
+		"map.qgs": strToU8(`<qgis><projectlayers>${projectLayers}</projectlayers></qgis>`)
+	};
+	for (const [name, collection] of Object.entries(layers)) {
+		files[`${name}.geojson`] = strToU8(JSON.stringify(collection));
+	}
+	return Buffer.from(zipSync(files));
+}
+
 /** Builds a small QGIS project whose one local point gives boundary drawing real geographic context. */
 function referenceProjectArchive(): Buffer {
-	const project = `<qgis><projectlayers><maplayer type="vector"><id>reference-points</id><layername>Trees</layername><provider>ogr</provider><datasource>trees.geojson</datasource></maplayer></projectlayers></qgis>`;
-	const trees = {
-		type: "FeatureCollection",
-		features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: FRESH.a[0] } }]
-	};
-	return Buffer.from(zipSync({ "map.qgs": strToU8(project), "trees.geojson": strToU8(JSON.stringify(trees)) }));
+	return projectArchive({
+		trees: {
+			type: "FeatureCollection",
+			features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: FRESH.a[0] } }]
+		}
+	});
+}
+
+/** Complete first-map package: outline, one zone, and one tree reference. */
+function completeProjectArchive(): Buffer {
+	return projectArchive({
+		ground: {
+			type: "FeatureCollection",
+			features: [
+				{
+					type: "Feature",
+					properties: { kind: "site" },
+					geometry: { type: "Polygon", coordinates: [FRESH.site] }
+				}
+			]
+		},
+		zones: {
+			type: "FeatureCollection",
+			features: [
+				{
+					type: "Feature",
+					properties: { id: "A", label: "Lawn" },
+					geometry: { type: "Polygon", coordinates: [FRESH.a] }
+				}
+			]
+		},
+		trees: {
+			type: "FeatureCollection",
+			features: [
+				{
+					type: "Feature",
+					properties: { label: "Tree" },
+					geometry: { type: "Point", coordinates: FRESH.a[0] }
+				}
+			]
+		}
+	});
+}
+
+/** Outline-only package used when zones must be drawn in the app. */
+function outlineOnlyProjectArchive(): Buffer {
+	return projectArchive({
+		ground: {
+			type: "FeatureCollection",
+			features: [
+				{
+					type: "Feature",
+					properties: { kind: "site" },
+					geometry: { type: "Polygon", coordinates: [FRESH.site] }
+				}
+			]
+		}
+	});
+}
+
+async function publishReviewedSetup(page: Page): Promise<void> {
+	await page.getByLabel("Published observation form", { exact: true }).selectOption("zone-review-play-v1");
+	await page.getByLabel("What changed (optional)", { exact: true }).fill("Browser acceptance map setup");
+	await page.getByRole("button", { name: "Check map", exact: true }).click();
+	await expect(page.getByRole("button", { name: "Publish map", exact: true })).toBeEnabled({ timeout: 60000 });
+	await page.getByRole("button", { name: "Publish map", exact: true }).click();
+	await expect(page.getByText("Map version 1 published.", { exact: true })).toBeVisible({ timeout: 60000 });
+}
+
+/** Waits for project conversion to finish and the layer-review step to become actionable. */
+async function awaitLayerReview(page: Page): Promise<void> {
+	await expect(page.getByText("Reading project…", { exact: true }).or(page.getByRole("heading", { name: "Review the map layers" }))).toBeVisible({
+		timeout: 30000
+	});
+	const review = page.getByRole("heading", { name: "Review the map layers" });
+	await expect(review).toBeVisible({ timeout: 120000 });
+	await review.scrollIntoViewIfNeeded();
 }
 
 /** Imports the reference project directly so a browser scenario can begin from one acknowledged revision. */
@@ -140,7 +228,7 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	await page.getByRole("option").filter({ hasText: "Z1" }).click();
 	await expect(page.getByLabel("Code", { exact: true })).toBeEditable();
 	await expectNoViolations(page);
-	let releaseSave: () => void = () => {};
+	let releaseSave: () => void = () => { };
 	const heldSave = new Promise<void>(resolve => {
 		releaseSave = resolve;
 	});
@@ -216,6 +304,97 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	expect(history.packages.map(item => item.package_version)).toEqual([1]);
 	expect(history.current_package_id).toBe(history.packages[0]?.package_id);
 	await page.screenshot({ path: info.outputPath("first-map-published.png"), fullPage: true });
+});
+
+test("a complete imported map publishes without redrawing outline or zones", async ({ page }) => {
+	test.setTimeout(180000);
+	const fixture = zoneFixture();
+	const call = await zoneApi("manager");
+	const site = await call<{ site_id: string; code: string }>("POST", `/v1/projects/${fixture.projectId}/sites`, {
+		name: "Complete imported setup",
+		code: `complete-${randomUUID().slice(0, 8)}`
+	});
+	await signInToZones(page, "manager");
+	await page.goto(`${fixture.path}/sites/${site.code}/map-setup`);
+	await page.getByLabel("QGIS project and its data files", { exact: true }).setInputFiles({
+		name: "complete.qgz",
+		mimeType: "application/zip",
+		buffer: completeProjectArchive()
+	});
+	await awaitLayerReview(page);
+	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
+	await page.getByLabel("zones · feature 1", { exact: true }).selectOption("zones");
+	await page.getByLabel("trees · feature 1", { exact: true }).selectOption("trees");
+	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Review the zones", exact: true })).toBeVisible();
+	await expect(page.getByRole("button", { name: "Draw site outline", exact: true })).toHaveCount(0);
+	await expect(page.getByRole("option").filter({ hasText: "Lawn" })).toBeVisible();
+	await page.getByRole("button", { name: "Review map", exact: true }).click();
+	await expect(page.getByText(/3 imported map features included/)).toBeVisible();
+	await publishReviewedSetup(page);
+	const history = await call<PackageHistory>(
+		"GET",
+		`/v1/projects/${fixture.projectId}/packages?site_id=${site.site_id}`
+	);
+	expect(history.packages.map(item => item.package_version)).toEqual([1]);
+});
+
+test("an outline-only project draws its missing zone before first publication", async ({ page }, info) => {
+	test.setTimeout(240000);
+	const touch = info.project.name === "phone-390";
+	const fixture = zoneFixture();
+	const call = await zoneApi("manager");
+	const site = await call<{ site_id: string; code: string }>("POST", `/v1/projects/${fixture.projectId}/sites`, {
+		name: "Outline without zones",
+		code: `outline-${randomUUID().slice(0, 8)}`
+	});
+	await signInToZones(page, "manager");
+	await page.goto(`${fixture.path}/sites/${site.code}/map-setup`);
+	await page.getByLabel("QGIS project and its data files", { exact: true }).setInputFiles({
+		name: "outline-no-zones.qgz",
+		mimeType: "application/zip",
+		buffer: outlineOnlyProjectArchive()
+	});
+	await awaitLayerReview(page);
+	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
+	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
+	await expect(page.getByText("No zones in this project. Draw them here.", { exact: true })).toBeVisible();
+	await activate(page, "Draw a zone with coordinates", touch);
+	if (touch) {
+		await tapMapRing(page, [
+			[0.4, 0.48],
+			[0.62, 0.48],
+			[0.62, 0.66],
+			[0.4, 0.66]
+		]);
+	} else {
+		await addCoordinateRing(page, FRESH.a.slice(0, -1));
+	}
+	await activate(page, "Finish zone", touch);
+	await page.getByRole("option").filter({ hasText: "Z1" }).click();
+	await page.getByLabel("Name", { exact: true }).fill("Lawn");
+	await page.getByRole("button", { name: "Review map", exact: true }).click();
+	await publishReviewedSetup(page);
+});
+
+test("a deep link to Review before boundaries are ready explains the remaining work", async ({ page }) => {
+	test.setTimeout(180000);
+	const fixture = zoneFixture();
+	const call = await zoneApi("manager");
+	const site = await call<{ site_id: string; code: string }>("POST", `/v1/projects/${fixture.projectId}/sites`, {
+		name: "Deep-link prerequisite",
+		code: `prereq-${randomUUID().slice(0, 8)}`
+	});
+	const imported = await importReferenceSetup(call, fixture.projectId, site.site_id);
+	await signInToZones(page, "manager");
+	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${imported.setup_id}/review`);
+	const prerequisite = page.getByText("Finish this step first.", { exact: true });
+	await expect(prerequisite).toBeVisible();
+	await expect(prerequisite.locator("..")).toContainText(
+		"Review every imported feature before opening Set boundaries."
+	);
+	await expect(page.getByRole("heading", { name: "Review and publish", exact: true })).toHaveCount(0);
+	await expect(page.getByRole("heading", { name: "Review the map layers" })).toBeVisible();
 });
 
 test("an observer opening map setup directly is routed away without setup controls", async ({ page }) => {

@@ -53,6 +53,7 @@ export function ReviewPanel({
 	const includedFeatureCount = content.assignments.filter(item => item.role !== "leave_out").length;
 	const leftOutFeatureCount = content.assignments.length - includedFeatureCount;
 	const leftOutSources = setup.issues.filter(issue => content.confirmed_omissions.includes(issue.source_id));
+	const openImportWarnings = setup.issues.filter(issue => !content.confirmed_omissions.includes(issue.source_id));
 	const ready =
 		unavailableInventory === null && checked?.key === key && checked.etag === setupEtag(setup) && !state.dirty;
 	return (
@@ -68,6 +69,21 @@ export function ReviewPanel({
 				{includedFeatureCount} imported map {includedFeatureCount === 1 ? "feature" : "features"} included ·{" "}
 				{leftOutFeatureCount + leftOutSources.length} features or sources left out.
 			</p>
+			{openImportWarnings.length > 0 && (
+				<div>
+					<h3 className="type-body font-semibold">Import warnings still open</h3>
+					<ul className="mt-2 list-disc space-y-1 pl-5 type-small">
+						{openImportWarnings.map(issue => (
+							<li key={`${issue.source_id}-${issue.kind}`}>
+								{issue.layer}: {issue.message}
+							</li>
+						))}
+					</ul>
+					<p className="mt-2 type-small text-ink-2">
+						Return to Add map to leave these sources out, or add the missing local files, before publishing.
+					</p>
+				</div>
+			)}
 			{leftOutSources.length > 0 && (
 				<div>
 					<h3 className="type-body font-semibold">Sources left out</h3>
@@ -195,11 +211,19 @@ export function ReviewPanel({
 			)}
 			<Button
 				variant="ink"
-				disabled={formsUnavailable || unavailableInventory !== null || state.busy || publishing}
+				disabled={
+					formsUnavailable ||
+					unavailableInventory !== null ||
+					openImportWarnings.length > 0 ||
+					state.busy ||
+					publishing
+				}
 				disabledReason={
 					unavailableInventory !== null
 						? "Turn Inventory off, choose another inventory form, or reload forms before checking this map."
-						: undefined
+						: openImportWarnings.length > 0
+							? "Resolve or leave out the open import warnings on Add map before checking this map."
+							: undefined
 				}
 				onClick={async () => {
 					if (!(await state.flush())) return;

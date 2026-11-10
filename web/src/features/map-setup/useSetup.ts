@@ -5,7 +5,7 @@ import { apiRequestError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/client";
 
 import { type Address, loadSetup, saveSetup } from "./api";
-import { classifySetupLoadFailure } from "./model";
+import { classifySetupLoadFailure, setupSaveConflictMessage } from "./model";
 import { drainSaves } from "./saving";
 import { type Content, contentSchema, type Setup } from "./schema";
 import { reduceSetupEditorState } from "./setup-editor-state";
@@ -111,9 +111,7 @@ export function useSetup(address: Address, id?: string) {
 				const failure = apiRequestError(raised);
 				if (failure.code === "revision_conflict" || failure.code === "publication_conflict") {
 					setConflict(true);
-					setError(
-						"Someone changed this map setup. Your changes are still here. Open the saved version to compare before continuing."
-					);
+					setError(setupSaveConflictMessage(failure.code));
 					return false;
 				}
 				if (failure.kind === "rejected" || failure.kind === "sign-in") {

@@ -65,3 +65,11 @@ export function nextZoneCode(zones: readonly { readonly zone_code: string }[]): 
 	while (used.has(`Z${number}`)) number += 1;
 	return `Z${number}`;
 }
+
+/** Manager-facing copy for concurrent map-setup write conflicts; keep revision and publication distinct. */
+export function setupSaveConflictMessage(code: string): string {
+	if (code === "publication_conflict") {
+		return "A newer map was published. Your setup is still saved.";
+	}
+	return "Someone changed this map setup. Your changes are still here. Open the saved version to compare before continuing.";
+}

@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { load } from "./support.mjs";
-const { allowedRoles, classifySetupLoadFailure, closeOutline, setupReady, sourceDisposition } =
-	await load("features/map-setup/model.ts");
+const {
+	allowedRoles,
+	classifySetupLoadFailure,
+	closeOutline,
+	setupReady,
+	setupSaveConflictMessage,
+	sourceDisposition
+} = await load("features/map-setup/model.ts");
 const { availableZoneIdentityChoices } = await load("features/map-setup/assignment.ts");
 const { setupFormChoices, unavailableInventoryFormCode } = await load("features/map-setup/form-choices.ts");
 const { createInitialImportAttempt, submitInitialImport } = await load("features/map-setup/initial-import.ts");
@@ -36,6 +42,14 @@ test("a committed first import with a dropped reply automatically replays its ex
 	assert.equal(stored.length, 1);
 	assert.equal(stored[0].request_id, "request-1");
 	assert.equal(dropReply, false);
+});
+
+test("save conflict copy distinguishes a published package from a draft revision race", () => {
+	assert.equal(
+		setupSaveConflictMessage("publication_conflict"),
+		"A newer map was published. Your setup is still saved."
+	);
+	assert.match(setupSaveConflictMessage("revision_conflict"), /Someone changed this map setup/);
 });
 
 test("two uncertain exact sends retain the immutable attempt for a deliberate UI retry", async () => {
