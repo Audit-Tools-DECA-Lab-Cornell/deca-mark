@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/contour/PageHeader";
 import { LoadFailure } from "@/components/shell/LoadFailure";
+import { ResumeSetup } from "@/features/map-setup/ResumeSetup";
 import { SiteScreen } from "@/features/sites/SiteScreen";
 import { siteView, zoneRows } from "@/features/sites/view";
 import { zoneEntry } from "@/features/zones/model";
@@ -61,17 +62,27 @@ export default async function SitePage({ params }: { params: Promise<Params> }) 
 	const groups = counts === null ? [] : counts.ok ? counts.data.groups : null;
 
 	return (
-		<SiteScreen
-			org={org}
-			project={code}
-			projectId={ref.id}
-			canManage={projectAbilities(ref.role).manage}
-			site={view}
-			plan={plan?.ok ? plan.data : null}
-			planFailure={plan && !plan.ok ? plan.failure : null}
-			zoneRows={zoneRows(view.zones, groups, view.package?.version ?? null)}
-			countsFailure={counts && !counts.ok ? counts.failure : null}
-			zoneEntry={zoneEntry(site.data)}
-		/>
+		<div className="flex flex-col gap-6">
+			{projectAbilities(ref.role).manage && (
+				<ResumeSetup
+					projectId={ref.id}
+					siteId={site.data.site_id}
+					siteHref={`/o/${org}/p/${code}/sites/${siteCode}`}
+					timezone={project.data.timezone}
+				/>
+			)}
+			<SiteScreen
+				org={org}
+				project={code}
+				projectId={ref.id}
+				canManage={projectAbilities(ref.role).manage}
+				site={view}
+				plan={plan?.ok ? plan.data : null}
+				planFailure={plan && !plan.ok ? plan.failure : null}
+				zoneRows={zoneRows(view.zones, groups, view.package?.version ?? null)}
+				countsFailure={counts && !counts.ok ? counts.failure : null}
+				zoneEntry={zoneEntry(site.data)}
+			/>
+		</div>
 	);
 }

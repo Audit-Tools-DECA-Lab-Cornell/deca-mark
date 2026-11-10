@@ -8,7 +8,7 @@ This application and the collector are one product, so they carry one design sys
 
 All of it (D30). Every page under `/o/<org>/p/<project>` reads and writes the DECA Mark API for the signed-in person: sites and map packages, forms and their versions, observations, the team, invitations, and project and organization settings. Sign-in, sign-up, verification and password recovery use Supabase through Server Actions (`src/lib/auth/actions.ts`). There is no sample workspace, no fixture data, no Preview data marker and no set-up flow.
 
-When a feature has no backend, the page says so once, with `components/shell/NotAvailable.tsx`: "X is not available yet.", then why, and what to do instead. Today that covers saved named views, the rounds plan, editing zones on the web where a site has no usable boundary or published form (edit them in QGIS), reviewing or excluding records, device readiness, live QGIS database access, deleting projects, organizations, sites or map packages, and resending invitations. A read that fails shows `LoadFailure` and never an empty list. The Honesty section of [`AGENTS.md`](AGENTS.md) holds the rules.
+When a feature has no backend, the page says so once, with `components/shell/NotAvailable.tsx`: "X is not available yet.", then why, and what to do instead. Today that covers saved named views, the rounds plan, reviewing or excluding records, device readiness, live QGIS database access, deleting projects, organizations, sites or map packages, and resending invitations. A read that fails shows `LoadFailure` and never an empty list. The Honesty section of [`AGENTS.md`](AGENTS.md) holds the rules.
 
 Data pages through all matching observations, 500 at a time, with server filters and recorded map/zone labels. Zone/round coverage uses the server summary, and exports download the complete authorized scope within the documented server limits. Observer/day/play-type breakdowns and loaded-row search still disclose their loaded subset. Dates use the project's timezone. See [current position and remaining acceptance](../docs/plan/current-state.md).
 
@@ -38,21 +38,15 @@ The route tree is in [`PLAN.md`](PLAN.md#target-route-tree). Old paths (`/overvi
 
 Filters and the selected record live in the URL, so a filtered view can be sent to a colleague, opened in a second tab, and undone with the back button. A link replaces saved named views.
 
-Form editing carries the loaded draft ETag through save and discard. Each successful
-save replaces the editor's ETag with the returned value. The publication review retains
-its own ETag; publication never reads a newer draft just to obtain a precondition.
-A conflict keeps unsaved wording in the editor and offers the latest draft in another
-tab for comparison. Saving waits for explicit reconciliation/reload. Publication reloads
-the review and clears confirmation when its ETag changes. The focused component/action
-regression is `tests/unit/forms-concurrency.test.mjs` (also in `pnpm test:unit`).
+Form editing carries the loaded draft ETag through save and discard. Each successful save replaces the editor's ETag with the returned value. The publication review retains its own ETag; publication never reads a newer draft just to obtain a precondition. A conflict keeps unsaved wording in the editor and offers the latest draft in another tab for comparison. Saving waits for explicit reconciliation/reload. Publication reloads the review and clears confirmation when its ETag changes. The focused component/action regression is `tests/unit/forms-concurrency.test.mjs` (also in `pnpm test:unit`).
 
 ## Import a QGIS project for a site
 
-Open **Sites → the site → Upload a new version**. Choose a `.qgz` or `.qgs` project and click **Read project**. If its vector data is external, select its GeoPackage or every shapefile part too, or upload a ZIP containing the project folder. A `.qgz` alone works only when it contains the source datasets; a saved project normally refers to files on the author's computer.
+Open **Sites → the site → Set up map** (or **Upload a new version**). The manager-only workflow is **Add map → Set boundaries → Review and publish**. Choose a QGIS project; reading starts automatically. Include missing GeoPackage/shapefile source data when prompted, or choose a ZIP of the project folder. Separate GeoJSON exports are optional and an advanced GeoJSON-only path remains available.
 
-The API converts uploaded GeoPackage, shapefile and GeoJSON layers to EPSG:4326. Review the ground and zones slots and assign any unmatched layer names before **Upload package** saves an immutable version for that site and published form. Reading the project does not save a package. Optional GeoJSON files replace matching converted layers; existing GeoJSON-only uploads remain available. A single ground polygon without `kind` becomes the site boundary; multiple polygons still require exactly one feature with `kind = site`. Zones need valid identifiers and labels.
+Review imported feature roles, draw any missing outline and zones, then choose the published observation form during review. An unfinished setup is stored separately from published packages. **Resume map setup** restores the last acknowledged revision. Source replacement has a conversion-only preview followed by confirmation; manually edited boundaries remain intact. Publication checks the reviewed revision and current package in one transaction. Existing maps and historical observations retain their version bindings.
 
-Import accepts at most 64 selected files totalling 16 MB, with bounded ZIP expansion. Missing or ambiguous sources are named rather than read from the host. Remote sources, raster imagery, QGIS styling and filtered-layer conversion are not supported; include a GeoJSON export of a filtered layer. The original project metadata remains attached for the existing source and imagery checks. This flow requires deploying the matching API and web changes together.
+Import supports local vector layers converted to WGS84, with 64 selected files/16 MB input, 16 MB converted output, 24 MB setup document, 8 MB project attachment and 16 MB final archive bounds. Remote data, raster imagery, QGIS styling and filtered-layer conversion are not imported. Projects without usable geographic features show recovery instructions rather than an invented map. Release requires the additive setup migration and matching API before the web. Local verification and remaining release gates are recorded in the setup review evidence.
 
 ## Design rules this application keeps
 
@@ -152,7 +146,7 @@ Run `pnpm test:auth` for redirect, response-validation and private-cache regress
 ## What this application deliberately does not do
 
 - **Collect observations.** The collector does that, on a device, offline. A browser form beside it would be a second way to enter the same record and a second thing to keep in step.
-- **Author the initial ground or ingest imagery.** QGIS supplies the site ground/reference layers. Managers can then edit named Polygon/MultiPolygon zones in server-backed drafts and publish immutable versions through the web editor. See [zone workflow](ZONE-BOUNDARIES.md).
+- **Ingest imagery or render arbitrary QGIS projects.** Setup can author a site outline and zones over usable imported vector geography. Raster imagery and QGIS styling remain outside this workflow. See [zone workflow](ZONE-BOUNDARIES.md).
 - **Review, exclude or delete records and projects.** Every uploaded observation is in the exports. Deleting projects, organizations, sites and map packages, and resending invitations, are not available yet; each says so where it would be.
 - **Promise email delivery without the service.** Addressed invitations can queue transactional email through the backend's Brevo outbox when configured. Link/code sharing remains available; queued is not delivered. See [email setup and evidence](../docs/Brevo-Email.md).
 - **Deliver a package to a device.** The web app stores, versions and offers map packages for download. The collector downloads each site's current package itself (D27).

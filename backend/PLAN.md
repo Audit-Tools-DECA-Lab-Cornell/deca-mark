@@ -358,6 +358,8 @@ Do: Implement draft lifecycle, conditional writes, geometry validation, publicat
 Done when: Live local HTTP workflow persists and publishes; conflicts/replays preserve current state; archive and DB shapes agree.
 Verify: pnpm backend:check and backend:test; contract coordinator regenerates OpenAPI/types.
 
+QGIS-first map setup adds a separate incomplete manager setup before publication, including first-map outline/zone authoring and resumable source recovery. Local implementation and verification: [setup evidence](../docs/reviews/qgis-first-map-setup/README.md). Hosted release remains a separate gate.
+
 ### BE-19: Bind new uploads to historical zone packages
 Status: done (2026-10-11; source and disposable local acceptance only) · Phase 3 · Size L · Depends: BE-18 · Blocks: BE-20, GIS-09
 Owner: API agent.

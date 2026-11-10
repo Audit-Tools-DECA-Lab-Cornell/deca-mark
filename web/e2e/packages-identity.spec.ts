@@ -82,6 +82,12 @@ test("a later upload keeps one zone, adds one and leaves one out, and the record
 	test.setTimeout(240_000);
 	const { baseline } = manifest();
 	const kept = await currentZone(SITE, baseline.zone);
+	const initialSite = await siteByCode(SITE);
+	const recorded = await api<{ total_matching: number }>(
+		"manager",
+		"GET",
+		`/v1/projects/${manifest().projectId}/observations/summary?site_id=${initialSite.site_id}&zone_id=${kept.zone_id}`
+	);
 	const stamp = runStamp();
 	const first = `E${stamp}`;
 	const second = `F${stamp}`;
@@ -123,7 +129,7 @@ test("a later upload keeps one zone, adds one and leaves one out, and the record
 	await page.goto(projectPath(`sites/${SITE}`));
 	const row = page.getByRole("main").locator("li, tr").filter({ hasText: kept.label }).first();
 	// Collected on the first map, they are counted under zone A's identity on the earlier versions.
-	await expect(row).toContainText(new RegExp(`\\b${baseline.total} on earlier versions\\b`));
+	await expect(row).toContainText(new RegExp(`\\b${recorded.total_matching} on earlier versions\\b`));
 
 	// 3. Back to the sample's one zone, so the other specs see the seeded site.
 	next += 1;

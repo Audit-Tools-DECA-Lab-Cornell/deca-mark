@@ -146,7 +146,7 @@ function forEachPosition(feature: SiteFeature, visit: (position: LngLat) => void
  * The frame for a site that does not carry one: the site's extent with a little room around it, centred in a
  * {@link PLAN_WIDTH} × {@link PLAN_HEIGHT} frame, so every plan shares one shape and thumbnails line up.
  */
-export function fitFrame(features: readonly SiteFeature[]): PlanFrame {
+export function fitFrame(features: readonly SiteFeature[], minimumSpanMetres = 0): PlanFrame {
 	// Loops, not Math.min(...spread): a spread of every position overflows the stack on a large site.
 	let west = Infinity;
 	let east = -Infinity;
@@ -162,8 +162,8 @@ export function fitFrame(features: readonly SiteFeature[]): PlanFrame {
 	}
 	if (west > east) throw new Error("A site needs at least one feature to fit a plan to.");
 	const cos = cosOf((north + south) / 2);
-	const widthMetres = (east - west) * METRES_PER_DEGREE * cos;
-	const heightMetres = (north - south) * METRES_PER_DEGREE;
+	const widthMetres = Math.max((east - west) * METRES_PER_DEGREE * cos, minimumSpanMetres);
+	const heightMetres = Math.max((north - south) * METRES_PER_DEGREE, minimumSpanMetres);
 	const pad = Math.max(widthMetres, heightMetres, 1) * FIT_PADDING;
 	const metresPerUnit = Math.max((widthMetres + pad * 2) / PLAN_WIDTH, (heightMetres + pad * 2) / PLAN_HEIGHT);
 	const centreLng = (west + east) / 2;

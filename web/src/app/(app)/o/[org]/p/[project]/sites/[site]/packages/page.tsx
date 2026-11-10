@@ -163,14 +163,14 @@ export default async function PackagesPage({
 					{ label: "Map packages" }
 				]}
 				title={`${site.data.name} map packages`}
-				lead="Prepare a map package from QGIS layers. The current version is the one observers get; records keep the version they were collected on."
+				lead="Review current and earlier map packages. Records keep the version they were collected on."
 				actions={
 					uploading ? (
 						<ButtonLink href={base} variant="outline" icon="arrow-left">
 							Back to history
 						</ButtonLink>
 					) : canManage ? (
-						<ButtonLink href={`${base}?step=upload`} variant="primary" icon="upload">
+						<ButtonLink href={`${siteHref}/map-setup`} variant="primary" icon="upload">
 							Upload a new version
 						</ButtonLink>
 					) : undefined

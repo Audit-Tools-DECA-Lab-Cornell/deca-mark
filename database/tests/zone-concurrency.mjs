@@ -97,6 +97,23 @@ const race = async (firstSql, secondSql, expectedError, actors = [manager, manag
   return [first, second];
 };
 try {
+  const setupDocument = JSON.stringify({content: {import_generation: 1, assignments: [], outline: null,
+    zones: [], form_version: null, inventory_form_version: null, change_note: '', confirmed_omissions: []},
+    layers: [], issues: [], sources: [], project_file: null});
+  const createSetup = `SELECT setup_id,replayed FROM fieldmaps_private.create_map_setup('${project}','${site}',
+    '96000000-0000-4000-8000-000000000001','${base}','${setupDocument}','[]','${'a'.repeat(64)}');`;
+  const [createdSetup, replayedSetup] = await race(createSetup, createSetup, null, [manager, manager]);
+  assert.match(createdSetup.stdout, /[0-9a-f-]{36}\|f/);
+  assert.match(replayedSetup.stdout, /[0-9a-f-]{36}\|t/);
+  const setupId = query(`SELECT setup_id FROM fieldmaps_private.map_setup_operations
+    WHERE request_id='96000000-0000-4000-8000-000000000001' AND operation='import';`);
+  console.log('PASS: concurrent exact map setup imports return one creation and one replay.');
+  const setupSave = note => `SELECT fieldmaps_private.replace_map_setup('${project}','${site}','${setupId}',1,
+    jsonb_set('${setupDocument}'::jsonb,'{content,change_note}','"${note}"'),NULL,NULL,NULL);`;
+  await race(setupSave('First manager'), setupSave('Second manager'), 'ZB002');
+  assert.equal(query(`SELECT revision||':'||(document#>>'{content,change_note}') FROM fieldmaps.map_setups
+    WHERE id='${setupId}';`), '2:First manager');
+  console.log('PASS: map setup CAS race preserves first acknowledged edit and refuses stale second manager.');
   const draft1 = create('86000000-0000-4000-8000-000000000001');
   const draft2 = create('86000000-0000-4000-8000-000000000002', base, manager2);
   save(draft1, 1, 'Preserve recorded zone A.');

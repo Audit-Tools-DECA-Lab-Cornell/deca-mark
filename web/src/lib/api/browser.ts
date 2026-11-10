@@ -42,7 +42,7 @@ export class AccountChangedError extends Error {
  * The signed-in person's access token, refreshed first when it expires within a minute. With `expectUser`,
  * a session of anyone else is refused before anything is sent.
  */
-async function accessToken(expectUser?: string): Promise<string> {
+export async function accessToken(expectUser?: string): Promise<string> {
 	let supabase: ReturnType<typeof createSupabaseClient>;
 	try {
 		supabase = createSupabaseClient();

@@ -514,8 +514,12 @@ export function UploadStep({
 
 	return (
 		<div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-			<Island flush divided title="Upload from QGIS" meta="Ground and zones are required">
+			<Island flush divided title="Advanced direct package upload" meta="Prepared layers only">
 				<IslandSection className="pt-5">
+					<p className="mb-4 type-small text-ink-2">
+						Use map setup for a normal QGIS project or to draw missing boundaries. This advanced route
+						publishes files that already contain ground and zones.
+					</p>
 					<ProjectImport
 						key={importReset}
 						projectId={projectId}

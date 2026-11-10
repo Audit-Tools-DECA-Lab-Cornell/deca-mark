@@ -10,6 +10,7 @@ import { TextLink } from "@/components/contour/TextLink";
 import { MapFrame } from "@/components/map/MapFrame";
 import { LoadFailure } from "@/components/shell/LoadFailure";
 import { NotAvailable } from "@/components/shell/NotAvailable";
+import { ResumeSetup } from "@/features/map-setup/ResumeSetup";
 import { projectHref } from "@/features/shell/navigation";
 import { plural } from "@/lib/labels";
 import type { ProjectedSite } from "@/lib/plan";
@@ -25,6 +26,7 @@ export type ZonesScreenProps = {
 	project: string;
 	projectId: string;
 	userId: string | null;
+	timezone: string;
 	site: { readonly siteId: string; readonly code: string; readonly name: string };
 	entry: ZoneEntry;
 	canManage: boolean;
@@ -107,15 +109,23 @@ export function ZonesScreen(props: ZonesScreenProps) {
 		return (
 			<div className="flex flex-col gap-6">
 				{header}
+				{canManage && (
+					<ResumeSetup
+						projectId={props.projectId}
+						siteId={props.site.siteId}
+						siteHref={siteHref}
+						timezone={props.timezone}
+					/>
+				)}
 				<ScreenState
 					kind="empty"
 					icon="layers"
 					title="No map package yet"
-					body="A site's zones come from its first map package. Upload one, then its zones appear here."
+					body="Start with a QGIS project, then draw the site outline and observation zones in map setup."
 					actions={
 						canManage ? (
-							<ButtonLink variant="primary" icon="upload" href={`${siteHref}/packages?step=upload`}>
-								Upload package
+							<ButtonLink variant="primary" icon="upload" href={`${siteHref}/map-setup`}>
+								Set up map
 							</ButtonLink>
 						) : undefined
 					}
@@ -138,7 +148,7 @@ export function ZonesScreen(props: ZonesScreenProps) {
 			{entry === "unavailable" && (
 				<NotAvailable
 					title="Editing zones on the web for this site"
-					instead="Edit the zones layer in QGIS and upload a new package."
+					instead="Open the site and upload a new map version to review or redraw its boundaries."
 				/>
 			)}
 			{props.missingVersion !== null && (

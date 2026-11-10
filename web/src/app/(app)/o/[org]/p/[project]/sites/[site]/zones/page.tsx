@@ -120,6 +120,7 @@ export default async function ZonesPage({
 			project={code}
 			projectId={ref.id}
 			userId={userId}
+			timezone={project.data.timezone}
 			site={{ siteId: site.data.site_id, code: site.data.code, name: site.data.name }}
 			entry={entry}
 			canManage={abilities.manage}

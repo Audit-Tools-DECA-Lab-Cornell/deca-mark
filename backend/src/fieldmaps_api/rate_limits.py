@@ -47,9 +47,12 @@ def policy_for(method: str, path: str) -> Policy | None:
         return None
     policies = (
         (r"/v1/projects/[^/]+/emails", EMAILS),
-        (r"/v1/projects/[^/]+/sites/[^/]+/zone-drafts/[^/]+/validate", ZONE_VALIDATION),
         (
-            r"/v1/projects/[^/]+/(?:sites/[^/]+/zone-drafts/[^/]+/publish|packages)",
+            r"/v1/projects/[^/]+/sites/[^/]+/(?:zone-drafts|map-setups)/[^/]+/validate",
+            ZONE_VALIDATION,
+        ),
+        (
+            r"/v1/projects/[^/]+/(?:sites/[^/]+/(?:zone-drafts|map-setups)/[^/]+/publish|packages)",
             ZONE_PUBLICATION,
         ),
         (r"/v1/orgs", ORGANIZATIONS),

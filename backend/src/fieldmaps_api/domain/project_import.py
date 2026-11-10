@@ -17,6 +17,7 @@ class ProjectImportRequest(BaseModel):
 class ImportedLayer(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
 
+    source_id: str = ""
     name: str
     collection: FeatureCollection
 
@@ -24,6 +25,7 @@ class ImportedLayer(BaseModel):
 class ImportIssue(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
 
+    source_id: str = ""
     layer: str
     message: str
     kind: Literal["online_basemap"] | None = Field(

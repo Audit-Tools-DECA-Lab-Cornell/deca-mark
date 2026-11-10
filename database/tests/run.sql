@@ -64,6 +64,8 @@ SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['00
 \ir zone-publication.sql
 \ir zone-managed-import.sql
 \ir zone-first-upload.sql
+\ir map-setups.sql
+\ir map-setup-publication.sql
 \ir zone-observation-binding.sql
 \ir zone-training-binding.sql
 \ir gis-recorded-zone-context.sql

@@ -104,7 +104,7 @@ export function SiteScreen({
 						siteCode={site.code}
 						current={current}
 						canManage={canManage}
-						uploadHref={`${base}/packages?step=upload`}
+						uploadHref={`${base}/map-setup`}
 						historyHref={`${base}/packages`}
 					/>
 
@@ -175,7 +175,7 @@ function ZonesIsland({
 					icon="layers"
 					headingLevel={3}
 					title="No zones yet"
-					body="Zones come from the zones layer of the site's first map package."
+					body="Set up this site’s map to draw or import its observation zones."
 				/>
 			) : (
 				<ul>
@@ -263,12 +263,13 @@ function PackageIsland({
 				) : (
 					<>
 						<p className="type-body text-ink-2">
-							No map package yet. Observers cannot collect on this site until one is uploaded.
+							Set up this site’s map. Start with a QGIS project, then draw or check the site outline and
+							zones.
 						</p>
 						{canManage ? (
 							<div>
 								<ButtonLink href={uploadHref} variant="primary" icon="upload">
-									Upload the first map package
+									Set up map
 								</ButtonLink>
 							</div>
 						) : (

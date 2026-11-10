@@ -54,7 +54,9 @@ test("uploading a new package from QGIS layers makes it the current one", async 
 
 	await page.goto(projectPath(`sites/${site}`));
 	await page.getByRole("link", { name: "Upload a new version", exact: true }).click();
-	await expect(page).toHaveURL(/\/packages\?(.*&)?step=upload/);
+	await expect(page).toHaveURL(/\/map-setup/);
+	// The advanced legacy uploader remains available through package history.
+	await page.goto(projectPath(`sites/${site}/packages?step=upload`));
 
 	await chooseLayers(page);
 	const zoneId = await keepZoneA(page);

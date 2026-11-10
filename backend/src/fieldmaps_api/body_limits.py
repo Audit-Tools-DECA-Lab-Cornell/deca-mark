@@ -28,6 +28,10 @@ def body_limit(method: str, path: str) -> int:
         return 4 * MIB
     if method == "POST" and re.fullmatch(r"/v1/projects/[^/]+/packages(/import)?", path):
         return 24 * MIB
+    if method in {"POST", "PUT"} and re.fullmatch(
+        r"/v1/projects/[^/]+/sites/[^/]+/map-setups/(import|[^/]+(?:/sources)?)", path
+    ):
+        return 24 * MIB
     # A form definition with many questions, options and protocol notes outgrows the default.
     if method in {"POST", "PUT"} and re.fullmatch(
         r"/v1/projects/[^/]+/(forms(/[^/]+/versions)?|form-versions/[^/]+)", path
@@ -98,9 +102,7 @@ class BodySizeMiddleware:
         body = bytes(buffer)
         if (
             request.method == "PUT"
-            and re.fullmatch(
-                r"/v1/projects/[^/]+/observations/[^/]+", request.url.path.rstrip("/")
-            )
+            and re.fullmatch(r"/v1/projects/[^/]+/observations/[^/]+", request.url.path.rstrip("/"))
             and not valid_upload_json(body)
         ):
             envelope = ErrorEnvelope(

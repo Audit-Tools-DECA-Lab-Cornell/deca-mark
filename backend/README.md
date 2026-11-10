@@ -364,3 +364,11 @@ This is a local development service. Local Supabase is development infrastructur
 Use QGIS read-only access for this slice; arbitrary GIS edits do not yet synchronize back to devices. The local database listens on port 54322; a QGIS Desktop login is not provisioned by these commands. The GIS test validates the database view, not the desktop application's behavior.
 
 References: [FastAPI typed responses](https://fastapi.tiangolo.com/tutorial/response-model/), [Supabase mobile auth](https://supabase.com/docs/guides/auth/quickstarts/react-native), [PostGIS](https://postgis.net/).
+
+## Unfinished map setup
+
+The manager-only map-setup lifecycle stores incomplete first maps and replacements separately from published zone packages. Apply `supabase/migrations/20261110090000_map_setups.sql` and `20261110103000_map_setup_replay_result.sql`, in order, through the explicitly selected target's normal migration process before releasing the API/web. Ordinary checks do not migrate shared or hosted databases.
+
+`/v1/projects/{project}/sites/{site}/map-setups` supports import, acknowledged reads, conditional saves, staged source replacement, validation, publication and discard. Private source bundles never appear in ordinary responses or observer reads. Setup publication locks the site then the setup, rechecks the reviewed revision/current map, and commits the immutable package and replay receipt atomically. Discard/publication release private draft source data; published history remains immutable.
+
+Disposable SQL/API acceptance uses `pnpm db:test ZONE_REHEARSAL=1` and `sh database/zone-api-rehearsal.sh tests/test_map_setup_api.py tests/test_map_setup_publication_api.py`. These commands use synthetic local data and clean their own resources; they do not prove deployed or physical-device acceptance.

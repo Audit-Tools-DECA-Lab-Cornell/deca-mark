@@ -146,8 +146,10 @@ def zone_request(path: str) -> bool:
         is not None
         or re.fullmatch(r"/v1/projects/[^/]+/packages", path.rstrip("/")) is not None
         or re.fullmatch(
-            r"/v1/projects/[^/]+/observations/[^/]+", path.rstrip("/")
-        ) is not None
+            r"/v1/projects/[^/]+/sites/[^/]+/map-setups(?:/[^/]+(?:/[^/]+)?)?", path.rstrip("/")
+        )
+        is not None
+        or re.fullmatch(r"/v1/projects/[^/]+/observations/[^/]+", path.rstrip("/")) is not None
     )
 
 
@@ -163,8 +165,7 @@ def zone_validation_failure(error: RequestValidationError, path: str) -> DomainE
     safe_issues: list[JsonValue] = []
     for issue in issues[:1_000]:
         bound_upload = (
-            re.fullmatch(r"/v1/projects/[^/]+/observations/[^/]+", path.rstrip("/"))
-            is not None
+            re.fullmatch(r"/v1/projects/[^/]+/observations/[^/]+", path.rstrip("/")) is not None
         )
         parts = body_parts(issue.loc, issue.type, bound_upload=bound_upload)
         pointer = "".join("/" + str(part).replace("~", "~0").replace("/", "~1") for part in parts)

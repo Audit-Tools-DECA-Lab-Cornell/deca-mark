@@ -4,21 +4,23 @@ The website converts uploaded vector sources into the GeoJSON layers used by a s
 
 ## Website workflow
 
-1. Open **Sites**, choose the site, and select **Upload a new version**.
-2. Choose the `.qgz` or `.qgs` project. Add any external GeoPackage or all shapefile parts (`.shp`, `.shx`, `.dbf`, `.prj`, and `.cpg` when present), or choose a ZIP containing the project folder.
-3. Select **Read project**. Review any missing-source messages and the converted layers on the plan. Nothing has been saved at this point.
-4. Assign unmatched layers to ground, zones, paths or trees. GeoJSON exports are optional: include them with the project or use the layer picker to replace converted geometry. Ground needs one site outline; zones need unique identifiers. Choose the published form version.
-5. Select **Upload package**. The preparation checks determine whether the new version becomes this site's current map. A package that fails a check is refused with its reason and nothing is saved: the site keeps its current map, and no blocked version appears in its history.
+1. Open **Sites**, choose the site, and select **Set up map** or **Upload a new version**. An unfinished setup shows **Resume map setup**.
+2. Choose a `.qgz`, `.qgs`, or ZIP containing the project and its data. Reading starts automatically. If source files are missing, add the named files and confirm the updated map. Separate geometry exports are optional.
+3. Review how the imported features will be used. Confirm the site outline and observation zones, keep reference features, or deliberately leave unsupported sources out.
+4. Use **Set boundaries** to draw or edit the site outline and zones. A project without zones can continue here. A project without any usable geographic features needs source data before drawing. Unfinished setups are saved privately; the status confirms when a save is acknowledged.
+5. In **Review and publish**, choose a published observation form, check the map, and publish. Observers can download the published version. The previous version remains current until publication succeeds.
+
+Reload restores the last confirmed save. Pending changes are not guaranteed to survive closing the browser. **Save and leave** waits for a confirmed save; conflicts preserve local work for comparison or download. A QGIS project is not always self-contained: its actual source datasets may still be needed.
 
 ## Why a project may need its source files
 
 QGIS normally stores layer references in the project, while geometry stays in separate datasets. On the author's computer those references resolve to local files. The website has only the files selected for upload. A `.qgz` alone works when it contains supported source datasets; otherwise include those datasets. The `.qgd` auxiliary database is not a replacement for the project's vector sources. See the [QGIS file-format documentation](https://doc.qgis.org/3.44/en/docs/user_manual/appendices/qgis_file_formats.html).
 
-The importer reads file-based OGR layers from GeoPackage, shapefile and GeoJSON. It respects the CRS assigned to each QGIS layer and converts coordinates to EPSG:4326. It preserves feature properties, using the dataset feature identifier when no `id` property exists. A single polygon assigned to ground without a `kind` value is marked as the site outline; multiple polygons require an explicitly marked outline.
+The importer reads file-based OGR layers from GeoPackage, shapefile and GeoJSON. It respects the CRS assigned to each QGIS layer and converts coordinates to EPSG:4326. It preserves feature properties, using the dataset feature identifier when no `id` property exists. The setup asks which polygon is the site outline; other polygons may remain ground reference features. Imported outlines and zones are candidates for review, and missing boundaries can be drawn in the app.
 
 Raster imagery and QGIS styles are not imported. Remote layers are not fetched. Filtered layers need a GeoJSON export of the filtered result. Missing or ambiguous source names are reported rather than guessed. Original project metadata stays attached, so preparation still reads the project's layers.
 
-An online background map (an XYZ, WMS or other tile service) never becomes part of a package, and observers do not see it: they see the vector layers only. The upload leaves such a map out only after the manager confirms it (D35). **Read project** marks each one with its host. The API refuses a package whose project uses an online background map that the request has not named in `leave_out_online_basemaps`, answering `422 online_basemap_unconfirmed` with the layers and hosts, and publishes nothing. The same request sent again with those layer names publishes the vector layers, and the version records a warning check that names each map left out. A raster file the institution holds passes as before.
+An online background map (an XYZ, WMS or other tile service) never becomes part of a package, and observers do not see it: they see the vector layers only. The upload leaves such a map out only after the manager confirms it (D35). The source review marks each one with its host. The API refuses a package whose project uses an online background map that the request has not named in `leave_out_online_basemaps`, answering `422 online_basemap_unconfirmed` with the layers and hosts, and publishes nothing. The same request sent again with those layer names publishes the vector layers, and the version records a warning check that names each map left out. A raster file the institution holds passes as before.
 
 ## Limits and verification
 

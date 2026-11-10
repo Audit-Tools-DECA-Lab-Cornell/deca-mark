@@ -50,7 +50,7 @@ export function SitesScreen({
 						title="No sites yet"
 						body={
 							canManage
-								? "A site is one real place. Use Create site to add the first one, then upload its map package from QGIS."
+								? "A site is one real place. Use Create site to add the first one, then set up its map from QGIS."
 								: "A site is one real place. A project manager can add the first one."
 						}
 					/>
@@ -69,7 +69,7 @@ export function SitesScreen({
 				)}
 			</Island>
 			<Note icon="layers">
-				A site&rsquo;s map and zones come from a map package prepared in QGIS. Open a site to upload one.
+				Start with a QGIS project, then draw or check the site outline and zones. Open a site to set up its map.
 			</Note>
 		</div>
 	);

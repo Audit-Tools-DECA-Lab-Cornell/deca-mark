@@ -348,3 +348,11 @@ All other populated tables require a fresh explicit report. The local helper nev
 historical provenance. Executing the persistent local apply requires explicit approval;
 the helper cannot target hosted databases. The [production rollout procedure](hosted/form-schema2-rollout.md)
 uses a fresh production snapshot and the same reviewed transaction builder.
+
+## Unfinished map setup
+
+The manager-only map-setup lifecycle stores incomplete first maps and replacements separately from published zone packages. Apply `supabase/migrations/20261110090000_map_setups.sql` and `20261110103000_map_setup_replay_result.sql`, in order, through the explicitly selected target's normal migration process before releasing the API/web. Ordinary checks do not migrate shared or hosted databases.
+
+`/v1/projects/{project}/sites/{site}/map-setups` supports import, acknowledged reads, conditional saves, staged source replacement, validation, publication and discard. Private source bundles never appear in ordinary responses or observer reads. Setup publication locks the site then the setup, rechecks the reviewed revision/current map, and commits the immutable package and replay receipt atomically. Discard/publication release private draft source data; published history remains immutable.
+
+Disposable SQL/API acceptance uses `pnpm db:test ZONE_REHEARSAL=1` and `sh database/zone-api-rehearsal.sh tests/test_map_setup_api.py tests/test_map_setup_publication_api.py`. These commands use synthetic local data and clean their own resources; they do not prove deployed or physical-device acceptance.

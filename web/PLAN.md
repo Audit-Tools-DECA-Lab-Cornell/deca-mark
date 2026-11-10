@@ -715,6 +715,8 @@ Done when: On the local stack, a first upload creates v1; a later upload with on
 Verify: `pnpm web:check`, `pnpm --dir web test:unit` (mapping model tests), and the packages e2e specs with first and later uploads.
 Verified: Every upload maps each zone of the file (`src/features/packages/{identity.ts,ZoneMapping.tsx}`): only a carried `zone_id` is preselected, a matching code or name is a suggestion, new zones get a client identity and a valid free code, left-out zones are listed; the inventory form, the change note, `request_id` and `expected_current_package_id` are sent; an attempt whose answer is unknown is kept whole until answered (resend replays); conflicts and zone issues read in words. Unit: `zone-identity`, `package-checks`, `package-history`. Local stack at desktop-1440 and phone-390: `packages-identity.spec.ts` (one kept, one new, one removed across successive versions with zone A's identity and its 8 records kept; an upload against a map changed meanwhile is refused with the conflict copy and makes no version) and `packages.spec.ts`.
 
+QGIS-first map setup adds a separate incomplete manager setup before publication, including first-map outline/zone authoring and resumable source recovery. Local implementation and verification: [setup evidence](../docs/reviews/qgis-first-map-setup/README.md). Hosted release remains a separate gate.
+
 ### WEB-43: Send the bootstrap script's first map on the single upload path
 Status: done (2026-10-14; local stack only) · Phase 3 · Size S · Depends: BE-22, WEB-42 · Blocks: none
 Owner: Claude web owner.

@@ -1,5 +1,6 @@
 """Bounded subprocess entry point for QGIS conversion; no credentials are inherited."""
 
+import hashlib
 import re
 import resource
 import sys
@@ -76,11 +77,19 @@ def import_layers(
         )
         raise ProjectFileError(message)
     for item in candidates:
+        source_id = (
+            item.findtext("id")
+            or hashlib.sha256(
+                (
+                    (item.findtext("datasource") or "") + "\0" + (item.findtext("layername") or "")
+                ).encode()
+            ).hexdigest()
+        )
         name = qgis_project.layer_name(item) or "Unnamed layer"
         provider = qgis_project.layer_provider(item)
         unconverted = unconverted_issue(item, name, provider)
         if unconverted is not None:
-            issues.append(unconverted)
+            issues.append(unconverted.model_copy(update={"source_id": source_id}))
             continue
         source, *options = (item.findtext("datasource") or "").split("|")
         options_map = dict(option.split("=", 1) for option in options if "=" in option)
@@ -89,6 +98,7 @@ def import_layers(
         ):
             issues.append(
                 ImportIssue(
+                    source_id=source_id,
                     layer=name,
                     message=(
                         "This layer has a filter. Export the filtered layer as GeoJSON "
@@ -103,6 +113,7 @@ def import_layers(
         ) or source.startswith("/vsi"):
             issues.append(
                 ImportIssue(
+                    source_id=source_id,
                     layer=name,
                     message=(
                         "Remote sources are not fetched. Include a local copy or a GeoJSON export."
@@ -115,6 +126,7 @@ def import_layers(
             missing = PurePosixPath(source.replace(chr(92), "/")).name or "the source file"
             issues.append(
                 ImportIssue(
+                    source_id=source_id,
                     layer=name,
                     message=(
                         f"Include {missing} with this project, or supply its GeoJSON export. "
@@ -132,12 +144,13 @@ def import_layers(
             )
             collection = convert_vector(directory / filename, selector, assigned_crs)
         except ProjectFileError as error:
-            issues.append(ImportIssue(layer=name, message=str(error)))
+            issues.append(ImportIssue(source_id=source_id, layer=name, message=str(error)))
             continue
         except (FionaError, ValidationError, ValueError, OSError):
             # Native diagnostics may contain paths; keep them out of the response.
             issues.append(
                 ImportIssue(
+                    source_id=source_id,
                     layer=name,
                     message=(
                         "This layer could not be read or reprojected. Include all shapefile "
@@ -146,7 +159,7 @@ def import_layers(
                 )
             )
             continue
-        layers.append(ImportedLayer(name=name, collection=collection))
+        layers.append(ImportedLayer(source_id=source_id, name=name, collection=collection))
     return layers, issues
 
 

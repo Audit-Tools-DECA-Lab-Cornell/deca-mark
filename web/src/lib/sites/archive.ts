@@ -1,7 +1,7 @@
 import { strFromU8, unzipSync } from "fflate";
 import { z } from "zod";
 
-import { parseSite, type ProjectedSite, projectSite, type SiteCollection, type SiteFeature } from "../plan";
+import { fitFrame, parseSite, type ProjectedSite, projectSite, type SiteCollection, type SiteFeature } from "../plan";
 import { type PolygonRings, readZoneGeometry, ZONE_LIMITS } from "../zones/geometry";
 
 /**
@@ -404,8 +404,11 @@ function sourceZones(layer: LayerInput | undefined): SiteFeature[] {
  * The plan a package prepared from these layers would draw, before anything is sent: the upload step's
  * preview. Null when there is nothing to draw yet.
  */
-export function layersPlan(name: string, layers: CollectionLayers): ProjectedSite | null {
+export function layersPlan(name: string, layers: CollectionLayers, minimumSpanMetres = 0): ProjectedSite | null {
 	const features = [...backgroundFeatures(layers), ...sourceZones(layers.zones)];
 	if (features.length === 0) return null;
-	return projectSite(parseSite({ type: "FeatureCollection", name, features }));
+	const collection = parseSite({ type: "FeatureCollection", name, features });
+	return projectSite(
+		minimumSpanMetres > 0 ? { ...collection, frame: fitFrame(collection.features, minimumSpanMetres) } : collection
+	);
 }
