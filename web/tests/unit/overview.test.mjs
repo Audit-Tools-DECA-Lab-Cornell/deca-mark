@@ -74,7 +74,7 @@ test("a site without a ready package, and a draft that observers cannot see", ()
 		items.map(item => item.id),
 		["no-package-a", "draft-play-v2"]
 	);
-	assert.equal(items[0].action.href, `${base}/sites/a/packages?step=upload`);
+	assert.equal(items[0].action.href, `${base}/sites/a/map-setup`);
 	assert.equal(items[1].action.href, `${base}/forms/versions/play-v2`);
 	assert.equal(items[1].tone, "waiting");
 });
@@ -166,7 +166,7 @@ test("v1 bound by Site A's map and v2 published is not 'nothing needs attention'
 		item.detail,
 		"Observers still get v1 at Site a. A site changes forms only when you upload a map package that names v2."
 	);
-	assert.deepEqual(item.action, { label: "Upload a map package", href: `${base}/sites/a/packages?step=upload` });
+	assert.deepEqual(item.action, { label: "Upload a new version", href: `${base}/sites/a/map-setup` });
 });
 
 test("sites on the newest version are not behind, whatever else is published", () => {
@@ -234,7 +234,7 @@ test("sites that name the newest version are said to, and sites with other forms
 	assert.equal(items.length, 1);
 	assert.equal(items[0].title, "Play form v2 is published, but not every site's map names it.");
 	assert.match(items[0].detail, /^Observers still get v1 at Site b\. /);
-	assert.equal(items[0].action.href, `${base}/sites/b/packages?step=upload`);
+	assert.equal(items[0].action.href, `${base}/sites/b/map-setup`);
 });
 
 test("several sites behind on one form are one item that lists each site's version and links to the sites", () => {
@@ -324,7 +324,7 @@ test("a bound version the forms do not list, or a map with no recorded forms, is
 			tone: "attention",
 			title: "Site b has no ready map package.",
 			detail: "Observers have no map to download for this site.",
-			action: { label: "Upload a map package", href: `${base}/sites/b/packages?step=upload` }
+			action: { label: "Set up map", href: `${base}/sites/b/map-setup` }
 		}
 	]);
 });

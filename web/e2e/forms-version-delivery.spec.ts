@@ -123,18 +123,22 @@ test("Forms, Overview and the upload step say a site is on v1 when v2 is publish
 		await shot("forms-v1-bound");
 	});
 
-	await test.step("Overview: a waiting item replaces 'Nothing needs attention' and links to the upload step", async () => {
+	await test.step("Overview: a waiting item names the older binding and opens map setup", async () => {
 		await page.goto(path);
 		const attention = page.getByRole("region", { name: "Needs attention" });
 		await expect(attention).toContainText(`${FORM.name} v2 is published, but no site's map names it.`);
 		await expect(attention).toContainText(`Observers still get v1 at ${SITE.name}.`);
 		await expect(attention).not.toContainText("Nothing needs attention");
 		await shot("overview-v1-bound");
-		await attention.getByRole("link", { name: "Upload a map package", exact: true }).click();
-		await expect(page).toHaveURL(new RegExp(`/sites/${SITE.code}/packages\\?(.*&)?step=upload`));
+		await attention.getByRole("link", { name: "Upload a new version", exact: true }).click();
+		await expect(page).toHaveURL(new RegExp(`/sites/${SITE.code}/map-setup$`));
+		await expect(page.locator("#map-source-files")).toBeVisible();
 	});
 
-	await test.step("Upload step: starts on v2, and says so when v1 is chosen", async () => {
+	await test.step("Advanced prepared upload: starts on v2, and says so when v1 is chosen", async () => {
+		await page.goto(`${path}/sites/${SITE.code}/packages`);
+		await page.getByRole("link", { name: "Advanced: upload prepared layers", exact: true }).click();
+		await expect(page).toHaveURL(/\/packages\?step=advanced-upload$/);
 		const version = page.getByLabel("Form version", { exact: true });
 		await expect(version).toHaveValue(`${FORM.code}-v2`);
 		await expect(main).not.toContainText("A newer version is published");

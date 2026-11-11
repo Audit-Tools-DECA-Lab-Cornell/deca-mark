@@ -163,7 +163,7 @@ export function attentionItems(input: {
 				tone: "attention",
 				title: `${site.name} has no ready map package.`,
 				detail: "Observers have no map to download for this site.",
-				...link("Upload a map package", `${base}/sites/${site.code}/packages?step=upload`)
+				...link("Set up map", `${base}/sites/${site.code}/map-setup`)
 			});
 		}
 	}
@@ -194,7 +194,7 @@ export function attentionItems(input: {
 					title: `${form.name} v${newest.version} is published, but ${named.length === 0 ? "no site's map names it" : "not every site's map names it"}.`,
 					detail: `Observers still get ${names(shown)}. A site changes forms only when you upload a map package that names v${newest.version}.`,
 					...(only
-						? link("Upload a map package", `${base}/sites/${only.code}/packages?step=upload`)
+						? link("Upload a new version", `${base}/sites/${only.code}/map-setup`)
 						: link("Open sites", `${base}/sites`))
 				});
 			}

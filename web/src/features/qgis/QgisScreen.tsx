@@ -157,7 +157,7 @@ export function QgisScreen({
 					divided={false}
 					title="Maps in"
 					meta={plural(maps.length, "site")}
-					footnote="Open a site's upload page to read a QGIS project with its source files, or upload GeoJSON layers. Review the layers before saving its map package.">
+					footnote="Open map setup for a site. Start with a QGIS project, then draw or check the site outline and observation zones before publishing.">
 					{maps.length === 0 ? (
 						<ScreenState
 							kind="empty"
@@ -223,8 +223,8 @@ export function QgisScreen({
 												</Button>
 											)}
 											{canUpload && (
-												<TextLink href={`${base}/sites/${entry.code}/packages?step=upload`}>
-													{entry.package ? "Upload a new version" : "Upload a map package"}
+												<TextLink href={`${base}/sites/${entry.code}/map-setup`}>
+													{entry.package ? "Upload a new version" : "Set up map"}
 												</TextLink>
 											)}
 										</div>

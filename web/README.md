@@ -42,7 +42,9 @@ Form editing carries the loaded draft ETag through save and discard. Each succes
 
 ## Import a QGIS project for a site
 
-Open **Sites → the site → Set up map** (or **Upload a new version**). The manager-only workflow is **Add map → Set boundaries → Review and publish**. Choose a QGIS project; reading starts automatically. Include missing GeoPackage/shapefile source data when prompted, or choose a ZIP of the project folder. Separate GeoJSON exports are optional and an advanced GeoJSON-only path remains available.
+Open **Sites → the site → Set up map** (or **Upload a new version**). QGIS and Overview actions open the same map setup workflow. The manager-only workflow is **Add map → Set boundaries → Review and publish**. Choose a QGIS project; reading starts automatically. Include missing GeoPackage/shapefile source data when prompted, or choose a ZIP of the project folder. Separate GeoJSON exports are optional.
+
+Old `…/packages?step=upload` addresses redirect to map setup, including any acknowledged draft. Package history offers **Advanced: upload prepared layers** at `…/packages?step=advanced-upload` for files that already contain ground and zones. That advanced route retains its prepared-layer requirements and has a **Use map setup** action for returning to normal project import and boundary editing.
 
 Review imported feature roles, draw any missing outline and zones, then choose the published observation form during review. An unfinished setup is stored separately from published packages. **Resume map setup** restores the last acknowledged revision. Adding missing data files retains the saved project. Select **Replace the QGIS project and its data files** before choosing a replacement project and all its dependencies; confirmation replaces the entire saved file selection and preserves drawn boundaries. Source replacement has a conversion-only preview followed by confirmation. Publication checks the reviewed revision and current package in one transaction. Existing maps and historical observations retain their version bindings.
 

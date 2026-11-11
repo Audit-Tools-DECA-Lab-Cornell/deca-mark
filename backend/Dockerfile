@@ -20,6 +20,7 @@ CMD ["pytest"]
 FROM python:3.13-slim AS runtime
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1
+RUN apt-get update && apt-get install --no-install-recommends -y libexpat1 && rm -rf /var/lib/apt/lists/*
 RUN groupadd --gid 10001 fieldmaps && useradd --uid 10001 --gid fieldmaps --no-create-home fieldmaps
 COPY --from=production-dependencies /app/.venv ./.venv
 COPY src ./src

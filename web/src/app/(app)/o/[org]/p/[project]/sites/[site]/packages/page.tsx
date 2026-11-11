@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { ButtonLink } from "@/components/contour/Button";
 import { Island } from "@/components/contour/Island";
@@ -75,7 +75,7 @@ function PackagesFailure({ failure }: { failure: Failure }) {
 
 /**
  * A site's map packages: History (the newest ready package is current), Inspect (`?package=<id>`: one
- * package's checks and contents) and Upload (`?step=upload`, managers: QGIS layers to a new version).
+ * package's checks and contents) and prepared-layer upload (`?step=advanced-upload`, managers).
  */
 export default async function PackagesPage({
 	params,
@@ -85,6 +85,7 @@ export default async function PackagesPage({
 	searchParams: Promise<Query>;
 }) {
 	const [{ org, project: code, site: siteCode }, query] = await Promise.all([params, searchParams]);
+	if (one(query.step) === "upload") redirect(`${projectHref(org, code, "sites")}/${siteCode}/map-setup`);
 	const ref = await resolveProject(org, code);
 	if (!ref) notFound();
 	const canManage = projectAbilities(ref.role).manage;
@@ -102,7 +103,7 @@ export default async function PackagesPage({
 	const siteHref = `${sitesHref}/${site.data.code}`;
 	const base = `${siteHref}/packages`;
 	const timezone = clock(project.data.timezone);
-	const uploading = one(query.step) === "upload";
+	const uploading = one(query.step) === "advanced-upload";
 
 	// Why each blocked package was blocked: the first check that blocked it.
 	// And what the warning checks of the newest ready ones say (a background map left out of the upload).
@@ -166,13 +167,23 @@ export default async function PackagesPage({
 				lead="Review current and earlier map packages. Records keep the version they were collected on."
 				actions={
 					uploading ? (
-						<ButtonLink href={base} variant="outline" icon="arrow-left">
-							Back to history
-						</ButtonLink>
+						<>
+							<ButtonLink href={`${siteHref}/map-setup`} variant="ink">
+								Use map setup
+							</ButtonLink>
+							<ButtonLink href={base} variant="outline" icon="arrow-left">
+								Back to history
+							</ButtonLink>
+						</>
 					) : canManage ? (
-						<ButtonLink href={`${siteHref}/map-setup`} variant="primary" icon="upload">
-							Upload a new version
-						</ButtonLink>
+						<>
+							<ButtonLink href={`${siteHref}/map-setup`} variant="primary" icon="upload">
+								{site.data.current_package_id ? "Upload a new version" : "Set up map"}
+							</ButtonLink>
+							<ButtonLink href={`${base}?step=advanced-upload`} variant="outline">
+								Advanced: upload prepared layers
+							</ButtonLink>
+						</>
 					) : undefined
 				}
 			/>

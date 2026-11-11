@@ -40,6 +40,8 @@ index is not selected under the current policies.
 
 `make -C database api-build api-test` builds separate runtime and test images and runs the API suite against the existing local database. The test image includes pytest and Docker tooling for SQL fixtures; the runtime image contains neither and runs as UID 10001. Runtime-mounted password files must be readable by that user. The runtime health check uses the configured `PORT` and calls `/health`.
 
+Run `sh backend/tests/runtime-import-smoke.sh` from the product root to verify QGIS conversion in the actual final production image. It builds Render's `linux/amd64` runtime (including on Apple Silicon), runs as UID 10001 with networking disabled and only committed synthetic map fixtures mounted read-only, and checks both a complete QGZ and actionable missing-source diagnostics for a standalone QGS. The runtime includes `libexpat1`, required by Fiona's native GDAL library. The harness removes only its own container and temporary image; it does not start a database or read credentials. CI runs this separately from the host-based API suite so a missing production shared library is detected even when imports pass on the host.
+
 For the separate API connected to hosted PostGIS, use [Supabase setup](../docs/Supabase-Setup.md).
 
 ## Configure a development identity provider

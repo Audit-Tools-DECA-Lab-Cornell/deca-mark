@@ -104,6 +104,8 @@ jobs:
         run: pnpm --dir mobile install --frozen-lockfile
       - run: pnpm backend:setup
       - run: pnpm backend:check
+      - name: QGIS imports in the final production image
+        run: sh backend/tests/runtime-import-smoke.sh
       - name: Cache pinned disposable database image
         run: docker pull "$DECAMARK_REHEARSAL_IMAGE"
       - name: Full backend suite including isolated recovery and collector acceptance

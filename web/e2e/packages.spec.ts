@@ -55,8 +55,8 @@ test("uploading a new package from QGIS layers makes it the current one", async 
 	await page.goto(projectPath(`sites/${site}`));
 	await page.getByRole("link", { name: "Upload a new version", exact: true }).click();
 	await expect(page).toHaveURL(/\/map-setup/);
-	// The advanced legacy uploader remains available through package history.
-	await page.goto(projectPath(`sites/${site}/packages?step=upload`));
+	await page.goto(projectPath(`sites/${site}/packages`));
+	await page.getByRole("link", { name: "Advanced: upload prepared layers", exact: true }).click();
 
 	await chooseLayers(page);
 	const zoneId = await keepZoneA(page);
@@ -111,7 +111,7 @@ test("a self-contained QGIS project becomes the site's current map without separ
 	test.setTimeout(120_000);
 	const site = SEED.sites.fallCreek;
 	const next = (await newestPackageVersion(site)) + 1;
-	await page.goto(projectPath(`sites/${site}/packages?step=upload`));
+	await page.goto(projectPath(`sites/${site}/packages?step=advanced-upload`));
 	await chooseProject(page, true);
 	await page.getByRole("button", { name: "Read project", exact: true }).click();
 	await expect(page.getByText("3 layers read. Nothing saved yet.", { exact: true })).toBeVisible({ timeout: 60_000 });
@@ -132,7 +132,7 @@ test("a self-contained QGIS project becomes the site's current map without separ
 
 test("a project with missing sources names them and accepts optional GeoJSON exports", async ({ page }) => {
 	test.setTimeout(120_000);
-	await page.goto(projectPath(`sites/${SEED.sites.fallCreek}/packages?step=upload`));
+	await page.goto(projectPath(`sites/${SEED.sites.fallCreek}/packages?step=advanced-upload`));
 	await chooseProject(page, false);
 	await page.getByRole("button", { name: "Read project", exact: true }).click();
 	await expect(page.getByText(/Include ground.geojson with this project/)).toBeVisible({ timeout: 60_000 });
@@ -170,7 +170,7 @@ async function readMarkedProject(page: Page, site: string, unmarked: boolean) {
 			body.issues = body.issues.map(issue => ({ layer: issue.layer, message: issue.message }));
 			await route.fulfill({ response, json: body });
 		});
-	await page.goto(projectPath(`sites/${site}/packages?step=upload`));
+	await page.goto(projectPath(`sites/${site}/packages?step=advanced-upload`));
 	await chooseProject(page, true, true);
 	await page.getByRole("button", { name: "Read project", exact: true }).click();
 	await expect(page.getByText("3 layers read. Nothing saved yet.", { exact: true })).toBeVisible({ timeout: 60_000 });

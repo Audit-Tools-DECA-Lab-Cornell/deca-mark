@@ -55,9 +55,9 @@ export const SCAN_ROUTES: ScanRoute[] = [
 	{ name: "zones", role: "manager", path: () => projectPath(`sites/${SEED.sites.fallCreek}/zones`) },
 	{ name: "zones-empty-site", role: "manager", path: () => projectPath(`sites/${SEED.sites.empty}/zones`) },
 	{
-		name: "packages-upload",
+		name: "packages-advanced-upload",
 		role: "manager",
-		path: () => projectPath(`sites/${SEED.sites.fallCreek}/packages?step=upload`)
+		path: () => projectPath(`sites/${SEED.sites.fallCreek}/packages?step=advanced-upload`)
 	},
 	{ name: "forms", role: "manager", path: () => projectPath("forms") },
 	{ name: "form-versions", role: "manager", path: () => projectPath(`forms/versions?form=${SEED.form.code}`) },

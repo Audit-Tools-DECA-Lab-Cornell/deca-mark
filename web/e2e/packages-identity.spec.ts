@@ -51,7 +51,7 @@ const file = (name: string, value: unknown) => ({
 });
 
 async function openUpload(page: Page, zones: unknown) {
-	await page.goto(projectPath(`sites/${SITE}/packages?step=upload`));
+	await page.goto(projectPath(`sites/${SITE}/packages?step=advanced-upload`));
 	await chooseFiles(
 		page.getByLabel("Choose files from the QGIS export", { exact: true }),
 		[file("ground.geojson", ground), file("zones.geojson", zones)],
