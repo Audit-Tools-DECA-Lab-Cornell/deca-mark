@@ -15,12 +15,15 @@ const react = new URL("../../node_modules/react/index.js", import.meta.url).href
 const boundaryEditorMock = `
 	import React from "${react}";
 	const { useEffect, useState } = React;
-	export function BoundaryEditor(props) {
+	export function OutlineStep() {
+		return null;
+	}
+	export function ZonesStep(props) {
 		const [zones, setZones] = useState(props.content.zones);
 		useEffect(() => {
 			props.onChange({ ...props.content, zones });
 		}, [zones, props.content, props.onChange]);
-		return React.createElement("BoundaryEditorProbe", {
+		return React.createElement("ZonesStepProbe", {
 			zones,
 			emitStaleGeometry: geometry =>
 				setZones(current => current.map(zone => ({ ...zone, geometry })))
@@ -30,11 +33,12 @@ const boundaryEditorMock = `
 
 registerHooks({
 	resolve(specifier, context, nextResolve) {
-		if (specifier === "./BoundaryEditor") return { url: "map-setup-adoption:BoundaryEditor", shortCircuit: true };
+		if (specifier === "./ZonesStep") return { url: "map-setup-adoption:ZonesStep", shortCircuit: true };
+		if (specifier === "./OutlineStep") return { url: "map-setup-adoption:ZonesStep", shortCircuit: true };
 		return nextResolve(specifier, context);
 	},
 	load(url, context, nextLoad) {
-		if (url === "map-setup-adoption:BoundaryEditor")
+		if (url === "map-setup-adoption:ZonesStep")
 			return { format: "module", source: boundaryEditorMock, shortCircuit: true };
 		if (url.endsWith(".tsx"))
 			return {
@@ -52,7 +56,7 @@ registerHooks({
 	}
 });
 
-const { AcceptedBoundaryEditor } = await load("features/map-setup/AcceptedBoundaryEditor.tsx");
+const { AcceptedZonesStep } = await load("features/map-setup/AcceptedSteps.tsx");
 
 const polygon = value => ({
 	type: "Polygon",
@@ -77,7 +81,7 @@ const content = geometry => ({
 	confirmed_omissions: []
 });
 
-test("accepting saved geometry remounts the whole boundary editor before it can emit stale zones", async () => {
+test("accepting saved geometry remounts the whole zones step before it can emit stale zones", async () => {
 	const staleGeometry = polygon(20);
 	const savedGeometry = polygon(40);
 	const writes = [];
@@ -87,7 +91,7 @@ test("accepting saved geometry remounts the whole boundary editor before it can 
 
 	await act(async () => {
 		editor = create(
-			React.createElement(AcceptedBoundaryEditor, {
+			React.createElement(AcceptedZonesStep, {
 				acceptedContentEpoch: 1,
 				layers: [],
 				baseZoneIds: [],
@@ -98,13 +102,13 @@ test("accepting saved geometry remounts the whole boundary editor before it can 
 		);
 	});
 	await act(async () => {
-		editor.root.findByType("BoundaryEditorProbe").props.emitStaleGeometry(staleGeometry);
+		editor.root.findByType("ZonesStepProbe").props.emitStaleGeometry(staleGeometry);
 	});
 	writes.length = 0;
 
 	await act(async () => {
 		editor.update(
-			React.createElement(AcceptedBoundaryEditor, {
+			React.createElement(AcceptedZonesStep, {
 				acceptedContentEpoch: 2,
 				layers: [],
 				baseZoneIds: [],
@@ -117,6 +121,6 @@ test("accepting saved geometry remounts the whole boundary editor before it can 
 
 	assert.ok(writes.length > 0);
 	assert.ok(writes.every(value => value.zones[0].geometry === savedGeometry));
-	assert.equal(editor.root.findByType("BoundaryEditorProbe").props.zones[0].geometry, savedGeometry);
+	assert.equal(editor.root.findByType("ZonesStepProbe").props.zones[0].geometry, savedGeometry);
 	await act(async () => editor.unmount());
 });

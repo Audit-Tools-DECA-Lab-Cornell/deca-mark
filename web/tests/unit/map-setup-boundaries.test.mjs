@@ -52,7 +52,8 @@ registerHooks({
 	}
 });
 
-const { BoundaryEditor } = await load("features/map-setup/BoundaryEditor.tsx");
+const { OutlineStep } = await load("features/map-setup/OutlineStep.tsx");
+const { ZonesStep } = await load("features/map-setup/ZonesStep.tsx");
 const { fromPlan, toPlan } = await load("lib/plan.ts");
 const polygon = (west, south, east, north) => ({
 	type: "Polygon",
@@ -92,10 +93,10 @@ const empty = {
 
 test("boundaries and click coordinates keep the accepted frame when the outline extent changes", async () => {
 	// Given a point-only map and its accepted drawing frame.
-	const props = { layers, baseZoneIds: [], onChange() {}, onPending() {} };
+	const props = { layers, onChange() {}, onPending() {}, onChooseImported() {}, footer: null };
 	let editor;
 	await act(async () => {
-		editor = create(React.createElement(BoundaryEditor, { ...props, content: empty }));
+		editor = create(React.createElement(OutlineStep, { ...props, content: empty }));
 	});
 	const initial = editor.root.findByType("MapFrameProbe").props.site;
 	const geometry = polygon(-76.0001, 41.9999, -75.9999, 42.0001);
@@ -114,7 +115,7 @@ test("boundaries and click coordinates keep the accepted frame when the outline 
 	try {
 		// When the outline and a zone extend beyond the original feature extent.
 		await act(async () => {
-			editor.update(React.createElement(BoundaryEditor, { ...props, content }));
+			editor.update(React.createElement(OutlineStep, { ...props, content }));
 		});
 		// Then rendered shapes, scale and inverse click coordinates use that same frame.
 		const plan = editor.root.findByType("MapFrameProbe").props.site;
@@ -148,12 +149,13 @@ test("deleting adopted zones leaves their source features out and preserves surv
 	let editor;
 	await act(async () => {
 		editor = create(
-			React.createElement(BoundaryEditor, {
+			React.createElement(ZonesStep, {
 				layers,
 				baseZoneIds: [],
 				content,
 				onChange: value => writes.push(value),
-				onPending() {}
+				onPending() {},
+				footer: null
 			})
 		);
 	});

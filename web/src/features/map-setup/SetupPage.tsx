@@ -8,12 +8,14 @@ import { settle } from "@/lib/workspace/result";
 
 import { setupFormChoices } from "./form-choices";
 import { SetupScreen } from "./SetupScreen";
+import { readStep } from "./steps";
 
 type Params = { org: string; project: string; site: string; setup?: string; step?: string };
 type FormChoice = { readonly code: string; readonly name: string };
 
 export async function SetupPage({ params }: { readonly params: Promise<Params> }) {
-	const { org, project, site, setup, step = "add-map" } = await params;
+	const { org, project, site, setup, step } = await params;
+	const initialStep = readStep(step);
 	const ref = await resolveProject(org, project);
 	if (!ref) notFound();
 	if (!projectAbilities(ref.role).manage)
@@ -28,7 +30,7 @@ export async function SetupPage({ params }: { readonly params: Promise<Params> }
 				noAccess="Only project managers can set up a map."
 			/>
 		);
-	if (!["add-map", "boundaries", "review"].includes(step)) notFound();
+	if (!initialStep) notFound();
 	const [siteResult, forms, workspace] = await Promise.all([
 		settle(getSite(ref.id, site)),
 		settle(listForms(ref.id)),
@@ -55,7 +57,6 @@ export async function SetupPage({ params }: { readonly params: Promise<Params> }
 		code: form.code,
 		name: `${form.formName} · version ${form.version}`
 	});
-	const initialStep = step === "boundaries" ? "boundaries" : step === "review" ? "review" : "add-map";
 	return (
 		<SetupScreen
 			projectId={ref.id}
@@ -63,6 +64,7 @@ export async function SetupPage({ params }: { readonly params: Promise<Params> }
 			userId={user}
 			siteName={siteResult.data.name}
 			siteHref={`/o/${org}/p/${project}/sites/${site}`}
+			sitesHref={`/o/${org}/p/${project}/sites`}
 			expectedCurrent={siteResult.data.current_package_id}
 			setupId={setup}
 			initialStep={initialStep}

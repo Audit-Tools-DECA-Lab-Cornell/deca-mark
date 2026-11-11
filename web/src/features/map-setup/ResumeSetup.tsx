@@ -51,12 +51,14 @@ export async function ResumeSetup({
 	return (
 		<Note title="Map setup in progress">
 			<p>
-				Last confirmed save: <time dateTime={active.updated_at}>{savedAt}</time>. Observers cannot use it until
-				you publish it.
+				A draft map for this site was last saved <time dateTime={active.updated_at}>{savedAt}</time>. Observers
+				cannot use it until you publish it.
 			</p>
-			<ButtonLink variant="ink" href={`${siteHref}/map-setup/${active.setup_id}/add-map`}>
-				Resume map setup
-			</ButtonLink>
+			<div className="mt-3">
+				<ButtonLink variant="ink" size="sm" href={`${siteHref}/map-setup/${active.setup_id}/add-map`}>
+					Resume map setup
+				</ButtonLink>
+			</div>
 		</Note>
 	);
 }

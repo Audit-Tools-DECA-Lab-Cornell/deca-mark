@@ -103,11 +103,11 @@ async function awaitLayerReview(page: Page): Promise<void> {
 	await expect(
 		page
 			.getByText("Reading project…", { exact: true })
-			.or(page.getByRole("heading", { name: "Review the map layers" }))
+			.or(page.getByRole("heading", { name: "Map layers", exact: true }))
 	).toBeVisible({
 		timeout: 30000
 	});
-	const review = page.getByRole("heading", { name: "Review the map layers" });
+	const review = page.getByRole("heading", { name: "Map layers", exact: true });
 	await expect(review).toBeVisible({ timeout: 120000 });
 	await review.scrollIntoViewIfNeeded();
 }
@@ -137,6 +137,36 @@ async function activate(page: Page, name: string, touch: boolean): Promise<void>
 	await page.keyboard.press("Enter");
 }
 
+/** Opens a closed disclosure by its summary; typing coordinates sits one level below drawing. */
+async function disclose(page: Page, summary: string): Promise<void> {
+	if (!(await page.getByLabel("Longitude", { exact: true }).isVisible()))
+		await page.getByText(summary, { exact: true }).click();
+}
+
+async function step(page: Page, name: RegExp): Promise<void> {
+	await page.getByRole("navigation", { name: "Map setup steps" }).getByRole("button", { name }).click();
+}
+
+/** Adds a zone on the Zones step from typed corners, as a manager without a pointer would. */
+async function typeZone(page: Page, points: readonly (readonly [number, number])[]): Promise<void> {
+	await disclose(page, "Add a zone by typing coordinates");
+	await addCoordinateRing(page, points);
+	await page.getByRole("button", { name: "Finish zone", exact: true }).click();
+}
+
+async function discardSetup(page: Page): Promise<void> {
+	await page.getByRole("button", { name: "More", exact: true }).click();
+	await page.getByRole("menuitem", { name: "Discard map setup", exact: true }).click();
+	const dialog = page.getByRole("dialog", { name: "Discard this map setup?" });
+	await expect(dialog).toContainText("The site stays, without a map.");
+	// Backing out keeps the draft and returns focus to where the manager was.
+	await dialog.getByRole("button", { name: "Keep draft", exact: true }).click();
+	await expect(page.getByRole("button", { name: "More", exact: true })).toBeFocused();
+	await page.getByRole("button", { name: "More", exact: true }).click();
+	await page.getByRole("menuitem", { name: "Discard map setup", exact: true }).click();
+	await dialog.getByRole("button", { name: "Discard map setup", exact: true }).click();
+}
+
 async function addCoordinateRing(page: Page, points: readonly (readonly [number, number])[]): Promise<void> {
 	for (const [longitude, latitude] of points) {
 		const longitudeInput = page.getByLabel("Longitude", { exact: true });
@@ -150,6 +180,35 @@ async function addCoordinateRing(page: Page, points: readonly (readonly [number,
 		await page.getByRole("button", { name: "Add point", exact: true }).focus();
 		await page.keyboard.press("Enter");
 	}
+}
+
+const ZONE_CORNERS = FRESH.a.slice(0, -1);
+
+/** Four corners well inside the site outline of the site's saved draft. */
+async function cornersInsideSavedOutline(
+	call: ZoneCall,
+	projectId: string,
+	siteId: string
+): Promise<readonly (readonly [number, number])[]> {
+	const base = `/v1/projects/${projectId}/sites/${siteId}/map-setups`;
+	let ring: readonly (readonly number[])[] | undefined;
+	await expect
+		.poll(
+			async () => {
+				const [summary] = await call<readonly { setup_id: string }[]>("GET", base);
+				const setup = await call<MapSetupRead>("GET", `${base}/${summary?.setup_id}`);
+				const outline = setup.content.outline;
+				ring = outline?.type === "Polygon" ? outline.coordinates[0] : undefined;
+				return ring !== undefined;
+			},
+			{ timeout: 30000 }
+		)
+		.toBe(true);
+	const xs = (ring ?? []).map(point => point[0] ?? 0);
+	const ys = (ring ?? []).map(point => point[1] ?? 0);
+	const [west, east, south, north] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+	const at = (x: number, y: number) => [west + (east - west) * x, south + (north - south) * y] as const;
+	return [at(0.3, 0.3), at(0.7, 0.3), at(0.7, 0.7), at(0.3, 0.7)];
 }
 
 async function tapMapRing(page: Page, points: readonly (readonly [number, number])[]): Promise<void> {
@@ -196,7 +255,7 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 		mimeType: "application/zip",
 		buffer: referenceProjectArchive()
 	});
-	await expect(page.getByRole("heading", { name: "Review the map layers" })).toBeVisible({ timeout: 60000 });
+	await expect(page.getByRole("heading", { name: "Map layers", exact: true })).toBeVisible({ timeout: 60000 });
 	const activeSetups = await call<readonly { setup_id: string }[]>(
 		"GET",
 		`/v1/projects/${fixture.projectId}/sites/${site.site_id}/map-setups`
@@ -204,7 +263,7 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	expect(activeSetups).toHaveLength(1);
 	await page.getByLabel("Trees · feature 1", { exact: true }).selectOption("trees");
 	await page.screenshot({ path: info.outputPath("import-review.png"), fullPage: true });
-	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
+	await page.getByRole("button", { name: "Continue to site outline", exact: true }).click();
 	const reference = page.locator('[aria-roledescription="map"][aria-label="Site outline"] svg circle').first();
 	const referencePosition = await reference.evaluate(circle => ({
 		cx: circle.getAttribute("cx"),
@@ -220,24 +279,16 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 			[0.25, 0.78]
 		]);
 	} else {
+		await disclose(page, "Type coordinates instead");
 		await addCoordinateRing(page, FRESH.site.slice(0, -1));
 	}
 	await activate(page, "Finish outline", touch);
 	await expect(reference).toHaveAttribute("cx", referencePosition.cx ?? "");
 	await expect(reference).toHaveAttribute("cy", referencePosition.cy ?? "");
 	await expect(reference).toHaveAttribute("r", referencePosition.radius ?? "");
-	await activate(page, "Draw a zone with coordinates", touch);
-	if (touch) {
-		await tapMapRing(page, [
-			[0.4, 0.48],
-			[0.62, 0.48],
-			[0.62, 0.66],
-			[0.4, 0.66]
-		]);
-	} else {
-		await addCoordinateRing(page, FRESH.a.slice(0, -1));
-	}
-	await activate(page, "Finish zone", touch);
+	await activate(page, "Continue to zones", touch);
+	// A tapped outline has no known coordinates, so the typed zone is placed inside the outline as saved.
+	await typeZone(page, touch ? await cornersInsideSavedOutline(call, fixture.projectId, site.site_id) : ZONE_CORNERS);
 	await page.getByRole("option").filter({ hasText: "Z1" }).click();
 	await expect(page.getByLabel("Code", { exact: true })).toBeEditable();
 	await expectNoViolations(page);
@@ -261,7 +312,7 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	releaseSave();
 	await leave;
 	await page.getByRole("link", { name: "Resume map setup", exact: true }).click();
-	await page.getByRole("button", { name: "Set boundaries", exact: true }).click();
+	await step(page, /Zones/);
 	await expect(page.getByRole("heading", { name: "Review the zones", exact: true })).toBeVisible();
 	await page.getByRole("option").filter({ hasText: "Lawn" }).click();
 	await expect(page.getByLabel("Name", { exact: true })).toHaveValue("Lawn");
@@ -275,7 +326,7 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	await page.evaluate(() => document.documentElement.setAttribute("data-theme", "day"));
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.getByRole("button", { name: "Review map", exact: true }).click();
-	await expect(page.getByText("1 imported map feature included · 0 features or sources left out.")).toBeVisible();
+	await expect(page.getByText("1 imported map feature included · 0 left out.")).toBeVisible();
 	await page.getByLabel("Published observation form", { exact: true }).selectOption("zone-review-play-v1");
 	await page.getByLabel("What changed (optional)", { exact: true }).fill("Initial site outline and observation zone");
 	await page.getByRole("button", { name: "Check map", exact: true }).click();
@@ -338,9 +389,11 @@ test("a complete imported map publishes without redrawing outline or zones", asy
 	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
 	await page.getByLabel("zones · feature 1", { exact: true }).selectOption("zones");
 	await page.getByLabel("trees · feature 1", { exact: true }).selectOption("trees");
-	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "Review the zones", exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Continue to site outline", exact: true }).click();
+	await expect(page.getByText("This outline came from your QGIS project. Check it against the map.")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Draw site outline", exact: true })).toHaveCount(0);
+	await page.getByRole("button", { name: "Continue to zones", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Review the zones", exact: true })).toBeVisible();
 	await expect(page.getByRole("option").filter({ hasText: "Lawn" })).toBeVisible();
 	await page.getByRole("button", { name: "Review map", exact: true }).click();
 	await expect(page.getByText(/3 imported map features included/)).toBeVisible();
@@ -371,7 +424,8 @@ test("removing an adopted zone saves its source as left out and resumes without 
 	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
 	await page.getByLabel("zones · feature 1", { exact: true }).selectOption("zones");
 	await page.getByLabel("trees · feature 1", { exact: true }).selectOption("trees");
-	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
+	await page.getByRole("button", { name: "Continue to site outline", exact: true }).click();
+	await page.getByRole("button", { name: "Continue to zones", exact: true }).click();
 	await page.getByRole("option").filter({ hasText: "Lawn" }).click();
 	await page.getByRole("button", { name: "Remove zone", exact: true }).click();
 	await expect(page.getByText("No zones in this draft.", { exact: true })).toBeVisible();
@@ -389,6 +443,131 @@ test("removing an adopted zone saves its source as left out and resumes without 
 	);
 	expect(setup.content.zones).toEqual([]);
 	expect(setup.content.assignments.every(assignment => assignment.zone_id === null)).toBe(true);
+});
+
+test("whole layers take one decision, and the list and the map select each other", async ({ page }) => {
+	test.setTimeout(180000);
+	const fixture = zoneFixture();
+	const call = await zoneApi("manager");
+	const site = await call<{ site_id: string; code: string; name: string }>(
+		"POST",
+		`/v1/projects/${fixture.projectId}/sites`,
+		{ name: "Layer decisions", code: `layers-${randomUUID().slice(0, 8)}` }
+	);
+	const point = (longitude: number) => ({
+		type: "Feature",
+		properties: {},
+		geometry: { type: "Point", coordinates: [longitude, 42.4485] }
+	});
+	await signInToZones(page, "manager");
+	await page.goto(`${fixture.path}/sites/${site.code}/map-setup`);
+	// The page says which site it changes and where it sits before anything is chosen.
+	const trail = page.getByRole("navigation", { name: "Breadcrumb" });
+	await expect(trail.getByRole("link", { name: "Sites", exact: true })).toHaveAttribute(
+		"href",
+		`${fixture.path}/sites`
+	);
+	await expect(trail.getByRole("link", { name: site.name, exact: true })).toHaveAttribute(
+		"href",
+		`${fixture.path}/sites/${site.code}`
+	);
+	await expect(page.getByText("Nothing is saved until a project has been read.", { exact: true })).toBeVisible();
+	await page.getByLabel("QGIS project and its data files", { exact: true }).setInputFiles({
+		name: "layers.qgz",
+		mimeType: "application/zip",
+		buffer: projectArchive({
+			ground: {
+				type: "FeatureCollection",
+				features: [
+					{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [FRESH.site] } }
+				]
+			},
+			zones: {
+				type: "FeatureCollection",
+				features: [
+					{
+						type: "Feature",
+						properties: { name: "Lawn" },
+						geometry: { type: "Polygon", coordinates: [FRESH.a] }
+					},
+					{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [FRESH.b] } }
+				]
+			},
+			trees: { type: "FeatureCollection", features: [point(-76.4862), point(-76.4856), point(-76.4847)] }
+		})
+	});
+	await awaitLayerReview(page);
+	const proceed = page.getByRole("button", { name: "Continue to site outline", exact: true });
+	await expect(proceed).toBeDisabled();
+	await expect(page.getByText("Decide how to use 6 more features first.", { exact: true })).toBeVisible();
+	await expect(page.getByText("0 of 6 decided", { exact: true })).toBeVisible();
+
+	// One decision for a layer whose features belong together; nothing was classified before it.
+	await expect(page.getByLabel("trees · feature 2", { exact: true })).toHaveValue("");
+	await page.getByLabel("Use all of trees as", { exact: true }).selectOption("trees");
+	for (const number of [1, 2, 3])
+		await expect(page.getByLabel(`trees · feature ${number}`, { exact: true })).toHaveValue("trees");
+	await page.getByLabel("Use all of zones as", { exact: true }).selectOption("zones");
+	await expect(page.getByLabel("zones · feature 2", { exact: true })).toHaveValue("zones");
+
+	// A feature carries its QGIS name, or its shape and number; the same number is on the map.
+	const named = page.getByRole("button", { name: "Show Lawn on the map", exact: true });
+	const numbered = page.getByRole("button", { name: "Show Area 2 on the map", exact: true });
+	await named.click();
+	await expect(named).toHaveAttribute("aria-pressed", "true");
+	await page.locator("[data-feature-overlay] text").filter({ hasText: /^2$/ }).click();
+	await expect(numbered).toHaveAttribute("aria-pressed", "true");
+	await expect(named).toHaveAttribute("aria-pressed", "false");
+
+	// A layer that already holds zones is not swept into another use by one control.
+	await page.getByLabel("Use all of zones as", { exact: true }).selectOption("ground");
+	await expect(page.getByRole("alert").filter({ hasText: "Change those features one at a time" })).toBeVisible();
+	await expect(page.getByLabel("zones · feature 1", { exact: true })).toHaveValue("zones");
+
+	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
+	await expect(page.getByText("6 of 6 decided", { exact: true })).toBeVisible();
+	await expect(page.getByText("Draft saved. Observers cannot use it yet.", { exact: true })).toBeVisible({
+		timeout: 30000
+	});
+	const base = `/v1/projects/${fixture.projectId}/sites/${site.site_id}/map-setups`;
+	const [summary] = await call<readonly { setup_id: string }[]>("GET", base);
+	const saved = await call<MapSetupRead>("GET", `${base}/${summary?.setup_id}`);
+	expect(saved.content.zones.map(zone => zone.zone_label)).toEqual(["Lawn", ""]);
+	expect(new Set(saved.content.zones.map(zone => zone.zone_id)).size).toBe(2);
+	expect(saved.content.assignments.filter(item => item.role === "trees")).toHaveLength(3);
+
+	// An unfinished drawing is never saved, and leaving waits for it to be finished or cancelled.
+	await expect(proceed).toBeEnabled();
+	await proceed.click();
+	await expect(page).toHaveURL(/\/outline$/);
+	await page.getByRole("button", { name: "Redraw site outline", exact: true }).click();
+	const map = page.locator('[aria-roledescription="map"][aria-label="Site outline"]');
+	const box = await map.boundingBox();
+	if (!box) throw new Error("The site outline map is not visible.");
+	for (const [x, y] of [
+		[0.3, 0.4],
+		[0.7, 0.4],
+		[0.7, 0.75]
+	] as const)
+		await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+	await expect(page.getByText(/3 points placed\. This unfinished site outline has not been added/)).toBeVisible();
+	await page.getByRole("button", { name: "Save and leave", exact: true }).click();
+	await expect(
+		page.getByText("Finish or cancel the drawing or file review you have open before leaving.", { exact: true })
+	).toBeVisible();
+	await page.getByRole("button", { name: "Cancel drawing", exact: true }).click();
+	expect((await call<MapSetupRead>("GET", `${base}/${saved.setup_id}`)).content.outline).toEqual(
+		saved.content.outline
+	);
+
+	// The steps show what is done, move between tasks, and an earlier link to boundaries still lands.
+	await step(page, /Zones/);
+	await expect(page).toHaveURL(/\/zones$/);
+	await expect(page.getByRole("option").filter({ hasText: "Lawn" })).toBeVisible();
+	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${saved.setup_id}/boundaries`);
+	await expect(page.getByRole("heading", { name: "Review the zones", exact: true })).toBeVisible();
+	await discardSetup(page);
+	await expect(page).toHaveURL(new RegExp(`/sites/${site.code}$`));
 });
 
 test("a renamed replacement project previews, cancels and commits while keeping drawn boundaries", async ({ page }) => {
@@ -420,13 +599,12 @@ test("a renamed replacement project previews, cancels and commits while keeping 
 	);
 	await signInToZones(page, "manager");
 	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${imported.setup_id}/add-map`);
-	await page.getByLabel("Replace the QGIS project and its data files", { exact: true }).check();
 	const replacement = { name: "new-name.qgz", mimeType: "application/zip", buffer: completeProjectArchive() };
-	await page.getByLabel("Missing data files or replacement project", { exact: true }).setInputFiles(replacement);
+	await page.getByLabel("Replace project", { exact: true }).setInputFiles(replacement);
 	await expect(page.getByText("Review the replacement project before keeping it.", { exact: true })).toBeVisible();
 	await page.getByRole("button", { name: "Cancel replacement", exact: true }).click();
 	expect(await call<MapSetupRead>("GET", setupPath)).toEqual(acknowledged);
-	await page.getByLabel("Missing data files or replacement project", { exact: true }).setInputFiles(replacement);
+	await page.getByLabel("Replace project", { exact: true }).setInputFiles(replacement);
 	await expect(page.getByRole("button", { name: "Keep replacement project", exact: true })).toBeVisible();
 	await page.getByRole("button", { name: "Keep replacement project", exact: true }).click();
 	await expect(page.getByText("Review the replacement project before keeping it.", { exact: true })).toHaveCount(0);
@@ -457,20 +635,10 @@ test("an outline-only project draws its missing zone before first publication", 
 	});
 	await awaitLayerReview(page);
 	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
-	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
+	await page.getByRole("button", { name: "Continue to site outline", exact: true }).click();
+	await activate(page, "Continue to zones", touch);
 	await expect(page.getByText("No zones in this project. Draw them here.", { exact: true })).toBeVisible();
-	await activate(page, "Draw a zone with coordinates", touch);
-	if (touch) {
-		await tapMapRing(page, [
-			[0.4, 0.48],
-			[0.62, 0.48],
-			[0.62, 0.66],
-			[0.4, 0.66]
-		]);
-	} else {
-		await addCoordinateRing(page, FRESH.a.slice(0, -1));
-	}
-	await activate(page, "Finish zone", touch);
+	await typeZone(page, ZONE_CORNERS);
 	await page.getByRole("option").filter({ hasText: "Z1" }).click();
 	await page.getByLabel("Name", { exact: true }).fill("Lawn");
 	await page.getByRole("button", { name: "Review map", exact: true }).click();
@@ -490,11 +658,9 @@ test("a deep link to Review before boundaries are ready explains the remaining w
 	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${imported.setup_id}/review`);
 	const prerequisite = page.getByText("Finish this step first.", { exact: true });
 	await expect(prerequisite).toBeVisible();
-	await expect(prerequisite.locator("..")).toContainText(
-		"Review every imported feature before opening Set boundaries."
-	);
+	await expect(prerequisite.locator("..")).toContainText("Decide how to use 1 more feature first.");
 	await expect(page.getByRole("heading", { name: "Review and publish", exact: true })).toHaveCount(0);
-	await expect(page.getByRole("heading", { name: "Review the map layers" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Map layers", exact: true })).toBeVisible();
 });
 
 test("an observer opening map setup directly is routed away without setup controls", async ({ page }) => {
@@ -506,7 +672,7 @@ test("an observer opening map setup directly is routed away without setup contro
 	await expect(main.getByRole("heading", { name: "Collect with the DECA Mark app", exact: true })).toBeVisible();
 	await expect(main).toContainText("Observers collect in the app. This site is for managers and viewers.");
 	await expect(main.getByLabel("QGIS project and its data files", { exact: true })).toHaveCount(0);
-	await expect(main.getByRole("button", { name: "Continue to boundaries", exact: true })).toHaveCount(0);
+	await expect(main.getByRole("button", { name: "Continue to site outline", exact: true })).toHaveCount(0);
 });
 
 test("a remote-only project is recoverable but cannot open a blank boundary canvas", async ({ page }) => {
@@ -526,7 +692,7 @@ test("a remote-only project is recoverable but cannot open a blank boundary canv
 		buffer: Buffer.from(zipSync({ "map.qgs": strToU8(remoteProject) }))
 	});
 
-	await expect(page.getByRole("heading", { name: "Review the map layers" })).toBeVisible({ timeout: 60000 });
+	await expect(page.getByRole("heading", { name: "Map layers", exact: true })).toBeVisible({ timeout: 60000 });
 	const main = page.getByRole("main");
 	await expect(page.getByText("Draft saved. Observers cannot use it yet.", { exact: true })).toBeVisible();
 	await expect(main).toContainText("This project has no local vector map features.");
@@ -536,11 +702,11 @@ test("a remote-only project is recoverable but cannot open a blank boundary canv
 	await expect(main).toContainText(
 		"This is an online background map. It is not converted or uploaded; observers see the vector layers only."
 	);
-	await expect(page.getByRole("button", { name: "Continue to boundaries", exact: true })).toBeDisabled();
-	await page.getByRole("button", { name: "Set boundaries", exact: true }).click();
-	await expect(main).toContainText(
-		"This project has no local vector map features. Add local vector files or GeoJSON exports before continuing to boundaries."
-	);
+	await expect(page.getByRole("button", { name: "Continue to site outline", exact: true })).toBeDisabled();
+	await expect(main).toContainText("This project has no map features to draw on. Add its data files first.");
+	await expect(
+		page.getByRole("navigation", { name: "Map setup steps" }).getByRole("button", { name: /Site outline/ })
+	).toHaveCount(0);
 	await expect(page.getByRole("heading", { name: "Review the zones", exact: true })).toHaveCount(0);
 	const setups = await call<readonly { setup_id: string }[]>(
 		"GET",
@@ -697,7 +863,7 @@ test("missing sources can be reviewed, cancelled and recovered without running l
 		mimeType: "application/zip",
 		buffer: Buffer.from(zipSync({ "map.qgs": strToU8(xml), "ground.geojson": strToU8(JSON.stringify(ground)) }))
 	});
-	await expect(page.getByRole("heading", { name: "Review the map layers" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Map layers", exact: true })).toBeVisible();
 	await expect(page.getByText(/Include missing.geojson/)).toBeVisible();
 	await expect(page.getByRole("group", { name: new RegExp("onerror") })).toBeVisible();
 	await expect(page.locator('img[src="x"]')).toHaveCount(0);
@@ -714,11 +880,11 @@ test("missing sources can be reviewed, cancelled and recovered without running l
 			})
 		)
 	};
-	await page.getByLabel("Missing data files or replacement project", { exact: true }).setInputFiles(file);
+	await page.getByLabel("Add data files", { exact: true }).setInputFiles(file);
 	await expect(page.getByText("Review the added files before keeping them.", { exact: true })).toBeVisible();
 	await page.getByRole("button", { name: "Cancel added files", exact: true }).click();
 	await expect(page.getByText(/Include missing.geojson/)).toBeVisible();
-	await page.getByLabel("Missing data files or replacement project", { exact: true }).setInputFiles(file);
+	await page.getByLabel("Add data files", { exact: true }).setInputFiles(file);
 	let loseSourceReply = true;
 	await page.route("**/map-setups/*/sources", async route => {
 		if (route.request().postDataJSON()?.preview === false && loseSourceReply) {
@@ -737,8 +903,7 @@ test("missing sources can be reviewed, cancelled and recovered without running l
 	await expect(page.getByText(/Include missing.geojson/)).toHaveCount(0);
 	await expect(page.getByLabel("Trees · feature 1", { exact: true })).toBeVisible();
 	await page.screenshot({ path: info.outputPath("source-recovered.png"), fullPage: true });
-	page.once("dialog", dialog => dialog.accept());
-	await page.getByRole("button", { name: "Discard map setup", exact: true }).click();
+	await discardSetup(page);
 	await expect(page).toHaveURL(new RegExp(`/sites/${site.code}$`));
 	await expect(page.getByRole("link", { name: "Resume map setup", exact: true })).toHaveCount(0);
 });

@@ -20,6 +20,15 @@ export type StepBarProps = {
 	done: string[];
 	/** Names the navigation landmark: "Map package steps". */
 	label: string;
+	/**
+	 * For a flow that changes step on the page instead of following a link: finished, current and
+	 * reachable steps become buttons that report their key, so the page can save before it moves.
+	 */
+	onSelect?: (key: string) => void;
+	/** Keys of later steps that may be opened although they are not finished. Only with `onSelect`. */
+	reachable?: string[];
+	/** Holds every step button still, while the page saves. */
+	disabled?: boolean;
 	className?: string;
 };
 
@@ -37,7 +46,16 @@ const STATE: Record<StepState, string> = {
  * steps show their number in secondary ink. On narrow screens the steps fall into two columns rather
  * than cutting a label.
  */
-export function StepBar({ steps, current, done, label, className }: StepBarProps) {
+export function StepBar({
+	steps,
+	current,
+	done,
+	label,
+	onSelect,
+	reachable = [],
+	disabled = false,
+	className
+}: StepBarProps) {
 	const total = steps.length;
 
 	return (
@@ -71,9 +89,28 @@ export function StepBar({ steps, current, done, label, className }: StepBarProps
 						STATE[state]
 					);
 
+					const pressable = onSelect && (state !== "upcoming" || reachable.includes(step.key));
+
 					return (
 						<li key={step.key}>
-							{step.href && state !== "upcoming" ? (
+							{pressable ? (
+								<button
+									type="button"
+									disabled={disabled}
+									aria-current={state === "current" ? "step" : undefined}
+									onClick={() => onSelect(step.key)}
+									className={cx(
+										classes,
+										"w-full disabled:cursor-not-allowed",
+										"transition-[color,background-color,opacity] duration-(--ct-duration-quick) ease-standard",
+										state === "current"
+											? "not-disabled:active:opacity-90"
+											: "not-disabled:hover:bg-well not-disabled:active:bg-ledge",
+										state === "upcoming" && "text-ink"
+									)}>
+									{content}
+								</button>
+							) : step.href && state !== "upcoming" ? (
 								<Link
 									href={step.href}
 									prefetch={false}
