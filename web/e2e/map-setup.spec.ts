@@ -564,6 +564,19 @@ test("whole layers take one decision, and the list and the map select each other
 	await step(page, /Zones/);
 	await expect(page).toHaveURL(/\/zones$/);
 	await expect(page.getByRole("option").filter({ hasText: "Lawn" })).toBeVisible();
+
+	// Typed zone corners stay protected when their section is closed: closing is not cancelling.
+	await disclose(page, "Add a zone by typing coordinates");
+	await addCoordinateRing(page, [FRESH.b[0] ?? [0, 0]]);
+	await expect(page.getByText(/1 points entered\./)).toBeVisible();
+	await page.getByText("Add a zone by typing coordinates", { exact: true }).click();
+	await expect(page.getByText(/1 points entered\./)).toBeVisible();
+	await page.getByRole("button", { name: "Save and leave", exact: true }).click();
+	await expect(
+		page.getByText("Finish or cancel the drawing or file review you have open before leaving.", { exact: true })
+	).toBeVisible();
+	await expect(page).toHaveURL(/\/zones$/);
+	await page.getByRole("button", { name: "Cancel", exact: true }).click();
 	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${saved.setup_id}/boundaries`);
 	await expect(page.getByRole("heading", { name: "Review the zones", exact: true })).toBeVisible();
 	await discardSetup(page);

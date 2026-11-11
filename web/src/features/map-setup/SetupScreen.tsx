@@ -86,7 +86,10 @@ export function SetupScreen(props: Props) {
 	// A link to a later step than the draft allows opens the step that is ready, and says what is missing.
 	const prerequisiteMessage =
 		requestedStep === step ? null : STEPS.map(item => blockers[item.key]).find(reason => reason !== null);
-	const [pendingWork, setPendingWork] = useState(false);
+	// Unfinished work that a save cannot see yet: an open drawing or file review, or a whole-layer change in progress.
+	const [openWork, setPendingWork] = useState(false);
+	const [layerWork, setLayerWork] = useState(false);
+	const pendingWork = openWork || layerWork;
 	const [publishing, setPublishing] = useState(false);
 	const [published, setPublished] = useState<number | null>(null);
 	const guard = useLeaveGuard(state.dirty || state.busy || publishing || pendingWork);
@@ -303,7 +306,8 @@ export function SetupScreen(props: Props) {
 						if (step !== "add-map") return null;
 						return (
 							<LayersStep
-								disabled={pendingWork}
+								disabled={openWork}
+								onPending={setLayerWork}
 								setup={setup}
 								content={content}
 								siteName={props.siteName}

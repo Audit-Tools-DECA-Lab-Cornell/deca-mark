@@ -31,10 +31,12 @@ export function ZonesStep({ layers, baseZoneIds, content, onChange, onPending, f
 	const [initial] = useState(() => setupPlan("Map setup", layers, content));
 	const [typing, setTyping] = useState(false);
 	const [points, setPoints] = useState<readonly Position[]>([]);
+	// Typed points are unfinished work until the zone is finished or cancelled; closing the section is neither.
+	const unfinished = points.length > 0;
 	useEffect(() => {
-		onPending(typing && points.length > 0);
+		onPending(unfinished);
 		return () => onPending(false);
-	}, [typing, points.length, onPending]);
+	}, [unfinished, onPending]);
 	const plan = useMemo(() => setupPlan("Map setup", layers, content, initial?.frame), [layers, content, initial]);
 	const changeZones = useCallback(
 		(zones: readonly DraftZone[]) => {
@@ -92,10 +94,14 @@ export function ZonesStep({ layers, baseZoneIds, content, onChange, onPending, f
 				onZonesChange={changeZones}
 			/>
 			<details
-				open={typing}
+				open={typing || unfinished}
 				onToggle={event => setTyping(event.currentTarget.open)}
 				className="max-w-xl rounded-note bg-well px-4 py-1">
-				<summary className="flex min-h-touch cursor-pointer list-none items-center gap-1.5 type-small font-semibold [&::-webkit-details-marker]:hidden">
+				<summary // The section stays open while it holds typed points, so they are never hidden and forgotten.
+					onClick={event => {
+						if (unfinished) event.preventDefault();
+					}}
+					className="flex min-h-touch cursor-pointer list-none items-center gap-1.5 type-small font-semibold [&::-webkit-details-marker]:hidden">
 					<Icon
 						name="chevron-right"
 						size={16}

@@ -1,5 +1,5 @@
 "use client";
-import { type ReactNode, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/contour/Button";
 import { Icon } from "@/components/contour/Icon";
@@ -33,6 +33,8 @@ type Props = {
 	readonly content: Content;
 	readonly siteName: string;
 	readonly onChange: (content: Content) => void;
+	/** Reports a whole-layer change that is still being worked out, so the page does not save or leave without it. */
+	readonly onPending: (pending: boolean) => void;
 	/** The map files row: what was read, and the ways to add to it or replace it. */
 	readonly files: ReactNode;
 	/** The step's Continue action. */
@@ -53,8 +55,13 @@ function keyOf(source: string, feature: string): string {
  * decided on its own. The open layer's features are numbered on the map and in the list, and pressing either
  * selects the other, so no one has to remember which shape "feature 4" was.
  */
-export function LayersStep({ setup, content, siteName, onChange, disabled, files, footer }: Props) {
+export function LayersStep({ setup, content, siteName, onChange, onPending, disabled, files, footer }: Props) {
 	const [busy, setBusy] = useState(false);
+	const [batching, setBatching] = useState(false);
+	useEffect(() => {
+		onPending(batching);
+		return () => onPending(false);
+	}, [batching, onPending]);
 	const [identityChoices, setIdentityChoices] = useState<Record<string, string>>({});
 	const [selected, setSelected] = useState<{ source: string; feature: string } | null>(null);
 	const [opened, setOpened] = useState<Record<string, boolean>>({});
@@ -185,6 +192,7 @@ export function LayersStep({ setup, content, siteName, onChange, disabled, files
 		}
 		if (role === "zones") {
 			setBusy(true);
+			setBatching(true);
 			try {
 				let next = content;
 				for (const entry of layer.features) {
@@ -208,6 +216,7 @@ export function LayersStep({ setup, content, siteName, onChange, disabled, files
 				onChange(next);
 			} finally {
 				setBusy(false);
+				setBatching(false);
 			}
 			return;
 		}
