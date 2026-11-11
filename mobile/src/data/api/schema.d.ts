@@ -1970,6 +1970,12 @@ export interface components {
              */
             preview: boolean;
             /**
+             * Replace Project
+             * @description Replace the entire source selection with a new QGIS project and its data files. Drawn boundaries are retained.
+             * @default false
+             */
+            replace_project: boolean;
+            /**
              * Request Id
              * Format: uuid
              */

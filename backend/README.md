@@ -371,4 +371,6 @@ The manager-only map-setup lifecycle stores incomplete first maps and replacemen
 
 `/v1/projects/{project}/sites/{site}/map-setups` supports import, acknowledged reads, conditional saves, staged source replacement, validation, publication and discard. Private source bundles never appear in ordinary responses or observer reads. Setup publication locks the site then the setup, rechecks the reviewed revision/current map, and commits the immutable package and replay receipt atomically. Discard/publication release private draft source data; published history remains immutable.
 
+Map setup accepts at most 20,000 imported features in total across all layers, matching the saved assignment limit. Source updates add missing data files by default. Sending `replace_project: true` to `POST …/map-setups/{setup}/sources` previews or confirms a replacement of the entire saved file selection with a new QGIS project and its dependencies, regardless of filenames. Drawn outline and zones remain intact; the existing revision and candidate-confirmation checks still apply.
+
 Disposable SQL/API acceptance uses `pnpm db:test ZONE_REHEARSAL=1` and `sh database/zone-api-rehearsal.sh tests/test_map_setup_api.py tests/test_map_setup_publication_api.py`. These commands use synthetic local data and clean their own resources; they do not prove deployed or physical-device acceptance.

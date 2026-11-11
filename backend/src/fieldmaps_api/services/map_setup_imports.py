@@ -13,7 +13,7 @@ from fieldmaps_api.domain.project_files import safe_path
 from fieldmaps_api.domain.project_import import ProjectImportRequest
 from fieldmaps_api.domain.qgis_project import ProjectFileError
 from fieldmaps_api.errors import ValidationFailedError
-from fieldmaps_api.map_setup_schemas import SetupFeature, SetupIssue, SetupLayer
+from fieldmaps_api.map_setup_schemas import MAX_SETUP_FEATURES, SetupFeature, SetupIssue, SetupLayer
 from fieldmaps_api.services.project_import import import_project
 
 MAX_FILES: Final = 64
@@ -84,6 +84,12 @@ def normalized_sources(files: list[ProjectFile]) -> list[ProjectFile]:
 
 
 def checked_result(result: ImportData) -> ImportData:
+    if sum(len(layer.features) for layer in result.layers) > MAX_SETUP_FEATURES:
+        message = (
+            "Choose a map with at most 20,000 features in total across all layers. "
+            "Reduce the features in QGIS and try again."
+        )
+        raise ValidationFailedError(message)
     identities = [layer.source_id for layer in result.layers] + [
         issue.source_id for issue in result.issues
     ]

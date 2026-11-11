@@ -163,6 +163,7 @@ export function SourceReview({
 											allowedRoles(entry.feature.geometry?.type ?? "").includes("zones") &&
 											!assignment && (
 												<Select
+													id={`identity-${layer.source_id}-${entry.feature_key}`}
 													aria-label={`Zone identity for ${layer.name} feature ${index + 1}`}
 													value={
 														identityChoices[`${layer.source_id}:${entry.feature_key}`] ?? ""

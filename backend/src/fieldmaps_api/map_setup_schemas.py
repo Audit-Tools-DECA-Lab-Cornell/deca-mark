@@ -16,6 +16,7 @@ from fieldmaps_api.zone_geometry_schemas import (
 
 MAX_SETUP_BYTES: Final = 24 * 1024 * 1024
 MAX_SOURCE_BYTES: Final = 16 * 1024 * 1024
+MAX_SETUP_FEATURES: Final = 20_000
 
 type SourceId = Annotated[str, StringConstraints(min_length=1, max_length=300)]
 type FeatureKey = Annotated[str, StringConstraints(min_length=1, max_length=200)]
@@ -53,7 +54,7 @@ class SetupZone(SetupModel):
 
 class MapSetupReplace(SetupModel):
     import_generation: Annotated[int, Field(ge=1, le=9_223_372_036_854_775_807, strict=True)]
-    assignments: Annotated[tuple[SetupAssignment, ...], Field(max_length=20_000)] = ()
+    assignments: Annotated[tuple[SetupAssignment, ...], Field(max_length=MAX_SETUP_FEATURES)] = ()
     outline: ZoneGeometry | None = None
     zones: Annotated[tuple[SetupZone, ...], Field(max_length=MAX_PACKAGE_ZONES)] = ()
     form_version: FormCode | None = None
@@ -111,6 +112,13 @@ class MapSetupImport(SetupModel):
 class MapSetupSources(SetupModel):
     request_id: UUID
     files: Annotated[tuple[ProjectFile, ...], Field(min_length=1, max_length=64)]
+    replace_project: bool = Field(
+        default=False,
+        description=(
+            "Replace the entire source selection with a new QGIS project and its data files. "
+            "Drawn boundaries are retained."
+        ),
+    )
     preview: bool = True
     candidate_hash: Annotated[str, StringConstraints(pattern=r"^[a-f0-9]{64}$")] | None = None
 

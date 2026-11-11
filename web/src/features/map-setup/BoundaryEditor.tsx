@@ -35,12 +35,20 @@ export function BoundaryEditor({ layers, content, onChange, onPending, baseZoneI
 	const [points, setPoints] = useState<readonly Position[]>([]);
 	const [future, setFuture] = useState<readonly Position[]>([]);
 	const [palette] = useMapPalette();
-	const live = useMemo(() => setupPlan("Map setup", layers, content), [layers, content]);
-	const plan =
-		live && initial ? { ...live, frame: initial.frame, width: initial.width, height: initial.height } : null;
+	const plan = useMemo(() => setupPlan("Map setup", layers, content, initial?.frame), [layers, content, initial]);
 	const changeZones = useCallback(
 		(zones: readonly DraftZone[]) => {
-			if (JSON.stringify(zones) !== JSON.stringify(content.zones)) onChange({ ...content, zones: [...zones] });
+			if (JSON.stringify(zones) === JSON.stringify(content.zones)) return;
+			const zoneIds = new Set(zones.map(zone => zone.zone_id));
+			onChange({
+				...content,
+				zones: [...zones],
+				assignments: content.assignments.map(assignment =>
+					assignment.role === "zones" && !zoneIds.has(assignment.zone_id ?? "")
+						? { ...assignment, role: "leave_out", zone_id: null }
+						: assignment
+				)
+			});
 		},
 		[content, onChange]
 	);

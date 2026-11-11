@@ -30,7 +30,7 @@ function projectArchive(layers: Record<string, unknown>): Buffer {
 /** Builds a small QGIS project whose one local point gives boundary drawing real geographic context. */
 function referenceProjectArchive(): Buffer {
 	return projectArchive({
-		trees: {
+		Trees: {
 			type: "FeatureCollection",
 			features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: FRESH.a[0] } }]
 		}
@@ -205,6 +205,12 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	await page.getByLabel("Trees · feature 1", { exact: true }).selectOption("trees");
 	await page.screenshot({ path: info.outputPath("import-review.png"), fullPage: true });
 	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
+	const reference = page.locator('[aria-roledescription="map"][aria-label="Site outline"] svg circle').first();
+	const referencePosition = await reference.evaluate(circle => ({
+		cx: circle.getAttribute("cx"),
+		cy: circle.getAttribute("cy"),
+		radius: circle.getAttribute("r")
+	}));
 	await activate(page, "Draw site outline", touch);
 	if (touch) {
 		await tapMapRing(page, [
@@ -217,6 +223,9 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 		await addCoordinateRing(page, FRESH.site.slice(0, -1));
 	}
 	await activate(page, "Finish outline", touch);
+	await expect(reference).toHaveAttribute("cx", referencePosition.cx ?? "");
+	await expect(reference).toHaveAttribute("cy", referencePosition.cy ?? "");
+	await expect(reference).toHaveAttribute("r", referencePosition.radius ?? "");
 	await activate(page, "Draw a zone with coordinates", touch);
 	if (touch) {
 		await tapMapRing(page, [
@@ -341,6 +350,93 @@ test("a complete imported map publishes without redrawing outline or zones", asy
 		`/v1/projects/${fixture.projectId}/packages?site_id=${site.site_id}`
 	);
 	expect(history.packages.map(item => item.package_version)).toEqual([1]);
+});
+
+test("removing an adopted zone saves its source as left out and resumes without it", async ({ page }) => {
+	test.setTimeout(180000);
+	const fixture = zoneFixture();
+	const call = await zoneApi("manager");
+	const site = await call<{ site_id: string; code: string }>("POST", `/v1/projects/${fixture.projectId}/sites`, {
+		name: "Delete adopted zone",
+		code: `remove-${randomUUID().slice(0, 8)}`
+	});
+	await signInToZones(page, "manager");
+	await page.goto(`${fixture.path}/sites/${site.code}/map-setup`);
+	await page.getByLabel("QGIS project and its data files", { exact: true }).setInputFiles({
+		name: "complete.qgz",
+		mimeType: "application/zip",
+		buffer: completeProjectArchive()
+	});
+	await awaitLayerReview(page);
+	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
+	await page.getByLabel("zones · feature 1", { exact: true }).selectOption("zones");
+	await page.getByLabel("trees · feature 1", { exact: true }).selectOption("trees");
+	await page.getByRole("button", { name: "Continue to boundaries", exact: true }).click();
+	await page.getByRole("option").filter({ hasText: "Lawn" }).click();
+	await page.getByRole("button", { name: "Remove zone", exact: true }).click();
+	await expect(page.getByText("No zones in this draft.", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Save and leave", exact: true }).click();
+	await expect(page).toHaveURL(new RegExp(`/sites/${site.code}$`));
+	await page.getByRole("link", { name: "Resume map setup", exact: true }).click();
+	await expect(page.getByLabel("zones · feature 1", { exact: true })).toHaveValue("leave_out");
+	const summaries = await call<readonly { setup_id: string }[]>(
+		"GET",
+		`/v1/projects/${fixture.projectId}/sites/${site.site_id}/map-setups`
+	);
+	const setup = await call<MapSetupRead>(
+		"GET",
+		`/v1/projects/${fixture.projectId}/sites/${site.site_id}/map-setups/${summaries[0]?.setup_id}`
+	);
+	expect(setup.content.zones).toEqual([]);
+	expect(setup.content.assignments.every(assignment => assignment.zone_id === null)).toBe(true);
+});
+
+test("a renamed replacement project previews, cancels and commits while keeping drawn boundaries", async ({ page }) => {
+	test.setTimeout(180000);
+	const fixture = zoneFixture();
+	const call = await zoneApi("manager");
+	const site = await call<{ site_id: string; code: string }>("POST", `/v1/projects/${fixture.projectId}/sites`, {
+		name: "Replace project files",
+		code: `replace-files-${randomUUID().slice(0, 8)}`
+	});
+	const imported = await importReferenceSetup(call, fixture.projectId, site.site_id);
+	const setupPath = `/v1/projects/${fixture.projectId}/sites/${site.site_id}/map-setups/${imported.setup_id}`;
+	const acknowledged = await call<MapSetupRead>(
+		"PUT",
+		setupPath,
+		{
+			...imported.content,
+			outline: { type: "Polygon", coordinates: [FRESH.site] },
+			zones: [
+				{
+					zone_id: randomUUID(),
+					zone_code: "DRAWN",
+					zone_label: "Drawn lawn",
+					geometry: { type: "Polygon", coordinates: [FRESH.a] }
+				}
+			]
+		},
+		mapSetupEtag(imported)
+	);
+	await signInToZones(page, "manager");
+	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${imported.setup_id}/add-map`);
+	await page.getByLabel("Replace the QGIS project and its data files", { exact: true }).check();
+	const replacement = { name: "new-name.qgz", mimeType: "application/zip", buffer: completeProjectArchive() };
+	await page.getByLabel("Missing data files or replacement project", { exact: true }).setInputFiles(replacement);
+	await expect(page.getByText("Review the replacement project before keeping it.", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Cancel replacement", exact: true }).click();
+	expect(await call<MapSetupRead>("GET", setupPath)).toEqual(acknowledged);
+	await page.getByLabel("Missing data files or replacement project", { exact: true }).setInputFiles(replacement);
+	await expect(page.getByRole("button", { name: "Keep replacement project", exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Keep replacement project", exact: true }).click();
+	await expect(page.getByText("Review the replacement project before keeping it.", { exact: true })).toHaveCount(0);
+	await expect(page.getByLabel("ground · feature 1", { exact: true })).toBeVisible();
+	await expectNoViolations(page);
+	const replaced = await call<MapSetupRead>("GET", setupPath);
+	expect(replaced.sources.map(source => source.file_name)).toEqual(["new-name.qgz"]);
+	expect(replaced.layers).toHaveLength(3);
+	expect(replaced.content.outline).toEqual(acknowledged.content.outline);
+	expect(replaced.content.zones).toEqual(acknowledged.content.zones);
 });
 
 test("an outline-only project draws its missing zone before first publication", async ({ page }, info) => {

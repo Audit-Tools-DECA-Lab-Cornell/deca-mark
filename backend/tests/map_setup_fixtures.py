@@ -5,11 +5,36 @@ from typing import Literal, assert_never
 from xml.sax.saxutils import escape
 from zipfile import ZipFile
 
+from fieldmaps_api.domain.packages import ProjectFile
 from fieldmaps_api.domain.project_import import ProjectImportRequest
 
 type Scenario = Literal[
     "outline-no-zones", "references-only", "complete", "missing-source", "remote-only"
 ]
+
+
+def point_sources(counts: tuple[int, ...]) -> list[ProjectFile]:
+    return [
+        ProjectFile(
+            file_name=f"trees-{index}.geojson",
+            content=b64encode(
+                json.dumps(
+                    {
+                        "type": "FeatureCollection",
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "properties": {},
+                                "geometry": {"type": "Point", "coordinates": [-76.48, 42.44]},
+                            }
+                        ]
+                        * count,
+                    }
+                ).encode()
+            ),
+        )
+        for index, count in enumerate(counts)
+    ]
 
 
 def qgz_request(scenario: Scenario) -> ProjectImportRequest:

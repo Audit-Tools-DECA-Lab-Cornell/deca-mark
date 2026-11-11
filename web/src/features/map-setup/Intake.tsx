@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/contour/Button";
+import { Checkbox } from "@/components/contour/Checkbox";
 import { Note } from "@/components/contour/Note";
 import { importSubmission } from "@/features/packages/project-import";
 import { apiRequestError } from "@/lib/api/errors";
@@ -28,6 +29,7 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mode, setMode] = useState<"project" | "geojson">("project");
+	const [replaceProject, setReplaceProject] = useState(false);
 	const [uncertain, setUncertain] = useState<InitialImportAttempt | null>(null);
 	const [candidate, setCandidate] = useState<{
 		hash: string;
@@ -35,6 +37,7 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 		layers: z.infer<typeof candidateSchema>["layers"];
 		issues: z.infer<typeof candidateSchema>["issues"];
 		files: Awaited<ReturnType<typeof importSubmission>>["files"];
+		replaceProject: boolean;
 	} | null>(null);
 	useEffect(() => {
 		onPending(busy || candidate !== null || uncertain !== null);
@@ -75,13 +78,19 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 					await request(address, `/${base.setup_id}/sources`, {
 						method: "POST",
 						headers: { "If-Match": setupEtag(base) },
-						body: JSON.stringify({ ...submission, request_id: crypto.randomUUID(), preview: true })
+						body: JSON.stringify({
+							...submission,
+							request_id: crypto.randomUUID(),
+							preview: true,
+							replace_project: replaceProject
+						})
 					})
 				);
 				setCandidate({
 					hash: result.candidate_hash,
 					requestId: crypto.randomUUID(),
 					files: submission.files,
+					replaceProject,
 					layers: result.layers,
 					issues: result.issues
 				});
@@ -97,11 +106,25 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 	}
 	return (
 		<section className="flex flex-col gap-4">
-			<h2 className="type-heading">{setup ? "Add missing files" : "Choose QGIS project"}</h2>
+			<h2 className="type-heading">{setup ? "Update map files" : "Choose QGIS project"}</h2>
 			<p className="type-body text-ink-2">
 				Start with a .qgz or .qgs file. If it uses files stored separately, we’ll tell you which ones to add.
 				You can also choose a ZIP containing the project and its data files.
 			</p>
+			{setup && (
+				<Checkbox
+					id="replace-map-project"
+					checked={replaceProject}
+					disabled={busy || candidate !== null}
+					onCheckedChange={setReplaceProject}
+					description={
+						replaceProject
+							? "Choose the new project and all its data files. They will replace the previous file selection after you confirm. Your drawn boundaries will be kept."
+							: "Leave this unchecked to add missing data files to the saved project."
+					}>
+					Replace the QGIS project and its data files
+				</Checkbox>
+			)}
 			<label className="type-body font-semibold" htmlFor="map-source-files">
 				{setup ? "Missing data files or replacement project" : "QGIS project and its data files"}
 			</label>
@@ -119,7 +142,8 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 				}}
 			/>
 			<p className="type-small text-ink-2">
-				Up to 64 files, 16 MB total. Imagery and QGIS styling are not imported.
+				Up to 64 files, 16 MB total, and 20,000 map features across all layers. Imagery and QGIS styling are not
+				imported.
 			</p>
 			<details>
 				<summary className="min-h-touch cursor-pointer type-small">
@@ -171,7 +195,12 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 				</Note>
 			)}
 			{candidate && setup && (
-				<Note title="Review the added files before keeping them.">
+				<Note
+					title={
+						candidate.replaceProject
+							? "Review the replacement project before keeping it."
+							: "Review the added files before keeping them."
+					}>
 					<ul className="list-disc pl-5">
 						{candidate.layers.map(layer => (
 							<li key={layer.source_id}>
@@ -185,6 +214,9 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 						))}
 					</ul>
 					<p>Existing drawn boundaries will be kept. You will need to review the imported features again.</p>
+					{candidate.replaceProject && (
+						<p>Keeping this project replaces the previous project and data files.</p>
+					)}
 					<Button
 						variant="ink"
 						disabled={busy}
@@ -199,6 +231,7 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 											headers: { "If-Match": setupEtag(setup) },
 											body: JSON.stringify({
 												files: candidate.files,
+												replace_project: candidate.replaceProject,
 												request_id: candidate.requestId,
 												preview: false,
 												candidate_hash: candidate.hash
@@ -218,10 +251,10 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 								setBusy(false);
 							}
 						}}>
-						Keep added files
+						{candidate.replaceProject ? "Keep replacement project" : "Keep added files"}
 					</Button>
 					<Button variant="outline" onClick={() => setCandidate(null)}>
-						Cancel added files
+						{candidate.replaceProject ? "Cancel replacement" : "Cancel added files"}
 					</Button>
 				</Note>
 			)}

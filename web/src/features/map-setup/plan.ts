@@ -1,8 +1,13 @@
-import type { ProjectedSite } from "../../lib/plan";
+import type { PlanFrame, ProjectedSite } from "../../lib/plan";
 import { type CollectionLayers, layersPlan } from "../../lib/sites/archive";
 import type { Content, SourceLayer } from "./schema";
 
-export function setupPlan(name: string, layers: readonly SourceLayer[], content: Content): ProjectedSite | null {
+export function setupPlan(
+	name: string,
+	layers: readonly SourceLayer[],
+	content: Content,
+	frame?: PlanFrame
+): ProjectedSite | null {
 	const references = layers.flatMap(layer =>
 		layer.features.flatMap(item => {
 			const role = content.assignments.find(
@@ -55,5 +60,5 @@ export function setupPlan(name: string, layers: readonly SourceLayer[], content:
 		}
 	};
 	// Viewing room is not a site outline: no geometry is invented or saved here.
-	return layersPlan(name, data, 60);
+	return layersPlan(name, data, 60, frame);
 }

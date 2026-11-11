@@ -8,7 +8,9 @@ import pytest
 from fieldmaps_api.domain.geojson import FeatureCollection
 from fieldmaps_api.domain.packages import ProjectFile
 from fieldmaps_api.errors import ValidationFailedError
+from fieldmaps_api.map_setup_schemas import MapSetupReplace, SetupAssignment
 from fieldmaps_api.services import map_setup_imports
+from tests.map_setup_fixtures import point_sources
 from tests.test_project_import import document, ground_layer, packed, request, zones_layer
 
 
@@ -158,3 +160,25 @@ def test_long_qgis_layer_identifier_is_bounded_for_setup_storage() -> None:
 
     assert imported.layers
     assert all(len(layer.source_id) <= 300 for layer in imported.layers)
+
+
+def test_import_refuses_an_aggregate_feature_count_above_the_save_limit() -> None:
+    files = point_sources((10_001, 10_001))
+    with pytest.raises(ValidationFailedError, match="20,000 features in total"):
+        anyio.run(map_setup_imports.convert, files, "geojson")
+
+
+def test_import_at_the_aggregate_limit_can_save_every_feature_disposition() -> None:
+    files = point_sources((10_000, 10_000))
+    imported = anyio.run(map_setup_imports.convert, files, "geojson")
+    saved = MapSetupReplace(
+        import_generation=1,
+        assignments=tuple(
+            SetupAssignment(
+                source_id=layer.source_id, feature_key=feature.feature_key, role="trees"
+            )
+            for layer in imported.layers
+            for feature in layer.features
+        ),
+    )
+    assert len(saved.assignments) == 20_000

@@ -151,6 +151,11 @@ async def update_sources(  # noqa: PLR0913, PLR0917 - explicit authenticated req
     supplied: str | None,
     payload: MapSetupSources,
 ) -> MapSetupCandidate | MapSetup:
+    request_fingerprint = fingerprint(
+        payload.model_dump_json(
+            exclude={"replace_project"} if not payload.replace_project else None
+        ).encode()
+    )
     async with zones.transaction(sessions, user) as session:
         if not payload.preview:
             previous = await db.replay(
@@ -159,7 +164,7 @@ async def update_sources(  # noqa: PLR0913, PLR0917 - explicit authenticated req
                 site,
                 payload.request_id,
                 "sources",
-                fingerprint(payload.model_dump_json().encode()),
+                request_fingerprint,
             )
             if previous is not None:
                 if previous.setup_id != identifier:
@@ -175,8 +180,10 @@ async def update_sources(  # noqa: PLR0913, PLR0917 - explicit authenticated req
     additions = map_setup_imports.normalized_sources(list(payload.files))
     files = {f.file_name: f for f in retained}
     files.update({f.file_name: f for f in additions})
-    merged = list(files.values())
-    mode = "project" if stored.document.get("project_file") else "geojson"
+    merged = additions if payload.replace_project else list(files.values())
+    mode = (
+        "project" if payload.replace_project or stored.document.get("project_file") else "geojson"
+    )
     imported = await map_setup_imports.convert(merged, mode)
     generation = stored.setup.import_generation + 1
     source_metadata = [{"file_name": f.file_name, "size": len(f.content)} for f in merged]
@@ -243,7 +250,7 @@ async def update_sources(  # noqa: PLR0913, PLR0917 - explicit authenticated req
                 "document": orjson.dumps(document).decode(),
                 "sources": TypeAdapter(list[ProjectFile]).dump_json(merged).decode(),
                 "request": payload.request_id,
-                "fingerprint": fingerprint(payload.model_dump_json().encode()),
+                "fingerprint": request_fingerprint,
             },
         )
         return (await db.get(session, project, site, identifier)).setup

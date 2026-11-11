@@ -2564,6 +2564,12 @@
             "title": "Preview",
             "type": "boolean"
           },
+          "replace_project": {
+            "default": false,
+            "description": "Replace the entire source selection with a new QGIS project and its data files. Drawn boundaries are retained.",
+            "title": "Replace Project",
+            "type": "boolean"
+          },
           "request_id": {
             "format": "uuid",
             "title": "Request Id",
