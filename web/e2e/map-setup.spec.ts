@@ -515,6 +515,13 @@ test("whole layers take one decision, and the list and the map select each other
 	const numbered = page.getByRole("button", { name: "Show Area 2 on the map", exact: true });
 	await named.click();
 	await expect(named).toHaveAttribute("aria-pressed", "true");
+	// A row in a layer that is not the numbered one moves the numbers to its layer at the first press.
+	const tree = page.getByRole("button", { name: "Show Point 3 on the map", exact: true });
+	await tree.click();
+	await expect(tree).toHaveAttribute("aria-pressed", "true");
+	await expect(page.locator("[data-feature-overlay] text")).toHaveCount(3);
+	await named.click();
+	await expect(page.locator("[data-feature-overlay] text")).toHaveCount(2);
 	await page.locator("[data-feature-overlay] text").filter({ hasText: /^2$/ }).click();
 	await expect(numbered).toHaveAttribute("aria-pressed", "true");
 	await expect(named).toHaveAttribute("aria-pressed", "false");

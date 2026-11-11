@@ -58,6 +58,11 @@ function keyOf(source: string, feature: string): string {
 export function LayersStep({ setup, content, siteName, onChange, onPending, disabled, files, footer }: Props) {
 	const [busy, setBusy] = useState(false);
 	const [batching, setBatching] = useState(false);
+	// The content as last rendered, for work that finishes after an await.
+	const latest = useRef(content);
+	useEffect(() => {
+		latest.current = content;
+	}, [content]);
 	useEffect(() => {
 		onPending(batching);
 		return () => onPending(false);
@@ -101,8 +106,13 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 			);
 			return;
 		}
-		const shape = shapes.find(item => item.key === keyOf(source, feature));
-		if (shape && source === active?.source_id) mapRef.current?.showPoint(shape.anchor);
+		// Worked out from the feature itself: the numbered shapes still belong to the layer shown before this press.
+		const layer = setup.layers.find(item => item.source_id === source);
+		const index = layer?.features.findIndex(item => item.feature_key === feature) ?? -1;
+		const entry = layer?.features[index];
+		const shape =
+			plan && entry ? overlayShape(entry.feature, plan.frame, keyOf(source, feature), index + 1, "") : null;
+		if (shape) mapRef.current?.showPoint(shape.anchor);
 		// On a narrow screen the map sits above the list; bring it back when a row asks for it.
 		const box = mapBox.current?.getBoundingClientRect();
 		if (box && (box.bottom < 80 || box.top > window.innerHeight - 80))
@@ -158,7 +168,7 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 						: "";
 			onChange(
 				assignFeature(
-					content,
+					latest.current,
 					{ source_id: layer.source_id, feature_key: featureKey, role },
 					shape.ok ? shape.geometry : null,
 					id,
@@ -194,9 +204,14 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 			setBusy(true);
 			setBatching(true);
 			try {
-				let next = content;
-				for (const entry of layer.features) {
-					if (roleOf(entry.feature_key) === "zones") continue;
+				// Work out every identity first, then apply them to the content as it is now: a choice made
+				// while the identities were computed (leaving a source out, say) is kept, not overwritten.
+				const pending = layer.features.filter(entry => roleOf(entry.feature_key) !== "zones");
+				const ids = await Promise.all(
+					pending.map(entry => adoptedZoneId(setup.setup_id, layer.source_id, entry.feature_key))
+				);
+				let next = latest.current;
+				pending.forEach((entry, index) => {
 					const shape = readZoneGeometry(entry.feature.geometry);
 					const properties = entry.feature.properties;
 					const label =
@@ -209,10 +224,10 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 						next,
 						{ source_id: layer.source_id, feature_key: entry.feature_key, role },
 						shape.ok ? shape.geometry : null,
-						await adoptedZoneId(setup.setup_id, layer.source_id, entry.feature_key),
+						ids[index] ?? "",
 						label
 					);
-				}
+				});
 				onChange(next);
 			} finally {
 				setBusy(false);

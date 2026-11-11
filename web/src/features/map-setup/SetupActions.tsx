@@ -76,7 +76,10 @@ export function SetupActions({
 			</Menu>
 			<Dialog
 				open={confirming}
-				onOpenChange={setConfirming}
+				// Once discarding has started it cannot be called back, so the dialog stays until it is answered.
+				onOpenChange={open => {
+					if (!discarding) setConfirming(open);
+				}}
 				// The menu that opened the dialog has closed, so focus goes back to the button that opened the menu.
 				onCloseAutoFocus={event => {
 					event.preventDefault();
@@ -92,7 +95,9 @@ export function SetupActions({
 				footer={
 					<>
 						<DialogClose asChild>
-							<Button variant="outline">Keep draft</Button>
+							<Button variant="outline" disabled={discarding}>
+								Keep draft
+							</Button>
 						</DialogClose>
 						<Button
 							variant="danger-solid"
