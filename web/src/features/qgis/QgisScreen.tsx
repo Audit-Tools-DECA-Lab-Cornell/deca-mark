@@ -148,22 +148,22 @@ export function QgisScreen({
 		<div className="flex flex-col gap-6">
 			<PageHeader
 				title="QGIS"
-				lead="Maps go in as packages made in QGIS. Observations come out as files QGIS can open."
+				lead="Download each site’s published map to open in QGIS, and export observations as files QGIS can read."
 			/>
 
 			<div className="grid gap-6 lg:grid-cols-2 lg:items-start">
 				<Island
 					flush
 					divided={false}
-					title="Maps in"
+					title="Site maps"
 					meta={plural(maps.length, "site")}
-					footnote="Open map setup for a site. Start with a QGIS project, then draw or check the site outline and observation zones before publishing.">
+					footnote="A map belongs to its site, so setting one up opens that site under Sites. You start from a QGIS project, then check the site outline and observation zones before publishing.">
 					{maps.length === 0 ? (
 						<ScreenState
 							kind="empty"
 							icon="map"
 							title="No sites yet"
-							body="A map package belongs to a site. Add a site, then upload its map package from QGIS."
+							body="A map belongs to a site. Add a site, then set up its map from your QGIS project."
 							actions={
 								canUpload ? (
 									<ButtonLink variant="outline" href={`${base}/sites`}>

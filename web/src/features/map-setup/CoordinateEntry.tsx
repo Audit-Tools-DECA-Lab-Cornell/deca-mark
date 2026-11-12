@@ -9,8 +9,11 @@ import type { Position } from "@/lib/zones/geometry";
 export function CoordinateEntry({
 	onAdd,
 	actionLabel = "Add point",
-	secondaryAction
+	secondaryAction,
+	mapHint = true
 }: {
+	/** Whether the map beside this form also takes points by clicking. */
+	readonly mapHint?: boolean;
 	readonly onAdd: (point: Position) => void;
 	readonly actionLabel?: string;
 	readonly secondaryAction?: Readonly<{
@@ -41,7 +44,8 @@ export function CoordinateEntry({
 	return (
 		<div className="flex flex-col gap-3">
 			<p className="type-small text-ink-2">
-				Enter longitude and latitude. While drawing, you can also tap the map.
+				Enter longitude and latitude in decimal degrees.
+				{mapHint && " You can still click the map for other points."}
 			</p>
 			<div className="grid gap-3 sm:grid-cols-2">
 				<Field label="Longitude" htmlFor="outline-lng">
@@ -62,11 +66,11 @@ export function CoordinateEntry({
 				</Field>
 			</div>
 			<div className="flex flex-wrap gap-2">
-				<Button variant="outline" onClick={() => apply(onAdd)}>
+				<Button variant="outline" size="sm" onClick={() => apply(onAdd)}>
 					{actionLabel}
 				</Button>
 				{secondaryAction && (
-					<Button variant="outline" onClick={() => apply(secondaryAction.onAdd)}>
+					<Button variant="outline" size="sm" onClick={() => apply(secondaryAction.onAdd)}>
 						{secondaryAction.label}
 					</Button>
 				)}

@@ -11,52 +11,57 @@ export function SetupNotice({ state, siteHref, recover }: Props) {
 	return (
 		<Note tone="attention" title="Map setup needs attention." live="assertive">
 			<p>{state.error}</p>
-			{state.conflict ? (
-				<>
-					<ButtonLink variant="outline" href={`${siteHref}/map-setup`} target="_blank">
-						Open saved version
-					</ButtonLink>
+			<div className="mt-3 flex flex-wrap gap-2">
+				{state.conflict ? (
+					<>
+						<ButtonLink variant="outline" size="sm" href={`${siteHref}/map-setup`} target="_blank">
+							Open saved version
+						</ButtonLink>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={state.busy}
+							onClick={() => {
+								if (
+									window.confirm(
+										"Use the saved version and discard the unsaved changes on this page? Save a recovery file first if you need them."
+									)
+								)
+									void state.resolveConflict("saved");
+							}}>
+							Use saved version
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={state.busy}
+							onClick={() => {
+								if (
+									window.confirm(
+										"Replace the saved setup with your changes? Compare the saved version first. A new change made meanwhile will still be refused."
+									)
+								)
+									void state.resolveConflict("mine");
+							}}>
+							Keep my version
+						</Button>
+						<Button variant="outline" size="sm" onClick={recover}>
+							Save my changes as a file
+						</Button>
+					</>
+				) : (
 					<Button
 						variant="outline"
-						disabled={state.busy}
+						size="sm"
 						onClick={() => {
-							if (
-								window.confirm(
-									"Use the saved version and discard the unsaved changes on this page? Save a recovery file first if you need them."
-								)
-							)
-								void state.resolveConflict("saved");
+							state.setError(null);
+							if (setup) void state.flush();
+							else window.location.reload();
 						}}>
-						Use saved version
+						Try again
 					</Button>
-					<Button
-						variant="outline"
-						disabled={state.busy}
-						onClick={() => {
-							if (
-								window.confirm(
-									"Replace the saved setup with your changes? Compare the saved version first. A new change made meanwhile will still be refused."
-								)
-							)
-								void state.resolveConflict("mine");
-						}}>
-						Keep my version
-					</Button>
-					<Button variant="outline" onClick={recover}>
-						Save my changes as a file
-					</Button>
-				</>
-			) : (
-				<Button
-					variant="outline"
-					onClick={() => {
-						state.setError(null);
-						if (setup) void state.flush();
-						else window.location.reload();
-					}}>
-					Try again
-				</Button>
-			)}
+				)}
+			</div>
 		</Note>
 	);
 }

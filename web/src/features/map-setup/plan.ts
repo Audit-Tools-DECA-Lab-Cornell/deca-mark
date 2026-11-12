@@ -55,7 +55,8 @@ export function setupPlan(
 		zones: {
 			features: content.zones.map(zone => ({
 				geometry: zone.geometry,
-				properties: { id: zone.zone_id, label: zone.zone_label }
+				// An unnamed zone shows its code; its identity is never a label.
+				properties: { id: zone.zone_id, label: zone.zone_label || zone.zone_code }
 			}))
 		}
 	};

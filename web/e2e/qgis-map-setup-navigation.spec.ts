@@ -24,6 +24,9 @@ for (const entry of [
 		const before = await call<{ name: string; current_package_id: string | null }>("GET", sitePath);
 		await signInToZones(page, "manager");
 		await page.goto(`${fixture.path}/qgis`);
+		await expect(page.getByRole("region", { name: "Site maps" })).toContainText(
+			"A map belongs to its site, so setting one up opens that site under Sites."
+		);
 		const row = page.getByRole("listitem").filter({
 			has: page.locator(`a[href="${fixture.path}/sites/${entry.code}"]`)
 		});
@@ -32,7 +35,17 @@ for (const entry of [
 		await action.click();
 		await expect(page).toHaveURL(new RegExp(`/sites/${entry.code}/map-setup(?:/[^/]+/add-map)?$`));
 		await expect(page.getByRole("heading", { name: `${before.name} · Map setup`, exact: true })).toBeVisible();
-		await expect(page.locator("#map-source-files")).toBeVisible();
+		// Arriving from QGIS, the page says it is this site's map, under Sites, with a way back to both.
+		const trail = page.getByRole("navigation", { name: "Breadcrumb" });
+		await expect(trail.getByRole("link", { name: "Sites", exact: true })).toBeVisible();
+		await expect(trail.getByRole("link", { name: before.name, exact: true })).toHaveAttribute(
+			"href",
+			`${fixture.path}/sites/${entry.code}`
+		);
+		await expect(
+			page.getByRole("navigation", { name: "Project" }).getByRole("link", { name: "Sites", exact: true })
+		).toHaveAttribute("aria-current", "page");
+		await expect(page.locator("#map-source-files")).toBeAttached();
 		await expect(page.getByRole("heading", { name: "Advanced direct package upload", exact: true })).toHaveCount(0);
 		const after = await call<{ current_package_id: string | null }>("GET", sitePath);
 		expect(after.current_package_id).toBe(before.current_package_id);
