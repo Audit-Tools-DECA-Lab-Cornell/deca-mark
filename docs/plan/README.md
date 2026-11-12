@@ -40,6 +40,8 @@ The full decision log, the running cost and the open questions are in [decisions
 
 **Current focused feature:** [Zone polygon boundaries](zone-boundaries/README.md), with linked database, API, mobile-data, web/GIS handoffs, contract, edge-case matrix and a Claude frontend-planning prompt. The feature has local implementation and component acceptance evidence; MOB-29 and QA-07 retain the integrated upload/device/release gates. See [current position](current-state.md) before choosing work. Finish its QA gate before taking on the next map feature. Status remains in the owning task files below.
 
+**Next feature (post-pilot):** [Variable library and form templates](library/README.md). The web plan exists (WEB-61 to WEB-72); the database, API and contract plans are not written yet.
+
 | File | Owns | Task IDs defined there |
 |---|---|---|
 | [docs/plan/README.md](README.md) | This index, conventions, phase board | none |

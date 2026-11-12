@@ -837,7 +837,7 @@ Done when: `pnpm build` shows zod absent from project-page chunks and one supaba
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, `pnpm build`, the e2e suite.
 
 ### WEB-56: Forms in one canonical format, templates from the API
-Status: todo · Phase 4 · Size S · Depends: BE-24, BE-25 · Blocks: none
+Status: todo · Phase 4 · Size S · Depends: BE-24, BE-25 · Blocks: WEB-70
 Added 2026-10-22 (D32). The web still carries the fields-only form path and compiles its "start from" templates from `contracts/forms/*.json`.
 Read first: CON-07 (`contracts/README.md` "Form schema version"); `features/forms/LegacyVersionScreen.tsx`; `forms/versions/[version]/page.tsx:25-29,85-93`; `publish/page.tsx:36`; `features/forms/answers.ts` and the fields reader; `features/forms/templates.ts`; BE-24, BE-25.
 Do: delete `LegacyVersionScreen`, both `isCanonical` branches, `VersionRow.legacy` and its strings, the fields reader and its fixtures; load templates from BE-25's endpoint; read every served definition (versions, drafts, templates, historical observation detail) through `parseServedDefinition(schema_version, definition)`, and where the number is unknown show "Update DECA Mark to use this form" instead of the editor or reader.
@@ -881,3 +881,87 @@ Done when: `qgisUpload()` gains an XYZ layer and the packages spec covers three 
 Verify: `pnpm web:check`, `pnpm --dir web test:unit`, the packages spec through `scripts/e2e-local.sh`.
 Done 2026-11-07: Read project lists each online background map in the slot, which stays Ready. Upload asks "Upload without the background map?" and sends `leave_out_online_basemaps` only after "Upload without it"; Cancel sends nothing, keeps the files and returns focus to Upload. An `online_basemap_unconfirmed` answer opens the same question from its own layers, and the version history shows the warning naming each layer left out. Review follow-ups: a version whose checks cannot be read says so on its row instead of showing no warnings; focus returns to Upload after Cancel and after confirming; the confirmed retry reuses the refused request's ID. `qgisUpload(includeSources, withBasemap)` adds the XYZ layer.
 Verified 2026-11-07: the three new packages-spec tests fail on master's web code at desktop-1440 (3 failed, 11 passed; the review saw 6 failed, 14 passed at both viewports) and pass with the change (20 passed at desktop-1440 and phone-390, axe included); packages-identity and forms-version-delivery specs 14 passed; web:check clean; test:unit 518 pass (5 new in package-warnings.test.mjs); build passes. Review: two rounds PASS (the second with probes of a refused retry, Cancel then new files, focus after confirm, and a viewer's history).
+
+## Variable library and form templates (added 2026-11-12)
+
+Start at the [feature brief](../docs/plan/library/README.md); design and decisions are in [LIBRARY-UI.md](LIBRARY-UI.md). Order: WEB-61 to WEB-67 deliver the variable library; WEB-68 to WEB-70 deliver form templates (WEB-71 is dropped); version 1 is both. WEB-72 follows version 1. Each task that reads or writes library data needs the API described in LIBRARY-UI.md section 8, which has no `BE-*`, `DB-*` or `CON-*` task yet; add those as `Depends:` when they exist.
+
+### WEB-61: Library tab, routes and navigation
+Status: todo · Post-pilot · Size S · Depends: none · Blocks: WEB-62
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) section 3; `next.config.ts` (the `/o/:org/library` redirect); the project and organization tab definitions; `src/lib/shortcuts.ts`; `components/shell/CommandPalette.tsx`.
+Do: add Library as the ninth project tab (after Forms) and the fourth organization tab, with the route tree in section 3; remove the old redirect; add ⌘K entries and `g l`; role checks per the table in section 3. Until the reads exist the pages say "The library is not available yet."
+Done when: every route in section 3 resolves for the right roles and shows the no-access note for the others; the tab bar has no page-level sideways scroll at 768 px.
+Verify: `pnpm web:check`, the removed-routes and navigation specs.
+
+### WEB-62: Library page lists variables at every level
+Status: todo · Post-pilot · Size M · Depends: WEB-61 · Blocks: WEB-63, WEB-65, WEB-68
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 4.1, 4.2 and section 8; `features/forms/ProjectFormsScreen.tsx`; `components/contour/Table.tsx`.
+Do: `features/library/{model,read}.ts` and `LibraryScreen`: level chips with counts, group and format filters, search, the table, URL-held filters, per-level empty states, loading and failure states. Project and organization pages share the screen.
+Done when: a seeded project shows Universal, Organization, Project and two sites' variables; each filter narrows the table and survives a reload; Universal rows show the lock.
+Verify: `pnpm web:check`, `pnpm --dir web test:unit` (filter parsing), a library spec at 1440 and 390 with axe.
+
+### WEB-63: Create, edit and delete a variable
+Status: todo · Post-pilot · Size L · Depends: WEB-62 · Blocks: WEB-66
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 4.3; `features/forms/QuestionSettings.tsx` and the editors it uses; `CollectorPreview.tsx`; `DiscardDialog.tsx`.
+Do: `VariableScreen` with settings, single-question preview and usage; New variable with level choice; explicit save and discard; edit and delete notes; delete blocked while a template lists the variable; the read-only variant.
+Done when: a manager creates, edits and deletes a Project and a Site variable; an admin does the same at Organization level; a manager sees Organization and Universal variables read-only with no disabled buttons; a display rule can only choose variables on the same or a higher level.
+Verify: `pnpm web:check`, unit tests for level rules, the library spec.
+
+### WEB-64: Picking rules as pure functions
+Status: todo · Post-pilot · Size M · Depends: none · Blocks: WEB-65
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 5.1 and section 8; `features/forms/raw.ts` (`addQuestion`, `unique`); `features/forms/problems.ts`.
+Do: `features/library/pick.ts`: classify each variable against a form (available, in this form, blocked by data column, needs parents) and build the questions to insert, with source tags, wired display rules and section placement.
+Done when: unit tests cover one- and two-level parents, a parent already present, an edited parent, data-column blocks against the form and inside one selection, and insert order.
+Verify: `pnpm --dir web test:unit`.
+
+### WEB-65: "Add from library" panel in the draft editor
+Status: todo · Post-pilot · Size L · Depends: WEB-62, WEB-64 · Blocks: WEB-66, WEB-69
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 5.1; `features/forms/DraftEditorScreen.tsx` (the three-column grid and `add`); `QuestionList.tsx`.
+Do: `LibraryPanel` in place of the settings and preview columns (a sheet below 1024 px): search, level filter, groups, row states, expandable detail, the parent note and the counted footer; insert through WEB-64; load on first open.
+Done when: a manager adds three variables in one action, one bringing its parent; Age2 is blocked while Age1 is in the form, with the sentence from the design; the draft saves and publishes; focus returns to the button on close.
+Verify: `pnpm web:check`, the forms specs plus a picker spec at 1440, 1024 and 390 with axe.
+
+### WEB-66: Source tag and "Save to library" on a question
+Status: todo · Post-pilot · Size M · Depends: WEB-63, WEB-65 · Blocks: WEB-67
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 5.2 and 5.3; `features/forms/QuestionSettings.tsx`; `raw.ts` (`ADDED_SOURCE`).
+Do: show the source line and its "edited in this form" form; `SaveToLibraryDialog` with level, group, code and the parent option; tag the question after saving.
+Done when: a custom question saved at Project level appears in the picker of another form in the project; a taken code shows the inline error; saving a dependent question offers its parent.
+Verify: `pnpm web:check`, unit tests, the picker spec.
+
+### WEB-67: Variable library acceptance
+Status: todo · Post-pilot · Size S · Depends: WEB-66 · Blocks: WEB-72
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) sections 7 and 10.
+Do: add the "Site variables" link on the site page; run the first, second and fourth flows of section 7 end to end; the honesty scan and the responsive sweep over every library page.
+Done when: the three flows pass on the local stack at 1440, 768 and 390, Day and Dusk, for an owner, a manager and a viewer.
+Verify: `scripts/e2e-local.sh` with the library, picker and honesty specs.
+
+### WEB-68: Form templates list
+Status: todo · Post-pilot · Size M · Depends: WEB-62 · Blocks: WEB-69, WEB-70
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 6.1.
+Do: the Form templates view on the organization and project Library pages; a read-only template page listing its variables in order with a preview; "Start a form from this" on the project page.
+Done when: Janet's universal templates and one organization template are listed with round and variable count on both pages.
+Verify: `pnpm web:check`, a templates spec with axe.
+
+### WEB-69: Template editor for the organization
+Status: todo · Post-pilot · Size L · Depends: WEB-65, WEB-68 · Blocks: none
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 6.2; `LibraryPanel`; `features/library/pick.ts`.
+Do: `TemplateEditorScreen`: ordered list, the panel limited to Universal and Organization, reorder and remove, the same parent and data-column rules, preview, save; no "Add a question"; delete a template.
+Done when: an admin builds and edits a template; a Project variable cannot be added; deleting a listed variable is refused on the variable page with the template named.
+Verify: `pnpm web:check`, unit tests, the templates spec.
+
+### WEB-70: New form starts from a library template
+Status: todo · Post-pilot · Size M · Depends: WEB-56, WEB-68 · Blocks: WEB-72
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) 6.3; `features/forms/NewFormDialog.tsx`, `templates.ts`, `starter.ts`; WEB-56.
+Do: the dialog lists templates by round, Universal then organization, plus Blank; creating copies the current variables into a draft with source tags; remove the bundled starting forms from the dialog.
+Done when: a form started from Standard Short Form opens with its variables tagged; editing a variable afterwards changes the next form started from the template and not the first.
+Verify: `pnpm web:check`, the forms and templates specs.
+
+### WEB-71: Automatic Reliability form
+Status: dropped (2026-11-12, L17: Reliability rounds already use the Standard form and record `Rel_Round` themselves, so no second form is needed; see [LIBRARY-UI.md](LIBRARY-UI.md) 6.4) · Post-pilot · Size L · Depends: none · Blocks: none
+
+### WEB-72: Type-ahead library suggestions in "Add a question"
+Status: todo · Post-pilot · Size M · Depends: WEB-67, WEB-70 · Blocks: none
+Read first: [LIBRARY-UI.md](LIBRARY-UI.md) section 9; `features/forms/AddQuestionDialog.tsx`; `features/library/pick.ts`.
+Do: suggestions under the wording field from a typo-tolerant search over the already-loaded list, ranked by recent picks; choosing one adds it by the picker's rules; hidden when the list is slow or failed. Measure before considering server search.
+Done when: "wether" suggests Climate1; typing is never delayed by the list; blocked variables explain why instead of adding.
+Verify: `pnpm web:check`, unit tests for matching and ranking, the picker spec.
