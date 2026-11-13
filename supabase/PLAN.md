@@ -187,7 +187,7 @@ Do:
 Done when: the test runs in `pnpm test` and passes.
 
 ### DB-05: Identity and tenancy schema, private helpers and caller-scoped policies
-Status: done (2026-09-26) · Phase 1 · Size L · Depends: BE-16, DB-04 · Blocks: BE-06, BE-07, DB-06, DB-07, DB-09, DB-10, DB-12, DB-13, OPS-14, QA-01
+Status: done (2026-09-26) · Phase 1 · Size L · Depends: BE-16, DB-04 · Blocks: BE-06, BE-07, DB-06, DB-07, DB-09, DB-10, DB-12, DB-13, DB-21, OPS-14, QA-01
 What now works: canonical migrations rebuilt on local Supabase; SQL isolation/function checks, 62 API tests and 94 mobile tests pass. Python lint/types pass. Hosted deployment is not claimed.
 Read first:
 - [product.md](../docs/plan/product.md#roles)
@@ -433,7 +433,7 @@ Do: add migration `auth_hooks`.
 Done when: a local sign-up with a blocked domain fails with that message, and a normal domain succeeds.
 
 ### DB-09: Instrument lifecycle (forms and versions)
-Status: done (2026-10-07; local Supabase only, not yet applied to a hosted project) · Phase 2 · Size M · Depends: CON-02, DB-05, DB-07 · Blocks: BE-11, DB-11, DB-13, GIS-01, MOB-13, OPS-15, SYNC-02
+Status: done (2026-10-07; local Supabase only, not yet applied to a hosted project) · Phase 2 · Size M · Depends: CON-02, DB-05, DB-07 · Blocks: BE-11, DB-11, DB-13, DB-21, GIS-01, MOB-13, OPS-15, SYNC-02
 What now works (`supabase/migrations/20261007120000_sites_forms_collection.sql`, ledger `0013_sites_forms_collection`):
 - `forms` and the version lifecycle as specified in steps 1–7, with every existing version backfilled (`shell` / `training` / fixture forms).
 - **Two deliberate differences from the steps below.** The `state` default stays `published`, and a `BEFORE INSERT` trigger (`fill_form_version_lineage`) gives a version inserted without a form its form from the code. Seeds, fixtures and the Training form therefore keep inserting as before (step 8 is not needed), while the API always inserts drafts explicitly and RLS only accepts `state = 'draft'` from it.
@@ -666,7 +666,7 @@ Done when: `pnpm db:reset` builds the baseline from scratch, `pnpm db:test` pass
 Verify: `pnpm db:reset` then `pnpm db:test` on the local stack; never a hosted database without explicit approval of the target.
 
 ### DB-20: Seed Training and form templates in the current form format
-Status: done (2026-10-28; disposable db:test and API suite pass, then reset, db:test and the Training join on the local stack) · Phase 4 · Size M · Depends: CON-07 · Blocks: BE-25, MOB-43, OPS-19
+Status: done (2026-10-28; disposable db:test and API suite pass, then reset, db:test and the Training join on the local stack) · Phase 4 · Size M · Depends: CON-07 · Blocks: BE-25, DB-22, DB-24, MOB-43, OPS-19
 Added 2026-10-22 (D32, D4, frontend audit). The baseline seeds `shell-v1` into a fixed legacy project id and a `training-v1` row whose definition says `"version": "janet-test-v1"`; the collector still substitutes a bundled Practice garden for the Training project.
 Read first: `supabase/migrations/20261012120000_current_baseline.sql` (form_versions seed rows near :2933-2934, the `is_training` views near :2181); `supabase/seed.sql`; `contracts/forms/*.json`; CON-07; how site packages are stored today (DB-12/BE-13 own the move to Storage).
 Do: seed the Training project with a practice site, a published map package (the Practice garden, two zones) and its published play and inventory forms in the canonical format; add a `form_templates` table seeded from `contracts/forms` (title, summary, definition, schema version); remove the mismatched and legacy-shaped seed rows. Under D31 the baseline may be edited in place until the pilot launches.
@@ -674,3 +674,40 @@ Done when: `pnpm db:reset` builds the baseline; `pnpm db:test` asserts every see
 Verify: `pnpm db:reset`, `pnpm db:test` on the local stack only.
 Done 2026-10-28: a forward migration, `20261028090000_training_seed_and_form_templates.sql`, removes the baseline's mismatched `training-v1` and legacy practice `shell-v1` and seeds Training: the Practice garden site, `training-v1` (Janet play form) and `training-inventory-v1` (inventory form), both published at schema version 2 and named by their own code and state, and a ready package v1 (ids `…0103` to `…0109`, see the [database README](../database/README.md#training-and-form-templates)). `fieldmaps.form_templates` (`code`, `title`, `summary`, `definition`, `schema_version`; signed-in API read only) holds `behaviour-mapping` and `zone-inventory`. A migration, not a baseline edit, because schema 2 embeds the hashes of the two baseline rows and is already in the hosted history, so local, CI and the OPS-19 rebuild run one chain. The practice form stays a local fixture in `supabase/seed.sql`; the practice organization, project and site stay (D13) until GIS-03.
 Verified 2026-10-28: `database/tests/seed-forms.sql` failed 12 statements on the previous schema and passes now; disposable `ZONE_REHEARSAL=1 pnpm db:test` and `ZONE_API_REHEARSAL=1 pnpm backend:test` pass (the latter apart from four tests that need `mobile/node_modules`, which pass once installed); `pnpm db:reset` then `pnpm db:test` and a new account joining Training and seeing the site passed on the local stack. The web's and the collector's own archive readers accept the seeded archive. Re-verified after the review: the migration refuses a database holding a fields-only form version (test_training_seed_guard.py failed without the guard, passes with it; a fresh chain still builds), and the API test compares the zones with the Practice garden fixture. No hosted check was run. Do not apply the migration to the hosted database before OPS-19; OPS-19 must reset with `--no-seed`, because `[db.seed] enabled = true` would run seed.sql (the practice form) on the target.
+
+
+## Variable library and form templates
+
+[Design](LIBRARY.md) · [Wire contract](../docs/plan/library/contract.md). Delivery order: approved Universal variables and the read first; source-schema transition and variable writes next; reference templates last. All tasks are Post-pilot. Implementation must recheck QA-08 before relying on the pre-launch reset policy.
+
+### DB-21 — Scoped variable storage and approved Universal seed
+Status: todo · Post-pilot · Size L · Depends: CON-08, DB-05, DB-09 · Blocks: BE-27, DB-23
+Read first: `LIBRARY.md` tables, main read, RLS and seed mapping; `../docs/plan/library/contract.md`; current baseline role functions; `../database/README.md`; Additional workbook and its decision list.
+Do: add the one variable table, checked lineage, scoped uniqueness/indexes and SELECT-only API grants/RLS; seed approved Universal variables with stable IDs from the reviewed manifest; implement the scoped grouped usage read shape and local performance fixture. Keep unresolved research rows out with an explicit manifest review list; do not wait for template authoring. No API variable writes yet.
+Done when: an owner, project manager and viewer see exactly the permitted full library, observers/foreign callers see none; two sites and empty sites are covered; no RelRound1/FirstRound1 seed rows; approved seed replay does not change revisions; the restricted-role query is measured at 10× library size and documented version counts without an N+1 scan.
+Verify: `pnpm db:test` on a disposable/local stack; canonical validation of approved seed settings; record EXPLAIN ANALYZE, response-size and timing evidence; `pnpm plan:check`.
+Needs user: Janet approves research corrections/options before affected rows enter the seed; apply to a hosted target only with explicit authorization.
+
+### DB-22 — Advance stored forms to the source-tag schema
+Status: todo · Post-pilot · Size M · Depends: CON-09, DB-20 · Blocks: BE-28, DB-24
+Read first: `../docs/plan/library/contract.md` source-tag transition; CON-07; current form-version immutability/revision migrations; `../contracts/README.md`; QA-08 and the pre-launch policy.
+Do: plan and implement the single schema-3 transition, preflighting unknown librarySource keys before they gain meaning; preserve definition data/answer IDs/options/columns/package bindings, advance stored schema metadata/defaults, include old definition templates if still present, and restore publication guards. Update schema readiness expectations and seeds; no guessed tags, dual reader or compatibility path.
+Done when: every supported stored form serves at schema 3, untagged forms stay untagged, unknown-key preflight refuses unsafe transitions, and published guards plus recorded observations/bindings remain intact. A reset is used only for explicitly authorized pre-launch incompatible data, never after QA-08.
+Verify: disposable SQL schema-transition/immutability assertions and canonical seed validation; `pnpm db:test`; `pnpm plan:check`.
+Needs user: any hosted application or reset names and authorizes its target separately.
+
+### DB-23 — Atomic variable writes and dependency protection
+Status: todo · Post-pilot · Size L · Depends: DB-21 · Blocks: BE-29, DB-24
+Read first: `LIBRARY.md` private functions, validation matrix and lock order; `../docs/plan/library/contract.md` mutations/errors; existing organization membership locks and SQLSTATE mappings.
+Do: add create-one-or-two, whole replacement and guarded delete private functions; structural settings/reference validation, same-library/ancestor rules, cycles/options/type checks, immutable code/scope and revision guards. Use global shared then existing organization write locks and post-wait permission checks; keep direct DML revoked. Provide the internal validator used by reviewed Universal operator updates. Template checks are extended by DB-24 when item storage exists.
+Done when: wrong-level/sibling references and broken children cannot commit; two-row creation is atomic; stale writes refuse; dependency-blocked deletion names safe blockers; two-connection delete/create, option/edit, cycle and revocation races leave a valid graph.
+Verify: `pnpm db:test` on disposable/local databases, privilege coverage and two-connection race assertions; `pnpm plan:check`.
+Needs user: hosted application is separately authorized.
+
+### DB-24 — Reference templates and the seven approved Universal recipes
+Status: todo · Post-pilot · Size L · Depends: DB-23, DB-20, DB-22, MOB-53 · Blocks: BE-30
+Read first: `LIBRARY.md` template tables/recipes and edit-impact checks; `../docs/plan/library/contract.md`; old form_templates seed migration; Janet's recorded decisions.
+Do: replace old whole-definition template data/shape with metadata plus ordered FK items; add scoped SELECT policies and private org template mutations; extend variable edits/deletes to protect templates and transitive closure/order/column validity. Seed all seven approved recipes through reviewed UUID references; keep Universal updates under the same invariant/locking protocol. No compatibility table/route and no Reliability twin.
+Done when: ordered lists always reference Universal/same-org variables with all parents and unique columns; affected variable saves and deletes name blocked templates; all seven approved expansions validate; unresolved recipes are never silently shortened or invented; old copied definitions are absent.
+Verify: disposable/local `pnpm db:test`, seed expansion validation, template/variable race tests and privilege checks; `pnpm plan:check`.
+Needs user: Janet resolves held recipes/content before production seed completion; hosted replacement is separately authorized and must recheck the launch policy.

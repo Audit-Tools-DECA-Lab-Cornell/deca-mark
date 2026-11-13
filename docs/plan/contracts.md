@@ -197,7 +197,7 @@ Server parity is BE-10's job, against the same case files. This task is finished
 Verify: `pnpm --dir mobile test`, then `git status contracts/` shows no drift after re-running the script.
 
 ### CON-03: Generate OpenAPI types for web and mobile
-Status: done (2026-10-03) · Phase 0 · Size S · Depends: BE-04, CON-01 · Blocks: CON-04, CON-05, MOB-04, WEB-05
+Status: done (2026-10-03) · Phase 0 · Size S · Depends: BE-04, CON-01 · Blocks: CON-04, CON-05, CON-08, MOB-04, WEB-05
 Verified: both apps typecheck with generated types; two complete generation runs produced identical SHA-256 values for all three artifacts. A CI job regenerates them and rejects drift. Files are ready for the next authorized commit.
 Read first: `web/src/lib/packages.ts`, `mobile/src/sync/contracts.ts`, `backend/Makefile` (or the root `Makefile`).
 Do:
@@ -216,7 +216,7 @@ Done when:
 Verify: `pnpm contracts:generate && git diff --exit-code -- contracts web/src/lib/api mobile/src/data/api`.
 
 ### CON-04: Document the error envelope and implement one client helper per app
-Status: done (2026-10-03) · Phase 1 · Size S · Depends: BE-03, CON-03 · Blocks: MOB-04, WEB-05
+Status: done (2026-10-03) · Phase 1 · Size S · Depends: BE-03, CON-03 · Blocks: CON-08, MOB-04, WEB-05
 Verified: web and mobile helpers cover every generated error code with local user copy, code-based retry/rejection decisions and safe unknown-response handling. Existing package upload and mobile upload consumers use them; dedicated web/mobile tests cover the codes, transport failures and malformed envelopes.
 Read first: the Error envelope section above; `mobile/src/sync/upload.ts` (status-code branching today).
 Do:
@@ -249,7 +249,7 @@ Verify: `pnpm plan:check`; a grep of the zone docs and `contracts/zones` for `/v
 Evidence: [CON-06 acceptance and review](../reviews/zone-boundaries-2026-10-12/con06.md). Focused artifact tests: 91 passed; two explicit production-model/fingerprint obligations remain BE-22 gates. Ruff, formatting, focused BasedPyright and the programming audit pass. Reviewed handoffs now distinguish the sole `/v1` API from map versions, use zone-aware `format: 1`, required recorded bindings and one `observation-jcs-1` fingerprint. First-upload, replay/live-current and all five validation changes are independently authored. DB-19/BE-22 implementation, generated OpenAPI and runtime compliance remain pending; CON-06 does not claim those checks.
 
 ### CON-07: One form definition format and its schema-version rule
-Status: done (2026-10-23) · Phase 4 · Size S · Depends: none · Blocks: BE-24, DB-20
+Status: done (2026-10-23) · Phase 4 · Size S · Depends: none · Blocks: BE-24, CON-09, DB-20
 Added 2026-10-22 (D32). Forms live only in the database; `contracts/form-definition.schema.json` is the one format; `contracts/forms/*.json` become seed and test data.
 Read first: `contracts/form-definition.schema.json`; `contracts/README.md`; `contracts/forms/` and `cases/`; `scripts/check-form-engine-parity.mjs`; the `schema_version` column of `form_versions`.
 Do: state the current form schema version and the rule every party follows: the API validates writes against it and serves only it; a client that receives a definition with a schema version it does not know refuses that site or form with "Update DECA Mark to use this form" instead of guessing; a new schema version is a forward migration of stored definitions, never a dual format (from the pilot launch on, D31). Mark `contracts/forms/*.json` as seed and test data in `contracts/README.md`.
@@ -258,3 +258,22 @@ Wiring left to other tasks, written into each task's own Do and Done when (2026-
 Done when: `contracts/README.md` and this file state the rule; the shared definition cases include an unknown-schema-version case that both engines refuse.
 Verify: `pnpm plan:check`, `pnpm forms:parity`, `pnpm --dir web test:unit`, `pnpm mobile:test`.
 Verified 2026-10-23: the current schema version (1) and the rule are in `contracts/README.md` ("Form schema version") and above; `contracts/forms/*.json` are marked seed and test data. `contracts/forms/definition.cases.json` gains `currentSchemaVersion` and six schema-version cases (current, 2, 0, "1", null, true). Both byte-identical engine copies export `FORM_SCHEMA_VERSION`, `parseServedDefinition`, `UnknownSchemaVersionError` and `isUnknownSchemaVersion` (code `unknown_schema_version`). Before the change the mobile and web runners and the backend runner each failed on the new cases (the engines parsed an unknown version; the backend runner expected a bad definition); afterwards `pnpm forms:parity`, `pnpm --dir web test:unit` (400 pass), `pnpm mobile:test` (843 pass, 5 skipped), `pnpm web:check`, `pnpm plan:check`, `pnpm backend:check` and the disposable-database `pnpm backend:test ZONE_API_REHEARSAL=1` (869 pass) are green. Not done here, by design: serving `schema_version` and the API refusal (BE-24), and passing it to the engine and showing the copy in screens (MOB-43, WEB-56). Also passing: `pnpm mobile:check`. After review (2026-10-23): a `schemaVersion: true` refusal case (six cases), the wiring written into BE-24, MOB-43 and WEB-56, `pnpm --dir web test:unit` 401 pass and `pnpm mobile:test` 844 pass, 5 skipped. Second review (2026-10-24, two Opus reviewers on the branch rebased onto OPS-18): the engines passed, with the same refusals on 23 probe values across mobile, web and Python, apart from JSON `1.0`, which BE-24 now settles. The wiring failed once because templates were handed to BE-24, which runs before any templates payload exists. Serving their `schema_version` moved to BE-25, which now depends on BE-24. BE-24 also states what a write without the number means. A third review found that a `[skip render]` on BE-24's own commit does not hold the API, because Render deploys master's head on the next commit without it. A fourth review widened the rule from squash merges to every commit that reaches master, direct pushes included, and to manual API deploys. From BE-24's own commit until OPS-19 deploys, every commit to master carries the tag and nobody deploys the API by hand. pilot-readiness.md ("Deploys before OPS-19"), BE-24, BE-25, OPS-19 and D36 say so.
+
+
+## Variable library and form templates
+
+The proposed [library wire contract](library/contract.md) owns this feature's endpoints, source tag, scoped usage semantics and decisions. Current source constants are schema 2; CON-07's version-1 evidence above is historical. Implementation advances to 3, not to a second accepted format.
+
+### CON-08 — Library wire models, errors and shared reference cases
+Status: todo · Post-pilot · Size M · Depends: CON-03, CON-04 · Blocks: BE-27, CON-09, DB-21, WEB-64
+Read first: `library/README.md`; `library/contract.md`; `../../supabase/LIBRARY.md`; `../../backend/LIBRARY.md`; `../../contracts/README.md`; existing generated error contracts.
+Do: freeze explicit org/project DTOs, identity/scope rules, entity ETags, usage counts and ordered template bodies; add bounded API wire models and literal error/detail types, plus independently authored library reference/closure/order/column/expansion cases. Keep generated OpenAPI/types backend-owned; each route task generates its actual endpoints, not placeholder routes. Record owner assumptions and seed decisions without pretending they are approvals.
+Done when: backend and web can consume the same shapes/cases without guessing ID meaning, usage scope or error semantics; no new generic search/import/history abstraction exists; typed errors retain CON-04 behaviour.
+Verify: model-boundary/shared-case integrity checks during implementation, generated type checks where models are exposed, and `pnpm plan:check`.
+
+### CON-09 — Source-tag schema-3 specification and transition cases
+Status: todo · Post-pilot · Size S · Depends: CON-07, CON-08 · Blocks: BE-28, DB-22, MOB-53
+Read first: `library/contract.md` source tag/schema transition; `../../contracts/README.md`; current canonical engines, schema generator and shared definition cases; source consumers in backend and collector.
+Do: finalize the optional typed librarySource shape while preserving source prose; author the schema-3 acceptance/transition case specification for MOB-53, BE-28 and DB-22, including formerly unknown properties, no library FK, deleted sources and unchanged answers. Document exact rollout and preservation requirements under QA-08, without adding a dual reader. MOB-53 lands executable cases/generated schema with the canonical parser change.
+Done when: every consumer has exact tag/version expectations and transition cases, and the plan identifies the coordinated collector/API/storage change; no Reliability/package/observation contract changes are requested.
+Verify: cross-check current source constants and generator ownership, review transition cases against CON-07 and run `pnpm plan:check`.

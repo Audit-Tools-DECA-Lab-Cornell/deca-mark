@@ -8,7 +8,7 @@ Written 2026-11-12. This is the entry point for every plan of this feature. It s
 | [Web UI plan](../../../web/LIBRARY-UI.md) | Screens, flows, wording, decisions L1 to L17, what the web needs from the API |
 | [Web tasks](../../../web/PLAN.md) | WEB-61 to WEB-72 and their status (WEB-71 is dropped) |
 | [Backend planning prompt](backend-prompt.md) | The handoff that asks for the database, API and contract plans |
-| Database, API and contract plans | Not written yet. They will live at `supabase/LIBRARY.md`, `backend/LIBRARY.md` and `docs/plan/library/contract.md` |
+| Database, API and contract plans | [Database](../../../supabase/LIBRARY.md), [API](../../../backend/LIBRARY.md), [wire contract](contract.md): proposed implementation, with owner/Janet decisions and owning tasks |
 
 ## 1. Why the frontend was planned first
 
@@ -111,14 +111,14 @@ Also postponed, and likelier than the items above. Keep these possible; build no
 
 ## 8. Facts about the system today
 
-Checked in the repository on 2026-11-12. Verify before relying on them.
+Rechecked in the newly pushed master source snapshot on 2026-11-12; evidence and qualifications for every item are in [the API plan](../../../backend/LIBRARY.md#verified-current-system). These are source facts, not hosted verification.
 
 - **Forms** belong to a project: `fieldmaps.forms` and `fieldmaps.form_versions` (`definition jsonb`, states draft, published, retired). Drafts save with a strong ETag and `If-Match` (`backend/src/fieldmaps_api/form_preconditions.py`).
-- **Form definitions** follow `contracts/form-definition.schema.json` under CON-07's schema-version rule. A question already carries a free-text `source` for provenance.
-- **Templates today** are whole definitions in `fieldmaps.form_templates` (code, title, summary, definition, schema_version), global and read-only, served by `GET /v1/form-templates` (DB-20, BE-25).
+- **Form definitions** follow `contracts/form-definition.schema.json` under CON-07's schema-version rule. A question already carries a free-text `source` for provenance. The current source schema version is 2 (CON-07’s dated version-1 evidence is historical); accepting the typed source tag requires the planned schema-3 consumer update, even though collection behaviour does not change.
+- **Templates today** are whole definitions in `fieldmaps.form_templates` (code, title, summary, definition, schema_version), global and read-only, served to callers who manage an organization or project by `GET /v1/form-templates` (DB-20, BE-25). The API is manager-only; its table SELECT policy is broader, permitting signed-in API callers.
 - **Rounds** are `standard`, `reliability` and `inventory`. A site package binds one form version for Standard and Reliability together, and one for Inventory. The collector stamps `Rel_Round` and `First_Round` from the round; they are not questions (`mobile/src/domain/rounds.ts`).
 - **Pre-launch policy:** no real users, so incompatible data may be reset and no compatibility path is kept, until QA-08 passes (`docs/plan/README.md`).
 
 ## 9. Reliability rounds need nothing new
 
-Decided 2026-11-12 (L17). An automatic Reliability twin form was considered and dropped: the system already runs Reliability rounds on the Standard form and records `Rel_Round` itself, so the two data sheets match with no second form. Site packages, the collector and observation upload do not change for this feature. `RelRound1` and `FirstRound1` are not seeded as Universal variables, and templates that list them in the workbook are seeded without them.
+Decided 2026-11-12 (L17). An automatic Reliability twin form was considered and dropped: the system already runs Reliability rounds on the Standard form and records `Rel_Round` itself, so the two data sheets match with no second form. Site packages, collection behaviour and observation upload do not change for this feature. The canonical source-tag/schema-version acceptance change is tracked by MOB-53; it adds no collector library feature. `RelRound1` and `FirstRound1` are not seeded as Universal variables, and templates that list them in the workbook are seeded without them.
