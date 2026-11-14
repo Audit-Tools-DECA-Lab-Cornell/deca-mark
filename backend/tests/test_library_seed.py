@@ -73,7 +73,7 @@ def test_provisional_seed_matches_workbook_and_sql() -> None:
         assert var.settings.export_column == rows[row]["E"].strip()
         assert var.settings.depends_on is None  # no rule invented for provisional content
         # Exports record the code, so it names the choice and never its position in the list.
-        codes = [x.code for x in var.settings.options]
+        codes = [x.code for x in var.settings.options or []]
         assert len(set(codes)) == len(codes)
         for code in codes:
             assert re.fullmatch(r"[a-z][a-z0-9]*(_[a-z0-9]+)*", code), code
@@ -85,7 +85,7 @@ def test_provisional_seed_matches_workbook_and_sql() -> None:
                 for r, d in rows.items()
                 if row <= r < next_row and d.get("G", "").strip()
             ]
-            assert [x.label for x in var.settings.options] == labels
+            assert [x.label for x in var.settings.options or []] == labels
         question = var.settings.model_dump(by_alias=True, exclude_none=True)
         FormDefinition.model_validate(
             {

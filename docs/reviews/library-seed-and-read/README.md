@@ -42,7 +42,8 @@ BE-28 is still required before API-authored tags are supported.
 Measured 2026-11-14, five warm EXPLAIN ANALYZE samples (first run excluded):
 **p95 database execution 3,293.038 ms; database response 3,220,488 UTF-8 bytes**.
 The “p95” of five samples is their maximum, not a production percentile estimate.
-The detailed plan was saved in the executor at `/tmp/library-read-explain.json`.
+The detailed plan was saved in the executor's temporary directory; the script now creates a
+private file there and prints its path.
 This exceeds the proposed 500 ms DB budget at the deliberately large version stress
 volume; no performance pass is claimed. The plan spends about 1.59 s scanning versions
 under existing form RLS and about 0.9 s expanding/grouping one million question tags,
@@ -114,3 +115,9 @@ Three changes after review of PR #66; no route, table or permission changed.
   `test_library_seed.py` refuses a positional or non-snake_case code.
 - **Benchmark.** `database/library-benchmark.py` runs in the baseline rehearsal only with
   `LIBRARY_BENCHMARK=1`.
+- **Optional settings in the client types (review comment).** Responses leave unset settings out,
+  but `required` and `columns` had defaults, so the generated web and mobile types promised them.
+  `required`, `columns` and `options` now carry no default; the types mark them optional, and
+  `test_library_contract.py` fails if an optional settings field gains a default.
+- **Benchmark output (review comment).** The saved query plan goes to a freshly created private
+  temporary file whose path is printed, never a fixed name in the shared temporary directory.

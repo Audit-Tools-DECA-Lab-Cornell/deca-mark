@@ -2014,13 +2014,16 @@ export interface components {
         /**
          * LibrarySettings
          * @description Canonical settings; dependency question strings identify variable UUIDs in storage.
+         *
+         *     Only label, exportColumn, kind and source are always present. Every other field is omitted
+         *     from a response when the stored settings omit it, so none of them carries a default here:
+         *     a default would make the generated client types promise a value the response does not send.
+         *     The form engine applies its own defaults (required false, one column) when a variable is
+         *     copied into a form.
          */
         LibrarySettings: {
-            /**
-             * Columns
-             * @default 1
-             */
-            columns: number;
+            /** Columns */
+            columns?: number | null;
             dateTime?: components["schemas"]["DateTimeConfig"] | null;
             dependsOn?: components["schemas"]["Condition"] | null;
             dynamicFrom?: components["schemas"]["DynamicFrom"] | null;
@@ -2045,18 +2048,15 @@ export interface components {
             /** Openedby */
             openedBy?: string | null;
             /** Options */
-            options?: components["schemas"]["Option"][];
+            options?: components["schemas"]["Option"][] | null;
             /** Optionspending */
             optionsPending?: string | null;
             /** Placeholder */
             placeholder?: string | null;
             /** Protocolflag */
             protocolFlag?: string | null;
-            /**
-             * Required
-             * @default false
-             */
-            required: boolean;
+            /** Required */
+            required?: boolean | null;
             /** Role */
             role?: "observer" | null;
             /** Rows */

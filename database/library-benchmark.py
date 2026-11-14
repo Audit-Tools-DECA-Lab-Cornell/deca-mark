@@ -4,6 +4,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 container = sys.argv[1]
@@ -54,4 +55,9 @@ report = {"variables":5700,"fixture_versions":10000,"questions_per_version":100,
           "samples":5,"db_execution_ms_p95":read_times[-1],"db_response_bytes":len(payload.encode()),
           "usage_source":"Direct SQL fixture tags, not API-authored tags (BE-28 pending)"}
 print(json.dumps(report,indent=2))
-Path("/tmp/library-read-explain.json").write_text(json.dumps(plans[-1],indent=2))
+# A private, freshly created file: never a fixed name in the shared temporary directory.
+with tempfile.NamedTemporaryFile(
+    "w", prefix="library-read-explain-", suffix=".json", delete=False
+) as plan_file:
+    plan_file.write(json.dumps(plans[-1], indent=2))
+print(f"Query plan saved to {plan_file.name}")

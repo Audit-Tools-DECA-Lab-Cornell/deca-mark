@@ -2411,14 +2411,20 @@
       },
       "LibrarySettings": {
         "additionalProperties": false,
-        "description": "Canonical settings; dependency question strings identify variable UUIDs in storage.",
+        "description": "Canonical settings; dependency question strings identify variable UUIDs in storage.\n\nOnly label, exportColumn, kind and source are always present. Every other field is omitted\nfrom a response when the stored settings omit it, so none of them carries a default here:\na default would make the generated client types promise a value the response does not send.\nThe form engine applies its own defaults (required false, one column) when a variable is\ncopied into a form.",
         "properties": {
           "columns": {
-            "default": 1,
-            "maximum": 4.0,
-            "minimum": 1.0,
-            "title": "Columns",
-            "type": "integer"
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Columns"
           },
           "dateTime": {
             "anyOf": [
@@ -2551,12 +2557,19 @@
             "title": "Openedby"
           },
           "options": {
-            "items": {
-              "$ref": "#/components/schemas/Option"
-            },
-            "maxItems": 200,
-            "title": "Options",
-            "type": "array"
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Option"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
           },
           "optionsPending": {
             "anyOf": [
@@ -2592,9 +2605,15 @@
             "title": "Protocolflag"
           },
           "required": {
-            "default": false,
-            "title": "Required",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required"
           },
           "role": {
             "anyOf": [

@@ -34,6 +34,35 @@ def test_settings_preserve_canonical_aliases_and_reject_identity() -> None:
             LibrarySettings.model_validate({**SETTINGS, **patch})
 
 
+class ObjectSchema(BaseModel):
+    required: list[str] = Field(default_factory=list)
+    properties: dict[str, JsonValue]
+
+
+class Components(BaseModel):
+    schemas: dict[str, JsonValue]
+
+
+class ApiDescription(BaseModel):
+    components: Components
+
+
+def test_response_omits_only_what_the_api_description_calls_optional() -> None:
+    """Responses leave unset settings out, so the generated client types must not promise them."""
+    always = {"label", "exportColumn", "kind", "source"}
+    api = ApiDescription.model_validate_json((ROOT / "contracts/openapi.json").read_text())
+    described = ObjectSchema.model_validate(api.components.schemas["LibrarySettings"])
+    assert set(described.required) == always
+    fields = LibrarySettings.model_fields
+    assert set(described.properties) == {field.alias or name for name, field in fields.items()}
+    minimal = {key: SETTINGS[key] for key in always}
+    parsed = LibrarySettings.model_validate(minimal)
+    assert parsed.model_dump(mode="json", by_alias=True, exclude_unset=True) == minimal
+    # A default on an optional field is a value the response would leave out but the types promise;
+    # with none, dropping only the absent (None) fields gives back exactly what was stored.
+    assert parsed.model_dump(mode="json", by_alias=True, exclude_none=True) == minimal
+
+
 def test_entity_scope_and_etag() -> None:
     body = {
         "id": "11111111-1111-4111-8111-111111111111",

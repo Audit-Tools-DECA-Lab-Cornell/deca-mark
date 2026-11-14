@@ -24,16 +24,23 @@ type Group = Annotated[str, Field(min_length=1, max_length=100)]
 
 
 class LibrarySettings(Input):
-    """Canonical settings; dependency question strings identify variable UUIDs in storage."""
+    """Canonical settings; dependency question strings identify variable UUIDs in storage.
+
+    Only label, exportColumn, kind and source are always present. Every other field is omitted
+    from a response when the stored settings omit it, so none of them carries a default here:
+    a default would make the generated client types promise a value the response does not send.
+    The form engine applies its own defaults (required false, one column) when a variable is
+    copied into a form.
+    """
 
     label: Label
     export_column: Annotated[str, Field(min_length=1, max_length=100)] = Field(alias="exportColumn")
     kind: Literal["one", "many", "text", "number", "dateTime"]
     source: Annotated[str, Field(min_length=1, max_length=2000)]
     hint: Annotated[str, Field(min_length=1, max_length=2000)] | None = None
-    options: Annotated[list[Option], Field(max_length=200)] = Field(default_factory=list)
-    required: bool = False
-    columns: Annotated[int, Field(ge=1, le=4)] = 1
+    options: Annotated[list[Option], Field(max_length=200)] | None = None
+    required: bool | None = None
+    columns: Annotated[int, Field(ge=1, le=4)] | None = None
     role: Literal["observer"] | None = None
     number_mode: Literal["integer", "decimal"] | None = Field(default=None, alias="numberMode")
     value_source: Literal["manual", "accountId", "observerCode", "captureTime"] | None = Field(
