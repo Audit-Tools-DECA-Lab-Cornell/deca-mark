@@ -15,7 +15,7 @@ WITH abilities AS MATERIALIZED (
  FROM scoped_versions v
  CROSS JOIN LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(v.definition->'questions')='array'
    THEN v.definition->'questions' ELSE '[]'::jsonb END) q(value)
- WHERE q.value->'librarySource'->>'variableId' IN (SELECT id::text FROM visible)
+ WHERE q.value->'librarySource'->>'variableId' IS NOT NULL
  GROUP BY q.value->'librarySource'->>'variableId'
 )
 SELECT jsonb_build_object(

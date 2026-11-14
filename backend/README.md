@@ -376,3 +376,21 @@ The manager-only map-setup lifecycle stores incomplete first maps and replacemen
 Map setup accepts at most 20,000 imported features in total across all layers, matching the saved assignment limit. Source updates add missing data files by default. Sending `replace_project: true` to `POST …/map-setups/{setup}/sources` previews or confirms a replacement of the entire saved file selection with a new QGIS project and its dependencies, regardless of filenames. Drawn outline and zones remain intact; the existing revision and candidate-confirmation checks still apply.
 
 Disposable SQL/API acceptance uses `pnpm db:test ZONE_REHEARSAL=1` and `sh database/zone-api-rehearsal.sh tests/test_map_setup_api.py tests/test_map_setup_publication_api.py`. These commands use synthetic local data and clean their own resources; they do not prove deployed or physical-device acceptance.
+
+## Variable library reads (BE-27)
+
+`GET /v1/projects/{project_id}/library/variables` returns all permitted Universal,
+Organization, Project and Site variables with full settings, sites, form usage counts
+and edit capabilities. Viewers/managers (including inherited owners/admins) may read;
+observers cannot. Organization owners/admins use the corresponding
+`/v1/orgs/{org_id}/library/variables` route for Universal/Organization content.
+There are no paging, search or filter parameters. These responses are private/no-store.
+
+Each context also serves `/variables/{variable_id}` with a strong entity ETag and
+`/variables/{variable_id}/usage` with readable version links, dependent variables and
+an empty reference-template list until DB-24. Usage counts distinct forms in the route's
+context and never reveal unreadable drafts. No application write routes exist, and this
+slice does not add source-tag authoring or advance form schema 2. Local/test content is
+provisional (10 Universal variables; 97 workbook rows held for Janet), not authorized
+for hosted seeding. See [contract](../docs/plan/library/contract.md) and
+[verification/scaling evidence](../docs/reviews/library-seed-and-read/README.md).

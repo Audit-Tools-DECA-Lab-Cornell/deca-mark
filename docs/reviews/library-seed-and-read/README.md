@@ -53,3 +53,48 @@ Environment recovery: public.ecr.aws image download was rate-limited; the identi
 pinned image was obtained from Docker Hub. Supabase CLI migration-new could not create
 its default directory on the read-only home filesystem; the migration filename follows
 the repository's timestamp fallback. Python/npm/pnpm caches live under /tmp.
+
+## BE-27
+
+Six GET routes now serve project/org lists, entities and usage. Existing template and
+form routes remain unchanged. There are no mutation routes or manually edited web/mobile
+sources. Both generated client declarations compile. Two complete OpenAPI/type generation
+runs produced matching hashes; a structural comparison found every pre-existing endpoint
+and component schema unchanged.
+
+Final focused disposable run (library API/contract/seed plus existing template tests):
+**27 passed**. Coverage includes owner/admin/manager/viewer/observer/member, foreign org
+and sibling-project denial even for owners, deleted callers and revoked membership,
+empty sites, same codes at different levels, complete settings, unavailable storage,
+no write route, no query parameters, distinct forms across published/retired/draft
+versions, viewer-hidden drafts, named dependent variables and stable entity ETags after
+usage-only changes. Usage tags are direct privileged SQL fixture data, not API saves.
+The hot read makes exactly one data statement (four SELECTs including identity, active
+caller and context checks), independent of variable count.
+
+Final HTTP measurements, six TestClient requests per fixture with the first excluded:
+
+| Fixture | Warm p95 (max of five) | UTF-8 HTTP response bytes |
+| --- | ---: | ---: |
+| 10 Universal + four tenant variables, no tagged versions | 17.274 ms | 11,304 |
+| 5,700 visible variables; 10,000 versions × 100 fixture tags | 3,889.802 ms | 3,334,293 |
+
+The stress fixture runs ANALYZE after its bulk insert, matching the SQL benchmark.
+A preliminary run without refreshed statistics exceeded the API SQL timeout and returned
+503; after inspecting the plan, the read no longer performs an unnecessary pre-aggregation
+semi-join of every tag to the visible variables. Counts aggregate the scoped readable
+versions once and join to visible variables at the end. No hidden source ID/count is
+serialized. Stress latency still exceeds the proposed target, and no production SLA is
+claimed. These measurements include in-process HTTP validation/serialization, excluding
+real network transit; production hardware/concurrency was not tested.
+
+Passed: `pnpm backend:check` (Ruff + BasedPyright), `pnpm contracts:generate` twice,
+`pnpm --dir web typecheck`, `pnpm --dir mobile typecheck`, and `pnpm plan:check`.
+The disposable commands used `DECAMARK_REHEARSAL_IMAGE=supabase/postgres:17.6.1.171`;
+Python/npm/pnpm dependencies were installed from existing lockfiles without lock changes.
+
+The broader regression run caught a pre-library schema-2 fixture loading today's full
+seed before the new table exists. Its test setup now selects only the original practice/
+identity portion of seed.sql; no runtime compatibility path was added. The corrected
+`tests/test_schema2_legacy_rehearsal.py` rerun passed all **6** cases. The earlier broad
+run started before this correction; it is not evidence of a clean final full-suite run.
