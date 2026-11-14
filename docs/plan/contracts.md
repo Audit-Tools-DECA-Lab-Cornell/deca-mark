@@ -265,11 +265,13 @@ Verified 2026-10-23: the current schema version (1) and the rule are in `contrac
 The proposed [library wire contract](library/contract.md) owns this feature's endpoints, source tag, scoped usage semantics and decisions. Current source constants are schema 2; CON-07's version-1 evidence above is historical. Implementation advances to 3, not to a second accepted format.
 
 ### CON-08 — Library wire models, errors and shared reference cases
-Status: todo · Post-pilot · Size M · Depends: CON-03, CON-04 · Blocks: BE-27, CON-09, DB-21, WEB-64
+Status: done (2026-11-14; four contract tests, focused Ruff/BasedPyright and plan check pass) · Post-pilot · Size M · Depends: CON-03, CON-04 · Blocks: BE-27, CON-09, DB-21, WEB-64
 Read first: `library/README.md`; `library/contract.md`; `../../supabase/LIBRARY.md`; `../../backend/LIBRARY.md`; `../../contracts/README.md`; existing generated error contracts.
 Do: freeze explicit org/project DTOs, identity/scope rules, entity ETags, usage counts and ordered template bodies; add bounded API wire models and literal error/detail types, plus independently authored library reference/closure/order/column/expansion cases. Keep generated OpenAPI/types backend-owned; each route task generates its actual endpoints, not placeholder routes. Record owner assumptions and seed decisions without pretending they are approvals.
 Done when: backend and web can consume the same shapes/cases without guessing ID meaning, usage scope or error semantics; no new generic search/import/history abstraction exists; typed errors retain CON-04 behaviour.
 Verify: model-boundary/shared-case integrity checks during implementation, generated type checks where models are exposed, and `pnpm plan:check`.
+
+Verified CON-08: bounded wire DTOs and library error/detail literals are defined without write routes; nine authored shared cases cover identity/scope/closure/order/collisions/expansion. Generated types are not exposed until BE-27 registers read routes. Existing CON-04 error consumers are unchanged; write error emission remains BE-29.
 
 ### CON-09 — Source-tag schema-3 specification and transition cases
 Status: todo · Post-pilot · Size S · Depends: CON-07, CON-08 · Blocks: BE-28, DB-22, MOB-53

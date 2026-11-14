@@ -1,6 +1,6 @@
 # Variable library and form templates: wire contract
 
-Planning only, 2026-11-12. Read the [brief](README.md), then this contract, the [database plan](../../../supabase/LIBRARY.md) and [API plan](../../../backend/LIBRARY.md). These are proposed interfaces, not implemented endpoints. The source snapshot is `master` commit `54338e5265c353a726499c5d73399acb99303c8a` (recorded in the downloaded source archive); no hosted state was inspected.
+Planning only, 2026-11-12. Read the [brief](README.md), then this contract, the [database plan](../../../supabase/LIBRARY.md) and [API plan](../../../backend/LIBRARY.md). Implementation note (2026-11-14): BE-27 implements only the six variable list/entity/usage GET routes below. Mutation/template interfaces remain proposals, and form schema stays 2 until the separate source-tag slice. The source snapshot is `master` commit `54338e5265c353a726499c5d73399acb99303c8a` (recorded in the downloaded source archive); no hosted state was inspected.
 
 ## Owner and Janet decisions (recommendations, not approvals)
 

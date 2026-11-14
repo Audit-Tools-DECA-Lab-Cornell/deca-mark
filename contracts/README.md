@@ -41,6 +41,14 @@ OpenAPI generation needs the installed backend dependencies and each app's own `
 
 Each app's adjacent `errors.ts` parses error envelopes into typed errors and local user copy. Error codes determine retry, sign-in and rejection, with transport fallbacks for 401 and 5xx. Unknown or malformed responses remain retryable; on mobile this preserves the local record, including when an older API returns an unstructured 403/409/422. Known validation/access/conflict codes remain rejected. Run `pnpm --dir web test:api-errors` and `pnpm mobile:test` to verify these decisions.
 
+## Library read contract
+
+The read-only variable library types are generated through OpenAPI; see
+[library contracts](library/README.md) and the [wire contract](../docs/plan/library/contract.md).
+`library/universal.json` is a provisional local/test-only manifest with 10 seed variables
+and 97 held workbook rows; it is not a runtime content source or a hosted seed.
+Source-tag form authoring still belongs to BE-28; this slice keeps form schema 2.
+
 ## Form lifecycle preconditions
 
 `FormVersionSummary` and `FormVersionDetail` expose `revision` and `etag`. Draft save,

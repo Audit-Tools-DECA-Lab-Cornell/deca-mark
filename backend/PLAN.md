@@ -453,11 +453,13 @@ Verify: `pnpm backend:check`, `pnpm backend:test`, `pnpm db:test`, `pnpm contrac
 [Implementation plan](LIBRARY.md) · [Wire contract](../docs/plan/library/contract.md). BE-27 unblocks the library page before writes or templates. No observation upload/export or site-package behaviour changes belong to this feature.
 
 ### BE-27 — One complete library read and scoped usage detail
-Status: todo · Post-pilot · Size M · Depends: CON-08, DB-21 · Blocks: BE-29, WEB-62
+Status: done (2026-11-14; 27 focused tests, 6 corrected fixture regressions, backend checks, generated-type drift checks and both client type checks pass) · Post-pilot · Size M · Depends: CON-08, DB-21 · Blocks: BE-29, WEB-62
 Read first: `LIBRARY.md` current facts, main read and permission matrix; `../docs/plan/library/contract.md`; `../supabase/LIBRARY.md`; tenancy and forms repositories.
 Do: add org/project variable lists, entity detail and usage detail through normal routers/services/repositories; return every permitted variable with settings/sites/usage counts in one list request; separate entity ETags from usage. Use one grouped scoped form-tag scan, existing form-version RLS and generated OpenAPI types; until reference templates exist their usage array is correctly empty.
 Done when: all four levels and full settings are returned without paging/search/N+1 calls, distinct-form counts and version links are correct for each role/context, empty versus failed reads differ, entity ETags do not vary with usage, and the 10× fixture's time/size is recorded.
 Verify: focused restricted-role API/usage/role tests, `pnpm backend:check`, `pnpm contracts:generate` twice without drift, both client type checks and `pnpm plan:check`.
+
+Verified BE-27: six read-only org/project list/entity/usage routes; source tags are direct SQL test fixtures and form schema remains 2. Fourteen-variable HTTP warm p95 17.274 ms / 11,304 bytes; 5,700-variable + 10,000-version × 100-tag stress p95 3,889.802 ms / 3,334,293 bytes. The stress case exceeds the proposed target; [complete evidence and limits](../docs/reviews/library-seed-and-read/README.md). No application writes, template changes or hand-written client code.
 
 ### BE-28 — Preserve source tags through the existing form lifecycle
 Status: todo · Post-pilot · Size M · Depends: CON-09, DB-22, MOB-53, BE-24 · Blocks: BE-30, WEB-65, WEB-66
