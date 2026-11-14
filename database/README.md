@@ -356,3 +356,15 @@ The manager-only map-setup lifecycle stores incomplete first maps and replacemen
 `/v1/projects/{project}/sites/{site}/map-setups` supports import, acknowledged reads, conditional saves, staged source replacement, validation, publication and discard. Private source bundles never appear in ordinary responses or observer reads. Setup publication locks the site then the setup, rechecks the reviewed revision/current map, and commits the immutable package and replay receipt atomically. Discard/publication release private draft source data; published history remains immutable.
 
 Disposable SQL/API acceptance uses `pnpm db:test ZONE_REHEARSAL=1` and `sh database/zone-api-rehearsal.sh tests/test_map_setup_api.py tests/test_map_setup_publication_api.py`. These commands use synthetic local data and clean their own resources; they do not prove deployed or physical-device acceptance.
+
+## Provisional variable library (DB-21)
+
+`library_variables` has four checked ownership levels with read-only, caller-scoped API
+access. No application write path exists. The local/test `seed.sql` inserts 10 provisional
+Universal variables from `contracts/library/universal.json`; 97 workbook rows are held
+for Janet and the two round variables are excluded. This content is **not authorized
+for hosted databases**, and is absent from the schema migration. No templates are seeded.
+Seed/workbook parity is checked by `backend/tests/test_library_seed.py`. Disposable SQL
+tests include scope, uniqueness, lineage, read roles, denied writes and replay. The
+baseline rehearsal runs `database/library-benchmark.py` on its disposable database only;
+[evidence and measured scaling limits](../docs/reviews/library-seed-and-read/README.md).

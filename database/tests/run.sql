@@ -69,5 +69,6 @@ SELECT pg_temp.assert_true((SELECT array_agg(version ORDER BY version)=ARRAY['00
 \ir zone-observation-binding.sql
 \ir zone-training-binding.sql
 \ir gis-recorded-zone-context.sql
+\ir library.sql
 ROLLBACK;
 \echo All database scenarios passed; test records rolled back.

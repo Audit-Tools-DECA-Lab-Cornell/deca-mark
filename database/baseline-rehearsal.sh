@@ -76,4 +76,5 @@ baseline_psql -f "$baseline_root/database/tests/auth_hooks.sql"
 baseline_psql -f "$baseline_root/database/hosted/verify.sql"
 node database/tests/zone-numbers.mjs "$baseline_container"
 node database/tests/zone-concurrency.mjs "$baseline_container"
+python3 database/library-benchmark.py "$baseline_container"
 printf '%s\n' 'Current schema acceptance passed on disposable PostgreSQL 17/PostGIS; existing databases untouched.'

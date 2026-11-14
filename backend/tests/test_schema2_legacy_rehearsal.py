@@ -49,7 +49,10 @@ def test_operator_bundle_preserves_legacy_records_packages_and_trigger(
 ) -> None:
     container = schema2_container
     old_installation(container)
-    psql(container, (ROOT / "supabase/seed.sql").read_text())
+    # This fixture stops its migration chain before schema 2, hence before the library table.
+    # Use only the original practice/identity fixtures, never later provisional library content.
+    seed = (ROOT / "supabase/seed.sql").read_text()
+    psql(container, seed.split("-- BEGIN GENERATED PROVISIONAL LIBRARY SEED")[0])
     psql(
         container,
         (ROOT / "database/tests/current-fixture-helper.sql").read_text()

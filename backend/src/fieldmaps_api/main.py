@@ -31,6 +31,7 @@ from fieldmaps_api.routers import (
     form_templates,
     forms,
     identity,
+    library,
     map_setups,
     observation_analysis,
     sites,
@@ -156,6 +157,7 @@ def create_app(  # noqa: PLR0915 - explicit lifecycle and router wiring
     app.include_router(zones.create_router(sessions, authenticate, work=zone_work))
     app.include_router(map_setups.create_router(sessions, authenticate, work=zone_work))
     app.include_router(forms.create_router(sessions, authenticate))
+    app.include_router(library.create_router(sessions, authenticate))
     app.include_router(form_templates.create_router(sessions, authenticate))
     return app
 

@@ -1,0 +1,14 @@
+{
+  "description": "Authored expectations for later picker/write consumers; no write implementation in CON-08.",
+  "cases": [
+    {"id":"same-code-is-not-identity","variables":[{"id":"a","code":"Age1","column":"age"},{"id":"b","code":"Age1","column":"age"}],"selected":["a","b"],"refusal":"duplicate_column"},
+    {"id":"transitive-parent-closure","dependencies":{"c":["b"],"b":["a"]},"selected":["c"],"expanded":["a","b","c"]},
+    {"id":"template-parent-missing","dependencies":{"b":["a"]},"selected":["b"],"refusal":"parent_missing"},
+    {"id":"template-parent-after-child","dependencies":{"b":["a"]},"selected":["b","a"],"refusal":"parent_order"},
+    {"id":"universal-cannot-reference-org","child":{"level":"universal"},"parent":{"level":"organization","org":"o"},"refusal":"reference_scope"},
+    {"id":"same-site-allowed","child":{"level":"site","org":"o","project":"p","site":"s"},"parent":{"level":"site","org":"o","project":"p","site":"s"},"allowed":true},
+    {"id":"sibling-site-forbidden","child":{"level":"site","org":"o","project":"p","site":"s"},"parent":{"level":"site","org":"o","project":"p","site":"other"},"refusal":"reference_scope"},
+    {"id":"foreign-org-forbidden","child":{"level":"project","org":"o","project":"p"},"parent":{"level":"organization","org":"other"},"refusal":"reference_unavailable"},
+    {"id":"copy-preserves-order-and-column","selected":["b","a"],"variables":[{"id":"a","code":"A1","column":"alpha"},{"id":"b","code":"B1","column":"beta"}],"questions":[{"id":"beta","code":"B1","exportColumn":"beta"},{"id":"alpha","code":"A1","exportColumn":"alpha"}]}
+  ]
+}
