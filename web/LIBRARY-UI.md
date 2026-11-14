@@ -2,7 +2,7 @@
 
 [Feature brief](../docs/plan/library/README.md) (read first: purpose, usage profile, what is fixed and open) · [Web plan](PLAN.md) (tasks WEB-61 to WEB-72; WEB-71 is dropped) · [Product rules](../PRODUCT.md) · [Design](../DESIGN.md) · Source workbook: `docs/variables/Behavior Mapping Variable Library_ Additional.xlsx`
 
-Agreed with the owner on 2026-11-12. This file holds the frontend design only: what managers see, where it lives and how it behaves. It names what the web needs from the API, the database and the contracts, but defines no `BE-*`, `DB-*` or `CON-*` task; those plans are still to be written. Status lives in [PLAN.md](PLAN.md).
+Agreed with the owner on 2026-11-12; five clarifications from the backend plan were accepted on 2026-11-13 (section 2.1). This file holds the frontend design only: what managers see, where it lives and how it behaves. It names what the web needs from the API, the database and the contracts, but defines no `BE-*`, `DB-*` or `CON-*` task. Those are in the [wire contract](../docs/plan/library/contract.md), the [database plan](../supabase/LIBRARY.md) and the [API plan](../backend/LIBRARY.md). Status lives in [PLAN.md](PLAN.md).
 
 ## 1. Outcome
 
@@ -37,8 +37,19 @@ The feature is not done until both parts work. Type-ahead suggestions come after
 | L14 | Each variable has a Group (Janet's names, or one the manager types) and a Form section (one of the seven the editor already has) | Group organizes the library. Form section decides where the question lands in a form. |
 | L15 | A template cannot contain a question that is not a library variable | The template editor has no "Add a question"; it links to "New variable" instead. |
 | L16 | Starting a form from a template copies the variables as they are at that moment | The new draft is independent of the template and the library. |
-
 | L17 | No separate Reliability form (decided 2026-11-12, replacing an earlier choice of an automatic twin) | Reliability rounds keep using the Standard form, as they do today. See 6.4. |
+
+### 2.1 Clarifications accepted 2026-11-13
+
+The backend plan asked for these in [the wire contract](../docs/plan/library/contract.md#requests-to-change-the-frontend-plan). The owner accepted all five. They refine L1 to L17 and replace none of them.
+
+| # | Clarification | Where it shows |
+| --- | --- | --- |
+| C1 | In a form, a copied question's ID and data column are the variable's data column (`Child_AgeRange`). The code (`Age1`) travels in the source tag | 4.1, 5.1, 5.3 |
+| C2 | A display rule that needs an answer its parent no longer has cannot be saved, not only not published. The picker blocks such a variable before it is added | 5.1 |
+| C3 | A question always sits after the question its display rule needs. The picker places it there; the editors refuse a move that breaks it | 5.1, 6.2 |
+| C4 | "Used in N forms" counts forms in the current project, or the current organization on its page. "Save to library" brings at most one parent | 4.2, 4.3, 5.3 |
+| C5 | The plan promises no question counts for Janet's templates. A new form is built by the server from the template's variables at that moment | 6.1, 6.2, 6.3, 7 |
 
 **Out of version 1:** spreadsheet import, copy between levels, archive and restore, a curator screen for Universal, saving an existing form as a template, updating drafts after a library edit, server-side or learned search.
 
@@ -87,7 +98,7 @@ Navigation rules:
 | Code | Variable Code (`Age1`) | Unique within its own library (one organization's, one project's or one site's). A project may have its own `Age1` beside Universal's; the level badge tells them apart, and L9 stops both entering one form. Not editable after first save. Tags, display rules and templates point at the variable itself, never at its code. |
 | Name | Variable Name | The label observers read. |
 | Instructions | Instructions | Help text under the label. |
-| Data column | Variable Column Name (`Child_AgeRange`) | Alternatives may share one. This is what L9 checks. |
+| Data column | Variable Column Name (`Child_AgeRange`) | Alternatives may share one. This is what L9 checks. In a form the data column is always the question's ID, so a copied question takes this value as its ID (C1). |
 | Answer format and its settings | Answer format, Answer Options | The same five formats and editors the form editor has. |
 | Display rule | Notes or Visibility Logic | May point only at a variable on the same level or a higher one, so the parent is always available wherever the child is. |
 | Group | Variable Group | Pick an existing group or type a new one. |
@@ -102,7 +113,7 @@ Variables view:
 
 - **Header:** "Library", one sentence on what it is, and one primary button "New variable" (hidden for people who cannot add at any level shown).
 - **Filters:** level chips with counts (All, Universal, Organization, Project, then one chip per site), a group select, a format select and a search box. Search matches code, name, data column and option labels.
-- **Table:** Code, Variable, Group, Format, Level, Used in. Universal rows carry a lock. A row opens its detail page.
+- **Table:** Code, Variable, Group, Format, Level, Used in. Universal rows carry a lock. A row opens its detail page. "Used in" counts forms in this project; on the organization page it counts forms in this organization. The column header says which.
 - **Empty states, one per level:**
   - Project: "This project has no variables of its own. Save one from a form question, or create one here."
   - Site: "No variables belong to this site."
@@ -115,7 +126,7 @@ Three columns on desktop, stacked on narrow screens:
 
 1. **Settings.** The form editor's own pieces reused: wording, answer format, options, number bounds, date and time, data column, display rule. Plus Group, Form section and Level.
 2. **Preview.** The collector preview showing this one question.
-3. **Usage.** "Used in 3 forms" with links to those versions, and "Listed in 2 form templates" with links.
+3. **Usage.** "Used in 3 forms in this project" (on the organization page: "in this organization"). Each form is listed once with its versions linked beneath it, retired ones included. The count covers only forms the viewer can open, and a Universal variable never shows its use in another organization. Below it: "Listed in 2 form templates" with links.
 
 Behaviour:
 
@@ -161,12 +172,16 @@ Rows and their states:
 | Blocked by data column | "Uses the same data column as Age1 in this form. Remove Age1 first." | no |
 | Needs a parent | under the row: "Also adds FixedNat1, needed for its display rule" | yes |
 | Parent already in the form | nothing extra; the rule connects to the existing question | yes |
+| Parent changed in this form | "Its display rule needs the answer "Running" on Play type 1, which this form's copy no longer has. Add that answer back first." | no |
 
 - A row expands to show its options, data column and display rule in words, so the manager can check before adding.
+- "In this form" is decided by the source tag, not by the code, so a question the manager renamed still counts.
 - Ticking two variables that share a data column blocks the second with the same sentence, naming the first.
 - The footer counts what will be added, parents included: "Add 3 questions".
-- After adding, the panel closes, each question lands at the end of its Form section, the new rows are marked like any unsaved change, and the first one is selected. The draft is still unsaved; the existing Save applies.
-- If a parent already in the form was edited so the rule's answer no longer exists, the question is added and the existing problem list reports it. The publish gate already blocks on problems.
+- **What the copy looks like (C1).** Each new question's ID and data column are the variable's data column, and its code is the variable's code. This is why the data-column block is exact: two questions cannot share an ID.
+- **Where it lands (C3).** After adding, the panel closes and each question lands at the end of its Form section. One exception: if that would put it before the question its display rule needs, it lands directly after that question. The new rows are marked like any unsaved change, and the first one is selected. The draft is still unsaved; the existing Save applies.
+- **Moving it later.** The question list already refuses a move that puts a question before the one its rule needs ("Keep A after B because it uses that answer"). Library questions follow the same rule.
+- **A changed parent (C2).** The server refuses to save a draft whose display rule names an answer that no longer exists. The panel therefore blocks the variable before it is added, as in the last row above, so adding from the library never produces a draft that cannot be saved.
 
 ### 5.2 Source tag
 
@@ -178,10 +193,15 @@ Question settings gains "Save to library" for managers. It opens a dialog:
 
 1. **Level:** Project (default), a site of this project, or Organization (owners and admins only).
 2. **Group:** pick or type.
-3. **Code:** prefilled from the question; an inline error if the code is taken.
-4. **If its display rule points at a question that is not in a library:** a ticked box, "Also save Play type 1, which this question's display rule needs". Unticking saves the variable without the rule and says so.
+3. **Code:** prefilled from the question; an inline error if the code is taken. The variable's data column is the question's ID (C1) and is shown, not asked.
+4. **If its display rule points at a question that is not in a library:** a ticked box, "Also save Play type 1, which this question's display rule needs". The parent is saved to the same level. Unticking saves the variable without the rule and says so.
 
-On success the question gains its source tag and a toast links to the variable. The form is otherwise unchanged.
+Limits (C4):
+
+- **One parent at most.** If the rule needs two questions that are not in a library, or the parent needs an unsaved question of its own, the box is replaced by "Save Play type 1 to the library first", with the choice to save this question without its rule.
+- **A parent on a lower level is refused.** A rule may point only at a variable on the same level or a higher one (4.1). Saving to Organization a question whose parent lives in the Project library says so and offers the Project level instead.
+
+On success the question gains its source tag and a toast links to the variable. The tag is stored by the next ordinary draft save, so the draft shows as unsaved. The form is otherwise unchanged.
 
 ## 6. Form templates
 
@@ -189,7 +209,7 @@ On success the question gains its source tag and a toast links to the variable. 
 
 The second ink tab on the Library page. A list: Name, Round (Behaviour, or Inventory and Conditions), Variables (count), Level.
 
-- Universal holds Janet's standard forms: Standard Short Form, Standard Long Form, Climate Conditions, Loose Parts Inventory (Collapsed and Expanded) and the two combined inventory forms.
+- Universal holds Janet's standard forms: Standard Short Form, Standard Long Form, Climate Conditions, Loose Parts Inventory (Collapsed and Expanded) and the two combined inventory forms. All seven are the target. Each one is seeded only when Janet has approved its exact list of variables; none appears with a question silently removed (C5). The lists and the open questions are in the [database plan](../supabase/LIBRARY.md).
 - On the project page the list is read-only and each row has "Start a form from this", which opens the New form dialog with the template chosen.
 - On the organization page owners and admins get "New template".
 
@@ -199,8 +219,9 @@ Two columns: the ordered list of variables on the left, the same Library panel a
 
 - Add with the panel; reorder with the move controls the question list already has; remove from a row.
 - The same parent and data-column rules apply, from the same code as the picker.
+- **Order is the manager's (C3).** A template keeps exactly the order shown; nothing is regrouped by Form section. A variable added with its parent arrives parent first. Moving a variable above the one its rule needs is refused with the same sentence the question list uses.
 - No "Add a question". One line explains: "Templates hold library variables only. To include a new question, create it in the organization library first.", with a link to New variable.
-- A Preview button shows the template as observers would see it, built from the variables as they are now.
+- A Preview button shows the template as observers would see it. It reloads the library first, so it shows the variables as they are now and not as they were when the page opened (C5).
 - A template whose variable was edited shows nothing special: it always reads the current version.
 
 ### 6.3 New form dialog
@@ -209,8 +230,8 @@ Today it offers Behaviour mapping, Zone inventory and Custom, compiled into the 
 
 - **Start from:** templates grouped by Round, Universal first and then the organization's, each with its variable count and description; and "Blank".
 - Creating the form copies every variable into a new draft with source tags, then opens the draft editor.
-- The bundled `contracts/forms/janet-*.json` starting points leave the dialog. WEB-56 already moves templates to the API (`GET /v1/form-templates`, whole definitions in `fieldmaps.form_templates`); the backend plan decides whether that table and route are reshaped or replaced, and WEB-70 builds on the result.
-- Either the web builds the draft from the template with the picker's own rules and calls the existing create-form endpoint, or the server expands the template. The dialog is the same both ways.
+- **The server builds the draft (C5).** The web sends the new form's name and code with the chosen template to the existing create-form endpoint. The server copies each variable as it is at that moment, in the template's order. The web does not compose the definition, so a dialog that has been open for an hour cannot produce an old copy. The draft the server returns is what was copied.
+- The bundled `contracts/forms/janet-*.json` starting points leave the dialog. The whole-definition templates and `GET /v1/form-templates` that WEB-56 uses are replaced by the library's template routes (BE-30); WEB-70 moves the dialog to them.
 
 ### 6.4 Reliability rounds (L17)
 
@@ -224,7 +245,7 @@ Two consequences for the library:
 ## 7. Flows
 
 **Build a form from the library (the main flow).**
-1. Forms, New form, choose Standard Short Form, name it. A draft opens with 18 questions.
+1. Forms, New form, choose Standard Short Form, name it. A draft opens with the template's questions, each tagged.
 2. Add from library, search "wildlife", tick Wildlife2. The panel says it also adds Wildlife1. Add 2 questions.
 3. Add a question for one custom item. Save the draft. Publish as today.
 
@@ -253,7 +274,7 @@ Two consequences for the library:
 
 **Loading and search.** A project sees a few hundred variables at most. The page and the panel load the whole list once and filter in the browser, so search answers on each keystroke and keeps working on a slow connection. The panel loads on first open, not with the editor.
 
-**What the web asks of the API.** These are needs, not a design. Usage numbers, what is fixed and what is open are in the [feature brief](../docs/plan/library/README.md).
+**What the web asks of the API.** These are needs, not a design. Usage numbers, what is fixed and what is open are in the [feature brief](../docs/plan/library/README.md). The [wire contract](../docs/plan/library/contract.md#screen-first-request-map) answers each row with a request.
 
 | Screen or action | Needs | How often |
 | --- | --- | --- |
@@ -272,11 +293,11 @@ Rules the server must hold, because the browser alone cannot be trusted with the
 
 1. Who may read and change each level (L10).
 2. A display rule points only at a variable on the same or a higher level, and at an answer that exists.
-3. Templates list only Universal and Organization variables, include every needed parent and never repeat a data column.
+3. Templates list only Universal and Organization variables, include every needed parent before its child and never repeat a data column.
 4. Deletes and saves that would break rule 2 or 3 are refused with the items named.
-5. Form definitions accept the source tag (level, variable, code, edited mark). This changes `contracts/form-definition.schema.json`; the collector ignores the tag.
+5. Form definitions accept the source tag (level, variable, code, edited mark). This moves the form schema from version 2 to 3. The collector never shows or uses the tag, but it must accept version 3 before any tagged form is published (MOB-53).
 
-Also needed once: Universal variables and templates seeded from Janet's workbook, after its duplicate `EnvZone3` code and blank `Gender1` column are resolved (`docs/QGIS-Field-Collection-Feasibility.md` lists them).
+Also needed once: Universal variables and templates seeded from Janet's workbook. The rows and templates that wait for her decision are listed in the [database plan](../supabase/LIBRARY.md); approved variables can be seeded before the held ones.
 
 ## 9. After version 1
 
@@ -286,7 +307,7 @@ Also needed once: Universal variables and templates seeded from Janet's workbook
 
 ## 10. Verification
 
-- Unit: `pick.ts` for parents (one and two levels deep), data-column blocks (against the form and inside one selection), already-in-form, an edited parent, and insert position by Form section.
+- Unit: `pick.ts` for parents (one and two levels deep), data-column blocks (against the form and inside one selection), already-in-form by source tag, a changed parent (blocked), the copied question's ID and code, and insert position by Form section including the after-parent exception.
 - Browser, at 1440, 1024, 768 and 390, Day and Dusk, with axe: the Library page for each role, the panel in the draft editor, Save to library, the template editor, the New form dialog.
 - Honesty scan: no library page shows a control that does nothing, and read-only levels show no disabled buttons.
 - Keyboard: the panel is reachable, its checkboxes and group headers work with the keyboard, focus returns to "Add from library" on close.

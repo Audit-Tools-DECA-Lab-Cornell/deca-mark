@@ -11,6 +11,8 @@ Planning only, 2026-11-12. Read the [brief](README.md), then this contract, the 
 5. **Owner — usage scope:** “Used in N forms” means distinct forms within the current project, or across the current organization on its page, counting only versions the caller may read. Include retired versions and group their links under the form. Recommended: label this scope; never show a Universal variable's usage across organizations.
 6. **Owner — saving parents:** keep the one-or-two-variable atomic create. If a question needs several unsaved ancestors, save those parents first, or explicitly remove the dependent rules. Recommended: explain this limit in the dialog rather than building a general bulk importer now.
 
+**Status, 2026-11-13:** the owner accepted decisions 1, 5 and 6 together with the five frontend changes at the end of this file. Decisions 2, 3 and 4 still wait for Janet.
+
 Proceed on these assumptions for implementation planning. Affected research rows/templates remain held from the production seed until Janet resolves them. Other approved rows can unblock the read and picker first. No unanswered question authorizes changing the UI plan or inventing a seed answer.
 
 ## Screen-first request map
@@ -146,7 +148,7 @@ These tags are declared provenance, not a trusted audit record or authorization 
 
 Copy algorithm: take settings, set question `code` to variable code, `act` to section and `id = exportColumn`, rewrite every UUID reference to the copied/existing parent's actual question ID, add tag. Check both existing questions and the entire new selection for column collisions **before** the current draft normalizer runs. On current form create/save, the API also refuses duplicate nonempty submitted export columns before normalization, including dynamic mappings across distinct questions; `knownExportCollisions` cannot waive this authoring check. Historical immutable form reads/observation interpretation retain their existing rules. Dynamic option-set export columns must equal the variable's single data column; multiple columns per variable are not a new feature. A variable already present is recognized by tag UUID, not its potentially edited code/ID. Existing parent copies retain their edited content. Do not silently repair their missing answer; the normal form problem list and save/publish validator refuse it.
 
-For templates, retain the exact stored list order; all parents must precede children. Do not regroup during server expansion. For insertion into a form, the picker uses section placement then validates final dependency order; it must report when section placement puts a parent after a child. Existing forms are never rearranged or retagged by a library edit.
+For templates, retain the exact stored list order; all parents must precede children. Do not regroup during server expansion. For insertion into a form, the picker uses section placement, except that a question whose parent would come after it is placed directly after that parent (web plan C3), so insertion never produces a parent after its child. The form save still validates final dependency order. Existing forms are never rearranged or retagged by a library edit.
 
 **Schema 2 → 3 is required.** Verified source constants currently equal 2, despite CON-07's dated task evidence saying 1. Recognizing `librarySource` changes the contract: an old parser strips unknown keys and must not silently discard tags. CON-07 requires one current schema; no schema-2/schema-3 dual reader. Update both canonical engine copies, generated JSON Schema, API models/current-version checks and authored cases together. The collector must accept schema 3 and ignore the tag for rendering/answers; MOB-53 is only that schema-consumer work, not a library UI or collection change.
 
@@ -170,7 +172,7 @@ DB-22 plans the sanctioned schema transition: preserve all question IDs, options
 
 ## Requests to change the frontend plan
 
-These are recommendations for owner decision; `web/LIBRARY-UI.md` is unchanged.
+Accepted by the owner on 2026-11-13 and applied to `web/LIBRARY-UI.md` as C1 to C5 (its section 2.1). Two were applied in a stricter form than requested: the picker blocks a variable whose parent lost the needed answer instead of adding it and failing the save (second item), and the picker places a child directly after its parent instead of reporting a problem (third item). The server rules below are unchanged by either.
 
 - Clarify 4.1/5.1: the data column becomes the copied question ID; the library code stays in `code`/the source tag. Today `normalize_draft_columns` always makes columns equal IDs. Keeping independent editable data columns would require changing canonical form authoring and export semantics, outside this request. The recommended approach loses an independently chosen initial question ID, not Janet's column.
 - Clarify 5.1: an edited parent with a missing option blocks **Save as well as Publish**, matching today's validator. Accepting invalid server drafts would split the current form validation path; the alternative loses only the ability to persist that invalid intermediate state.

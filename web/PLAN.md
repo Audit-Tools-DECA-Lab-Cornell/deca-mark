@@ -888,71 +888,71 @@ Start at the [feature brief](../docs/plan/library/README.md); design and decisio
 
 ### WEB-61: Library tab, routes and navigation
 Status: todo · Post-pilot · Size S · Depends: none · Blocks: WEB-62
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) section 3; `next.config.ts` (the `/o/:org/library` redirect); the project and organization tab definitions; `src/lib/shortcuts.ts`; `components/shell/CommandPalette.tsx`.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) section 3; `next.config.ts` (the `/o/:org/library` redirect); the project and organization tab definitions; `src/lib/shortcuts.ts`; `components/shell/CommandPalette.tsx`.
 Do: add Library as the ninth project tab (after Forms) and the fourth organization tab, with the route tree in section 3; remove the old redirect; add ⌘K entries and `g l`; role checks per the table in section 3. Until the reads exist the pages say "The library is not available yet."
 Done when: every route in section 3 resolves for the right roles and shows the no-access note for the others; the tab bar has no page-level sideways scroll at 768 px.
 Verify: `pnpm web:check`, the removed-routes and navigation specs.
 
 ### WEB-62: Library page lists variables at every level
 Status: todo · Post-pilot · Size M · Depends: WEB-61, BE-27 · Blocks: WEB-63, WEB-65, WEB-68
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 4.1, 4.2 and section 8; `features/forms/ProjectFormsScreen.tsx`; `components/contour/Table.tsx`.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 4.1, 4.2 and section 8; `features/forms/ProjectFormsScreen.tsx`; `components/contour/Table.tsx`.
 Do: `features/library/{model,read}.ts` and `LibraryScreen`: level chips with counts, group and format filters, search, the table, URL-held filters, per-level empty states, loading and failure states. Project and organization pages share the screen.
 Done when: a seeded project shows Universal, Organization, Project and two sites' variables; each filter narrows the table and survives a reload; Universal rows show the lock.
 Verify: `pnpm web:check`, `pnpm --dir web test:unit` (filter parsing), a library spec at 1440 and 390 with axe.
 
 ### WEB-63: Create, edit and delete a variable
 Status: todo · Post-pilot · Size L · Depends: WEB-62, BE-29 · Blocks: WEB-66
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 4.3; `features/forms/QuestionSettings.tsx` and the editors it uses; `CollectorPreview.tsx`; `DiscardDialog.tsx`.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 4.3; `features/forms/QuestionSettings.tsx` and the editors it uses; `CollectorPreview.tsx`; `DiscardDialog.tsx`.
 Do: `VariableScreen` with settings, single-question preview and usage; New variable with level choice; explicit save and discard; edit and delete notes; delete blocked while a template lists the variable; the read-only variant.
 Done when: a manager creates, edits and deletes a Project and a Site variable; an admin does the same at Organization level; a manager sees Organization and Universal variables read-only with no disabled buttons; a display rule can only choose variables on the same or a higher level.
 Verify: `pnpm web:check`, unit tests for level rules, the library spec.
 
 ### WEB-64: Picking rules as pure functions
 Status: todo · Post-pilot · Size M · Depends: CON-08, MOB-53 · Blocks: WEB-65
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 5.1 and section 8; `features/forms/raw.ts` (`addQuestion`, `unique`); `features/forms/problems.ts`.
-Do: `features/library/pick.ts`: classify each variable against a form (available, in this form, blocked by data column, needs parents) and build the questions to insert, with source tags, wired display rules and section placement.
-Done when: unit tests cover one- and two-level parents, a parent already present, an edited parent, data-column blocks against the form and inside one selection, and insert order.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 5.1 and section 8; `features/forms/raw.ts` (`addQuestion`, `unique`); `features/forms/problems.ts`.
+Do: `features/library/pick.ts`: classify each variable against a form (available, in this form by source tag, blocked by data column, needs parents, parent changed in this form) and build the questions to insert: ID and data column from the variable's data column, code from its code, source tags, wired display rules, and section placement with the after-parent exception (C1 to C3).
+Done when: unit tests cover one- and two-level parents, a parent already present, a changed parent (blocked), data-column blocks against the form and inside one selection, the copied ID and code, and insert order including a parent whose section comes later.
 Verify: `pnpm --dir web test:unit`.
 
 ### WEB-65: "Add from library" panel in the draft editor
 Status: todo · Post-pilot · Size L · Depends: WEB-62, WEB-64, BE-28 · Blocks: WEB-66, WEB-69
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 5.1; `features/forms/DraftEditorScreen.tsx` (the three-column grid and `add`); `QuestionList.tsx`.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 5.1; `features/forms/DraftEditorScreen.tsx` (the three-column grid and `add`); `QuestionList.tsx`.
 Do: `LibraryPanel` in place of the settings and preview columns (a sheet below 1024 px): search, level filter, groups, row states, expandable detail, the parent note and the counted footer; insert through WEB-64; load on first open.
 Done when: a manager adds three variables in one action, one bringing its parent; Age2 is blocked while Age1 is in the form, with the sentence from the design; the draft saves and publishes; focus returns to the button on close.
 Verify: `pnpm web:check`, the forms specs plus a picker spec at 1440, 1024 and 390 with axe.
 
 ### WEB-66: Source tag and "Save to library" on a question
 Status: todo · Post-pilot · Size M · Depends: WEB-63, WEB-65, BE-29, BE-28 · Blocks: WEB-67
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 5.2 and 5.3; `features/forms/QuestionSettings.tsx`; `raw.ts` (`ADDED_SOURCE`).
-Do: show the source line and its "edited in this form" form; `SaveToLibraryDialog` with level, group, code and the parent option; tag the question after saving.
-Done when: a custom question saved at Project level appears in the picker of another form in the project; a taken code shows the inline error; saving a dependent question offers its parent.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 5.2 and 5.3; `features/forms/QuestionSettings.tsx`; `raw.ts` (`ADDED_SOURCE`).
+Do: show the source line and its "edited in this form" form; `SaveToLibraryDialog` with level, group, code and the parent option, limited to one parent and to parents on the same or a higher level (C4); tag the question after saving.
+Done when: a custom question saved at Project level appears in the picker of another form in the project; a taken code shows the inline error; saving a dependent question offers its parent; a question needing two unsaved parents is told to save one first.
 Verify: `pnpm web:check`, unit tests, the picker spec.
 
 ### WEB-67: Variable library acceptance
 Status: todo · Post-pilot · Size S · Depends: WEB-66 · Blocks: WEB-72
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) sections 7 and 10.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) sections 7 and 10.
 Do: add the "Site variables" link on the site page; run the first, second and fourth flows of section 7 end to end; the honesty scan and the responsive sweep over every library page.
 Done when: the three flows pass on the local stack at 1440, 768 and 390, Day and Dusk, for an owner, a manager and a viewer.
 Verify: `scripts/e2e-local.sh` with the library, picker and honesty specs.
 
 ### WEB-68: Form templates list
 Status: todo · Post-pilot · Size M · Depends: WEB-62, BE-30 · Blocks: WEB-69, WEB-70
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 6.1.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 6.1.
 Do: the Form templates view on the organization and project Library pages; a read-only template page listing its variables in order with a preview; "Start a form from this" on the project page.
 Done when: Janet's universal templates and one organization template are listed with round and variable count on both pages.
 Verify: `pnpm web:check`, a templates spec with axe.
 
 ### WEB-69: Template editor for the organization
 Status: todo · Post-pilot · Size L · Depends: WEB-65, WEB-68, BE-30 · Blocks: WEB-72
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 6.2; `LibraryPanel`; `features/library/pick.ts`.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 6.2; `LibraryPanel`; `features/library/pick.ts`.
 Do: `TemplateEditorScreen`: ordered list, the panel limited to Universal and Organization, reorder and remove, the same parent and data-column rules, preview, save; no "Add a question"; delete a template.
 Done when: an admin builds and edits a template; a Project variable cannot be added; deleting a listed variable is refused on the variable page with the template named.
 Verify: `pnpm web:check`, unit tests, the templates spec.
 
 ### WEB-70: New form starts from a library template
 Status: todo · Post-pilot · Size M · Depends: WEB-56, WEB-68, BE-30 · Blocks: WEB-72
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) 6.3; `features/forms/NewFormDialog.tsx`, `templates.ts`, `starter.ts`; WEB-56.
-Do: the dialog lists templates by round, Universal then organization, plus Blank; creating copies the current variables into a draft with source tags; remove the bundled starting forms from the dialog.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) 6.3; `features/forms/NewFormDialog.tsx`, `templates.ts`, `starter.ts`; WEB-56.
+Do: the dialog lists templates by round, Universal then organization, plus Blank; creating sends the template to the create-form endpoint and the server copies the current variables into a draft with source tags (C5); remove the bundled starting forms from the dialog.
 Done when: a form started from Standard Short Form opens with its variables tagged; editing a variable afterwards changes the next form started from the template and not the first.
 Verify: `pnpm web:check`, the forms and templates specs.
 
@@ -961,7 +961,7 @@ Status: dropped (2026-11-12, L17: Reliability rounds already use the Standard fo
 
 ### WEB-72: Type-ahead library suggestions in "Add a question"
 Status: todo · Post-pilot · Size M · Depends: WEB-67, WEB-69, WEB-70 · Blocks: none
-Read first: [library wire contract](../docs/plan/library/contract.md) (including requested frontend clarifications); [LIBRARY-UI.md](LIBRARY-UI.md) section 9; `features/forms/AddQuestionDialog.tsx`; `features/library/pick.ts`.
+Read first: [library wire contract](../docs/plan/library/contract.md) (its frontend clarifications are applied as C1 to C5 in LIBRARY-UI.md 2.1); [LIBRARY-UI.md](LIBRARY-UI.md) section 9; `features/forms/AddQuestionDialog.tsx`; `features/library/pick.ts`.
 Do: suggestions under the wording field from a typo-tolerant search over the already-loaded list, ranked by recent picks; choosing one adds it by the picker's rules; hidden when the list is slow or failed. Measure before considering server search.
 Done when: "wether" suggests Climate1; typing is never delayed by the list; blocked variables explain why instead of adding.
 Verify: `pnpm web:check`, unit tests for matching and ranking, the picker spec.
