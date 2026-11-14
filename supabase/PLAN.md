@@ -681,12 +681,14 @@ Verified 2026-10-28: `database/tests/seed-forms.sql` failed 12 statements on the
 [Design](LIBRARY.md) · [Wire contract](../docs/plan/library/contract.md). Delivery order: approved Universal variables and the read first; source-schema transition and variable writes next; reference templates last. All tasks are Post-pilot. Implementation must recheck QA-08 before relying on the pre-launch reset policy.
 
 ### DB-21 — Scoped variable storage and approved Universal seed
-Status: todo · Post-pilot · Size L · Depends: CON-08, DB-05, DB-09 · Blocks: BE-27, DB-23
+Status: done (2026-11-14; disposable SQL suite, canonical seed/workbook parity and scoped-query measurement passed; stress latency exceeds the proposed budget) · Post-pilot · Size L · Depends: CON-08, DB-05, DB-09 · Blocks: BE-27, DB-23
 Read first: `LIBRARY.md` tables, main read, RLS and seed mapping; `../docs/plan/library/contract.md`; current baseline role functions; `../database/README.md`; Additional workbook and its decision list.
 Do: add the one variable table, checked lineage, scoped uniqueness/indexes and SELECT-only API grants/RLS; seed approved Universal variables with stable IDs from the reviewed manifest; implement the scoped grouped usage read shape and local performance fixture. Keep unresolved research rows out with an explicit manifest review list; do not wait for template authoring. No API variable writes yet.
 Done when: an owner, project manager and viewer see exactly the permitted full library, observers/foreign callers see none; two sites and empty sites are covered; no RelRound1/FirstRound1 seed rows; approved seed replay does not change revisions; the restricted-role query is measured at 10× library size and documented version counts without an N+1 scan.
 Verify: `pnpm db:test` on a disposable/local stack; canonical validation of approved seed settings; record EXPLAIN ANALYZE, response-size and timing evidence; `pnpm plan:check`.
 Needs user: Janet approves research corrections/options before affected rows enter the seed; apply to a hosted target only with explicit authorization.
+
+Verified DB-21: 10 provisional local/test variables and 97 held rows; no template seed or application writes. All existing disposable SQL/Auth/assertion/race suites and library constraints/RLS checks passed. The 5,700-variable / 10,000-version × 100-question read measured 3,293.038 ms warm p95 and 3,220,488 bytes, exceeding the proposed latency target; [evidence](../docs/reviews/library-seed-and-read/README.md). Tags were direct fixture data, not API-authored.
 
 ### DB-22 — Advance stored forms to the source-tag schema
 Status: todo · Post-pilot · Size M · Depends: CON-09, DB-20 · Blocks: BE-28, DB-24

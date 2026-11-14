@@ -1,0 +1,834 @@
+{
+  "provisional": true,
+  "allowed_targets": "local and test databases only; not authorized for hosted seeding",
+  "workbook": "Behavior Mapping Variable Library_ Additional.xlsx",
+  "sheet": "BehMapApp Variable Library",
+  "excluded": "RelRound1 and FirstRound1 (L17)",
+  "option_code_policy": "option_N is the stable position in the explicitly listed workbook choices; labels copied verbatim, with surrounding whitespace trimmed. No choice meanings inferred.",
+  "variables": [
+    {
+      "id": "71fbbc77-5315-459d-813f-de50c37b60be",
+      "code": "PlaySummary1",
+      "group": "Play Event Summary",
+      "section": "Play",
+      "cell": "B58",
+      "settings": {
+        "label": "Play Event Summary",
+        "exportColumn": "Play_Event_Summary",
+        "kind": "text",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B58",
+        "hint": "Write a detailed description of the play event",
+        "maxLength": 1000
+      }
+    },
+    {
+      "id": "73b7be2c-441d-4547-a969-da7c0afcde52",
+      "code": "Clothing1",
+      "group": "Target Child Details",
+      "section": "Child",
+      "cell": "B59",
+      "settings": {
+        "label": "Target Child Clothing Color/Description",
+        "exportColumn": "Child_Clothing",
+        "kind": "text",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B59",
+        "hint": "Describe child's shirt/main clothing item by color and/or pattern",
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "ce4e4a68-34eb-4091-a9f4-40834bad66b0",
+      "code": "Age1",
+      "group": "Target Child Details",
+      "section": "Child",
+      "cell": "B61",
+      "settings": {
+        "label": "Child Age range",
+        "exportColumn": "Child_AgeRange",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B61",
+        "hint": "Choose most appropriate range",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "0-2 yrs"
+          },
+          {
+            "code": "option_2",
+            "label": "3-5 yrs"
+          },
+          {
+            "code": "option_3",
+            "label": "6-8 yrs"
+          },
+          {
+            "code": "option_4",
+            "label": "9-12yrs"
+          },
+          {
+            "code": "option_5",
+            "label": "13-16yrs"
+          },
+          {
+            "code": "option_6",
+            "label": "17+"
+          }
+        ]
+      }
+    },
+    {
+      "id": "3fd87700-e72b-484b-9dad-e5fe2877d9b1",
+      "code": "Age2",
+      "group": "Target Child Details",
+      "section": "Child",
+      "cell": "B67",
+      "settings": {
+        "label": "Child Age Range",
+        "exportColumn": "Child_AgeRange",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B67",
+        "hint": "Choose most appropriate range",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "0-5 yrs"
+          },
+          {
+            "code": "option_2",
+            "label": "6-10 yrs"
+          },
+          {
+            "code": "option_3",
+            "label": "11-15 yrs"
+          },
+          {
+            "code": "option_4",
+            "label": "16+ yrs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "11a062d6-0af6-4243-b91c-042bb230dcce",
+      "code": "Age3",
+      "group": "Target Child Details",
+      "section": "Child",
+      "cell": "B71",
+      "settings": {
+        "label": "Child Age Range Early Years",
+        "exportColumn": "Child_AgeRange_EY",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B71",
+        "hint": "Choose most appropriate range",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "0-2 yrs"
+          },
+          {
+            "code": "option_2",
+            "label": "3-5 yrs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "6c09600c-261d-472e-8669-8878b43a0ac5",
+      "code": "PlayType1",
+      "group": "Play Type Details",
+      "section": "Play",
+      "cell": "B120",
+      "settings": {
+        "label": "Primary Play Type 1",
+        "exportColumn": "Play_Type_1",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B120",
+        "hint": "Select a primary type of play involved in the play event",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "Physical"
+          },
+          {
+            "code": "option_2",
+            "label": "Exploratory"
+          },
+          {
+            "code": "option_3",
+            "label": "Imaginative"
+          },
+          {
+            "code": "option_4",
+            "label": "Play with Rules"
+          },
+          {
+            "code": "option_5",
+            "label": "Bio"
+          },
+          {
+            "code": "option_6",
+            "label": "Expressive"
+          },
+          {
+            "code": "option_7",
+            "label": "Restorative"
+          },
+          {
+            "code": "option_8",
+            "label": "Digital"
+          },
+          {
+            "code": "option_9",
+            "label": "Non-Play"
+          }
+        ]
+      }
+    },
+    {
+      "id": "280891d6-e03c-4f5b-8fa9-b4a13693dfd4",
+      "code": "PlayType2",
+      "group": "Play Type Details",
+      "section": "Play",
+      "cell": "B129",
+      "settings": {
+        "label": "Primary Play Type 2",
+        "exportColumn": "Play_Type_2",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B129",
+        "hint": "Select a primary type of play involved in the play event",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "Physical"
+          },
+          {
+            "code": "option_2",
+            "label": "Exploratory"
+          },
+          {
+            "code": "option_3",
+            "label": "Imaginative"
+          },
+          {
+            "code": "option_4",
+            "label": "Play with Rules"
+          },
+          {
+            "code": "option_5",
+            "label": "Bio"
+          },
+          {
+            "code": "option_6",
+            "label": "Expressive"
+          },
+          {
+            "code": "option_7",
+            "label": "Restorative"
+          },
+          {
+            "code": "option_8",
+            "label": "Digital"
+          },
+          {
+            "code": "option_9",
+            "label": "Non-Play"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e50f4320-227f-4338-87f8-174ae5e6eae5",
+      "code": "CARS1",
+      "group": "Activity Intensity & Movement Details",
+      "section": "Play",
+      "cell": "B172",
+      "settings": {
+        "label": "CARS Activity Intensity Expanded",
+        "exportColumn": "CARS",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B172",
+        "hint": "Choose the most appropriate (or longest lasting) activity intensity level",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "1 (Stationary)"
+          },
+          {
+            "code": "option_2",
+            "label": "2 (stationary but moving limbs)"
+          },
+          {
+            "code": "option_3",
+            "label": "3 (Slow)"
+          },
+          {
+            "code": "option_4",
+            "label": "4 (Moderate/FAst)"
+          },
+          {
+            "code": "option_5",
+            "label": "5 (Vigorous/Very Fast)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bbfbbde5-2214-4f53-bce6-6f0f8ada0c13",
+      "code": "CARS2",
+      "group": "Activity Intensity & Movement Details",
+      "section": "Play",
+      "cell": "B177",
+      "settings": {
+        "label": "CARS Activity Intensity Collapsed",
+        "exportColumn": "CARS",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B177",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "1-2 (Stationary)"
+          },
+          {
+            "code": "option_2",
+            "label": "3 (Slow)"
+          },
+          {
+            "code": "option_3",
+            "label": "4-5 (Moderate-Vigorous)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "68179129-3e8d-42ab-be61-7d320d6ce8ee",
+      "code": "Topography1",
+      "group": "Topography",
+      "section": "Setting",
+      "cell": "B263",
+      "settings": {
+        "label": "Topography",
+        "exportColumn": "Topography",
+        "kind": "one",
+        "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B263",
+        "hint": "What were the topography conditions where the play event occurred",
+        "options": [
+          {
+            "code": "option_1",
+            "label": "Flat - Ground level"
+          },
+          {
+            "code": "option_2",
+            "label": "Flat - Raised level"
+          },
+          {
+            "code": "option_3",
+            "label": "Low slope"
+          },
+          {
+            "code": "option_4",
+            "label": "Moderate slope"
+          },
+          {
+            "code": "option_5",
+            "label": "Steep Slope"
+          },
+          {
+            "code": "option_6",
+            "label": "Uneven or rolling surface"
+          },
+          {
+            "code": "option_7",
+            "label": "Other"
+          }
+        ]
+      }
+    }
+  ],
+  "held_rows": [
+    {
+      "cell": "B4",
+      "code": "DateTime1",
+      "open_question": "Approve automatic date/time settings or supply the explicit time blocks (D4/D6/G8); timezone/display settings are unresolved."
+    },
+    {
+      "cell": "B6",
+      "code": "DateTime2",
+      "open_question": "Approve automatic date/time settings or supply the explicit time blocks (D4/D6/G8); timezone/display settings are unresolved."
+    },
+    {
+      "cell": "B8",
+      "code": "DateTime3",
+      "open_question": "Approve automatic date/time settings or supply the explicit time blocks (D4/D6/G8); timezone/display settings are unresolved."
+    },
+    {
+      "cell": "B10",
+      "code": "Observer1",
+      "open_question": "Approve manual versus automatic researcher identity and bounds (rows 10-14); do not equate account IDs with researcher-assigned IDs."
+    },
+    {
+      "cell": "B12",
+      "code": "Observer2",
+      "open_question": "Approve manual versus automatic researcher identity and bounds (rows 10-14); do not equate account IDs with researcher-assigned IDs."
+    },
+    {
+      "cell": "B14",
+      "code": "Observer3",
+      "open_question": "Approve manual versus automatic researcher identity and bounds (rows 10-14); do not equate account IDs with researcher-assigned IDs."
+    },
+    {
+      "cell": "B17",
+      "code": "EnvZone1",
+      "open_question": "Resolve duplicate EnvZone3 (B21/B23), project zone/subzone choices and automatic metadata wishes (H17:H23)."
+    },
+    {
+      "cell": "B19",
+      "code": "EnvZone2",
+      "open_question": "Resolve duplicate EnvZone3 (B21/B23), project zone/subzone choices and automatic metadata wishes (H17:H23)."
+    },
+    {
+      "cell": "B21",
+      "code": "EnvZone3",
+      "open_question": "Resolve duplicate EnvZone3 (B21/B23), project zone/subzone choices and automatic metadata wishes (H17:H23)."
+    },
+    {
+      "cell": "B23",
+      "code": "EnvZone3",
+      "open_question": "Resolve duplicate EnvZone3 (B21/B23), project zone/subzone choices and automatic metadata wishes (H17:H23)."
+    },
+    {
+      "cell": "B30",
+      "code": "Climate1",
+      "open_question": "Confirm the inventory carry-forward wish is outside these settings (H30:H34), and whether Climate3 and Shade1 must share column Shade."
+    },
+    {
+      "cell": "B32",
+      "code": "Climate2",
+      "open_question": "Confirm the inventory carry-forward wish is outside these settings (H30:H34), and whether Climate3 and Shade1 must share column Shade."
+    },
+    {
+      "cell": "B34",
+      "code": "Climate3",
+      "open_question": "Confirm the inventory carry-forward wish is outside these settings (H30:H34), and whether Climate3 and Shade1 must share column Shade."
+    },
+    {
+      "cell": "B36",
+      "code": "LP_Inventory1",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B37",
+      "code": "LP_Inventory2",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B38",
+      "code": "LP_Inventory3",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B39",
+      "code": "LP_Inventory4",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B40",
+      "code": "LP_Inventory5",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B41",
+      "code": "LP_Inventory6",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B42",
+      "code": "LP_Inventory7",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B43",
+      "code": "LP_Inventory8",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B44",
+      "code": "LP_Inventory9",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B45",
+      "code": "LP_Inventory10",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B46",
+      "code": "LP_Inventory11",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B47",
+      "code": "LP_Inventory12",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B48",
+      "code": "LP_Inventory13",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B49",
+      "code": "LP_Inventory14",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B50",
+      "code": "LP_Inventory15",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B51",
+      "code": "LP_Inventory16",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B52",
+      "code": "LP_Inventory17",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B53",
+      "code": "LP_Inventory18",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B54",
+      "code": "LP_Inventory19",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B55",
+      "code": "LP_Inventory20",
+      "open_question": "Approve inventory behaviour and binary/detail predicates (H36); supply actual checklist choices rather than example lists for rows 43-55."
+    },
+    {
+      "cell": "B74",
+      "code": "Gender1",
+      "open_question": "Supply the missing Gender1 data column (E74)."
+    },
+    {
+      "cell": "B77",
+      "code": "PeerIntn1",
+      "open_question": "Approve one global peer parent gate and treatment of solitary play (H76, rows 77-95); Short Form omits the proposed parent."
+    },
+    {
+      "cell": "B82",
+      "code": "PeerIntn2",
+      "open_question": "Approve one global peer parent gate and treatment of solitary play (H76, rows 77-95); Short Form omits the proposed parent."
+    },
+    {
+      "cell": "B87",
+      "code": "PeerIntn3",
+      "open_question": "Approve one global peer parent gate and treatment of solitary play (H76, rows 77-95); Short Form omits the proposed parent."
+    },
+    {
+      "cell": "B90",
+      "code": "PeerIntn4",
+      "open_question": "Approve one global peer parent gate and treatment of solitary play (H76, rows 77-95); Short Form omits the proposed parent."
+    },
+    {
+      "cell": "B96",
+      "code": "AdultIntn1",
+      "open_question": "Approve the adult gate and which alternative drives the Other description (H95/H99, rows 100-118)."
+    },
+    {
+      "cell": "B100",
+      "code": "AdultIntn2",
+      "open_question": "Approve the adult gate and which alternative drives the Other description (H95/H99, rows 100-118)."
+    },
+    {
+      "cell": "B111",
+      "code": "AdultIntn3",
+      "open_question": "Approve the adult gate and which alternative drives the Other description (H95/H99, rows 100-118)."
+    },
+    {
+      "cell": "B118",
+      "code": "AdultIntn4",
+      "open_question": "Approve the adult gate and which alternative drives the Other description (H95/H99, rows 100-118)."
+    },
+    {
+      "cell": "B138",
+      "code": "PlaySubtype1",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B142",
+      "code": "PlaySubtype2",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B145",
+      "code": "PlaySubtype3",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B148",
+      "code": "PlaySubtype4",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B150",
+      "code": "PlaySubtype5",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B153",
+      "code": "PlaySubtype6",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B157",
+      "code": "PlaySubtype7",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B161",
+      "code": "PlaySubtype8",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B164",
+      "code": "PlaySubtype9",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B170",
+      "code": "PlaySubtype10",
+      "open_question": "Resolve slot-versus-category identity in rows 138-170 versus Form Library C41/C43; approve independent second-slot columns/rules."
+    },
+    {
+      "cell": "B180",
+      "code": "FMS1",
+      "open_question": "Supply actual FMS choices and Other trigger (G180:G183); F183 contradicts the text answer requested in G183."
+    },
+    {
+      "cell": "B181",
+      "code": "FMS2",
+      "open_question": "Supply actual FMS choices and Other trigger (G180:G183); F183 contradicts the text answer requested in G183."
+    },
+    {
+      "cell": "B182",
+      "code": "FMS3",
+      "open_question": "Supply actual FMS choices and Other trigger (G180:G183); F183 contradicts the text answer requested in G183."
+    },
+    {
+      "cell": "B183",
+      "code": "FMS4",
+      "open_question": "Supply actual FMS choices and Other trigger (G180:G183); F183 contradicts the text answer requested in G183."
+    },
+    {
+      "cell": "B184",
+      "code": "Risk1",
+      "open_question": "Approve the alternative parent of Risk4 and Other predicate; fill missing format F205 (rows 184-205)."
+    },
+    {
+      "cell": "B194",
+      "code": "Risk2",
+      "open_question": "Approve the alternative parent of Risk4 and Other predicate; fill missing format F205 (rows 184-205)."
+    },
+    {
+      "cell": "B198",
+      "code": "Risk3",
+      "open_question": "Approve the alternative parent of Risk4 and Other predicate; fill missing format F205 (rows 184-205)."
+    },
+    {
+      "cell": "B205",
+      "code": "Risk4",
+      "open_question": "Approve the alternative parent of Risk4 and Other predicate; fill missing format F205 (rows 184-205)."
+    },
+    {
+      "cell": "B206",
+      "code": "PlayComm1",
+      "open_question": "Confirm which PlayComm1 option reveals PlayComm2; H213/H214 say make this visible without an explicit target."
+    },
+    {
+      "cell": "B214",
+      "code": "PlayComm2",
+      "open_question": "Confirm which PlayComm1 option reveals PlayComm2; H213/H214 say make this visible without an explicit target."
+    },
+    {
+      "cell": "B215",
+      "code": "FixedNat1",
+      "open_question": "Supply missing fixed-feature choices and approve the likely parent/Other gates (H215:H218)."
+    },
+    {
+      "cell": "B216",
+      "code": "FixedNat2",
+      "open_question": "Supply missing fixed-feature choices and approve the likely parent/Other gates (H215:H218)."
+    },
+    {
+      "cell": "B217",
+      "code": "FixedNat3",
+      "open_question": "Supply missing fixed-feature choices and approve the likely parent/Other gates (H215:H218)."
+    },
+    {
+      "cell": "B218",
+      "code": "FixedNat4",
+      "open_question": "Supply missing fixed-feature choices and approve the likely parent/Other gates (H215:H218)."
+    },
+    {
+      "cell": "B221",
+      "code": "FixedDes1",
+      "open_question": "Supply missing choices, approve gates and correct copied natural-feature wording (rows 221-224)."
+    },
+    {
+      "cell": "B222",
+      "code": "FixedDes2",
+      "open_question": "Supply missing choices, approve gates and correct copied natural-feature wording (rows 221-224)."
+    },
+    {
+      "cell": "B223",
+      "code": "FixedDes3",
+      "open_question": "Supply missing choices, approve gates and correct copied natural-feature wording (rows 221-224)."
+    },
+    {
+      "cell": "B224",
+      "code": "FixedDes4",
+      "open_question": "Supply missing choices, approve gates and correct copied natural-feature wording (rows 221-224)."
+    },
+    {
+      "cell": "B226",
+      "code": "LooseParts1",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B227",
+      "code": "LooseParts2",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B228",
+      "code": "LooseParts3",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B229",
+      "code": "LooseParts4",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B230",
+      "code": "LooseParts5",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B231",
+      "code": "LooseParts6",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B232",
+      "code": "LooseParts7",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B233",
+      "code": "LooseParts8",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B234",
+      "code": "LooseParts9",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B235",
+      "code": "LooseParts10",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B236",
+      "code": "LooseParts11",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B237",
+      "code": "LooseParts12",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B238",
+      "code": "LooseParts13",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B239",
+      "code": "LooseParts14",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B240",
+      "code": "LooseParts15",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B241",
+      "code": "LooseParts16",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B242",
+      "code": "LooseParts17",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B243",
+      "code": "LooseParts18",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B244",
+      "code": "LooseParts19",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B245",
+      "code": "LooseParts20",
+      "open_question": "Approve explicit parent gates, provide missing lists and correct the child checklist column E239 before seeding (rows 226-245)."
+    },
+    {
+      "cell": "B246",
+      "code": "Wildlife1",
+      "open_question": "Resolve the None/yes predicates (H246, Form Library D59), missing Wildlife4 list and Other-description gate (rows 246-256)."
+    },
+    {
+      "cell": "B247",
+      "code": "Wildlife2",
+      "open_question": "Resolve the None/yes predicates (H246, Form Library D59), missing Wildlife4 list and Other-description gate (rows 246-256)."
+    },
+    {
+      "cell": "B254",
+      "code": "Wildlife3",
+      "open_question": "Resolve the None/yes predicates (H246, Form Library D59), missing Wildlife4 list and Other-description gate (rows 246-256)."
+    },
+    {
+      "cell": "B255",
+      "code": "Wildlife4",
+      "open_question": "Resolve the None/yes predicates (H246, Form Library D59), missing Wildlife4 list and Other-description gate (rows 246-256)."
+    },
+    {
+      "cell": "B256",
+      "code": "Wildlife5",
+      "open_question": "Resolve the None/yes predicates (H246, Form Library D59), missing Wildlife4 list and Other-description gate (rows 246-256)."
+    },
+    {
+      "cell": "B258",
+      "code": "Shade1",
+      "open_question": "Confirm Shade shared-column alternatives with Climate3 (E34/E258)."
+    },
+    {
+      "cell": "B270",
+      "code": "Topography2",
+      "open_question": "Confirm whether Topography2 is a separate Other description rather than an inline custom answer (H270)."
+    }
+  ]
+}
