@@ -72,6 +72,12 @@ def test_provisional_seed_matches_workbook_and_sql() -> None:
         assert var.settings.label == rows[row]["C"].strip()
         assert var.settings.export_column == rows[row]["E"].strip()
         assert var.settings.depends_on is None  # no rule invented for provisional content
+        # Exports record the code, so it names the choice and never its position in the list.
+        codes = [x.code for x in var.settings.options]
+        assert len(set(codes)) == len(codes)
+        for code in codes:
+            assert re.fullmatch(r"[a-z][a-z0-9]*(_[a-z0-9]+)*", code), code
+            assert not re.fullmatch(r"option_\d+", code), code
         next_row = min((r for r in rows if r > row and rows[r].get("B")), default=10000)
         if var.settings.kind == "one":
             labels = [

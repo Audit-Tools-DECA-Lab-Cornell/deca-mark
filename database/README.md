@@ -366,5 +366,6 @@ for Janet and the two round variables are excluded. This content is **not author
 for hosted databases**, and is absent from the schema migration. No templates are seeded.
 Seed/workbook parity is checked by `backend/tests/test_library_seed.py`. Disposable SQL
 tests include scope, uniqueness, lineage, read roles, denied writes and replay. The
-baseline rehearsal runs `database/library-benchmark.py` on its disposable database only;
+baseline rehearsal runs `database/library-benchmark.py` on its disposable database only when
+`LIBRARY_BENCHMARK=1` is set, because it loads a million fixture tags and measures, not asserts;
 [evidence and measured scaling limits](../docs/reviews/library-seed-and-read/README.md).

@@ -17,8 +17,9 @@ Write errors are defined but not emitted by this read-only slice. Form schema st
 The provisional manifest contains **10 seed variables, 97 held rows**, and explicitly
 excludes RelRound1 and FirstRound1. It accounts for all 109 workbook variable rows.
 Every held row includes its workbook cell and open question. Choice labels and data
-columns are checked against the Additional workbook. Stable `option_N` codes are
-positional identifiers for its literal listed choices, not inferred research choices.
+columns are checked against the Additional workbook. Each choice has a meaningful
+snake_case code (`physical`, `age_0_2`, `cars_1_2`), reusing the code of the same choice in
+`contracts/forms/janet-test-v1.json` where one exists, because exports record the code.
 The selected variables have no display dependencies. No reference templates are seeded.
 
 The migration creates storage, lineage/scope/unique constraints, indexes and SELECT-only
@@ -98,3 +99,18 @@ seed before the new table exists. Its test setup now selects only the original p
 identity portion of seed.sql; no runtime compatibility path was added. The corrected
 `tests/test_schema2_legacy_rehearsal.py` rerun passed all **6** cases. The earlier broad
 run started before this correction; it is not evidence of a clean final full-suite run.
+
+## Review fixes (2026-11-14)
+
+Three changes after review of PR #66; no route, table or permission changed.
+
+- **Seed guard.** The backend CI job failed at
+  `docs/reviews/account-deletion-recovery-2026-10-17/reproduce-forward.sh`, which loads
+  `supabase/seed.sql` into a pre-library schema. The provisional library block now skips itself
+  when `fieldmaps.library_variables` does not exist, so every earlier-schema rehearsal can load the
+  whole file. The seed-splitting workaround in `tests/test_schema2_legacy_rehearsal.py` is removed;
+  that file again matches master.
+- **Option codes.** Positional `option_N` codes are replaced by meaningful codes, and
+  `test_library_seed.py` refuses a positional or non-snake_case code.
+- **Benchmark.** `database/library-benchmark.py` runs in the baseline rehearsal only with
+  `LIBRARY_BENCHMARK=1`.

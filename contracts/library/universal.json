@@ -4,7 +4,7 @@
   "workbook": "Behavior Mapping Variable Library_ Additional.xlsx",
   "sheet": "BehMapApp Variable Library",
   "excluded": "RelRound1 and FirstRound1 (L17)",
-  "option_code_policy": "option_N is the stable position in the explicitly listed workbook choices; labels copied verbatim, with surrounding whitespace trimmed. No choice meanings inferred.",
+  "option_code_policy": "Each choice has a meaningful lowercase snake_case code, because exports record the code. Where contracts/forms/janet-test-v1.json already codes the same choice, its code is reused (age_0_2, physical, cars_1_2). Codes are assigned once and never follow a later label edit. Labels are copied verbatim from the workbook, with surrounding whitespace trimmed. No choice meanings inferred.",
   "variables": [
     {
       "id": "71fbbc77-5315-459d-813f-de50c37b60be",
@@ -50,27 +50,27 @@
         "hint": "Choose most appropriate range",
         "options": [
           {
-            "code": "option_1",
+            "code": "age_0_2",
             "label": "0-2 yrs"
           },
           {
-            "code": "option_2",
+            "code": "age_3_5",
             "label": "3-5 yrs"
           },
           {
-            "code": "option_3",
+            "code": "age_6_8",
             "label": "6-8 yrs"
           },
           {
-            "code": "option_4",
+            "code": "age_9_12",
             "label": "9-12yrs"
           },
           {
-            "code": "option_5",
+            "code": "age_13_16",
             "label": "13-16yrs"
           },
           {
-            "code": "option_6",
+            "code": "age_17_plus",
             "label": "17+"
           }
         ]
@@ -90,19 +90,19 @@
         "hint": "Choose most appropriate range",
         "options": [
           {
-            "code": "option_1",
+            "code": "age_0_5",
             "label": "0-5 yrs"
           },
           {
-            "code": "option_2",
+            "code": "age_6_10",
             "label": "6-10 yrs"
           },
           {
-            "code": "option_3",
+            "code": "age_11_15",
             "label": "11-15 yrs"
           },
           {
-            "code": "option_4",
+            "code": "age_16_plus",
             "label": "16+ yrs"
           }
         ]
@@ -122,11 +122,11 @@
         "hint": "Choose most appropriate range",
         "options": [
           {
-            "code": "option_1",
+            "code": "age_0_2",
             "label": "0-2 yrs"
           },
           {
-            "code": "option_2",
+            "code": "age_3_5",
             "label": "3-5 yrs"
           }
         ]
@@ -146,39 +146,39 @@
         "hint": "Select a primary type of play involved in the play event",
         "options": [
           {
-            "code": "option_1",
+            "code": "physical",
             "label": "Physical"
           },
           {
-            "code": "option_2",
+            "code": "exploratory",
             "label": "Exploratory"
           },
           {
-            "code": "option_3",
+            "code": "imaginative",
             "label": "Imaginative"
           },
           {
-            "code": "option_4",
+            "code": "play_with_rules",
             "label": "Play with Rules"
           },
           {
-            "code": "option_5",
+            "code": "bio",
             "label": "Bio"
           },
           {
-            "code": "option_6",
+            "code": "expressive",
             "label": "Expressive"
           },
           {
-            "code": "option_7",
+            "code": "restorative",
             "label": "Restorative"
           },
           {
-            "code": "option_8",
+            "code": "digital",
             "label": "Digital"
           },
           {
-            "code": "option_9",
+            "code": "non_play",
             "label": "Non-Play"
           }
         ]
@@ -198,39 +198,39 @@
         "hint": "Select a primary type of play involved in the play event",
         "options": [
           {
-            "code": "option_1",
+            "code": "physical",
             "label": "Physical"
           },
           {
-            "code": "option_2",
+            "code": "exploratory",
             "label": "Exploratory"
           },
           {
-            "code": "option_3",
+            "code": "imaginative",
             "label": "Imaginative"
           },
           {
-            "code": "option_4",
+            "code": "play_with_rules",
             "label": "Play with Rules"
           },
           {
-            "code": "option_5",
+            "code": "bio",
             "label": "Bio"
           },
           {
-            "code": "option_6",
+            "code": "expressive",
             "label": "Expressive"
           },
           {
-            "code": "option_7",
+            "code": "restorative",
             "label": "Restorative"
           },
           {
-            "code": "option_8",
+            "code": "digital",
             "label": "Digital"
           },
           {
-            "code": "option_9",
+            "code": "non_play",
             "label": "Non-Play"
           }
         ]
@@ -250,23 +250,23 @@
         "hint": "Choose the most appropriate (or longest lasting) activity intensity level",
         "options": [
           {
-            "code": "option_1",
+            "code": "cars_1",
             "label": "1 (Stationary)"
           },
           {
-            "code": "option_2",
+            "code": "cars_2",
             "label": "2 (stationary but moving limbs)"
           },
           {
-            "code": "option_3",
+            "code": "cars_3",
             "label": "3 (Slow)"
           },
           {
-            "code": "option_4",
+            "code": "cars_4",
             "label": "4 (Moderate/FAst)"
           },
           {
-            "code": "option_5",
+            "code": "cars_5",
             "label": "5 (Vigorous/Very Fast)"
           }
         ]
@@ -285,15 +285,15 @@
         "source": "Behavior Mapping Variable Library_ Additional.xlsx · BehMapApp Variable Library · B177",
         "options": [
           {
-            "code": "option_1",
+            "code": "cars_1_2",
             "label": "1-2 (Stationary)"
           },
           {
-            "code": "option_2",
+            "code": "cars_3",
             "label": "3 (Slow)"
           },
           {
-            "code": "option_3",
+            "code": "cars_4_5",
             "label": "4-5 (Moderate-Vigorous)"
           }
         ]
@@ -313,31 +313,31 @@
         "hint": "What were the topography conditions where the play event occurred",
         "options": [
           {
-            "code": "option_1",
+            "code": "flat_ground_level",
             "label": "Flat - Ground level"
           },
           {
-            "code": "option_2",
+            "code": "flat_raised_level",
             "label": "Flat - Raised level"
           },
           {
-            "code": "option_3",
+            "code": "low_slope",
             "label": "Low slope"
           },
           {
-            "code": "option_4",
+            "code": "moderate_slope",
             "label": "Moderate slope"
           },
           {
-            "code": "option_5",
+            "code": "steep_slope",
             "label": "Steep Slope"
           },
           {
-            "code": "option_6",
+            "code": "uneven_or_rolling_surface",
             "label": "Uneven or rolling surface"
           },
           {
-            "code": "option_7",
+            "code": "other",
             "label": "Other"
           }
         ]
