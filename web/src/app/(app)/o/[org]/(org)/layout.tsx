@@ -4,7 +4,7 @@ import { ShellMain, ShellTabsRow } from "@/components/shell/ShellMain";
 import { OrgTabs } from "@/components/shell/WorkspaceTabs";
 
 /**
- * The organization pages: Projects · Members · Settings (Members and Settings for owners and admins). Each
+ * The organization pages: Projects · Members · Library · Settings (all but Projects for owners and admins). Each
  * page checks the role itself and shows its own no-access state; this layout never reads them.
  */
 export default async function OrgPagesLayout({

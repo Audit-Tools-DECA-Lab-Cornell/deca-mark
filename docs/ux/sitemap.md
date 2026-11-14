@@ -120,13 +120,14 @@ AUTH
 HOME
   /o                                 Opens the last project, the only project or the first organization   ✅
 
-ORGANIZATION    /o/[org]             Tabs: Projects · Members · Settings (Members and Settings: owners and admins)
+ORGANIZATION    /o/[org]             Tabs: Projects · Members · Library · Settings (all but Projects: owners and admins)
   /o/[org]                           Projects: role, sites and observations; Create project   ✅
   /o/[org]/members                   Members: org roles, invitations                   ✅
   /o/[org]/settings                  Settings: name, web address, Transfer ownership; deleting the org is not available   ✅
+  /o/[org]/library                   Library: Universal and Organization variables, form templates (WEB-61 to WEB-70; says "not available yet" until then)   🔴
   /o/[org]/collect                   Observer handoff: "You collect in the app" (U3)   ✅
 
-PROJECT         /o/[org]/p/[project] Tabs: Overview · Data · Sites · Forms · Team · QGIS · Reports · Settings
+PROJECT         /o/[org]/p/[project] Tabs: Overview · Data · Sites · Forms · Library · Team · QGIS · Reports · Settings
   (project root)                     Overview: field return, coverage, what needs attention, activity   ✅
   data                               Data: table + plan; filters; export               ✅
   data/[observation]                 Observation: answers worded by the form version it used, context, location   ✅
@@ -137,6 +138,7 @@ PROJECT         /o/[org]/p/[project] Tabs: Overview · Data · Sites · Forms ·
   forms/versions                     Form versions: start a draft, discard, retire     ✅
   forms/versions/[version]           Draft editor + collector view; read-only once published   ✅
   forms/versions/[version]/publish   Review publication: protocol notes, then publish  ✅
+  library                            Library: variables of all four levels, form templates (WEB-61 to WEB-70; says "not available yet" until then)   🔴
   team                               Team: members, roles, invitations (link and code shown once)   ✅
   qgis                               QGIS: maps in (current packages by site); records out (CSV, GeoJSON, codebook)   ✅
   reports                            Reports: counts by zone, round, play type, observer, day; Print   ✅
@@ -158,7 +160,7 @@ ACCOUNT         /account
 **Development only.** `/dev/contour` shows every Contour primitive in Day and Dusk. It is `noindex` and exists only in dev and preview builds.
 
 **Navigation.**
-- Inside a project, the tabs are Overview · Data · Sites · Forms · Team · QGIS · Reports · Settings. Inside an organization they are Projects · Members · Settings.
+- Inside a project, the tabs are Overview · Data · Sites · Forms · Library · Team · QGIS · Reports · Settings. Inside an organization they are Projects · Members · Library · Settings.
 - The header holds the org and project switchers, "Search or jump to" (⌘K) and the account menu.
 - Viewers do not see Team or Settings, and those pages show a no-access note if a viewer opens them. Members and the org Settings are for owners and admins.
 - An observer who opens a project is sent to the observer handoff.

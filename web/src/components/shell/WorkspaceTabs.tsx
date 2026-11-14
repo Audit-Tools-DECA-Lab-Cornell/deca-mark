@@ -5,8 +5,8 @@ import { ORG_SECTIONS, orgHref, PROJECT_SECTIONS, projectHref, visibleSections }
 import { useWorkspace } from "@/features/shell/WorkspaceProvider";
 
 /**
- * Overview · Data · Sites · Forms · Team · QGIS · Reports · Settings. Team and Settings are for project
- * managers; a viewer does not see them.
+ * Overview · Data · Sites · Forms · Library · Team · QGIS · Reports · Settings. Team and Settings are for
+ * project managers; a viewer does not see them.
  */
 export function ProjectTabs({ org, project }: { org: string; project: string }) {
 	const { projectAbilities } = useWorkspace();
@@ -17,7 +17,7 @@ export function ProjectTabs({ org, project }: { org: string; project: string }) 
 	return <InkTabs items={items} label="Project" />;
 }
 
-/** Projects · Members · Settings. Members and Settings are for organization owners and admins. */
+/** Projects · Members · Library · Settings. All but Projects are for organization owners and admins. */
 export function OrgTabs({ org }: { org: string }) {
 	const { orgAbilities } = useWorkspace();
 	const items = visibleSections(ORG_SECTIONS, orgAbilities.manage).map(section => ({

@@ -10,7 +10,7 @@ import { projectAbilities } from "@/lib/workspace/access";
 import { collectPath } from "@/lib/workspace/home";
 
 /**
- * A project's pages under its eight tabs (D21). The project comes from the person's memberships: one they
+ * A project's pages under its nine tabs (D21, and Library from L7 of LIBRARY-UI.md). The project comes from the person's memberships: one they
  * are not on is the in-shell "not found", and an observer, who collects on the phone, goes to the collect
  * page. Each page checks the role itself; Team and Settings are for managers.
  */

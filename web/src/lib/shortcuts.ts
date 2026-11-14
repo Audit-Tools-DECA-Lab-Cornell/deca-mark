@@ -19,6 +19,7 @@ export const PROJECT_GO_KEYS: Record<string, string> = {
 	d: "data",
 	s: "sites",
 	f: "forms",
+	l: "library",
 	t: "team",
 	q: "qgis",
 	r: "reports",
@@ -29,6 +30,7 @@ export const PROJECT_GO_KEYS: Record<string, string> = {
 export const ORG_GO_KEYS: Record<string, string> = {
 	p: "",
 	m: "members",
+	l: "library",
 	",": "settings"
 };
 
@@ -70,6 +72,7 @@ export const PROJECT_SHORTCUTS: ShortcutGroup = {
 		{ keys: ["g", "d"], sequence: true, label: "Go to Data" },
 		{ keys: ["g", "s"], sequence: true, label: "Go to Sites" },
 		{ keys: ["g", "f"], sequence: true, label: "Go to Forms" },
+		{ keys: ["g", "l"], sequence: true, label: "Go to Library" },
 		{ keys: ["g", "t"], sequence: true, label: "Go to Team" },
 		{ keys: ["g", "q"], sequence: true, label: "Go to QGIS" },
 		{ keys: ["g", "r"], sequence: true, label: "Go to Reports" },
@@ -82,6 +85,7 @@ export const ORG_SHORTCUTS: ShortcutGroup = {
 	rows: [
 		{ keys: ["g", "p"], sequence: true, label: "Go to Projects" },
 		{ keys: ["g", "m"], sequence: true, label: "Go to Members" },
+		{ keys: ["g", "l"], sequence: true, label: "Go to Library" },
 		{ keys: ["g", ","], sequence: true, label: "Go to Settings" }
 	]
 };

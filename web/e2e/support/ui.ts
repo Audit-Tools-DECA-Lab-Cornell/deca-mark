@@ -14,12 +14,12 @@ export function countPattern(count: number, noun: string): RegExp {
 	return new RegExp(`\\b${count}\\s+${word}\\b|\\b${word}\\s+${count}\\b`, "i");
 }
 
-/** The project tabs (Overview · Data · Sites · Forms · Team · QGIS · Reports · Settings). */
+/** The project tabs (Overview · Data · Sites · Forms · Library · Team · QGIS · Reports · Settings). */
 export function projectTabs(page: Page): Locator {
 	return page.getByRole("navigation", { name: "Project" });
 }
 
-/** The organization tabs (Projects · Members · Settings). */
+/** The organization tabs (Projects · Members · Library · Settings). */
 export function orgTabs(page: Page): Locator {
 	return page.getByRole("navigation", { name: "Organization" });
 }

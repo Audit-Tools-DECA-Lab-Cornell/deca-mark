@@ -64,6 +64,9 @@ export const SCAN_ROUTES: ScanRoute[] = [
 	{ name: "form-published", role: "manager", path: () => projectPath(`forms/versions/${SEED.form.published}`) },
 	{ name: "form-draft", role: "manager", path: seededDraft },
 	{ name: "form-publish", role: "manager", path: async () => `${await seededDraft()}/publish` },
+	{ name: "library", role: "manager", path: () => projectPath("library") },
+	{ name: "library-templates", role: "manager", path: () => projectPath("library/templates") },
+	{ name: "manager-org-library", role: "manager", path: () => orgPath("library") },
 	{ name: "team", role: "manager", path: () => projectPath("team") },
 	{ name: "qgis", role: "manager", path: () => projectPath("qgis") },
 	{ name: "reports", role: "manager", path: () => projectPath("reports") },
@@ -73,12 +76,15 @@ export const SCAN_ROUTES: ScanRoute[] = [
 	// What a viewer and an observer see.
 	{ name: "viewer-overview", role: "viewer", path: () => projectPath() },
 	{ name: "viewer-team", role: "viewer", path: () => projectPath("team") },
+	{ name: "viewer-new-variable", role: "viewer", path: () => projectPath("library/variables/new") },
 	{ name: "viewer-zones", role: "viewer", path: () => projectPath(`sites/${SEED.sites.fallCreek}/zones`) },
 	{ name: "observer-collect", role: "observer", path: () => orgPath("collect") },
 
 	// The organization, as its owner.
 	{ name: "org-projects", role: "owner", path: () => orgPath() },
 	{ name: "org-members", role: "owner", path: () => orgPath("members") },
+	{ name: "org-library", role: "owner", path: () => orgPath("library") },
+	{ name: "org-library-templates", role: "owner", path: () => orgPath("library/templates") },
 	{ name: "org-settings", role: "owner", path: () => orgPath("settings") },
 	{ name: "org-missing", role: "owner", path: () => "/o/no-such-organization", status: 404 },
 	// The sample workspace is gone: its old address is a plain not-found page, not a demo.
@@ -93,7 +99,6 @@ export const REMOVED_ROUTES: { name: string; path: () => string }[] = [
 	{ name: "onboarding", path: () => "/onboarding" },
 	{ name: "old overview", path: () => "/overview" },
 	{ name: "old QGIS page", path: () => "/qgis" },
-	{ name: "organization library", path: () => orgPath("library") },
 	{ name: "saved report views", path: () => projectPath("reports/views") },
 	{ name: "rounds plan", path: () => projectPath("settings/rounds") },
 	{ name: "sample workspace", path: () => "/o/deca/p/play-study" }

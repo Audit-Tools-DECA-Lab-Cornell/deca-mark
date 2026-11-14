@@ -18,7 +18,8 @@ export type Section = {
 	go: string;
 	/**
 	 * Shown only to people who manage the place: project managers for project sections, organization
-	 * owners and admins for organization sections. A viewer has no Team or Settings tab.
+	 * owners and admins for organization sections. A viewer has no Team or Settings tab, and only owners
+	 * and admins have the organization's Members, Library and Settings.
 	 */
 	managersOnly?: boolean;
 };
@@ -28,6 +29,7 @@ export const PROJECT_SECTIONS: Section[] = [
 	{ segment: "data", label: "Data", pageName: "Observation data", icon: "table", go: "d" },
 	{ segment: "sites", label: "Sites", pageName: "Sites", icon: "map", go: "s" },
 	{ segment: "forms", label: "Forms", pageName: "Forms", icon: "file-text", go: "f" },
+	{ segment: "library", label: "Library", pageName: "Library", icon: "book-open", go: "l" },
 	{ segment: "team", label: "Team", pageName: "Project team", icon: "users", go: "t", managersOnly: true },
 	{ segment: "qgis", label: "QGIS", pageName: "QGIS", icon: "layers", go: "q" },
 	{ segment: "reports", label: "Reports", pageName: "Reports", icon: "printer", go: "r" },
@@ -49,6 +51,14 @@ export const ORG_SECTIONS: Section[] = [
 		pageName: "Organization members",
 		icon: "users",
 		go: "m",
+		managersOnly: true
+	},
+	{
+		segment: "library",
+		label: "Library",
+		pageName: "Organization library",
+		icon: "book-open",
+		go: "l",
 		managersOnly: true
 	},
 	{

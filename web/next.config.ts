@@ -25,7 +25,6 @@ const OLD_ROUTES: [string, string][] = [
 	["/qgis", "/o"],
 	["/onboarding", "/o"],
 	["/onboarding/:path*", "/o"],
-	["/o/:org/library", "/o/:org"],
 	["/o/:org/p/:project/reports/views", "/o/:org/p/:project/reports"],
 	["/o/:org/p/:project/settings/rounds", "/o/:org/p/:project/settings"]
 ];
