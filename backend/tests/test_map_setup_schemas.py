@@ -32,7 +32,8 @@ def test_collection_summary_cannot_carry_private_setup_document_fields() -> None
     }
     # When parsed, then the summary is usable without setup content or retained source metadata.
     summary = MapSetupSummary.model_validate(body)
-    assert set(summary.model_dump()) == {"setup_id", "state", "updated_at"}
+    assert set(summary.model_dump()) == {"setup_id", "state", "updated_at", "ready_for_form"}
+    assert summary.ready_for_form is False
     with pytest.raises(ValidationError):
         MapSetupSummary.model_validate({**body, "content": {"import_generation": 1}})
 

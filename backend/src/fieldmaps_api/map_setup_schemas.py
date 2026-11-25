@@ -171,6 +171,13 @@ class MapSetupSummary(SetupModel):
     setup_id: UUID
     state: Literal["draft", "published", "discarded"]
     updated_at: datetime
+    ready_for_form: bool = False
+
+
+class MapAwaitingForm(SetupModel):
+    setup_id: UUID
+    site_code: str
+    site_name: str
 
 
 class MapSetup(SetupModel):
@@ -191,6 +198,7 @@ class MapSetup(SetupModel):
     sources: tuple[SetupSource, ...] = ()
     published_package_id: UUID | None = None
     base_zone_ids: tuple[UUID, ...] = ()
+    ready_for_form: bool = False
 
 
 class MapSetupCandidate(SetupModel):

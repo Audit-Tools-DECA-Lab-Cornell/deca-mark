@@ -11,7 +11,7 @@ export const STEPS: readonly { readonly key: Step; readonly label: string }[] = 
 	{ key: "add-map", label: "Map layers" },
 	{ key: "outline", label: "Site outline" },
 	{ key: "zones", label: "Zones" },
-	{ key: "review", label: "Publish" }
+	{ key: "review", label: "Save map" }
 ];
 
 /** Reads a step from its address. `boundaries` is the earlier combined outline-and-zones step. */

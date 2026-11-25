@@ -8,7 +8,7 @@ The website converts uploaded vector sources into the GeoJSON layers used by a s
 2. Choose the `.qgz` or `.qgs` with its vector data, such as its GeoPackage, or ZIP those files together. Reading starts automatically and saves a draft without a form. If a vector file is missing, add the named file and confirm the updated map.
 3. Imported QGIS vectors are kept as map references by default, using their original names. Review them and change an imported area’s use if it represents the site outline or an observation zone. A layer can have any name. A layer named “zones” still needs confirmation because it changes where observers can record.
 4. Use **Set boundaries** to draw or edit the site outline and zones. A project without zones can continue here. A project without any usable geographic features needs source data before drawing. Unfinished setups are saved privately; the status confirms when a save is acknowledged.
-5. In **Review and publish**, choose a published observation form, check the map, and publish. Observers can download the published version. The previous version remains current until publication succeeds.
+5. Select **Save map**. The saved map appears under **Forms → Maps awaiting a form**. Select **Assign form**, choose a published observation form, and check and publish the map for observers. The previous package remains current until publication succeeds. Edits to saved layers or boundaries return the map to setup for review.
 
 Reload restores the last confirmed save. Pending changes are not guaranteed to survive closing the browser. **Save and leave** waits for a confirmed save; conflicts preserve local work for comparison or download. A QGIS project is not always self-contained: its actual source datasets may still be needed.
 

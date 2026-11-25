@@ -5,10 +5,11 @@ import re
 from uuid import UUID
 
 import orjson
-from pydantic import TypeAdapter
+from pydantic import JsonValue, TypeAdapter
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from fieldmaps_api.domain.map_setup_compilation import validate_map
 from fieldmaps_api.domain.map_setup_roles import keep_references
 from fieldmaps_api.domain.packages import ProjectFile
 from fieldmaps_api.errors import DomainError
@@ -121,7 +122,42 @@ async def replace(  # noqa: PLR0913, PLR0917 - explicit authenticated request bo
     if payload.import_generation != stored.setup.import_generation:
         message = "revision_conflict"
         raise DomainError(message, "The imported map changed. Review it again.", 412)
-    document = {**stored.document, "content": payload.model_dump(mode="json")}
+    map_fields = {"outline", "zones", "assignments", "confirmed_omissions"}
+    ready = stored.setup.ready_for_form and (
+        payload.model_dump(include=map_fields)
+        == stored.setup.content.model_dump(include=map_fields)
+    )
+    document: dict[str, JsonValue] = {
+        **stored.document,
+        "content": payload.model_dump(mode="json"),
+        "ready_for_form": ready,
+    }
+    return await save_document(
+        session, zones.DraftReference(project, site, identifier, supplied), stored.setup, document
+    )
+
+
+async def complete_map(session: AsyncSession, reference: zones.DraftReference) -> MapSetup:
+    stored = await db.get(session, reference.project, reference.site, reference.identifier)
+    check(stored.setup, reference.etag)
+    scope = await zone_db.scope(session, reference.project, reference.site)
+    if scope.current_package_id != stored.setup.expected_current_package_id:
+        code = "publication_conflict"
+        raise DomainError(code, "A newer map was published. Your setup is still saved.", 409)
+    if stored.setup.ready_for_form:
+        return stored.setup
+    validate_map(stored.setup.content, stored.setup.layers, stored.setup.issues)
+    return await save_document(
+        session, reference, stored.setup, {**stored.document, "ready_for_form": True}
+    )
+
+
+async def save_document(
+    session: AsyncSession,
+    reference: zones.DraftReference,
+    setup: MapSetup,
+    document: dict[str, JsonValue],
+) -> MapSetup:
     await zone_db.invoke(
         session,
         text(
@@ -135,14 +171,14 @@ async def replace(  # noqa: PLR0913, PLR0917 - explicit authenticated request bo
             NULL)"""
         ),
         {
-            "project": project,
-            "site": site,
-            "setup": identifier,
-            "revision": stored.setup.revision,
+            "project": reference.project,
+            "site": reference.site,
+            "setup": reference.identifier,
+            "revision": setup.revision,
             "document": orjson.dumps(document).decode(),
         },
     )
-    return (await db.get(session, project, site, identifier)).setup
+    return (await db.get(session, reference.project, reference.site, reference.identifier)).setup
 
 
 async def update_sources(  # noqa: PLR0913, PLR0917 - explicit authenticated request boundary

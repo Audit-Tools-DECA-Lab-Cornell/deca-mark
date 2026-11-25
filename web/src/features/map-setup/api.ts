@@ -43,3 +43,12 @@ export async function saveSetup(address: Address, setup: Setup, content: Content
 		})
 	);
 }
+
+export async function completeMap(address: Address, setup: Setup): Promise<Setup> {
+	return setupSchema.parse(
+		await request(address, `/${setup.setup_id}/complete-map`, {
+			method: "POST",
+			headers: { "If-Match": setupEtag(setup) }
+		})
+	);
+}

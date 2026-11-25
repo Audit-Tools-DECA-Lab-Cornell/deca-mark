@@ -278,7 +278,8 @@ def test_import_receipt_replays_without_creating_another_draft(
     raw_summaries = TypeAdapter(list[dict[str, JsonValue]]).validate_json(listed.content)
     assert len(summaries) == 1
     assert summaries[0].setup_id == MapSetup.model_validate_json(first.content).setup_id
-    assert set(raw_summaries[0]) == {"setup_id", "state", "updated_at"}
+    assert set(raw_summaries[0]) == {"setup_id", "state", "updated_at", "ready_for_form"}
+    assert raw_summaries[0]["ready_for_form"] is False
 
 
 def test_concurrent_exact_import_returns_one_created_and_one_replayed_response(

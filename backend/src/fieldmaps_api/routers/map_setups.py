@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from fieldmaps_api.deps import Authentication
 from fieldmaps_api.errors import ERROR_RESPONSES
 from fieldmaps_api.map_setup_schemas import (
+    MapAwaitingForm,
     MapSetup,
     MapSetupCandidate,
     MapSetupImport,
@@ -32,6 +33,13 @@ def create_router(  # noqa: C901 - explicit route registration with bounded life
 ) -> APIRouter:
     router = APIRouter(responses=ERROR_RESPONSES)
     prefix = "/v1/projects/{project_id}/sites/{site_id}/map-setups"
+
+    @router.get("/v1/projects/{project_id}/maps-awaiting-form", operation_id="listMapsAwaitingForm")
+    async def awaiting_form(
+        project_id: UUID, user: Annotated[UUID, Depends(authenticate)]
+    ) -> list[MapAwaitingForm]:
+        async with zones.transaction(sessions, user) as session:
+            return await db.awaiting_form(session, project_id)
 
     @router.get(prefix, operation_id="listMapSetups")
     async def listing(
@@ -83,9 +91,7 @@ def create_router(  # noqa: C901 - explicit route registration with bounded life
             response.headers["ETag"] = map_setups.etag(previous)
             return previous
         async with work.slot():
-            result, replayed = await map_setups.create(
-                sessions, user, project_id, site_id, payload
-            )
+            result, replayed = await map_setups.create(sessions, user, project_id, site_id, payload)
         response.status_code = 200 if replayed else 201
         response.headers["ETag"] = map_setups.etag(result)
         return result
@@ -137,6 +143,22 @@ def create_router(  # noqa: C901 - explicit route registration with bounded life
             _, result = await map_setup_publication.validate(
                 session, zones.DraftReference(project_id, site_id, setup_id, if_match), uuid4()
             )
+        return result
+
+    @router.post(prefix + "/{setup_id}/complete-map", operation_id="completeMapSetup")
+    async def complete_map(  # noqa: PLR0913, PLR0917 - revision-checked authenticated write
+        project_id: UUID,
+        site_id: UUID,
+        setup_id: UUID,
+        user: Annotated[UUID, Depends(authenticate)],
+        response: Response,
+        if_match: Annotated[str | None, Header()] = None,
+    ) -> MapSetup:
+        async with work.slot(), zones.transaction(sessions, user) as session:
+            result = await map_setups.complete_map(
+                session, zones.DraftReference(project_id, site_id, setup_id, if_match)
+            )
+        response.headers["ETag"] = map_setups.etag(result)
         return result
 
     @router.post(

@@ -42,14 +42,23 @@ export type SourceLayer = z.infer<typeof layerSchema>;
 export const setupSummarySchema = z.object({
 	setup_id: z.uuid(),
 	state: z.enum(["draft", "published", "discarded"]),
-	updated_at: z.string()
+	updated_at: z.string(),
+	ready_for_form: z.boolean().default(false)
 });
+export const mapsAwaitingFormSchema = z.array(
+	z.object({
+		setup_id: z.uuid(),
+		site_code: z.string(),
+		site_name: z.string()
+	})
+);
 export const setupSchema = z.object({
 	setup_id: z.uuid(),
 	site_id: z.uuid(),
 	project_id: z.uuid(),
 	state: z.enum(["draft", "published", "discarded"]),
 	base_zone_ids: z.array(z.uuid()).default([]),
+	ready_for_form: z.boolean().default(false),
 	revision: z.number().int(),
 	import_generation: z.number().int(),
 	expected_current_package_id: z.uuid().nullable(),

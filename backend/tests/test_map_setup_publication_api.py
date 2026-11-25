@@ -4,10 +4,11 @@ from zipfile import ZipFile
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import TypeAdapter
 
 from fieldmaps_api.domain.geojson import FeatureCollection
 from fieldmaps_api.domain.zone_package_schemas import ZonePackageManifest
-from fieldmaps_api.map_setup_schemas import MapSetup
+from fieldmaps_api.map_setup_schemas import MapAwaitingForm, MapSetup
 from fieldmaps_api.schemas import PackageHistory
 from fieldmaps_api.zone_response_schemas import HistoricalZones, Publication
 from tests.map_setup_fixtures import qgz_request
@@ -18,7 +19,7 @@ pytestmark = pytest.mark.integration
 pytest_plugins = ("tests.test_map_setup_api",)
 
 
-def test_first_map_publishes_once_and_replays_original_receipt(
+def test_map_saved_without_form_can_be_bound_published_and_replayed(
     api_client: TestClient, setup_site: Tenant
 ) -> None:
     # Given a real first-map setup with reviewed outline, one drawn zone and form.
@@ -51,11 +52,45 @@ def test_first_map_publishes_once_and_replays_original_receipt(
                     },
                 }
             ],
-            "form_version": "shell-v1",
         }
     )
     saved = api_client.put(url, headers={"If-Match": etag}, json=content)
     assert saved.status_code == 200, saved.text
+    site_url = f"/v1/projects/{setup_site.project}/sites/{setup_site.site}"
+    forms_queue = f"/v1/projects/{setup_site.project}/maps-awaiting-form"
+    assert api_client.get(forms_queue).json() == []
+    complete = api_client.post(f"{url}/complete-map", headers={"If-Match": saved.headers["etag"]})
+    assert complete.status_code == 200, complete.text
+    assert complete.json()["ready_for_form"] is True
+    assert complete.json()["content"]["form_version"] is None
+    assert api_client.get(site_url).json()["current_package_id"] is None
+    pending = TypeAdapter(list[MapAwaitingForm]).validate_json(api_client.get(forms_queue).content)
+    assert [row.setup_id for row in pending] == [setup.setup_id]
+
+    stale = api_client.put(url, headers={"If-Match": saved.headers["etag"]}, json=content)
+    assert stale.status_code == 412, stale.text
+    edited = api_client.put(
+        url,
+        headers={"If-Match": complete.headers["etag"]},
+        json={**content, "outline": None},
+    )
+    assert edited.status_code == 200, edited.text
+    assert edited.json()["ready_for_form"] is False
+    assert api_client.get(forms_queue).json() == []
+
+    reworked = api_client.put(url, headers={"If-Match": edited.headers["etag"]}, json=content)
+    assert reworked.status_code == 200, reworked.text
+    complete = api_client.post(
+        f"{url}/complete-map", headers={"If-Match": reworked.headers["etag"]}
+    )
+    assert complete.status_code == 200, complete.text
+    saved = api_client.put(
+        url,
+        headers={"If-Match": complete.headers["etag"]},
+        json={**content, "form_version": "shell-v1"},
+    )
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["ready_for_form"] is True
     checked = api_client.post(f"{url}/validate", headers={"If-Match": saved.headers["etag"]})
     assert checked.status_code == 200, checked.text
     assert checked.json()["ready"] is True
@@ -72,13 +107,14 @@ def test_first_map_publishes_once_and_replays_original_receipt(
     assert replay.status_code == 200, replay.text
     assert replay.json()["replayed"] is True
     assert replay.json()["package"] == published.json()["package"]
-    current = api_client.get(f"/v1/projects/{setup_site.project}/sites/{setup_site.site}")
+    current = api_client.get(site_url)
     assert current.json()["current_package_id"] == published.json()["package"]["package_id"]
     restored = api_client.get(url)
     assert restored.status_code == 200, restored.text
     assert restored.json()["state"] == "published"
     assert not restored.json()["layers"]
     assert not restored.json()["sources"]
+    assert api_client.get(forms_queue).json() == []
 
 
 def test_complete_import_publishes_its_reviewed_geometry_and_zone_identity(

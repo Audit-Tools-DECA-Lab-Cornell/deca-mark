@@ -39,6 +39,8 @@ type Props = {
 	readonly siteName: string;
 	readonly siteHref: string;
 	readonly sitesHref: string;
+	readonly formsHref: string;
+	readonly assignForm: boolean;
 	readonly expectedCurrent: string | null;
 	readonly setupId?: string;
 	readonly initialStep: Step;
@@ -110,12 +112,14 @@ export function SetupScreen(props: Props) {
 		window.history.replaceState(null, "", `${props.siteHref}/map-setup/${setup.setup_id}/${next}`);
 		window.scrollTo({ top: 0 });
 	}
-	const title = `${props.siteName} · Map setup`;
-	const breadcrumbs = [
-		{ label: "Sites", href: props.sitesHref },
-		{ label: props.siteName, href: props.siteHref },
-		{ label: "Map setup" }
-	];
+	const title = `${props.siteName} · ${props.assignForm ? "Assign form" : "Map setup"}`;
+	const breadcrumbs = props.assignForm
+		? [{ label: "Forms", href: props.formsHref }, { label: props.siteName }]
+		: [
+				{ label: "Sites", href: props.sitesHref },
+				{ label: props.siteName, href: props.siteHref },
+				{ label: "Map setup" }
+			];
 	if (state.fenced)
 		return (
 			<Note title="Your signed-in account changed.">
@@ -173,6 +177,18 @@ export function SetupScreen(props: Props) {
 				</Note>
 			</div>
 		);
+	if (props.assignForm && (!setup?.ready_for_form || step !== "review"))
+		return (
+			<div className="flex flex-col gap-6">
+				<PageHeader breadcrumbs={breadcrumbs} title={title} />
+				<SetupNotice state={state} siteHref={props.siteHref} recover={recover} />
+				<Note title="Save this map in Sites first.">
+					<ButtonLink variant="ink" href={`${props.siteHref}/map-setup`}>
+						Open map setup
+					</ButtonLink>
+				</Note>
+			</div>
+		);
 	const tone = published !== null || (setup && !state.busy && !state.dirty) ? "saved" : "waiting";
 	const next = nextStep(step);
 	const back = previousStep(step);
@@ -207,7 +223,7 @@ export function SetupScreen(props: Props) {
 				breadcrumbs={breadcrumbs}
 				title={title}
 				actions={
-					published === null && setup ? (
+					published === null && setup && !props.assignForm ? (
 						<SetupActions
 							state={state}
 							address={address}
@@ -223,19 +239,23 @@ export function SetupScreen(props: Props) {
 				}
 			/>
 			<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-				<StepBar
-					label="Map setup steps"
-					steps={STEPS.map(item => ({ key: item.key, label: item.label }))}
-					current={published !== null ? "" : step}
-					done={published !== null ? STEPS.map(item => item.key) : finishedSteps(input)}
-					reachable={STEPS.filter(item => blockers[item.key] === null).map(item => item.key)}
-					disabled={!setup || state.busy || publishing || published !== null}
-					onSelect={key => {
-						const target = STEPS.find(item => item.key === key)?.key;
-						if (target && target !== step) void go(target);
-					}}
-					className="lg:min-w-0 lg:flex-1"
-				/>
+				{!props.assignForm && (
+					<StepBar
+						label="Map setup steps"
+						steps={STEPS.map(item => ({ key: item.key, label: item.label }))}
+						current={step}
+						done={
+							setup?.ready_for_form && !state.dirty ? STEPS.map(item => item.key) : finishedSteps(input)
+						}
+						reachable={STEPS.filter(item => blockers[item.key] === null).map(item => item.key)}
+						disabled={!setup || state.busy || publishing || published !== null}
+						onSelect={key => {
+							const target = STEPS.find(item => item.key === key)?.key;
+							if (target && target !== step) void go(target);
+						}}
+						className="lg:min-w-0 lg:flex-1"
+					/>
+				)}
 				<p
 					role="status"
 					className={cx(
@@ -256,7 +276,9 @@ export function SetupScreen(props: Props) {
 							: state.dirty
 								? "Changes not yet saved."
 								: setup
-									? "Draft saved. Observers cannot use it yet."
+									? setup.ready_for_form
+										? "Map saved. Assign a form to make it available to observers."
+										: "Draft saved. Observers cannot use it yet."
 									: props.expectedCurrent
 										? "Observers keep the current map until you publish a new one."
 										: "Nothing is saved until a project has been read."}
@@ -347,7 +369,9 @@ export function SetupScreen(props: Props) {
 							state={state}
 							siteHref={props.siteHref}
 							siteName={props.siteName}
-							footer={footer}
+							formsHref={props.formsHref}
+							assignForm={props.assignForm}
+							footer={props.assignForm ? null : footer}
 							observationForms={props.observationForms}
 							inventoryForms={props.inventoryForms}
 							formsUnavailable={props.formsUnavailable}

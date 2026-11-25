@@ -5,9 +5,10 @@ import { z } from "zod";
 import { ButtonLink } from "@/components/contour/Button";
 import { Note } from "@/components/contour/Note";
 import { session } from "@/lib/api/client";
-const summaries = z.array(
-	z.object({ setup_id: z.uuid(), state: z.enum(["draft", "published", "discarded"]), updated_at: z.string() })
-);
+
+import { setupSummarySchema } from "./schema";
+
+const summaries = z.array(setupSummarySchema);
 async function readActive(projectId: string, siteId: string) {
 	const identity = await session();
 	const base = process.env.DECAMARK_API_URL;
@@ -43,6 +44,22 @@ export async function ResumeSetup({
 		);
 	}
 	if (!active) return null;
+	if (active.ready_for_form)
+		return (
+			<Note title="Map saved. Assign a form to continue.">
+				<p>
+					The map is listed in Forms. Observers get it after you assign a published form and publish the map.
+				</p>
+				<div className="mt-3 flex flex-wrap gap-2">
+					<ButtonLink variant="ink" size="sm" href={`${siteHref.split("/sites/")[0]}/forms`}>
+						Go to Forms
+					</ButtonLink>
+					<ButtonLink variant="outline" size="sm" href={`${siteHref}/map-setup/${active.setup_id}/add-map`}>
+						Edit map
+					</ButtonLink>
+				</div>
+			</Note>
+		);
 	const savedAt = new Intl.DateTimeFormat("en-US", {
 		dateStyle: "medium",
 		timeStyle: "short",

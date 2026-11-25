@@ -89,7 +89,19 @@ function outlineOnlyProjectArchive(): Buffer {
 	});
 }
 
+async function openFormAssignment(page: Page): Promise<void> {
+	const heading = await page.getByRole("heading", { level: 1 }).innerText();
+	const siteName = heading.replace(/ · Map setup$/, "");
+	await expect(page.getByLabel("Published observation form", { exact: true })).toHaveCount(0);
+	await page.getByRole("button", { name: "Save map", exact: true }).click();
+	await page.getByRole("link", { name: "Go to Forms", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Maps awaiting a form", exact: true })).toBeVisible();
+	await page.getByRole("link", { name: `Assign form to ${siteName}`, exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Assign a form", exact: true })).toBeVisible();
+}
+
 async function publishReviewedSetup(page: Page): Promise<void> {
+	await openFormAssignment(page);
 	await page.getByLabel("Published observation form", { exact: true }).selectOption("zone-review-play-v1");
 	await page.getByLabel("What changed (optional)", { exact: true }).fill("Browser acceptance map setup");
 	await page.getByRole("button", { name: "Check map", exact: true }).click();
@@ -327,6 +339,7 @@ test("first map keeps an incomplete draft and draws its missing boundaries", asy
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.getByRole("button", { name: "Review map", exact: true }).click();
 	await expect(page.getByText("1 imported map feature included · 0 left out.")).toBeVisible();
+	await openFormAssignment(page);
 	await page.getByLabel("Published observation form", { exact: true }).selectOption("zone-review-play-v1");
 	await page.getByLabel("What changed (optional)", { exact: true }).fill("Initial site outline and observation zone");
 	await page.getByRole("button", { name: "Check map", exact: true }).click();
@@ -676,7 +689,7 @@ test("a deep link to Review before boundaries are ready explains the remaining w
 	const prerequisite = page.getByText("Finish this step first.", { exact: true });
 	await expect(prerequisite).toBeVisible();
 	await expect(prerequisite.locator("..")).toContainText("Add the site outline first.");
-	await expect(page.getByRole("heading", { name: "Review and publish", exact: true })).toHaveCount(0);
+	await expect(page.getByRole("heading", { name: "Review map", exact: true })).toHaveCount(0);
 	await expect(page.getByRole("heading", { name: "Site outline", exact: true })).toBeVisible();
 });
 

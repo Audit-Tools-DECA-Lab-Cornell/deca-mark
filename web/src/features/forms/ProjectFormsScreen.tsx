@@ -31,7 +31,8 @@ export function ProjectFormsScreen({
 	timeZone,
 	canManage,
 	templates,
-	sitesProblem
+	sitesProblem,
+	mapAssignments
 }: {
 	org: string;
 	project: string;
@@ -41,6 +42,7 @@ export function ProjectFormsScreen({
 	templates: readonly TemplateInfo[];
 	/** Why the sites could not be read, when they could not: "Used by" then says it was not checked. */
 	sitesProblem: string | null;
+	readonly mapAssignments: ReactNode;
 }) {
 	const day = clock(timeZone).day;
 	const editor = (code: string) => projectHref(org, project, `forms/versions/${code}`);
@@ -67,6 +69,7 @@ export function ProjectFormsScreen({
 					{sitesProblem}
 				</Note>
 			)}
+			{mapAssignments}
 
 			<Island title="Forms in this project" meta={plural(forms.length, "form")} flush>
 				{forms.length === 0 ? (

@@ -8,7 +8,8 @@ from sqlalchemy import Result, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fieldmaps_api.errors import DomainError, NotFoundError
-from fieldmaps_api.map_setup_schemas import MapSetup, MapSetupSummary
+from fieldmaps_api.map_setup_schemas import MapAwaitingForm, MapSetup, MapSetupSummary
+from fieldmaps_api.queries import tenancy as tenancy_queries
 from fieldmaps_api.repositories import tenancy, zones
 
 
@@ -48,7 +49,8 @@ async def listing(session: AsyncSession, project: UUID, site: UUID) -> list[MapS
         SELECT jsonb_build_object(
             'setup_id',id,
             'state',state,
-            'updated_at',updated_at
+            'updated_at',updated_at,
+            'ready_for_form',coalesce(document->'ready_for_form','false'::jsonb)
         )::text
         FROM fieldmaps.map_setups
         WHERE project_id=:project AND site_id=:site AND state='draft'
@@ -56,6 +58,24 @@ async def listing(session: AsyncSession, project: UUID, site: UUID) -> list[MapS
         """),
         MapSetupSummary,
         {"project": project, "site": site},
+    )
+
+
+async def awaiting_form(session: AsyncSession, project: UUID) -> list[MapAwaitingForm]:
+    await session.execute(text("SELECT fieldmaps_private.assert_active_user()"))
+    await tenancy.require_manager(session, tenancy_queries.PROJECT_MANAGER, project)
+    return await tenancy.rows(
+        session,
+        text("""
+        SELECT jsonb_build_object('setup_id',m.id,'site_code',s.code,'site_name',s.name)::text
+        FROM fieldmaps.map_setups m
+        JOIN fieldmaps.sites s ON s.id=m.site_id AND s.project_id=m.project_id
+        WHERE m.project_id=:project AND m.state='draft'
+          AND m.document->'ready_for_form' = 'true'::jsonb
+        ORDER BY s.name,s.code
+        """),
+        MapAwaitingForm,
+        {"project": project},
     )
 
 

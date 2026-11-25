@@ -42,7 +42,7 @@ Form editing carries the loaded draft ETag through save and discard. Each succes
 
 ## Import a QGIS project for a site
 
-Open **Sites → the site → Set up map** (or **Upload a new version**). QGIS and Overview actions open the same map setup workflow. The manager-only workflow has four steps, each with the map beside its task: **Map layers → Site outline → Zones → Publish**. A step opens once the one before it is finished, and the Continue button says what is still missing. The page sits under Sites with a Sites › site › Map setup trail, wherever it was opened from, and Save and leave returns to the site, where the draft is shown. Choose a QGIS project; reading starts automatically. Include missing GeoPackage/shapefile source data when prompted, or choose a ZIP of the project folder. Separate GeoJSON exports are optional.
+Open **Sites → the site → Set up map** (or **Upload a new version**). QGIS and Overview actions open the same manager workflow, with the map beside each step: **Map layers → Site outline → Zones → Save map**. Choose a QGIS project and its vector sources. Reading starts automatically. Add missing data when prompted or upload a ZIP containing the project and its vector files. Once saved, the map appears in **Forms → Maps awaiting a form**. From there, select a published form and check and publish a package for observers.
 
 Old `…/packages?step=upload` addresses redirect to map setup, including any acknowledged draft. Package history offers **Advanced: upload prepared layers** at `…/packages?step=advanced-upload` for files that already contain ground and zones. That advanced route retains its prepared-layer requirements and has a **Use map setup** action for returning to normal project import and boundary editing.
 

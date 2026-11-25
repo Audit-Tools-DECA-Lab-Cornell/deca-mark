@@ -13,9 +13,15 @@ import { readStep } from "./steps";
 type Params = { org: string; project: string; site: string; setup?: string; step?: string };
 type FormChoice = { readonly code: string; readonly name: string };
 
-export async function SetupPage({ params }: { readonly params: Promise<Params> }) {
+export async function SetupPage({
+	params,
+	assignForm = false
+}: {
+	readonly params: Promise<Params>;
+	readonly assignForm?: boolean;
+}) {
 	const { org, project, site, setup, step } = await params;
-	const initialStep = readStep(step);
+	const initialStep = assignForm ? "review" : readStep(step);
 	const ref = await resolveProject(org, project);
 	if (!ref) notFound();
 	if (!projectAbilities(ref.role).manage)
@@ -33,7 +39,7 @@ export async function SetupPage({ params }: { readonly params: Promise<Params> }
 	if (!initialStep) notFound();
 	const [siteResult, forms, workspace] = await Promise.all([
 		settle(getSite(ref.id, site)),
-		settle(listForms(ref.id)),
+		assignForm ? settle(listForms(ref.id)) : null,
 		getWorkspace()
 	]);
 	if (!siteResult.ok) return <LoadFailure failure={siteResult.failure} what="this site" />;
@@ -45,8 +51,8 @@ export async function SetupPage({ params }: { readonly params: Promise<Params> }
 				what="map setup"
 			/>
 		);
-	const published = publishedVersions(forms.ok ? forms.data : []);
-	const formDefinitions = forms.ok
+	const published = publishedVersions(forms?.ok ? forms.data : []);
+	const formDefinitions = forms?.ok
 		? await getFormDefinitions(
 				ref.id,
 				published.map(form => form.code)
@@ -65,11 +71,13 @@ export async function SetupPage({ params }: { readonly params: Promise<Params> }
 			siteName={siteResult.data.name}
 			siteHref={`/o/${org}/p/${project}/sites/${site}`}
 			sitesHref={`/o/${org}/p/${project}/sites`}
+			formsHref={`/o/${org}/p/${project}/forms`}
+			assignForm={assignForm}
 			expectedCurrent={siteResult.data.current_package_id}
 			setupId={setup}
 			initialStep={initialStep}
-			formsUnavailable={!forms.ok}
-			inventoryFormsIncomplete={forms.ok && formDefinitions.missing.length > 0}
+			formsUnavailable={forms !== null && !forms.ok}
+			inventoryFormsIncomplete={formDefinitions.missing.length > 0}
 			observationForms={choices.observation.map(label)}
 			inventoryForms={choices.inventory.map(label)}
 		/>

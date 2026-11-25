@@ -3,7 +3,11 @@ from uuid import UUID, uuid4
 import anyio
 import pytest
 
-from fieldmaps_api.domain.map_setup_compilation import compile_package, reviewed_layer_check
+from fieldmaps_api.domain.map_setup_compilation import (
+    compile_package,
+    reviewed_layer_check,
+    validate_map,
+)
 from fieldmaps_api.domain.map_setup_roles import keep_references
 from fieldmaps_api.domain.zone_archive import prepare_import_base
 from fieldmaps_api.errors import DomainError
@@ -60,10 +64,13 @@ def test_qgis_sources_keep_custom_names_and_manager_overrides_through_preparatio
                     "geometry": geometry,
                 }
             ],
-            "form_version": "play-v1",
         }
     )
-    package = compile_package(SITE, REQUEST, None, content, layers, [], imported.project_file)
+    validate_map(content, layers, [])
+    with pytest.raises(DomainError, match="published observation form"):
+        compile_package(SITE, REQUEST, None, content, layers, [], imported.project_file)
+    bound = content.model_copy(update={"form_version": "play-v1"})
+    package = compile_package(SITE, REQUEST, None, bound, layers, [], imported.project_file)
     base = prepare_import_base(
         package, "NORTH", forms(), layer_check=reviewed_layer_check(content, tuple(layers), ())
     )

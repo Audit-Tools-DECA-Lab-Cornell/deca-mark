@@ -191,8 +191,8 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 							</div>
 							{status}
 							<p className="type-small text-ink-2">
-								Your upload is saved as a map draft. Choose a form when you are ready to publish it. If
-								a vector data file is missing, the next screen names it.
+								Your upload is saved as a map draft. Assign a form later from the Forms tab. If a vector
+								data file is missing, the next screen names it.
 							</p>
 							<p className="type-small text-ink-2">{LIMITS}</p>
 						</div>

@@ -1,5 +1,6 @@
 """Compile reviewed setup geometry into the unchanged published-package contract."""
 
+from collections.abc import Sequence
 from uuid import UUID
 
 from pydantic import TypeAdapter, ValidationError
@@ -13,19 +14,16 @@ from fieldmaps_api.zone_import_schemas import PackageRequest, ZoneIdentityMappin
 
 GEOMETRY: TypeAdapter[Geometry] = TypeAdapter(Geometry)
 CHECK_DETAIL_LIMIT = 2000
+type ReviewedFeatures = list[tuple[str, Feature, SetupRole]]
 
 
-def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and reviewed input
-    site: UUID,
-    request: UUID,
-    expected: UUID | None,
+def validate_map(
     content: MapSetupReplace,
-    layers: list[SetupLayer],
-    issues: list[SetupIssue],
-    project: ProjectFile | None,
-) -> PackageRequest:
-    if content.outline is None or not content.zones or not content.form_version:
-        message = "Add a site outline, at least one zone and a published form before publishing."
+    layers: Sequence[SetupLayer],
+    issues: Sequence[SetupIssue],
+) -> ReviewedFeatures:
+    if content.outline is None or not content.zones:
+        message = "Add a site outline and at least one zone before saving the map."
         raise ValidationFailedError(message)
     validate_zone_names(content)
     source = {
@@ -37,11 +35,43 @@ def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and r
         (item.source_id, item.feature_key): item.role for item in content.assignments
     }
     if len(assigned) != len(content.assignments) or set(assigned) != set(source):
-        message = "Review every imported feature before publishing."
+        message = "Review every imported feature before saving the map."
         raise ValidationFailedError(message)
     omitted = set(content.confirmed_omissions)
     if any(issue.source_id not in omitted for issue in issues):
-        message = "Review each layer that could not be imported before publishing."
+        message = "Review each layer that could not be imported before saving the map."
+        raise ValidationFailedError(message)
+    allowed = {
+        "ground": {"Polygon", "MultiPolygon"},
+        "paths": {"LineString", "MultiLineString", "Polygon", "MultiPolygon"},
+        "trees": {"Point", "MultiPoint", "Polygon", "MultiPolygon"},
+        "outline": {"Polygon", "MultiPolygon"},
+        "zones": {"Polygon", "MultiPolygon"},
+    }
+    reviewed: ReviewedFeatures = []
+    for key, (layer_name, feature) in source.items():
+        role = assigned[key]
+        if role == "leave_out":
+            continue
+        if feature.geometry.type not in allowed[role]:
+            message = "Choose a role compatible with the imported feature's geometry."
+            raise ValidationFailedError(message)
+        reviewed.append((layer_name, feature, role))
+    return reviewed
+
+
+def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and reviewed input
+    site: UUID,
+    request: UUID,
+    expected: UUID | None,
+    content: MapSetupReplace,
+    layers: list[SetupLayer],
+    issues: list[SetupIssue],
+    project: ProjectFile | None,
+) -> PackageRequest:
+    reviewed = validate_map(content, layers, issues)
+    if content.outline is None or content.form_version is None:
+        message = "Choose a published observation form before publishing for observers."
         raise ValidationFailedError(message)
     ground = [
         Feature(
@@ -53,20 +83,7 @@ def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and r
     paths: list[Feature] = []
     trees: list[Feature] = []
     references = {"ground": ground, "paths": paths, "trees": trees}
-    allowed = {
-        "ground": {"Polygon", "MultiPolygon"},
-        "paths": {"LineString", "MultiLineString", "Polygon", "MultiPolygon"},
-        "trees": {"Point", "MultiPoint", "Polygon", "MultiPolygon"},
-        "outline": {"Polygon", "MultiPolygon"},
-        "zones": {"Polygon", "MultiPolygon"},
-    }
-    for key, (layer_name, feature) in source.items():
-        role = assigned[key]
-        if role == "leave_out":
-            continue
-        if feature.geometry.type not in allowed[role]:
-            message = "Choose a role compatible with the imported feature's geometry."
-            raise ValidationFailedError(message)
+    for layer_name, feature, role in reviewed:
         if role in references:
             references[role].append(
                 reference_feature(feature, role, layer_name if project else None)
