@@ -2,7 +2,7 @@ from typing import Annotated, ClassVar, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
-from fieldmaps_api.domain.packages import OnlineBasemap
+from fieldmaps_api.domain.packages import OnlineBasemap, PreparationCheck
 from fieldmaps_api.domain.zone_package_schemas import PackageIdentity
 from fieldmaps_api.zone_import_schemas import PackageRequest
 from fieldmaps_api.zone_response_schemas import ImportValidation, PackageForms
@@ -25,6 +25,7 @@ class ImportJob(ArchiveJob):
     forms: PackageForms
     validation: ImportValidation
     submission: PackageRequest
+    layer_check: PreparationCheck | None = None
 
 
 type Job = Annotated[PublishJob | ImportJob, Field(discriminator="operation")]

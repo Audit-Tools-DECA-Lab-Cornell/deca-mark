@@ -21,7 +21,6 @@ import {
 	undecidedIn
 } from "./feature-names";
 import { FeatureOverlay, type OverlayShape, overlayShape } from "./FeatureOverlay";
-import { ADD_FILES_INPUT } from "./Intake";
 import { allowedRoles, sourceDisposition } from "./model";
 import { setupPlan } from "./plan";
 import { type Content, type Role, role as roleSchema, type Setup, type SourceLayer } from "./schema";
@@ -78,6 +77,10 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 	const plan = useMemo(() => setupPlan(siteName, setup.layers, content), [siteName, setup.layers, content]);
 	const total = setup.layers.reduce((sum, layer) => sum + layer.features.length, 0);
 	const undecided = sourceDisposition(setup.layers, content.assignments);
+	const assignments = useMemo(
+		() => new Map(content.assignments.map(item => [keyOf(item.source_id, item.feature_key), item])),
+		[content.assignments]
+	);
 	const active =
 		setup.layers.find(layer => layer.source_id === activeSource) ??
 		setup.layers.find(layer => undecidedIn(layer, content.assignments) > 0) ??
@@ -122,9 +125,7 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 	async function choose(layer: SourceLayer, featureKey: string, role: Role) {
 		const entry = layer.features.find(item => item.feature_key === featureKey);
 		if (!entry) return;
-		const prior = content.assignments.find(
-			item => item.source_id === layer.source_id && item.feature_key === featureKey
-		);
+		const prior = assignments.get(keyOf(layer.source_id, featureKey));
 		if (prior?.role === role) return;
 		setRefusal(null);
 		setBusy(true);
@@ -184,9 +185,7 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 	async function bulk(layer: SourceLayer, role: Role) {
 		setRefusal(null);
 		setActiveSource(layer.source_id);
-		const roleOf = (featureKey: string) =>
-			content.assignments.find(item => item.source_id === layer.source_id && item.feature_key === featureKey)
-				?.role;
+		const roleOf = (featureKey: string) => assignments.get(keyOf(layer.source_id, featureKey))?.role;
 		if (
 			layer.features.some(entry => {
 				const current = roleOf(entry.feature_key);
@@ -290,7 +289,7 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 								<span className="tnum">
 									{total - undecided} of {total}
 								</span>{" "}
-								decided
+								ready to review
 							</span>
 						) : undefined
 					}
@@ -299,9 +298,11 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 						{files}
 						{total > 0 && (
 							<p className="type-small text-ink-2">
-								Choose how each layer is used. The site outline is the outer edge of the site, and
-								observation zones are the areas observers record in. Ground features, paths and trees
-								are drawn for orientation. Nothing is used or left out until you choose.
+								{undecided > 0
+									? "Choose a use for the features marked to decide."
+									: "Imported features are ready to use. Continue to the site outline or change a layer’s use here."}{" "}
+								To use an imported area as the site outline or an observation zone, select that use
+								here.
 							</p>
 						)}
 					</IslandSection>
@@ -347,16 +348,6 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 											</>
 										) : (
 											<>
-												{!online && (
-													<Button
-														variant="ink"
-														size="sm"
-														onClick={() =>
-															document.getElementById(ADD_FILES_INPUT)?.click()
-														}>
-														Add the missing file
-													</Button>
-												)}
 												<Button
 													variant="outline"
 													size="sm"
@@ -481,10 +472,8 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 									{(open || !many) && (
 										<ul id={listId} className="-mx-2 flex flex-col">
 											{layer.features.map((entry, index) => {
-												const assignment = content.assignments.find(
-													item =>
-														item.source_id === layer.source_id &&
-														item.feature_key === entry.feature_key
+												const assignment = assignments.get(
+													keyOf(layer.source_id, entry.feature_key)
 												);
 												const name = featureName(entry.feature, index);
 												const chosen =
@@ -492,7 +481,10 @@ export function LayersStep({ setup, content, siteName, onChange, onPending, disa
 													selected.feature === entry.feature_key;
 												const roles = allowedRoles(entry.feature.geometry?.type ?? "");
 												const identities =
-													content.zones.length > 0 && roles.includes("zones") && !assignment
+													content.zones.length > 0 &&
+													roles.includes("zones") &&
+													assignment?.role !== "zones" &&
+													assignment?.role !== "outline"
 														? availableZoneIdentityChoices(
 																content,
 																layer.source_id,

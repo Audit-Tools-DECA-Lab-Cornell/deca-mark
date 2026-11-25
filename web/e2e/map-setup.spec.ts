@@ -498,15 +498,12 @@ test("whole layers take one decision, and the list and the map select each other
 	});
 	await awaitLayerReview(page);
 	const proceed = page.getByRole("button", { name: "Continue to site outline", exact: true });
-	await expect(proceed).toBeDisabled();
-	await expect(page.getByText("Decide how to use 6 more features first.", { exact: true })).toBeVisible();
-	await expect(page.getByText("0 of 6 decided", { exact: true })).toBeVisible();
+	await expect(proceed).toBeEnabled();
+	await expect(page.getByText("6 of 6 ready to review", { exact: true })).toBeVisible();
 
-	// One decision for a layer whose features belong together; nothing was classified before it.
-	await expect(page.getByLabel("trees · feature 2", { exact: true })).toHaveValue("");
-	await page.getByLabel("Use all of trees as", { exact: true }).selectOption("trees");
 	for (const number of [1, 2, 3])
 		await expect(page.getByLabel(`trees · feature ${number}`, { exact: true })).toHaveValue("trees");
+	await expect(page.getByLabel("zones · feature 2", { exact: true })).toHaveValue("ground");
 	await page.getByLabel("Use all of zones as", { exact: true }).selectOption("zones");
 	await expect(page.getByLabel("zones · feature 2", { exact: true })).toHaveValue("zones");
 
@@ -532,7 +529,7 @@ test("whole layers take one decision, and the list and the map select each other
 	await expect(page.getByLabel("zones · feature 1", { exact: true })).toHaveValue("zones");
 
 	await page.getByLabel("ground · feature 1", { exact: true }).selectOption("outline");
-	await expect(page.getByText("6 of 6 decided", { exact: true })).toBeVisible();
+	await expect(page.getByText("6 of 6 ready to review", { exact: true })).toBeVisible();
 	await expect(page.getByText("Draft saved. Observers cannot use it yet.", { exact: true })).toBeVisible({
 		timeout: 30000
 	});
@@ -678,9 +675,9 @@ test("a deep link to Review before boundaries are ready explains the remaining w
 	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${imported.setup_id}/review`);
 	const prerequisite = page.getByText("Finish this step first.", { exact: true });
 	await expect(prerequisite).toBeVisible();
-	await expect(prerequisite.locator("..")).toContainText("Decide how to use 1 more feature first.");
+	await expect(prerequisite.locator("..")).toContainText("Add the site outline first.");
 	await expect(page.getByRole("heading", { name: "Review and publish", exact: true })).toHaveCount(0);
-	await expect(page.getByRole("heading", { name: "Map layers", exact: true })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Site outline", exact: true })).toBeVisible();
 });
 
 test("an observer opening map setup directly is routed away without setup controls", async ({ page }) => {
@@ -802,7 +799,7 @@ test("a stale map-setup save keeps local work and can explicitly replace the sav
 	await signInToZones(page, "manager");
 	await page.goto(`${fixture.path}/sites/${site.code}/map-setup/${imported.setup_id}/add-map`);
 	const role = page.getByLabel("Trees · feature 1", { exact: true });
-	await expect(role).toHaveValue("");
+	await expect(role).toHaveValue("trees");
 	await other<MapSetupRead>(
 		"PUT",
 		setupUrl,
@@ -810,7 +807,7 @@ test("a stale map-setup save keeps local work and can explicitly replace the sav
 		mapSetupEtag(imported)
 	);
 
-	await role.selectOption("trees");
+	await role.selectOption("leave_out");
 	await expect(page.getByText("Map setup needs attention.", { exact: true })).toBeVisible({ timeout: 30000 });
 	await expect(
 		page.getByText(
@@ -818,8 +815,8 @@ test("a stale map-setup save keeps local work and can explicitly replace the sav
 			{ exact: true }
 		)
 	).toBeVisible();
-	await expect(role).toHaveValue("trees");
-	expect((await call<MapSetupRead>("GET", setupUrl)).content.assignments).toHaveLength(0);
+	await expect(role).toHaveValue("leave_out");
+	expect((await call<MapSetupRead>("GET", setupUrl)).content.assignments.map(item => item.role)).toEqual(["trees"]);
 
 	page.once("dialog", dialog => dialog.accept());
 	await page.getByRole("button", { name: "Keep my version", exact: true }).click();
@@ -829,7 +826,7 @@ test("a stale map-setup save keeps local work and can explicitly replace the sav
 		.poll(async () => (await call<MapSetupRead>("GET", setupUrl)).content.assignments.map(item => item.role), {
 			timeout: 30000
 		})
-		.toEqual(["trees"]);
+		.toEqual(["leave_out"]);
 });
 
 test("a missing bare map-setups list shows setup capability as unavailable", async ({ page }) => {

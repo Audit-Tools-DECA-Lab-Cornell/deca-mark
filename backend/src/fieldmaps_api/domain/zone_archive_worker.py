@@ -39,7 +39,9 @@ def process(directory: Path) -> None:
         case PublishJob():
             base = extract_base_archive((directory / "base.zip").read_bytes())
         case ImportJob():
-            base = prepare_import_base(job.submission, job.identity.site_code, job.forms)
+            base = prepare_import_base(
+                job.submission, job.identity.site_code, job.forms, layer_check=job.layer_check
+            )
         case _:
             assert_never(job)
     prepared = prepare_zone_package(base, job.identity, job.forms, job.validation)

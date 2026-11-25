@@ -256,7 +256,11 @@ def refuse_blocked(checks: list[PreparationCheck], project: SourceProject | None
 
 
 def prepare_import_base(
-    submission: PackageRequest, site_code: str, forms: PackageForms
+    submission: PackageRequest,
+    site_code: str,
+    forms: PackageForms,
+    *,
+    layer_check: PreparationCheck | None = None,
 ) -> BaseArchive:
     if not {"ground", "zones"} <= submission.layers.keys():
         message = "A package needs a ground and a zones layer"
@@ -278,7 +282,10 @@ def prepare_import_base(
         project_file=submission.project_file,
     )
     project = read_source_project(submission.project_file, checks)
-    check_layer_sources(internal_submission, project, checks)
+    if layer_check is None:
+        check_layer_sources(internal_submission, project, checks)
+    else:
+        checks.append(layer_check)
     check_coordinate_reference(internal_submission, project, checks)
     check_imagery_licence(
         project, NO_PERMITTED_HOSTS, checks, frozenset(submission.leave_out_online_basemaps)

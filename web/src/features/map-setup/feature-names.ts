@@ -71,11 +71,12 @@ export function sharedRole(
 	layer: Pick<SourceLayer, "source_id" | "features">,
 	assignments: readonly { source_id: string; feature_key: string; role: Role }[]
 ): Role | null {
+	const byFeature = new Map(
+		assignments.filter(item => item.source_id === layer.source_id).map(item => [item.feature_key, item.role])
+	);
 	let shared: Role | null = null;
 	for (const entry of layer.features) {
-		const role = assignments.find(
-			item => item.source_id === layer.source_id && item.feature_key === entry.feature_key
-		)?.role;
+		const role = byFeature.get(entry.feature_key);
 		if (!role || (shared !== null && role !== shared)) return null;
 		shared = role;
 	}
@@ -87,7 +88,8 @@ export function undecidedIn(
 	layer: Pick<SourceLayer, "source_id" | "features">,
 	assignments: readonly { source_id: string; feature_key: string }[]
 ): number {
-	return layer.features.filter(
-		entry => !assignments.some(item => item.source_id === layer.source_id && item.feature_key === entry.feature_key)
-	).length;
+	const decided = new Set(
+		assignments.filter(item => item.source_id === layer.source_id).map(item => item.feature_key)
+	);
+	return layer.features.filter(entry => !decided.has(entry.feature_key)).length;
 }

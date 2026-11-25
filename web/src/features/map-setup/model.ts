@@ -49,13 +49,9 @@ export function sourceDisposition(
 	layers: readonly Pick<SourceLayer, "source_id" | "features">[],
 	assignments: readonly { source_id: string; feature_key: string }[]
 ): number {
+	const assigned = new Set(assignments.map(item => `${item.source_id}\u0000${item.feature_key}`));
 	return layers.flatMap(layer =>
-		layer.features.filter(
-			feature =>
-				!assignments.some(
-					item => item.source_id === layer.source_id && item.feature_key === feature.feature_key
-				)
-		)
+		layer.features.filter(feature => !assigned.has(`${layer.source_id}\u0000${feature.feature_key}`))
 	).length;
 }
 

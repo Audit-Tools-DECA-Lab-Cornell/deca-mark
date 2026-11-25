@@ -174,7 +174,7 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 					<div className="flex flex-col gap-5">
 						<p className="type-body text-ink-2">
 							{mode === "project"
-								? "Choose the project file (.qgz or .qgs). If the project keeps its layers in separate files, choose them together, or choose one ZIP that holds everything."
+								? "Choose the QGIS project (.qgz or .qgs) and its vector data files, such as a GeoPackage. You can also choose one ZIP containing those files."
 								: "Choose the GeoJSON files you exported from QGIS, one for each layer."}
 						</p>
 						<div className="flex flex-col gap-3">
@@ -191,8 +191,8 @@ export function Intake({ address, setup, expectedCurrent, onImported, beforeRead
 							</div>
 							{status}
 							<p className="type-small text-ink-2">
-								If a data file is missing, the next screen names it. A site outline or zones that are
-								not in the project can be drawn here afterwards.
+								Your upload is saved as a map draft. Choose a form when you are ready to publish it. If
+								a vector data file is missing, the next screen names it.
 							</p>
 							<p className="type-small text-ink-2">{LIMITS}</p>
 						</div>

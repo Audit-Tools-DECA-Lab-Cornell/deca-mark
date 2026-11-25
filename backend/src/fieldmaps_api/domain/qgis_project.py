@@ -96,6 +96,26 @@ def map_layers(root: ElementTree.Element) -> list[ElementTree.Element]:
     return list(root.iter("maplayer"))
 
 
+def layers_in_paint_order(root: ElementTree.Element) -> list[ElementTree.Element]:
+    layers = map_layers(root)
+    tree = root.find("./layer-tree-group")
+    if tree is None:
+        return layers
+    custom = tree.find("custom-order")
+    top_first = (
+        [item.text for item in custom.findall("item")]
+        if custom is not None and custom.get("enabled") == "1"
+        else [item.get("id") for item in tree.iter("layer-tree-layer")]
+    )
+    by_id = {layer.findtext("id"): layer for layer in layers if layer.findtext("id")}
+    if len(by_id) != len(layers):
+        return layers
+    order = [identifier for identifier in dict.fromkeys(top_first) if identifier in by_id]
+    return [layer for layer in layers if layer.findtext("id") not in order] + [
+        by_id[identifier] for identifier in reversed(order)
+    ]
+
+
 def layer_name(layer: ElementTree.Element) -> str | None:
     return _text(layer.find("layername"))
 

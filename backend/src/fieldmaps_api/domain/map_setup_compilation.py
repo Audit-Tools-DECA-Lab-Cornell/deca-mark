@@ -5,13 +5,14 @@ from uuid import UUID
 from pydantic import TypeAdapter, ValidationError
 
 from fieldmaps_api.domain.geojson import Feature, FeatureCollection, Geometry
-from fieldmaps_api.domain.packages import ProjectFile
+from fieldmaps_api.domain.packages import PreparationCheck, ProjectFile
 from fieldmaps_api.errors import ValidationFailedError
 from fieldmaps_api.map_setup_schemas import MapSetupReplace, SetupIssue, SetupLayer, SetupRole
 from fieldmaps_api.zone_draft_schemas import DraftReplace
 from fieldmaps_api.zone_import_schemas import PackageRequest, ZoneIdentityMapping
 
 GEOMETRY: TypeAdapter[Geometry] = TypeAdapter(Geometry)
+CHECK_DETAIL_LIMIT = 2000
 
 
 def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and reviewed input
@@ -28,7 +29,7 @@ def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and r
         raise ValidationFailedError(message)
     validate_zone_names(content)
     source = {
-        (layer.source_id, item.feature_key): item.feature
+        (layer.source_id, item.feature_key): (layer.name, item.feature)
         for layer in layers
         for item in layer.features
     }
@@ -59,15 +60,17 @@ def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and r
         "outline": {"Polygon", "MultiPolygon"},
         "zones": {"Polygon", "MultiPolygon"},
     }
-    for key, role in assigned.items():
-        feature = source[key]
+    for key, (layer_name, feature) in source.items():
+        role = assigned[key]
         if role == "leave_out":
             continue
         if feature.geometry.type not in allowed[role]:
             message = "Choose a role compatible with the imported feature's geometry."
             raise ValidationFailedError(message)
         if role in references:
-            references[role].append(reference_feature(feature, role))
+            references[role].append(
+                reference_feature(feature, role, layer_name if project else None)
+            )
     zone_features = [
         Feature(
             type="Feature",
@@ -115,11 +118,47 @@ def compile_package(  # noqa: PLR0913, PLR0917 - canonical package context and r
     )
 
 
-def reference_feature(feature: Feature, role: SetupRole) -> Feature:
+def reference_feature(feature: Feature, role: SetupRole, layer_name: str | None) -> Feature:
     properties = dict(feature.properties)
-    if role == "ground" and properties.get("kind") == "site":
+    if layer_name is not None:
+        properties.setdefault("qgis_layer", layer_name)
+    if role == "ground" and (feature.text("kind") or "").casefold() == "site":
         properties["kind"] = "ground"
     return feature.model_copy(update={"properties": properties})
+
+
+def reviewed_layer_check(
+    content: MapSetupReplace, layers: tuple[SetupLayer, ...], issues: tuple[SetupIssue, ...]
+) -> PreparationCheck:
+    excluded = {
+        (item.source_id, item.feature_key)
+        for item in content.assignments
+        if item.role == "leave_out"
+    }
+    kept: list[str] = []
+    left_out = [issue.layer for issue in issues if issue.kind != "online_basemap"]
+    for layer in layers:
+        included = sum(
+            (layer.source_id, item.feature_key) not in excluded for item in layer.features
+        )
+        if included:
+            kept.append(layer.name)
+        if included < len(layer.features):
+            left_out.append(layer.name)
+    detail = (
+        f"Sources with map features included: {', '.join(kept)}."
+        if kept
+        else "No source features included."
+    )
+    if left_out:
+        detail = f"Sources with features left out: {', '.join(left_out)}. {detail}"
+    return PreparationCheck(
+        step="layer-sources",
+        state="warning" if left_out else "passed",
+        detail=(
+            detail if len(detail) <= CHECK_DETAIL_LIMIT else detail[: CHECK_DETAIL_LIMIT - 1] + "…"
+        ),
+    )
 
 
 def validate_zone_names(content: MapSetupReplace) -> None:

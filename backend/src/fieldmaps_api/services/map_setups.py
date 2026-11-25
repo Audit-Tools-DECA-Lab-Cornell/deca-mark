@@ -9,6 +9,7 @@ from pydantic import TypeAdapter
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from fieldmaps_api.domain.map_setup_roles import keep_references
 from fieldmaps_api.domain.packages import ProjectFile
 from fieldmaps_api.errors import DomainError
 from fieldmaps_api.map_setup_schemas import (
@@ -72,6 +73,8 @@ async def create(
             )
         initial = await initial_content(session, project, site, payload.expected_current_package_id)
     imported = await map_setup_imports.convert(list(payload.files), payload.mode)
+    if payload.mode == "project":
+        initial = initial.model_copy(update={"assignments": keep_references(imported.layers)})
     document = {
         **imported.model_dump(mode="json"),
         "content": initial.model_dump(mode="json"),
@@ -214,11 +217,14 @@ async def update_sources(  # noqa: PLR0913, PLR0917 - explicit authenticated req
         message = "revision_conflict"
         raise DomainError(message, "Source files changed. Review the new preview.", 412)
     keys = {(layer.source_id, f.feature_key) for layer in imported.layers for f in layer.features}
+    saved = stored.setup.content.assignments
     content = stored.setup.content.model_copy(
         update={
             "import_generation": generation,
-            "assignments": tuple(
-                a for a in stored.setup.content.assignments if (a.source_id, a.feature_key) in keys
+            "assignments": (
+                keep_references(imported.layers, saved)
+                if mode == "project"
+                else tuple(a for a in saved if (a.source_id, a.feature_key) in keys)
             ),
             "confirmed_omissions": (),
         }

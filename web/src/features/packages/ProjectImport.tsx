@@ -8,7 +8,7 @@ import { Note } from "@/components/contour/Note";
 import { importQgisProject } from "@/lib/api/browser";
 import { apiRequestError } from "@/lib/api/errors";
 import type { ProjectImportResult } from "@/lib/api/types";
-import { LayerReadError } from "@/lib/packages";
+import { LayerReadError, matchSlot } from "@/lib/packages";
 
 import { onlineMapLine } from "./online-maps";
 import { importSubmission } from "./project-import";
@@ -38,6 +38,12 @@ export function ProjectImport({
 		setResult(null);
 		try {
 			const imported = await importQgisProject(projectId, await importSubmission(files));
+			const slots = imported.layers.map(layer => matchSlot(`${layer.name}.geojson`));
+			if (slots.some(slot => slot === null || slot === "project") || new Set(slots).size !== slots.length) {
+				throw new LayerReadError(
+					"This project has layers that cannot be kept in the prepared-layer slots. Select Use map setup to keep the original layers and names."
+				);
+			}
 			await onImported(imported, files);
 			setResult(imported);
 		} catch (raised) {

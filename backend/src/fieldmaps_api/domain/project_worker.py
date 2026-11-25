@@ -70,7 +70,7 @@ def import_layers(
 ) -> tuple[list[ImportedLayer], list[ImportIssue]]:
     layers: list[ImportedLayer] = []
     issues: list[ImportIssue] = []
-    candidates = qgis_project.map_layers(root)
+    candidates = qgis_project.layers_in_paint_order(root)
     if len(candidates) > MAX_LAYERS:
         message = (
             "A project may contain at most 64 layers. Save a copy with only this site's layers."

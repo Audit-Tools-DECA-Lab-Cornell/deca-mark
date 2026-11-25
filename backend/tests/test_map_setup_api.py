@@ -231,6 +231,7 @@ def test_missing_source_can_be_added_after_reload_without_replacing_drawn_work(
     assert restored.content.outline == acknowledged.content.outline
     assert restored.content.zones == acknowledged.content.zones
     assert restored.content.change_note == acknowledged.content.change_note
+    assert {item.role for item in restored.content.assignments} == {"ground", "trees"}
 
 
 def test_save_without_revision_is_refused(api_client: TestClient, setup_site: Tenant) -> None:

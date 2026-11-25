@@ -8,14 +8,14 @@ export function setupPlan(
 	content: Content,
 	frame?: PlanFrame
 ): ProjectedSite | null {
+	const roles = new Map(content.assignments.map(item => [`${item.source_id}\u0000${item.feature_key}`, item.role]));
 	const references = layers.flatMap(layer =>
 		layer.features.flatMap(item => {
-			const role = content.assignments.find(
-				assignment => assignment.source_id === layer.source_id && assignment.feature_key === item.feature_key
-			)?.role;
+			const role = roles.get(`${layer.source_id}\u0000${item.feature_key}`);
 			if (role === "leave_out" || role === "outline" || role === "zones") return [];
+			const kind = item.feature.properties?.kind;
 			const feature =
-				item.feature.properties?.kind === "site"
+				typeof kind === "string" && kind.trim().toLowerCase() === "site"
 					? { ...item.feature, properties: { ...item.feature.properties, kind: "ground" } }
 					: item.feature;
 			return [{ feature, role }];

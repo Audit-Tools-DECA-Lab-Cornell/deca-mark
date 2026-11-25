@@ -56,6 +56,20 @@ def packed(files: dict[str, bytes]) -> bytes:
     return output.getvalue()
 
 
+@pytest.mark.parametrize(
+    ("custom", "expected"), [("0", ["base", "detail"]), ("1", ["detail", "base"])]
+)
+def test_qgis_project_layer_order_becomes_paint_order(custom: str, expected: list[str]) -> None:
+    root = qgis_project.parse(
+        f'<qgis><layer-tree-group><layer-tree-group name="Group">'
+        '<layer-tree-layer id="detail"/></layer-tree-group><layer-tree-layer id="base"/>'
+        f'<custom-order enabled="{custom}"><item>base</item><item>detail</item></custom-order>'
+        "</layer-tree-group><projectlayers><maplayer><id>detail</id></maplayer>"
+        "<maplayer><id>base</id></maplayer></projectlayers></qgis>"
+    )
+    assert [layer.findtext("id") for layer in qgis_project.layers_in_paint_order(root)] == expected
+
+
 def document(source: str = "ground.geojson", provider: str = "ogr") -> bytes:
     return (
         '<!DOCTYPE qgis PUBLIC "http://mrcc.com/qgis.dtd" "SYSTEM">'

@@ -9,7 +9,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from fieldmaps_api.database_errors import database_error
-from fieldmaps_api.domain.map_setup_compilation import compile_package
+from fieldmaps_api.domain.map_setup_compilation import compile_package, reviewed_layer_check
 from fieldmaps_api.domain.packages import PackageError, ProjectFile
 from fieldmaps_api.domain.zone_archive_jobs import ImportJob
 from fieldmaps_api.domain.zone_package_schemas import PackageIdentity
@@ -119,7 +119,15 @@ async def publish(
         identity = PackageIdentity(reference.site, uuid4(), scope.next_version, scope.code)
     try:
         prepared = await zone_archives.prepare(
-            ImportJob(identity=identity, forms=forms, validation=validation, submission=package)
+            ImportJob(
+                identity=identity,
+                forms=forms,
+                validation=validation,
+                submission=package,
+                layer_check=reviewed_layer_check(
+                    stored.setup.content, stored.setup.layers, stored.setup.issues
+                ),
+            )
         )
     except PackageError as error:
         raise zone_publication.refusal(error) from error
